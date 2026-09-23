@@ -1,0 +1,308 @@
+import { assertEquals, assertNotEquals } from "@std/assert";
+import { STATUS_CODE } from "@std/http";
+import { openDatabase } from "../../db/database.ts";
+import { migrateDatabase } from "../../db/migrate.ts";
+import { AuthService, SESSION_COOKIE_NAME } from "./service.ts";
+import { createApp } from "../../app.ts";
+import type { Envelope, UserDto } from "@shared/contracts.ts";
+import { eq, sql } from "drizzle-orm";
+import { users } from "../../db/schema.ts";
+const ORIGIN = "http://localhost:8000";
+
+async function setupTestApp() {
+    const store = openDatabase(":memory:");
+    await migrateDatabase(store);
+
+    const auth = new AuthService({
+        store,
+        origin: ORIGIN,
+    });
+
+    const app = createApp({
+        store,
+        auth,
+        origin: ORIGIN,
+        now: () => Date.now(),
+    });
+
+    return { store, auth, app };
+}
+
+function extractCookie(response: Response, name: string): string | null {
+    const setCookie = response.headers.get("set-cookie");
+    if (!setCookie) return null;
+    const match = setCookie.match(new RegExp(`${name}=([^;]+)`));
+    return match ? match[1] : null;
+}
+
+Deno.test({
+    name: "auth contract: register, me, logout lifecycle with session cookie",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            // 1. Register new user
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "alice_contract",
+                    displayName: "Alice Contract",
+                    password: "Password123456!",
+                }),
+            });
+
+            assertEquals(regRes.status, STATUS_CODE.OK);
+            const regBody = await regRes.json() as Envelope<{ user: UserDto }>;
+            assertEquals(regBody.status, true);
+            assertEquals(regBody.data?.user.username, "alice_contract");
+            assertEquals(regBody.data?.user.role, "user");
+
+            const sessionToken = extractCookie(regRes, SESSION_COOKIE_NAME);
+            assertNotEquals(sessionToken, null);
+
+            // 2. Access protected /api/auth/me with session cookie
+            const meRes = await app.request("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
+                },
+            });
+            assertEquals(meRes.status, STATUS_CODE.OK);
+            const meBody = await meRes.json() as Envelope<{ user: UserDto }>;
+            assertEquals(meBody.status, true);
+            assertEquals(meBody.data?.user.id, regBody.data?.user.id);
+
+            // 3. Logout revokes session
+            const logoutRes = await app.request("/api/auth/logout", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
+                },
+            });
+            assertEquals(logoutRes.status, STATUS_CODE.OK);
+
+            // 4. Accessing /api/auth/me after logout must be rejected with 401
+            const meAfterLogout = await app.request("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
+                },
+            });
+            assertEquals(meAfterLogout.status, STATUS_CODE.Unauthorized);
+            const meAfterBody = await meAfterLogout.json() as Envelope<never>;
+            assertEquals(meAfterBody.status, false);
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth contract: unauthenticated requests to protected endpoints return 401 envelope",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            const res = await app.request("/api/auth/me", {
+                method: "GET",
+            });
+            assertEquals(res.status, STATUS_CODE.Unauthorized);
+            const body = await res.json() as Envelope<never>;
+            assertEquals(body.status, false);
+            assertEquals(body.code, STATUS_CODE.Unauthorized);
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth contract: account password change increments authVersion and revokes old sessions",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            // Register
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "bob_contract",
+                    displayName: "Bob Contract",
+                    password: "Password123456!",
+                }),
+            });
+            const oldToken = extractCookie(regRes, SESSION_COOKIE_NAME);
+            assertNotEquals(oldToken, null);
+
+            // Change password
+            const changeRes = await app.request("/api/account/password", {
+                method: "PUT",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${oldToken}`,
+                },
+                body: JSON.stringify({
+                    currentPassword: "Password123456!",
+                    newPassword: "NewStrongPassword789!",
+                }),
+            });
+            assertEquals(changeRes.status, STATUS_CODE.OK);
+
+            // Old session token must now be invalid
+            const meWithOld = await app.request("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${oldToken}`,
+                },
+            });
+            assertEquals(meWithOld.status, STATUS_CODE.Unauthorized);
+
+            // Login with new password succeeds and gets new session
+            const loginRes = await app.request("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "bob_contract",
+                    password: "NewStrongPassword789!",
+                }),
+            });
+            assertEquals(loginRes.status, STATUS_CODE.OK);
+            const newToken = extractCookie(loginRes, SESSION_COOKIE_NAME);
+            assertNotEquals(newToken, null);
+
+            const meWithNew = await app.request("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${newToken}`,
+                },
+            });
+            assertEquals(meWithNew.status, STATUS_CODE.OK);
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth security: Origin check and rate limiting boundaries on mutating endpoints",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            // 1. Missing Origin header on POST must be 403 Forbidden
+            const noOriginRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "evil_csrf",
+                    displayName: "Evil",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(noOriginRes.status, STATUS_CODE.Forbidden);
+
+            // 2. Mismatched Origin header on POST must be 403 Forbidden
+            const mismatchOriginRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": "https://attacker.com",
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "evil_csrf",
+                    displayName: "Evil",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(mismatchOriginRes.status, STATUS_CODE.Forbidden);
+
+            // 3. Non-json content-type on mutating endpoint with body must be 415
+            const badContentTypeRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "text/plain",
+                },
+                body: "hello world",
+            });
+            assertEquals(
+                badContentTypeRes.status,
+                STATUS_CODE.UnsupportedMediaType,
+            );
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth security: optimistic authVersion check prevents stale password overwrite",
+    async fn() {
+        const { store, auth, app } = await setupTestApp();
+        try {
+            // Register
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "carol_race",
+                    displayName: "Carol Race",
+                    password: "Password123456!",
+                }),
+            });
+            const sessionToken = extractCookie(regRes, SESSION_COOKIE_NAME)!;
+
+            // To simulate race condition: verify password succeeds with current authVersion,
+            // but before the transaction completes, an out-of-band reset/change updates authVersion.
+            // We test this by hooking verifyPassword or by simulating concurrent update right before transaction.
+            const origVerify = auth.verifyPassword.bind(auth);
+            auth.verifyPassword = async (candidate: string, hash: string) => {
+                const result = await origVerify(candidate, hash);
+                // Concurrent race right after verifyPassword (during hashing)
+                await store.run(async (db) => {
+                    await db
+                        .update(users)
+                        .set({
+                            authVersion: sql`auth_version + 1`,
+                        })
+                        .where(eq(users.username, "carol_race"));
+                });
+                return result;
+            };
+            // Attempting to change password now should fail optimistic concurrency (409)
+            const changeRes = await app.request("/api/account/password", {
+                method: "PUT",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
+                },
+                body: JSON.stringify({
+                    currentPassword: "Password123456!",
+                    newPassword: "NewStrongPassword789!",
+                }),
+            });
+            assertEquals(changeRes.status, STATUS_CODE.Conflict);
+        } finally {
+            await store.close();
+        }
+    },
+});

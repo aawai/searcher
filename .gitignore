@@ -1,0 +1,9 @@
+.env*
+!.env.example
+data/
+node_modules/
+web/dist/
+web/.vite/
+coverage/
+*.tmp
+.DS_Store
