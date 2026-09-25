@@ -44,6 +44,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 style: "glass",
                 accent: "violet",
                 searchShape: "pill",
+                searchOpacity: 0.85,
                 wallpaperBlur: 16,
                 wallpaperGrayscale: 0.3,
                 wallpaperMask: 0.65,
@@ -57,6 +58,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.style, "glass");
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
+        assertEquals(saved.data?.searchOpacity, 0.85);
         assertEquals(saved.data?.webAppHomeLimit, 16);
         assertEquals(saved.data?.webAppIconSize, "large");
         const partial = await app.request("/api/preferences", {
@@ -73,6 +75,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.wallpaperMask, 0.4);
         assertEquals(changed.data?.style, "glass");
         assertEquals(changed.data?.accent, "violet");
+        assertEquals(changed.data?.searchOpacity, 0.85);
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.webAppIconSize, "large");
@@ -82,6 +85,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         const isolated = await other.json() as Envelope<PreferencesDto>;
         assertEquals(isolated.data?.style, "quiet");
         assertEquals(isolated.data?.defaultEngine, "bing");
+        assertEquals(isolated.data?.searchOpacity, 1);
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.webAppIconSize, "default");
     } finally {
@@ -118,6 +122,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { backgroundImage: "https://user:pass@example.com/a.png" },
                 { webAppHomeLimit: 15 },
                 { webAppIconSize: "huge" },
+                { searchOpacity: 0.05 },
+                { searchOpacity: 1.5 },
             ]
         ) {
             const response = await app.request("/api/preferences", {

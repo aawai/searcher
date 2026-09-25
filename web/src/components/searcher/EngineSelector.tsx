@@ -1,4 +1,4 @@
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, RotateCw, Sparkles } from "lucide-react";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     DropdownMenu,
@@ -112,13 +112,22 @@ export function EngineIcon({ id, size = 18 }: { id: EngineId; size?: number }) {
 }
 
 export function EngineSelector(
-    { engine, mode, onEngineChange, onModeChange, reachability, onCheck }: {
+    {
+        engine,
+        mode,
+        onEngineChange,
+        onModeChange,
+        reachability,
+        onCheck,
+        isChecking = false,
+    }: {
         engine: EngineId;
         mode: "search" | "ai";
         onEngineChange: (id: EngineId) => void;
         onModeChange: (mode: "search" | "ai") => void;
         reachability: Reachability;
         onCheck?: () => void;
+        isChecking?: boolean;
     },
 ) {
     const current = SEARCH_ENGINES.find((item) => item.id === engine);
@@ -223,9 +232,37 @@ export function EngineSelector(
                 {onCheck && (
                     <DropdownMenuItem
                         className="engine-check"
-                        onClick={onCheck}
+                        closeOnClick={false}
+                        disabled={isChecking}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onCheck();
+                        }}
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            onCheck();
+                        }}
                     >
-                        重新检测资源连接
+                        <span
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                width: "100%",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <RotateCw
+                                size={14}
+                                className={isChecking ? "animate-spin" : ""}
+                            />
+                            <span>
+                                {isChecking
+                                    ? "正在检测资源连接…"
+                                    : "重新检测资源连接"}
+                            </span>
+                        </span>
                     </DropdownMenuItem>
                 )}
             </DropdownMenuContent>

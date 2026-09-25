@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-003",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "main.ts",
+  "file_path": "src/main.ts",
+  "format": "file",
+  "extractor": "passthrough",
+  "extraction_status": "success"
+}

@@ -64,6 +64,13 @@
       "when": 1790269645053,
       "tag": "0008_silent_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790303781545,
+      "tag": "0009_flowery_firebrand",
+      "breakpoints": true
     }
   ]
 }

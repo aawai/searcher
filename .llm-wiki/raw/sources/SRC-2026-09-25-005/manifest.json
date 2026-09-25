@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-005",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "deno.jsonc",
+  "file_path": "deno.jsonc",
+  "format": "file",
+  "extractor": "passthrough",
+  "extraction_status": "success"
+}

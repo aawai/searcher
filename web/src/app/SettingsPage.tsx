@@ -132,14 +132,27 @@ export function SettingsPage() {
                                 select={(v) => set("theme", v)}
                             />
                             <Choices
+                                title="主题配色"
+                                value={appearance.accent}
+                                values={[
+                                    ["blue", "经典蓝"],
+                                    ["cyan", "天青蓝"],
+                                    ["teal", "鸭翅绿"],
+                                    ["violet", "紫罗兰"],
+                                    ["orange", "暖晨橙"],
+                                    ["mono", "单色黑白"],
+                                ] as const}
+                                select={(v) => set("accent", v)}
+                            />
+                            <Choices
                                 title="风格"
                                 value={appearance.style}
                                 values={[
-                                    ["quiet", "Quiet"],
-                                    ["minimal", "Minimal"],
-                                    ["glass", "Glass"],
-                                    ["soft", "Soft"],
-                                    ["classic", "Classic"],
+                                    ["quiet", "默认 (Quiet)"],
+                                    ["minimal", "极简 (Minimal)"],
+                                    ["glass", "毛玻璃 (Glass)"],
+                                    ["soft", "柔和 (Soft)"],
+                                    ["classic", "经典 (Classic)"],
                                 ] as const}
                                 select={(v) => set("style", v)}
                             />
@@ -148,9 +161,43 @@ export function SettingsPage() {
                                 value={appearance.shape ?? "rounded"}
                                 values={[
                                     ["rounded", "Rounded（圆角）"],
-                                    ["pill", "Pill（胶囊）"],
+                                    ["pill", "Pill（胶囊 Capsule）"],
                                 ] as const}
                                 select={(v) => set("shape", v)}
+                            />
+                            <div className="setting-group">
+                                <h3>搜索框透明度调节</h3>
+                                <label
+                                    className="field"
+                                    style={{ marginTop: "4px" }}
+                                >
+                                    不透明度 {Math.round(
+                                        (appearance.searchOpacity ?? 1) * 100,
+                                    )}%
+                                    <input
+                                        type="range"
+                                        min="0.1"
+                                        max="1"
+                                        step="0.05"
+                                        value={appearance.searchOpacity ?? 1}
+                                        onChange={(e) =>
+                                            set(
+                                                "searchOpacity",
+                                                Number(e.target.value),
+                                            )}
+                                    />
+                                </label>
+                            </div>
+                            <Choices
+                                title="首页 Searcher 标题（仅本设备有效）"
+                                value={appearance.showTitle !== false
+                                    ? "show"
+                                    : "hide"}
+                                values={[
+                                    ["show", "显示"],
+                                    ["hide", "隐藏"],
+                                ] as const}
+                                select={(v) => set("showTitle", v === "show")}
                             />
                             <Choices
                                 title="Web App 图标大小"

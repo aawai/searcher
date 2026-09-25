@@ -15,6 +15,8 @@ export type Appearance = {
     style: "quiet" | "minimal" | "glass" | "soft" | "classic";
     accent: "blue" | "cyan" | "teal" | "violet" | "orange" | "mono";
     shape: "rounded" | "pill";
+    searchOpacity: number;
+    showTitle?: boolean;
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
@@ -30,6 +32,8 @@ const initial: Appearance = {
     style: "quiet",
     accent: "blue",
     shape: "rounded",
+    searchOpacity: 1,
+    showTitle: true,
     engine: "bing",
     target: "current",
     wallpaper: "",
@@ -113,12 +117,13 @@ export function AppState({ children }: { children: ReactNode }) {
             .then((prefs) => {
                 if (!alive) return;
                 setSyncFailed(false);
-                const cloudAppearance: Appearance = {
+                const cloudAppearance: Partial<Appearance> = {
                     engine: prefs.defaultEngine,
                     theme: prefs.theme,
                     style: prefs.style,
                     accent: prefs.accent,
                     shape: prefs.searchShape,
+                    searchOpacity: prefs.searchOpacity ?? 1,
                     target: prefs.searchTarget === "new"
                         ? "new_tab"
                         : "current",
@@ -129,8 +134,24 @@ export function AppState({ children }: { children: ReactNode }) {
                     webAppHomeLimit: prefs.webAppHomeLimit,
                     webAppIconSize: prefs.webAppIconSize,
                 };
-                // 默认使用云端配置覆盖本地配置
-                setValue((prev) => ({ ...prev, ...cloudAppearance }));
+                // 默认使用云端配置覆盖本地配置，同时保留当前设备专属配置（如 showTitle）并同步回写本地存储
+                setValue((prev) => {
+                    const merged: Appearance = {
+                        ...prev,
+                        ...cloudAppearance,
+                        showTitle: prev.showTitle ?? true,
+                    };
+                    void setLocal("visitor_appearance", merged).catch(() => {});
+                    try {
+                        localStorage.setItem(
+                            "visitor_appearance",
+                            JSON.stringify(merged),
+                        );
+                    } catch {
+                        // ignore quota or disabled local storage
+                    }
+                    return merged;
+                });
             }).catch(() => {
                 if (alive) setSyncFailed(true);
             });
@@ -172,30 +193,37 @@ export function AppState({ children }: { children: ReactNode }) {
         document.documentElement.dataset.style = appearance.style;
         document.documentElement.dataset.accent = appearance.accent;
         document.documentElement.dataset.shape = appearance.shape;
-    }, [appearance.style, appearance.accent, appearance.shape]);
+        document.documentElement.style.setProperty(
+            "--search-opacity",
+            String(appearance.searchOpacity ?? 1),
+        );
+    }, [
+        appearance.style,
+        appearance.accent,
+        appearance.shape,
+        appearance.searchOpacity,
+    ]);
 
     const setAppearance = (next: Partial<Appearance>) => {
         setValue((current) => {
             const updated = { ...current, ...next };
-            // 未登录：偏好保存至本地 (IndexedDB + localStorage)
-            if (!user) {
-                void setLocal("visitor_appearance", updated).catch(() => {});
-                try {
-                    if (updated.wallpaper?.startsWith("data:")) {
-                        const { wallpaper: _, ...rest } = updated;
-                        localStorage.setItem(
-                            "visitor_appearance",
-                            JSON.stringify(rest),
-                        );
-                    } else {
-                        localStorage.setItem(
-                            "visitor_appearance",
-                            JSON.stringify(updated),
-                        );
-                    }
-                } catch {
-                    // 忽略 localStorage 配额错误
+            // 无论登录与否，均同步写入本地存储 (IndexedDB + localStorage) 作为即时缓存，保证刷新立即可见
+            void setLocal("visitor_appearance", updated).catch(() => {});
+            try {
+                if (updated.wallpaper?.startsWith("data:")) {
+                    const { wallpaper: _, ...rest } = updated;
+                    localStorage.setItem(
+                        "visitor_appearance",
+                        JSON.stringify(rest),
+                    );
+                } else {
+                    localStorage.setItem(
+                        "visitor_appearance",
+                        JSON.stringify(updated),
+                    );
                 }
+            } catch {
+                // 忽略 localStorage 配额错误
             }
             return updated;
         });
@@ -205,6 +233,9 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.style !== undefined) updates.style = next.style;
             if (next.accent !== undefined) updates.accent = next.accent;
             if (next.shape !== undefined) updates.searchShape = next.shape;
+            if (next.searchOpacity !== undefined) {
+                updates.searchOpacity = next.searchOpacity;
+            }
             if (next.engine !== undefined) updates.defaultEngine = next.engine;
             if (next.target !== undefined) {
                 updates.searchTarget = next.target === "new_tab"

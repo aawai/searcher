@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-007",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Drizzle <> SQLite",
+  "url": "https://orm.drizzle.team/docs/sqlite/get-started-sqlite",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

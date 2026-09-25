@@ -1,0 +1,159 @@
+{
+  "concepts/contract-first-testing": [
+    "entities/deno-runtime",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-005",
+    "syntheses/searcher-system-architecture"
+  ],
+  "concepts/database-queue-serialization": [
+    "entities/drizzle-sqlite-store",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-007",
+    "syntheses/searcher-system-architecture"
+  ],
+  "concepts/session-security-and-isolation": [
+    "entities/hono-framework",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-004",
+    "syntheses/searcher-system-architecture"
+  ],
+  "concepts/single-process-architecture": [
+    "entities/deno-runtime",
+    "entities/hono-framework",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-004",
+    "sources/SRC-2026-09-25-005",
+    "sources/SRC-2026-09-25-006",
+    "sources/SRC-2026-09-25-007",
+    "sources/SRC-2026-09-25-008",
+    "syntheses/searcher-system-architecture"
+  ],
+  "entities/deno-runtime": [
+    "concepts/single-process-architecture",
+    "entities/hono-framework",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-004",
+    "sources/SRC-2026-09-25-005",
+    "sources/SRC-2026-09-25-006",
+    "sources/SRC-2026-09-25-007",
+    "syntheses/searcher-system-architecture"
+  ],
+  "entities/drizzle-sqlite-store": [
+    "concepts/database-queue-serialization",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-005",
+    "sources/SRC-2026-09-25-007",
+    "syntheses/searcher-system-architecture"
+  ],
+  "entities/hono-framework": [
+    "concepts/single-process-architecture",
+    "entities/deno-runtime",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-004",
+    "sources/SRC-2026-09-25-005",
+    "sources/SRC-2026-09-25-006",
+    "syntheses/searcher-system-architecture"
+  ],
+  "entities/searcher-项目": [
+    "concepts/contract-first-testing",
+    "concepts/database-queue-serialization",
+    "concepts/session-security-and-isolation",
+    "concepts/single-process-architecture",
+    "entities/deno-runtime",
+    "entities/drizzle-sqlite-store",
+    "entities/hono-framework",
+    "entities/shadcn-ui-system",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-003",
+    "sources/SRC-2026-09-25-004",
+    "sources/SRC-2026-09-25-005",
+    "sources/SRC-2026-09-25-006",
+    "sources/SRC-2026-09-25-007",
+    "sources/SRC-2026-09-25-008",
+    "syntheses/searcher-system-architecture"
+  ],
+  "entities/shadcn-ui-system": [
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-001",
+    "sources/SRC-2026-09-25-002",
+    "sources/SRC-2026-09-25-008",
+    "syntheses/searcher-system-architecture"
+  ],
+  "sources/SRC-2026-09-25-001": [
+    "concepts/contract-first-testing",
+    "concepts/database-queue-serialization",
+    "concepts/session-security-and-isolation",
+    "concepts/single-process-architecture",
+    "entities/deno-runtime",
+    "entities/drizzle-sqlite-store",
+    "entities/hono-framework",
+    "entities/searcher-项目",
+    "entities/shadcn-ui-system",
+    "syntheses/searcher-system-architecture"
+  ],
+  "sources/SRC-2026-09-25-002": [
+    "concepts/session-security-and-isolation",
+    "entities/drizzle-sqlite-store",
+    "entities/searcher-项目",
+    "entities/shadcn-ui-system",
+    "syntheses/searcher-system-architecture"
+  ],
+  "sources/SRC-2026-09-25-003": [
+    "concepts/database-queue-serialization",
+    "concepts/session-security-and-isolation",
+    "concepts/single-process-architecture",
+    "entities/deno-runtime",
+    "entities/drizzle-sqlite-store",
+    "syntheses/searcher-system-architecture"
+  ],
+  "sources/SRC-2026-09-25-004": [
+    "concepts/session-security-and-isolation",
+    "concepts/single-process-architecture",
+    "entities/hono-framework",
+    "syntheses/searcher-system-architecture"
+  ],
+  "sources/SRC-2026-09-25-005": [
+    "concepts/contract-first-testing",
+    "entities/deno-runtime"
+  ],
+  "sources/SRC-2026-09-25-006": [
+    "entities/deno-runtime",
+    "entities/hono-framework"
+  ],
+  "sources/SRC-2026-09-25-007": [
+    "entities/drizzle-sqlite-store"
+  ],
+  "sources/SRC-2026-09-25-008": [
+    "entities/shadcn-ui-system"
+  ],
+  "syntheses/searcher-system-architecture": [
+    "concepts/contract-first-testing",
+    "concepts/database-queue-serialization",
+    "concepts/session-security-and-isolation",
+    "concepts/single-process-architecture",
+    "entities/deno-runtime",
+    "entities/drizzle-sqlite-store",
+    "entities/hono-framework",
+    "entities/searcher-项目",
+    "entities/shadcn-ui-system"
+  ]
+}

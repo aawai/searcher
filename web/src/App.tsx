@@ -51,6 +51,7 @@ function Layout() {
                 "--wallpaper-blur": appearance.blur + "px",
                 "--wallpaper-grayscale": appearance.grayscale,
                 "--wallpaper-mask": appearance.mask,
+                "--search-opacity": appearance.searchOpacity ?? 1,
             } as React.CSSProperties}
         >
             <div className="wallpaper" aria-hidden="true" />

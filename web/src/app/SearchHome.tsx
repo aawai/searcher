@@ -135,6 +135,7 @@ export function SearchHome() {
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
     const [mode, setMode] = useState<"search" | "ai">("search");
     const [reachability, setReachability] = useState<Reachability>({});
+    const [isCheckingConnections, setIsCheckingConnections] = useState(false);
     const [apps, setApps] = useState<ExtendedWebApp[]>([]);
     const [groups, setGroups] = useState<WebAppGroup[]>([]);
     const [notes, setNotes] = useState<NoteItem[]>([]);
@@ -270,27 +271,31 @@ export function SearchHome() {
     }, [user?.id, loadedUserId, appsStatus, apps, groups]);
 
     async function checkConnections() {
-        const pairs = await Promise.all(SEARCH_ENGINES.map(async (item) => {
-            const start = performance.now();
-            let ok = false;
-            try {
-                await fetch(item.probeUrl, {
-                    mode: "no-cors",
-                    cache: "no-store",
-                });
-                ok = true;
-            } catch { /* actual browser reachability only */ }
-            return [item.id, {
-                ok,
-                checkedAt: Date.now(),
-                latency: Math.round(performance.now() - start),
-            }] as const;
-        }));
-        const next = Object.fromEntries(pairs);
-        setReachability(next);
-        await setLocal("reachability", next);
+        setIsCheckingConnections(true);
+        try {
+            const pairs = await Promise.all(SEARCH_ENGINES.map(async (item) => {
+                const start = performance.now();
+                let ok = false;
+                try {
+                    await fetch(item.probeUrl, {
+                        mode: "no-cors",
+                        cache: "no-store",
+                    });
+                    ok = true;
+                } catch { /* actual browser reachability only */ }
+                return [item.id, {
+                    ok,
+                    checkedAt: Date.now(),
+                    latency: Math.round(performance.now() - start),
+                }] as const;
+            }));
+            const next = Object.fromEntries(pairs);
+            setReachability(next);
+            await setLocal("reachability", next);
+        } finally {
+            setIsCheckingConnections(false);
+        }
     }
-
     function search(
         query: string,
         newTab: boolean,
@@ -830,10 +835,17 @@ export function SearchHome() {
 
     return (
         <main className="home">
-            <section className="hero" aria-label="搜索">
-                <h1 className="hero-title">
-                    Searcher<span>.</span>
-                </h1>
+            <section
+                className={`hero ${
+                    appearance.showTitle === false ? "hero--no-title" : ""
+                }`}
+                aria-label="搜索"
+            >
+                {appearance.showTitle !== false && (
+                    <h1 className="hero-title">
+                        Searcher<span>.</span>
+                    </h1>
+                )}
                 <SearcherSearchInput
                     engine={engine}
                     onEngineChange={setEngine}
@@ -849,6 +861,7 @@ export function SearchHome() {
                     disabled={isManagingApps}
                     reachability={reachability}
                     onCheck={() => void checkConnections()}
+                    isChecking={isCheckingConnections}
                     webApps={apps}
                     onOpenApp={(app) => openApp(app as ExtendedWebApp)}
                 />

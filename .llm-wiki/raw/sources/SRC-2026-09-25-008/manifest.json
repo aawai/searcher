@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-008",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Introduction",
+  "url": "https://ui.shadcn.com/docs",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
