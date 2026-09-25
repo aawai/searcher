@@ -33,6 +33,25 @@ export const SHORTCUT_COMMANDS = [
     { prefix: "/ai", name: "AI 问答", mode: "ai" as const },
 ] as const;
 
+export function parseCommandPrefix(raw: string) {
+    const trimmedLead = raw.trimStart();
+    const match = /^\/(g|b|ba|d|ai)(?:\s+|$)/i.exec(trimmedLead);
+    if (!match) return null;
+    const command = match[1].toLowerCase();
+    const rest = trimmedLead.slice(match[0].length).trim();
+    const isAi = command === "ai";
+    const engineMap = {
+        g: "google",
+        b: "bing",
+        ba: "baidu",
+        d: "duckduckgo",
+    } as const;
+    const targetEngine = isAi
+        ? undefined
+        : engineMap[command as keyof typeof engineMap];
+    const hasSpace = /\s/.test(match[0]);
+    return { command, rest, isAi, targetEngine, hasSpace, prefix: match[0] };
+}
 export function SearcherSearchInput(
     {
         engine,
@@ -42,6 +61,7 @@ export function SearcherSearchInput(
         onSubmit,
         reachability = {},
         onCheck,
+        isChecking = false,
         modelLabel = "未配置模型",
         models = [],
         selectedModel = null,
@@ -61,6 +81,7 @@ export function SearcherSearchInput(
         ) => void;
         reachability?: Reachability;
         onCheck?: () => void;
+        isChecking?: boolean;
         modelLabel?: string;
         models?: ModelOption[];
         selectedModel?: string | null;
@@ -125,24 +146,49 @@ export function SearcherSearchInput(
             return;
         }
 
-        // 快捷命令触发（输入 / 提示 /g /b /ba 等）
-        if (trimmed.startsWith("/")) {
+        const cmd = parseCommandPrefix(query);
+        // 快捷命令触发（输入 / 提示 /g /b /ba 等，尚未输入空格分割）
+        if (trimmed.startsWith("/") && (!cmd || !cmd.hasSpace)) {
             const firstToken = trimmed.split(/\s+/)[0].toLowerCase();
-            const matchedCommands = SHORTCUT_COMMANDS.filter((cmd) =>
-                cmd.prefix.toLowerCase().startsWith(firstToken)
+            const matchedCommands = SHORTCUT_COMMANDS.filter((c) =>
+                c.prefix.toLowerCase().startsWith(firstToken)
             );
-            if (matchedCommands.length > 0 && !trimmed.includes(" ")) {
+            if (matchedCommands.length > 0) {
                 const commandSuggestions: SuggestionItem[] = matchedCommands
-                    .map((cmd) => ({
-                        text: cmd.prefix,
+                    .map((c) => ({
+                        text: c.prefix,
                         source: "command",
-                        engine: "engine" in cmd ? cmd.engine : undefined,
-                        description: `${cmd.prefix} · ${cmd.name}`,
+                        engine: "engine" in c ? c.engine : undefined,
+                        description: `${c.prefix} · ${c.name}`,
                     }));
                 setSuggestions(commandSuggestions);
                 setIsOpen(true);
                 setSelectedIndex(-1);
                 return;
+            }
+        }
+
+        let effectiveQuery = trimmed;
+        let effectiveEngine = engine;
+
+        if (cmd && cmd.hasSpace) {
+            if (cmd.isAi) {
+                setSuggestions([]);
+                setIsOpen(false);
+                setSelectedIndex(-1);
+                return;
+            }
+            if (!cmd.rest) {
+                // 仅输入了命令及空格，无后续搜索词，不拿命令本身作为关键词联想
+                setSuggestions([]);
+                setIsOpen(false);
+                setSelectedIndex(-1);
+                return;
+            }
+            // 剔除命令前缀，仅使用用户输入的实际搜索词进行关键词联想
+            effectiveQuery = cmd.rest;
+            if (cmd.targetEngine) {
+                effectiveEngine = cmd.targetEngine;
             }
         }
 
@@ -156,7 +202,7 @@ export function SearcherSearchInput(
             const seen = new Set<string>();
 
             // 1. Web App candidates (Name and URL)
-            const qLower = trimmed.toLowerCase();
+            const qLower = effectiveQuery.toLowerCase();
             for (const app of webApps) {
                 if (
                     app.name.toLowerCase().includes(qLower) ||
@@ -200,8 +246,8 @@ export function SearcherSearchInput(
             try {
                 const res = await api<SuggestionItem[]>(
                     `/api/search/suggestions?q=${
-                        encodeURIComponent(trimmed)
-                    }&engine=${encodeURIComponent(engine)}`,
+                        encodeURIComponent(effectiveQuery)
+                    }&engine=${encodeURIComponent(effectiveEngine)}`,
                     { signal: controller.signal },
                 );
                 if (Array.isArray(res)) {
@@ -247,68 +293,74 @@ export function SearcherSearchInput(
         if (!trimmed || disabled) return;
 
         setIsOpen(false);
-        const match = /^\/(g|b|ba|d|ai)(?:\s+|$)/i.exec(trimmed);
-        // 快捷命令仅在开头识别：剥除前缀后用 override 直传目标引擎/模式，
-        // 不依赖异步 setState，不发明字符串协议。
-        if (match) {
-            const command = match[1].toLowerCase();
-            const rest = trimmed.slice(match[0].length).trim();
-            if (command === "ai") {
+        const cmd = parseCommandPrefix(value);
+        if (cmd) {
+            if (cmd.isAi) {
                 onModeChange("ai");
-                setQuery(rest);
-                if (!rest) return;
-                saveToLocalHistory(rest);
-                onSubmit(rest, newTab, { mode: "ai" });
+                setQuery(cmd.rest);
+                if (!cmd.rest) return;
+                saveToLocalHistory(cmd.rest);
+                onSubmit(cmd.rest, newTab, { mode: "ai" });
                 return;
             }
-            const selected = ({
-                g: "google",
-                b: "bing",
-                ba: "baidu",
-                d: "duckduckgo",
-            } as const)[command as "g" | "b" | "ba" | "d"];
-            onEngineChange(selected);
-            if (!rest) {
-                setQuery("");
+            if (cmd.targetEngine) {
+                onEngineChange(cmd.targetEngine);
+                if (!cmd.rest) {
+                    setQuery("");
+                    return;
+                }
+                setQuery(cmd.rest);
+                saveToLocalHistory(cmd.rest);
+                onSubmit(cmd.rest, newTab, { engine: cmd.targetEngine });
                 return;
             }
-            setQuery(rest);
-            saveToLocalHistory(rest);
-            onSubmit(rest, newTab, { engine: selected });
-            return;
         }
         saveToLocalHistory(trimmed);
         onSubmit(trimmed, newTab);
+    }
+
+    function selectSuggestion(item: SuggestionItem, newTab = false) {
+        if (item.source === "command") {
+            if (item.text.includes(" ")) {
+                executeSubmit(item.text, newTab);
+            } else {
+                setQuery(item.text + " ");
+                field.current?.focus();
+                setSelectedIndex(-1);
+            }
+            return;
+        }
+        if (item.source === "webapp" && item.url) {
+            if (onOpenApp) {
+                onOpenApp({ name: item.text, url: item.url });
+            } else {
+                globalThis.open(
+                    item.url,
+                    "_blank",
+                    "noopener,noreferrer",
+                );
+            }
+            setIsOpen(false);
+            return;
+        }
+        const cmd = parseCommandPrefix(query);
+        if (cmd && cmd.targetEngine) {
+            onEngineChange(cmd.targetEngine);
+            setQuery(item.text);
+            saveToLocalHistory(item.text);
+            onSubmit(item.text, newTab, { engine: cmd.targetEngine });
+            setIsOpen(false);
+            return;
+        }
+        setQuery(item.text);
+        executeSubmit(item.text, newTab);
     }
 
     function submit(event: FormEvent, newTab = false) {
         event.preventDefault();
         if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
             const chosen = suggestions[selectedIndex];
-            if (chosen.source === "command") {
-                if (chosen.text.includes(" ")) {
-                    executeSubmit(chosen.text, newTab);
-                } else {
-                    setQuery(chosen.text + " ");
-                    field.current?.focus();
-                    setSelectedIndex(-1);
-                }
-                return;
-            }
-            if (chosen.source === "webapp" && chosen.url) {
-                if (onOpenApp) {
-                    onOpenApp({ name: chosen.text, url: chosen.url });
-                } else {
-                    globalThis.open(
-                        chosen.url,
-                        "_blank",
-                        "noopener,noreferrer",
-                    );
-                }
-                setIsOpen(false);
-                return;
-            }
-            executeSubmit(chosen.text, newTab);
+            selectSuggestion(chosen, newTab);
             return;
         }
         executeSubmit(query, newTab);
@@ -356,6 +408,7 @@ export function SearcherSearchInput(
                         onModeChange={onModeChange}
                         reachability={reachability}
                         onCheck={onCheck}
+                        isChecking={isChecking}
                     />
                     {mode === "ai" && (onModelChange
                         ? (
@@ -415,33 +468,7 @@ export function SearcherSearchInput(
                                     isSelected ? "active" : ""
                                 }`}
                                 onClick={() => {
-                                    if (item.source === "command") {
-                                        if (item.text.includes(" ")) {
-                                            executeSubmit(item.text, false);
-                                        } else {
-                                            setQuery(item.text + " ");
-                                            field.current?.focus();
-                                        }
-                                        return;
-                                    }
-                                    if (item.source === "webapp" && item.url) {
-                                        if (onOpenApp) {
-                                            onOpenApp({
-                                                name: item.text,
-                                                url: item.url,
-                                            });
-                                        } else {
-                                            globalThis.open(
-                                                item.url,
-                                                "_blank",
-                                                "noopener,noreferrer",
-                                            );
-                                        }
-                                        setIsOpen(false);
-                                    } else {
-                                        setQuery(item.text);
-                                        executeSubmit(item.text, false);
-                                    }
+                                    selectSuggestion(item, false);
                                 }}
                                 onMouseEnter={() => setSelectedIndex(idx)}
                             >

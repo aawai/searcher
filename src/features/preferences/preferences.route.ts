@@ -18,6 +18,9 @@ const Accent = v.optional(
     v.picklist(["blue", "cyan", "teal", "violet", "orange", "mono"]),
 );
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
+const SearchOpacity = v.optional(
+    v.pipe(v.number(), v.finite(), v.minValue(0.1), v.maxValue(1)),
+);
 const Target = v.optional(v.picklist(["same", "new"]));
 const HistoryEnabled = v.optional(v.boolean("搜索历史开关必须为布尔值"));
 const WebAppHomeLimit = v.optional(v.picklist([8, 12, 16, "all"]));
@@ -76,6 +79,7 @@ export function registerPreferencesRoutes(
             style: json(Style),
             accent: json(Accent),
             searchShape: json(Shape),
+            searchOpacity: json(SearchOpacity),
             searchTarget: json(Target),
             searchHistoryEnabled: json(HistoryEnabled),
             webAppHomeLimit: json(WebAppHomeLimit),

@@ -1,0 +1,147 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-09-25T03:50:39.498Z",
+  "pages": {
+    "concepts/contract-first-testing": {
+      "type": "concept",
+      "title": "Contract First Testing",
+      "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "concepts/database-queue-serialization": {
+      "type": "concept",
+      "title": "Database Queue Serialization",
+      "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "concepts/session-security-and-isolation": {
+      "type": "concept",
+      "title": "Session Security and Isolation",
+      "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "concepts/single-process-architecture": {
+      "type": "concept",
+      "title": "Single Process Architecture",
+      "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "entities/deno-runtime": {
+      "type": "entity",
+      "title": "Deno Runtime",
+      "category": "tool",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "entities/drizzle-sqlite-store": {
+      "type": "entity",
+      "title": "Drizzle SQLite Store",
+      "category": "tool",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "entities/hono-framework": {
+      "type": "entity",
+      "title": "Hono Framework",
+      "category": "tool",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "entities/searcher-项目": {
+      "type": "entity",
+      "title": "Searcher 项目",
+      "category": "project",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "entities/shadcn-ui-system": {
+      "type": "entity",
+      "title": "shadcn UI System",
+      "category": "tool",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-001": {
+      "type": "source",
+      "title": "AGENTS.md: Searcher 仓库架构与工程指南",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-001/extracted.md",
+      "source_id": "SRC-2026-09-25-001",
+      "format": "markdown",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-002": {
+      "type": "source",
+      "title": "README.md: Searcher 项目使用与运维部署总览",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-002/extracted.md",
+      "source_id": "SRC-2026-09-25-002",
+      "format": "markdown",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-003": {
+      "type": "source",
+      "title": "src/main.ts: Searcher 服务端启动与生命周期管理",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-003/extracted.md",
+      "source_id": "SRC-2026-09-25-003",
+      "format": "typescript",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-004": {
+      "type": "source",
+      "title": "src/app.ts: Hono 路由组装与单进程全栈中间件管线",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-004/extracted.md",
+      "source_id": "SRC-2026-09-25-004",
+      "format": "typescript",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-005": {
+      "type": "source",
+      "title": "deno.jsonc: Deno 项目依赖锁定与工程任务定义",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-005/extracted.md",
+      "source_id": "SRC-2026-09-25-005",
+      "format": "json",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-006": {
+      "type": "source",
+      "title": "Hono Deno 官方文档: Deno 运行时快速上手与架构实践",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-006/extracted.md",
+      "source_id": "SRC-2026-09-25-006",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-007": {
+      "type": "source",
+      "title": "Drizzle ORM SQLite 官方生态与驱动架构文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-007/extracted.md",
+      "source_id": "SRC-2026-09-25-007",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-008": {
+      "type": "source",
+      "title": "shadcn/ui 官方架构与代码分发模式文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-008/extracted.md",
+      "source_id": "SRC-2026-09-25-008",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "syntheses/searcher-system-architecture": {
+      "type": "synthesis",
+      "title": "Searcher System Architecture",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    }
+  }
+}

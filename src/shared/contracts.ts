@@ -24,6 +24,8 @@ export interface PreferencesDto {
     style: StylePreset;
     accent: AccentId;
     searchShape: SearchShape;
+    /** 搜索框不透明度，取值范围 [0.1, 1.0] */
+    searchOpacity: number;
     backgroundImage: string | null;
     wallpaperBlur: number;
     wallpaperGrayscale: number;

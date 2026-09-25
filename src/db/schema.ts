@@ -66,6 +66,7 @@ export const preferences = sqliteTable("preferences", {
     searchShape: text("search_shape", {
         enum: ["rounded", "pill"],
     }).default("rounded"),
+    searchOpacity: real("search_opacity").notNull().default(1),
     backgroundImage: text("background_image"),
     backgroundOpacity: real("background_opacity").notNull().default(0.36),
     wallpaperBlur: real("wallpaper_blur").notNull().default(0),
@@ -105,6 +106,10 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_shape_check",
         sql`${t.searchShape} in ('rounded','pill')`,
+    ),
+    check(
+        "preferences_search_opacity_check",
+        sql`${t.searchOpacity} >= 0.1 and ${t.searchOpacity} <= 1`,
     ),
     check(
         "preferences_opacity_check",

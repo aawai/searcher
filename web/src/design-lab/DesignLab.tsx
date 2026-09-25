@@ -185,6 +185,28 @@ export function DesignLab() {
                             change("grayscale", Number(e.target.value))}
                     />
                 </label>
+                <label>
+                    搜索框透明度<input
+                        type="range"
+                        min="0.1"
+                        max="1"
+                        step="0.05"
+                        value={appearance.searchOpacity ?? 1}
+                        onChange={(e) =>
+                            change("searchOpacity", Number(e.target.value))}
+                    />
+                    {Math.round((appearance.searchOpacity ?? 1) * 100)}%
+                </label>
+                <label>
+                    首页标题<select
+                        value={appearance.showTitle !== false ? "show" : "hide"}
+                        onChange={(e) =>
+                            change("showTitle", e.target.value === "show")}
+                    >
+                        <option value="show">显示</option>
+                        <option value="hide">隐藏</option>
+                    </select>
+                </label>
             </div>
             <nav className="lab-nav" aria-label="设计实验区">
                 {([
@@ -195,6 +217,7 @@ export function DesignLab() {
                     "navigation",
                 ] as const).map((id) => (
                     <button
+                        type="button"
                         key={id}
                         aria-current={tab === id ? "page" : undefined}
                         onClick={() => setTab(id)}
@@ -209,14 +232,24 @@ export function DesignLab() {
                     </button>
                 ))}
             </nav>
-            <section className="lab-stage" aria-label="组件预览">
+            <section
+                className="lab-stage"
+                aria-label="组件预览"
+                style={{
+                    "--search-opacity": appearance.searchOpacity ?? 1,
+                } as React.CSSProperties}
+            >
                 {(tab === "screen" || tab === "search") && (
                     <>
-                        <h2 className="hero-title">
-                            Searcher<span style={{ color: "var(--accent)" }}>
-                                .
-                            </span>
-                        </h2>
+                        {appearance.showTitle !== false && (
+                            <h2 className="hero-title">
+                                Searcher<span
+                                    style={{ color: "var(--accent)" }}
+                                >
+                                    .
+                                </span>
+                            </h2>
+                        )}
                         <SearcherSearchInput
                             engine={engine}
                             onEngineChange={setEngine}
@@ -296,6 +329,7 @@ export function DesignLab() {
                             onNotes={() => setSheet(true)}
                         />
                         <button
+                            type="button"
                             className="button button--primary"
                             onClick={() => setSheet(true)}
                         >

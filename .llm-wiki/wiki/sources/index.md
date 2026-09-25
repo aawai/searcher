@@ -1,0 +1,12 @@
+# sources
+
+## Concepts
+
+- [AGENTS.md: Searcher 仓库架构与工程指南](SRC-2026-09-25-001.md)
+- [README.md: Searcher 项目使用与运维部署总览](SRC-2026-09-25-002.md)
+- [src/main.ts: Searcher 服务端启动与生命周期管理](SRC-2026-09-25-003.md)
+- [src/app.ts: Hono 路由组装与单进程全栈中间件管线](SRC-2026-09-25-004.md)
+- [deno.jsonc: Deno 项目依赖锁定与工程任务定义](SRC-2026-09-25-005.md)
+- [Hono Deno 官方文档: Deno 运行时快速上手与架构实践](SRC-2026-09-25-006.md)
+- [Drizzle ORM SQLite 官方生态与驱动架构文档](SRC-2026-09-25-007.md)
+- [shadcn/ui 官方架构与代码分发模式文档](SRC-2026-09-25-008.md)
