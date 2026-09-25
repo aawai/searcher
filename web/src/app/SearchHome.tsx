@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     buildSearchUrl,
@@ -24,6 +24,7 @@ import {
 } from "@dnd-kit/core";
 import {
     arrayMove,
+    rectSortingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
     useSortable,
@@ -128,10 +129,57 @@ function SortableGroupManageItem({
         </div>
     );
 }
+function SortableDrawerNoteItem({
+    note,
+    disabled,
+    children,
+}: {
+    note: NoteItem;
+    disabled: boolean;
+    children: (dragHandle: React.ReactNode) => React.ReactNode;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: note.id, disabled });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.6 : 1,
+        zIndex: isDragging ? 50 : "auto",
+    };
+    const dragHandle = (
+        <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="note-drag"
+            aria-label={"拖拽排序 " + (note.title || "便签")}
+            style={{
+                border: 0,
+                background: "transparent",
+                padding: 0,
+                cursor: disabled ? "default" : "grab",
+            }}
+        >
+            <GripVertical size={15} aria-hidden="true" />
+        </button>
+    );
+    return (
+        <div ref={setNodeRef} style={style} className="note-list-item">
+            {children(dragHandle)}
+        </div>
+    );
+}
 
 export function SearchHome() {
     const { user, appearance } = useAppState();
     const navigate = useNavigate();
+    const updatingNotesRef = useRef<Set<string>>(new Set());
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
     const [mode, setMode] = useState<"search" | "ai">("search");
     const [reachability, setReachability] = useState<Reachability>({});
@@ -430,6 +478,68 @@ export function SearchHome() {
     const fixedNotes = useMemo(() => notes.filter((note) => note.isHomeFixed), [
         notes,
     ]);
+    const visibleNotes = useMemo(() => {
+        return notes
+            .filter((note) =>
+                ((note.title ?? "") + " " + note.body).toLowerCase()
+                    .includes(filter.toLowerCase())
+            )
+            .sort((a, b) =>
+                Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) ||
+                Number(Boolean(b.isHomeFixed)) -
+                    Number(Boolean(a.isHomeFixed)) ||
+                (b.sortOrder ?? 0) - (a.sortOrder ?? 0) ||
+                (b.updatedAt ?? 0) - (a.updatedAt ?? 0) ||
+                b.id.localeCompare(a.id)
+            );
+    }, [notes, filter]);
+
+    const drawerNoteSensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
+
+    async function handleDrawerNotesDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        if (!over || active.id === over.id || filter.trim()) return;
+        const oldIndex = visibleNotes.findIndex((n) => n.id === active.id);
+        const newIndex = visibleNotes.findIndex((n) => n.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+
+        const reordered = arrayMove(visibleNotes, oldIndex, newIndex);
+        const snapshot = [...notes];
+
+        const newOrders = new Map<string, number>();
+        reordered.forEach((note, idx) => {
+            newOrders.set(note.id, (reordered.length - idx) * 10);
+        });
+
+        const nextNotes = notes.map((item) => {
+            const o = newOrders.get(item.id);
+            return o !== undefined ? { ...item, sortOrder: o } : item;
+        });
+        setNotes(nextNotes);
+
+        try {
+            for (const item of reordered) {
+                const o = newOrders.get(item.id);
+                if (o !== undefined && o !== item.sortOrder) {
+                    const updated = await api<NoteItem>(
+                        "/api/notes/" + encodeURIComponent(item.id),
+                        json("PATCH", { sortOrder: o, version: item.version }),
+                    );
+                    setNotes((current) =>
+                        current.map((n) => (n.id === updated.id ? updated : n))
+                    );
+                }
+            }
+        } catch (err) {
+            setNotes(snapshot);
+            setError(errorMessage(err));
+        }
+    }
 
     // Filtered apps in the Bottom Sheet
     const displayedApps = useMemo(() => {
@@ -788,6 +898,9 @@ export function SearchHome() {
         setSheet("notes");
     }
     async function updateNote(note: NoteItem, patch: Record<string, unknown>) {
+        const lockKey = `${note.id}:${JSON.stringify(patch)}`;
+        if (updatingNotesRef.current.has(lockKey)) return;
+        updatingNotesRef.current.add(lockKey);
         setError("");
         try {
             const updated = await api<NoteItem>(
@@ -795,7 +908,39 @@ export function SearchHome() {
                 json("PATCH", { ...patch, version: note.version }),
             );
             setNotes((items) =>
-                items.map((item) => item.id === note.id ? updated : item)
+                items.map((item) => (item.id === note.id ? updated : item))
+            );
+        } catch (e) {
+            if (e instanceof ApiError && e.code === 409 && e.data) {
+                const latest = e.data as NoteItem;
+                setNotes((items) =>
+                    items.map((item) => (item.id === note.id ? latest : item))
+                );
+            }
+            setError(errorMessage(e));
+        } finally {
+            updatingNotesRef.current.delete(lockKey);
+        }
+    }
+    async function updateNoteLayout(
+        note: NoteItem,
+        layout: NonNullable<NoteItem["layout"]>,
+    ) {
+        setNotes((items) =>
+            items.map((item) =>
+                item.id === note.id ? { ...item, layout } : item
+            )
+        );
+        try {
+            await api(
+                "/api/notes/" + encodeURIComponent(note.id) + "/layout",
+                json("PUT", {
+                    deviceClass: layout.deviceClass || "desktop",
+                    x: layout.x,
+                    y: layout.y,
+                    zIndex: layout.zIndex,
+                    expanded: layout.expanded,
+                }),
             );
         } catch (e) {
             setError(errorMessage(e));
@@ -939,7 +1084,21 @@ export function SearchHome() {
                             }}
                         />
                     )}
-                    <FloatingNotes notes={fixedNotes} onOpen={editNote} />
+                    <FloatingNotes
+                        notes={fixedNotes}
+                        onOpen={editNote}
+                        onUpdateLayout={(n, layout) =>
+                            void updateNoteLayout(n, layout)}
+                        onTogglePin={(n) =>
+                            void updateNote(n, { isPinned: !n.isPinned })}
+                        onToggleHomeFixed={(n) =>
+                            void updateNote(n, {
+                                isHomeFixed: !n.isHomeFixed,
+                            })}
+                        onChangeColor={(n, color) =>
+                            void updateNote(n, { color })}
+                        onDelete={(n) => void deleteNote(n)}
+                    />
                 </section>
             )}
 
@@ -1588,133 +1747,92 @@ export function SearchHome() {
                                     新建便签
                                 </Button>
                             </div>
-                            {notes.length
+                            {visibleNotes.length
                                 ? (
-                                    <div className="note-list-grid">
-                                        {notes.filter((note) =>
-                                            ((note.title ?? "") + " " +
-                                                note.body).toLowerCase()
-                                                .includes(filter.toLowerCase())
-                                        )
-                                            .sort((a, b) =>
-                                                Number(Boolean(b.isPinned)) -
-                                                    Number(
-                                                        Boolean(a.isPinned),
-                                                    ) ||
-                                                (b.updatedAt ?? 0) -
-                                                    (a.updatedAt ?? 0)
-                                            )
-                                            .map((note) => (
-                                                <div
-                                                    key={note.id}
-                                                    className="note-list-item"
-                                                >
-                                                    <NoteCard
+                                    <DndContext
+                                        sensors={drawerNoteSensors}
+                                        onDragEnd={handleDrawerNotesDragEnd}
+                                    >
+                                        <SortableContext
+                                            items={visibleNotes.map((n) =>
+                                                n.id
+                                            )}
+                                            strategy={rectSortingStrategy}
+                                            disabled={Boolean(filter.trim())}
+                                        >
+                                            <div className="note-list-grid">
+                                                {visibleNotes.map((note) => (
+                                                    <SortableDrawerNoteItem
+                                                        key={note.id}
                                                         note={note}
-                                                        onOpen={() =>
-                                                            editNote(note)}
-                                                    />
-                                                    <div className="note-list-actions">
-                                                        <button
-                                                            type="button"
-                                                            aria-pressed={Boolean(
-                                                                note.isPinned,
-                                                            )}
-                                                            onClick={() =>
-                                                                void updateNote(
-                                                                    note,
-                                                                    {
-                                                                        isPinned:
-                                                                            !note
-                                                                                .isPinned,
-                                                                    },
-                                                                )}
-                                                        >
-                                                            {note.isPinned
-                                                                ? "取消置顶"
-                                                                : "置顶"}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            aria-pressed={Boolean(
-                                                                note.isHomeFixed,
-                                                            )}
-                                                            onClick={() =>
-                                                                void updateNote(
-                                                                    note,
-                                                                    {
-                                                                        isHomeFixed:
-                                                                            !note
-                                                                                .isHomeFixed,
-                                                                    },
-                                                                )}
-                                                        >
-                                                            {note.isHomeFixed
-                                                                ? "移出首页"
-                                                                : "固定首页"}
-                                                        </button>
-                                                        <label>
-                                                            颜色<select
-                                                                aria-label={"便签颜色 " +
-                                                                    (note
-                                                                        .title ||
-                                                                        "无标题")}
-                                                                value={note
-                                                                    .color ??
-                                                                    "paper"}
-                                                                onChange={(
-                                                                    event,
+                                                        disabled={Boolean(
+                                                            filter.trim(),
+                                                        )}
+                                                    >
+                                                        {(dragHandle) => (
+                                                            <NoteCard
+                                                                note={note}
+                                                                dragHandle={dragHandle}
+                                                                onOpen={() =>
+                                                                    editNote(
+                                                                        note,
+                                                                    )}
+                                                                onTogglePin={() =>
+                                                                    void updateNote(
+                                                                        note,
+                                                                        {
+                                                                            isPinned:
+                                                                                !note
+                                                                                    .isPinned,
+                                                                        },
+                                                                    )}
+                                                                onToggleHomeFixed={() =>
+                                                                    void updateNote(
+                                                                        note,
+                                                                        {
+                                                                            isHomeFixed:
+                                                                                !note
+                                                                                    .isHomeFixed,
+                                                                        },
+                                                                    )}
+                                                                onToggleMode={() =>
+                                                                    void updateNoteLayout(
+                                                                        note,
+                                                                        {
+                                                                            ...(note
+                                                                                .layout ??
+                                                                                {
+                                                                                    deviceClass:
+                                                                                        "desktop" as const,
+                                                                                    zIndex:
+                                                                                        1,
+                                                                                    expanded:
+                                                                                        true,
+                                                                                }),
+                                                                            expanded:
+                                                                                !(note
+                                                                                    .layout
+                                                                                    ?.expanded ??
+                                                                                    true),
+                                                                        },
+                                                                    )}
+                                                                onChangeColor={(
+                                                                    color,
                                                                 ) => void updateNote(
                                                                     note,
-                                                                    {
-                                                                        color:
-                                                                            event
-                                                                                .target
-                                                                                .value,
-                                                                    },
+                                                                    { color },
                                                                 )}
-                                                            >
-                                                                {([
-                                                                    "paper",
-                                                                    "amber",
-                                                                    "rose",
-                                                                    "sage",
-                                                                    "sky",
-                                                                ] as const).map(
-                                                                    (color) => (
-                                                                        <option
-                                                                            key={color}
-                                                                            value={color}
-                                                                        >
-                                                                            {({
-                                                                                paper:
-                                                                                    "纸白",
-                                                                                amber:
-                                                                                    "琥珀",
-                                                                                rose:
-                                                                                    "玫瑰",
-                                                                                sage:
-                                                                                    "鼠尾草",
-                                                                                sky: "天空",
-                                                                            })[color]}
-                                                                        </option>
-                                                                    ),
-                                                                )}
-                                                            </select>
-                                                        </label>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                void deleteNote(
-                                                                    note,
-                                                                )}
-                                                        >
-                                                            移至回收站
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                    </div>
+                                                                onDelete={() =>
+                                                                    void deleteNote(
+                                                                        note,
+                                                                    )}
+                                                            />
+                                                        )}
+                                                    </SortableDrawerNoteItem>
+                                                ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
                                 )
                                 : (
                                     <p className="empty">
