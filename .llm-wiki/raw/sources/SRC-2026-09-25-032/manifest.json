@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-032",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Batch API",
+  "url": "https://orm.drizzle.team/docs/sqlite/batch-api",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

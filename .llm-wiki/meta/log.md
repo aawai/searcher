@@ -143,3 +143,21 @@
 ## [2026-09-25T11:05:05.461Z] capture
 - source_id: "SRC-2026-09-25-028", url: "https://docs.deno.com/api/node/sqlite/~/DatabaseSync", format: "web"
 
+## [2026-09-25T13:48:54.085Z] observe
+- slug: "obs-2026-09-25-ui-ux", title: "UI/UX 精致化与设计系统收敛落地", relevance: "high"
+
+## [2026-09-25T13:50:59.547Z] capture
+- source_id: "SRC-2026-09-25-029", url: "https://deno.com/blog/announcing-hono-on-jsr", format: "web"
+
+## [2026-09-25T13:51:13.247Z] capture
+- source_id: "SRC-2026-09-25-030", url: "https://deno.com/blog/v2.2", format: "web"
+
+## [2026-09-25T13:51:24.535Z] capture
+- source_id: "SRC-2026-09-25-031", url: "https://deno.com/blog/building-deno-kv", format: "web"
+
+## [2026-09-25T13:51:32.059Z] capture
+- source_id: "SRC-2026-09-25-032", url: "https://orm.drizzle.team/docs/sqlite/batch-api", format: "web"
+
+## [2026-09-25T13:51:42.077Z] capture
+- source_id: "SRC-2026-09-25-033", url: "https://dev.to/gabrielanhaia/drizzle-zod-a-type-safe-api-in-200-lines-5bde", format: "web"
+
