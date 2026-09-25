@@ -1,0 +1,8 @@
+{
+  "llm-wiki": {
+    "taskModel": {
+      "provider": "google-antigravity",
+      "id": "gemini-3.8-flash"
+    }
+  }
+}

@@ -99,6 +99,7 @@ Renderer 必须 sanitize。Design Lab 要测试 heading、paragraph、bold、ita
 ## 11. dnd-kit
 
 Web App 使用 sortable；drag end 后一次提交 server。
+WebAppLauncher 将可见 APP 按 groupId 折叠为 desktop tiles；desktopLayout.ts 只计算 1×1 / 2×2 的逻辑占位。launcher.css 定义列宽、整格行高和 gap；ResizeObserver 读容器宽度并重算列数。Folder preview 和外层占位分离；Large preview 图标可直接打开网站。showAppLabels 来自 appearance（默认 true），关闭时顶层 APP 和 Folder 标题不渲染、整格行高/行间距收紧；按钮 accessible name 和 Folder 内容面板名称保留。
 
 Note 使用 draggable；业务层管理 x/y/z-index/safe area/overlap。
 

@@ -8,3 +8,4 @@
 - [Hono Middleware Pipeline & Request Intake](hono-middleware-pipeline-request-intake.md)
 - [Session Security and Isolation](session-security-and-isolation.md)
 - [Single Process Architecture](single-process-architecture.md)
+- [SQLite Table Recreation Migration](sqlite-table-recreation-migration.md)

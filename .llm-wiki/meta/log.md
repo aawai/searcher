@@ -77,3 +77,27 @@
 ## [2026-09-25T07:10:02.065Z] ensure_page
 - page_type: "concept", title: "Hono Middleware Pipeline & Request Intake", path: "concepts/hono-middleware-pipeline-request-intake"
 
+## [2026-09-25T09:53:14.173Z] observe
+- slug: "obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture", title: "Web App Launcher Grid Alignment & Square Folder Architecture", relevance: "high"
+
+## [2026-09-25T09:53:49.502Z] retro
+- slug: "sqlite-table-recreation-migration-zero-loss", title: "SQLite Table Recreation Migration Pattern with Zero Loss", category: "architecture"
+
+## [2026-09-25T09:54:29.329Z] capture
+- source_id: "SRC-2026-09-25-012", url: "https://www.sqlite.org/lang_altertable.html", format: "web"
+
+## [2026-09-25T09:55:05.380Z] capture
+- source_id: "SRC-2026-09-25-013", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout", format: "web"
+
+## [2026-09-25T09:55:43.430Z] capture
+- source_id: "SRC-2026-09-25-014", url: "https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver", format: "web"
+
+## [2026-09-25T09:56:21.065Z] capture
+- source_id: "SRC-2026-09-25-015", url: "https://react.dev/learn/preserving-and-resetting-state", format: "web"
+
+## [2026-09-25T09:56:55.713Z] capture
+- source_id: "SRC-2026-09-25-016", url: "https://react.dev/learn/synchronizing-with-effects", format: "web"
+
+## [2026-09-25T10:04:02.764Z] ensure_page
+- page_type: "concept", title: "SQLite Table Recreation Migration", path: "concepts/sqlite-table-recreation-migration"
+

@@ -25,6 +25,7 @@ export type Appearance = {
     mask: number;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
+    showAppLabels: boolean;
 };
 
 const initial: Appearance = {
@@ -42,6 +43,7 @@ const initial: Appearance = {
     mask: .75,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
+    showAppLabels: true,
 };
 
 type State = {
@@ -133,6 +135,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     mask: prefs.wallpaperMask,
                     webAppHomeLimit: prefs.webAppHomeLimit,
                     webAppIconSize: prefs.webAppIconSize,
+                    showAppLabels: prefs.showAppLabels,
                 };
                 // 默认使用云端配置覆盖本地配置，同时保留当前设备专属配置（如 showTitle）并同步回写本地存储
                 setValue((prev) => {
@@ -255,6 +258,9 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (next.webAppIconSize !== undefined) {
                 updates.webAppIconSize = next.webAppIconSize;
+            }
+            if (next.showAppLabels !== undefined) {
+                updates.showAppLabels = next.showAppLabels;
             }
             if (Object.keys(updates).length) {
                 void api("/api/preferences", json("PATCH", updates)).catch(

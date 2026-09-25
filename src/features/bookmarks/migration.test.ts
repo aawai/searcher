@@ -156,3 +156,111 @@ Deno.test({
         }
     },
 });
+
+Deno.test({
+    name:
+        "migration 0010: preserves existing webapp_groups and preferences with folder_size and show_app_labels defaults",
+    async fn() {
+        const testDbPath = await Deno.makeTempFile({ suffix: ".sqlite" });
+        try {
+            // 1. Run migrations 0000 - 0009
+            const store = openDatabase(testDbPath);
+            try {
+                for (
+                    const tag of [
+                        "0000_messy_the_hunter",
+                        "0001_curious_sinister_six",
+                        "0002_sharp_gauntlet",
+                        "0003_polite_owl",
+                        "0004_naive_vector",
+                        "0005_v1_webapps_rich_notes_and_preferences",
+                        "0006_unknown_morgan_stark",
+                        "0007_friendly_vengeance",
+                        "0008_silent_iron_lad",
+                        "0009_flowery_firebrand",
+                    ]
+                ) {
+                    const sql = await Deno.readTextFile(`./drizzle/${tag}.sql`);
+                    const stmts = sql.split("--> statement-breakpoint");
+                    store.migrate(stmts.filter((s) => s.trim().length > 0));
+                }
+            } finally {
+                await store.close();
+            }
+
+            // 2. Populate records before 0010
+            const native = new DatabaseSync(testDbPath);
+            native.exec(`
+                INSERT INTO users (id, username, display_name, password_hash, role, disabled, auth_version, created_at, updated_at)
+                VALUES ('u_test_10', 'user_10', 'User 10', 'hash', 'user', 0, 1, 1000, 1000);
+
+                INSERT INTO preferences (user_id, default_engine, theme, visual_style, background_image, background_opacity, search_target)
+                VALUES ('u_test_10', 'bing', 'dark', 'linear-dark', null, 0.36, 'same');
+
+                INSERT INTO webapp_groups (id, user_id, name, sort_order, created_at, updated_at)
+                VALUES ('group_10', 'u_test_10', 'My Group', 5, 1000, 1000);
+                INSERT INTO webapps (id, user_id, name, url, group_id, created_at, updated_at)
+                VALUES ('app_10', 'u_test_10', 'Existing App', 'https://example.com', 'group_10', 1000, 1000);
+            `);
+            native.close();
+
+            // 3. Apply 0010 via DatabaseStore.migrate
+            const store2 = openDatabase(testDbPath);
+            try {
+                const sql0010 = await Deno.readTextFile(
+                    "./drizzle/0010_brainy_nemesis.sql",
+                );
+                const stmts0010 = sql0010.split("--> statement-breakpoint");
+                store2.migrate(stmts0010.filter((s) => s.trim().length > 0));
+            } finally {
+                await store2.close();
+            }
+
+            // 4. Verify data preservation and defaults
+            const verifyNative = new DatabaseSync(testDbPath);
+            try {
+                type PrefRow = {
+                    user_id: string;
+                    theme: string;
+                    show_app_labels: number;
+                };
+                const prefRows = verifyNative.prepare(
+                    "SELECT user_id, theme, show_app_labels FROM preferences WHERE user_id = 'u_test_10'",
+                ).all() as unknown as PrefRow[];
+                assertEquals(prefRows.length, 1);
+                assertEquals(prefRows[0].theme, "dark");
+                assertEquals(prefRows[0].show_app_labels, 1);
+
+                type GroupRow = {
+                    id: string;
+                    name: string;
+                    sort_order: number;
+                    folder_size: string;
+                };
+                const groupRows = verifyNative.prepare(
+                    "SELECT id, name, sort_order, folder_size FROM webapp_groups WHERE id = 'group_10'",
+                ).all() as unknown as GroupRow[];
+                assertEquals(groupRows.length, 1);
+                assertEquals(groupRows[0].name, "My Group");
+                assertEquals(groupRows[0].sort_order, 5);
+                assertEquals(groupRows[0].folder_size, "small");
+                const appRows = verifyNative.prepare(
+                    "SELECT id, group_id FROM webapps WHERE id = 'app_10'",
+                ).all() as unknown as { id: string; group_id: string }[];
+                assertEquals(appRows, [{ id: "app_10", group_id: "group_10" }]);
+                assertEquals(
+                    verifyNative.prepare("PRAGMA foreign_key_check").all(),
+                    [],
+                );
+            } finally {
+                verifyNative.close();
+            }
+        } finally {
+            try {
+                await Deno.remove(testDbPath);
+            } catch {
+                // ignore
+            }
+        }
+    },
+});

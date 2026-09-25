@@ -171,6 +171,7 @@ Deno.test({
             const devGroup =
                 (await createGroupRes.json() as Envelope<WebAppGroupDto>).data!;
             assertEquals(devGroup.name, "Development");
+            assertEquals(devGroup.folderSize, "small");
 
             // 2. Create WebApps (one grouped, one ungrouped)
             const createW1Res = await app.request("/api/webapps", {
@@ -196,6 +197,26 @@ Deno.test({
             assertEquals(w1.groupId, devGroup.id);
             assertEquals(w1.isPinned, true);
             assertEquals(w1.openMode, "new_tab");
+
+            // 2b. Patch group folderSize to large
+            const patchGroupRes = await app.request(
+                `/api/webapp-groups/${devGroup.id}`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "origin": ORIGIN,
+                        "content-type": "application/json",
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                    body: JSON.stringify({
+                        folderSize: "large",
+                    }),
+                },
+            );
+            assertEquals(patchGroupRes.status, STATUS_CODE.OK);
+            const patchedGroup =
+                (await patchGroupRes.json() as Envelope<WebAppGroupDto>).data!;
+            assertEquals(patchedGroup.folderSize, "large");
 
             const createW2Res = await app.request("/api/webapps", {
                 method: "POST",

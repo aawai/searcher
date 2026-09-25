@@ -71,6 +71,13 @@
       "when": 1790303781545,
       "tag": "0009_flowery_firebrand",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1790321351922,
+      "tag": "0010_brainy_nemesis",
+      "breakpoints": true
     }
   ]
 }

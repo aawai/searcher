@@ -1,11 +1,16 @@
 {
   "concepts/contract-first-testing": [
+    "concepts/sqlite-table-recreation-migration",
     "entities/deno-runtime",
     "sources/SRC-2026-09-25-001",
     "sources/SRC-2026-09-25-005",
+    "sources/SRC-2026-09-25-012",
+    "sources/SRC-2026-09-25-016",
+    "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/database-queue-serialization": [
+    "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
@@ -13,11 +18,17 @@
     "sources/SRC-2026-09-25-003",
     "sources/SRC-2026-09-25-007",
     "sources/SRC-2026-09-25-010",
+    "sources/SRC-2026-09-25-012",
+    "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
     "entities/dnd-kit-system",
-    "sources/SRC-2026-09-25-009"
+    "sources/SRC-2026-09-25-009",
+    "sources/SRC-2026-09-25-013",
+    "sources/SRC-2026-09-25-014",
+    "sources/SRC-2026-09-25-015",
+    "sources/SRC-2026-09-25-016"
   ],
   "concepts/hono-middleware-pipeline-request-intake": [
     "entities/hono-framework",
@@ -49,8 +60,14 @@
     "sources/SRC-2026-09-25-009",
     "sources/SRC-2026-09-25-010",
     "sources/SRC-2026-09-25-011",
+    "sources/SRC-2026-09-25-012",
+    "sources/SRC-2026-09-25-013",
+    "sources/SRC-2026-09-25-014",
+    "sources/SRC-2026-09-25-015",
+    "sources/SRC-2026-09-25-016",
     "syntheses/searcher-system-architecture"
   ],
+  "concepts/sqlite-table-recreation-migration": [],
   "entities/deno-runtime": [
     "concepts/single-process-architecture",
     "entities/hono-framework",
@@ -64,14 +81,20 @@
     "sources/SRC-2026-09-25-007",
     "sources/SRC-2026-09-25-010",
     "sources/SRC-2026-09-25-011",
+    "sources/SRC-2026-09-25-012",
+    "sources/SRC-2026-09-25-016",
     "syntheses/searcher-system-architecture"
   ],
   "entities/dnd-kit-system": [
     "concepts/dnd-kit-2d-grid-sorting-architecture",
-    "sources/SRC-2026-09-25-009"
+    "sources/SRC-2026-09-25-009",
+    "sources/SRC-2026-09-25-013",
+    "sources/SRC-2026-09-25-014",
+    "sources/SRC-2026-09-25-015"
   ],
   "entities/drizzle-sqlite-store": [
     "concepts/database-queue-serialization",
+    "concepts/sqlite-table-recreation-migration",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
     "sources/SRC-2026-09-25-002",
@@ -79,6 +102,8 @@
     "sources/SRC-2026-09-25-005",
     "sources/SRC-2026-09-25-007",
     "sources/SRC-2026-09-25-010",
+    "sources/SRC-2026-09-25-012",
+    "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
   "entities/hono-framework": [
@@ -102,6 +127,7 @@
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/session-security-and-isolation",
     "concepts/single-process-architecture",
+    "concepts/sqlite-table-recreation-migration",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
@@ -118,6 +144,11 @@
     "sources/SRC-2026-09-25-009",
     "sources/SRC-2026-09-25-010",
     "sources/SRC-2026-09-25-011",
+    "sources/SRC-2026-09-25-012",
+    "sources/SRC-2026-09-25-013",
+    "sources/SRC-2026-09-25-014",
+    "sources/SRC-2026-09-25-015",
+    "sources/SRC-2026-09-25-016",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
@@ -127,6 +158,10 @@
     "sources/SRC-2026-09-25-001",
     "sources/SRC-2026-09-25-002",
     "sources/SRC-2026-09-25-008",
+    "sources/SRC-2026-09-25-013",
+    "sources/SRC-2026-09-25-014",
+    "sources/SRC-2026-09-25-015",
+    "sources/SRC-2026-09-25-016",
     "syntheses/searcher-system-architecture"
   ],
   "sources/SRC-2026-09-25-001": [
@@ -187,12 +222,22 @@
   ],
   "sources/SRC-2026-09-25-010": [
     "concepts/database-queue-serialization",
+    "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store"
   ],
   "sources/SRC-2026-09-25-011": [
     "concepts/hono-middleware-pipeline-request-intake",
     "entities/hono-framework"
   ],
+  "sources/SRC-2026-09-25-012": [
+    "concepts/sqlite-table-recreation-migration"
+  ],
+  "sources/SRC-2026-09-25-013": [],
+  "sources/SRC-2026-09-25-014": [],
+  "sources/SRC-2026-09-25-015": [],
+  "sources/SRC-2026-09-25-016": [],
+  "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [],
+  "sources/sqlite-table-recreation-migration-zero-loss": [],
   "syntheses/searcher-system-architecture": [
     "concepts/contract-first-testing",
     "concepts/database-queue-serialization",

@@ -1587,6 +1587,20 @@ a {
     margin: 0 0 16px;
 }
 
+.note-masonry-container {
+    position: relative;
+    width: 100%;
+}
+.note-masonry-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+}
+.note-masonry-item.is-dragging {
+    opacity: 0.35;
+    z-index: 10;
+}
 .note-list-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill,minmax(245px,1fr));
@@ -1597,6 +1611,20 @@ a {
 }
 .note-list-item .note-card {
     width: 100%;
+}
+.note-list-item.is-over {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 3px;
+    border-radius: 12px;
+}
+.note-drag-overlay {
+    pointer-events: none;
+    touch-action: none;
+}
+.note-drag-overlay .note-card {
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+    border-color: var(--accent, #3b82f6);
+    transform: rotate(1deg);
 }
 .note-list-actions {
     display: flex;

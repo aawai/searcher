@@ -17,6 +17,7 @@ export function WebAppIcon({
     app,
     onOpen,
     size = "default",
+    showLabel = true,
     dragAttributes,
     dragListeners,
     movable = false,
@@ -25,6 +26,7 @@ export function WebAppIcon({
     app: WebAppItem;
     onOpen: (app: WebAppItem) => void;
     size?: "compact" | "default" | "large";
+    showLabel?: boolean;
     dragAttributes?: object;
     dragListeners?: object;
     movable?: boolean;
@@ -77,7 +79,7 @@ export function WebAppIcon({
                     <GripVertical size={14} />
                 </span>
             )}
-            <span className="webapp-name">{app.name}</span>
+            {showLabel && <span className="webapp-name">{app.name}</span>}
             <ArrowUpRight
                 className="webapp-arrow"
                 size={13}

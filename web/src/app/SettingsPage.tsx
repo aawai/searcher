@@ -208,6 +208,18 @@ export function SettingsPage() {
                                 ], ["large", "大图标"]] as const}
                                 select={(v) => set("webAppIconSize", v)}
                             />
+                            <Choices
+                                title="显示 Web App 名称"
+                                value={appearance.showAppLabels
+                                    ? "show"
+                                    : "hide"}
+                                values={[["show", "显示名称"], [
+                                    "hide",
+                                    "仅显示图标",
+                                ]] as const}
+                                select={(value) =>
+                                    set("showAppLabels", value === "show")}
+                            />
                             <div className="setting-group">
                                 <h3>壁纸预设与自定义</h3>
                                 <div

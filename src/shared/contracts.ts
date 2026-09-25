@@ -34,6 +34,7 @@ export interface PreferencesDto {
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
+    showAppLabels: boolean;
 }
 export type NoteColor = "paper" | "amber" | "rose" | "sage" | "sky";
 export interface Envelope<T> {

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-25T07:13:18.578Z",
+  "last_updated": "2026-09-25T10:04:40.852Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -39,6 +39,12 @@
       "type": "concept",
       "title": "Single Process Architecture",
       "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "concepts/sqlite-table-recreation-migration": {
+      "type": "concept",
+      "title": "SQLite Table Recreation Migration",
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
@@ -182,6 +188,78 @@
       "source_id": "SRC-2026-09-25-011",
       "format": "web",
       "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-012": {
+      "type": "source",
+      "title": "SQLite ALTER TABLE 规范与 12 步表重构模式文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-012/extracted.md",
+      "source_id": "SRC-2026-09-25-012",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-013": {
+      "type": "source",
+      "title": "MDN CSS Grid Layout 规范与双维轨道布局架构文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-013/extracted.md",
+      "source_id": "SRC-2026-09-25-013",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-014": {
+      "type": "source",
+      "title": "MDN ResizeObserver 规范与响应式容器感知架构文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-014/extracted.md",
+      "source_id": "SRC-2026-09-25-014",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-015": {
+      "type": "source",
+      "title": "React 19 状态保留与重置机制官方权威指南",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-015/extracted.md",
+      "source_id": "SRC-2026-09-25-015",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-016": {
+      "type": "source",
+      "title": "React 19 副作用同步与清理机制官方权威指南",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-016/extracted.md",
+      "source_id": "SRC-2026-09-25-016",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": {
+      "type": "source",
+      "title": "Observation: Web App Launcher Grid Alignment & Square Folder Architecture",
+      "tags": [
+        "frontend",
+        "layout",
+        "css-grid",
+        "dnd-kit",
+        "webapp-launcher"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture",
+      "relevance": "high",
+      "observed_at": "2026-09-25T09:53:14.169Z",
+      "source_context": "Web App Launcher desktop layout upgrade",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/sqlite-table-recreation-migration-zero-loss": {
+      "type": "source",
+      "title": "SQLite Table Recreation Migration Pattern with Zero Loss",
+      "category": "architecture",
+      "status": "insight",
+      "slug": "sqlite-table-recreation-migration-zero-loss",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
     },
     "syntheses/searcher-system-architecture": {
       "type": "synthesis",

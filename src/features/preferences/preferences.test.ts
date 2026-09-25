@@ -51,6 +51,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 defaultEngine: "google",
                 webAppHomeLimit: 16,
                 webAppIconSize: "large",
+                showAppLabels: false,
             }),
         });
         assertEquals(response.status, 200);
@@ -61,6 +62,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.searchOpacity, 0.85);
         assertEquals(saved.data?.webAppHomeLimit, 16);
         assertEquals(saved.data?.webAppIconSize, "large");
+        assertEquals(saved.data?.showAppLabels, false);
         const partial = await app.request("/api/preferences", {
             method: "PATCH",
             headers: {
@@ -79,6 +81,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.webAppIconSize, "large");
+        assertEquals(changed.data?.showAppLabels, false);
         const other = await app.request("/api/preferences", {
             headers: { cookie: second },
         });
@@ -88,6 +91,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.searchOpacity, 1);
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.webAppIconSize, "default");
+        assertEquals(isolated.data?.showAppLabels, true);
     } finally {
         await store.close();
     }
@@ -124,6 +128,7 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { webAppIconSize: "huge" },
                 { searchOpacity: 0.05 },
                 { searchOpacity: 1.5 },
+                { showAppLabels: "not-a-bool" },
             ]
         ) {
             const response = await app.request("/api/preferences", {
