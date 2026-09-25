@@ -1,6 +1,20 @@
 import { useState } from "react";
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
-import { LogIn, Monitor, Moon, Settings, Sun, UserRound } from "lucide-react";
+import {
+    BrowserRouter,
+    Link,
+    Route,
+    Routes,
+    useNavigate,
+} from "react-router-dom";
+import {
+    LogIn,
+    Monitor,
+    Moon,
+    Settings,
+    Shield,
+    Sun,
+    UserRound,
+} from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
 import { SearchHome } from "./app/SearchHome.tsx";
 import { DesignLab } from "./design-lab/DesignLab.tsx";
@@ -12,6 +26,12 @@ import { AdminPage } from "./app/AdminPage.tsx";
 import { TrashPage } from "./app/TrashPage.tsx";
 import { Button } from "./components/ui/button.tsx";
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu.tsx";
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -19,6 +39,7 @@ import {
     DialogTitle,
 } from "./components/ui/dialog.tsx";
 function Layout() {
+    const navigate = useNavigate();
     const { user, ready, appearance, setAppearance, logout, syncFailed } =
         useAppState();
     const [error, setError] = useState("");
@@ -102,26 +123,93 @@ function Layout() {
                     </Link>
                     {user
                         ? (
-                            <>
-                                <Link to="/account" className="user-link">
-                                    <UserRound size={19} />
-                                    <span>{user.displayName}</span>
-                                </Link>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        void logout().then((done) => {
-                                            if (!done) setConfirmLogout(true);
-                                        }).catch((e) => setError(String(e)))}
-                                    title="退出登录"
-                                    aria-label="退出登录"
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    className="user-avatar-trigger"
+                                    aria-label={`用户菜单：${user.displayName}`}
+                                    title={user.displayName}
                                 >
-                                    <LogIn
-                                        size={20}
-                                        style={{ transform: "rotate(180deg)" }}
-                                    />
-                                </button>
-                            </>
+                                    <span className="user-avatar-badge">
+                                        {(user.displayName || user.username)
+                                            .slice(0, 1).toUpperCase()}
+                                    </span>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent sideOffset={8}>
+                                    <div
+                                        style={{
+                                            padding: "8px 12px 6px",
+                                            borderBottom:
+                                                "1px solid var(--border)",
+                                            marginBottom: "4px",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                fontWeight: 600,
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            {user.displayName}
+                                        </div>
+                                        <div
+                                            className="muted"
+                                            style={{ fontSize: "12px" }}
+                                        >
+                                            @{user.username}
+                                        </div>
+                                    </div>
+                                    <DropdownMenuItem
+                                        onClick={() => navigate("/account")}
+                                    >
+                                        <UserRound
+                                            size={15}
+                                            style={{ marginRight: 8 }}
+                                        />
+                                        <span>账户与安全</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => navigate("/settings")}
+                                    >
+                                        <Settings
+                                            size={15}
+                                            style={{ marginRight: 8 }}
+                                        />
+                                        <span>偏好设置</span>
+                                    </DropdownMenuItem>
+                                    {user.role === "admin" && (
+                                        <DropdownMenuItem
+                                            onClick={() => navigate("/admin")}
+                                        >
+                                            <Shield
+                                                size={15}
+                                                style={{ marginRight: 8 }}
+                                            />
+                                            <span>管理后台</span>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem
+                                        className="note-dropdown-item--delete"
+                                        aria-label="退出登录"
+                                        onClick={() =>
+                                            void logout().then((done) => {
+                                                if (!done) {
+                                                    setConfirmLogout(true);
+                                                }
+                                            }).catch((e) =>
+                                                setError(String(e))
+                                            )}
+                                    >
+                                        <LogIn
+                                            size={15}
+                                            style={{
+                                                transform: "rotate(180deg)",
+                                                marginRight: 8,
+                                            }}
+                                        />
+                                        <span>退出登录</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )
                         : (
                             <Link to="/login" className="user-link">

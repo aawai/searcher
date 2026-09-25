@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Maximize2, Minimize2, X } from "lucide-react";
 import { type CSSProperties, type ReactNode, useRef } from "react";
 import { Button } from "../ui/button.tsx";
 import {
@@ -8,7 +8,6 @@ import {
     SheetHeader,
     SheetTitle,
 } from "../ui/sheet.tsx";
-
 export function ContentSheet(
     { open, onOpenChange, title, children, height, onHeightChange }: {
         open: boolean;
@@ -47,20 +46,22 @@ export function ContentSheet(
                         <span className="sheet-grip" aria-hidden="true" />
                     )}
                     <SheetTitle>{title}</SheetTitle>
-                    {height && (
-                        <div className="sheet-sizes" aria-label="面板高度">
-                            {([40, 65, 90] as const).map((value) => (
-                                <Button
-                                    key={value}
-                                    variant="ghost"
-                                    aria-label={`面板高度 ${value}%`}
-                                    aria-pressed={height === value}
-                                    onClick={() => onHeightChange?.(value)}
-                                >
-                                    {value}%
-                                </Button>
-                            ))}
-                        </div>
+                    {onHeightChange && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={height === 90
+                                ? "恢复默认高度"
+                                : "全屏面板"}
+                            title={height === 90 ? "恢复默认" : "全屏"}
+                            onClick={() =>
+                                onHeightChange(height === 90 ? 65 : 90)}
+                            style={{ marginLeft: "auto" }}
+                        >
+                            {height === 90
+                                ? <Minimize2 size={16} />
+                                : <Maximize2 size={16} />}
+                        </Button>
                     )}
                     <SheetClose
                         render={<Button variant="ghost" aria-label="关闭" />}

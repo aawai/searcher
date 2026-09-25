@@ -3,9 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import {
     Copy,
     Menu,
+    Pencil,
     Plus,
     RotateCcw,
     Send,
+    SlidersHorizontal,
     Square,
     Trash2,
     X,
@@ -15,6 +17,7 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { ModelSelector } from "../components/searcher/ModelSelector.tsx";
 import { Button } from "../components/ui/button.tsx";
+import { Switch } from "../components/ui/switch.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import type {
@@ -332,14 +335,16 @@ export function AskPage() {
                             setPartial("");
                         }}
                     >
-                        新对话 <Plus size={18} />
+                        <Plus size={16} />
+                        <span>新对话</span>
                     </Button>
                     <Button
                         className="history-toggle"
                         onClick={() => setDrawer((value) => !value)}
                         aria-expanded={drawer}
                     >
-                        <Menu size={18} />历史
+                        <Menu size={16} />
+                        <span>历史</span>
                     </Button>
                 </div>
             </div>
@@ -375,24 +380,28 @@ export function AskPage() {
                                             {item.title}
                                         </button>
                                         <button
+                                            type="button"
                                             aria-label={"重命名 " + item.title}
+                                            title="重命名对话"
                                             onClick={() =>
                                                 void rename(
                                                     item.id,
                                                     item.title,
                                                 )}
                                         >
-                                            改
+                                            <Pencil size={14} />
                                         </button>
                                         <button
+                                            type="button"
                                             aria-label={"删除 " + item.title}
+                                            title="删除对话"
                                             onClick={() =>
                                                 void remove(
                                                     item.id,
                                                     item.title,
                                                 )}
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={15} />
                                         </button>
                                     </div>
                                 ))}
@@ -409,16 +418,41 @@ export function AskPage() {
                             selected={selected}
                             onChange={setSelected}
                         />
-                        <label>
-                            <input
-                                type="checkbox"
+                        <div
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                            }}
+                        >
+                            <Switch
+                                id="ask-history-switch"
                                 checked={historyEnabled}
-                                onChange={(e) =>
-                                    setHistoryEnabled(e.target.checked)}
-                            />{" "}
-                            保存历史
-                        </label>
-                        <Link to="/settings/ai">管理 Provider</Link>
+                                onCheckedChange={setHistoryEnabled}
+                                aria-label="保存历史记录"
+                            />
+                            <label
+                                htmlFor="ask-history-switch"
+                                style={{
+                                    fontSize: "13px",
+                                    cursor: "pointer",
+                                    userSelect: "none",
+                                }}
+                            >
+                                保存历史
+                            </label>
+                        </div>
+                        <Link
+                            to="/settings/ai"
+                            className="button button--subtle button--sm"
+                            style={{ marginLeft: "auto" }}
+                        >
+                            <SlidersHorizontal
+                                size={14}
+                                style={{ marginRight: 6 }}
+                            />
+                            <span>管理 Provider</span>
+                        </Link>
                     </div>
                     <div className="ask-messages" aria-live="polite">
                         {(() => {
