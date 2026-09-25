@@ -59,3 +59,21 @@
 ## [2026-09-25T03:44:53.791Z] capture
 - source_id: "SRC-2026-09-25-008", url: "https://ui.shadcn.com/docs", format: "web"
 
+## [2026-09-25T07:06:42.117Z] capture
+- source_id: "SRC-2026-09-25-009", url: "https://dndkit.com/legacy/presets/sortable/overview/", format: "web"
+
+## [2026-09-25T07:06:57.925Z] capture
+- source_id: "SRC-2026-09-25-010", url: "https://sqlite.org/wal.html", format: "web"
+
+## [2026-09-25T07:07:12.681Z] capture
+- source_id: "SRC-2026-09-25-011", url: "https://hono.dev/docs/guides/middleware", format: "web"
+
+## [2026-09-25T07:09:41.305Z] ensure_page
+- page_type: "entity", title: "dnd-kit System", path: "entities/dnd-kit-system"
+
+## [2026-09-25T07:09:50.786Z] ensure_page
+- page_type: "concept", title: "dnd-kit 2D Grid Sorting Architecture", path: "concepts/dnd-kit-2d-grid-sorting-architecture"
+
+## [2026-09-25T07:10:02.065Z] ensure_page
+- page_type: "concept", title: "Hono Middleware Pipeline & Request Intake", path: "concepts/hono-middleware-pipeline-request-intake"
+

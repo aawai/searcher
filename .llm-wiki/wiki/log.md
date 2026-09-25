@@ -2,6 +2,12 @@
 
 ## 2026-09-25
 
+- **ensure\_page**: {"page_type":"concept","path":"concepts/hono-middleware-pipeline-request-intake","title":"Hono Middleware Pipeline & Request Intake"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/dnd-kit-2d-grid-sorting-architecture","title":"dnd-kit 2D Grid Sorting Architecture"}
+- **ensure\_page**: {"page_type":"entity","path":"entities/dnd-kit-system","title":"dnd-kit System"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-011","url":"https://hono.dev/docs/guides/middleware"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-010","url":"https://sqlite.org/wal.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-009","url":"https://dndkit.com/legacy/presets/sortable/overview/"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-25-008","url":"https://ui.shadcn.com/docs"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-25-007","url":"https://orm.drizzle.team/docs/sqlite/get-started-sqlite"}
 - **ensure\_page**: {"page_type":"synthesis","path":"syntheses/searcher-system-architecture","title":"Searcher System Architecture"}

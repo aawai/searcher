@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-009",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Sortable",
+  "url": "https://dndkit.com/legacy/presets/sortable/overview/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -1,5 +1,24 @@
-import { GripVertical, Maximize2 } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+    Bookmark,
+    ExternalLink,
+    GripVertical,
+    Maximize2,
+    Minimize2,
+    MoreHorizontal,
+    Pin,
+    Trash2,
+} from "lucide-react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
+import remarkGfm from "remark-gfm";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../ui/dropdown-menu.tsx";
+
 export interface NoteItem {
     id: string;
     title?: string | null;
@@ -8,6 +27,7 @@ export interface NoteItem {
     version: number;
     isPinned?: boolean;
     isHomeFixed?: boolean;
+    sortOrder?: number | null;
     updatedAt?: number;
     layout?: {
         deviceClass: "desktop" | "tablet" | "mobile";
@@ -18,33 +38,264 @@ export interface NoteItem {
         sortOrder?: number | null;
     };
 }
+
+const NOTE_COLORS = ["paper", "amber", "rose", "sage", "sky"] as const;
+const COLOR_NAMES: Record<string, string> = {
+    paper: "纸白",
+    amber: "琥珀",
+    rose: "玫瑰",
+    sage: "鼠尾草",
+    sky: "天空",
+};
+export function isNoteCompact(
+    mode?: "full" | "compact",
+    expanded?: boolean,
+): boolean {
+    return mode === "compact" || (mode === undefined && expanded === false);
+}
+
+export function getNoteDisplayTitle(
+    title?: string | null,
+    body?: string,
+): string {
+    return (
+        title?.trim() ||
+        (body ?? "")
+            .split("\n")
+            .find(Boolean)
+            ?.replace(/^[#\s\-*]+/, "")
+            .slice(0, 30) ||
+        "空白便签"
+    );
+}
+
 export function NoteCard(
-    { note, onOpen, dragHandle, status }: {
+    {
+        note,
+        onOpen,
+        dragHandle,
+        status,
+        mode,
+        isHome,
+        onToggleMode,
+        onTogglePin,
+        onToggleHomeFixed,
+        onChangeColor,
+        onDelete,
+    }: {
         note: NoteItem;
         onOpen?: () => void;
         dragHandle?: ReactNode;
         status?: "saved" | "saving" | "unsynced" | "error";
+        mode?: "full" | "compact";
+        isHome?: boolean;
+        onToggleMode?: () => void;
+        onTogglePin?: () => void;
+        onToggleHomeFixed?: () => void;
+        onChangeColor?: (color: string) => void;
+        onDelete?: () => void;
     },
 ) {
+    const isCompact = isNoteCompact(mode, note.layout?.expanded);
+    const displayTitle = getNoteDisplayTitle(note.title, note.body);
     return (
-        <article className={"note-card note-" + (note.color || "default")}>
+        <article
+            className={"note-card note-" + (note.color || "paper") +
+                (isCompact ? " note-card--compact" : "")}
+            onDoubleClick={(e) => {
+                if (
+                    (e.target as HTMLElement).closest(
+                        "button, select, input, a",
+                    )
+                ) return;
+                if (onToggleMode) onToggleMode();
+                else onOpen?.();
+            }}
+        >
             <header className="note-head">
-                <span className="note-drag">
-                    {dragHandle ?? <GripVertical
-                        size={16}
-                        aria-hidden="true"
-                    />}
-                </span>
-                <strong>
-                    {note.title?.trim() ||
-                        note.body.split("\n").find(Boolean)?.slice(0, 30) ||
-                        "空白便签"}
-                </strong>
-                <button type="button" onClick={onOpen} aria-label="展开便签">
-                    <Maximize2 size={16} />
-                </button>
+                <div className="note-head-left">
+                    <span className="note-drag">
+                        {dragHandle ?? (
+                            <GripVertical
+                                size={15}
+                                aria-hidden="true"
+                            />
+                        )}
+                    </span>
+                    <strong className="note-title" title={displayTitle}>
+                        {displayTitle}
+                    </strong>
+                </div>
+
+                <div
+                    className="note-card-actions"
+                    role="toolbar"
+                    aria-label="便签操作"
+                >
+                    {onToggleMode && (
+                        <button
+                            type="button"
+                            className="note-action-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleMode();
+                            }}
+                            aria-label={isCompact ? "展开" : "折叠"}
+                            title={isCompact ? "展开" : "折叠"}
+                        >
+                            {isCompact
+                                ? <Maximize2 size={14} />
+                                : <Minimize2 size={14} />}
+                        </button>
+                    )}
+
+                    {(onTogglePin || onToggleHomeFixed || onOpen ||
+                        onChangeColor || onDelete) && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                className="note-action-btn"
+                                aria-label="更多操作"
+                                title="更多选项"
+                            >
+                                <MoreHorizontal size={14} />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                sideOffset={8}
+                                className="note-dropdown-content"
+                            >
+                                {onTogglePin && (
+                                    <DropdownMenuItem
+                                        onClick={(e) => {
+                                            e?.stopPropagation();
+                                            onTogglePin();
+                                        }}
+                                        onSelect={onTogglePin}
+                                    >
+                                        <Pin
+                                            size={13}
+                                            className={note.isPinned
+                                                ? "fill-current"
+                                                : ""}
+                                        />
+                                        <span>
+                                            {note.isPinned
+                                                ? "取消置顶"
+                                                : "置顶便签"}
+                                        </span>
+                                    </DropdownMenuItem>
+                                )}
+                                {onToggleHomeFixed && (
+                                    <DropdownMenuItem
+                                        onClick={(e) => {
+                                            e?.stopPropagation();
+                                            onToggleHomeFixed();
+                                        }}
+                                        onSelect={onToggleHomeFixed}
+                                    >
+                                        <Bookmark
+                                            size={13}
+                                            className={note.isHomeFixed
+                                                ? "fill-current"
+                                                : ""}
+                                        />
+                                        <span>
+                                            {note.isHomeFixed
+                                                ? "移出首页"
+                                                : "固定到首页"}
+                                        </span>
+                                    </DropdownMenuItem>
+                                )}
+                                {onOpen && (
+                                    <DropdownMenuItem
+                                        onClick={(e) => {
+                                            e?.stopPropagation();
+                                            onOpen();
+                                        }}
+                                        onSelect={onOpen}
+                                    >
+                                        <ExternalLink size={13} />
+                                        <span>编辑便签</span>
+                                    </DropdownMenuItem>
+                                )}
+                                {onChangeColor &&
+                                    NOTE_COLORS.map((c) => (
+                                        <DropdownMenuItem
+                                            key={c}
+                                            onClick={(e) => {
+                                                e?.stopPropagation();
+                                                onChangeColor(c);
+                                            }}
+                                            onSelect={() => onChangeColor(c)}
+                                        >
+                                            <span
+                                                className={"note-color-dot note-" +
+                                                    c +
+                                                    (note.color === c
+                                                        ? " is-selected"
+                                                        : "")}
+                                                style={{
+                                                    display: "inline-block",
+                                                    marginRight: 6,
+                                                }}
+                                            />
+                                            <span>{COLOR_NAMES[c]}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                {onDelete && (
+                                    <DropdownMenuItem
+                                        className="note-dropdown-item--delete"
+                                        onClick={(e) => {
+                                            e?.stopPropagation();
+                                            onDelete();
+                                        }}
+                                        onSelect={onDelete}
+                                    >
+                                        <Trash2 size={13} />
+                                        <span>移至回收站</span>
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
             </header>
-            <p className="note-preview">{note.body || "写下你的想法…"}</p>
+
+            {!isCompact && (
+                <div className="note-preview markdown">
+                    {note.body?.trim()
+                        ? (
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeSanitize]}
+                                components={{
+                                    a: (
+                                        {
+                                            href,
+                                            children,
+                                        }: ComponentPropsWithoutRef<"a">,
+                                    ) => (
+                                        <a
+                                            href={href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            {children}
+                                        </a>
+                                    ),
+                                }}
+                            >
+                                {note.body}
+                            </ReactMarkdown>
+                        )
+                        : (
+                            <span className="note-placeholder">
+                                写下你的想法…
+                            </span>
+                        )}
+                </div>
+            )}
+
             {status && (
                 <small className={"save-state save-" + status}>
                     {({
