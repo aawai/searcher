@@ -1,0 +1,10 @@
+{
+    "id": "SRC-2026-09-25-035",
+    "captured": "2026-09-25",
+    "packet_version": "1.0",
+    "title": "Streaming Helper",
+    "url": "https://hono.dev/docs/helpers/streaming",
+    "format": "web",
+    "extractor": "markitdown",
+    "extraction_status": "success"
+}

@@ -1,0 +1,10 @@
+{
+    "id": "SRC-2026-09-25-036",
+    "captured": "2026-09-25",
+    "packet_version": "1.0",
+    "title": "Validation",
+    "url": "https://hono.dev/docs/guides/validation",
+    "format": "web",
+    "extractor": "markitdown",
+    "extraction_status": "success"
+}

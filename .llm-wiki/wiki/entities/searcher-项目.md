@@ -4,7 +4,12 @@ category: project
 title: "Searcher 项目"
 created: 2026-09-25
 updated: 2026-09-25
-sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-002, sources/SRC-2026-09-25-003, sources/SRC-2026-09-25-004]
+sources: [
+    sources/SRC-2026-09-25-001,
+    sources/SRC-2026-09-25-002,
+    sources/SRC-2026-09-25-003,
+    sources/SRC-2026-09-25-004,
+]
 ---
 
 # Searcher 项目
@@ -13,9 +18,13 @@ sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-002, sources/SRC-20
 
 ## 核心定位与特性
 
-1. **同源单进程**：由 [[entities/deno-runtime]] 单一进程承载后端 API 与前端 SPA 静态托管，践行 [[concepts/single-process-architecture]]。
-2. **渐进式功能体验**：普通访客享受纯粹快速的搜索体验，匿名偏好不落盘；登录后开放 Web App 抽屉面板、Markdown 便签、AI 问答服务与跨设备同步。
-3. **安全严密设计**：管理员通过交互式命令行创建，会话实行严格的 [[concepts/session-security-and-isolation]]，数据库操作经由 [[concepts/database-queue-serialization]] 保护。
+1. **同源单进程**：由 [[entities/deno-runtime]] 单一进程承载后端 API 与前端 SPA
+   静态托管，践行 [[concepts/single-process-architecture]]。
+2. **渐进式功能体验**：普通访客享受纯粹快速的搜索体验，匿名偏好不落盘；登录后开放
+   Web App 抽屉面板、Markdown 便签、AI 问答服务与跨设备同步。
+3. **安全严密设计**：管理员通过交互式命令行创建，会话实行严格的
+   [[concepts/session-security-and-isolation]]，数据库操作经由
+   [[concepts/database-queue-serialization]] 保护。
 
 ## 关联技术栈
 
