@@ -6,12 +6,15 @@
 
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
+- [[concepts/dnd-kit-2d-grid-sorting-architecture]] — dnd-kit 2D Grid Sorting Architecture *(created: 2026-09-25)*
+- [[concepts/hono-middleware-pipeline-request-intake]] — Hono Middleware Pipeline & Request Intake *(created: 2026-09-25)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/single-process-architecture]] — Single Process Architecture *(created: 2026-09-25)*
 
 ## Entitys
 
 - [[entities/deno-runtime]] — Deno Runtime *(created: 2026-09-25)*
+- [[entities/dnd-kit-system]] — dnd-kit System *(created: 2026-09-25)*
 - [[entities/drizzle-sqlite-store]] — Drizzle SQLite Store *(created: 2026-09-25)*
 - [[entities/hono-framework]] — Hono Framework *(created: 2026-09-25)*
 - [[entities/searcher-项目]] — Searcher 项目 *(created: 2026-09-25)*
@@ -27,10 +30,13 @@
 - [[sources/SRC-2026-09-25-006]] — Hono Deno 官方文档: Deno 运行时快速上手与架构实践 *(created: unknown)*
 - [[sources/SRC-2026-09-25-007]] — Drizzle ORM SQLite 官方生态与驱动架构文档 *(created: unknown)*
 - [[sources/SRC-2026-09-25-008]] — shadcn/ui 官方架构与代码分发模式文档 *(created: unknown)*
+- [[sources/SRC-2026-09-25-009]] — @dnd-kit/sortable 2D 网格与可排序预设官方指南 *(created: unknown)*
+- [[sources/SRC-2026-09-25-010]] — SQLite Write-Ahead Logging (WAL) 机制与并发架构文档 *(created: unknown)*
+- [[sources/SRC-2026-09-25-011]] — Hono 中间件流水线与上下文生命周期指南 *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-09-25T03:50:39.498Z* | *Total pages: 18*
+*Last updated: 2026-09-25T07:13:18.578Z* | *Total pages: 24*

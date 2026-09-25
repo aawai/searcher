@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-011",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Middleware",
+  "url": "https://hono.dev/docs/guides/middleware",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

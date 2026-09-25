@@ -10,3 +10,6 @@
 - [Hono Deno 官方文档: Deno 运行时快速上手与架构实践](SRC-2026-09-25-006.md)
 - [Drizzle ORM SQLite 官方生态与驱动架构文档](SRC-2026-09-25-007.md)
 - [shadcn/ui 官方架构与代码分发模式文档](SRC-2026-09-25-008.md)
+- [@dnd-kit/sortable 2D 网格与可排序预设官方指南](SRC-2026-09-25-009.md)
+- [SQLite Write-Ahead Logging (WAL) 机制与并发架构文档](SRC-2026-09-25-010.md)
+- [Hono 中间件流水线与上下文生命周期指南](SRC-2026-09-25-011.md)
