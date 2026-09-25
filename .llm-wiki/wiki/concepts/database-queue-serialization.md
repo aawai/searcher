@@ -4,7 +4,7 @@ domain: engineering
 title: "Database Queue Serialization"
 created: 2026-09-25
 updated: 2026-09-25
-sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-003, sources/SRC-2026-09-25-010]
+sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-003, sources/SRC-2026-09-25-010, sources/SRC-2026-09-25-012, sources/SRC-2026-09-25-028]
 ---
 
 # Database Queue Serialization (数据库队列串行化)
@@ -19,10 +19,13 @@ sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-003, sources/SRC-20
    `DatabaseStore.run` 建立了一个严格的先进先出（FIFO）异步调用执行队列。所有的读取和写入调用均排队进入唯一的通道执行，从物理层面根除了事务重叠冲突与死锁。
 3. **闭包与纯净事务准则**：
    在持有队列的 `run` 闭包内部，严禁嵌套第二次 `store.run`（会导致自死锁），严禁执行耗时的密码哈希计算或外部网络请求，以保证队列以微秒级的极致吞吐释放。
+4. **模式迁移与外键安全协作**：
+   在执行涉及表重建的复杂 Schema 迁移时（见 [[concepts/sqlite-table-recreation-migration]] 与 [[sources/SRC-2026-09-25-012]]），迁移过程必须持有队列并严格管理 `PRAGMA foreign_keys`，并在提交前运行 `PRAGMA foreign_key_check` 避免损坏外键关系。
 
 ## 关联页面
 
 - 数据存储：[[entities/drizzle-sqlite-store]]
+- 模式迁移：[[concepts/sqlite-table-recreation-migration]]
 - 综合总览：[[syntheses/searcher-system-architecture]]
 
 ## 来源
@@ -30,3 +33,5 @@ sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-003, sources/SRC-20
 - [[sources/SRC-2026-09-25-001]]
 - [[sources/SRC-2026-09-25-003]]
 - [[sources/SRC-2026-09-25-010]]
+- [[sources/SRC-2026-09-25-012]]
+- [[sources/SRC-2026-09-25-028]]

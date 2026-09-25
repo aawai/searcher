@@ -4,7 +4,7 @@ category: library
 title: "dnd-kit System"
 created: 2026-09-25
 updated: 2026-09-25
-sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-005, sources/SRC-2026-09-25-009]
+sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-005, sources/SRC-2026-09-25-009, sources/SRC-2026-09-25-026]
 ---
 
 # dnd-kit System
@@ -35,3 +35,4 @@ sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-005, sources/SRC-20
 - [[sources/SRC-2026-09-25-001]]
 - [[sources/SRC-2026-09-25-005]]
 - [[sources/SRC-2026-09-25-009]]
+- [[sources/SRC-2026-09-25-026]]

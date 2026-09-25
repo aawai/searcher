@@ -3,6 +3,7 @@ type: concept
 title: SQLite Table Recreation Migration
 created: 2026-09-25
 updated: 2026-09-25
+sources: [sources/SRC-2026-09-25-012, sources/SRC-2026-09-25-010, sources/sqlite-table-recreation-migration-zero-loss]
 ---
 
 # SQLite Table Recreation Migration (SQLite 12步表重构迁移模式)
@@ -22,7 +23,7 @@ updated: 2026-09-25
 
 在 [[entities/searcher-项目]] 中，持久化基础设施 [[entities/drizzle-sqlite-store]] 严格践行了这一原则：
 - 在向 `webapp_groups` 引入 `folder_size` 字段与 CHECK 约束时，迁移文件 `drizzle/0010_brainy_nemesis.sql` 完整采用了标准 12 步重构模板；
-- 自动化契约测试 `src/features/bookmarks/migration.test.ts` 模拟从历史版本逐级升级，不仅验证旧表字段完整迁移至新表，还显式断言关联子表 `webapps.group_id` 的外键无孤儿记录，且 `PRAGMA foreign_key_check` 返回空数组，贯彻了 [[concepts/contract-first-testing]] 的零数据丢失底线。
+- 自动化契约测试 `src/features/bookmarks/migration.test.ts` 模拟从历史版本逐级升级，不仅验证旧表字段完整迁移至新表，还显式断言关联子表 `webapps.group_id` 的外键无孤儿记录，且 `PRAGMA foreign_key_check` 返回空数组，贯彻了 [[concepts/contract-first-testing]] 的零数据丢失底线（参见实战洞见 [[sources/sqlite-table-recreation-migration-zero-loss]]）。
 
 ## Links
 
@@ -32,3 +33,4 @@ updated: 2026-09-25
 - [[concepts/contract-first-testing]]
 - [[sources/SRC-2026-09-25-012]]
 - [[sources/SRC-2026-09-25-010]]
+- [[sources/sqlite-table-recreation-migration-zero-loss]]

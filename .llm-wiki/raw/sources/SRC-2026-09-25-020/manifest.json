@@ -1,0 +1,9 @@
+{
+  "id": "SRC-2026-09-25-020",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "dnd-kit DragOverlay and Custom Layout Sorting Strategy Patterns",
+  "format": "text",
+  "extractor": "passthrough",
+  "extraction_status": "success"
+}
