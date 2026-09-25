@@ -199,7 +199,8 @@ export function AdminOverview({
                     </div>
                     <button
                         type="button"
-                        onClick={() => onNavigateTab("users")}
+                        onClick={() =>
+                            onNavigateTab("users")}
                         style={{
                             background: "transparent",
                             border: "none",
@@ -271,7 +272,7 @@ export function AdminOverview({
                                 marginTop: "4px",
                             }}
                         >
-                            已创建 Web App 与 Markdown 便签
+                            已创建 APP 与 Markdown 便签
                         </div>
                     </div>
                     <Link

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
-import { api, json } from "../lib/api.ts";
+import { api } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { Button } from "../components/ui/button.tsx";
 
@@ -71,7 +71,7 @@ export function TrashPage() {
             await api(`/api/webapps/${encodeURIComponent(id)}/restore`, {
                 method: "POST",
             });
-            setStatus("Web App 已恢复");
+            setStatus("APP 已恢复");
             setWebapps((prev) => prev.filter((item) => item.id !== id));
         } catch (e) {
             setError(errorMessage(e));
@@ -89,7 +89,7 @@ export function TrashPage() {
             await api(`/api/webapps/${encodeURIComponent(id)}/permanent`, {
                 method: "DELETE",
             });
-            setStatus("Web App 已彻底删除");
+            setStatus("APP 已彻底删除");
             setWebapps((prev) => prev.filter((item) => item.id !== id));
         } catch (e) {
             setError(errorMessage(e));
@@ -182,7 +182,7 @@ export function TrashPage() {
             </div>
 
             <p className="muted">
-                已删除的 Web App 与便签将在此保留 30 天，可随时恢复或彻底删除。
+                已删除的 APP 与便签将在此保留 30 天，可随时恢复或彻底删除。
             </p>
 
             <nav className="choice-row trash-tabs" aria-label="回收站分类">
@@ -191,7 +191,7 @@ export function TrashPage() {
                     aria-pressed={tab === "webapps"}
                     onClick={() => setTab("webapps")}
                 >
-                    Web App ({webapps.length})
+                    APP ({webapps.length})
                 </button>
                 <button
                     type="button"
@@ -210,10 +210,10 @@ export function TrashPage() {
             {tab === "webapps" && (
                 <section
                     className="trash-list-section"
-                    aria-label="已删除的 Web App"
+                    aria-label="已删除的 APP"
                 >
                     {webapps.length === 0
-                        ? <p className="empty">回收站中没有 Web App</p>
+                        ? <p className="empty">回收站中没有 APP</p>
                         : (
                             <div className="trash-table-wrap">
                                 <table className="trash-table">

@@ -274,7 +274,8 @@ created_at
 
 ## 18. Soft Delete
 
-Web App / Notes 使用 deleted_at，默认 30 天。AI Conversation 可 logical delete，但不进入普通 Trash UI。
+Web App / Notes 使用 deleted_at，默认 30 天。AI Conversation 可 logical
+delete，但不进入普通 Trash UI。
 
 ## 19. Migration
 

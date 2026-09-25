@@ -64,7 +64,7 @@ export function getNoteDisplayTitle(
             .split("\n")
             .find(Boolean)
             ?.replace(/^[#\s\-*]+/, "")
-            .slice(0, 30) ||
+            .slice(0, 100) ||
         "空白便签"
     );
 }
@@ -76,7 +76,7 @@ export function NoteCard(
         dragHandle,
         status,
         mode,
-        isHome,
+        isHome: _isHome,
         onToggleMode,
         onTogglePin,
         onToggleHomeFixed,

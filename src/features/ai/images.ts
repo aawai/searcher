@@ -115,10 +115,9 @@ export async function generateLogoCandidates(
             }
         } else if ("url" in item && typeof item.url === "string") {
             try {
-                bytes =
-                    (await fetchWithSafeLimit(item.url, {
-                        maxBytes: 2 * 1024 * 1024,
-                    })).bytes;
+                bytes = (await fetchWithSafeLimit(item.url, {
+                    maxBytes: 2 * 1024 * 1024,
+                })).bytes;
             } catch {
                 throw new OpenAIClientError("图像候选 URL 无法安全获取");
             }

@@ -118,9 +118,6 @@ function Layout() {
                             !
                         </Link>
                     )}
-                    <Link to="/settings" aria-label="设置">
-                        <Settings size={20} />
-                    </Link>
                     {user
                         ? (
                             <DropdownMenu>

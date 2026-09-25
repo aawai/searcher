@@ -552,14 +552,18 @@ export function registerAiRoutes(
                 );
                 return c.success({ images });
             } catch (err) {
-                if (err instanceof AiServiceError) {return c.fail(
+                if (err instanceof AiServiceError) {
+                    return c.fail(
                         err.statusCode as 400 | 403 | 404,
                         err.message,
-                    );}
-                if (err instanceof OpenAIClientError) {return c.fail(
+                    );
+                }
+                if (err instanceof OpenAIClientError) {
+                    return c.fail(
                         400,
                         err.message,
-                    );}
+                    );
+                }
                 throw err;
             }
         },

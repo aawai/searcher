@@ -39,7 +39,8 @@
 └───────────────────────────────────────────────────────────────┘
 ```
 
-视觉层级：Search Input → Pinned Web Apps → Pinned Notes → Utility / Navigation → Wallpaper。
+视觉层级：Search Input → Pinned Web Apps → Pinned Notes → Utility / Navigation →
+Wallpaper。
 
 ## 3. Search Area
 
@@ -57,7 +58,8 @@ Mobile：`width: calc(100vw - 32px);`
 
 AI：`[ AI ▼ ] [ Model ▼ ] [ Question Input ] [ Send ]`
 
-同一组件支持 Quiet / Minimal / Glass / Soft / Classic，以及 Rounded / Pill。不可复制多套业务逻辑组件。
+同一组件支持 Quiet / Minimal / Glass / Soft / Classic，以及 Rounded /
+Pill。不可复制多套业务逻辑组件。
 
 ## 5. Search Engine Menu
 
@@ -70,13 +72,15 @@ DuckDuckGo   ●
 重新检测
 ```
 
-视觉只显示红/绿点；accessible detail 必须说明连接检测成功或未成功。Hover/tooltip 可显示 checked_at 与 latency。
+视觉只显示红/绿点；accessible detail 必须说明连接检测成功或未成功。Hover/tooltip
+可显示 checked_at 与 latency。
 
 ## 6. Pinned Web App
 
 手机桌面式 Icon + Label；首页不显示分组 title；支持 drag reorder。
 
-Desktop 48–56px；Mobile 44–52px。Icon size preference：Compact / Default / Large。
+Desktop 48–56px；Mobile 44–52px。Icon size preference：Compact / Default /
+Large。
 
 ## 7. Floating Notes
 
@@ -86,7 +90,8 @@ Mobile：Grid / List / Single column，不使用绝对坐标。
 
 ## 8. Layout Edit Mode
 
-Search 仍显示但暂不可执行；Web App 可拖动；Note 显示 drag handle；z-index 可调整；可 reset layout。
+Search 仍显示但暂不可执行；Web App 可拖动；Note 显示 drag handle；z-index
+可调整；可 reset layout。
 
 ## 9. Bottom Navigation
 
@@ -96,8 +101,13 @@ Search 仍显示但暂不可执行；Web App 可拖动；Note 显示 drag handle
 
 Desktop 40% / 65% / 90%。Mobile 标准 Bottom Sheet。
 
-内容包括 Search、All / Group / Ungrouped、App Grid、Add、Manage。每次打开默认进入 All。
-“全部”将 APP（1×1）、小文件夹（1×1）、大文件夹（2×2）排列在同一基础栅格。大文件夹最多 3×3 预览，点图标直达网站，点背景打开完整文件夹；文件夹管理和右键菜单均可切换大小。外观设置中的“显示 Web App 名称”默认开启；关闭后顶层 APP 和文件夹均仅显示图标、行高同步收紧。文件夹内容面板仍显示名称。40% / 65% / 90% 调整面板高度而非列数。
+内容包括 Search、All / Group / Ungrouped、App
+Grid、Add、Manage。每次打开默认进入 All。 “全部”将
+APP（1×1）、小文件夹（1×1）、大文件夹（2×2）排列在同一基础栅格。大文件夹最多 3×3
+预览，点图标直达网站，点背景打开完整文件夹；文件夹管理和右键菜单均可切换大小。外观设置中的“显示
+Web App 名称”默认开启；关闭后顶层 APP
+和文件夹均仅显示图标、行高同步收紧。文件夹内容面板仍显示名称。40% / 65% / 90%
+调整面板高度而非列数。
 
 Context Menu：Open、Pin/Unpin、Edit、Move Group、Change Icon、Delete。
 
@@ -117,15 +127,18 @@ Note menu：Edit、Pin List、Pin Home、Color、History、Delete。
 
 Desktop：Edit / Preview / Split。Mobile：Edit / Preview，无 Split。
 
-保存状态：Saved、Saving、Unsynced、Error。Saved 弱提示，Saving 延迟显示，Unsynced 明确但不阻塞，Error 明显。
+保存状态：Saved、Saving、Unsynced、Error。Saved 弱提示，Saving
+延迟显示，Unsynced 明确但不阻塞，Error 明显。
 
 ## 14. Conflict UI
 
-同时显示 Cloud Version 与 Local Draft。操作：Copy Draft、Use Cloud、Overwrite、Merge & Save。
+同时显示 Cloud Version 与 Local Draft。操作：Copy Draft、Use
+Cloud、Overwrite、Merge & Save。
 
 ## 15. AI Conversation
 
-Desktop 左侧 History，中间 Conversation。History 默认展开，可折叠并记住状态；Mobile 使用 Drawer。
+Desktop 左侧 History，中间 Conversation。History
+默认展开，可折叠并记住状态；Mobile 使用 Drawer。
 
 主区顶部：Provider / Model / New Chat。
 
@@ -163,4 +176,5 @@ Desktop-first ≠ Desktop-only。
 
 2K/4K 增加主内容宽度、留白、字号与间距，不无限放大控件。
 
-Mobile 保持 Search First、Bottom Sheet、Note Grid/List、AI Drawer、Settings 二级页。
+Mobile 保持 Search First、Bottom Sheet、Note Grid/List、AI Drawer、Settings
+二级页。
