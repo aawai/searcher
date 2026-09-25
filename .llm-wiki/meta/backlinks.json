@@ -358,6 +358,12 @@
     "entities/drizzle-sqlite-store",
     "sources/SRC-2026-09-25-027"
   ],
+  "sources/SRC-2026-09-25-029": [],
+  "sources/SRC-2026-09-25-030": [],
+  "sources/SRC-2026-09-25-031": [],
+  "sources/SRC-2026-09-25-032": [],
+  "sources/SRC-2026-09-25-033": [],
+  "sources/obs-2026-09-25-ui-ux": [],
   "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [
     "concepts/dnd-kit-2d-grid-sorting-architecture"
   ],

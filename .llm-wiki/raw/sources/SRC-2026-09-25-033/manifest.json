@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-033",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Drizzle + Zod: A Type-Safe API in 200 Lines",
+  "url": "https://dev.to/gabrielanhaia/drizzle-zod-a-type-safe-api-in-200-lines-5bde",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

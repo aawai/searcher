@@ -9,8 +9,10 @@ import {
     Folder,
     FolderPlus,
     GripVertical,
+    MoreHorizontal,
     Plus,
     RotateCcw,
+    SlidersHorizontal,
     Trash2,
     X,
 } from "lucide-react";
@@ -48,6 +50,14 @@ import {
 import { type WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu.tsx";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
+import { Switch } from "../components/ui/switch.tsx";
 import {
     Dialog,
     DialogContent,
@@ -270,6 +280,9 @@ export function SearchHome() {
     const [isFetchingIcon, setIsFetchingIcon] = useState(false);
     const [iconPreviewUrl, setIconPreviewUrl] = useState<string | null>(null);
     const [iconImageUrl, setIconImageUrl] = useState("");
+    const [iconTab, setIconTab] = useState<"auto" | "upload" | "url" | "ai">(
+        "auto",
+    );
     // Group Management Form State
     const [newGroupName, setNewGroupName] = useState("");
 
@@ -696,9 +709,8 @@ export function SearchHome() {
         setAppIconAssetId(null);
         setAppIconSource("website");
         setIconPreviewUrl(null);
-        setIconImageUrl("");
-        setAppFormMessage("");
         setEditingApp(null);
+        setIconTab("auto");
         setIsAddingApp(true);
     }
 
@@ -719,6 +731,15 @@ export function SearchHome() {
         setIconImageUrl("");
         setAppFormMessage("");
         setEditingApp(app);
+        setIconTab(
+            app.iconSource === "upload"
+                ? "upload"
+                : app.iconSource === "url"
+                ? "url"
+                : app.iconSource === "ai"
+                ? "ai"
+                : "auto",
+        );
         setIsAddingApp(true);
     }
     async function detectAppDetails() {
@@ -1257,7 +1278,10 @@ export function SearchHome() {
                 onHeightChange={setWebAppSheetHeight}
             >
                 <div className="webapp-manager-header">
-                    <div className="section-tools" style={{ margin: 0 }}>
+                    <div
+                        className="section-tools"
+                        style={{ margin: 0, flex: 1 }}
+                    >
                         <label className="sr-only" htmlFor="filter-apps">
                             搜索网站
                         </label>
@@ -1268,28 +1292,53 @@ export function SearchHome() {
                             onChange={(e) => setFilter(e.target.value)}
                         />
                     </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => setIsManagingApps((value) => !value)}
-                    >
-                        {isManagingApps ? "完成管理" : "管理模式"}
+                    <Button variant="default" onClick={openAddModal}>
+                        <Plus size={16} />
+                        <span>添加网站</span>
                     </Button>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        <Button
-                            variant="outline"
-                            onClick={() =>
-                                setIsManagingGroups(!isManagingGroups)}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            className="button button--subtle"
+                            style={{
+                                width: "44px",
+                                height: "44px",
+                                minWidth: "44px",
+                                minHeight: "44px",
+                                padding: 0,
+                            }}
+                            aria-label="更多管理操作"
+                            title="更多管理选项"
                         >
-                            <Folder size={16} />
-                            <span>
-                                {isManagingGroups ? "返回列表" : "文件夹管理"}
-                            </span>
-                        </Button>
-                        <Button variant="default" onClick={openAddModal}>
-                            <Plus size={16} />
-                            <span>添加网站</span>
-                        </Button>
-                    </div>
+                            <MoreHorizontal size={18} />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" sideOffset={6}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setIsManagingApps((value) => !value)}
+                            >
+                                <SlidersHorizontal
+                                    size={15}
+                                    style={{ marginRight: 8 }}
+                                />
+                                <span>
+                                    {isManagingApps
+                                        ? "退出管理模式"
+                                        : "管理模式"}
+                                </span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setIsManagingGroups(!isManagingGroups)}
+                            >
+                                <Folder size={15} style={{ marginRight: 8 }} />
+                                <span>
+                                    {isManagingGroups
+                                        ? "返回网站列表"
+                                        : "文件夹管理"}
+                                </span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 {isManagingGroups
@@ -1533,38 +1582,71 @@ export function SearchHome() {
                                 ))}
                             </select>
                         </label>
-                        <label className="field">
-                            打开方式
-                            <select
+                        <div
+                            className="setting-group"
+                            style={{ margin: "14px 0 8px" }}
+                        >
+                            <h4 style={{ margin: "0 0 8px", fontSize: "14px" }}>
+                                打开方式
+                            </h4>
+                            <RadioGroup
                                 value={appOpenMode}
-                                onChange={(e) =>
-                                    setAppOpenMode(
-                                        e.target.value as
-                                            | "global"
-                                            | "current"
-                                            | "new_tab",
-                                    )}
+                                onValueChange={(val) => setAppOpenMode(
+                                    val as "global" | "current" | "new_tab",
+                                )}
+                                aria-label="打开方式"
                             >
-                                <option value="global">
-                                    跟随全局设置
-                                </option>
-                                <option value="new_tab">
-                                    始终在新标签页打开
-                                </option>
-                                <option value="current">
-                                    在当前标签页打开
-                                </option>
-                            </select>
-                        </label>
+                                <RadioGroupItem value="global">
+                                    <span>跟随全局设置</span>
+                                </RadioGroupItem>
+                                <RadioGroupItem value="new_tab">
+                                    <span>新标签页打开</span>
+                                </RadioGroupItem>
+                                <RadioGroupItem value="current">
+                                    <span>当前标签页打开</span>
+                                </RadioGroupItem>
+                            </RadioGroup>
+                        </div>
 
-                        {/* Web App Icon Configuration */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                margin: "16px 0 10px",
+                            }}
+                        >
+                            <div>
+                                <strong style={{ fontSize: "14px" }}>
+                                    固定在搜索首页
+                                </strong>
+                                <p
+                                    className="muted"
+                                    style={{
+                                        margin: "2px 0 0",
+                                        fontSize: "12px",
+                                    }}
+                                >
+                                    在搜索框下方的常用应用区域快捷展示
+                                </p>
+                            </div>
+                            <Switch
+                                checked={appIsPinned}
+                                onCheckedChange={setAppIsPinned}
+                                aria-label="固定在搜索首页"
+                            />
+                        </div>
+
+                        {/* Web App Icon Configuration with Tabs */}
                         <div
                             className="setting-group"
                             style={{
-                                marginTop: "12px",
+                                marginTop: "14px",
                                 border: "1px solid var(--border)",
-                                padding: "12px",
-                                borderRadius: "10px",
+                                padding: "16px",
+                                borderRadius: "12px",
+                                background:
+                                    "color-mix(in srgb, var(--surface) 60%, transparent)",
                             }}
                         >
                             <div
@@ -1572,205 +1654,251 @@ export function SearchHome() {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
-                                    marginBottom: "8px",
+                                    marginBottom: "12px",
                                 }}
                             >
-                                <strong style={{ fontSize: "14px" }}>
-                                    图标设置
-                                </strong>
-                                {iconPreviewUrl && (
-                                    <img
-                                        src={iconPreviewUrl}
-                                        alt="Icon Preview"
+                                <div>
+                                    <strong style={{ fontSize: "14px" }}>
+                                        图标来源
+                                    </strong>
+                                    <p
+                                        className="muted"
                                         style={{
-                                            width: "28px",
-                                            height: "28px",
-                                            borderRadius: "6px",
-                                            objectFit: "contain",
-                                            border: "1px solid var(--border)",
+                                            margin: "2px 0 0",
+                                            fontSize: "12px",
                                         }}
-                                    />
+                                    >
+                                        选择图标获取或生成方式
+                                    </p>
+                                </div>
+                                {iconPreviewUrl && (
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                        }}
+                                    >
+                                        <img
+                                            src={iconPreviewUrl}
+                                            alt="Icon Preview"
+                                            style={{
+                                                width: "32px",
+                                                height: "32px",
+                                                borderRadius: "8px",
+                                                objectFit: "contain",
+                                                border:
+                                                    "1px solid var(--border)",
+                                                background: "var(--surface)",
+                                            }}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                setAppIconAssetId(null);
+                                                setAppIconSource("default");
+                                                setIconPreviewUrl(null);
+                                            }}
+                                        >
+                                            重置默认
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: "8px",
-                                    flexWrap: "wrap",
-                                    marginBottom: "8px",
-                                }}
-                            >
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={isFetchingIcon ||
-                                        !appUrl.trim()}
-                                    onClick={() => void detectAppDetails()}
-                                >
-                                    {isFetchingIcon
-                                        ? "正在抓取..."
-                                        : "抓取站点图标"}
-                                </Button>
 
-                                <label
-                                    className="button button--subtle"
-                                    style={{
-                                        cursor: "pointer",
-                                        margin: 0,
-                                    }}
-                                >
+                            {/* Icon Source Tabs */}
+                            <RadioGroup
+                                value={iconTab}
+                                onValueChange={(val) => setIconTab(
+                                    val as "auto" | "upload" | "url" | "ai",
+                                )}
+                                aria-label="图标来源选项卡"
+                                style={{ marginBottom: "14px" }}
+                            >
+                                <RadioGroupItem value="auto">
+                                    <span>自动抓取</span>
+                                </RadioGroupItem>
+                                <RadioGroupItem value="upload">
                                     <span>上传图片</span>
-                                    <input
-                                        type="file"
-                                        accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml,image/x-icon"
-                                        style={{ display: "none" }}
-                                        onChange={async (e) => {
-                                            const file = e.target.files
-                                                ?.[0];
-                                            if (!file) return;
-                                            const fd = new FormData();
-                                            fd.append("icon", file);
-                                            try {
-                                                const res = await fetch(
-                                                    "/api/webapp-icons/upload",
-                                                    {
-                                                        method: "POST",
-                                                        body: fd,
-                                                    },
-                                                );
-                                                const data = await res
-                                                    .json();
-                                                if (
-                                                    data.status &&
-                                                    data.data
-                                                ) {
-                                                    setAppIconAssetId(
-                                                        data.data.id,
+                                </RadioGroupItem>
+                                <RadioGroupItem value="url">
+                                    <span>网络链接</span>
+                                </RadioGroupItem>
+                                <RadioGroupItem value="ai">
+                                    <span>AI 生成</span>
+                                </RadioGroupItem>
+                            </RadioGroup>
+
+                            {/* Tab Content Panels */}
+                            {iconTab === "auto" && (
+                                <div style={{ display: "grid", gap: "8px" }}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={isFetchingIcon ||
+                                            !appUrl.trim()}
+                                        onClick={() =>
+                                            void detectAppDetails()}
+                                    >
+                                        {isFetchingIcon
+                                            ? "正在抓取站点图标…"
+                                            : "自动检测抓取站点图标"}
+                                    </Button>
+                                    <p
+                                        className="muted"
+                                        style={{ fontSize: "12px", margin: 0 }}
+                                    >
+                                        根据填写的网址自动访问站点并提取高清
+                                        Favicon 或 Touch Icon。
+                                    </p>
+                                </div>
+                            )}
+
+                            {iconTab === "upload" && (
+                                <div style={{ display: "grid", gap: "8px" }}>
+                                    <label
+                                        className="button button--subtle"
+                                        style={{
+                                            cursor: "pointer",
+                                            margin: 0,
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <span>选择本地图片文件</span>
+                                        <input
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml,image/x-icon"
+                                            style={{ display: "none" }}
+                                            onChange={async (e) => {
+                                                const file = e.target.files
+                                                    ?.[0];
+                                                if (!file) {
+                                                    return;
+                                                }
+                                                const fd = new FormData();
+                                                fd.append("icon", file);
+                                                try {
+                                                    const res = await fetch(
+                                                        "/api/webapp-icons/upload",
+                                                        {
+                                                            method: "POST",
+                                                            body: fd,
+                                                        },
                                                     );
-                                                    setAppIconSource(
-                                                        "upload",
-                                                    );
-                                                    setIconPreviewUrl(
-                                                        data.data.url,
-                                                    );
-                                                } else {
+                                                    const data = await res
+                                                        .json();
+                                                    if (
+                                                        data.status && data.data
+                                                    ) {
+                                                        setAppIconAssetId(
+                                                            data.data.id,
+                                                        );
+                                                        setAppIconSource(
+                                                            "upload",
+                                                        );
+                                                        setIconPreviewUrl(
+                                                            data.data.url,
+                                                        );
+                                                    } else {
+                                                        setError(
+                                                            data.message ||
+                                                                "上传图标失败",
+                                                        );
+                                                    }
+                                                } catch (err) {
                                                     setError(
-                                                        data.message ||
-                                                            "上传图标失败",
+                                                        "上传图标出错: " +
+                                                            (err instanceof
+                                                                    Error
+                                                                ? err.message
+                                                                : String(err)),
                                                     );
                                                 }
-                                            } catch (err) {
-                                                setError(
-                                                    "上传图标出错: " +
-                                                        (err instanceof
-                                                                Error
-                                                            ? err
-                                                                .message
-                                                            : String(
-                                                                err,
-                                                            )),
-                                                );
-                                            }
-                                        }}
-                                    />
-                                </label>
+                                            }}
+                                        />
+                                    </label>
+                                    <p
+                                        className="muted"
+                                        style={{ fontSize: "12px", margin: 0 }}
+                                    >
+                                        支持
+                                        PNG/JPEG/WebP/AVIF/SVG，文件大小最大
+                                        5MB。
+                                    </p>
+                                </div>
+                            )}
 
-                                {iconPreviewUrl && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
-                                            setAppIconAssetId(null);
-                                            setAppIconSource("default");
-                                            setIconPreviewUrl(null);
-                                        }}
+                            {iconTab === "url" && (
+                                <div className="field">
+                                    <label htmlFor="icon-image-url">
+                                        图片 URL
+                                    </label>
+                                    <div
+                                        style={{ display: "flex", gap: "8px" }}
                                     >
-                                        重置默认
-                                    </Button>
-                                )}
-                            </div>
-                            <div className="field">
-                                <label htmlFor="icon-image-url">
-                                    图片 URL
-                                </label>
-                                <span style={{ display: "flex", gap: 8 }}>
-                                    <input
-                                        id="icon-image-url"
-                                        type="url"
-                                        value={iconImageUrl}
-                                        onChange={(e) =>
-                                            setIconImageUrl(e.target.value)}
-                                        placeholder="https://example.com/icon.png"
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        disabled={!iconImageUrl.trim() ||
-                                            isFetchingIcon}
-                                        onClick={async () => {
-                                            setIsFetchingIcon(true);
-                                            try {
-                                                const res = await api<
-                                                    {
-                                                        id: string;
-                                                        url: string;
-                                                    }
-                                                >(
-                                                    "/api/webapp-icons/url",
-                                                    json("POST", {
-                                                        imageUrl: iconImageUrl
-                                                            .trim(),
-                                                    }),
-                                                );
-                                                setAppIconAssetId(res.id);
-                                                setAppIconSource("url");
-                                                setIconPreviewUrl(res.url);
-                                            } catch (err) {
-                                                setError(
-                                                    "获取图片失败: " +
-                                                        errorMessage(err),
-                                                );
-                                            } finally {
-                                                setIsFetchingIcon(false);
-                                            }
-                                        }}
-                                    >
-                                        使用图片
-                                    </Button>
-                                </span>
-                            </div>
-                            <LogoCandidatePicker
-                                siteName={appName.trim() || appUrl.trim()}
-                                onSelect={(asset) => {
-                                    setAppIconAssetId(asset.id);
-                                    setAppIconSource("ai");
-                                    setIconPreviewUrl(asset.url);
-                                }}
-                                onError={(message) => setError(message)}
-                            />
+                                        <input
+                                            id="icon-image-url"
+                                            type="url"
+                                            value={iconImageUrl}
+                                            onChange={(e) =>
+                                                setIconImageUrl(e.target.value)}
+                                            placeholder="https://example.com/icon.png"
+                                            style={{ flex: 1 }}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={!iconImageUrl.trim() ||
+                                                isFetchingIcon}
+                                            onClick={async () => {
+                                                setIsFetchingIcon(true);
+                                                try {
+                                                    const res = await api<
+                                                        {
+                                                            id: string;
+                                                            url: string;
+                                                        }
+                                                    >(
+                                                        "/api/webapp-icons/url",
+                                                        json("POST", {
+                                                            imageUrl:
+                                                                iconImageUrl
+                                                                    .trim(),
+                                                        }),
+                                                    );
+                                                    setAppIconAssetId(res.id);
+                                                    setAppIconSource("url");
+                                                    setIconPreviewUrl(res.url);
+                                                } catch (err) {
+                                                    setError(
+                                                        "获取图片失败: " +
+                                                            errorMessage(err),
+                                                    );
+                                                } finally {
+                                                    setIsFetchingIcon(false);
+                                                }
+                                            }}
+                                        >
+                                            使用图片
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {iconTab === "ai" && (
+                                <LogoCandidatePicker
+                                    siteName={appName.trim() || appUrl.trim()}
+                                    onSelect={(asset) => {
+                                        setAppIconAssetId(asset.id);
+                                        setAppIconSource("ai");
+                                        setIconPreviewUrl(asset.url);
+                                    }}
+                                    onError={(message) => setError(message)}
+                                />
+                            )}
                         </div>
-
-                        <label
-                            className="field"
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={appIsPinned}
-                                onChange={(e) =>
-                                    setAppIsPinned(e.target.checked)}
-                                style={{
-                                    width: "auto",
-                                    minHeight: "auto",
-                                }}
-                            />
-                            <span>固定在搜索首页</span>
-                        </label>
-
                         <div className="webapp-dialog-actions">
                             <Button
                                 variant="outline"

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-029",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "404",
+  "url": "https://deno.com/blog/announcing-hono-on-jsr",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

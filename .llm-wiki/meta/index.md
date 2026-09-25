@@ -25,6 +25,7 @@
 
 ## Sources
 
+- [[sources/obs-2026-09-25-ui-ux]] — Observation: UI/UX 精致化与设计系统收敛落地 *(created: 2026-09-25)*
 - [[sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture]] — Observation: Web App Launcher Grid Alignment & Square Folder Architecture *(created: 2026-09-25)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
@@ -55,10 +56,15 @@
 - [[sources/SRC-2026-09-25-026]] — dnd-kit Sortable Presets and Strategies for Complex Layouts *(created: unknown)*
 - [[sources/SRC-2026-09-25-027]] — Deno Legacy SQLite Tutorial Route (Obsolete/404) *(created: unknown)*
 - [[sources/SRC-2026-09-25-028]] — Deno node:sqlite DatabaseSync API and Embedded Persistence Contract *(created: unknown)*
+- [[sources/SRC-2026-09-25-029]] — 404 *(created: unknown)*
+- [[sources/SRC-2026-09-25-030]] — Deno 2.2: OpenTelemetry, Lint Plugins, node:sqlite *(created: unknown)*
+- [[sources/SRC-2026-09-25-031]] — Deno KV internals: building a database for the modern web *(created: unknown)*
+- [[sources/SRC-2026-09-25-032]] — Batch API *(created: unknown)*
+- [[sources/SRC-2026-09-25-033]] — Drizzle + Zod: A Type-Safe API in 200 Lines *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-09-25T11:22:40.936Z* | *Total pages: 46*
+*Last updated: 2026-09-25T13:51:42.083Z* | *Total pages: 52*

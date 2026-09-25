@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-031",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Deno KV internals: building a database for the modern web",
+  "url": "https://deno.com/blog/building-deno-kv",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

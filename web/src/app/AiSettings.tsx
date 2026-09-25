@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Eye, EyeOff, Plus, RefreshCw, Trash2 } from "lucide-react";
 import type {
     AiModelDto,
     AiProviderDto,
 } from "../../../src/features/ai/types.ts";
 import { Button } from "../components/ui/button.tsx";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "../components/ui/dialog.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+
 export function AiSettings() {
     const { user } = useAppState();
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
@@ -14,8 +23,10 @@ export function AiSettings() {
     const [name, setName] = useState("");
     const [baseUrl, setBaseUrl] = useState("");
     const [apiKey, setApiKey] = useState("");
+    const [showApiKey, setShowApiKey] = useState(false);
     const [scope, setScope] = useState<"user" | "system">("user");
     const [editing, setEditing] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [working, setWorking] = useState(false);
     const [error, setError] = useState("");
     const [status, setStatus] = useState("");
@@ -38,6 +49,26 @@ export function AiSettings() {
             </p>
         );
     }
+    function openAdd() {
+        setEditing(null);
+        setName("");
+        setBaseUrl("");
+        setApiKey("");
+        setShowApiKey(false);
+        setError("");
+        setIsModalOpen(true);
+    }
+
+    function openEdit(provider: AiProviderDto) {
+        setEditing(provider.id);
+        setName(provider.name);
+        setBaseUrl(provider.baseUrl);
+        setApiKey("");
+        setShowApiKey(false);
+        setError("");
+        setIsModalOpen(true);
+    }
+
     async function save(event: React.FormEvent) {
         event.preventDefault();
         setError("");
@@ -55,11 +86,13 @@ export function AiSettings() {
                         : { name, baseUrl, apiKey, scope },
                 ),
             );
+            await load();
             setEditing(null);
             setName("");
             setBaseUrl("");
             setApiKey("");
-            await load();
+            setShowApiKey(false);
+            setIsModalOpen(false);
             setStatus("Provider 和模型已同步");
         } catch (e) {
             setError(errorMessage(e));
@@ -108,79 +141,195 @@ export function AiSettings() {
     }
     return (
         <div className="ai-settings">
-            <p className="muted">
-                配置 OpenAI-Compatible Endpoint。保存前通过 /models 验证；Key
-                只在服务端加密保存。
-            </p>
-            <form onSubmit={save} className="setting-group">
-                <h3>{editing ? "编辑 Provider" : "添加 Provider"}</h3>
-                <label className="field">
-                    名称<input
-                        required
-                        maxLength={100}
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                </label>
-                <label className="field">
-                    Base URL<input
-                        required
-                        type="url"
-                        placeholder="https://example.com/v1"
-                        value={baseUrl}
-                        onChange={(e) => setBaseUrl(e.target.value)}
-                    />
-                </label>
-                <label className="field">
-                    API Key<input
-                        required={!editing}
-                        type="password"
-                        autoComplete="off"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        placeholder={editing
-                            ? "留空保持现有 Key"
-                            : "输入 API Key"}
-                    />
-                </label>
-                {!editing && user.role === "admin" && (
-                    <label className="field">
-                        范围<select
-                            value={scope}
-                            onChange={(e) =>
-                                setScope(e.target.value as "user" | "system")}
-                        >
-                            <option value="user">仅自己</option>
-                            <option value="system">所有用户</option>
-                        </select>
-                    </label>
-                )}
-                <div className="form-actions">
-                    <Button type="submit" variant="default" disabled={working}>
-                        {working
-                            ? "正在验证模型…"
-                            : editing
-                            ? "保存并验证"
-                            : "添加并验证"}
-                    </Button>
-                    {editing && (
-                        <Button
-                            type="button"
-                            onClick={() => {
-                                setEditing(null);
-                                setName("");
-                                setBaseUrl("");
-                                setApiKey("");
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "16px",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                }}
+            >
+                <div>
+                    <h3 style={{ margin: 0, fontSize: "16px" }}>
+                        已配置的 Provider
+                    </h3>
+                    <p
+                        className="muted"
+                        style={{ margin: "4px 0 0", fontSize: "13px" }}
+                    >
+                        配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存
+                    </p>
+                </div>
+                <Button variant="default" onClick={openAdd}>
+                    <Plus size={16} />
+                    <span>添加 Provider</span>
+                </Button>
+            </div>
+
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent
+                    aria-label={editing ? "编辑 Provider" : "添加 Provider"}
+                >
+                    <DialogHeader>
+                        <DialogTitle>
+                            {editing ? "编辑 Provider" : "添加 Provider"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            填写 OpenAI 兼容 API 信息。保存前会自动请求 /models
+                            进行连接验证。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form
+                        onSubmit={save}
+                        style={{
+                            display: "grid",
+                            gap: "16px",
+                            marginTop: "12px",
+                        }}
+                    >
+                        <label className="field">
+                            名称
+                            <input
+                                required
+                                maxLength={100}
+                                value={name}
+                                placeholder="例如：OpenAI、DeepSeek、Ollama"
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </label>
+                        <label className="field">
+                            Base URL
+                            <input
+                                required
+                                type="url"
+                                placeholder="https://api.openai.com/v1"
+                                value={baseUrl}
+                                onChange={(e) => setBaseUrl(e.target.value)}
+                            />
+                        </label>
+                        <div className="field">
+                            <label htmlFor="ai-api-key">API Key</label>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                                <input
+                                    id="ai-api-key"
+                                    required={!editing}
+                                    type={showApiKey ? "text" : "password"}
+                                    autoComplete="off"
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    placeholder={editing
+                                        ? "留空保持现有 Key"
+                                        : "输入 API Key"}
+                                    style={{ flex: 1 }}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setShowApiKey(!showApiKey)}
+                                    aria-label={showApiKey
+                                        ? "隐藏 API Key"
+                                        : "显示 API Key"}
+                                    title={showApiKey ? "隐藏" : "显示"}
+                                >
+                                    {showApiKey
+                                        ? <EyeOff size={16} />
+                                        : <Eye size={16} />}
+                                </Button>
+                            </div>
+                            <p
+                                className="muted"
+                                style={{ margin: "4px 0 0", fontSize: "12px" }}
+                            >
+                                Key
+                                仅存储在服务端，并经过安全密钥加密，不会向前端明文暴露。
+                            </p>
+                        </div>
+                        {!editing && user.role === "admin" && (
+                            <label className="field">
+                                范围
+                                <select
+                                    value={scope}
+                                    onChange={(e) =>
+                                        setScope(
+                                            e.target.value as "user" | "system",
+                                        )}
+                                >
+                                    <option value="user">仅自己可用</option>
+                                    <option value="system">
+                                        系统共享（所有用户）
+                                    </option>
+                                </select>
+                            </label>
+                        )}
+                        {error && (
+                            <p
+                                role="alert"
+                                className="error"
+                                style={{ margin: "4px 0 0" }}
+                            >
+                                {error}
+                            </p>
+                        )}
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: "8px",
+                                marginTop: "8px",
                             }}
                         >
-                            取消
-                        </Button>
-                    )}
-                </div>
-            </form>
-            <h3>已配置的 Provider</h3>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                取消
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="default"
+                                disabled={working}
+                            >
+                                {working
+                                    ? "正在验证模型…"
+                                    : editing
+                                    ? "保存并验证"
+                                    : "验证并添加"}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
             {!providers.length && (
-                <p className="muted">尚无 Provider。添加后可开始问答。</p>
+                <div
+                    style={{
+                        padding: "32px 20px",
+                        textAlign: "center",
+                        border: "1px dashed var(--border)",
+                        borderRadius: "12px",
+                        background: "var(--surface)",
+                        marginTop: "12px",
+                    }}
+                >
+                    <p style={{ margin: "0 0 8px", fontWeight: 600 }}>
+                        尚未添加 AI Provider
+                    </p>
+                    <p
+                        className="muted"
+                        style={{ margin: "0 0 16px", fontSize: "13px" }}
+                    >
+                        添加 Provider 并验证模型后，即可在主页直接切换使用 AI
+                        问答。
+                    </p>
+                    <Button variant="default" onClick={openAdd}>
+                        <Plus size={16} />
+                        <span>添加第一个 Provider</span>
+                    </Button>
+                </div>
             )}
             {providers.map((provider) => (
                 <section className="provider-card" key={provider.id}>
@@ -204,12 +353,7 @@ export function AiSettings() {
                                 <Button
                                     type="button"
                                     disabled={working}
-                                    onClick={() => {
-                                        setEditing(provider.id);
-                                        setName(provider.name);
-                                        setBaseUrl(provider.baseUrl);
-                                        setApiKey("");
-                                    }}
+                                    onClick={() => openEdit(provider)}
                                 >
                                     编辑
                                 </Button>

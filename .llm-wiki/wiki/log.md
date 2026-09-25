@@ -2,6 +2,12 @@
 
 ## 2026-09-25
 
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-033","url":"https://dev.to/gabrielanhaia/drizzle-zod-a-type-safe-api-in-200-lines-5bde"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-032","url":"https://orm.drizzle.team/docs/sqlite/batch-api"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-031","url":"https://deno.com/blog/building-deno-kv"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-030","url":"https://deno.com/blog/v2.2"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-25-029","url":"https://deno.com/blog/announcing-hono-on-jsr"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-25-ui-ux","title":"UI/UX 精致化与设计系统收敛落地"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-25-028","url":"https://docs.deno.com/api/node/sqlite/~/DatabaseSync"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-25-027","url":"https://docs.deno.com/runtime/tutorials/sqlite/"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-25-026","url":"https://docs.dndkit.com/presets/sortable"}

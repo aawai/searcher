@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-25T11:22:40.936Z",
+  "last_updated": "2026-09-25T13:51:42.083Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -363,6 +363,70 @@
       "source_id": "SRC-2026-09-25-028",
       "format": "web",
       "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-029": {
+      "type": "source",
+      "title": "404",
+      "status": "skeleton",
+      "raw_path": "raw/sources/SRC-2026-09-25-029/extracted.md",
+      "source_id": "SRC-2026-09-25-029",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-030": {
+      "type": "source",
+      "title": "Deno 2.2: OpenTelemetry, Lint Plugins, node:sqlite",
+      "status": "skeleton",
+      "raw_path": "raw/sources/SRC-2026-09-25-030/extracted.md",
+      "source_id": "SRC-2026-09-25-030",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-031": {
+      "type": "source",
+      "title": "Deno KV internals: building a database for the modern web",
+      "status": "skeleton",
+      "raw_path": "raw/sources/SRC-2026-09-25-031/extracted.md",
+      "source_id": "SRC-2026-09-25-031",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-032": {
+      "type": "source",
+      "title": "Batch API",
+      "status": "skeleton",
+      "raw_path": "raw/sources/SRC-2026-09-25-032/extracted.md",
+      "source_id": "SRC-2026-09-25-032",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-033": {
+      "type": "source",
+      "title": "Drizzle + Zod: A Type-Safe API in 200 Lines",
+      "status": "skeleton",
+      "raw_path": "raw/sources/SRC-2026-09-25-033/extracted.md",
+      "source_id": "SRC-2026-09-25-033",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/obs-2026-09-25-ui-ux": {
+      "type": "source",
+      "title": "Observation: UI/UX 精致化与设计系统收敛落地",
+      "tags": [
+        "ui-ux",
+        "shadcn-ui",
+        "design-system",
+        "settings",
+        "webapp",
+        "accessibility"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-25-ui-ux",
+      "relevance": "high",
+      "observed_at": "2026-09-25T13:48:54.079Z",
+      "source_context": "站点 UI / UX 评审与精致化建议落地",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
     },
     "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": {
       "type": "source",
