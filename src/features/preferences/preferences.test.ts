@@ -1,110 +1,133 @@
 import { assertEquals } from "@std/assert";
-import { STATUS_CODE } from "@std/http";
-import type { Hono } from "hono";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
-import type { AppEnv } from "../../serve/env.ts";
 import { createApp } from "../../app.ts";
 import type { Envelope, PreferencesDto } from "@shared/contracts.ts";
 
-const ORIGIN = "http://localhost:8000";
+const origin = "http://localhost:8000";
 
-async function setupTestApp() {
+Deno.test("preferences: authenticated appearance sync is isolated and partial updates preserve fields", async () => {
     const store = openDatabase(":memory:");
-    await migrateDatabase(store);
-
-    const auth = new AuthService({
-        store,
-        origin: ORIGIN,
-    });
-
-    const app = createApp({
-        store,
-        auth,
-        origin: ORIGIN,
-        now: () => Date.now(),
-    });
-
-    return { store, auth, app };
-}
-
-function extractCookie(response: Response, name: string): string | null {
-    const setCookie = response.headers.get("set-cookie");
-    if (!setCookie) return null;
-    const match = setCookie.match(new RegExp(`${name}=([^;]+)`));
-    return match ? match[1] : null;
-}
-
-async function registerUser(app: Hono<AppEnv>, username: string) {
-    const res = await app.request("/api/auth/register", {
-        method: "POST",
-        headers: {
-            "origin": ORIGIN,
-            "content-type": "application/json",
-        },
-        body: JSON.stringify({
-            username,
-            displayName: `Display ${username}`,
-            password: "Password123456!",
-        }),
-    });
-    const token = extractCookie(res, SESSION_COOKIE_NAME);
-    return token!;
-}
-
-Deno.test({
-    name:
-        "preferences contract: default values, user isolation, and patch updates",
-    async fn() {
-        const { store, app } = await setupTestApp();
-        try {
-            const tokenA = await registerUser(app, "pref_user_a");
-            const tokenB = await registerUser(app, "pref_user_b");
-
-            // User A gets initial preferences
-            const getA1 = await app.request("/api/preferences", {
-                method: "GET",
-                headers: {
-                    cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
-                },
-            });
-            assertEquals(getA1.status, STATUS_CODE.OK);
-            const prefA1 = await getA1.json() as Envelope<PreferencesDto>;
-            assertEquals(prefA1.data?.defaultEngine, "bing");
-            assertEquals(prefA1.data?.theme, "system");
-
-            // User A patches theme to "dark" and engine to "google"
-            const patchA = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    "origin": ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
-                },
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+        const register = async (username: string) => {
+            const response = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: { origin, "content-type": "application/json" },
                 body: JSON.stringify({
-                    defaultEngine: "google",
-                    theme: "dark",
+                    username,
+                    displayName: username,
+                    password: "Password123456!",
                 }),
             });
-            assertEquals(patchA.status, STATUS_CODE.OK);
-            const patchABody = await patchA.json() as Envelope<PreferencesDto>;
-            assertEquals(patchABody.data?.defaultEngine, "google");
-            assertEquals(patchABody.data?.theme, "dark");
+            assertEquals(response.status, 200);
+            const cookie = response.headers.get("set-cookie")?.split(";")[0];
+            if (!cookie?.startsWith(SESSION_COOKIE_NAME + "=")) {
+                throw Error("Missing session cookie");
+            }
+            return cookie;
+        };
+        const first = await register("appearance_a");
+        const second = await register("appearance_b");
+        const response = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                theme: "dark",
+                style: "glass",
+                accent: "violet",
+                searchShape: "pill",
+                wallpaperBlur: 16,
+                wallpaperGrayscale: 0.3,
+                wallpaperMask: 0.65,
+                defaultEngine: "google",
+                webAppHomeLimit: 16,
+                webAppIconSize: "large",
+            }),
+        });
+        assertEquals(response.status, 200);
+        const saved = await response.json() as Envelope<PreferencesDto>;
+        assertEquals(saved.data?.style, "glass");
+        assertEquals(saved.data?.accent, "violet");
+        assertEquals(saved.data?.searchShape, "pill");
+        assertEquals(saved.data?.webAppHomeLimit, 16);
+        assertEquals(saved.data?.webAppIconSize, "large");
+        const partial = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ wallpaperMask: 0.4 }),
+        });
+        assertEquals(partial.status, 200);
+        const changed = await partial.json() as Envelope<PreferencesDto>;
+        assertEquals(changed.data?.wallpaperMask, 0.4);
+        assertEquals(changed.data?.style, "glass");
+        assertEquals(changed.data?.accent, "violet");
+        assertEquals(changed.data?.defaultEngine, "google");
+        assertEquals(changed.data?.webAppHomeLimit, 16);
+        assertEquals(changed.data?.webAppIconSize, "large");
+        const other = await app.request("/api/preferences", {
+            headers: { cookie: second },
+        });
+        const isolated = await other.json() as Envelope<PreferencesDto>;
+        assertEquals(isolated.data?.style, "quiet");
+        assertEquals(isolated.data?.defaultEngine, "bing");
+        assertEquals(isolated.data?.webAppHomeLimit, 12);
+        assertEquals(isolated.data?.webAppIconSize, "default");
+    } finally {
+        await store.close();
+    }
+});
 
-            // User B's preferences remain default (user isolation)
-            const getB = await app.request("/api/preferences", {
-                method: "GET",
-                headers: {
-                    cookie: `${SESSION_COOKIE_NAME}=${tokenB}`,
-                },
+Deno.test("preferences: invalid wallpaper and appearance values are rejected", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+        const register = await app.request("/api/auth/register", {
+            method: "POST",
+            headers: { origin, "content-type": "application/json" },
+            body: JSON.stringify({
+                username: "appearance_valid",
+                displayName: "Valid",
+                password: "Password123456!",
+            }),
+        });
+        const cookie = register.headers.get("set-cookie")?.split(";")[0] ?? "";
+        for (
+            const patch of [
+                { style: "neon" },
+                { accent: "red" },
+                { searchShape: "square" },
+                { wallpaperBlur: -1 },
+                { wallpaperBlur: 25 },
+                { wallpaperGrayscale: 1.1 },
+                { wallpaperMask: 0.9 },
+                { backgroundImage: "javascript:alert(1)" },
+                { backgroundImage: "https://user:pass@example.com/a.png" },
+                { webAppHomeLimit: 15 },
+                { webAppIconSize: "huge" },
+            ]
+        ) {
+            const response = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: { origin, cookie, "content-type": "application/json" },
+                body: JSON.stringify(patch),
             });
-            assertEquals(getB.status, STATUS_CODE.OK);
-            const prefB = await getB.json() as Envelope<PreferencesDto>;
-            assertEquals(prefB.data?.defaultEngine, "bing");
-            assertEquals(prefB.data?.theme, "system");
-        } finally {
-            await store.close();
+            assertEquals(response.status, 400, JSON.stringify(patch));
         }
-    },
+    } finally {
+        await store.close();
+    }
 });

@@ -1,0 +1,1730 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+    buildSearchUrl,
+    type EngineId,
+    SEARCH_ENGINES,
+} from "@shared/engines.ts";
+import {
+    Folder,
+    FolderPlus,
+    GripVertical,
+    Plus,
+    RotateCcw,
+    Trash2,
+    X,
+} from "lucide-react";
+import {
+    DndContext,
+    type DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { BottomNavigation } from "../components/searcher/BottomNavigation.tsx";
+import { FloatingNotes } from "../components/searcher/FloatingNotes.tsx";
+import { LogoCandidatePicker } from "../components/searcher/LogoCandidatePicker.tsx";
+import { WebAppLauncher } from "../components/searcher/WebAppLauncher.tsx";
+import { NoteCard, type NoteItem } from "../components/searcher/NoteCard.tsx";
+import { NoteEditor } from "../components/searcher/NoteEditor.tsx";
+import {
+    type Reachability,
+    SearcherSearchInput,
+} from "../components/searcher/SearcherSearchInput.tsx";
+import { type WebAppItem } from "../components/searcher/WebAppIcon.tsx";
+import { Button } from "../components/ui/button.tsx";
+import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+} from "../components/ui/dialog.tsx";
+import { api, ApiError, json } from "../lib/api.ts";
+import { getLocal, setLocal } from "../lib/local.ts";
+import { errorMessage, useAppState } from "./state.tsx";
+
+export interface WebAppGroup {
+    id: string;
+    userId: string;
+    name: string;
+    sortOrder: number;
+    createdAt: number;
+    updatedAt: number;
+}
+
+export interface ExtendedWebApp extends WebAppItem {
+    sortOrder?: number;
+    pinnedSortOrder?: number;
+    openMode?: "global" | "current" | "new_tab";
+    groupId?: string | null;
+}
+
+function SortableGroupManageItem({
+    group,
+    onRename,
+    onDelete,
+}: {
+    group: WebAppGroup;
+    onRename: (group: WebAppGroup, name: string) => void;
+    onDelete: (group: WebAppGroup) => void;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: group.id });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : undefined,
+        opacity: isDragging ? 0.5 : undefined,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="group-manage-item"
+        >
+            <button
+                type="button"
+                className="group-drag-handle"
+                aria-label={`拖动排序文件夹 ${group.name}`}
+                {...attributes}
+                {...listeners}
+            >
+                <GripVertical size={16} />
+            </button>
+            <input
+                defaultValue={group.name}
+                onBlur={(e) => void onRename(group, e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                    }
+                }}
+            />
+            <Button
+                variant="destructive"
+                onClick={() => void onDelete(group)}
+                title="删除文件夹"
+            >
+                <Trash2 size={15} />
+                <span>删除</span>
+            </Button>
+        </div>
+    );
+}
+
+export function SearchHome() {
+    const { user, appearance } = useAppState();
+    const navigate = useNavigate();
+    const [engine, setEngine] = useState<EngineId>(appearance.engine);
+    const [mode, setMode] = useState<"search" | "ai">("search");
+    const [reachability, setReachability] = useState<Reachability>({});
+    const [apps, setApps] = useState<ExtendedWebApp[]>([]);
+    const [groups, setGroups] = useState<WebAppGroup[]>([]);
+    const [notes, setNotes] = useState<NoteItem[]>([]);
+    const [appsStatus, setAppsStatus] = useState<
+        "loading" | "ready" | "offline" | "error"
+    >("loading");
+    const [appsError, setAppsError] = useState("");
+    const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+    const [reloadApps, setReloadApps] = useState(0);
+    const [sheet, setSheet] = useState<"apps" | "notes" | null>(null);
+    const [filter, setFilter] = useState("");
+    const [editing, setEditing] = useState<NoteItem | null>(null);
+    const [error, setError] = useState("");
+    const [noteUndo, setNoteUndo] = useState<
+        { note: NoteItem; timer: ReturnType<typeof setTimeout> } | null
+    >(null);
+    // Sensors for dnd-kit (Pointer with activation constraint + Keyboard with sortable coordinates)
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 5 },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
+
+    // WebApp Management State
+    const [activeGroupFilter, setActiveGroupFilter] = useState<
+        string | "all" | "ungrouped"
+    >("all");
+    const [isManagingGroups, setIsManagingGroups] = useState(false);
+    const [isManagingApps, setIsManagingApps] = useState(false);
+    const [webAppSheetHeight, setWebAppSheetHeight] = useState<40 | 65 | 90>(
+        65,
+    );
+    const [editingApp, setEditingApp] = useState<ExtendedWebApp | null>(null);
+    const [isAddingApp, setIsAddingApp] = useState(false);
+    const [undoApp, setUndoApp] = useState<
+        { app: ExtendedWebApp; timer: ReturnType<typeof setTimeout> } | null
+    >(null);
+
+    // Form states for Add / Edit WebApp
+    const [appName, setAppName] = useState("");
+    const [appUrl, setAppUrl] = useState("");
+    const [appGroupId, setAppGroupId] = useState<string | "">("");
+    const [appOpenMode, setAppOpenMode] = useState<
+        "global" | "current" | "new_tab"
+    >("global");
+    const [appIsPinned, setAppIsPinned] = useState(false);
+    const [appIconAssetId, setAppIconAssetId] = useState<string | null>(null);
+    const [appFormMessage, setAppFormMessage] = useState("");
+    const [appIconSource, setAppIconSource] = useState<
+        "website" | "upload" | "url" | "ai" | "default"
+    >("website");
+    const [isFetchingIcon, setIsFetchingIcon] = useState(false);
+    const [iconPreviewUrl, setIconPreviewUrl] = useState<string | null>(null);
+    const [iconImageUrl, setIconImageUrl] = useState("");
+    // Group Management Form State
+    const [newGroupName, setNewGroupName] = useState("");
+
+    useEffect(() => setEngine(appearance.engine), [appearance.engine]);
+    useEffect(() => {
+        void getLocal<Reachability>("reachability").then((value) => {
+            if (value) setReachability(value);
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!user) {
+            setApps([]);
+            setGroups([]);
+            setLoadedUserId(null);
+            return;
+        }
+        let active = true;
+        const userId = user.id;
+        setAppsStatus("loading");
+        setAppsError("");
+        setApps([]);
+        setGroups([]);
+        setLoadedUserId(null);
+        Promise.all([
+            api<ExtendedWebApp[]>("/api/webapps"),
+            api<WebAppGroup[]>("/api/webapp-groups"),
+        ]).then(([nextApps, nextGroups]) => {
+            if (!active) return;
+            setApps(nextApps);
+            setGroups(nextGroups);
+            setLoadedUserId(userId);
+            setAppsStatus("ready");
+        }).catch(async (cause: unknown) => {
+            if (!active) return;
+            if (!(cause instanceof ApiError)) {
+                try {
+                    const cached = await getLocal<
+                        { apps: ExtendedWebApp[]; groups: WebAppGroup[] }
+                    >(
+                        `webapps:${userId}`,
+                    );
+                    if (!active) return;
+                    if (
+                        cached && Array.isArray(cached.apps) &&
+                        Array.isArray(cached.groups)
+                    ) {
+                        setApps(cached.apps);
+                        setGroups(cached.groups);
+                        setAppsStatus("offline");
+                        return;
+                    }
+                } catch { /* IndexedDB may be unavailable */ }
+            }
+            if (active) {
+                setAppsError(errorMessage(cause));
+                setAppsStatus("error");
+            }
+        });
+        api<NoteItem[]>("/api/notes").then((items) => {
+            if (active) setNotes(items);
+        }).catch((cause) => {
+            if (active) setError(errorMessage(cause));
+        });
+        return () => {
+            active = false;
+        };
+    }, [user?.id, reloadApps]);
+
+    useEffect(() => {
+        if (user && loadedUserId === user.id && appsStatus === "ready") {
+            void setLocal(`webapps:${user.id}`, { apps, groups }).catch(
+                () => {},
+            );
+        }
+    }, [user?.id, loadedUserId, appsStatus, apps, groups]);
+
+    async function checkConnections() {
+        const pairs = await Promise.all(SEARCH_ENGINES.map(async (item) => {
+            const start = performance.now();
+            let ok = false;
+            try {
+                await fetch(item.probeUrl, {
+                    mode: "no-cors",
+                    cache: "no-store",
+                });
+                ok = true;
+            } catch { /* actual browser reachability only */ }
+            return [item.id, {
+                ok,
+                checkedAt: Date.now(),
+                latency: Math.round(performance.now() - start),
+            }] as const;
+        }));
+        const next = Object.fromEntries(pairs);
+        setReachability(next);
+        await setLocal("reachability", next);
+    }
+
+    function search(
+        query: string,
+        newTab: boolean,
+        override?: { engine?: EngineId; mode?: "search" | "ai" },
+    ) {
+        const trimmed = query.trim();
+        if (!trimmed) return;
+        const effMode = override?.mode ?? mode;
+        const effEngine = override?.engine ?? engine;
+        if (effMode === "ai") {
+            if (!user) {
+                // 访客拦截：留首页显示提示，不跳转、不发起 Provider 请求
+                setError("登录后使用 AI 问答");
+                return;
+            }
+            navigate("/ask?q=" + encodeURIComponent(trimmed));
+            return;
+        }
+        const url = buildSearchUrl(effEngine, trimmed);
+        if (!url) return;
+        if (user) {
+            api(
+                "/api/search/history",
+                json("POST", { query: trimmed, engineId: effEngine }),
+            ).catch(() => {});
+        }
+        if (newTab || appearance.target === "new_tab") {
+            globalThis.open(url, "_blank", "noopener,noreferrer");
+        } else globalThis.location.assign(url);
+    }
+    function openApp(app: ExtendedWebApp) {
+        const urlStr = /^https?:\/\//i.test(app.url)
+            ? app.url
+            : `https://${app.url}`;
+        try {
+            const url = new URL(urlStr);
+            if (url.protocol !== "http:" && url.protocol !== "https:") {
+                throw new Error("invalid URL");
+            }
+            const target = (app.openMode ?? "global") === "global"
+                ? appearance.target
+                : app.openMode === "new_tab"
+                ? "new_tab"
+                : "current";
+            if (target === "new_tab") {
+                globalThis.open(url.href, "_blank", "noopener,noreferrer");
+            } else globalThis.location.assign(url.href);
+        } catch {
+            setError("网站网址无效，请编辑后重试。");
+        }
+    }
+
+    // Desktop and mobile use the same pinned order.
+    const pinned = useMemo(
+        () =>
+            apps
+                .filter((item) => item.isPinned)
+                .sort((a, b) =>
+                    (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0)
+                )
+                .slice(
+                    0,
+                    appearance.webAppHomeLimit === "all"
+                        ? undefined
+                        : appearance.webAppHomeLimit,
+                ),
+        [apps, appearance.webAppHomeLimit],
+    );
+
+    const groupIds = useMemo(() => groups.map((g) => g.id), [groups]);
+
+    // Drag end handlers
+    async function reorderPinned(ids: string[]) {
+        const updates = ids.map((id, pinnedSortOrder) => ({
+            id,
+            pinnedSortOrder,
+        }));
+
+        try {
+            await api("/api/webapps/reorder", json("PUT", { items: updates }));
+            const positions = new Map(
+                updates.map((item) => [item.id, item.pinnedSortOrder]),
+            );
+            setApps((items) =>
+                items.map((app) => ({
+                    ...app,
+                    pinnedSortOrder: positions.get(app.id) ??
+                        app.pinnedSortOrder,
+                }))
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    async function handleGroupDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = groups.findIndex((g) => g.id === active.id);
+        const newIndex = groups.findIndex((g) => g.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+
+        const reordered = arrayMove(groups, oldIndex, newIndex);
+        const total = reordered.length;
+        // Backend listGroups orders by desc(webappGroups.sortOrder)
+        // reordered[0] should have highest sortOrder: total - 0, reordered[1]: total - 1, etc.
+        const updates = reordered.map((group, idx) => ({
+            group,
+            sortOrder: total - idx,
+        }));
+
+        // Optimistically update groups state
+        setGroups(
+            reordered.map((g, idx) => ({ ...g, sortOrder: total - idx })),
+        );
+
+        // Submit updated sortOrder for changed groups to server
+        try {
+            await Promise.all(
+                updates.map(({ group, sortOrder }) =>
+                    api(
+                        `/api/webapp-groups/${group.id}`,
+                        json("PATCH", { sortOrder }),
+                    )
+                ),
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+    const fixedNotes = useMemo(() => notes.filter((note) => note.isHomeFixed), [
+        notes,
+    ]);
+
+    // Filtered apps in the Bottom Sheet
+    const displayedApps = useMemo(() => {
+        let filtered = apps;
+        if (activeGroupFilter === "ungrouped") {
+            filtered = filtered.filter((app) => !app.groupId);
+        } else if (activeGroupFilter !== "all") {
+            filtered = filtered.filter((app) =>
+                app.groupId === activeGroupFilter
+            );
+        }
+        if (filter.trim()) {
+            const q = filter.trim().toLowerCase();
+            filtered = filtered.filter((app) =>
+                (app.name + " " + app.url).toLowerCase().includes(q)
+            );
+        }
+        return filtered.slice().sort((a, b) =>
+            (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+        );
+    }, [apps, activeGroupFilter, filter]);
+
+    // Group Counts
+    const groupCounts = useMemo(() => {
+        const counts: Record<string, number> = {
+            all: apps.length,
+            ungrouped: 0,
+        };
+        for (const app of apps) {
+            if (!app.groupId) {
+                counts.ungrouped = (counts.ungrouped || 0) + 1;
+            } else {
+                counts[app.groupId] = (counts[app.groupId] || 0) + 1;
+            }
+        }
+        return counts;
+    }, [apps]);
+
+    function openAddModal() {
+        setAppName("");
+        setAppUrl("");
+        setAppGroupId(
+            activeGroupFilter !== "all" && activeGroupFilter !== "ungrouped"
+                ? activeGroupFilter
+                : "",
+        );
+        setAppOpenMode("global");
+        setAppIsPinned(false);
+        setAppIconAssetId(null);
+        setAppIconSource("website");
+        setIconPreviewUrl(null);
+        setIconImageUrl("");
+        setAppFormMessage("");
+        setEditingApp(null);
+        setIsAddingApp(true);
+    }
+
+    function openEditModal(app: ExtendedWebApp) {
+        setAppName(app.name);
+        setAppUrl(app.url);
+        setAppGroupId(app.groupId || "");
+        setAppOpenMode(app.openMode ?? "global");
+        setAppIsPinned(Boolean(app.isPinned));
+        setAppIconAssetId(app.iconAssetId || null);
+        setAppIconSource(app.iconSource || "website");
+        setIconPreviewUrl(
+            app.iconUrl ||
+                (app.iconAssetId
+                    ? `/api/webapp-icons/${app.iconAssetId}`
+                    : null),
+        );
+        setIconImageUrl("");
+        setAppFormMessage("");
+        setEditingApp(app);
+        setIsAddingApp(true);
+    }
+    async function detectAppDetails() {
+        setIsFetchingIcon(true);
+        setAppFormMessage("");
+        try {
+            const raw = appUrl.trim();
+            const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+            const found = await api<
+                { id: string; url: string; siteName: string | null }
+            >(
+                "/api/webapp-icons/fetch",
+                json("POST", { url }),
+            );
+            setAppIconAssetId(found.id);
+            setAppIconSource("website");
+            setIconPreviewUrl(found.url);
+            if (!editingApp && !appName.trim() && found.siteName) {
+                setAppName(found.siteName);
+            }
+            setAppFormMessage("已检测网站名称与图标，可直接保存或继续修改。");
+        } catch (e) {
+            setAppFormMessage(
+                `检测失败：${errorMessage(e)}。仍可填写名称并保存。`,
+            );
+        } finally {
+            setIsFetchingIcon(false);
+        }
+    }
+    async function handleSaveApp(event: React.FormEvent) {
+        event.preventDefault();
+        setError("");
+        try {
+            let normalizedUrl = appUrl.trim();
+            if (!/^https?:\/\//i.test(normalizedUrl)) {
+                normalizedUrl = "https://" + normalizedUrl;
+            }
+            const parsed = new URL(normalizedUrl);
+            if (!["http:", "https:"].includes(parsed.protocol)) {
+                throw new Error("只支持 HTTP 或 HTTPS 地址");
+            }
+
+            const name = appName.trim() || parsed.hostname;
+            const groupId = appGroupId ? appGroupId : null;
+            if (
+                !editingApp && apps.some((app) => app.url === parsed.href) &&
+                !globalThis.confirm("该网站已存在，仍要继续添加吗？")
+            ) return;
+            let nextIconAssetId = appIconAssetId;
+            let nextIconSource = appIconSource;
+            let nextIconPreviewUrl = iconPreviewUrl;
+            if (
+                editingApp && editingApp.url !== parsed.href &&
+                editingApp.iconAssetId === appIconAssetId &&
+                globalThis.confirm("网址已改变，是否重新获取网站图标？")
+            ) {
+                const found = await api<{ id: string; url: string }>(
+                    "/api/webapp-icons/fetch",
+                    json("POST", { url: parsed.href }),
+                );
+                nextIconAssetId = found.id;
+                nextIconSource = "website";
+                nextIconPreviewUrl = found.url;
+            }
+
+            if (editingApp) {
+                // Update
+                const updated = await api<ExtendedWebApp>(
+                    `/api/webapps/${editingApp.id}`,
+                    json("PATCH", {
+                        name,
+                        url: parsed.href,
+                        groupId,
+                        iconAssetId: nextIconAssetId,
+                        iconSource: nextIconSource,
+                        openMode: appOpenMode,
+                        isPinned: appIsPinned,
+                    }),
+                );
+                setApps((items) =>
+                    items.map((
+                        item,
+                    ) => (item.id === editingApp.id
+                        ? {
+                            ...item,
+                            ...updated,
+                            iconUrl: nextIconPreviewUrl || updated.iconUrl,
+                        }
+                        : item)
+                    )
+                );
+            } else {
+                // Create
+                const created = await api<ExtendedWebApp>(
+                    "/api/webapps",
+                    json("POST", {
+                        name,
+                        url: parsed.href,
+                        groupId,
+                        iconAssetId: nextIconAssetId,
+                        iconSource: nextIconSource,
+                        openMode: appOpenMode,
+                        isPinned: appIsPinned,
+                        sortOrder: apps.length,
+                    }),
+                );
+                setApps((
+                    items,
+                ) => [...items, {
+                    ...created,
+                    iconUrl: nextIconPreviewUrl || created.iconUrl,
+                }]);
+            }
+            setEditingApp(null);
+            setIsAddingApp(false);
+        } catch (e) {
+            setError(errorMessage(e));
+            setAppFormMessage(`保存失败：${errorMessage(e)}`);
+        }
+    }
+
+    async function togglePinApp(app: ExtendedWebApp) {
+        setError("");
+        const nextPinned = !app.isPinned;
+        try {
+            const updated = await api<ExtendedWebApp>(
+                `/api/webapps/${app.id}`,
+                json("PATCH", { isPinned: nextPinned }),
+            );
+            setApps((items) =>
+                items.map((item) => item.id === app.id ? updated : item)
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+    async function moveAppGroup(app: ExtendedWebApp, groupId: string | null) {
+        try {
+            const updated = await api<ExtendedWebApp>(
+                `/api/webapps/${app.id}`,
+                json("PATCH", { groupId }),
+            );
+            setApps((items) =>
+                items.map((item) => item.id === app.id ? updated : item)
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    async function reorderApps(ids: string[]) {
+        const updates = ids.map((id, sortOrder) => ({ id, sortOrder }));
+        try {
+            await api("/api/webapps/reorder", json("PUT", { items: updates }));
+            const positions = new Map(
+                updates.map((item) => [item.id, item.sortOrder]),
+            );
+            setApps((items) =>
+                items.map((app) => ({
+                    ...app,
+                    sortOrder: positions.get(app.id) ?? app.sortOrder,
+                }))
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    async function softDeleteApp(app: ExtendedWebApp) {
+        setError("");
+        try {
+            await api(`/api/webapps/${app.id}`, { method: "DELETE" });
+            setApps((items) => items.filter((item) => item.id !== app.id));
+
+            // Set up undo toast (5 seconds)
+            if (undoApp) clearTimeout(undoApp.timer);
+            const timer = setTimeout(() => {
+                setUndoApp(null);
+            }, 5000);
+            setUndoApp({ app, timer });
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    async function undoDelete() {
+        if (!undoApp) return;
+        const { app } = undoApp;
+        clearTimeout(undoApp.timer);
+        setUndoApp(null);
+        try {
+            const restored = await api<ExtendedWebApp>(
+                `/api/webapps/${app.id}/restore`,
+                json("POST", {}),
+            );
+            setApps((items) => [...items, restored]);
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    // Group Management Actions
+    async function createGroup(e: React.FormEvent) {
+        e.preventDefault();
+        if (!newGroupName.trim()) return;
+        setError("");
+        try {
+            const group = await api<WebAppGroup>(
+                "/api/webapp-groups",
+                json("POST", {
+                    name: newGroupName.trim(),
+                    sortOrder: groups.length,
+                }),
+            );
+            setGroups((items) => [...items, group]);
+            setNewGroupName("");
+        } catch (err) {
+            setError(errorMessage(err));
+        }
+    }
+
+    async function renameGroup(group: WebAppGroup, name: string) {
+        if (!name.trim() || name === group.name) return;
+        setError("");
+        try {
+            const updated = await api<WebAppGroup>(
+                `/api/webapp-groups/${group.id}`,
+                json("PATCH", { name: name.trim() }),
+            );
+            setGroups((items) =>
+                items.map((
+                    g,
+                ) => (g.id === group.id ? { ...g, name: updated.name } : g))
+            );
+        } catch (err) {
+            setError(errorMessage(err));
+        }
+    }
+
+    async function deleteGroup(group: WebAppGroup) {
+        if (
+            !confirm(
+                `确定删除文件夹“${group.name}”吗？其中的网站将移至“未放入文件夹”。`,
+            )
+        ) {
+            return;
+        }
+        setError("");
+        try {
+            await api(`/api/webapp-groups/${group.id}`, { method: "DELETE" });
+            setGroups((items) => items.filter((g) => g.id !== group.id));
+            setApps((items) =>
+                items.map((
+                    a,
+                ) => (a.groupId === group.id ? { ...a, groupId: null } : a))
+            );
+            if (activeGroupFilter === group.id) {
+                setActiveGroupFilter("all");
+            }
+        } catch (err) {
+            setError(errorMessage(err));
+        }
+    }
+
+    // Note actions
+    async function createNote() {
+        setError("");
+        try {
+            const note = await api<NoteItem>(
+                "/api/notes",
+                json("POST", { title: null, body: "", isHomeFixed: false }),
+            );
+            setNotes((items) => [note, ...items]);
+            setEditing(note);
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    function editNote(note: NoteItem) {
+        setEditing(note);
+        setSheet("notes");
+    }
+    async function updateNote(note: NoteItem, patch: Record<string, unknown>) {
+        setError("");
+        try {
+            const updated = await api<NoteItem>(
+                "/api/notes/" + encodeURIComponent(note.id),
+                json("PATCH", { ...patch, version: note.version }),
+            );
+            setNotes((items) =>
+                items.map((item) => item.id === note.id ? updated : item)
+            );
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+    async function deleteNote(note: NoteItem) {
+        setError("");
+        try {
+            await api(
+                "/api/notes/" + encodeURIComponent(note.id) + "?version=" +
+                    note.version,
+                { method: "DELETE" },
+            );
+            setNotes((items) => items.filter((item) => item.id !== note.id));
+            if (noteUndo) clearTimeout(noteUndo.timer);
+            const timer = setTimeout(() => setNoteUndo(null), 5000);
+            setNoteUndo({ note, timer });
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+    async function undoDeleteNote() {
+        if (!noteUndo) return;
+        const { note } = noteUndo;
+        clearTimeout(noteUndo.timer);
+        setNoteUndo(null);
+        try {
+            const restored = await api<NoteItem>(
+                "/api/notes/" + encodeURIComponent(note.id) + "/restore",
+                json("POST", {}),
+            );
+            setNotes((items) => [restored, ...items]);
+        } catch (e) {
+            setError(errorMessage(e));
+        }
+    }
+
+    return (
+        <main className="home">
+            <section className="hero" aria-label="搜索">
+                <h1 className="hero-title">
+                    Searcher<span>.</span>
+                </h1>
+                <SearcherSearchInput
+                    engine={engine}
+                    onEngineChange={setEngine}
+                    mode={mode}
+                    onModeChange={(next) => {
+                        if (next === "ai" && !user) {
+                            setError("登录后使用 AI 问答");
+                            return;
+                        }
+                        setMode(next);
+                    }}
+                    onSubmit={search}
+                    disabled={isManagingApps}
+                    reachability={reachability}
+                    onCheck={() => void checkConnections()}
+                    webApps={apps}
+                    onOpenApp={(app) => openApp(app as ExtendedWebApp)}
+                />
+                {mode === "ai" && (
+                    <p className="hero-caption">
+                        问你所想，回答将在独立对话中展开
+                    </p>
+                )}
+            </section>
+            {error && (
+                <div role="alert" className="home-error">
+                    <span>{error}</span>
+                    <Button
+                        variant="ghost"
+                        aria-label="关闭错误提示"
+                        onClick={() => setError("")}
+                    >
+                        <X size={16} />
+                    </Button>
+                </div>
+            )}
+
+            {user && (
+                <section className="pinned-area" aria-label="固定的个人内容">
+                    {appsStatus === "loading" && (
+                        <p role="status" className="launcher-empty">
+                            正在加载常用网站…
+                        </p>
+                    )}
+                    {appsStatus === "error" && (
+                        <div role="alert" className="launcher-empty">
+                            网站加载失败：{appsError}{" "}
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    setReloadApps((count) =>
+                                        count + 1
+                                    )}
+                            >
+                                重试
+                            </Button>
+                        </div>
+                    )}
+                    {appsStatus === "offline" && (
+                        <p role="status" className="launcher-notice">
+                            当前离线，显示此账户上次保存的网站列表；更改需联网。
+                        </p>
+                    )}
+                    {(appsStatus === "ready" || appsStatus === "offline") && (
+                        <WebAppLauncher
+                            apps={pinned}
+                            emptyMessage="还没有固定的网站"
+                            groups={groups}
+                            showFolders={false}
+                            size={appearance.webAppIconSize}
+                            managing={isManagingApps}
+                            onToggleManaging={() =>
+                                setIsManagingApps((value) => !value)}
+                            onResetLayout={() =>
+                                void reorderPinned(
+                                    [...pinned].sort((a, b) =>
+                                        (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+                                    ).map((app) => app.id),
+                                )}
+                            onOpen={openApp}
+                            onEdit={openEditModal}
+                            onMove={(app, groupId) =>
+                                void moveAppGroup(app, groupId)}
+                            onPin={(app) => void togglePinApp(app)}
+                            onDelete={(app) => void softDeleteApp(app)}
+                            onReorder={(ids) => void reorderPinned(ids)}
+                            onAdd={() => {
+                                setSheet("apps");
+                                openAddModal();
+                            }}
+                        />
+                    )}
+                    <FloatingNotes notes={fixedNotes} onOpen={editNote} />
+                </section>
+            )}
+
+            {user && (
+                <BottomNavigation
+                    onApps={() => {
+                        setSheet("apps");
+                        setFilter("");
+                        setActiveGroupFilter("all");
+                    }}
+                    onNotes={() => {
+                        setSheet("notes");
+                        setFilter("");
+                    }}
+                />
+            )}
+
+            {/* Web App Sheet */}
+            <ContentSheet
+                open={sheet === "apps"}
+                onOpenChange={(v) => {
+                    setSheet(v ? "apps" : null);
+                    if (!v) {
+                        setIsManagingGroups(false);
+                    }
+                }}
+                title="Web App"
+                height={webAppSheetHeight}
+                onHeightChange={setWebAppSheetHeight}
+            >
+                <div className="webapp-manager-header">
+                    <div className="section-tools" style={{ margin: 0 }}>
+                        <label className="sr-only" htmlFor="filter-apps">
+                            搜索网站
+                        </label>
+                        <input
+                            id="filter-apps"
+                            placeholder="搜索网站名称或网址"
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                        />
+                    </div>
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsManagingApps((value) => !value)}
+                    >
+                        {isManagingApps ? "完成管理" : "管理模式"}
+                    </Button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                setIsManagingGroups(!isManagingGroups)}
+                        >
+                            <Folder size={16} />
+                            <span>
+                                {isManagingGroups ? "返回列表" : "文件夹管理"}
+                            </span>
+                        </Button>
+                        <Button variant="default" onClick={openAddModal}>
+                            <Plus size={16} />
+                            <span>添加网站</span>
+                        </Button>
+                    </div>
+                </div>
+
+                {isManagingGroups
+                    ? (
+                        <div className="group-manage-section">
+                            <h3>文件夹管理</h3>
+                            <p className="muted" style={{ fontSize: "13px" }}>
+                                文件夹可帮助归类 Web
+                                App。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
+                            </p>
+                            <form
+                                onSubmit={createGroup}
+                                className="section-form"
+                                style={{ marginTop: "14px" }}
+                            >
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                    <input
+                                        required
+                                        placeholder="新文件夹名称（如：开发、娱乐、办公）"
+                                        value={newGroupName}
+                                        onChange={(e) =>
+                                            setNewGroupName(e.target.value)}
+                                    />
+                                    <Button
+                                        variant="default"
+                                        type="submit"
+                                        disabled={!newGroupName.trim()}
+                                    >
+                                        <FolderPlus size={16} />
+                                        <span>创建文件夹</span>
+                                    </Button>
+                                </div>
+                            </form>
+                            <div className="group-manage-list">
+                                {groups.length === 0
+                                    ? <p className="empty">暂无文件夹</p>
+                                    : (
+                                        <DndContext
+                                            sensors={sensors}
+                                            onDragEnd={(e) =>
+                                                void handleGroupDragEnd(e)}
+                                        >
+                                            <SortableContext
+                                                items={groupIds}
+                                                strategy={verticalListSortingStrategy}
+                                            >
+                                                {groups.map((g) => (
+                                                    <SortableGroupManageItem
+                                                        key={g.id}
+                                                        group={g}
+                                                        onRename={renameGroup}
+                                                        onDelete={deleteGroup}
+                                                    />
+                                                ))}
+                                            </SortableContext>
+                                        </DndContext>
+                                    )}
+                            </div>
+                        </div>
+                    )
+                    : (
+                        <>
+                            <nav
+                                className="webapp-group-tabs"
+                                aria-label="Web App 文件夹切换"
+                            >
+                                <button
+                                    type="button"
+                                    className="webapp-group-tab"
+                                    aria-pressed={activeGroupFilter === "all"}
+                                    onClick={() => setActiveGroupFilter("all")}
+                                >
+                                    全部
+                                    <span className="webapp-group-count">
+                                        {apps.length}
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="webapp-group-tab"
+                                    aria-pressed={activeGroupFilter ===
+                                        "ungrouped"}
+                                    onClick={() =>
+                                        setActiveGroupFilter("ungrouped")}
+                                >
+                                    未放入文件夹
+                                    <span className="webapp-group-count">
+                                        {groupCounts.ungrouped || 0}
+                                    </span>
+                                </button>
+                                {groups.map((g) => (
+                                    <button
+                                        key={g.id}
+                                        type="button"
+                                        className="webapp-group-tab"
+                                        aria-pressed={activeGroupFilter ===
+                                            g.id}
+                                        onClick={() =>
+                                            setActiveGroupFilter(g.id)}
+                                    >
+                                        {g.name}
+                                        <span className="webapp-group-count">
+                                            {groupCounts[g.id] || 0}
+                                        </span>
+                                    </button>
+                                ))}
+                            </nav>
+
+                            {appsStatus === "loading" && (
+                                <p role="status" className="launcher-empty">
+                                    正在加载网站…
+                                </p>
+                            )}
+                            {appsStatus === "error" && (
+                                <div role="alert" className="launcher-empty">
+                                    网站加载失败：{appsError}{" "}
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            setReloadApps((count) =>
+                                                count + 1
+                                            )}
+                                    >
+                                        重试
+                                    </Button>
+                                </div>
+                            )}
+                            {appsStatus === "offline" && (
+                                <div role="status" className="launcher-notice">
+                                    当前离线，显示此账户上次保存的网站列表。
+                                    {" "}
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            setReloadApps((count) =>
+                                                count + 1
+                                            )}
+                                    >
+                                        重试连接
+                                    </Button>
+                                </div>
+                            )}
+                            {(appsStatus === "ready" ||
+                                appsStatus === "offline") && (
+                                <WebAppLauncher
+                                    apps={displayedApps}
+                                    emptyMessage={filter.trim() ||
+                                            (activeGroupFilter !== "all" &&
+                                                displayedApps.length === 0)
+                                        ? "没有匹配的网站"
+                                        : "还没有常用网站"}
+                                    emptyAction={!filter.trim() &&
+                                        activeGroupFilter === "all"}
+                                    groups={groups}
+                                    showFolders={activeGroupFilter === "all" &&
+                                        !filter.trim()}
+                                    size={appearance.webAppIconSize}
+                                    managing={isManagingApps}
+                                    onToggleManaging={() =>
+                                        setIsManagingApps((value) => !value)}
+                                    onOpen={openApp}
+                                    onEdit={openEditModal}
+                                    onMove={(app, groupId) =>
+                                        void moveAppGroup(app, groupId)}
+                                    onPin={(app) => void togglePinApp(app)}
+                                    onDelete={(app) => void softDeleteApp(app)}
+                                    onReorder={(ids) => void reorderApps(ids)}
+                                    onAdd={openAddModal}
+                                />
+                            )}
+                        </>
+                    )}
+            </ContentSheet>
+            {/* Add / Edit WebApp Modal */}
+            <Dialog
+                open={isAddingApp}
+                onOpenChange={(open) => {
+                    setIsAddingApp(open);
+                    if (!open) setEditingApp(null);
+                }}
+            >
+                <DialogContent>
+                    <DialogTitle>
+                        {editingApp ? "编辑 Web App" : "添加 Web App"}
+                    </DialogTitle>
+                    <form onSubmit={handleSaveApp}>
+                        {appFormMessage && (
+                            <p role="status" className="muted">
+                                {appFormMessage}
+                            </p>
+                        )}
+                        <label className="field">
+                            网址 (URL)
+                            <input
+                                required
+                                type="text"
+                                placeholder="https://example.com"
+                                value={appUrl}
+                                onChange={(e) => setAppUrl(e.target.value)}
+                            />
+                        </label>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={!appUrl.trim() || isFetchingIcon}
+                            onClick={() => void detectAppDetails()}
+                        >
+                            {isFetchingIcon ? "正在检测…" : "检测名称与图标"}
+                        </Button>
+                        <label className="field">
+                            网站名称
+                            <input
+                                placeholder="默认使用域名"
+                                value={appName}
+                                onChange={(e) => setAppName(e.target.value)}
+                            />
+                        </label>
+                        <label className="field">
+                            文件夹
+                            <select
+                                value={appGroupId}
+                                onChange={(e) => setAppGroupId(e.target.value)}
+                            >
+                                <option value="">未放入文件夹</option>
+                                {groups.map((g) => (
+                                    <option key={g.id} value={g.id}>
+                                        {g.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="field">
+                            打开方式
+                            <select
+                                value={appOpenMode}
+                                onChange={(e) =>
+                                    setAppOpenMode(
+                                        e.target.value as
+                                            | "global"
+                                            | "current"
+                                            | "new_tab",
+                                    )}
+                            >
+                                <option value="global">
+                                    跟随全局设置
+                                </option>
+                                <option value="new_tab">
+                                    始终在新标签页打开
+                                </option>
+                                <option value="current">
+                                    在当前标签页打开
+                                </option>
+                            </select>
+                        </label>
+
+                        {/* Web App Icon Configuration */}
+                        <div
+                            className="setting-group"
+                            style={{
+                                marginTop: "12px",
+                                border: "1px solid var(--border)",
+                                padding: "12px",
+                                borderRadius: "10px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    marginBottom: "8px",
+                                }}
+                            >
+                                <strong style={{ fontSize: "14px" }}>
+                                    图标设置
+                                </strong>
+                                {iconPreviewUrl && (
+                                    <img
+                                        src={iconPreviewUrl}
+                                        alt="Icon Preview"
+                                        style={{
+                                            width: "28px",
+                                            height: "28px",
+                                            borderRadius: "6px",
+                                            objectFit: "contain",
+                                            border: "1px solid var(--border)",
+                                        }}
+                                    />
+                                )}
+                            </div>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "8px",
+                                    flexWrap: "wrap",
+                                    marginBottom: "8px",
+                                }}
+                            >
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={isFetchingIcon ||
+                                        !appUrl.trim()}
+                                    onClick={() => void detectAppDetails()}
+                                >
+                                    {isFetchingIcon
+                                        ? "正在抓取..."
+                                        : "抓取站点图标"}
+                                </Button>
+
+                                <label
+                                    className="button button--subtle"
+                                    style={{
+                                        cursor: "pointer",
+                                        margin: 0,
+                                    }}
+                                >
+                                    <span>上传图片</span>
+                                    <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml,image/x-icon"
+                                        style={{ display: "none" }}
+                                        onChange={async (e) => {
+                                            const file = e.target.files
+                                                ?.[0];
+                                            if (!file) return;
+                                            const fd = new FormData();
+                                            fd.append("icon", file);
+                                            try {
+                                                const res = await fetch(
+                                                    "/api/webapp-icons/upload",
+                                                    {
+                                                        method: "POST",
+                                                        body: fd,
+                                                    },
+                                                );
+                                                const data = await res
+                                                    .json();
+                                                if (
+                                                    data.status &&
+                                                    data.data
+                                                ) {
+                                                    setAppIconAssetId(
+                                                        data.data.id,
+                                                    );
+                                                    setAppIconSource(
+                                                        "upload",
+                                                    );
+                                                    setIconPreviewUrl(
+                                                        data.data.url,
+                                                    );
+                                                } else {
+                                                    setError(
+                                                        data.message ||
+                                                            "上传图标失败",
+                                                    );
+                                                }
+                                            } catch (err) {
+                                                setError(
+                                                    "上传图标出错: " +
+                                                        (err instanceof
+                                                                Error
+                                                            ? err
+                                                                .message
+                                                            : String(
+                                                                err,
+                                                            )),
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </label>
+
+                                {iconPreviewUrl && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setAppIconAssetId(null);
+                                            setAppIconSource("default");
+                                            setIconPreviewUrl(null);
+                                        }}
+                                    >
+                                        重置默认
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="field">
+                                <label htmlFor="icon-image-url">
+                                    图片 URL
+                                </label>
+                                <span style={{ display: "flex", gap: 8 }}>
+                                    <input
+                                        id="icon-image-url"
+                                        type="url"
+                                        value={iconImageUrl}
+                                        onChange={(e) =>
+                                            setIconImageUrl(e.target.value)}
+                                        placeholder="https://example.com/icon.png"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={!iconImageUrl.trim() ||
+                                            isFetchingIcon}
+                                        onClick={async () => {
+                                            setIsFetchingIcon(true);
+                                            try {
+                                                const res = await api<
+                                                    {
+                                                        id: string;
+                                                        url: string;
+                                                    }
+                                                >(
+                                                    "/api/webapp-icons/url",
+                                                    json("POST", {
+                                                        imageUrl: iconImageUrl
+                                                            .trim(),
+                                                    }),
+                                                );
+                                                setAppIconAssetId(res.id);
+                                                setAppIconSource("url");
+                                                setIconPreviewUrl(res.url);
+                                            } catch (err) {
+                                                setError(
+                                                    "获取图片失败: " +
+                                                        errorMessage(err),
+                                                );
+                                            } finally {
+                                                setIsFetchingIcon(false);
+                                            }
+                                        }}
+                                    >
+                                        使用图片
+                                    </Button>
+                                </span>
+                            </div>
+                            <LogoCandidatePicker
+                                siteName={appName.trim() || appUrl.trim()}
+                                onSelect={(asset) => {
+                                    setAppIconAssetId(asset.id);
+                                    setAppIconSource("ai");
+                                    setIconPreviewUrl(asset.url);
+                                }}
+                                onError={(message) => setError(message)}
+                            />
+                        </div>
+
+                        <label
+                            className="field"
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                cursor: "pointer",
+                            }}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={appIsPinned}
+                                onChange={(e) =>
+                                    setAppIsPinned(e.target.checked)}
+                                style={{
+                                    width: "auto",
+                                    minHeight: "auto",
+                                }}
+                            />
+                            <span>固定在搜索首页</span>
+                        </label>
+
+                        <div className="webapp-dialog-actions">
+                            <Button
+                                variant="outline"
+                                type="button"
+                                onClick={() => {
+                                    setIsAddingApp(false);
+                                    setEditingApp(null);
+                                }}
+                            >
+                                取消
+                            </Button>
+                            <Button variant="default" type="submit">
+                                {editingApp ? "保存更新" : "确认添加"}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Undo Toast */}
+            {undoApp && (
+                <div className="webapp-undo-toast" role="status">
+                    <span>已删除网站 “{undoApp.app.name}”</span>
+                    <Button
+                        variant="default"
+                        onClick={() => void undoDelete()}
+                    >
+                        <RotateCcw size={15} />
+                        <span>撤销</span>
+                    </Button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            clearTimeout(undoApp.timer);
+                            setUndoApp(null);
+                        }}
+                        style={{
+                            border: 0,
+                            background: "none",
+                            color: "inherit",
+                            cursor: "pointer",
+                        }}
+                        aria-label="关闭"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Notes Sheet */}
+            <ContentSheet
+                open={sheet === "notes"}
+                onOpenChange={(v) => {
+                    setSheet(v ? "notes" : null);
+                    if (!v) setEditing(null);
+                }}
+                title={editing ? "编辑便签" : "便签"}
+            >
+                {editing && user
+                    ? (
+                        <div>
+                            <NoteEditor
+                                key={editing.id}
+                                note={editing}
+                                userId={user.id}
+                                onSaved={(next) => {
+                                    setNotes((items) =>
+                                        items.map((
+                                            item,
+                                        ) => (item.id === next.id
+                                            ? next
+                                            : item)
+                                        )
+                                    );
+                                    setEditing(next);
+                                }}
+                            />
+                            <div
+                                style={{
+                                    marginTop: "14px",
+                                    display: "flex",
+                                    gap: "9px",
+                                }}
+                            >
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setEditing(null)}
+                                >
+                                    返回便签列表
+                                </Button>
+                            </div>
+                        </div>
+                    )
+                    : (
+                        <div>
+                            <div className="section-tools">
+                                <label
+                                    className="sr-only"
+                                    htmlFor="filter-notes"
+                                >
+                                    搜索便签
+                                </label>
+                                <input
+                                    id="filter-notes"
+                                    placeholder="搜索便签内容"
+                                    value={filter}
+                                    onChange={(e) => setFilter(e.target.value)}
+                                />
+                                <Button
+                                    variant="default"
+                                    onClick={() => void createNote()}
+                                >
+                                    新建便签
+                                </Button>
+                            </div>
+                            {notes.length
+                                ? (
+                                    <div className="note-list-grid">
+                                        {notes.filter((note) =>
+                                            ((note.title ?? "") + " " +
+                                                note.body).toLowerCase()
+                                                .includes(filter.toLowerCase())
+                                        )
+                                            .sort((a, b) =>
+                                                Number(Boolean(b.isPinned)) -
+                                                    Number(
+                                                        Boolean(a.isPinned),
+                                                    ) ||
+                                                (b.updatedAt ?? 0) -
+                                                    (a.updatedAt ?? 0)
+                                            )
+                                            .map((note) => (
+                                                <div
+                                                    key={note.id}
+                                                    className="note-list-item"
+                                                >
+                                                    <NoteCard
+                                                        note={note}
+                                                        onOpen={() =>
+                                                            editNote(note)}
+                                                    />
+                                                    <div className="note-list-actions">
+                                                        <button
+                                                            type="button"
+                                                            aria-pressed={Boolean(
+                                                                note.isPinned,
+                                                            )}
+                                                            onClick={() =>
+                                                                void updateNote(
+                                                                    note,
+                                                                    {
+                                                                        isPinned:
+                                                                            !note
+                                                                                .isPinned,
+                                                                    },
+                                                                )}
+                                                        >
+                                                            {note.isPinned
+                                                                ? "取消置顶"
+                                                                : "置顶"}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            aria-pressed={Boolean(
+                                                                note.isHomeFixed,
+                                                            )}
+                                                            onClick={() =>
+                                                                void updateNote(
+                                                                    note,
+                                                                    {
+                                                                        isHomeFixed:
+                                                                            !note
+                                                                                .isHomeFixed,
+                                                                    },
+                                                                )}
+                                                        >
+                                                            {note.isHomeFixed
+                                                                ? "移出首页"
+                                                                : "固定首页"}
+                                                        </button>
+                                                        <label>
+                                                            颜色<select
+                                                                aria-label={"便签颜色 " +
+                                                                    (note
+                                                                        .title ||
+                                                                        "无标题")}
+                                                                value={note
+                                                                    .color ??
+                                                                    "paper"}
+                                                                onChange={(
+                                                                    event,
+                                                                ) => void updateNote(
+                                                                    note,
+                                                                    {
+                                                                        color:
+                                                                            event
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )}
+                                                            >
+                                                                {([
+                                                                    "paper",
+                                                                    "amber",
+                                                                    "rose",
+                                                                    "sage",
+                                                                    "sky",
+                                                                ] as const).map(
+                                                                    (color) => (
+                                                                        <option
+                                                                            key={color}
+                                                                            value={color}
+                                                                        >
+                                                                            {({
+                                                                                paper:
+                                                                                    "纸白",
+                                                                                amber:
+                                                                                    "琥珀",
+                                                                                rose:
+                                                                                    "玫瑰",
+                                                                                sage:
+                                                                                    "鼠尾草",
+                                                                                sky: "天空",
+                                                                            })[color]}
+                                                                        </option>
+                                                                    ),
+                                                                )}
+                                                            </select>
+                                                        </label>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                void deleteNote(
+                                                                    note,
+                                                                )}
+                                                        >
+                                                            移至回收站
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                )
+                                : (
+                                    <p className="empty">
+                                        还没有便签。点击上方新建开始记录。
+                                    </p>
+                                )}
+                            {noteUndo && (
+                                <div
+                                    className="webapp-undo-toast"
+                                    role="status"
+                                >
+                                    便签已移至回收站{" "}
+                                    <button
+                                        type="button"
+                                        onClick={() => void undoDeleteNote()}
+                                    >
+                                        撤销
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+            </ContentSheet>
+        </main>
+    );
+}

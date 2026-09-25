@@ -1,0 +1,158 @@
+import { assertEquals } from "@std/assert";
+import { DatabaseSync } from "node:sqlite";
+import { openDatabase } from "../../db/database.ts";
+
+Deno.test({
+    name:
+        "migration 0005: preserves pre-existing user, session, preference, bookmark, and note data with zero loss",
+    async fn() {
+        const testDbPath = await Deno.makeTempFile({ suffix: ".sqlite" });
+        try {
+            const native = new DatabaseSync(testDbPath);
+            native.exec(
+                "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;",
+            );
+
+            // 1. Apply migrations 0000 - 0004
+            for (
+                const tag of [
+                    "0000_messy_the_hunter",
+                    "0001_curious_sinister_six",
+                    "0002_sharp_gauntlet",
+                    "0003_polite_owl",
+                    "0004_naive_vector",
+                ]
+            ) {
+                const sqlContent = await Deno.readTextFile(
+                    `./drizzle/${tag}.sql`,
+                );
+                const stmts = sqlContent.split("--> statement-breakpoint");
+                native.exec("BEGIN IMMEDIATE");
+                for (const stmt of stmts) {
+                    if (stmt.trim().length > 0) native.exec(stmt);
+                }
+                native.exec("COMMIT");
+            }
+
+            // 2. Populate legacy records before 0005
+            native.exec(`
+                INSERT INTO users (id, username, display_name, password_hash, role, disabled, auth_version, created_at, updated_at)
+                VALUES ('u_test_legacy', 'legacy_user', 'Legacy User', 'hash123', 'user', 0, 1, 1000, 1000);
+
+                INSERT INTO sessions (token_hash, user_id, auth_version, expires_at, created_at)
+                VALUES ('sess_hash_1', 'u_test_legacy', 1, 9999999, 1000);
+
+                INSERT INTO preferences (user_id, default_engine, theme, visual_style, background_image, background_opacity, search_target)
+                VALUES ('u_test_legacy', 'bing', 'dark', 'spatial-glass', 'https://img.jpg', 0.5, 'new');
+
+                INSERT INTO bookmarks (id, user_id, title, url, created_at, updated_at)
+                VALUES ('bm_legacy_1', 'u_test_legacy', 'My Old Bookmark', 'https://example.com/test', 1000, 1000);
+
+                INSERT INTO notes (id, user_id, content, pinned, color, version, created_at, updated_at)
+                VALUES ('note_legacy_1', 'u_test_legacy', 'Legacy Note Body Content', 1, 'amber', 5, 1000, 1000);
+            `);
+
+            // 3. Apply 0005 via DatabaseStore.migrate
+            const store = openDatabase(testDbPath);
+            try {
+                const sql0005 = await Deno.readTextFile(
+                    "./drizzle/0005_v1_webapps_rich_notes_and_preferences.sql",
+                );
+                const stmts0005 = sql0005.split("--> statement-breakpoint");
+                store.migrate(stmts0005.filter((s) => s.trim().length > 0));
+            } finally {
+                await store.close();
+            }
+
+            // 4. Assertions for zero data loss using DatabaseSync directly:
+            const verifyNative = new DatabaseSync(testDbPath);
+            try {
+                // 1. Users preserved
+                type CountRow = { c: number };
+                const userCount = verifyNative.prepare(
+                    "SELECT count(*) as c FROM users WHERE id = 'u_test_legacy'",
+                ).all() as unknown as CountRow[];
+                assertEquals(userCount[0].c, 1);
+
+                // 2. Sessions preserved
+                const sessCount = verifyNative.prepare(
+                    "SELECT count(*) as c FROM sessions WHERE user_id = 'u_test_legacy'",
+                ).all() as unknown as CountRow[];
+                assertEquals(sessCount[0].c, 1);
+
+                // 3. Preferences preserved
+                type PrefRow = {
+                    visual_style: string;
+                    theme: string;
+                    style: string;
+                };
+                const prefRows = verifyNative.prepare(
+                    "SELECT visual_style, theme, style FROM preferences WHERE user_id = 'u_test_legacy'",
+                ).all() as unknown as PrefRow[];
+                assertEquals(prefRows.length, 1);
+                assertEquals(prefRows[0].visual_style, "spatial-glass");
+                assertEquals(prefRows[0].theme, "dark");
+                assertEquals(prefRows[0].style, "quiet");
+
+                // 4. Bookmarks preserved
+                const bmCount = verifyNative.prepare(
+                    "SELECT count(*) as c FROM bookmarks WHERE user_id = 'u_test_legacy'",
+                ).all() as unknown as CountRow[];
+                assertEquals(bmCount[0].c, 1);
+
+                // 5. Webapps migrated from bookmarks
+                type WebAppRow = { name: string; url: string };
+                const webappRows = verifyNative.prepare(
+                    "SELECT name, url FROM webapps WHERE id = 'bm_legacy_1'",
+                ).all() as unknown as WebAppRow[];
+                assertEquals(webappRows.length, 1);
+                assertEquals(webappRows[0].name, "My Old Bookmark");
+                assertEquals(webappRows[0].url, "https://example.com/test");
+
+                // 6. Notes preserved and backfilled
+                type NoteRow = {
+                    current_body: string;
+                    current_version: number;
+                    is_pinned: number;
+                    color: string;
+                };
+                const noteRows = verifyNative.prepare(
+                    "SELECT current_body, current_version, is_pinned, color FROM notes WHERE id = 'note_legacy_1'",
+                ).all() as unknown as NoteRow[];
+                assertEquals(noteRows.length, 1);
+                assertEquals(
+                    noteRows[0].current_body,
+                    "Legacy Note Body Content",
+                );
+                assertEquals(noteRows[0].current_version, 5);
+                assertEquals(noteRows[0].is_pinned, 1);
+                assertEquals(noteRows[0].color, "amber");
+
+                // 7. Initial snapshot created in note_versions
+                type VersionRow = { version: number; body: string };
+                const versionRows = verifyNative.prepare(
+                    "SELECT version, body FROM note_versions WHERE note_id = 'note_legacy_1'",
+                ).all() as unknown as VersionRow[];
+                assertEquals(versionRows.length, 1);
+                assertEquals(versionRows[0].version, 5);
+                assertEquals(versionRows[0].body, "Legacy Note Body Content");
+
+                // 8. FTS virtual table populated
+                type FtsRow = { body: string };
+                const ftsRows = verifyNative.prepare(
+                    "SELECT body FROM notes_fts WHERE note_id = 'note_legacy_1'",
+                ).all() as unknown as FtsRow[];
+                assertEquals(ftsRows.length, 1);
+                assertEquals(ftsRows[0].body, "Legacy Note Body Content");
+            } finally {
+                verifyNative.close();
+            }
+        } finally {
+            try {
+                await Deno.remove(testDbPath);
+            } catch {
+                // ignore
+            }
+        }
+    },
+});

@@ -1,0 +1,278 @@
+import {
+    createContext,
+    type ReactNode,
+    useContext,
+    useEffect,
+    useState,
+} from "react";
+import type { PreferencesDto, UserDto } from "@shared/contracts.ts";
+import type { EngineId } from "@shared/engines.ts";
+import { api, ApiError, json } from "../lib/api.ts";
+import { getLocal, listLocalKeys, setLocal } from "../lib/local.ts";
+
+export type Appearance = {
+    theme: "system" | "light" | "dark";
+    style: "quiet" | "minimal" | "glass" | "soft" | "classic";
+    accent: "blue" | "cyan" | "teal" | "violet" | "orange" | "mono";
+    shape: "rounded" | "pill";
+    engine: EngineId;
+    target: "current" | "new_tab";
+    wallpaper: string;
+    blur: number;
+    grayscale: number;
+    mask: number;
+    webAppHomeLimit: 8 | 12 | 16 | "all";
+    webAppIconSize: "compact" | "default" | "large";
+};
+
+const initial: Appearance = {
+    theme: "system",
+    style: "quiet",
+    accent: "blue",
+    shape: "rounded",
+    engine: "bing",
+    target: "current",
+    wallpaper: "",
+    blur: 0,
+    grayscale: 0,
+    mask: .75,
+    webAppHomeLimit: 12,
+    webAppIconSize: "default",
+};
+
+type State = {
+    user: UserDto | null;
+    ready: boolean;
+    syncFailed: boolean;
+    appearance: Appearance;
+    setAppearance: (next: Partial<Appearance>) => void;
+    login: (user: UserDto) => void;
+    /** 登出：有未同步草稿时返回 false 并由调用方弹确认（V-003）。 */
+    logout: (options?: { force?: boolean }) => Promise<boolean>;
+};
+
+const Context = createContext<State | null>(null);
+
+export function useAppState() {
+    const state = useContext(Context);
+    if (!state) throw new Error("AppState required");
+    return state;
+}
+
+function getInitialAppearance(): Appearance {
+    try {
+        const raw = localStorage.getItem("visitor_appearance");
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            return { ...initial, ...parsed };
+        }
+    } catch {
+        // fallback
+    }
+    return initial;
+}
+
+export function AppState({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<UserDto | null>(null);
+    const [ready, setReady] = useState(false);
+    const [appearance, setValue] = useState<Appearance>(getInitialAppearance);
+    const [syncFailed, setSyncFailed] = useState(false);
+
+    // 访客偏好启动时从 IndexedDB 恢复（包含可能存储在本地的大体积壁纸等）
+    useEffect(() => {
+        let alive = true;
+        void getLocal<Appearance>("visitor_appearance").then((saved) => {
+            if (alive && saved && !user) {
+                setValue((prev) => ({ ...prev, ...saved }));
+            }
+        });
+        return () => {
+            alive = false;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        let alive = true;
+        api<{ user: UserDto }>("/api/auth/me", {
+            signal: AbortSignal.timeout(5000),
+        }).then(({ user }) => {
+            if (alive) setUser(user);
+        }).catch(() => {}).finally(() => {
+            if (alive) setReady(true);
+        });
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    // 登录后拉取云端偏好，默认直接覆盖本地配置，不再弹窗询问
+    useEffect(() => {
+        if (!user) return;
+        let alive = true;
+        api<PreferencesDto>("/api/preferences")
+            .then((prefs) => {
+                if (!alive) return;
+                setSyncFailed(false);
+                const cloudAppearance: Appearance = {
+                    engine: prefs.defaultEngine,
+                    theme: prefs.theme,
+                    style: prefs.style,
+                    accent: prefs.accent,
+                    shape: prefs.searchShape,
+                    target: prefs.searchTarget === "new"
+                        ? "new_tab"
+                        : "current",
+                    wallpaper: prefs.backgroundImage ?? "",
+                    blur: prefs.wallpaperBlur,
+                    grayscale: prefs.wallpaperGrayscale,
+                    mask: prefs.wallpaperMask,
+                    webAppHomeLimit: prefs.webAppHomeLimit,
+                    webAppIconSize: prefs.webAppIconSize,
+                };
+                // 默认使用云端配置覆盖本地配置
+                setValue((prev) => ({ ...prev, ...cloudAppearance }));
+            }).catch(() => {
+                if (alive) setSyncFailed(true);
+            });
+        return () => {
+            alive = false;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        const expired = () => {
+            setUser(null);
+            void getLocal<Appearance>("visitor_appearance").then((saved) => {
+                if (saved) {
+                    setValue((prev) => ({ ...prev, ...saved }));
+                } else {
+                    setValue(getInitialAppearance());
+                }
+            });
+        };
+        globalThis.addEventListener("searcher:auth-expired", expired);
+        return () =>
+            globalThis.removeEventListener("searcher:auth-expired", expired);
+    }, []);
+
+    useEffect(() => {
+        const media = matchMedia("(prefers-color-scheme: dark)");
+        const apply = () => {
+            const theme = appearance.theme === "system"
+                ? (media.matches ? "dark" : "light")
+                : appearance.theme;
+            document.documentElement.dataset.theme = theme;
+        };
+        apply();
+        media.addEventListener("change", apply);
+        return () => media.removeEventListener("change", apply);
+    }, [appearance.theme]);
+
+    useEffect(() => {
+        document.documentElement.dataset.style = appearance.style;
+        document.documentElement.dataset.accent = appearance.accent;
+        document.documentElement.dataset.shape = appearance.shape;
+    }, [appearance.style, appearance.accent, appearance.shape]);
+
+    const setAppearance = (next: Partial<Appearance>) => {
+        setValue((current) => {
+            const updated = { ...current, ...next };
+            // 未登录：偏好保存至本地 (IndexedDB + localStorage)
+            if (!user) {
+                void setLocal("visitor_appearance", updated).catch(() => {});
+                try {
+                    if (updated.wallpaper?.startsWith("data:")) {
+                        const { wallpaper: _, ...rest } = updated;
+                        localStorage.setItem(
+                            "visitor_appearance",
+                            JSON.stringify(rest),
+                        );
+                    } else {
+                        localStorage.setItem(
+                            "visitor_appearance",
+                            JSON.stringify(updated),
+                        );
+                    }
+                } catch {
+                    // 忽略 localStorage 配额错误
+                }
+            }
+            return updated;
+        });
+        if (user) {
+            const updates: Record<string, unknown> = {};
+            if (next.theme !== undefined) updates.theme = next.theme;
+            if (next.style !== undefined) updates.style = next.style;
+            if (next.accent !== undefined) updates.accent = next.accent;
+            if (next.shape !== undefined) updates.searchShape = next.shape;
+            if (next.engine !== undefined) updates.defaultEngine = next.engine;
+            if (next.target !== undefined) {
+                updates.searchTarget = next.target === "new_tab"
+                    ? "new"
+                    : "same";
+            }
+            if (next.mask !== undefined) updates.wallpaperMask = next.mask;
+            if (next.blur !== undefined) updates.wallpaperBlur = next.blur;
+            if (next.grayscale !== undefined) {
+                updates.wallpaperGrayscale = next.grayscale;
+            }
+            if (next.wallpaper !== undefined) {
+                updates.backgroundImage = next.wallpaper || null;
+            }
+            if (next.webAppHomeLimit !== undefined) {
+                updates.webAppHomeLimit = next.webAppHomeLimit;
+            }
+            if (next.webAppIconSize !== undefined) {
+                updates.webAppIconSize = next.webAppIconSize;
+            }
+            if (Object.keys(updates).length) {
+                void api("/api/preferences", json("PATCH", updates)).catch(
+                    () => setSyncFailed(true),
+                );
+            }
+        }
+    };
+
+    const logout = async (options?: { force?: boolean }) => {
+        if (!options?.force && user) {
+            try {
+                const keys = await listLocalKeys("draft:" + user.id + ":");
+                if (keys.length > 0) return false;
+            } catch {
+                // IndexedDB 不可用时降级放行
+            }
+        }
+        await api("/api/auth/logout", { method: "POST" });
+        setUser(null);
+        void getLocal<Appearance>("visitor_appearance").then((saved) => {
+            if (saved) {
+                setValue((prev) => ({ ...prev, ...saved }));
+            } else {
+                setValue(getInitialAppearance());
+            }
+        });
+        return true;
+    };
+
+    return (
+        <Context.Provider
+            value={{
+                user,
+                ready,
+                syncFailed,
+                appearance,
+                setAppearance,
+                login: setUser,
+                logout,
+            }}
+        >
+            {children}
+        </Context.Provider>
+    );
+}
+
+export function errorMessage(error: unknown) {
+    return error instanceof ApiError
+        ? error.message
+        : "连接失败，请检查网络后重试";
+}

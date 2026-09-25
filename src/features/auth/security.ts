@@ -106,13 +106,22 @@ export function createApiSecurityMiddleware(options: {
             if (!reqOrigin || reqOrigin !== expectedOrigin) {
                 return failResponse(c, 403, "Origin 校验失败，禁止跨站请求");
             }
-
+            const isFileUpload = (c.req.path === "/api/wallpaper" ||
+                c.req.path.startsWith("/api/admin/backup/")) &&
+                method === "POST";
+            const maxAllowedBody = isFileUpload ? 50 * 1024 * 1024 : 64 * 1024;
             const contentLengthHeader = c.req.header("content-length");
             const contentLength = contentLengthHeader
                 ? parseInt(contentLengthHeader, 10)
                 : 0;
-            if (contentLength > 64 * 1024) {
-                return failResponse(c, 413, "请求体超过 64 KiB 上限");
+            if (contentLength > maxAllowedBody) {
+                return failResponse(
+                    c,
+                    413,
+                    isFileUpload
+                        ? "上传文件大小超过限制"
+                        : "请求体超过 64 KiB 上限",
+                );
             }
 
             const contentType = c.req.header("content-type");
@@ -120,15 +129,30 @@ export function createApiSecurityMiddleware(options: {
                 (contentType !== undefined && contentType.length > 0);
 
             if (hasBody) {
-                if (
-                    !contentType ||
-                    !contentType.toLowerCase().includes("application/json")
-                ) {
-                    return failResponse(
-                        c,
-                        415,
-                        "不支持的 Content-Type，仅接受 application/json",
-                    );
+                if (isFileUpload) {
+                    if (
+                        !contentType ||
+                        !contentType.toLowerCase().startsWith(
+                            "multipart/form-data",
+                        )
+                    ) {
+                        return failResponse(
+                            c,
+                            415,
+                            "不支持的 Content-Type，仅接受 multipart/form-data",
+                        );
+                    }
+                } else {
+                    if (
+                        !contentType ||
+                        !contentType.toLowerCase().includes("application/json")
+                    ) {
+                        return failResponse(
+                            c,
+                            415,
+                            "不支持的 Content-Type，仅接受 application/json",
+                        );
+                    }
                 }
             }
         }

@@ -8,6 +8,62 @@
       "when": 1790147221281,
       "tag": "0000_messy_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790153518609,
+      "tag": "0001_curious_sinister_six",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790161089375,
+      "tag": "0002_sharp_gauntlet",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790165458221,
+      "tag": "0003_polite_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790178943871,
+      "tag": "0004_naive_vector",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790233493127,
+      "tag": "0005_v1_webapps_rich_notes_and_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790236262376,
+      "tag": "0006_unknown_morgan_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790238337646,
+      "tag": "0007_friendly_vengeance",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790269645053,
+      "tag": "0008_silent_iron_lad",
+      "breakpoints": true
     }
   ]
 }

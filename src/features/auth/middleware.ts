@@ -3,7 +3,7 @@ import { failResponse } from "@internal/hono/middleware/response.ts";
 import type { AppEnv } from "../../serve/env.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "./service.ts";
 
-function parseCookie(
+export function parseCookie(
     cookieHeader: string | undefined,
     name: string,
 ): string | undefined {
@@ -33,7 +33,9 @@ export function createSessionMiddleware(
             return failResponse(c, 401, "未登录或登录已失效");
         }
 
-        const user = await authService.authenticateSessionToken(token);
+        const user = await authService.authenticateSessionToken(token, {
+            updateActivity: true,
+        });
         if (!user) {
             c.header("Set-Cookie", authService.buildClearSessionCookieHeader());
             return failResponse(c, 401, "未登录或登录已失效");

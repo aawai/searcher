@@ -3,7 +3,7 @@ import { STATUS_CODE } from "@std/http";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "./service.ts";
-import { createApp } from "../../app.ts";
+import { createAuthTestApp } from "./test-app.ts";
 import type { Envelope, UserDto } from "@shared/contracts.ts";
 import { eq, sql } from "drizzle-orm";
 import { users } from "../../db/schema.ts";
@@ -18,7 +18,7 @@ async function setupTestApp() {
         origin: ORIGIN,
     });
 
-    const app = createApp({
+    const app = createAuthTestApp({
         store,
         auth,
         origin: ORIGIN,
@@ -301,6 +301,217 @@ Deno.test({
                 }),
             });
             assertEquals(changeRes.status, STATUS_CODE.Conflict);
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth spec §14: register/login with optional unique email, login by username or email",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            // 1. Register with email
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "david_spec14",
+                    email: "david@example.com",
+                    displayName: "David Spec14",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(regRes.status, STATUS_CODE.OK);
+
+            // 2. Duplicate email registration rejected with 409
+            const dupEmailRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "david_other",
+                    email: "david@example.com",
+                    displayName: "David Dup",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(dupEmailRes.status, STATUS_CODE.Conflict);
+
+            // 3. Login by email
+            const loginByEmailRes = await app.request("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    account: "david@example.com",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(loginByEmailRes.status, STATUS_CODE.OK);
+            const emailLoginBody = await loginByEmailRes.json() as Envelope<
+                { user: UserDto }
+            >;
+            assertEquals(emailLoginBody.data?.user.username, "david_spec14");
+
+            // 4. Login by username
+            const loginByUserRes = await app.request("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "david_spec14",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(loginByUserRes.status, STATUS_CODE.OK);
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth spec §14: remember-me session duration (7 vs 30 days) and device listing/revocation",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            // Register
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "eve_devices",
+                    displayName: "Eve Devices",
+                    password: "Password123456!",
+                }),
+            });
+            const sessionToken1 = extractCookie(regRes, SESSION_COOKIE_NAME)!;
+            assertNotEquals(sessionToken1, null);
+
+            // Normal login (7 days = 604800s)
+            const loginNormalRes = await app.request("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "eve_devices",
+                    password: "Password123456!",
+                    rememberMe: false,
+                }),
+            });
+            const setCookieNormal = loginNormalRes.headers.get("set-cookie")!;
+            assertEquals(setCookieNormal.includes("Max-Age=604800"), true);
+            const sessionToken2 = extractCookie(
+                loginNormalRes,
+                SESSION_COOKIE_NAME,
+            )!;
+
+            // Remember-me login (30 days = 2592000s)
+            const loginRememberRes = await app.request("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "eve_devices",
+                    password: "Password123456!",
+                    rememberMe: true,
+                }),
+            });
+            const setCookieRemember = loginRememberRes.headers.get(
+                "set-cookie",
+            )!;
+            assertEquals(setCookieRemember.includes("Max-Age=2592000"), true);
+            const sessionToken3 = extractCookie(
+                loginRememberRes,
+                SESSION_COOKIE_NAME,
+            )!;
+
+            // Device list
+            const devicesRes = await app.request("/api/auth/devices", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken3}`,
+                },
+            });
+            assertEquals(devicesRes.status, STATUS_CODE.OK);
+            const devicesBody = await devicesRes.json() as Envelope<{
+                devices: Array<{ id: string; isCurrent: boolean }>;
+            }>;
+            assertEquals(devicesBody.data?.devices.length, 3);
+            const currentDevice = devicesBody.data?.devices.find((d) =>
+                d.isCurrent
+            );
+            assertNotEquals(currentDevice, undefined);
+
+            // Revoke other devices
+            const revokeOthersRes = await app.request(
+                "/api/auth/devices/revoke-others",
+                {
+                    method: "POST",
+                    headers: {
+                        "origin": ORIGIN,
+                        cookie: `${SESSION_COOKIE_NAME}=${sessionToken3}`,
+                    },
+                },
+            );
+            assertEquals(revokeOthersRes.status, STATUS_CODE.OK);
+
+            // sessionToken2 should now be revoked (401)
+            const testRevokedRes = await app.request("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken2}`,
+                },
+            });
+            assertEquals(testRevokedRes.status, STATUS_CODE.Unauthorized);
+
+            // sessionToken3 should still be valid
+            const testCurrentRes = await app.request("/api/auth/me", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${sessionToken3}`,
+                },
+            });
+            assertEquals(testCurrentRes.status, STATUS_CODE.OK);
+            const logoutCurrent = await app.request(
+                `/api/auth/devices/${currentDevice!.id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        origin: ORIGIN,
+                        cookie: `${SESSION_COOKIE_NAME}=${sessionToken3}`,
+                    },
+                },
+            );
+            assertEquals(logoutCurrent.status, STATUS_CODE.OK);
+            assertEquals(
+                logoutCurrent.headers.get("set-cookie")?.includes("Max-Age=0"),
+                true,
+            );
+            const loggedOut = await app.request("/api/auth/me", {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${sessionToken3}` },
+            });
+            assertEquals(loggedOut.status, STATUS_CODE.Unauthorized);
         } finally {
             await store.close();
         }

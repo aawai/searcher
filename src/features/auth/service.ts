@@ -6,8 +6,9 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { sessions, users } from "../../db/schema.ts";
 
 export const SESSION_COOKIE_NAME = "searcher_session";
-export const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
-
+export const SESSION_NORMAL_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
+export const SESSION_REMEMBER_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
+export const SESSION_MAX_AGE_SECONDS = SESSION_NORMAL_MAX_AGE_SECONDS;
 export interface AuthServiceOptions {
     store: DatabaseStore;
     origin: string;
@@ -68,30 +69,48 @@ export class AuthService {
             .replace(/=+$/, "");
     }
 
-    async createSession(userId: string, authVersion: number): Promise<{
+    async createSession(
+        userId: string,
+        authVersion: number,
+        options: {
+            rememberMe?: boolean;
+            userAgent?: string;
+            ip?: string;
+        } = {},
+    ): Promise<{
         token: string;
         tokenHash: string;
         expiresAt: number;
+        maxAgeSeconds: number;
     }> {
         const token = this.generateSessionToken();
         const tokenHash = await this.hashToken(token);
         const createdAt = this.#now();
-        const expiresAt = createdAt + SESSION_MAX_AGE_SECONDS * 1000;
+        const maxAgeSeconds = options.rememberMe
+            ? SESSION_REMEMBER_MAX_AGE_SECONDS
+            : SESSION_NORMAL_MAX_AGE_SECONDS;
+        const expiresAt = createdAt + maxAgeSeconds * 1000;
 
         await this.#store.run(async (db) => {
             await db.insert(sessions).values({
                 tokenHash,
                 userId,
                 authVersion,
+                lastActiveAt: createdAt,
+                userAgent: options.userAgent ?? null,
+                ip: options.ip ?? null,
                 expiresAt,
                 createdAt,
             });
         });
 
-        return { token, tokenHash, expiresAt };
+        return { token, tokenHash, expiresAt, maxAgeSeconds };
     }
 
-    async authenticateSessionToken(token: string): Promise<UserDto | null> {
+    async authenticateSessionToken(
+        token: string,
+        options: { updateActivity?: boolean } = {},
+    ): Promise<UserDto | null> {
         const tokenHash = await this.hashToken(token);
         const currentTime = this.#now();
 
@@ -121,7 +140,7 @@ export class AuthService {
                 return null;
             }
 
-            if (user.disabled) {
+            if (user.disabled || user.softDeletedAt !== null) {
                 return null;
             }
 
@@ -131,6 +150,12 @@ export class AuthService {
                     eq(sessions.tokenHash, tokenHash),
                 );
                 return null;
+            }
+
+            if (options.updateActivity) {
+                await db.update(sessions).set({
+                    lastActiveAt: currentTime,
+                }).where(eq(sessions.tokenHash, tokenHash));
             }
 
             return {
@@ -155,6 +180,92 @@ export class AuthService {
         });
     }
 
+    async revokeOtherUserSessions(
+        userId: string,
+        currentToken: string,
+    ): Promise<void> {
+        const currentTokenHash = await this.hashToken(currentToken);
+        await this.#store.run(async (db) => {
+            const allUserSessions = await db
+                .select({ tokenHash: sessions.tokenHash })
+                .from(sessions)
+                .where(eq(sessions.userId, userId))
+                .all();
+
+            for (const s of allUserSessions) {
+                if (s.tokenHash !== currentTokenHash) {
+                    await db.delete(sessions).where(
+                        eq(sessions.tokenHash, s.tokenHash),
+                    );
+                }
+            }
+        });
+    }
+
+    async listUserSessions(
+        userId: string,
+        currentToken?: string,
+    ): Promise<
+        Array<{
+            id: string;
+            isCurrent: boolean;
+            userAgent: string | null;
+            ip: string | null;
+            createdAt: number;
+            lastActiveAt: number | null;
+            expiresAt: number;
+        }>
+    > {
+        const currentTokenHash = currentToken
+            ? await this.hashToken(currentToken)
+            : null;
+        const currentTime = this.#now();
+
+        return await this.#store.run(async (db) => {
+            const rows = await db
+                .select()
+                .from(sessions)
+                .where(eq(sessions.userId, userId))
+                .all();
+
+            return rows
+                .filter((s) => s.expiresAt > currentTime)
+                .map((s) => ({
+                    id: s.tokenHash.slice(0, 16),
+                    isCurrent: currentTokenHash !== null &&
+                        s.tokenHash === currentTokenHash,
+                    userAgent: s.userAgent,
+                    ip: s.ip,
+                    createdAt: s.createdAt,
+                    lastActiveAt: s.lastActiveAt,
+                    expiresAt: s.expiresAt,
+                }));
+        });
+    }
+
+    async revokeUserSessionById(
+        userId: string,
+        sessionPrefix: string,
+    ): Promise<boolean> {
+        return await this.#store.run(async (db) => {
+            const userSessions = await db
+                .select({ tokenHash: sessions.tokenHash })
+                .from(sessions)
+                .where(eq(sessions.userId, userId))
+                .all();
+
+            const target = userSessions.find((s) =>
+                s.tokenHash.startsWith(sessionPrefix)
+            );
+            if (!target) return false;
+
+            await db.delete(sessions).where(
+                eq(sessions.tokenHash, target.tokenHash),
+            );
+            return true;
+        });
+    }
+
     async hashPassword(password: string): Promise<string> {
         return await this.#vault.passwords.hash(password);
     }
@@ -163,10 +274,13 @@ export class AuthService {
         return await this.#vault.passwords.verify(candidate, hash);
     }
 
-    buildSessionCookieHeader(token: string): string {
+    buildSessionCookieHeader(
+        token: string,
+        maxAgeSeconds: number = SESSION_NORMAL_MAX_AGE_SECONDS,
+    ): string {
         const isSecure = this.isSecureCookie();
         let cookie =
-            `${SESSION_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
+            `${SESSION_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
         if (isSecure) {
             cookie += "; Secure";
         }

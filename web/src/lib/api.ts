@@ -1,65 +1,39 @@
 import type { Envelope } from "@shared/contracts.ts";
-
 export class ApiError extends Error {
     constructor(
-        public readonly code: number,
+        readonly code: number,
         message: string,
-        public readonly data?: unknown,
+        readonly data?: unknown,
     ) {
         super(message);
-        this.name = "ApiError";
     }
 }
-
-let onUnauthorizedHandler: (() => void) | null = null;
-
-export function setUnauthorizedHandler(handler: (() => void) | null) {
-    onUnauthorizedHandler = handler;
-}
-
-export async function apiFetch<T>(
-    endpoint: string,
-    options: RequestInit = {},
-): Promise<T> {
-    const headers = new Headers(options.headers || {});
-
-    if (
-        options.body && typeof options.body === "string" &&
-        !headers.has("Content-Type")
-    ) {
+export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const headers = new Headers(init.headers);
+    if (typeof init.body === "string" && !headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
     }
-
-    const response = await fetch(endpoint, {
-        ...options,
+    const response = await fetch(path, {
+        ...init,
         headers,
         credentials: "same-origin",
     });
-
+    const result: Envelope<T> | undefined =
+        response.headers.get("content-type")?.includes("application/json")
+            ? await response.json()
+            : undefined;
     if (response.status === 401) {
-        if (onUnauthorizedHandler) {
-            onUnauthorizedHandler();
-        }
+        window.dispatchEvent(new Event("searcher:auth-expired"));
     }
-
-    let envelope: Envelope<T> | null = null;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-        try {
-            envelope = await response.json();
-        } catch {
-            // ignore json parse error
-        }
+    if (!response.ok || !result?.status) {
+        throw new ApiError(
+            response.status,
+            result?.message ?? "请求失败",
+            result?.data,
+        );
     }
-
-    if (!response.ok) {
-        const errorMsg = envelope?.message || `请求失败 (${response.status})`;
-        throw new ApiError(response.status, errorMsg, envelope?.data);
-    }
-
-    if (envelope) {
-        return envelope.data as T;
-    }
-
-    return undefined as unknown as T;
+    return result.data as T;
+}
+export function json(method: string, body: unknown): RequestInit {
+    return { method, body: JSON.stringify(body) };
 }

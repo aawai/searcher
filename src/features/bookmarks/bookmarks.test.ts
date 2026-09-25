@@ -6,7 +6,8 @@ import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 import type { AppEnv } from "../../serve/env.ts";
 import { createApp } from "../../app.ts";
-import type { BookmarkDto, Envelope } from "@shared/contracts.ts";
+import type { Envelope } from "@shared/contracts.ts";
+import type { WebAppDto, WebAppGroupDto } from "./service.ts";
 
 const ORIGIN = "http://localhost:8000";
 
@@ -54,16 +55,15 @@ async function registerUser(app: Hono<AppEnv>, username: string) {
 }
 
 Deno.test({
-    name:
-        "bookmarks contract: strict user isolation and duplicate url conflict",
+    name: "webapps contract: strict user isolation and duplicate url allowed",
     async fn() {
         const { store, app } = await setupTestApp();
         try {
-            const tokenA = await registerUser(app, "bm_user_a");
-            const tokenB = await registerUser(app, "bm_user_b");
+            const tokenA = await registerUser(app, "user_w_a");
+            const tokenB = await registerUser(app, "user_w_b");
 
-            // User A creates a bookmark
-            const createA = await app.request("/api/bookmarks", {
+            // User A creates a webapp
+            const createA1 = await app.request("/api/webapps", {
                 method: "POST",
                 headers: {
                     "origin": ORIGIN,
@@ -71,16 +71,15 @@ Deno.test({
                     cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
                 },
                 body: JSON.stringify({
-                    title: "Deno Home",
-                    url: "https://deno.com",
+                    name: "GitHub",
+                    url: "https://github.com",
                 }),
             });
-            assertEquals(createA.status, STATUS_CODE.OK);
-            const createdA = await createA.json() as Envelope<BookmarkDto>;
-            const bmAId = createdA.data!.id;
+            assertEquals(createA1.status, STATUS_CODE.OK);
+            const wA1 = (await createA1.json() as Envelope<WebAppDto>).data!;
 
-            // User A duplicate URL creation returns 409 Conflict
-            const dupCreateA = await app.request("/api/bookmarks", {
+            // User A creates another webapp with the SAME URL -> spec 9.5: duplicate URL is allowed!
+            const createA2 = await app.request("/api/webapps", {
                 method: "POST",
                 headers: {
                     "origin": ORIGIN,
@@ -88,14 +87,16 @@ Deno.test({
                     cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
                 },
                 body: JSON.stringify({
-                    title: "Duplicate Deno",
-                    url: "https://deno.com",
+                    name: "GitHub Second",
+                    url: "https://github.com/",
                 }),
             });
-            assertEquals(dupCreateA.status, STATUS_CODE.Conflict);
+            assertEquals(createA2.status, STATUS_CODE.OK);
+            const wA2 = (await createA2.json() as Envelope<WebAppDto>).data!;
+            assertEquals(wA1.url, wA2.url);
 
-            // User B creates the same URL -> allowed because bookmarks are scoped per user
-            const createB = await app.request("/api/bookmarks", {
+            // User B creates the same URL -> allowed
+            const createB = await app.request("/api/webapps", {
                 method: "POST",
                 headers: {
                     "origin": ORIGIN,
@@ -103,14 +104,22 @@ Deno.test({
                     cookie: `${SESSION_COOKIE_NAME}=${tokenB}`,
                 },
                 body: JSON.stringify({
-                    title: "Deno for B",
-                    url: "https://deno.com",
+                    name: "GitHub for B",
+                    url: "https://github.com",
                 }),
             });
             assertEquals(createB.status, STATUS_CODE.OK);
 
-            // User B cannot patch User A's bookmark -> 404 NotFound
-            const patchAlien = await app.request(`/api/bookmarks/${bmAId}`, {
+            // User B cannot get, patch or delete User A's webapp -> 404
+            const getAlien = await app.request(`/api/webapps/${wA1.id}`, {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${tokenB}`,
+                },
+            });
+            assertEquals(getAlien.status, STATUS_CODE.NotFound);
+
+            const patchAlien = await app.request(`/api/webapps/${wA1.id}`, {
                 method: "PATCH",
                 headers: {
                     "origin": ORIGIN,
@@ -118,13 +127,12 @@ Deno.test({
                     cookie: `${SESSION_COOKIE_NAME}=${tokenB}`,
                 },
                 body: JSON.stringify({
-                    title: "Hacked by B",
+                    name: "Hacked",
                 }),
             });
             assertEquals(patchAlien.status, STATUS_CODE.NotFound);
 
-            // User B cannot delete User A's bookmark -> 404 NotFound
-            const deleteAlien = await app.request(`/api/bookmarks/${bmAId}`, {
+            const deleteAlien = await app.request(`/api/webapps/${wA1.id}`, {
                 method: "DELETE",
                 headers: {
                     "origin": ORIGIN,
@@ -132,18 +140,234 @@ Deno.test({
                 },
             });
             assertEquals(deleteAlien.status, STATUS_CODE.NotFound);
+        } finally {
+            await store.close();
+        }
+    },
+});
 
-            // User A lists bookmarks -> contains 1 bookmark
-            const listA = await app.request("/api/bookmarks", {
-                method: "GET",
+Deno.test({
+    name:
+        "webapps & webapp-groups: CRUD, groups, group deletion migration, pin, order, soft-delete, trash and restore",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            const token = await registerUser(app, "user_webapps_full");
+
+            // 1. Create a WebApp group
+            const createGroupRes = await app.request("/api/webapp-groups", {
+                method: "POST",
                 headers: {
-                    cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "Development",
+                    sortOrder: 1,
+                }),
+            });
+            assertEquals(createGroupRes.status, STATUS_CODE.OK);
+            const devGroup =
+                (await createGroupRes.json() as Envelope<WebAppGroupDto>).data!;
+            assertEquals(devGroup.name, "Development");
+
+            // 2. Create WebApps (one grouped, one ungrouped)
+            const createW1Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "GitHub",
+                    url: "https://github.com",
+                    groupId: devGroup.id,
+                    isPinned: true,
+                    sortOrder: 1,
+                    pinnedSortOrder: 1,
+                    openMode: "new_tab",
+                }),
+            });
+            assertEquals(createW1Res.status, STATUS_CODE.OK);
+            const w1 = (await createW1Res.json() as Envelope<WebAppDto>).data!;
+            assertEquals(w1.name, "GitHub");
+            assertEquals(w1.groupId, devGroup.id);
+            assertEquals(w1.isPinned, true);
+            assertEquals(w1.openMode, "new_tab");
+
+            const createW2Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "Figma",
+                    url: "https://figma.com",
+                    isPinned: false,
+                    sortOrder: 2,
+                }),
+            });
+            assertEquals(createW2Res.status, STATUS_CODE.OK);
+            const w2 = (await createW2Res.json() as Envelope<WebAppDto>).data!;
+
+            // 3. Query filtered by pinned and groupId
+            const listPinnedRes = await app.request(
+                "/api/webapps?pinned=true",
+                {
+                    method: "GET",
+                    headers: {
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(listPinnedRes.status, STATUS_CODE.OK);
+            const pinnedList =
+                (await listPinnedRes.json() as Envelope<WebAppDto[]>).data!;
+            assertEquals(pinnedList.length, 1);
+            assertEquals(pinnedList[0].id, w1.id);
+
+            const listGroupRes = await app.request(
+                `/api/webapps?groupId=${devGroup.id}`,
+                {
+                    method: "GET",
+                    headers: {
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(listGroupRes.status, STATUS_CODE.OK);
+            const groupApps =
+                (await listGroupRes.json() as Envelope<WebAppDto[]>).data!;
+            assertEquals(groupApps.length, 1);
+            assertEquals(groupApps[0].id, w1.id);
+
+            // 4. Reorder webapps
+            const reorderRes = await app.request("/api/webapps/reorder", {
+                method: "PUT",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    items: [
+                        { id: w1.id, sortOrder: 10, pinnedSortOrder: 2 },
+                        { id: w2.id, sortOrder: 5, pinnedSortOrder: 1 },
+                    ],
+                }),
+            });
+            assertEquals(reorderRes.status, STATUS_CODE.OK);
+
+            // 5. Soft-delete w1 -> moves to trash
+            const deleteRes = await app.request(`/api/webapps/${w1.id}`, {
+                method: "DELETE",
+                headers: {
+                    "origin": ORIGIN,
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
                 },
             });
-            assertEquals(listA.status, STATUS_CODE.OK);
-            const listABody = await listA.json() as Envelope<BookmarkDto[]>;
-            assertEquals(listABody.data?.length, 1);
-            assertEquals(listABody.data?.[0].id, bmAId);
+            assertEquals(deleteRes.status, STATUS_CODE.OK);
+
+            // List normal webapps -> w1 not present
+            const listAfterDelete = await app.request("/api/webapps", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+            });
+            assertEquals(listAfterDelete.status, STATUS_CODE.OK);
+            const normalList =
+                (await listAfterDelete.json() as Envelope<WebAppDto[]>).data!;
+            assertEquals(normalList.some((w) => w.id === w1.id), false);
+
+            // Trash contains w1
+            const trashRes = await app.request("/api/webapps/trash", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+            });
+            assertEquals(trashRes.status, STATUS_CODE.OK);
+            const trashList = (await trashRes.json() as Envelope<WebAppDto[]>)
+                .data!;
+            assertEquals(trashList.some((w) => w.id === w1.id), true);
+
+            // 6. Restore w1 from trash
+            const restoreRes = await app.request(
+                `/api/webapps/${w1.id}/restore`,
+                {
+                    method: "POST",
+                    headers: {
+                        "origin": ORIGIN,
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(restoreRes.status, STATUS_CODE.OK);
+
+            const listAfterRestore = await app.request("/api/webapps", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+            });
+            const restoredList =
+                (await listAfterRestore.json() as Envelope<WebAppDto[]>).data!;
+            assertEquals(restoredList.some((w) => w.id === w1.id), true);
+
+            // 7. Delete group -> per spec 9.2, WebApps migrate to ungrouped (groupId = null)
+            const deleteGroupRes = await app.request(
+                `/api/webapp-groups/${devGroup.id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "origin": ORIGIN,
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(deleteGroupRes.status, STATUS_CODE.OK);
+
+            const w1AfterGroupDelete = await app.request(
+                `/api/webapps/${w1.id}`,
+                {
+                    method: "GET",
+                    headers: {
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(w1AfterGroupDelete.status, STATUS_CODE.OK);
+            const w1Final =
+                (await w1AfterGroupDelete.json() as Envelope<WebAppDto>).data!;
+            assertEquals(w1Final.groupId, null);
+
+            // 8. Permanent delete
+            const permDeleteRes = await app.request(
+                `/api/webapps/${w1.id}/permanent`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "origin": ORIGIN,
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(permDeleteRes.status, STATUS_CODE.OK);
+
+            const trashAfterPerm = await app.request("/api/webapps/trash", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+            });
+            const trashAfterPermData =
+                (await trashAfterPerm.json() as Envelope<WebAppDto[]>).data!;
+            assertEquals(trashAfterPermData.some((w) => w.id === w1.id), false);
         } finally {
             await store.close();
         }
