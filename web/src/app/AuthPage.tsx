@@ -54,7 +54,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
             <h1>{kind === "login" ? "登录 Searcher" : "创建账户"}</h1>
             <p className="muted">
                 {kind === "login"
-                    ? "登录后同步 Web App、便签与偏好。"
+                    ? "登录后同步 APP、便签与偏好。"
                     : "账户数据只保存在你的 Searcher 服务上。"}
             </p>
             <form onSubmit={submit}>

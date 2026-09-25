@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
     Link,
     useNavigate,
@@ -5,12 +6,12 @@ import {
     useSearchParams,
 } from "react-router-dom";
 import {
-    CircleUserRound,
     Palette,
     RefreshCw,
     RotateCcw,
     Search,
     Sparkles,
+    Upload,
 } from "lucide-react";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import { Button } from "../components/ui/button.tsx";
@@ -21,13 +22,12 @@ import { Separator } from "../components/ui/separator.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
 
-type Tab = "search" | "appearance" | "ai" | "account" | "data";
+type Tab = "search" | "appearance" | "ai" | "data";
 
 const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     search: { label: "搜索", icon: Search },
     appearance: { label: "外观", icon: Palette },
     ai: { label: "AI 问答", icon: Sparkles },
-    account: { label: "账户", icon: CircleUserRound },
     data: { label: "数据与同步", icon: RefreshCw },
 };
 
@@ -86,6 +86,46 @@ function Choices<T extends string>(
 export function SettingsPage() {
     const { appearance, setAppearance, user } = useAppState();
     const navigate = useNavigate();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    async function handleWallpaperUpload(file: File) {
+        if (file.size > 5 * 1024 * 1024) {
+            alert("壁纸文件大小不能超过 5MB");
+            return;
+        }
+        if (!user) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (typeof reader.result === "string") {
+                    set("wallpaper", reader.result);
+                }
+            };
+            reader.onerror = () => {
+                alert("读取本地壁纸文件失败");
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+        const fd = new FormData();
+        fd.append("image", file);
+        try {
+            const res = await fetch("/api/wallpaper", {
+                method: "POST",
+                body: fd,
+            });
+            const data = await res.json();
+            if (data.status && data.data?.url) {
+                set("wallpaper", data.data.url);
+            } else {
+                alert(data.message || "上传壁纸失败");
+            }
+        } catch (err) {
+            alert(
+                "上传壁纸出错: " +
+                    (err instanceof Error ? err.message : String(err)),
+            );
+        }
+    }
     const { tab: pathTab } = useParams<{ tab?: string }>();
     const [params] = useSearchParams();
     const queryTab = params.get("tab");
@@ -315,7 +355,7 @@ export function SettingsPage() {
                                     />
                                 </div>
                                 <Choices
-                                    title="Web App 图标大小"
+                                    title="APP 图标大小"
                                     value={appearance.webAppIconSize}
                                     values={[["compact", "紧凑"], [
                                         "default",
@@ -333,7 +373,7 @@ export function SettingsPage() {
                                 >
                                     <div>
                                         <h3 style={{ margin: 0 }}>
-                                            显示 Web App 名称
+                                            显示 APP 名称
                                         </h3>
                                         <p
                                             className="muted"
@@ -349,7 +389,7 @@ export function SettingsPage() {
                                         checked={appearance.showAppLabels}
                                         onCheckedChange={(checked) =>
                                             set("showAppLabels", checked)}
-                                        aria-label="显示 Web App 名称"
+                                        aria-label="显示 APP 名称"
                                     />
                                 </div>
                             </div>
@@ -388,147 +428,89 @@ export function SettingsPage() {
                                     </Button>
                                 </div>
 
-                                <div className="setting-group">
-                                    <h4
+                                <div className="field">
+                                    <label htmlFor="wallpaper-input">
+                                        壁纸背景 (上传本地图片或输入地址/渐变)
+                                    </label>
+                                    <div
                                         style={{
-                                            margin: "0 0 10px",
-                                            fontSize: "14px",
+                                            display: "flex",
+                                            gap: "8px",
+                                            alignItems: "center",
                                         }}
                                     >
-                                        预设壁纸
-                                    </h4>
-                                    <div className="choice-row">
-                                        <button
-                                            type="button"
-                                            aria-pressed={appearance
-                                                .wallpaper === ""}
-                                            onClick={() => set("wallpaper", "")}
-                                        >
-                                            默认纯色
-                                        </button>
-                                        <button
-                                            type="button"
-                                            aria-pressed={appearance
-                                                .wallpaper ===
-                                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"}
-                                            onClick={() =>
-                                                set(
-                                                    "wallpaper",
-                                                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                                )}
-                                        >
-                                            紫蓝极光
-                                        </button>
-                                        <button
-                                            type="button"
-                                            aria-pressed={appearance
-                                                .wallpaper ===
-                                                "linear-gradient(120deg, #1f2937 0%, #111827 100%)"}
-                                            onClick={() =>
-                                                set(
-                                                    "wallpaper",
-                                                    "linear-gradient(120deg, #1f2937 0%, #111827 100%)",
-                                                )}
-                                        >
-                                            深邃暗色
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <label className="field">
-                                    壁纸图片 HTTPS 地址 / CSS 渐变
-                                    <input
-                                        type="text"
-                                        placeholder={appearance.wallpaper
-                                                .startsWith("data:")
-                                            ? "当前已使用本地壁纸图片（输入新地址或渐变可替换）"
-                                            : "https://example.com/wallpaper.jpg 或 linear-gradient(...)"}
-                                        value={appearance.wallpaper.startsWith(
-                                                "data:",
-                                            )
-                                            ? ""
-                                            : appearance.wallpaper}
-                                        onChange={(e) =>
-                                            set("wallpaper", e.target.value)}
-                                    />
-                                </label>
-
-                                <div
-                                    className="field"
-                                    style={{ marginTop: "10px" }}
-                                >
-                                    <span>
-                                        上传本地壁纸 (PNG/JPEG/WebP/AVIF，最大
-                                        5MB)
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept="image/png,image/jpeg,image/webp,image/avif"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            if (file.size > 5 * 1024 * 1024) {
-                                                alert(
-                                                    "壁纸文件大小不能超过 5MB",
-                                                );
-                                                return;
-                                            }
-                                            if (!user) {
-                                                const reader = new FileReader();
-                                                reader.onload = () => {
-                                                    if (
-                                                        typeof reader.result ===
-                                                            "string"
-                                                    ) {
-                                                        set(
-                                                            "wallpaper",
-                                                            reader.result,
-                                                        );
-                                                    }
-                                                };
-                                                reader.onerror = () => {
-                                                    alert(
-                                                        "读取本地壁纸文件失败",
-                                                    );
-                                                };
-                                                reader.readAsDataURL(file);
-                                                return;
-                                            }
-                                            const fd = new FormData();
-                                            fd.append("image", file);
-                                            try {
-                                                const res = await fetch(
-                                                    "/api/wallpaper",
-                                                    {
-                                                        method: "POST",
-                                                        body: fd,
-                                                    },
-                                                );
-                                                const data = await res.json();
-                                                if (
-                                                    data.status &&
-                                                    data.data?.url
-                                                ) {
-                                                    set(
-                                                        "wallpaper",
-                                                        data.data.url,
-                                                    );
-                                                } else {
-                                                    alert(
-                                                        data.message ||
-                                                            "上传壁纸失败",
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            style={{ display: "none" }}
+                                            accept="image/png,image/jpeg,image/webp,image/avif"
+                                            onChange={(e) => {
+                                                const file = e.target.files
+                                                    ?.[0];
+                                                if (file) {
+                                                    void handleWallpaperUpload(
+                                                        file,
                                                     );
                                                 }
-                                            } catch (err) {
-                                                alert(
-                                                    "上传壁纸出错: " +
-                                                        (err instanceof Error
-                                                            ? err.message
-                                                            : String(err)),
-                                                );
-                                            }
-                                        }}
-                                    />
+                                                e.target.value = "";
+                                            }}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() =>
+                                                fileInputRef.current?.click()}
+                                            title="上传本地图片 (PNG/JPEG/WebP/AVIF，最大 5MB)"
+                                            aria-label="上传本地图片"
+                                            style={{
+                                                flexShrink: 0,
+                                                width: "42px",
+                                                height: "42px",
+                                                padding: 0,
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
+                                        >
+                                            <Upload size={18} />
+                                        </Button>
+                                        <input
+                                            id="wallpaper-input"
+                                            type="text"
+                                            placeholder={appearance.wallpaper
+                                                    .startsWith("data:")
+                                                ? "当前已使用本地壁纸图片（输入新地址或渐变可替换）"
+                                                : "输入图片 HTTPS 地址或 CSS 渐变"}
+                                            value={appearance.wallpaper
+                                                    .startsWith("data:")
+                                                ? ""
+                                                : appearance.wallpaper}
+                                            onChange={(e) =>
+                                                set(
+                                                    "wallpaper",
+                                                    e.target.value,
+                                                )}
+                                            style={{ flex: 1, margin: 0 }}
+                                        />
+                                        {appearance.wallpaper && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                    set("wallpaper", "")}
+                                                title="清除壁纸"
+                                                aria-label="清除壁纸"
+                                                style={{
+                                                    flexShrink: 0,
+                                                    height: "42px",
+                                                    padding: "0 10px",
+                                                }}
+                                            >
+                                                <RotateCcw size={15} />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="setting-group">
@@ -680,29 +662,6 @@ export function SettingsPage() {
                             <div className="settings-subgroup">
                                 <AiSettings />
                             </div>
-                        </div>
-                    )}
-                    {tab === "account" && (
-                        <div className="settings-section">
-                            <p>
-                                {user
-                                    ? (
-                                        <Link
-                                            to="/account"
-                                            className="button button--subtle"
-                                        >
-                                            管理个人资料、密码与登录设备
-                                        </Link>
-                                    )
-                                    : (
-                                        <Link
-                                            to="/login"
-                                            className="button button--primary"
-                                        >
-                                            登录以管理账户和设备
-                                        </Link>
-                                    )}
-                            </p>
                         </div>
                     )}
                     {tab === "data" && (

@@ -543,7 +543,7 @@ export function WebAppLauncher({
                     <div className="launcher-empty">
                         {emptyMessage}{" "}
                         {emptyAction && (
-                            <Button onClick={onAdd}>添加 Web App</Button>
+                            <Button onClick={onAdd}>添加 APP</Button>
                         )}
                     </div>
                 )

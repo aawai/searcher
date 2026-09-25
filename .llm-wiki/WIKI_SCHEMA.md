@@ -2,15 +2,16 @@
 
 ## Ownership Rules
 
-| Path | Owner | Rule |
-|------|-------|------|
-| raw/** | extension | immutable after capture |
-| wiki/** | model + user | editable knowledge pages |
-| meta/events.jsonl | extension tools | append-only authoritative state |
-| meta/* except events.jsonl | extension | generated projections |
-| . | human + explicit request | operating rules |
+| Path                       | Owner                    | Rule                            |
+| -------------------------- | ------------------------ | ------------------------------- |
+| raw/**                     | extension                | immutable after capture         |
+| wiki/**                    | model + user             | editable knowledge pages        |
+| meta/events.jsonl          | extension tools          | append-only authoritative state |
+| meta/* except events.jsonl | extension                | generated projections           |
+| .                          | human + explicit request | operating rules                 |
 
-Back up `meta/events.jsonl` to preserve activity history. Generated logs cannot reconstruct it.
+Back up `meta/events.jsonl` to preserve activity history. Generated logs cannot
+reconstruct it.
 
 ## Source Packet Format
 

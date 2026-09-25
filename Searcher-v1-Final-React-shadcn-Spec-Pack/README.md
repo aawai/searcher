@@ -47,4 +47,5 @@
 6. `06_AGENTS.md` — Coding Agent 开发规则
 7. `07_DESIGN_LAB_PROMPT.md` — `/design-lab` 设计实现提示词
 
-> 本包替代此前以 Figma 为中心的设计流程。Searcher 的设计事实以真实 React 组件、Design Tokens、`/design-lab` 和 Git 中的代码为准。
+> 本包替代此前以 Figma 为中心的设计流程。Searcher 的设计事实以真实 React
+> 组件、Design Tokens、`/design-lab` 和 Git 中的代码为准。

@@ -9,10 +9,8 @@ import {
     Folder,
     FolderPlus,
     GripVertical,
-    MoreHorizontal,
     Plus,
     RotateCcw,
-    SlidersHorizontal,
     Trash2,
     X,
 } from "lucide-react";
@@ -50,12 +48,6 @@ import {
 import { type WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import {
@@ -256,6 +248,9 @@ export function SearchHome() {
     const [isManagingGroups, setIsManagingGroups] = useState(false);
     const [isManagingApps, setIsManagingApps] = useState(false);
     const [webAppSheetHeight, setWebAppSheetHeight] = useState<40 | 65 | 90>(
+        65,
+    );
+    const [notesSheetHeight, setNotesSheetHeight] = useState<40 | 65 | 90>(
         65,
     );
     const [editingApp, setEditingApp] = useState<ExtendedWebApp | null>(null);
@@ -679,22 +674,6 @@ export function SearchHome() {
             (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
         );
     }, [apps, groups, activeGroupFilter, filter]);
-
-    // Group Counts
-    const groupCounts = useMemo(() => {
-        const counts: Record<string, number> = {
-            all: apps.length,
-            ungrouped: 0,
-        };
-        for (const app of apps) {
-            if (!app.groupId) {
-                counts.ungrouped = (counts.ungrouped || 0) + 1;
-            } else {
-                counts[app.groupId] = (counts[app.groupId] || 0) + 1;
-            }
-        }
-        return counts;
-    }, [apps]);
 
     function openAddModal() {
         setAppName("");
@@ -1273,7 +1252,7 @@ export function SearchHome() {
                         setIsManagingGroups(false);
                     }
                 }}
-                title="Web App"
+                title="APP"
                 height={webAppSheetHeight}
                 onHeightChange={setWebAppSheetHeight}
             >
@@ -1294,51 +1273,21 @@ export function SearchHome() {
                     </div>
                     <Button variant="default" onClick={openAddModal}>
                         <Plus size={16} />
-                        <span>添加网站</span>
+                        <span>APP</span>
                     </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            className="button button--subtle"
-                            style={{
-                                width: "44px",
-                                height: "44px",
-                                minWidth: "44px",
-                                minHeight: "44px",
-                                padding: 0,
-                            }}
-                            aria-label="更多管理操作"
-                            title="更多管理选项"
-                        >
-                            <MoreHorizontal size={18} />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" sideOffset={6}>
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    setIsManagingApps((value) => !value)}
-                            >
-                                <SlidersHorizontal
-                                    size={15}
-                                    style={{ marginRight: 8 }}
-                                />
-                                <span>
-                                    {isManagingApps
-                                        ? "退出管理模式"
-                                        : "管理模式"}
-                                </span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    setIsManagingGroups(!isManagingGroups)}
-                            >
-                                <Folder size={15} style={{ marginRight: 8 }} />
-                                <span>
-                                    {isManagingGroups
-                                        ? "返回网站列表"
-                                        : "文件夹管理"}
-                                </span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                        variant={isManagingGroups ? "secondary" : "outline"}
+                        onClick={() => setIsManagingGroups(!isManagingGroups)}
+                        title={isManagingGroups
+                            ? "返回 APP 列表"
+                            : "文件夹管理"}
+                        aria-label={isManagingGroups
+                            ? "返回 APP 列表"
+                            : "文件夹管理"}
+                    >
+                        <Folder size={16} />
+                        <span>{isManagingGroups ? "返回" : "文件夹"}</span>
+                    </Button>
                 </div>
 
                 {isManagingGroups
@@ -1346,8 +1295,8 @@ export function SearchHome() {
                         <div className="group-manage-section">
                             <h3>文件夹管理</h3>
                             <p className="muted" style={{ fontSize: "13px" }}>
-                                文件夹可帮助归类 Web
-                                App。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
+                                文件夹可帮助归类
+                                APP。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
                             </p>
                             <form
                                 onSubmit={createGroup}
@@ -1408,52 +1357,6 @@ export function SearchHome() {
                     )
                     : (
                         <>
-                            <nav
-                                className="webapp-group-tabs"
-                                aria-label="Web App 文件夹切换"
-                            >
-                                <button
-                                    type="button"
-                                    className="webapp-group-tab"
-                                    aria-pressed={activeGroupFilter === "all"}
-                                    onClick={() => setActiveGroupFilter("all")}
-                                >
-                                    全部
-                                    <span className="webapp-group-count">
-                                        {apps.length}
-                                    </span>
-                                </button>
-                                <button
-                                    type="button"
-                                    className="webapp-group-tab"
-                                    aria-pressed={activeGroupFilter ===
-                                        "ungrouped"}
-                                    onClick={() =>
-                                        setActiveGroupFilter("ungrouped")}
-                                >
-                                    未放入文件夹
-                                    <span className="webapp-group-count">
-                                        {groupCounts.ungrouped || 0}
-                                    </span>
-                                </button>
-                                {groups.map((g) => (
-                                    <button
-                                        key={g.id}
-                                        type="button"
-                                        className="webapp-group-tab"
-                                        aria-pressed={activeGroupFilter ===
-                                            g.id}
-                                        onClick={() =>
-                                            setActiveGroupFilter(g.id)}
-                                    >
-                                        {g.name}
-                                        <span className="webapp-group-count">
-                                            {groupCounts[g.id] || 0}
-                                        </span>
-                                    </button>
-                                ))}
-                            </nav>
-
                             {appsStatus === "loading" && (
                                 <p role="status" className="launcher-empty">
                                     正在加载网站…
@@ -1534,7 +1437,7 @@ export function SearchHome() {
             >
                 <DialogContent>
                     <DialogTitle>
-                        {editingApp ? "编辑 Web App" : "添加 Web App"}
+                        {editingApp ? "编辑 APP" : "添加 APP"}
                     </DialogTitle>
                     <form onSubmit={handleSaveApp}>
                         {appFormMessage && (
@@ -1542,24 +1445,39 @@ export function SearchHome() {
                                 {appFormMessage}
                             </p>
                         )}
-                        <label className="field">
-                            网址 (URL)
-                            <input
-                                required
-                                type="text"
-                                placeholder="https://example.com"
-                                value={appUrl}
-                                onChange={(e) => setAppUrl(e.target.value)}
-                            />
-                        </label>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            disabled={!appUrl.trim() || isFetchingIcon}
-                            onClick={() => void detectAppDetails()}
-                        >
-                            {isFetchingIcon ? "正在检测…" : "检测名称与图标"}
-                        </Button>
+                        <div className="field">
+                            <label htmlFor="app-url-input">网址 (URL)</label>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "8px",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <input
+                                    id="app-url-input"
+                                    required
+                                    type="text"
+                                    placeholder="https://example.com"
+                                    value={appUrl}
+                                    onChange={(e) => setAppUrl(e.target.value)}
+                                    style={{ flex: 1, margin: 0 }}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={!appUrl.trim() || isFetchingIcon}
+                                    onClick={() => void detectAppDetails()}
+                                    style={{
+                                        flexShrink: 0,
+                                        height: "42px",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {isFetchingIcon ? "识别中…" : "识别"}
+                                </Button>
+                            </div>
+                        </div>
                         <label className="field">
                             网站名称
                             <input
@@ -1956,6 +1874,8 @@ export function SearchHome() {
                     if (!v) setEditing(null);
                 }}
                 title={editing ? "编辑便签" : "便签"}
+                height={notesSheetHeight}
+                onHeightChange={setNotesSheetHeight}
             >
                 {editing && user
                     ? (

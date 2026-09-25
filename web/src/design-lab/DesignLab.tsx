@@ -225,7 +225,7 @@ export function DesignLab() {
                         {({
                             screen: "主页",
                             search: "搜索",
-                            webapps: "Web App",
+                            webapps: "APP",
                             notes: "便签",
                             navigation: "导航与 Sheet",
                         })[id]}

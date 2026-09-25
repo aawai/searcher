@@ -62,7 +62,13 @@
     },
     "lint": {
         "rules": { "exclude": ["no-sloppy-imports"] },
-        "exclude": ["web/.vite/", "web/dist/", "node_modules/", "drizzle/"]
+        "exclude": [
+            "web/.vite/",
+            "web/dist/",
+            "node_modules/",
+            "drizzle/",
+            ".llm-wiki/"
+        ]
     },
     "fmt": {
         "indentWidth": 4,
@@ -71,7 +77,8 @@
             "./drizzle",
             "web/.vite/",
             "web/dist/",
-            "node_modules/"
+            "node_modules/",
+            ".llm-wiki/"
         ]
     }
 }
