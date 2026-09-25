@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-025",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "Best Practices",
+  "url": "https://hono.dev/docs/guides/best-practices",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

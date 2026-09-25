@@ -124,6 +124,7 @@ Accent：blue / cyan / teal / violet / orange / mono。
 使用 dnd-kit。
 
 Web App：sortable，drop 后一次提交最终顺序。
+桌面按照 APP sort_order 形成 canonical order；将分组折叠到首个成员位置，再对当前 visible tiles 按尺寸运行纯 First-Fit occupancy，CSS Grid 使用显式 col/row/span 渲染。ResizeObserver 根据实际 Grid 容器宽度和 Cell/gap 推导列数。拖拽保留原 slot，使用 pointerWithin 优先、closestCenter 回退、DragOverlay 和不交换不等大 rect 的排序策略；drop 后仅更新 APP sort_order，不存响应式坐标。
 
 Note：desktop draggable；Searcher 自己维护 x/y/z-index/overlap/safe area。
 

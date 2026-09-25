@@ -1,5 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { type LauncherApp, launcherTiles } from "./launcherTiles.ts";
+import {
+    type LauncherApp,
+    launcherTiles,
+    mergeVisibleOrder,
+} from "./launcherTiles.ts";
 
 Deno.test("grouped apps form one folder with every current member in app order", () => {
     const app = (id: string, groupId: string | null): LauncherApp => ({
@@ -28,5 +32,16 @@ Deno.test("grouped apps form one folder with every current member in app order",
     assertEquals(
         launcherTiles([apps[2]], groups)[0].apps?.map((item) => item.id),
         ["second"],
+    );
+});
+
+Deno.test("sorting a filtered desktop preserves hidden apps in canonical order", () => {
+    assertEquals(
+        mergeVisibleOrder(["A", "hidden1", "B", "hidden2", "C"], [
+            "C",
+            "A",
+            "B",
+        ]),
+        ["C", "hidden1", "A", "hidden2", "B"],
     );
 });

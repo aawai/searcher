@@ -4,7 +4,7 @@ category: tool
 title: "Hono Framework"
 created: 2026-09-25
 updated: 2026-09-25
-sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-004, sources/SRC-2026-09-25-006, sources/SRC-2026-09-25-011]
+sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-004, sources/SRC-2026-09-25-006, sources/SRC-2026-09-25-011, sources/SRC-2026-09-25-018, sources/SRC-2026-09-25-025]
 ---
 
 # Hono Framework
@@ -30,3 +30,5 @@ sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-004, sources/SRC-20
 - [[sources/SRC-2026-09-25-004]]
 - [[sources/SRC-2026-09-25-006]]
 - [[sources/SRC-2026-09-25-011]]
+- [[sources/SRC-2026-09-25-018]]
+- [[sources/SRC-2026-09-25-025]]

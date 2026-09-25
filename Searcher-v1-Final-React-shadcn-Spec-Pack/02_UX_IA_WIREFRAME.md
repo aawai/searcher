@@ -97,6 +97,7 @@ Search 仍显示但暂不可执行；Web App 可拖动；Note 显示 drag handle
 Desktop 40% / 65% / 90%。Mobile 标准 Bottom Sheet。
 
 内容包括 Search、All / Group / Ungrouped、App Grid、Add、Manage。每次打开默认进入 All。
+“全部”将 APP（1×1）、小文件夹（1×1）、大文件夹（2×2）排列在同一基础栅格。大文件夹最多 3×3 预览，点图标直达网站，点背景打开完整文件夹；文件夹管理和右键菜单均可切换大小。外观设置中的“显示 Web App 名称”默认开启；关闭后顶层 APP 和文件夹均仅显示图标、行高同步收紧。文件夹内容面板仍显示名称。40% / 65% / 90% 调整面板高度而非列数。
 
 Context Menu：Open、Pin/Unpin、Edit、Move Group、Change Icon、Delete。
 

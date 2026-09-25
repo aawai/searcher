@@ -82,6 +82,8 @@ export const preferences = sqliteTable("preferences", {
     webAppIconSize: text("webapp_icon_size", {
         enum: ["compact", "default", "large"],
     }).notNull().default("default"),
+    showAppLabels: integer("show_app_labels", { mode: "boolean" })
+        .notNull().default(true),
 }, (t) => [
     check(
         "preferences_engine_check",
@@ -156,10 +158,17 @@ export const webappGroups = sqliteTable("webapp_groups", {
     }),
     name: text("name").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
+    folderSize: text("folder_size", {
+        enum: ["small", "large"],
+    }).notNull().default("small"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
 }, (t) => [
     index("webapp_groups_user_idx").on(t.userId),
+    check(
+        "webapp_groups_folder_size_check",
+        sql`${t.folderSize} in ('small', 'large')`,
+    ),
 ]);
 
 export const webapps = sqliteTable("webapps", {

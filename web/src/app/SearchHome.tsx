@@ -15,16 +15,18 @@ import {
     X,
 } from "lucide-react";
 import {
+    closestCenter,
     DndContext,
     type DragEndEvent,
+    DragOverlay,
     KeyboardSensor,
     PointerSensor,
+    pointerWithin,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
 import {
     arrayMove,
-    rectSortingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
     useSortable,
@@ -35,8 +37,10 @@ import { BottomNavigation } from "../components/searcher/BottomNavigation.tsx";
 import { FloatingNotes } from "../components/searcher/FloatingNotes.tsx";
 import { LogoCandidatePicker } from "../components/searcher/LogoCandidatePicker.tsx";
 import { WebAppLauncher } from "../components/searcher/WebAppLauncher.tsx";
+import { mergeVisibleOrder } from "../components/searcher/launcherTiles.ts";
 import { NoteCard, type NoteItem } from "../components/searcher/NoteCard.tsx";
 import { NoteEditor } from "../components/searcher/NoteEditor.tsx";
+import { useMasonryLayout } from "../components/searcher/masonry.ts";
 import {
     type Reachability,
     SearcherSearchInput,
@@ -57,6 +61,7 @@ export interface WebAppGroup {
     id: string;
     userId: string;
     name: string;
+    folderSize: "small" | "large";
     sortOrder: number;
     createdAt: number;
     updatedAt: number;
@@ -72,10 +77,12 @@ export interface ExtendedWebApp extends WebAppItem {
 function SortableGroupManageItem({
     group,
     onRename,
+    onSizeChange,
     onDelete,
 }: {
     group: WebAppGroup;
     onRename: (group: WebAppGroup, name: string) => void;
+    onSizeChange: (group: WebAppGroup, size: "small" | "large") => void;
     onDelete: (group: WebAppGroup) => void;
 }) {
     const {
@@ -119,6 +126,19 @@ function SortableGroupManageItem({
                 }}
             />
             <Button
+                variant="outline"
+                onClick={() =>
+                    onSizeChange(
+                        group,
+                        group.folderSize === "large" ? "small" : "large",
+                    )}
+                aria-label={`${group.name} 当前为${
+                    group.folderSize === "large" ? "大" : "小"
+                }文件夹，切换大小`}
+            >
+                {group.folderSize === "large" ? "大文件夹" : "小文件夹"}
+            </Button>
+            <Button
                 variant="destructive"
                 onClick={() => void onDelete(group)}
                 title="删除文件夹"
@@ -132,10 +152,12 @@ function SortableGroupManageItem({
 function SortableDrawerNoteItem({
     note,
     disabled,
+    isOverlayActive,
     children,
 }: {
     note: NoteItem;
     disabled: boolean;
+    isOverlayActive?: boolean;
     children: (dragHandle: React.ReactNode) => React.ReactNode;
 }) {
     const {
@@ -145,12 +167,13 @@ function SortableDrawerNoteItem({
         transform,
         transition,
         isDragging,
+        isOver,
     } = useSortable({ id: note.id, disabled });
-    const style = {
-        transform: CSS.Transform.toString(transform),
+    const style: React.CSSProperties = {
+        transform: isOverlayActive
+            ? undefined
+            : CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.6 : 1,
-        zIndex: isDragging ? 50 : "auto",
     };
     const dragHandle = (
         <button
@@ -170,7 +193,13 @@ function SortableDrawerNoteItem({
         </button>
     );
     return (
-        <div ref={setNodeRef} style={style} className="note-list-item">
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`note-list-item${
+                isOver && isOverlayActive && !isDragging ? " is-over" : ""
+            }`}
+        >
             {children(dragHandle)}
         </div>
     );
@@ -493,6 +522,25 @@ export function SearchHome() {
                 b.id.localeCompare(a.id)
             );
     }, [notes, filter]);
+    const [activeDrawerNoteId, setActiveDrawerNoteId] = useState<string | null>(
+        null,
+    );
+    const activeDrawerNote = useMemo(
+        () =>
+            visibleNotes.find((note) => note.id === activeDrawerNoteId) ?? null,
+        [visibleNotes, activeDrawerNoteId],
+    );
+
+    const {
+        containerRef: notesMasonryRef,
+        registerCard: registerNoteCard,
+        layout: notesMasonryLayout,
+    } = useMasonryLayout({
+        items: visibleNotes,
+        gap: 16,
+        minColumnWidth: 245,
+        maxColumns: 3,
+    });
 
     const drawerNoteSensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -503,12 +551,51 @@ export function SearchHome() {
 
     async function handleDrawerNotesDragEnd(event: DragEndEvent) {
         const { active, over } = event;
+        setActiveDrawerNoteId(null);
         if (!over || active.id === over.id || filter.trim()) return;
         const oldIndex = visibleNotes.findIndex((n) => n.id === active.id);
-        const newIndex = visibleNotes.findIndex((n) => n.id === over.id);
-        if (oldIndex < 0 || newIndex < 0) return;
+        const overIndex = visibleNotes.findIndex((n) => n.id === over.id);
+        if (oldIndex < 0 || overIndex < 0) return;
 
-        const reordered = arrayMove(visibleNotes, oldIndex, newIndex);
+        const activeItem = visibleNotes[oldIndex];
+        const overItem = visibleNotes[overIndex];
+        if (!activeItem || !overItem) return;
+
+        const translatedRect = active.rect.current.translated;
+        const activeCenterY = translatedRect
+            ? translatedRect.top + translatedRect.height / 2
+            : null;
+        const overCenterY = over.rect
+            ? over.rect.top + over.rect.height / 2
+            : null;
+
+        let insertAfter = false;
+        if (activeCenterY !== null && overCenterY !== null) {
+            insertAfter = activeCenterY > overCenterY;
+        } else {
+            insertAfter = oldIndex < overIndex;
+        }
+
+        let targetIndex = overIndex;
+        if (insertAfter) {
+            targetIndex = oldIndex < overIndex ? overIndex : overIndex + 1;
+        } else {
+            targetIndex = oldIndex < overIndex ? overIndex - 1 : overIndex;
+        }
+
+        const pinnedCount = visibleNotes.filter((n) => n.isPinned).length;
+        if (activeItem.isPinned) {
+            targetIndex = Math.max(0, Math.min(pinnedCount - 1, targetIndex));
+        } else {
+            targetIndex = Math.max(
+                pinnedCount,
+                Math.min(visibleNotes.length - 1, targetIndex),
+            );
+        }
+
+        if (targetIndex === oldIndex) return;
+
+        const reordered = arrayMove(visibleNotes, oldIndex, targetIndex);
         const snapshot = [...notes];
 
         const newOrders = new Map<string, number>();
@@ -553,14 +640,32 @@ export function SearchHome() {
         }
         if (filter.trim()) {
             const q = filter.trim().toLowerCase();
+            const matches = (app: ExtendedWebApp) =>
+                (app.name + " " + app.url).toLowerCase().includes(q);
+            const matchingGroups = new Set(
+                activeGroupFilter === "all"
+                    ? groups.filter((group) =>
+                        group.name.toLowerCase().includes(q)
+                    ).map((group) => group.id)
+                    : [],
+            );
+            if (activeGroupFilter === "all") {
+                for (const app of filtered) {
+                    if (app.groupId && matches(app)) {
+                        matchingGroups.add(app.groupId);
+                    }
+                }
+            }
             filtered = filtered.filter((app) =>
-                (app.name + " " + app.url).toLowerCase().includes(q)
+                matches(app) ||
+                (app.groupId !== null && app.groupId !== undefined &&
+                    matchingGroups.has(app.groupId))
             );
         }
         return filtered.slice().sort((a, b) =>
             (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
         );
-    }, [apps, activeGroupFilter, filter]);
+    }, [apps, groups, activeGroupFilter, filter]);
 
     // Group Counts
     const groupCounts = useMemo(() => {
@@ -765,7 +870,12 @@ export function SearchHome() {
     }
 
     async function reorderApps(ids: string[]) {
-        const updates = ids.map((id, sortOrder) => ({ id, sortOrder }));
+        const order = mergeVisibleOrder(
+            apps.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                .map((app) => app.id),
+            ids,
+        );
+        const updates = order.map((id, sortOrder) => ({ id, sortOrder }));
         try {
             await api("/api/webapps/reorder", json("PUT", { items: updates }));
             const positions = new Map(
@@ -853,6 +963,22 @@ export function SearchHome() {
         }
     }
 
+    async function changeFolderSize(
+        group: Pick<WebAppGroup, "id">,
+        folderSize: "small" | "large",
+    ) {
+        try {
+            const updated = await api<WebAppGroup>(
+                `/api/webapp-groups/${group.id}`,
+                json("PATCH", { folderSize }),
+            );
+            setGroups((items) =>
+                items.map((item) => item.id === group.id ? updated : item)
+            );
+        } catch (cause) {
+            setError(errorMessage(cause));
+        }
+    }
     async function deleteGroup(group: WebAppGroup) {
         if (
             !confirm(
@@ -1062,6 +1188,7 @@ export function SearchHome() {
                             groups={groups}
                             showFolders={false}
                             size={appearance.webAppIconSize}
+                            showAppLabels={appearance.showAppLabels}
                             managing={isManagingApps}
                             onToggleManaging={() =>
                                 setIsManagingApps((value) => !value)}
@@ -1215,6 +1342,13 @@ export function SearchHome() {
                                                         group={g}
                                                         onRename={renameGroup}
                                                         onDelete={deleteGroup}
+                                                        onSizeChange={(
+                                                            group,
+                                                            size,
+                                                        ) => void changeFolderSize(
+                                                            group,
+                                                            size,
+                                                        )}
                                                     />
                                                 ))}
                                             </SortableContext>
@@ -1317,9 +1451,14 @@ export function SearchHome() {
                                     emptyAction={!filter.trim() &&
                                         activeGroupFilter === "all"}
                                     groups={groups}
-                                    showFolders={activeGroupFilter === "all" &&
-                                        !filter.trim()}
+                                    showFolders={activeGroupFilter === "all"}
                                     size={appearance.webAppIconSize}
+                                    showAppLabels={appearance.showAppLabels}
+                                    onFolderSizeChange={(group, folderSize) =>
+                                        void changeFolderSize(
+                                            group,
+                                            folderSize,
+                                        )}
                                     managing={isManagingApps}
                                     onToggleManaging={() =>
                                         setIsManagingApps((value) => !value)}
@@ -1751,87 +1890,197 @@ export function SearchHome() {
                                 ? (
                                     <DndContext
                                         sensors={drawerNoteSensors}
+                                        collisionDetection={(args) => {
+                                            const targets = pointerWithin(args);
+                                            return targets.length
+                                                ? targets
+                                                : closestCenter(args);
+                                        }}
+                                        onDragStart={(event) =>
+                                            setActiveDrawerNoteId(
+                                                String(event.active.id),
+                                            )}
+                                        onDragCancel={() =>
+                                            setActiveDrawerNoteId(null)}
                                         onDragEnd={handleDrawerNotesDragEnd}
                                     >
                                         <SortableContext
                                             items={visibleNotes.map((n) =>
                                                 n.id
                                             )}
-                                            strategy={rectSortingStrategy}
+                                            strategy={() => null}
                                             disabled={Boolean(filter.trim())}
                                         >
-                                            <div className="note-list-grid">
-                                                {visibleNotes.map((note) => (
-                                                    <SortableDrawerNoteItem
-                                                        key={note.id}
-                                                        note={note}
-                                                        disabled={Boolean(
-                                                            filter.trim(),
-                                                        )}
-                                                    >
-                                                        {(dragHandle) => (
-                                                            <NoteCard
-                                                                note={note}
-                                                                dragHandle={dragHandle}
-                                                                onOpen={() =>
-                                                                    editNote(
-                                                                        note,
-                                                                    )}
-                                                                onTogglePin={() =>
-                                                                    void updateNote(
-                                                                        note,
-                                                                        {
-                                                                            isPinned:
-                                                                                !note
-                                                                                    .isPinned,
-                                                                        },
-                                                                    )}
-                                                                onToggleHomeFixed={() =>
-                                                                    void updateNote(
-                                                                        note,
-                                                                        {
-                                                                            isHomeFixed:
-                                                                                !note
-                                                                                    .isHomeFixed,
-                                                                        },
-                                                                    )}
-                                                                onToggleMode={() =>
-                                                                    void updateNoteLayout(
-                                                                        note,
-                                                                        {
-                                                                            ...(note
-                                                                                .layout ??
-                                                                                {
-                                                                                    deviceClass:
-                                                                                        "desktop" as const,
-                                                                                    zIndex:
-                                                                                        1,
-                                                                                    expanded:
-                                                                                        true,
-                                                                                }),
-                                                                            expanded:
-                                                                                !(note
-                                                                                    .layout
-                                                                                    ?.expanded ??
-                                                                                    true),
-                                                                        },
-                                                                    )}
-                                                                onChangeColor={(
-                                                                    color,
-                                                                ) => void updateNote(
-                                                                    note,
-                                                                    { color },
+                                            <div
+                                                ref={notesMasonryRef}
+                                                className="note-masonry-container"
+                                                style={{
+                                                    minHeight:
+                                                        `${notesMasonryLayout.containerHeight}px`,
+                                                    height:
+                                                        `${notesMasonryLayout.containerHeight}px`,
+                                                }}
+                                            >
+                                                {visibleNotes.map((note) => {
+                                                    const pos =
+                                                        notesMasonryLayout
+                                                            .placements.get(
+                                                                note.id,
+                                                            );
+                                                    const isDragging =
+                                                        activeDrawerNoteId ===
+                                                            note.id;
+                                                    return (
+                                                        <div
+                                                            key={note.id}
+                                                            ref={(el) =>
+                                                                registerNoteCard(
+                                                                    note.id,
+                                                                    el,
                                                                 )}
-                                                                onDelete={() =>
-                                                                    void deleteNote(
-                                                                        note,
-                                                                    )}
-                                                            />
-                                                        )}
-                                                    </SortableDrawerNoteItem>
-                                                ))}
+                                                            className={"note-masonry-item" +
+                                                                (isDragging
+                                                                    ? " is-dragging"
+                                                                    : "")}
+                                                            style={{
+                                                                width: `${
+                                                                    pos?.width ??
+                                                                        notesMasonryLayout
+                                                                            .columnWidth
+                                                                }px`,
+                                                                transform: pos
+                                                                    ? `translate3d(${pos.x}px, ${pos.y}px, 0)`
+                                                                    : undefined,
+                                                                transition:
+                                                                    isDragging ||
+                                                                        !pos
+                                                                        ? "none"
+                                                                        : "transform 200ms ease, opacity 200ms ease",
+                                                                zIndex:
+                                                                    isDragging
+                                                                        ? 50
+                                                                        : 1,
+                                                                visibility: pos
+                                                                    ? "visible"
+                                                                    : "hidden",
+                                                            }}
+                                                        >
+                                                            <SortableDrawerNoteItem
+                                                                note={note}
+                                                                disabled={Boolean(
+                                                                    filter
+                                                                        .trim(),
+                                                                )}
+                                                                isOverlayActive={Boolean(
+                                                                    activeDrawerNoteId,
+                                                                )}
+                                                            >
+                                                                {(
+                                                                    dragHandle,
+                                                                ) => (
+                                                                    <NoteCard
+                                                                        note={note}
+                                                                        dragHandle={dragHandle}
+                                                                        onOpen={() =>
+                                                                            editNote(
+                                                                                note,
+                                                                            )}
+                                                                        onTogglePin={() =>
+                                                                            void updateNote(
+                                                                                note,
+                                                                                {
+                                                                                    isPinned:
+                                                                                        !note
+                                                                                            .isPinned,
+                                                                                },
+                                                                            )}
+                                                                        onToggleHomeFixed={() =>
+                                                                            void updateNote(
+                                                                                note,
+                                                                                {
+                                                                                    isHomeFixed:
+                                                                                        !note
+                                                                                            .isHomeFixed,
+                                                                                },
+                                                                            )}
+                                                                        onToggleMode={() =>
+                                                                            void updateNoteLayout(
+                                                                                note,
+                                                                                {
+                                                                                    ...(note
+                                                                                        .layout ??
+                                                                                        {
+                                                                                            deviceClass:
+                                                                                                "desktop" as const,
+                                                                                            zIndex:
+                                                                                                1,
+                                                                                            expanded:
+                                                                                                true,
+                                                                                        }),
+                                                                                    expanded:
+                                                                                        !(note
+                                                                                            .layout
+                                                                                            ?.expanded ??
+                                                                                            true),
+                                                                                },
+                                                                            )}
+                                                                        onChangeColor={(
+                                                                            color,
+                                                                        ) => void updateNote(
+                                                                            note,
+                                                                            {
+                                                                                color,
+                                                                            },
+                                                                        )}
+                                                                        onDelete={() =>
+                                                                            void deleteNote(
+                                                                                note,
+                                                                            )}
+                                                                    />
+                                                                )}
+                                                            </SortableDrawerNoteItem>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </SortableContext>
+                                        <DragOverlay>
+                                            {activeDrawerNote
+                                                ? (
+                                                    <div
+                                                        className="note-drag-overlay"
+                                                        style={{
+                                                            width:
+                                                                `${notesMasonryLayout.columnWidth}px`,
+                                                        }}
+                                                    >
+                                                        <NoteCard
+                                                            note={activeDrawerNote}
+                                                            dragHandle={
+                                                                <span
+                                                                    className="note-drag"
+                                                                    style={{
+                                                                        border:
+                                                                            0,
+                                                                        background:
+                                                                            "transparent",
+                                                                        padding:
+                                                                            0,
+                                                                        cursor:
+                                                                            "grabbing",
+                                                                    }}
+                                                                >
+                                                                    <GripVertical
+                                                                        size={15}
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                </span>
+                                                            }
+                                                        />
+                                                    </div>
+                                                )
+                                                : null}
+                                        </DragOverlay>
                                     </DndContext>
                                 )
                                 : (

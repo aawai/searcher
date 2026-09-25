@@ -25,6 +25,7 @@ const Target = v.optional(v.picklist(["same", "new"]));
 const HistoryEnabled = v.optional(v.boolean("搜索历史开关必须为布尔值"));
 const WebAppHomeLimit = v.optional(v.picklist([8, 12, 16, "all"]));
 const WebAppIconSize = v.optional(v.picklist(["compact", "default", "large"]));
+const ShowAppLabels = v.optional(v.boolean("显示应用标签必须为布尔值"));
 const BackgroundImage = v.optional(v.nullable(v.pipe(
     v.string(),
     v.maxLength(2048),
@@ -84,6 +85,7 @@ export function registerPreferencesRoutes(
             searchHistoryEnabled: json(HistoryEnabled),
             webAppHomeLimit: json(WebAppHomeLimit),
             webAppIconSize: json(WebAppIconSize),
+            showAppLabels: json(ShowAppLabels),
             backgroundImage: json(BackgroundImage),
             wallpaperBlur: json(Blur),
             wallpaperGrayscale: json(Grayscale),

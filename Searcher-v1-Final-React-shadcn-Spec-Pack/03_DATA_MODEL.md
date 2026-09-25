@@ -41,6 +41,7 @@ style
 accent
 search_shape
 webapp_icon_size
+show_app_labels boolean default true
 homepage_webapp_limit
 wallpaper_asset_id nullable
 wallpaper_mask
@@ -57,6 +58,7 @@ updated_at
 id
 user_id
 name
+folder_size small|large default small
 sort_order
 created_at
 updated_at

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-25T07:13:18.578Z",
+  "last_updated": "2026-09-25T11:22:40.936Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -35,10 +35,30 @@
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
+    "concepts/shortest-column-masonry-layout": {
+      "type": "concept",
+      "title": "Shortest Column Masonry Layout",
+      "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
     "concepts/single-process-architecture": {
       "type": "concept",
       "title": "Single Process Architecture",
       "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "concepts/sqlite-fts5-fulltext-search": {
+      "type": "concept",
+      "title": "SQLite FTS5 Fulltext Search",
+      "domain": "engineering",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "concepts/sqlite-table-recreation-migration": {
+      "type": "concept",
+      "title": "SQLite Table Recreation Migration",
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
@@ -182,6 +202,194 @@
       "source_id": "SRC-2026-09-25-011",
       "format": "web",
       "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-012": {
+      "type": "source",
+      "title": "SQLite ALTER TABLE 规范与 12 步表重构模式文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-012/extracted.md",
+      "source_id": "SRC-2026-09-25-012",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-013": {
+      "type": "source",
+      "title": "MDN CSS Grid Layout 规范与双维轨道布局架构文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-013/extracted.md",
+      "source_id": "SRC-2026-09-25-013",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-014": {
+      "type": "source",
+      "title": "MDN ResizeObserver 规范与响应式容器感知架构文档",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-014/extracted.md",
+      "source_id": "SRC-2026-09-25-014",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-015": {
+      "type": "source",
+      "title": "React 19 状态保留与重置机制官方权威指南",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-015/extracted.md",
+      "source_id": "SRC-2026-09-25-015",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-016": {
+      "type": "source",
+      "title": "React 19 副作用同步与清理机制官方权威指南",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-25-016/extracted.md",
+      "source_id": "SRC-2026-09-25-016",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-017": {
+      "type": "source",
+      "title": "Build a Database App with Drizzle ORM and Deno",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-017/extracted.md",
+      "source_id": "SRC-2026-09-25-017",
+      "format": "web",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-018": {
+      "type": "source",
+      "title": "Announcing Hono on JSR",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-018/extracted.md",
+      "source_id": "SRC-2026-09-25-018",
+      "format": "web",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-019": {
+      "type": "source",
+      "title": "Shortest-Column Masonry Algorithm and Dynamic Web Layout Architecture",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-019/extracted.md",
+      "source_id": "SRC-2026-09-25-019",
+      "format": "text",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-020": {
+      "type": "source",
+      "title": "dnd-kit DragOverlay and Custom Layout Sorting Strategy Patterns",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-020/extracted.md",
+      "source_id": "SRC-2026-09-25-020",
+      "format": "text",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-021": {
+      "type": "source",
+      "title": "SQLite FTS5 Full-Text Search Tokenizers and BM25 Ranking",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-021/extracted.md",
+      "source_id": "SRC-2026-09-25-021",
+      "format": "text",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-022": {
+      "type": "source",
+      "title": "Source Code: masonry.ts (Shortest-Column Masonry Algorithm and Hook)",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-022/extracted.md",
+      "source_id": "SRC-2026-09-25-022",
+      "format": "code",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-023": {
+      "type": "source",
+      "title": "Source Code: masonry.test.ts (Unit Tests for Masonry Layout)",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-023/extracted.md",
+      "source_id": "SRC-2026-09-25-023",
+      "format": "code",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-024": {
+      "type": "source",
+      "title": "Source Code: SearchHome.tsx (Masonry Integration and Drag-and-Drop Drawer)",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-09-25-024/extracted.md",
+      "source_id": "SRC-2026-09-25-024",
+      "format": "code",
+      "captured": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-025": {
+      "type": "source",
+      "title": "Hono Routing Best Practices & Modular Application Structuring",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-09-25-025/extracted.md",
+      "source_id": "SRC-2026-09-25-025",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-026": {
+      "type": "source",
+      "title": "dnd-kit Sortable Presets and Strategies for Complex Layouts",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-09-25-026/extracted.md",
+      "source_id": "SRC-2026-09-25-026",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-027": {
+      "type": "source",
+      "title": "Deno Legacy SQLite Tutorial Route (Obsolete/404)",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-09-25-027/extracted.md",
+      "source_id": "SRC-2026-09-25-027",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/SRC-2026-09-25-028": {
+      "type": "source",
+      "title": "Deno node:sqlite DatabaseSync API and Embedded Persistence Contract",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-09-25-028/extracted.md",
+      "source_id": "SRC-2026-09-25-028",
+      "format": "web",
+      "captured": "2026-09-25"
+    },
+    "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": {
+      "type": "source",
+      "title": "Observation: Web App Launcher Grid Alignment & Square Folder Architecture",
+      "tags": [
+        "frontend",
+        "layout",
+        "css-grid",
+        "dnd-kit",
+        "webapp-launcher"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture",
+      "relevance": "high",
+      "observed_at": "2026-09-25T09:53:14.169Z",
+      "source_context": "Web App Launcher desktop layout upgrade",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
+    },
+    "sources/sqlite-table-recreation-migration-zero-loss": {
+      "type": "source",
+      "title": "SQLite Table Recreation Migration Pattern with Zero Loss",
+      "category": "architecture",
+      "status": "insight",
+      "slug": "sqlite-table-recreation-migration-zero-loss",
+      "created": "2026-09-25",
+      "updated": "2026-09-25"
     },
     "syntheses/searcher-system-architecture": {
       "type": "synthesis",

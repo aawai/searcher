@@ -3,6 +3,7 @@ import type { WebAppItem } from "./WebAppIcon.tsx";
 export interface LauncherGroup {
     id: string;
     name: string;
+    folderSize?: "small" | "large";
 }
 
 export interface LauncherApp extends WebAppItem {
@@ -39,4 +40,14 @@ export function launcherTiles(
         folder.apps.push(app);
     }
     return tiles;
+}
+
+/** Reorder only visible slots; filtered-out apps retain their canonical positions. */
+export function mergeVisibleOrder(
+    allIds: string[],
+    visibleIds: string[],
+): string[] {
+    const visible = new Set(visibleIds);
+    let index = 0;
+    return allIds.map((id) => visible.has(id) ? visibleIds[index++] : id);
 }

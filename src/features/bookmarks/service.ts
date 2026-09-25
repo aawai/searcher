@@ -22,11 +22,14 @@ export interface WebAppDto {
     updatedAt: number;
 }
 
+export type WebAppFolderSize = "small" | "large";
+
 export interface WebAppGroupDto {
     id: string;
     userId: string;
     name: string;
     sortOrder: number;
+    folderSize: WebAppFolderSize;
     createdAt: number;
     updatedAt: number;
 }
@@ -437,6 +440,7 @@ export class BookmarksService {
         userId: string,
         name: string,
         sortOrder = 0,
+        folderSize: WebAppFolderSize = "small",
     ): Promise<WebAppGroupDto> {
         const id = crypto.randomUUID();
         const currentTime = this.now();
@@ -447,6 +451,7 @@ export class BookmarksService {
                 userId,
                 name: name.trim(),
                 sortOrder,
+                folderSize,
                 createdAt: currentTime,
                 updatedAt: currentTime,
             };
@@ -462,6 +467,7 @@ export class BookmarksService {
         id: string,
         name?: string,
         sortOrder?: number,
+        folderSize?: WebAppFolderSize,
     ): Promise<WebAppGroupDto> {
         const currentTime = this.now();
 
@@ -486,12 +492,16 @@ export class BookmarksService {
             const nextSortOrder = sortOrder !== undefined
                 ? sortOrder
                 : existing[0].sortOrder;
+            const nextFolderSize = folderSize !== undefined
+                ? folderSize
+                : existing[0].folderSize;
 
             await db
                 .update(webappGroups)
                 .set({
                     name: nextName,
                     sortOrder: nextSortOrder,
+                    folderSize: nextFolderSize,
                     updatedAt: currentTime,
                 })
                 .where(
@@ -506,6 +516,7 @@ export class BookmarksService {
                 ...existing[0],
                 name: nextName,
                 sortOrder: nextSortOrder,
+                folderSize: nextFolderSize,
                 updatedAt: currentTime,
             };
         });

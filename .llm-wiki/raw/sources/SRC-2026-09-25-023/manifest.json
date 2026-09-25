@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-25-023",
+  "captured": "2026-09-25",
+  "packet_version": "1.0",
+  "title": "masonry.test.ts",
+  "file_path": "web/src/components/searcher/masonry.test.ts",
+  "format": "file",
+  "extractor": "passthrough",
+  "extraction_status": "success"
+}

@@ -49,6 +49,7 @@ const IconSourceSchema = v.picklist([
     "default",
 ]);
 const OpenModeSchema = v.picklist(["global", "current", "new_tab"]);
+const FolderSizeSchema = v.picklist(["small", "large"]);
 
 export function registerBookmarksRoutes(
     routes: Routes<AppEnv>,
@@ -73,6 +74,7 @@ export function registerBookmarksRoutes(
         validator({
             name: json(TitleSchema),
             sortOrder: json(v.optional(IntegerSchema, 0)),
+            folderSize: json(v.optional(FolderSizeSchema, "small")),
         }),
         async (c, data) => {
             const user = c.get("user");
@@ -80,6 +82,7 @@ export function registerBookmarksRoutes(
                 user.id,
                 data.name,
                 data.sortOrder,
+                data.folderSize,
             );
             return c.success(group);
         },
@@ -92,6 +95,7 @@ export function registerBookmarksRoutes(
             id: param(IdParamSchema),
             name: json(v.optional(TitleSchema)),
             sortOrder: json(v.optional(IntegerSchema)),
+            folderSize: json(v.optional(FolderSizeSchema)),
         }),
         async (c, data) => {
             const user = c.get("user");
@@ -101,6 +105,7 @@ export function registerBookmarksRoutes(
                     data.id,
                     data.name,
                     data.sortOrder,
+                    data.folderSize,
                 );
                 return c.success(group);
             } catch (error) {

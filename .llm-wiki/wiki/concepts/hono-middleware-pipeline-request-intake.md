@@ -3,7 +3,7 @@ type: concept
 title: "Hono Middleware Pipeline & Request Intake"
 created: 2026-09-25
 updated: 2026-09-25
-sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-004, sources/SRC-2026-09-25-011]
+sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-004, sources/SRC-2026-09-25-011, sources/SRC-2026-09-25-025]
 ---
 
 # Hono Middleware Pipeline & Request Intake (Hono 中间件流水线与请求摄入架构)
@@ -42,3 +42,4 @@ sources: [sources/SRC-2026-09-25-001, sources/SRC-2026-09-25-004, sources/SRC-20
 - [[sources/SRC-2026-09-25-001]]
 - [[sources/SRC-2026-09-25-004]]
 - [[sources/SRC-2026-09-25-011]]
+- [[sources/SRC-2026-09-25-025]]

@@ -18,6 +18,7 @@ const defaults: PreferencesDto = {
     searchHistoryEnabled: false,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
+    showAppLabels: true,
 };
 
 function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
@@ -38,6 +39,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
             ? "all"
             : Number(row.webAppHomeLimit) as 8 | 12 | 16,
         webAppIconSize: row.webAppIconSize,
+        showAppLabels: row.showAppLabels ?? true,
     };
 }
 
