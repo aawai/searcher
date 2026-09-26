@@ -52,6 +52,10 @@ export function parseCommandPrefix(raw: string) {
     const hasSpace = /\s/.test(match[0]);
     return { command, rest, isAi, targetEngine, hasSpace, prefix: match[0] };
 }
+const EMPTY_REACHABILITY: Reachability = {};
+const EMPTY_MODELS: ModelOption[] = [];
+const EMPTY_WEB_APPS: WebAppCandidate[] = [];
+
 export function SearcherSearchInput(
     {
         engine,
@@ -59,15 +63,15 @@ export function SearcherSearchInput(
         mode,
         onModeChange,
         onSubmit,
-        reachability = {},
+        reachability = EMPTY_REACHABILITY,
         onCheck,
         isChecking = false,
         modelLabel = "未配置模型",
-        models = [],
+        models = EMPTY_MODELS,
         selectedModel = null,
         onModelChange,
         disabled = false,
-        webApps = [],
+        webApps = EMPTY_WEB_APPS,
         onOpenApp,
     }: {
         engine: EngineId;
@@ -140,7 +144,7 @@ export function SearcherSearchInput(
     useEffect(() => {
         const trimmed = query.trim();
         if (!trimmed || mode === "ai") {
-            setSuggestions([]);
+            setSuggestions((prev) => prev.length === 0 ? prev : []);
             setIsOpen(false);
             setSelectedIndex(-1);
             return;
@@ -173,14 +177,14 @@ export function SearcherSearchInput(
 
         if (cmd && cmd.hasSpace) {
             if (cmd.isAi) {
-                setSuggestions([]);
+                setSuggestions((prev) => prev.length === 0 ? prev : []);
                 setIsOpen(false);
                 setSelectedIndex(-1);
                 return;
             }
             if (!cmd.rest) {
                 // 仅输入了命令及空格，无后续搜索词，不拿命令本身作为关键词联想
-                setSuggestions([]);
+                setSuggestions((prev) => prev.length === 0 ? prev : []);
                 setIsOpen(false);
                 setSelectedIndex(-1);
                 return;

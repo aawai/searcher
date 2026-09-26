@@ -1,8 +1,10 @@
 import {
     createContext,
     type ReactNode,
+    useCallback,
     useContext,
     useEffect,
+    useRef,
     useState,
 } from "react";
 import type { PreferencesDto, UserDto } from "@shared/contracts.ts";
@@ -50,13 +52,14 @@ type State = {
     user: UserDto | null;
     ready: boolean;
     syncFailed: boolean;
+    connectionError: boolean;
+    retryConnection: () => Promise<void>;
     appearance: Appearance;
     setAppearance: (next: Partial<Appearance>) => void;
     login: (user: UserDto) => void;
     /** 登出：有未同步草稿时返回 false 并由调用方弹确认（V-003）。 */
     logout: (options?: { force?: boolean }) => Promise<boolean>;
 };
-
 const Context = createContext<State | null>(null);
 
 export function useAppState() {
@@ -83,7 +86,9 @@ export function AppState({ children }: { children: ReactNode }) {
     const [ready, setReady] = useState(false);
     const [appearance, setValue] = useState<Appearance>(getInitialAppearance);
     const [syncFailed, setSyncFailed] = useState(false);
-
+    const [connectionError, setConnectionError] = useState(false);
+    const userRef = useRef<UserDto | null>(null);
+    userRef.current = user;
     // 访客偏好启动时从 IndexedDB 恢复（包含可能存储在本地的大体积壁纸等）
     useEffect(() => {
         let alive = true;
@@ -97,19 +102,32 @@ export function AppState({ children }: { children: ReactNode }) {
         };
     }, [user?.id]);
 
-    useEffect(() => {
-        let alive = true;
-        api<{ user: UserDto }>("/api/auth/me", {
-            signal: AbortSignal.timeout(5000),
-        }).then(({ user }) => {
-            if (alive) setUser(user);
-        }).catch(() => {}).finally(() => {
-            if (alive) setReady(true);
-        });
-        return () => {
-            alive = false;
-        };
+    const checkAuth = useCallback(async () => {
+        try {
+            const { user } = await api<{ user: UserDto }>("/api/auth/me", {
+                signal: AbortSignal.timeout(5000),
+            });
+            const next = handleAuthCheckResult(
+                { user: userRef.current, connectionError: false },
+                { type: "success", user },
+            );
+            setUser(next.user);
+            setConnectionError(next.connectionError);
+        } catch (error) {
+            const next = handleAuthCheckResult(
+                { user: userRef.current, connectionError: true },
+                { type: "error", error },
+            );
+            setUser(next.user);
+            setConnectionError(next.connectionError);
+        } finally {
+            setReady(true);
+        }
     }, []);
+
+    useEffect(() => {
+        void checkAuth();
+    }, [checkAuth]);
 
     // 登录后拉取云端偏好，默认直接覆盖本地配置，不再弹窗询问
     useEffect(() => {
@@ -155,8 +173,10 @@ export function AppState({ children }: { children: ReactNode }) {
                     }
                     return merged;
                 });
-            }).catch(() => {
-                if (alive) setSyncFailed(true);
+            }).catch((err) => {
+                if (alive && !(err instanceof ApiError && err.code === 401)) {
+                    setSyncFailed(true);
+                }
             });
         return () => {
             alive = false;
@@ -166,6 +186,8 @@ export function AppState({ children }: { children: ReactNode }) {
     useEffect(() => {
         const expired = () => {
             setUser(null);
+            setSyncFailed(false);
+            setConnectionError(false);
             void getLocal<Appearance>("visitor_appearance").then((saved) => {
                 if (saved) {
                     setValue((prev) => ({ ...prev, ...saved }));
@@ -264,7 +286,11 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (Object.keys(updates).length) {
                 void api("/api/preferences", json("PATCH", updates)).catch(
-                    () => setSyncFailed(true),
+                    (err) => {
+                        if (!(err instanceof ApiError && err.code === 401)) {
+                            setSyncFailed(true);
+                        }
+                    },
                 );
             }
         }
@@ -297,6 +323,8 @@ export function AppState({ children }: { children: ReactNode }) {
                 user,
                 ready,
                 syncFailed,
+                connectionError,
+                retryConnection: checkAuth,
                 appearance,
                 setAppearance,
                 login: setUser,
@@ -312,4 +340,21 @@ export function errorMessage(error: unknown) {
     return error instanceof ApiError
         ? error.message
         : "连接失败，请检查网络后重试";
+}
+
+export function handleAuthCheckResult(
+    previous: { user: UserDto | null; connectionError: boolean },
+    outcome:
+        | { type: "success"; user: UserDto }
+        | { type: "error"; error: unknown },
+): { user: UserDto | null; connectionError: boolean } {
+    if (outcome.type === "success") {
+        return { user: outcome.user, connectionError: false };
+    }
+    const error = outcome.error;
+    if (error instanceof ApiError && error.code === 401) {
+        return { user: null, connectionError: false };
+    }
+    // Network failure, 5xx, timeout: flag connectionError, do NOT wipe user if already logged in
+    return { user: previous.user, connectionError: true };
 }
