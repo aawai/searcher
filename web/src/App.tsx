@@ -40,8 +40,16 @@ import {
 } from "./components/ui/dialog.tsx";
 function Layout() {
     const navigate = useNavigate();
-    const { user, ready, appearance, setAppearance, logout, syncFailed } =
-        useAppState();
+    const {
+        user,
+        ready,
+        appearance,
+        setAppearance,
+        logout,
+        syncFailed,
+        connectionError,
+        retryConnection,
+    } = useAppState();
     const [error, setError] = useState("");
     // V-003：检测到未同步草稿时弹确认 Dialog，确认后 force 登出
     const [confirmLogout, setConfirmLogout] = useState(false);
@@ -209,13 +217,43 @@ function Layout() {
                             </DropdownMenu>
                         )
                         : (
-                            <Link to="/login" className="user-link">
-                                <LogIn size={19} />
-                                <span>登录</span>
-                            </Link>
+                            <>
+                                <Link
+                                    to="/settings"
+                                    aria-label="设置"
+                                    title="设置"
+                                >
+                                    <Settings size={20} />
+                                </Link>
+                                <Link
+                                    to="/login"
+                                    className="user-link"
+                                    aria-label="登录"
+                                >
+                                    <LogIn size={19} />
+                                    <span>登录</span>
+                                </Link>
+                            </>
                         )}
                 </nav>
             </header>
+            {connectionError && (
+                <aside
+                    className="connection-banner"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <span>服务暂不可用，部分功能可能受限</span>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void retryConnection()}
+                    >
+                        重试
+                    </Button>
+                </aside>
+            )}
             {error && <p role="alert" className="error">{error}</p>}
             <Dialog open={confirmLogout} onOpenChange={setConfirmLogout}>
                 <DialogContent aria-label="退出登录确认">

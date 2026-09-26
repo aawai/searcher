@@ -8,6 +8,7 @@ sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-002,
     sources/SRC-2026-09-25-008,
+    sources/SRC-2026-09-26-001,
 ]
 ---
 
@@ -29,6 +30,7 @@ sources: [
    环支持，并严格适配 `prefers-reduced-motion`。
 5. **补充能力集成**：拖拽排序采用 dnd-kit 等成熟库，严格继承 Searcher Design
    Token 的圆角、边框与阴影，防止视觉割裂。
+6. **Headless 原语可访问性传递**：对于 Slider 等复合组件，交互状态与隐藏表单输入由 `@base-ui/react` 等底层原语维护；由于 Root 的 `aria-label` 仅作用于容器 group `<div>`，外部传入的 `aria-label` 必须显式穿透至具体的 `Thumb` 实例，以确保无障碍树中的 `<input type="range">` 具备标准 accessible name。
 
 ## 关联架构与文档
 
@@ -41,3 +43,4 @@ sources: [
 - [[sources/SRC-2026-09-25-001]]
 - [[sources/SRC-2026-09-25-002]]
 - [[sources/SRC-2026-09-25-008]]
+- [[sources/SRC-2026-09-26-001]]

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
     Link,
     useNavigate,
@@ -134,6 +134,17 @@ export function SettingsPage() {
         : (queryTab && queryTab in tabs)
         ? (queryTab as Tab)
         : "search";
+    const activeNavButtonRef = useRef<HTMLButtonElement | null>(null);
+
+    useEffect(() => {
+        if (activeNavButtonRef.current) {
+            activeNavButtonRef.current.scrollIntoView({
+                behavior: "auto",
+                block: "nearest",
+                inline: "nearest",
+            });
+        }
+    }, [tab]);
 
     function set<K extends keyof Appearance>(key: K, value: Appearance[K]) {
         void setAppearance({ [key]: value });
@@ -150,6 +161,7 @@ export function SettingsPage() {
                             <button
                                 type="button"
                                 key={id}
+                                ref={tab === id ? activeNavButtonRef : null}
                                 onClick={() =>
                                     navigate(
                                         id === "search"
@@ -622,34 +634,18 @@ export function SettingsPage() {
                                     <h3>AI 问答</h3>
                                     <p>智能 AI 问答工作区与偏好设置</p>
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        padding: "16px 20px",
-                                        border: "1px solid var(--border)",
-                                        borderRadius: "10px",
-                                        background: "var(--surface)",
-                                    }}
-                                >
-                                    <div>
-                                        <strong style={{ fontSize: "14px" }}>
+                                <div className="settings-action-card">
+                                    <div className="settings-action-card__content">
+                                        <strong>
                                             AI 问答工作区
                                         </strong>
-                                        <p
-                                            className="muted"
-                                            style={{
-                                                margin: "4px 0 0",
-                                                fontSize: "13px",
-                                            }}
-                                        >
+                                        <p>
                                             AI
                                             拥有专属的独立对话空间，只在显式选择后响应，不接管普通搜索。
                                         </p>
                                     </div>
                                     <Link
-                                        className="button button--primary"
+                                        className="button button--primary settings-action-card__action"
                                         to="/ask"
                                     >
                                         打开 AI 问答
@@ -673,49 +669,28 @@ export function SettingsPage() {
                                         登录后将偏好设置、网站书签与便签实时同步到您的账户
                                     </p>
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        padding: "16px 20px",
-                                        border: "1px solid var(--border)",
-                                        borderRadius: "10px",
-                                        background: "var(--surface)",
-                                    }}
-                                >
-                                    <div>
-                                        <strong style={{ fontSize: "14px" }}>
+                                <div className="settings-action-card">
+                                    <div className="settings-action-card__content">
+                                        <strong>
                                             {user
                                                 ? "已登录账户"
                                                 : "本地访客模式"}
                                         </strong>
-                                        <p
-                                            className="muted"
-                                            style={{
-                                                margin: "4px 0 0",
-                                                fontSize: "13px",
-                                            }}
-                                        >
+                                        <p>
                                             {user
                                                 ? `已连接为 ${user.displayName}，数据已双向同步`
                                                 : "访客偏好仅在当前页面有效，登录后个人内容由服务端同步。"}
                                         </p>
                                     </div>
                                     <span
+                                        className="settings-action-card__badge"
                                         style={{
-                                            display: "inline-flex",
-                                            padding: "4px 10px",
-                                            borderRadius: "999px",
-                                            fontSize: "12px",
-                                            fontWeight: 600,
                                             background: user
                                                 ? "color-mix(in srgb, var(--success) 16%, var(--surface))"
                                                 : "var(--surface-soft)",
                                             color: user
                                                 ? "var(--success)"
                                                 : "var(--muted)",
-                                            border: "1px solid var(--border)",
                                         }}
                                     >
                                         {user ? "已同步" : "未登录"}
@@ -737,72 +712,35 @@ export function SettingsPage() {
                                     }}
                                 >
                                     {user && (
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "space-between",
-                                                padding: "14px 18px",
-                                                border:
-                                                    "1px solid var(--border)",
-                                                borderRadius: "10px",
-                                                background: "var(--surface)",
-                                            }}
-                                        >
-                                            <div>
-                                                <strong
-                                                    style={{ fontSize: "14px" }}
-                                                >
+                                        <div className="settings-action-card">
+                                            <div className="settings-action-card__content">
+                                                <strong>
                                                     回收站
                                                 </strong>
-                                                <p
-                                                    className="muted"
-                                                    style={{
-                                                        margin: "4px 0 0",
-                                                        fontSize: "13px",
-                                                    }}
-                                                >
+                                                <p>
                                                     查看或彻底清理已删除的网站和便签
                                                 </p>
                                             </div>
                                             <Link
                                                 to="/trash"
-                                                className="button button--subtle"
+                                                className="button button--subtle settings-action-card__action"
                                             >
                                                 打开回收站
                                             </Link>
                                         </div>
                                     )}
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "space-between",
-                                            padding: "14px 18px",
-                                            border: "1px solid var(--border)",
-                                            borderRadius: "10px",
-                                            background: "var(--surface)",
-                                        }}
-                                    >
-                                        <div>
-                                            <strong
-                                                style={{ fontSize: "14px" }}
-                                            >
+                                    <div className="settings-action-card">
+                                        <div className="settings-action-card__content">
+                                            <strong>
                                                 Design Lab
                                             </strong>
-                                            <p
-                                                className="muted"
-                                                style={{
-                                                    margin: "4px 0 0",
-                                                    fontSize: "13px",
-                                                }}
-                                            >
+                                            <p>
                                                 管理与测试实验性的界面配置和组件预览
                                             </p>
                                         </div>
                                         <Link
                                             to="/design-lab"
-                                            className="button button--subtle"
+                                            className="button button--subtle settings-action-card__action"
                                         >
                                             打开 Design Lab
                                         </Link>

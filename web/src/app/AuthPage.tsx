@@ -98,7 +98,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                     {busy ? "处理中…" : kind === "login" ? "登录" : "创建账户"}
                 </Button>
             </form>
-            <p className="muted">
+            <p className="muted auth-footer">
                 {kind === "login"
                     ? (
                         allowRegistration !== false && (

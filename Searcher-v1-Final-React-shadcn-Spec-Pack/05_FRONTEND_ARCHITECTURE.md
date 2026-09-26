@@ -130,13 +130,19 @@ Note 使用 draggable；业务层管理 x/y/z-index/safe area/overlap。
 ## 13. Accessibility
 
 必须保证 keyboard navigation、visible focus、semantic form labels、aria for
-icon-only buttons、color not sole signal、sufficient touch target、reduced
+icon-only buttons、color not sole signal、sufficient touch target (≥44×44px)、reduced
 motion。
+
+复合表单与 Headless 控件规范：
+- `Slider`：标量值只生成一个交互 Thumb，多端点数组才生成对应数量 Thumb；Root 的 `aria-label` 必须显式穿透到生成的实际 range input（Base UI 仅自动传递 `aria-labelledby`，Root `aria-label` 仅作用于容器 group），确保内嵌表单控件具备标准无障碍名称。
+- 移动端图标链接：文字隐藏时父级 `<a>` 必须附带 `aria-label`，触控面积保持 44×44px（如顶部登录链接与首页 `s.` 字标）。
+- 信息操作卡片：使用 `.settings-action-card` 保证内容区自适应折行，操作与徽章单行保护，避免挤压为多行畸形换行。
+- 认证页面：登录/注册桌面表单最大宽度限制为 400px，操作与次要入口保持 20px 间距。
 
 ## 14. `/design-lab`
 
 必须复用正式组件，禁止 Demo 与 Real 两套组件。
-
+组件实现必须保持默认参数与回调引用的稳定性，严禁在组件参数内使用内联 `[]` 或 `{}` 作为默认值导致依赖 `useEffect` 触发 `Maximum update depth exceeded` 死循环。实验舞台与容器必须严格自适应宽度，严禁在移动端视口产生横向溢出。
 ## 15. Visual Regression
 
 Playwright 使用截图基线覆盖不同 viewport、theme、style preset。重点
