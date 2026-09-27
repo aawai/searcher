@@ -142,7 +142,6 @@ export function EngineSelector(
     },
 ) {
     const current = SEARCH_ENGINES.find((item) => item.id === engine);
-    const currentStatus = mode === "ai" ? undefined : reachability[engine];
 
     return (
         <DropdownMenu>
@@ -155,26 +154,6 @@ export function EngineSelector(
                 {mode === "ai"
                     ? <Sparkles size={18} className="text-accent" />
                     : <EngineIcon id={engine} size={18} />}
-                {mode !== "ai" && (
-                    <span
-                        className={"status-dot " + (!currentStatus
-                            ? "unknown"
-                            : currentStatus.ok
-                            ? "online"
-                            : "offline")}
-                        role="img"
-                        aria-label={!currentStatus
-                            ? "尚未检测资源连接"
-                            : currentStatus.ok
-                            ? "最近检测资源可连接"
-                            : "最近检测未成功"}
-                        title={currentStatus
-                            ? new Date(currentStatus.checkedAt)
-                                .toLocaleString() +
-                                " · " + currentStatus.latency + "ms"
-                            : "尚未检测"}
-                    />
-                )}
                 <ChevronDown size={14} className="engine-chevron" />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={10}>
@@ -203,24 +182,19 @@ export function EngineSelector(
                                 <EngineIcon id={item.id} size={16} />
                                 <span>{item.label}</span>
                             </span>
-                            <span
-                                className={"status-dot " + (!status
-                                    ? "unknown"
-                                    : status.ok
-                                    ? "online"
-                                    : "offline")}
-                                role="img"
-                                aria-label={!status
-                                    ? "尚未检测资源连接"
-                                    : status.ok
-                                    ? "最近检测资源可连接"
-                                    : "最近检测未成功"}
-                                title={status
-                                    ? new Date(status.checkedAt)
-                                        .toLocaleString() +
-                                        " · " + status.latency + "ms"
-                                    : "尚未检测"}
-                            />
+                            {status && (
+                                <span
+                                    className="text-xs text-[var(--muted)]"
+                                    title={`${
+                                        new Date(status.checkedAt)
+                                            .toLocaleString()
+                                    } · ${status.latency}ms`}
+                                >
+                                    {status.ok
+                                        ? "最近检测可连接"
+                                        : "最近检测失败"}
+                                </span>
+                            )}
                         </DropdownMenuItem>
                     );
                 })}

@@ -6,6 +6,7 @@ import {
     SEARCH_ENGINES,
 } from "@shared/engines.ts";
 import {
+    Ellipsis,
     Folder,
     FolderPlus,
     GripVertical,
@@ -47,14 +48,24 @@ import {
 } from "../components/searcher/SearcherSearchInput.tsx";
 import { type WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
-import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
-import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
-import { Switch } from "../components/ui/switch.tsx";
 import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-} from "../components/ui/dialog.tsx";
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu.tsx";
+import { Input } from "../components/ui/input.tsx";
+import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
 import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
@@ -118,36 +129,65 @@ function SortableGroupManageItem({
             >
                 <GripVertical size={16} />
             </button>
-            <input
+            <Input
+                aria-label={"文件夹名称：" + group.name}
                 defaultValue={group.name}
                 onBlur={(e) => void onRename(group, e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                    }
+                    if (e.key === "Enter") e.currentTarget.blur();
                 }}
             />
-            <Button
-                variant="outline"
-                onClick={() =>
-                    onSizeChange(
-                        group,
-                        group.folderSize === "large" ? "small" : "large",
-                    )}
-                aria-label={`${group.name} 当前为${
-                    group.folderSize === "large" ? "大" : "小"
-                }文件夹，切换大小`}
-            >
-                {group.folderSize === "large" ? "大文件夹" : "小文件夹"}
-            </Button>
-            <Button
-                variant="destructive"
-                onClick={() => void onDelete(group)}
-                title="删除文件夹"
-            >
-                <Trash2 size={15} />
-                <span>删除</span>
-            </Button>
+            <div className="group-manage-desktop-actions">
+                <Button
+                    variant="outline"
+                    onClick={() =>
+                        onSizeChange(
+                            group,
+                            group.folderSize === "large" ? "small" : "large",
+                        )}
+                    aria-label={group.name + " 当前为" +
+                        (group.folderSize === "large" ? "大" : "小") +
+                        "文件夹，切换大小"}
+                >
+                    {group.folderSize === "large" ? "大文件夹" : "小文件夹"}
+                </Button>
+                <Button
+                    variant="destructive"
+                    onClick={() => void onDelete(group)}
+                    title="删除文件夹"
+                >
+                    <Trash2 size={15} />
+                    <span>删除</span>
+                </Button>
+            </div>
+            <div className="group-manage-mobile-actions">
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={<Button variant="outline" size="icon" />}
+                        aria-label={"更多操作：" + group.name}
+                    >
+                        <Ellipsis size={18} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem
+                            onClick={() =>
+                                onSizeChange(
+                                    group,
+                                    group.folderSize === "large"
+                                        ? "small"
+                                        : "large",
+                                )}
+                        >
+                            {group.folderSize === "large"
+                                ? "切换为小文件夹"
+                                : "切换为大文件夹"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void onDelete(group)}>
+                            删除文件夹
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
     );
 }
@@ -258,10 +298,16 @@ export function SearchHome() {
     const [undoApp, setUndoApp] = useState<
         { app: ExtendedWebApp; timer: ReturnType<typeof setTimeout> } | null
     >(null);
+    const [groupToDelete, setGroupToDelete] = useState<WebAppGroup | null>(
+        null,
+    );
+    const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+    const [formPresentation, setFormPresentation] = useState<
+        "dialog" | "panel"
+    >("panel");
 
     // Group Management Form State
     const [newGroupName, setNewGroupName] = useState("");
-
     useEffect(() => setEngine(appearance.engine), [appearance.engine]);
     useEffect(() => {
         void getLocal<Reachability>("reachability").then((value) => {
@@ -805,14 +851,11 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
-    async function deleteGroup(group: WebAppGroup) {
-        if (
-            !confirm(
-                `确定删除文件夹“${group.name}”吗？其中的网站将移至“未放入文件夹”。`,
-            )
-        ) {
-            return;
-        }
+    function deleteGroup(group: WebAppGroup) {
+        setGroupToDelete(group);
+    }
+
+    async function confirmDeleteGroup(group: WebAppGroup) {
         setError("");
         try {
             await api(`/api/webapp-groups/${group.id}`, { method: "DELETE" });
@@ -825,6 +868,10 @@ export function SearchHome() {
             if (activeGroupFilter === group.id) {
                 setActiveGroupFilter("all");
             }
+            if (activeFolderId === group.id) {
+                setActiveFolderId(null);
+            }
+            setGroupToDelete(null);
         } catch (err) {
             setError(errorMessage(err));
         }
@@ -1031,7 +1078,10 @@ export function SearchHome() {
                                     ).map((app) => app.id),
                                 )}
                             onOpen={openApp}
-                            onEdit={openEditModal}
+                            onEdit={(app) => {
+                                setFormPresentation("dialog");
+                                openEditModal(app);
+                            }}
                             onMove={(app, groupId) =>
                                 void moveAppGroup(app, groupId)}
                             onPin={(app) => void togglePinApp(app)}
@@ -1039,6 +1089,7 @@ export function SearchHome() {
                             onReorder={(ids) => void reorderPinned(ids)}
                             onAdd={() => {
                                 setSheet("apps");
+                                setFormPresentation("panel");
                                 openAddModal();
                             }}
                         />
@@ -1082,212 +1133,372 @@ export function SearchHome() {
                     setSheet(v ? "apps" : null);
                     if (!v) {
                         setIsManagingGroups(false);
+                        setIsAddingApp(false);
+                        setEditingApp(null);
+                        setActiveFolderId(null);
                     }
                 }}
-                title="APP"
+                title={isAddingApp && formPresentation === "panel"
+                    ? (editingApp ? "编辑 APP" : "添加 APP")
+                    : isManagingGroups
+                    ? "文件夹管理"
+                    : activeFolderId
+                    ? (groups.find((g) => g.id === activeFolderId)?.name ??
+                        "文件夹")
+                    : "APP"}
+                onBack={isAddingApp && formPresentation === "panel"
+                    ? () => {
+                        setIsAddingApp(false);
+                        setEditingApp(null);
+                    }
+                    : isManagingGroups
+                    ? () => setIsManagingGroups(false)
+                    : activeFolderId
+                    ? () => setActiveFolderId(null)
+                    : undefined}
                 height={webAppSheetHeight}
                 onHeightChange={setWebAppSheetHeight}
             >
-                <div className="webapp-manager-header">
-                    <div
-                        className="section-tools"
-                        style={{ margin: 0, flex: 1 }}
-                    >
-                        <label className="sr-only" htmlFor="filter-apps">
-                            搜索网站
-                        </label>
-                        <input
-                            id="filter-apps"
-                            placeholder="搜索网站名称或网址"
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value)}
-                        />
-                    </div>
-                    <Button variant="default" onClick={openAddModal}>
-                        <Plus size={16} />
-                        <span>APP</span>
-                    </Button>
-                    <Button
-                        variant={isManagingGroups ? "default" : "outline"}
-                        onClick={() => setIsManagingGroups(!isManagingGroups)}
-                        title={isManagingGroups
-                            ? "返回 APP 列表"
-                            : "文件夹管理"}
-                        aria-label={isManagingGroups
-                            ? "返回 APP 列表"
-                            : "文件夹管理"}
-                    >
-                        <Folder size={16} />
-                        <span>{isManagingGroups ? "返回" : "文件夹"}</span>
-                    </Button>
-                </div>
-
-                {isManagingGroups
-                    ? (
-                        <div className="group-manage-section">
-                            <h3>文件夹管理</h3>
-                            <p className="muted" style={{ fontSize: "13px" }}>
-                                文件夹可帮助归类
-                                APP。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
-                            </p>
-                            <form
-                                onSubmit={createGroup}
-                                className="section-form"
-                                style={{ marginTop: "14px" }}
+                {isAddingApp && formPresentation === "panel" && (
+                    <AppFormDialog
+                        open
+                        presentation="panel"
+                        onOpenChange={(open) => {
+                            setIsAddingApp(open);
+                            if (!open) setEditingApp(null);
+                        }}
+                        editingApp={editingApp}
+                        groups={groups}
+                        appearance={appearance}
+                        existingApps={apps}
+                        defaultGroupId={activeFolderId ||
+                            (activeGroupFilter !== "all" &&
+                                    activeGroupFilter !== "ungrouped"
+                                ? activeGroupFilter
+                                : "")}
+                        onSaved={(savedApp, isEdit) => {
+                            if (isEdit) {
+                                setApps((items) =>
+                                    items.map((item) =>
+                                        item.id === savedApp.id
+                                            ? { ...item, ...savedApp }
+                                            : item
+                                    )
+                                );
+                            } else {
+                                setApps((items) => [...items, savedApp]);
+                            }
+                            setIsAddingApp(false);
+                            setEditingApp(null);
+                        }}
+                    />
+                )}
+                <div
+                    hidden={isAddingApp && formPresentation === "panel"}
+                    inert={isAddingApp && formPresentation === "panel"
+                        ? true
+                        : undefined}
+                    style={isAddingApp && formPresentation === "panel"
+                        ? { display: "none" }
+                        : undefined}
+                >
+                    <div className="webapp-manager-header">
+                        <div
+                            className="section-tools"
+                            style={{ margin: 0, flex: 1 }}
+                        >
+                            <label
+                                className="sr-only"
+                                htmlFor="filter-apps"
                             >
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <input
-                                        required
-                                        placeholder="新文件夹名称（如：开发、娱乐、办公）"
-                                        value={newGroupName}
-                                        onChange={(e) =>
-                                            setNewGroupName(e.target.value)}
-                                    />
-                                    <Button
-                                        variant="default"
-                                        type="submit"
-                                        disabled={!newGroupName.trim()}
-                                    >
-                                        <FolderPlus size={16} />
-                                        <span>创建文件夹</span>
-                                    </Button>
-                                </div>
-                            </form>
-                            <div className="group-manage-list">
-                                {groups.length === 0
-                                    ? <p className="empty">暂无文件夹</p>
-                                    : (
-                                        <DndContext
-                                            sensors={sensors}
-                                            onDragEnd={(e) =>
-                                                void handleGroupDragEnd(e)}
-                                        >
-                                            <SortableContext
-                                                items={groupIds}
-                                                strategy={verticalListSortingStrategy}
-                                            >
-                                                {groups.map((g) => (
-                                                    <SortableGroupManageItem
-                                                        key={g.id}
-                                                        group={g}
-                                                        onRename={renameGroup}
-                                                        onDelete={deleteGroup}
-                                                        onSizeChange={(
-                                                            group,
-                                                            size,
-                                                        ) => void changeFolderSize(
-                                                            group,
-                                                            size,
-                                                        )}
-                                                    />
-                                                ))}
-                                            </SortableContext>
-                                        </DndContext>
-                                    )}
-                            </div>
+                                搜索网站
+                            </label>
+                            <input
+                                id="filter-apps"
+                                placeholder="搜索网站名称或网址"
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                            />
                         </div>
-                    )
-                    : (
-                        <>
-                            {appsStatus === "loading" && (
-                                <p role="status" className="launcher-empty">
-                                    正在加载网站…
+                        <div className="webapp-manager-actions">
+                            <Button
+                                variant="default"
+                                onClick={() => {
+                                    setFormPresentation("panel");
+                                    openAddModal();
+                                }}
+                            >
+                                <Plus size={16} />
+                                <span>APP</span>
+                            </Button>
+                            <Button
+                                variant={isManagingGroups
+                                    ? "default"
+                                    : "outline"}
+                                onClick={() => setIsManagingGroups(
+                                    !isManagingGroups,
+                                )}
+                                title={isManagingGroups
+                                    ? "返回 APP 列表"
+                                    : "文件夹管理"}
+                                aria-label={isManagingGroups
+                                    ? "返回 APP 列表"
+                                    : "文件夹管理"}
+                            >
+                                <Folder size={16} />
+                                <span>
+                                    {isManagingGroups ? "返回" : "文件夹"}
+                                </span>
+                            </Button>
+                        </div>
+                    </div>
+
+                    {isManagingGroups
+                        ? (
+                            <div className="group-manage-section">
+                                <h3 className="text-base font-semibold m-0 mb-1">
+                                    文件夹管理
+                                </h3>
+                                <p className="muted text-xs m-0 mb-3">
+                                    文件夹可帮助归类
+                                    APP。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
                                 </p>
-                            )}
-                            {appsStatus === "error" && (
-                                <div role="alert" className="launcher-empty">
-                                    网站加载失败：{appsError}{" "}
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            setReloadApps((count) =>
-                                                count + 1
-                                            )}
-                                    >
-                                        重试
-                                    </Button>
+                                <form
+                                    onSubmit={createGroup}
+                                    className="section-form mb-4"
+                                >
+                                    <div className="flex gap-2">
+                                        <input
+                                            required
+                                            placeholder="新文件夹名称（如：开发、娱乐、办公）"
+                                            value={newGroupName}
+                                            onChange={(e) =>
+                                                setNewGroupName(
+                                                    e.target.value,
+                                                )}
+                                            className="flex-1"
+                                        />
+                                        <Button
+                                            variant="default"
+                                            type="submit"
+                                            disabled={!newGroupName
+                                                .trim()}
+                                        >
+                                            <FolderPlus size={16} />
+                                            <span>创建文件夹</span>
+                                        </Button>
+                                    </div>
+                                </form>
+                                <div className="group-manage-list">
+                                    {groups.length === 0
+                                        ? (
+                                            <p className="empty">
+                                                暂无文件夹
+                                            </p>
+                                        )
+                                        : (
+                                            <DndContext
+                                                sensors={sensors}
+                                                onDragEnd={(e) =>
+                                                    void handleGroupDragEnd(
+                                                        e,
+                                                    )}
+                                            >
+                                                <SortableContext
+                                                    items={groupIds}
+                                                    strategy={verticalListSortingStrategy}
+                                                >
+                                                    {groups.map((g) => (
+                                                        <SortableGroupManageItem
+                                                            key={g.id}
+                                                            group={g}
+                                                            onRename={renameGroup}
+                                                            onDelete={deleteGroup}
+                                                            onSizeChange={(
+                                                                group,
+                                                                size,
+                                                            ) => void changeFolderSize(
+                                                                group,
+                                                                size,
+                                                            )}
+                                                        />
+                                                    ))}
+                                                </SortableContext>
+                                            </DndContext>
+                                        )}
                                 </div>
-                            )}
-                            {appsStatus === "offline" && (
-                                <div role="status" className="launcher-notice">
-                                    当前离线，显示此账户上次保存的网站列表。
-                                    {" "}
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            setReloadApps((count) =>
-                                                count + 1
-                                            )}
+                            </div>
+                        )
+                        : (
+                            <>
+                                {appsStatus === "loading" && (
+                                    <p
+                                        role="status"
+                                        className="launcher-empty"
                                     >
-                                        重试连接
-                                    </Button>
-                                </div>
-                            )}
-                            {(appsStatus === "ready" ||
-                                appsStatus === "offline") && (
-                                <WebAppLauncher
-                                    apps={displayedApps}
-                                    emptyMessage={filter.trim() ||
-                                            (activeGroupFilter !== "all" &&
-                                                displayedApps.length === 0)
-                                        ? "没有匹配的网站"
-                                        : "还没有常用网站"}
-                                    emptyAction={!filter.trim() &&
-                                        activeGroupFilter === "all"}
-                                    groups={groups}
-                                    showFolders={activeGroupFilter === "all"}
-                                    size={appearance.webAppIconSize}
-                                    showAppLabels={appearance.showAppLabels}
-                                    onFolderSizeChange={(group, folderSize) =>
-                                        void changeFolderSize(
+                                        正在加载网站…
+                                    </p>
+                                )}
+                                {appsStatus === "error" && (
+                                    <div
+                                        role="alert"
+                                        className="launcher-empty"
+                                    >
+                                        网站加载失败：{appsError}{" "}
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setReloadApps((count) =>
+                                                    count + 1
+                                                )}
+                                        >
+                                            重试
+                                        </Button>
+                                    </div>
+                                )}
+                                {appsStatus === "offline" && (
+                                    <div
+                                        role="status"
+                                        className="launcher-notice"
+                                    >
+                                        当前离线，显示此账户上次保存的网站列表。
+                                        {" "}
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setReloadApps((count) =>
+                                                    count + 1
+                                                )}
+                                        >
+                                            重试连接
+                                        </Button>
+                                    </div>
+                                )}
+                                {(appsStatus === "ready" ||
+                                    appsStatus === "offline") && (
+                                    <WebAppLauncher
+                                        apps={displayedApps}
+                                        emptyMessage={filter.trim() ||
+                                                (activeGroupFilter !==
+                                                        "all" &&
+                                                    displayedApps
+                                                            .length ===
+                                                        0)
+                                            ? "没有匹配的网站"
+                                            : "还没有常用网站"}
+                                        emptyAction={!filter.trim() &&
+                                            activeGroupFilter === "all"}
+                                        groups={groups}
+                                        showFolders={activeGroupFilter ===
+                                            "all"}
+                                        size={appearance.webAppIconSize}
+                                        showAppLabels={appearance
+                                            .showAppLabels}
+                                        activeFolderId={activeFolderId}
+                                        onFolderChange={setActiveFolderId}
+                                        onFolderSizeChange={(
+                                            group,
+                                            folderSize,
+                                        ) => void changeFolderSize(
                                             group,
                                             folderSize,
                                         )}
-                                    managing={isManagingApps}
-                                    onToggleManaging={() =>
-                                        setIsManagingApps((value) => !value)}
-                                    onOpen={openApp}
-                                    onEdit={openEditModal}
-                                    onMove={(app, groupId) =>
-                                        void moveAppGroup(app, groupId)}
-                                    onPin={(app) => void togglePinApp(app)}
-                                    onDelete={(app) => void softDeleteApp(app)}
-                                    onReorder={(ids) => void reorderApps(ids)}
-                                    onAdd={openAddModal}
-                                />
-                            )}
-                        </>
-                    )}
+                                        managing={isManagingApps}
+                                        onToggleManaging={() =>
+                                            setIsManagingApps((value) =>
+                                                !value
+                                            )}
+                                        onOpen={openApp}
+                                        onEdit={(app) => {
+                                            setFormPresentation(
+                                                "panel",
+                                            );
+                                            openEditModal(app);
+                                        }}
+                                        onMove={(app, groupId) =>
+                                            void moveAppGroup(
+                                                app,
+                                                groupId,
+                                            )}
+                                        onPin={(app) => void togglePinApp(app)}
+                                        onDelete={(app) =>
+                                            void softDeleteApp(app)}
+                                        onReorder={(ids) =>
+                                            void reorderApps(ids)}
+                                        onAdd={() => {
+                                            setFormPresentation(
+                                                "panel",
+                                            );
+                                            openAddModal();
+                                        }}
+                                    />
+                                )}
+                            </>
+                        )}
+                </div>
             </ContentSheet>
-            {/* Add / Edit WebApp Modal */}
-            <AppFormDialog
-                open={isAddingApp}
-                onOpenChange={(open) => {
-                    setIsAddingApp(open);
-                    if (!open) setEditingApp(null);
-                }}
-                editingApp={editingApp}
-                groups={groups}
-                appearance={appearance}
-                existingApps={apps}
-                defaultGroupId={activeGroupFilter !== "all" &&
-                        activeGroupFilter !== "ungrouped"
-                    ? activeGroupFilter
-                    : ""}
-                onSaved={(savedApp, isEdit) => {
-                    if (isEdit) {
-                        setApps((items) =>
-                            items.map((item) => item.id === savedApp.id
-                                ? { ...item, ...savedApp }
-                                : item
-                            )
-                        );
-                    } else {
-                        setApps((items) => [...items, savedApp]);
-                    }
-                }}
-            />
 
+            {/* Standalone Add / Edit WebApp Dialog for pinned apps */}
+            {formPresentation === "dialog" && isAddingApp && (
+                <AppFormDialog
+                    open
+                    presentation="dialog"
+                    onOpenChange={(open) => {
+                        setIsAddingApp(open);
+                        if (!open) setEditingApp(null);
+                    }}
+                    editingApp={editingApp}
+                    groups={groups}
+                    appearance={appearance}
+                    existingApps={apps}
+                    defaultGroupId=""
+                    onSaved={(savedApp, isEdit) => {
+                        if (isEdit) {
+                            setApps((items) =>
+                                items.map((item) =>
+                                    item.id === savedApp.id
+                                        ? { ...item, ...savedApp }
+                                        : item
+                                )
+                            );
+                        } else {
+                            setApps((items) => [...items, savedApp]);
+                        }
+                        setIsAddingApp(false);
+                        setEditingApp(null);
+                    }}
+                />
+            )}
+
+            {/* Folder Deletion Alert Dialog */}
+            <AlertDialog
+                open={Boolean(groupToDelete)}
+                onOpenChange={(open) => !open && setGroupToDelete(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            删除文件夹“{groupToDelete?.name}”？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            只删除文件夹，其中的 APP
+                            将移至“未放入文件夹”，不会删除文件夹内的网站。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                if (groupToDelete) {void confirmDeleteGroup(
+                                        groupToDelete,
+                                    );}
+                            }}
+                        >
+                            删除文件夹
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             {/* Undo Toast */}
             {undoApp && (
                 <div className="webapp-undo-toast" role="status">
@@ -1325,44 +1536,26 @@ export function SearchHome() {
                     setSheet(v ? "notes" : null);
                     if (!v) setEditing(null);
                 }}
-                title={editing ? "编辑便签" : "便签"}
+                title={editing ? (editing.title?.trim() || "编辑便签") : "便签"}
+                onBack={editing ? () => setEditing(null) : undefined}
                 height={notesSheetHeight}
                 onHeightChange={setNotesSheetHeight}
             >
                 {editing && user
                     ? (
-                        <div>
-                            <NoteEditor
-                                key={editing.id}
-                                note={editing}
-                                userId={user.id}
-                                onSaved={(next) => {
-                                    setNotes((items) =>
-                                        items.map((
-                                            item,
-                                        ) => (item.id === next.id
-                                            ? next
-                                            : item)
-                                        )
-                                    );
-                                    setEditing(next);
-                                }}
-                            />
-                            <div
-                                style={{
-                                    marginTop: "14px",
-                                    display: "flex",
-                                    gap: "9px",
-                                }}
-                            >
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setEditing(null)}
-                                >
-                                    返回便签列表
-                                </Button>
-                            </div>
-                        </div>
+                        <NoteEditor
+                            key={editing.id}
+                            note={editing}
+                            userId={user.id}
+                            onSaved={(next) => {
+                                setNotes((items) =>
+                                    items.map((
+                                        item,
+                                    ) => (item.id === next.id ? next : item))
+                                );
+                                setEditing(next);
+                            }}
+                        />
                     )
                     : (
                         <div>

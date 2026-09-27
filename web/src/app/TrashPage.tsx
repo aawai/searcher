@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
+import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { Button } from "../components/ui/button.tsx";
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 
 interface TrashWebApp {
     id: string;
@@ -81,7 +82,7 @@ export function TrashPage() {
     }
 
     async function permanentDeleteWebApp(id: string) {
-        if (!window.confirm("彻底删除后将无法恢复，确认删除？")) return;
+        if (!globalThis.confirm("彻底删除后将无法恢复，确认删除？")) return;
         setActionId(id);
         setError("");
         setStatus("");
@@ -116,7 +117,7 @@ export function TrashPage() {
     }
 
     async function permanentDeleteNote(id: string) {
-        if (!window.confirm("彻底删除后将无法恢复，确认删除？")) return;
+        if (!globalThis.confirm("彻底删除后将无法恢复，确认删除？")) return;
         setActionId(id);
         setError("");
         setStatus("");
@@ -156,52 +157,46 @@ export function TrashPage() {
 
     return (
         <main className="page trash-page">
-            <div className="trash-header">
-                <div className="trash-title-row">
-                    <Link
-                        to="/settings"
-                        className="button button--ghost trash-back-btn"
-                        title="返回设置"
-                    >
-                        <ArrowLeft size={18} />
-                        <span>返回设置</span>
-                    </Link>
-                    <h1>回收站</h1>
+            <div className="flex items-center justify-between gap-4 mb-2">
+                <div>
+                    <h1 className="m-0 mb-1 text-2xl font-bold">回收站</h1>
+                    <p className="muted m-0 text-sm">
+                        已删除的 APP 与便签将在此保留 30
+                        天，可随时恢复或彻底删除。
+                    </p>
                 </div>
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void loadTrash()}
-                    disabled={loading}
-                    className="trash-refresh-btn"
-                    title="刷新回收站"
-                >
-                    <RefreshCw size={15} className={loading ? "spin" : ""} />
-                    <span>刷新</span>
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void loadTrash()}
+                        disabled={loading}
+                        className="gap-1.5"
+                    >
+                        <RefreshCw
+                            size={14}
+                            className={loading ? "spin" : ""}
+                        />
+                        <span>刷新</span>
+                    </Button>
+                </div>
             </div>
 
-            <p className="muted">
-                已删除的 APP 与便签将在此保留 30 天，可随时恢复或彻底删除。
-            </p>
-
-            <nav className="choice-row trash-tabs" aria-label="回收站分类">
-                <button
-                    type="button"
-                    aria-pressed={tab === "webapps"}
-                    onClick={() => setTab("webapps")}
-                >
-                    APP ({webapps.length})
-                </button>
-                <button
-                    type="button"
-                    aria-pressed={tab === "notes"}
-                    onClick={() => setTab("notes")}
-                >
-                    便签 ({notes.length})
-                </button>
-            </nav>
-
+            <Tabs
+                value={tab}
+                onValueChange={(val) => setTab(val as "webapps" | "notes")}
+                className="mt-4"
+            >
+                <TabsList className="mb-4">
+                    <TabsTrigger value="webapps">
+                        APP ({webapps.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="notes">
+                        便签 ({notes.length})
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
             {status && (
                 <p role="status" className="trash-status-msg">{status}</p>
             )}
@@ -215,61 +210,127 @@ export function TrashPage() {
                     {webapps.length === 0
                         ? <p className="empty">回收站中没有 APP</p>
                         : (
-                            <div className="trash-table-wrap">
-                                <table className="trash-table">
-                                    <thead>
-                                        <tr>
-                                            <th>名称 / 网址</th>
-                                            <th>删除时间</th>
-                                            <th className="th-actions">操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {webapps.map((item) => (
-                                            <tr key={item.id}>
-                                                <td className="trash-item-info">
-                                                    <div className="trash-item-name">
-                                                        {item.name}
-                                                    </div>
-                                                    <div className="trash-item-sub muted">
-                                                        {item.url}
-                                                    </div>
-                                                </td>
-                                                <td className="trash-item-date muted">
-                                                    {formatDate(item.deletedAt)}
-                                                </td>
-                                                <td className="trash-item-actions">
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            void restoreWebApp(
-                                                                item.id,
-                                                            )}
-                                                        disabled={actionId ===
-                                                            item.id}
-                                                        title="恢复"
-                                                    >
-                                                        <RotateCcw size={15} />
-                                                        <span>恢复</span>
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        onClick={() =>
-                                                            void permanentDeleteWebApp(
-                                                                item.id,
-                                                            )}
-                                                        disabled={actionId ===
-                                                            item.id}
-                                                        title="彻底删除"
-                                                    >
-                                                        <Trash2 size={15} />
-                                                        <span>彻底删除</span>
-                                                    </Button>
-                                                </td>
+                            <div>
+                                {/* Desktop Table */}
+                                <div className="hidden sm:block trash-table-wrap">
+                                    <table className="trash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>名称 / 网址</th>
+                                                <th>删除时间</th>
+                                                <th className="th-actions">
+                                                    操作
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {webapps.map((item) => (
+                                                <tr key={item.id}>
+                                                    <td className="trash-item-info">
+                                                        <div className="trash-item-name">
+                                                            {item.name}
+                                                        </div>
+                                                        <div className="trash-item-sub muted">
+                                                            {item.url}
+                                                        </div>
+                                                    </td>
+                                                    <td className="trash-item-date muted">
+                                                        {formatDate(
+                                                            item.deletedAt,
+                                                        )}
+                                                    </td>
+                                                    <td className="trash-item-actions">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                void restoreWebApp(
+                                                                    item.id,
+                                                                )}
+                                                            disabled={actionId ===
+                                                                item.id}
+                                                            title="恢复"
+                                                        >
+                                                            <RotateCcw
+                                                                size={14}
+                                                            />
+                                                            <span>恢复</span>
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                void permanentDeleteWebApp(
+                                                                    item.id,
+                                                                )}
+                                                            disabled={actionId ===
+                                                                item.id}
+                                                            title="彻底删除"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                            <span>
+                                                                彻底删除
+                                                            </span>
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Mobile Stacked Cards */}
+                                <div className="sm:hidden flex flex-col gap-3">
+                                    {webapps.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="p-3.5 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] flex flex-col gap-2"
+                                        >
+                                            <div>
+                                                <div className="font-semibold text-sm text-[var(--foreground)]">
+                                                    {item.name}
+                                                </div>
+                                                <div className="text-xs text-[var(--muted)] truncate">
+                                                    {item.url}
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-[var(--muted)]">
+                                                删除时间：{formatDate(
+                                                    item.deletedAt,
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 pt-2 border-t border-[var(--border)]">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={() =>
+                                                        void restoreWebApp(
+                                                            item.id,
+                                                        )}
+                                                    disabled={actionId ===
+                                                        item.id}
+                                                >
+                                                    <RotateCcw size={14} />
+                                                    <span>恢复</span>
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={() =>
+                                                        void permanentDeleteWebApp(
+                                                            item.id,
+                                                        )}
+                                                    disabled={actionId ===
+                                                        item.id}
+                                                >
+                                                    <Trash2 size={14} />
+                                                    <span>彻底删除</span>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                 </section>
@@ -283,65 +344,133 @@ export function TrashPage() {
                     {notes.length === 0
                         ? <p className="empty">回收站中没有便签</p>
                         : (
-                            <div className="trash-table-wrap">
-                                <table className="trash-table">
-                                    <thead>
-                                        <tr>
-                                            <th>标题 / 内容摘要</th>
-                                            <th>删除时间</th>
-                                            <th className="th-actions">操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {notes.map((note) => (
-                                            <tr key={note.id}>
-                                                <td className="trash-item-info">
-                                                    <div className="trash-item-name">
-                                                        {note.title?.trim() ||
-                                                            "无标题便签"}
-                                                    </div>
-                                                    <div className="trash-item-sub muted">
-                                                        {note.body.slice(
-                                                            0,
-                                                            80,
-                                                        ) || "（空便签）"}
-                                                    </div>
-                                                </td>
-                                                <td className="trash-item-date muted">
-                                                    {formatDate(note.deletedAt)}
-                                                </td>
-                                                <td className="trash-item-actions">
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            void restoreNote(
-                                                                note.id,
-                                                            )}
-                                                        disabled={actionId ===
-                                                            note.id}
-                                                        title="恢复"
-                                                    >
-                                                        <RotateCcw size={15} />
-                                                        <span>恢复</span>
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        onClick={() =>
-                                                            void permanentDeleteNote(
-                                                                note.id,
-                                                            )}
-                                                        disabled={actionId ===
-                                                            note.id}
-                                                        title="彻底删除"
-                                                    >
-                                                        <Trash2 size={15} />
-                                                        <span>彻底删除</span>
-                                                    </Button>
-                                                </td>
+                            <div>
+                                {/* Desktop Table */}
+                                <div className="hidden sm:block trash-table-wrap">
+                                    <table className="trash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>标题 / 内容摘要</th>
+                                                <th>删除时间</th>
+                                                <th className="th-actions">
+                                                    操作
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {notes.map((note) => (
+                                                <tr key={note.id}>
+                                                    <td className="trash-item-info">
+                                                        <div className="trash-item-name">
+                                                            {note.title
+                                                                ?.trim() ||
+                                                                "无标题便签"}
+                                                        </div>
+                                                        <div className="trash-item-sub muted">
+                                                            {note.body.slice(
+                                                                0,
+                                                                80,
+                                                            ) || "（空便签）"}
+                                                        </div>
+                                                    </td>
+                                                    <td className="trash-item-date muted">
+                                                        {formatDate(
+                                                            note.deletedAt,
+                                                        )}
+                                                    </td>
+                                                    <td className="trash-item-actions">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                void restoreNote(
+                                                                    note.id,
+                                                                )}
+                                                            disabled={actionId ===
+                                                                note.id}
+                                                            title="恢复"
+                                                        >
+                                                            <RotateCcw
+                                                                size={14}
+                                                            />
+                                                            <span>恢复</span>
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                void permanentDeleteNote(
+                                                                    note.id,
+                                                                )}
+                                                            disabled={actionId ===
+                                                                note.id}
+                                                            title="彻底删除"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                            <span>
+                                                                彻底删除
+                                                            </span>
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Mobile Stacked Cards */}
+                                <div className="sm:hidden flex flex-col gap-3">
+                                    {notes.map((note) => (
+                                        <div
+                                            key={note.id}
+                                            className="p-3.5 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] flex flex-col gap-2"
+                                        >
+                                            <div>
+                                                <div className="font-semibold text-sm text-[var(--foreground)]">
+                                                    {note.title?.trim() ||
+                                                        "无标题便签"}
+                                                </div>
+                                                <div className="text-xs text-[var(--muted)] line-clamp-2">
+                                                    {note.body || "（空便签）"}
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-[var(--muted)]">
+                                                删除时间：{formatDate(
+                                                    note.deletedAt,
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 pt-2 border-t border-[var(--border)]">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={() =>
+                                                        void restoreNote(
+                                                            note.id,
+                                                        )}
+                                                    disabled={actionId ===
+                                                        note.id}
+                                                >
+                                                    <RotateCcw size={14} />
+                                                    <span>恢复</span>
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={() =>
+                                                        void permanentDeleteNote(
+                                                            note.id,
+                                                        )}
+                                                    disabled={actionId ===
+                                                        note.id}
+                                                >
+                                                    <Trash2 size={14} />
+                                                    <span>彻底删除</span>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                 </section>

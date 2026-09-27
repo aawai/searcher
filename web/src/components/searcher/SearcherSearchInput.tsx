@@ -101,6 +101,8 @@ export function SearcherSearchInput(
     const [isOpen, setIsOpen] = useState(false);
     const field = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const isMac = typeof navigator !== "undefined" &&
+        /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || "");
     const abortRef = useRef<AbortController | null>(null);
 
     // Global keyboard shortcut focus (/ and Cmd/Ctrl+K)
@@ -440,6 +442,14 @@ export function SearcherSearchInput(
                             : "搜索你想知道的…"}
                         disabled={disabled}
                     />
+                    {!query && (
+                        <span
+                            className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs text-[var(--muted)] border border-[var(--border)] rounded-[var(--control-radius)] bg-[var(--surface-soft)] pointer-events-none select-none mr-1 font-mono"
+                            aria-hidden="true"
+                        >
+                            {isMac ? "⌘K" : "Ctrl+K"}
+                        </span>
+                    )}
                     <Button
                         className="search-submit"
                         variant="default"

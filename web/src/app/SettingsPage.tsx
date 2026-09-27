@@ -19,6 +19,11 @@ import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Slider } from "../components/ui/slider.tsx";
 import { Separator } from "../components/ui/separator.tsx";
+import { Input } from "../components/ui/input.tsx";
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from "../components/ui/native-select.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
 
@@ -41,44 +46,136 @@ const ACCENT_COLORS: Record<string, string> = {
 };
 
 function Choices<T extends string>(
-    { title, value, values, select }: {
+    {
+        title,
+        description,
+        value,
+        values,
+        control,
+        select,
+    }: {
         title: string;
+        description?: string;
         value: T;
         values: readonly [T, string][];
+        control: "select" | "segmented" | "swatches";
         select: (v: T) => void;
     },
 ) {
-    return (
-        <div className="setting-group">
-            <h3>{title}</h3>
-            <RadioGroup
-                value={value}
-                onValueChange={(next) => select(next as T)}
-                aria-label={title}
-            >
-                {values.map(([id, label]) => (
-                    <RadioGroupItem
-                        key={id}
-                        value={id}
-                        aria-label={label}
+    if (control === "select") {
+        return (
+            <div className="settings-row">
+                <div className="settings-row-label">
+                    <span className="settings-row-title">{title}</span>
+                    {description && (
+                        <p className="settings-row-desc">{description}</p>
+                    )}
+                </div>
+                <div className="settings-row-control">
+                    <NativeSelect
+                        value={value}
+                        onChange={(e) => select(e.target.value as T)}
+                        className="w-[180px]"
+                        aria-label={title}
                     >
-                        {id in ACCENT_COLORS && (
-                            <span
-                                style={{
-                                    display: "inline-block",
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: "50%",
-                                    background: ACCENT_COLORS[id],
-                                    marginRight: 6,
-                                    flexShrink: 0,
-                                }}
-                            />
-                        )}
-                        <span>{label}</span>
-                    </RadioGroupItem>
-                ))}
-            </RadioGroup>
+                        {values.map(([id, label]) => (
+                            <NativeSelectOption key={id} value={id}>
+                                {label}
+                            </NativeSelectOption>
+                        ))}
+                    </NativeSelect>
+                </div>
+            </div>
+        );
+    }
+
+    if (control === "segmented") {
+        return (
+            <div className="settings-row">
+                <div className="settings-row-label">
+                    <span className="settings-row-title">{title}</span>
+                    {description && (
+                        <p className="settings-row-desc">{description}</p>
+                    )}
+                </div>
+                <div className="settings-row-control">
+                    <RadioGroup
+                        value={value}
+                        onValueChange={(next) => select(next as T)}
+                        className="flex items-center gap-1.5 flex-wrap"
+                        aria-label={title}
+                    >
+                        {values.map(([id, label]) => (
+                            <RadioGroupItem
+                                key={id}
+                                value={id}
+                                aria-label={label}
+                            >
+                                {label}
+                            </RadioGroupItem>
+                        ))}
+                    </RadioGroup>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="settings-row settings-row--stack-mobile">
+            <div className="settings-row-label">
+                <span className="settings-row-title">{title}</span>
+                {description && (
+                    <p className="settings-row-desc">{description}</p>
+                )}
+            </div>
+            <div className="settings-row-control w-full sm:w-[320px]">
+                <RadioGroup
+                    value={value}
+                    onValueChange={(next) => select(next as T)}
+                    className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full"
+                    aria-label={title}
+                >
+                    {values.map(([id, label]) => {
+                        const isSelected = value === id;
+                        return (
+                            <RadioGroupItem
+                                key={id}
+                                value={id}
+                                aria-label={label}
+                                className={`flex items-center gap-2 p-2 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] text-sm cursor-pointer transition-colors ${
+                                    isSelected
+                                        ? "border-[var(--accent)] ring-1 ring-[var(--accent)] font-semibold"
+                                        : "hover:bg-[var(--surface-soft)]"
+                                }`}
+                            >
+                                <span
+                                    style={{
+                                        display: "inline-block",
+                                        width: 12,
+                                        height: 12,
+                                        borderRadius: "50%",
+                                        background: ACCENT_COLORS[id] ||
+                                            "#326cae",
+                                        flexShrink: 0,
+                                    }}
+                                    aria-hidden="true"
+                                />
+                                <span className="text-xs truncate">
+                                    {label}
+                                </span>
+                                {isSelected && (
+                                    <span
+                                        className="ml-auto text-xs text-[var(--accent)]"
+                                        aria-hidden="true"
+                                    >
+                                        ✓
+                                    </span>
+                                )}
+                            </RadioGroupItem>
+                        );
+                    })}
+                </RadioGroup>
+            </div>
         </div>
     );
 }
@@ -186,242 +283,232 @@ export function SettingsPage() {
                     <h2>{tabs[tab].label}</h2>
                     {tab === "search" && (
                         <div className="settings-section">
-                            <Choices
-                                title="默认搜索引擎"
-                                value={appearance.engine}
-                                values={SEARCH_ENGINES.map((
-                                    e,
-                                ) => [e.id, e.label] as const)}
-                                select={(v) => set("engine", v as EngineId)}
-                            />
-                            <Choices
-                                title="搜索结果打开方式"
-                                value={appearance.target}
-                                values={[
-                                    ["current", "当前标签页打开"],
-                                    ["new_tab", "新标签页打开"],
-                                ] as const}
-                                select={(v) => set("target", v)}
-                            />
-                            <div className="setting-group">
-                                <h3>首页快捷方式数量</h3>
-                                <RadioGroup
-                                    value={String(appearance.webAppHomeLimit)}
-                                    onValueChange={(val) =>
-                                        set(
-                                            "webAppHomeLimit",
-                                            val === "all"
-                                                ? "all"
-                                                : (Number(val) as 8 | 12 | 16),
+                            <div className="settings-group">
+                                <h3 className="settings-group-title">
+                                    搜索引擎与打开方式
+                                </h3>
+                                <div className="settings-card">
+                                    <Choices
+                                        title="默认搜索引擎"
+                                        description="选择在搜索框内直接回车时使用的搜索引擎"
+                                        control="select"
+                                        value={appearance.engine}
+                                        values={SEARCH_ENGINES.map((e) =>
+                                            [e.id, e.label] as const
                                         )}
-                                    aria-label="首页快捷方式数量"
-                                >
-                                    {([8, 12, 16, "all"] as const).map((
-                                        limit,
-                                    ) => (
-                                        <RadioGroupItem
-                                            key={String(limit)}
-                                            value={String(limit)}
-                                            aria-label={limit === "all"
-                                                ? "全部"
-                                                : String(limit)}
-                                        >
-                                            <span>
-                                                {limit === "all"
-                                                    ? "全部"
-                                                    : limit}
-                                            </span>
-                                        </RadioGroupItem>
-                                    ))}
-                                </RadioGroup>
+                                        select={(v) =>
+                                            set("engine", v as EngineId)}
+                                    />
+                                    <Choices
+                                        title="搜索结果打开方式"
+                                        description="在当前页面跳转或在新标签页中打开搜索结果"
+                                        control="segmented"
+                                        value={appearance.target}
+                                        values={[
+                                            ["current", "当前标签页打开"],
+                                            ["new_tab", "新标签页打开"],
+                                        ] as const}
+                                        select={(v) => set("target", v)}
+                                    />
+                                    <Choices
+                                        title="首页快捷方式数量"
+                                        description="在搜索主页固定的常用 APP 展示上限"
+                                        control="select"
+                                        value={String(
+                                            appearance.webAppHomeLimit,
+                                        )}
+                                        values={[
+                                            ["8", "8 个"],
+                                            ["12", "12 个"],
+                                            ["16", "16 个"],
+                                            ["all", "全部"],
+                                        ] as const}
+                                        select={(v) =>
+                                            set(
+                                                "webAppHomeLimit",
+                                                v === "all"
+                                                    ? "all"
+                                                    : (Number(v) as
+                                                        | 8
+                                                        | 12
+                                                        | 16),
+                                            )}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
                     {tab === "appearance" && (
                         <div className="settings-section">
-                            <div className="settings-subgroup">
-                                <div className="settings-section-head">
-                                    <h3>主题</h3>
-                                    <p>调整界面的基础视觉样式与配色</p>
-                                </div>
-                                <Choices
-                                    title="主题模式"
-                                    value={appearance.theme}
-                                    values={[
-                                        ["system", "跟随系统"],
-                                        ["light", "浅色"],
-                                        ["dark", "深色"],
-                                    ] as const}
-                                    select={(v) => set("theme", v)}
-                                />
-                                <Choices
-                                    title="强调色"
-                                    value={appearance.accent}
-                                    values={[
-                                        ["blue", "经典蓝"],
-                                        ["cyan", "天青蓝"],
-                                        ["teal", "鸭翅绿"],
-                                        ["violet", "紫罗兰"],
-                                        ["orange", "暖晨橙"],
-                                        ["mono", "单色黑白"],
-                                    ] as const}
-                                    select={(v) => set("accent", v)}
-                                />
-                                <Choices
-                                    title="界面风格"
-                                    value={appearance.style}
-                                    values={[
-                                        ["quiet", "默认 (Quiet)"],
-                                        ["minimal", "极简 (Minimal)"],
-                                        ["glass", "毛玻璃 (Glass)"],
-                                        ["soft", "柔和 (Soft)"],
-                                        ["classic", "经典 (Classic)"],
-                                    ] as const}
-                                    select={(v) => set("style", v)}
-                                />
-                            </div>
-
-                            <Separator orientation="horizontal" />
-
-                            <div className="settings-subgroup">
-                                <div className="settings-section-head">
-                                    <h3>主页</h3>
-                                    <p>调整首页搜索框与快捷入口布局</p>
-                                </div>
-                                <Choices
-                                    title="搜索框样式"
-                                    value={appearance.shape ?? "rounded"}
-                                    values={[
-                                        ["rounded", "Rounded（圆角）"],
-                                        ["pill", "Pill（胶囊 Capsule）"],
-                                    ] as const}
-                                    select={(v) => set("shape", v)}
-                                />
-                                <div className="setting-group">
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            marginBottom: "10px",
-                                        }}
-                                    >
-                                        <h3 style={{ margin: 0 }}>
-                                            搜索框透明度
-                                        </h3>
-                                        <span
-                                            className="muted"
-                                            style={{
-                                                fontWeight: 600,
-                                                fontSize: "13px",
-                                            }}
-                                        >
-                                            {Math.round(
-                                                (appearance.searchOpacity ??
-                                                    1) * 100,
-                                            )}%
-                                        </span>
-                                    </div>
-                                    <Slider
-                                        min={0.1}
-                                        max={1}
-                                        step={0.05}
-                                        value={appearance.searchOpacity ?? 1}
-                                        onValueChange={(v) =>
-                                            set(
-                                                "searchOpacity",
-                                                typeof v === "number"
-                                                    ? v
-                                                    : v[0],
-                                            )}
-                                        aria-label="搜索框透明度"
+                            <div className="settings-group">
+                                <h3 className="settings-group-title">
+                                    主题与配色
+                                </h3>
+                                <div className="settings-card">
+                                    <Choices
+                                        title="主题模式"
+                                        description="切换浅色、深色模式或跟随系统"
+                                        control="segmented"
+                                        value={appearance.theme}
+                                        values={[
+                                            ["system", "跟随系统"],
+                                            ["light", "浅色"],
+                                            ["dark", "深色"],
+                                        ] as const}
+                                        select={(v) => set("theme", v)}
                                     />
-                                </div>
-                                <div
-                                    className="setting-group"
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <div>
-                                        <h3 style={{ margin: 0 }}>
-                                            显示 Searcher 标题
-                                        </h3>
-                                        <p
-                                            className="muted"
-                                            style={{
-                                                margin: "4px 0 0",
-                                                fontSize: "13px",
-                                            }}
-                                        >
-                                            在首页搜索框上方展示品牌标题
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={appearance.showTitle !== false}
-                                        onCheckedChange={(checked) =>
-                                            set("showTitle", checked)}
-                                        aria-label="显示 Searcher 标题"
+                                    <Choices
+                                        title="强调色"
+                                        description="设置按钮、焦点环与激活标签的主题强调色"
+                                        control="swatches"
+                                        value={appearance.accent}
+                                        values={[
+                                            ["blue", "经典蓝"],
+                                            ["cyan", "天青蓝"],
+                                            ["teal", "鸭翅绿"],
+                                            ["violet", "紫罗兰"],
+                                            ["orange", "暖晨橙"],
+                                            ["mono", "单色黑白"],
+                                        ] as const}
+                                        select={(v) => set("accent", v)}
                                     />
-                                </div>
-                                <Choices
-                                    title="APP 图标大小"
-                                    value={appearance.webAppIconSize}
-                                    values={[["compact", "紧凑"], [
-                                        "default",
-                                        "标准",
-                                    ], ["large", "大图标"]] as const}
-                                    select={(v) => set("webAppIconSize", v)}
-                                />
-                                <div
-                                    className="setting-group"
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <div>
-                                        <h3 style={{ margin: 0 }}>
-                                            显示 APP 名称
-                                        </h3>
-                                        <p
-                                            className="muted"
-                                            style={{
-                                                margin: "4px 0 0",
-                                                fontSize: "13px",
-                                            }}
-                                        >
-                                            在桌面或快捷列表中展示网站文字标签
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={appearance.showAppLabels}
-                                        onCheckedChange={(checked) =>
-                                            set("showAppLabels", checked)}
-                                        aria-label="显示 APP 名称"
+                                    <Choices
+                                        title="界面风格"
+                                        description="调整工作区、卡片与搜索框的圆角、质感与阴影"
+                                        control="select"
+                                        value={appearance.style}
+                                        values={[
+                                            ["quiet", "默认 (Quiet)"],
+                                            ["minimal", "极简 (Minimal)"],
+                                            ["glass", "毛玻璃 (Glass)"],
+                                            ["soft", "柔和 (Soft)"],
+                                            ["classic", "经典 (Classic)"],
+                                        ] as const}
+                                        select={(v) => set("style", v)}
                                     />
                                 </div>
                             </div>
 
-                            <Separator orientation="horizontal" />
-
-                            <div className="settings-subgroup">
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <div className="settings-section-head">
-                                        <h3>壁纸与背景效果</h3>
-                                        <p>
-                                            设置首页背景图像及遮罩、模糊与灰度
-                                        </p>
+                            <div className="settings-group">
+                                <h3 className="settings-group-title">
+                                    主页与快捷入口
+                                </h3>
+                                <div className="settings-card">
+                                    <Choices
+                                        title="搜索框样式"
+                                        description="选择圆角矩形或药丸形胶囊外观"
+                                        control="segmented"
+                                        value={appearance.shape ?? "rounded"}
+                                        values={[
+                                            ["rounded", "圆角 (Rounded)"],
+                                            ["pill", "胶囊 (Pill)"],
+                                        ] as const}
+                                        select={(v) => set("shape", v)}
+                                    />
+                                    <div className="settings-row settings-row--stack-mobile">
+                                        <div className="settings-row-label">
+                                            <div className="flex justify-between items-center sm:block">
+                                                <span className="settings-row-title">
+                                                    搜索框透明度
+                                                </span>
+                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                    {Math.round(
+                                                        (appearance
+                                                            .searchOpacity ??
+                                                            1) * 100,
+                                                    )}%
+                                                </span>
+                                            </div>
+                                            <p className="settings-row-desc">
+                                                调整搜索框背景的不透明度
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                {Math.round(
+                                                    (appearance.searchOpacity ??
+                                                        1) * 100,
+                                                )}%
+                                            </div>
+                                            <Slider
+                                                min={0.1}
+                                                max={1}
+                                                step={0.05}
+                                                value={appearance
+                                                    .searchOpacity ?? 1}
+                                                onValueChange={(v) =>
+                                                    set(
+                                                        "searchOpacity",
+                                                        typeof v === "number"
+                                                            ? v
+                                                            : v[0],
+                                                    )}
+                                                aria-label="搜索框透明度"
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
+                                    <div className="settings-row settings-row--inline-mobile">
+                                        <div className="settings-row-label">
+                                            <span className="settings-row-title">
+                                                显示 Searcher 标题
+                                            </span>
+                                            <p className="settings-row-desc">
+                                                在首页搜索框上方展示品牌大标题
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control">
+                                            <Switch
+                                                checked={appearance
+                                                    .showTitle !== false}
+                                                onCheckedChange={(checked) =>
+                                                    set("showTitle", checked)}
+                                                aria-label="显示 Searcher 标题"
+                                            />
+                                        </div>
+                                    </div>
+                                    <Choices
+                                        title="APP 图标大小"
+                                        description="调整工作区与首页快捷方式的图标尺度"
+                                        control="select"
+                                        value={appearance.webAppIconSize}
+                                        values={[
+                                            ["compact", "紧凑"],
+                                            ["default", "标准"],
+                                            ["large", "大图标"],
+                                        ] as const}
+                                        select={(v) => set("webAppIconSize", v)}
+                                    />
+                                    <div className="settings-row settings-row--inline-mobile">
+                                        <div className="settings-row-label">
+                                            <span className="settings-row-title">
+                                                显示 APP 名称
+                                            </span>
+                                            <p className="settings-row-desc">
+                                                在桌面或快捷列表中展示网站文字标签
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control">
+                                            <Switch
+                                                checked={appearance
+                                                    .showAppLabels}
+                                                onCheckedChange={(checked) =>
+                                                    set(
+                                                        "showAppLabels",
+                                                        checked,
+                                                    )}
+                                                aria-label="显示 APP 名称"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="settings-group">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="settings-group-title m-0">
+                                        壁纸与背景效果
+                                    </h3>
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -434,195 +521,206 @@ export function SettingsPage() {
                                             });
                                         }}
                                         title="恢复壁纸与效果默认值"
+                                        className="h-8 gap-1 text-xs"
                                     >
-                                        <RotateCcw size={14} />
+                                        <RotateCcw size={13} />
                                         <span>恢复默认</span>
                                     </Button>
                                 </div>
-
-                                <div className="field">
-                                    <label htmlFor="wallpaper-input">
-                                        壁纸背景 (上传本地图片或输入地址/渐变)
-                                    </label>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            gap: "8px",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            style={{ display: "none" }}
-                                            accept="image/png,image/jpeg,image/webp,image/avif"
-                                            onChange={(e) => {
-                                                const file = e.target.files
-                                                    ?.[0];
-                                                if (file) {
-                                                    void handleWallpaperUpload(
-                                                        file,
-                                                    );
-                                                }
-                                                e.target.value = "";
-                                            }}
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() =>
-                                                fileInputRef.current?.click()}
-                                            title="上传本地图片 (PNG/JPEG/WebP/AVIF，最大 5MB)"
-                                            aria-label="上传本地图片"
-                                            style={{
-                                                flexShrink: 0,
-                                                width: "42px",
-                                                height: "42px",
-                                                padding: 0,
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            }}
-                                        >
-                                            <Upload size={18} />
-                                        </Button>
-                                        <input
-                                            id="wallpaper-input"
-                                            type="text"
-                                            placeholder={appearance.wallpaper
-                                                    .startsWith("data:")
-                                                ? "当前已使用本地壁纸图片（输入新地址或渐变可替换）"
-                                                : "输入图片 HTTPS 地址或 CSS 渐变"}
-                                            value={appearance.wallpaper
-                                                    .startsWith("data:")
-                                                ? ""
-                                                : appearance.wallpaper}
-                                            onChange={(e) =>
-                                                set(
-                                                    "wallpaper",
-                                                    e.target.value,
+                                <div className="settings-card">
+                                    <div className="settings-row settings-row--stack-mobile">
+                                        <div className="settings-row-label">
+                                            <span className="settings-row-title">
+                                                壁纸背景
+                                            </span>
+                                            <p className="settings-row-desc">
+                                                上传本地图片或输入 HTTPS
+                                                图像地址、CSS 渐变
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control w-full sm:w-auto flex-1 max-w-[380px]">
+                                            <div className="flex gap-2 items-center w-full">
+                                                <input
+                                                    type="file"
+                                                    ref={fileInputRef}
+                                                    style={{ display: "none" }}
+                                                    accept="image/png,image/jpeg,image/webp,image/avif"
+                                                    onChange={(e) => {
+                                                        const file = e.target
+                                                            .files?.[0];
+                                                        if (file) {
+                                                            void handleWallpaperUpload(
+                                                                file,
+                                                            );
+                                                        }
+                                                        e.target.value = "";
+                                                    }}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        fileInputRef.current
+                                                            ?.click()}
+                                                    title="上传本地图片"
+                                                    aria-label="上传本地图片"
+                                                    className="shrink-0"
+                                                >
+                                                    <Upload size={16} />
+                                                </Button>
+                                                <Input
+                                                    id="wallpaper-input"
+                                                    placeholder={appearance
+                                                            .wallpaper
+                                                            .startsWith("data:")
+                                                        ? "当前已使用本地壁纸图片"
+                                                        : "输入图片 HTTPS 地址或 CSS 渐变"}
+                                                    value={appearance.wallpaper
+                                                            .startsWith("data:")
+                                                        ? ""
+                                                        : appearance.wallpaper}
+                                                    onChange={(e) =>
+                                                        set(
+                                                            "wallpaper",
+                                                            e.target.value,
+                                                        )}
+                                                    className="flex-1 min-w-0"
+                                                />
+                                                {appearance.wallpaper && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            set(
+                                                                "wallpaper",
+                                                                "",
+                                                            )}
+                                                        title="清除壁纸"
+                                                        aria-label="清除壁纸"
+                                                        className="shrink-0 text-[var(--muted)]"
+                                                    >
+                                                        <RotateCcw size={14} />
+                                                    </Button>
                                                 )}
-                                            style={{ flex: 1, margin: 0 }}
-                                        />
-                                        {appearance.wallpaper && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() =>
-                                                    set("wallpaper", "")}
-                                                title="清除壁纸"
-                                                aria-label="清除壁纸"
-                                                style={{
-                                                    flexShrink: 0,
-                                                    height: "42px",
-                                                    padding: "0 10px",
-                                                }}
-                                            >
-                                                <RotateCcw size={15} />
-                                            </Button>
-                                        )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div className="setting-group">
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            marginBottom: "8px",
-                                        }}
-                                    >
-                                        <span>遮罩</span>
-                                        <span
-                                            className="muted"
-                                            style={{ fontWeight: 600 }}
-                                        >
-                                            {Math.round(
-                                                appearance.mask * 100,
-                                            )}%
-                                        </span>
+                                    <div className="settings-row settings-row--stack-mobile">
+                                        <div className="settings-row-label">
+                                            <div className="flex justify-between items-center sm:block">
+                                                <span className="settings-row-title">
+                                                    遮罩不透明度
+                                                </span>
+                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                    {Math.round(
+                                                        appearance.mask * 100,
+                                                    )}%
+                                                </span>
+                                            </div>
+                                            <p className="settings-row-desc">
+                                                覆盖在壁纸上的背景遮罩浓度
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                {Math.round(
+                                                    appearance.mask * 100,
+                                                )}%
+                                            </div>
+                                            <Slider
+                                                min={0}
+                                                max={0.8}
+                                                step={0.05}
+                                                value={appearance.mask}
+                                                onValueChange={(v) =>
+                                                    set(
+                                                        "mask",
+                                                        typeof v === "number"
+                                                            ? v
+                                                            : v[0],
+                                                    )}
+                                                aria-label="遮罩不透明度"
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
-                                    <Slider
-                                        min={0}
-                                        max={0.8}
-                                        step={0.05}
-                                        value={appearance.mask}
-                                        onValueChange={(v) =>
-                                            set(
-                                                "mask",
-                                                typeof v === "number"
-                                                    ? v
-                                                    : v[0],
-                                            )}
-                                        aria-label="遮罩比例"
-                                    />
-                                </div>
-
-                                <div className="setting-group">
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            marginBottom: "8px",
-                                        }}
-                                    >
-                                        <span>模糊</span>
-                                        <span
-                                            className="muted"
-                                            style={{ fontWeight: 600 }}
-                                        >
-                                            {appearance.blur}px
-                                        </span>
+                                    <div className="settings-row settings-row--stack-mobile">
+                                        <div className="settings-row-label">
+                                            <div className="flex justify-between items-center sm:block">
+                                                <span className="settings-row-title">
+                                                    模糊半径
+                                                </span>
+                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                    {appearance.blur}px
+                                                </span>
+                                            </div>
+                                            <p className="settings-row-desc">
+                                                壁纸背景的高斯模糊程度
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                {appearance.blur}px
+                                            </div>
+                                            <Slider
+                                                min={0}
+                                                max={24}
+                                                step={1}
+                                                value={appearance.blur}
+                                                onValueChange={(v) =>
+                                                    set(
+                                                        "blur",
+                                                        typeof v === "number"
+                                                            ? v
+                                                            : v[0],
+                                                    )}
+                                                aria-label="模糊半径"
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
-                                    <Slider
-                                        min={0}
-                                        max={24}
-                                        step={1}
-                                        value={appearance.blur}
-                                        onValueChange={(v) =>
-                                            set(
-                                                "blur",
-                                                typeof v === "number"
-                                                    ? v
-                                                    : v[0],
-                                            )}
-                                        aria-label="模糊半径"
-                                    />
-                                </div>
-
-                                <div className="setting-group">
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            marginBottom: "8px",
-                                        }}
-                                    >
-                                        <span>灰度</span>
-                                        <span
-                                            className="muted"
-                                            style={{ fontWeight: 600 }}
-                                        >
-                                            {Math.round(
-                                                appearance.grayscale * 100,
-                                            )}%
-                                        </span>
+                                    <div className="settings-row settings-row--stack-mobile">
+                                        <div className="settings-row-label">
+                                            <div className="flex justify-between items-center sm:block">
+                                                <span className="settings-row-title">
+                                                    灰度滤镜
+                                                </span>
+                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                    {Math.round(
+                                                        appearance.grayscale *
+                                                            100,
+                                                    )}%
+                                                </span>
+                                            </div>
+                                            <p className="settings-row-desc">
+                                                将壁纸转换为黑白灰度
+                                            </p>
+                                        </div>
+                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                {Math.round(
+                                                    appearance.grayscale * 100,
+                                                )}%
+                                            </div>
+                                            <Slider
+                                                min={0}
+                                                max={1}
+                                                step={0.05}
+                                                value={appearance.grayscale}
+                                                onValueChange={(v) =>
+                                                    set(
+                                                        "grayscale",
+                                                        typeof v === "number"
+                                                            ? v
+                                                            : v[0],
+                                                    )}
+                                                aria-label="灰度比例"
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
-                                    <Slider
-                                        min={0}
-                                        max={1}
-                                        step={0.05}
-                                        value={appearance.grayscale}
-                                        onValueChange={(v) => set(
-                                            "grayscale",
-                                            typeof v === "number" ? v : v[0],
-                                        )}
-                                        aria-label="灰度比例"
-                                    />
                                 </div>
                             </div>
                         </div>

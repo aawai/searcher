@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-27-003",
+  "captured": "2026-09-27",
+  "packet_version": "1.0",
+  "title": "HTTP server: Server-sent events",
+  "url": "https://docs.deno.com/examples/http_server_sse/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

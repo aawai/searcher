@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-27-001",
+  "captured": "2026-09-27",
+  "packet_version": "1.0",
+  "title": "Dialog",
+  "url": "https://base-ui.com/react/components/dialog",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

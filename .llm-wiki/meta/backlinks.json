@@ -1,5 +1,6 @@
 {
   "concepts/contract-first-testing": [
+    "concepts/modal-layering-and-escape-dismissal",
     "concepts/sqlite-table-recreation-migration",
     "entities/deno-runtime",
     "sources/SRC-2026-09-25-001",
@@ -61,11 +62,20 @@
   "concepts/hono-rpc-type-safe-client": [
     "sources/SRC-2026-09-26-003"
   ],
+  "concepts/modal-layering-and-escape-dismissal": [
+    "concepts/tailwind-v4-css-first-architecture",
+    "entities/searcher-项目",
+    "entities/shadcn-ui-system",
+    "sources/SRC-2026-09-27-001"
+  ],
   "concepts/offline-first-与-local-draft-持久化架构": [
     "sources/SRC-2026-09-25-037"
   ],
   "concepts/server-sent-events-sse-与实时事件流": [
-    "sources/SRC-2026-09-25-035"
+    "entities/deno-runtime",
+    "entities/searcher-项目",
+    "sources/SRC-2026-09-25-035",
+    "sources/SRC-2026-09-27-003"
   ],
   "concepts/session-security-and-isolation": [
     "concepts/hono-middleware-pipeline-request-intake",
@@ -131,6 +141,11 @@
     "sources/SRC-2026-09-25-031",
     "sources/SRC-2026-09-25-032"
   ],
+  "concepts/tailwind-v4-css-first-architecture": [
+    "entities/searcher-项目",
+    "entities/shadcn-ui-system",
+    "sources/SRC-2026-09-27-002"
+  ],
   "entities/deno-runtime": [
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/single-process-architecture",
@@ -158,6 +173,7 @@
     "sources/SRC-2026-09-25-034",
     "sources/SRC-2026-09-25-035",
     "sources/SRC-2026-09-26-002",
+    "sources/SRC-2026-09-27-003",
     "syntheses/searcher-system-architecture"
   ],
   "entities/dnd-kit-system": [
@@ -215,6 +231,7 @@
     "sources/SRC-2026-09-25-036",
     "sources/SRC-2026-09-26-002",
     "sources/SRC-2026-09-26-003",
+    "sources/SRC-2026-09-27-003",
     "syntheses/searcher-system-architecture"
   ],
   "entities/indexeddb-本地存储引擎": [
@@ -225,6 +242,7 @@
     "concepts/database-queue-serialization",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/hono-middleware-pipeline-request-intake",
+    "concepts/modal-layering-and-escape-dismissal",
     "concepts/offline-first-与-local-draft-持久化架构",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/session-security-and-isolation",
@@ -232,6 +250,7 @@
     "concepts/single-process-architecture",
     "concepts/sqlite-fts5-fulltext-search",
     "concepts/sqlite-table-recreation-migration",
+    "concepts/tailwind-v4-css-first-architecture",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
@@ -272,10 +291,13 @@
     "sources/SRC-2026-09-25-033",
     "sources/SRC-2026-09-25-034",
     "sources/SRC-2026-09-25-037",
+    "sources/SRC-2026-09-27-002",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
     "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/modal-layering-and-escape-dismissal",
+    "concepts/tailwind-v4-css-first-architecture",
     "entities/dnd-kit-system",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
@@ -288,6 +310,8 @@
     "sources/SRC-2026-09-25-024",
     "sources/SRC-2026-09-25-026",
     "sources/SRC-2026-09-26-001",
+    "sources/SRC-2026-09-27-001",
+    "sources/SRC-2026-09-27-002",
     "syntheses/searcher-system-architecture"
   ],
   "entities/valibot-schema-validator": [
@@ -431,12 +455,26 @@
   "sources/SRC-2026-09-26-003": [
     "concepts/hono-rpc-type-safe-client"
   ],
+  "sources/SRC-2026-09-27-001": [
+    "concepts/modal-layering-and-escape-dismissal",
+    "entities/shadcn-ui-system"
+  ],
+  "sources/SRC-2026-09-27-002": [
+    "concepts/tailwind-v4-css-first-architecture",
+    "entities/shadcn-ui-system"
+  ],
+  "sources/SRC-2026-09-27-003": [
+    "concepts/server-sent-events-sse-与实时事件流",
+    "entities/deno-runtime"
+  ],
   "sources/obs-2026-09-25-ui-app": [],
   "sources/obs-2026-09-25-ui-ux": [],
   "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [
     "concepts/dnd-kit-2d-grid-sorting-architecture"
   ],
   "sources/obs-2026-09-26-app-ui-ux": [],
+  "sources/obs-2026-09-26-searcher-ui": [],
+  "sources/obs-2026-09-27-2026-09-27-searcher-ui": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

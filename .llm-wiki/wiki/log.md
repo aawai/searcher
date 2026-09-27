@@ -1,7 +1,17 @@
 # Wiki Update Log
 
+## 2026-09-27
+
+- **ensure\_page**: {"page_type":"concept","path":"concepts/tailwind-v4-css-first-architecture","title":"Tailwind v4 CSS First Architecture"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/modal-layering-and-escape-dismissal","title":"Modal Layering and Escape Dismissal"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-27-003","url":"https://docs.deno.com/examples/http_server_sse/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-27-002","url":"https://tailwindcss.com/blog/tailwindcss-v4"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-27-001","url":"https://base-ui.com/react/components/dialog"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-27-2026-09-27-searcher-ui","title":"2026-09-27 Searcher UI 实页复核发现工作区关键偏差"}
+
 ## 2026-09-26
 
+- **observe**: {"relevance":"critical","slug":"obs-2026-09-26-searcher-ui","title":"Searcher UI 重构与克制效率工具落地完成"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-26-003","url":"https://hono.dev/docs/concepts/stacks"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-26-002","url":"https://hono.dev/docs/getting-started/deno"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-26-001","url":"https://base-ui.com/react/components/slider"}

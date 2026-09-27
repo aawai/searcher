@@ -715,10 +715,32 @@ export function AskPage() {
                         )}
                         {!conversation && !streaming && (
                             <div className="ask-empty">
-                                <h2>从一个问题开始</h2>
-                                <p className="muted">
-                                    AI 只在显式选择后响应，不会接管普通搜索。
-                                </p>
+                                {selected
+                                    ? (
+                                        <>
+                                            <h2>从一个问题开始</h2>
+                                            <p className="muted">
+                                                输入您想了解的问题，Enter
+                                                发送，Shift+Enter 换行。
+                                            </p>
+                                        </>
+                                    )
+                                    : (
+                                        <>
+                                            <h2>未配置可用模型</h2>
+                                            <p className="muted">
+                                                配置 OpenAI 或兼容 Provider
+                                                后即可使用 AI 智能问答。
+                                            </p>
+                                            <Link
+                                                to="/settings/ai"
+                                                className="button button--primary mt-3 inline-flex items-center gap-1.5"
+                                            >
+                                                <SlidersHorizontal size={14} />
+                                                <span>配置模型</span>
+                                            </Link>
+                                        </>
+                                    )}
                             </div>
                         )}
                     </div>

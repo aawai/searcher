@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-26T13:17:16.216Z",
+  "last_updated": "2026-09-27T02:13:05.461Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -35,6 +35,16 @@
       "created": "2026-09-26",
       "updated": "2026-09-26"
     },
+    "concepts/modal-layering-and-escape-dismissal": {
+      "type": "concept",
+      "title": "Modal Layering and Escape Dismissal",
+      "entities": [
+        "[[entities/shadcn-ui-system]]",
+        "[[entities/searcher-项目]]"
+      ],
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
+    },
     "concepts/offline-first-与-local-draft-持久化架构": {
       "type": "concept",
       "title": "Offline-First 与 Local Draft 持久化架构",
@@ -45,7 +55,7 @@
       "type": "concept",
       "title": "Server-Sent Events (SSE) 与实时事件流",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-09-27"
     },
     "concepts/session-security-and-isolation": {
       "type": "concept",
@@ -81,12 +91,22 @@
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
+    "concepts/tailwind-v4-css-first-architecture": {
+      "type": "concept",
+      "title": "Tailwind v4 CSS First Architecture",
+      "entities": [
+        "[[entities/shadcn-ui-system]]",
+        "[[entities/searcher-项目]]"
+      ],
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
+    },
     "entities/deno-runtime": {
       "type": "entity",
       "title": "Deno Runtime",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-09-27"
     },
     "entities/dnd-kit-system": {
       "type": "entity",
@@ -120,14 +140,14 @@
       "title": "Searcher 项目",
       "category": "project",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-09-27"
     },
     "entities/shadcn-ui-system": {
       "type": "entity",
       "title": "shadcn UI System",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-09-27"
     },
     "entities/valibot-schema-validator": {
       "type": "entity",
@@ -534,6 +554,53 @@
         "[[concepts/hono-rpc-type-safe-client]]"
       ]
     },
+    "sources/SRC-2026-09-27-001": {
+      "type": "source",
+      "title": "Base UI Dialog Component Architecture, Nested Modals and Escape Dismissal",
+      "status": "active",
+      "raw_path": "raw/sources/SRC-2026-09-27-001/extracted.md",
+      "source_id": "SRC-2026-09-27-001",
+      "format": "web",
+      "captured": "2026-09-27",
+      "entities": [
+        "[[entities/shadcn-ui-system]]"
+      ],
+      "concepts": [
+        "[[concepts/modal-layering-and-escape-dismissal]]"
+      ]
+    },
+    "sources/SRC-2026-09-27-002": {
+      "type": "source",
+      "title": "Tailwind CSS v4: CSS-First Architecture, Native Variables and Viewport Adaptations",
+      "status": "active",
+      "raw_path": "raw/sources/SRC-2026-09-27-002/extracted.md",
+      "source_id": "SRC-2026-09-27-002",
+      "format": "web",
+      "captured": "2026-09-27",
+      "entities": [
+        "[[entities/shadcn-ui-system]]",
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/tailwind-v4-css-first-architecture]]"
+      ]
+    },
+    "sources/SRC-2026-09-27-003": {
+      "type": "source",
+      "title": "Deno HTTP Server: Server-Sent Events with WHATWG ReadableStream",
+      "status": "active",
+      "raw_path": "raw/sources/SRC-2026-09-27-003/extracted.md",
+      "source_id": "SRC-2026-09-27-003",
+      "format": "web",
+      "captured": "2026-09-27",
+      "entities": [
+        "[[entities/deno-runtime]]",
+        "[[entities/hono-framework]]"
+      ],
+      "concepts": [
+        "[[concepts/server-sent-events-sse-与实时事件流]]"
+      ]
+    },
     "sources/obs-2026-09-25-ui-app": {
       "type": "source",
       "title": "Observation: UI 精致化与交互优化：APP 命名对齐、壁纸复合输入、便签全屏与悬浮卡片空间优化",
@@ -606,6 +673,38 @@
       "source_context": "优化添加 APP 页面的 UI/UX 并验证实际效果",
       "created": "2026-09-26",
       "updated": "2026-09-26"
+    },
+    "sources/obs-2026-09-26-searcher-ui": {
+      "type": "source",
+      "title": "Observation: Searcher UI 重构与克制效率工具落地完成",
+      "tags": [
+        "ui-redesign",
+        "design-system",
+        "shadcn-base-ui",
+        "content-sheet",
+        "a11y"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-26-searcher-ui",
+      "relevance": "critical",
+      "observed_at": "2026-09-26T23:27:22.363Z",
+      "source_context": "Searcher 克制效率工具 UI 改版执行计划",
+      "created": "2026-09-26",
+      "updated": "2026-09-26"
+    },
+    "sources/obs-2026-09-27-2026-09-27-searcher-ui": {
+      "type": "source",
+      "title": "Observation: 2026-09-27 Searcher UI 实页复核发现工作区关键偏差",
+      "tags": [
+        "ui-redesign,audit,content-sheet,app-folders,glass,2026-09-27"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-27-2026-09-27-searcher-ui",
+      "relevance": "high",
+      "observed_at": "2026-09-27T00:42:38.925Z",
+      "source_context": ".omp/plans/SEARCHER_UI_REDESIGN_PLAN.md; isolated browser 127.0.0.1:34570",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-27-002",
+  "captured": "2026-09-27",
+  "packet_version": "1.0",
+  "title": "Tailwind CSS v4.0",
+  "url": "https://tailwindcss.com/blog/tailwindcss-v4",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

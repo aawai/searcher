@@ -39,6 +39,13 @@ export function launcherTiles(
         }
         folder.apps.push(app);
     }
+    for (const group of groups) {
+        if (!folders.has(group.id)) {
+            const folder = { id: `folder:${group.id}`, group, apps: [] };
+            folders.set(group.id, folder);
+            tiles.push(folder);
+        }
+    }
     return tiles;
 }
 

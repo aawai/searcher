@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GripVertical } from "lucide-react";
+import { ArrowLeft, GripVertical } from "lucide-react";
 import {
     closestCenter,
     DndContext,
@@ -20,7 +20,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "../ui/button.tsx";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog.tsx";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -444,6 +443,8 @@ export function WebAppLauncher({
     onResetLayout,
     emptyMessage = "还没有常用网站",
     emptyAction = true,
+    activeFolderId,
+    onFolderChange,
 }: {
     apps: LauncherApp[];
     groups: LauncherGroup[];
@@ -466,6 +467,8 @@ export function WebAppLauncher({
     onResetLayout?: () => void;
     emptyMessage?: string;
     emptyAction?: boolean;
+    activeFolderId?: string | null;
+    onFolderChange?: (folderId: string | null) => void;
 }) {
     const tiles = useMemo(
         () => launcherTiles(apps, showFolders ? groups : []),
@@ -481,27 +484,48 @@ export function WebAppLauncher({
             })),
             columns,
         ), [tiles, columns]);
-    const [folderId, setFolderId] = useState<string | null>(null);
+    const [internalFolderId, setInternalFolderId] = useState<string | null>(
+        null,
+    );
+    const folderId = activeFolderId !== undefined
+        ? activeFolderId
+        : internalFolderId;
     const [activeId, setActiveId] = useState<string | null>(null);
     const folder = tiles.find((tile) => tile.group?.id === folderId);
     const active = tiles.find((tile) => tile.id === activeId);
-    useEffect(() => {
-        if (!folderId) return;
-        const closeOutside = (event: PointerEvent) => {
-            const target = event.target;
-            if (
-                target instanceof Element &&
-                !target.closest(
-                    '.launcher-folder-dialog, [data-slot="context-menu-content"]',
-                )
-            ) {
-                setFolderId(null);
+    const lastActiveTriggerRef = useRef<HTMLElement | null>(null);
+    const scrollPosRef = useRef<number>(0);
+
+    const setFolderId = (id: string | null) => {
+        setInternalFolderId(id);
+        onFolderChange?.(id);
+    };
+
+    const openFolder = (id: string) => {
+        lastActiveTriggerRef.current = document.activeElement as
+            | HTMLElement
+            | null;
+        if (gridRef.current && gridRef.current.parentElement) {
+            scrollPosRef.current = gridRef.current.parentElement.scrollTop;
+        }
+        setFolderId(id);
+    };
+
+    const closeFolder = () => {
+        setFolderId(null);
+        requestAnimationFrame(() => {
+            if (gridRef.current && gridRef.current.parentElement) {
+                gridRef.current.parentElement.scrollTop = scrollPosRef.current;
             }
-        };
-        document.addEventListener("pointerdown", closeOutside, true);
-        return () =>
-            document.removeEventListener("pointerdown", closeOutside, true);
-    }, [folderId]);
+            lastActiveTriggerRef.current?.focus();
+        });
+    };
+
+    useEffect(() => {
+        if (folderId && !groups.some((g) => g.id === folderId)) {
+            closeFolder();
+        }
+    }, [folderId, groups]);
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(KeyboardSensor, {
@@ -510,10 +534,7 @@ export function WebAppLauncher({
     );
     const actions: Actions = {
         onOpen,
-        onEdit: (app) => {
-            setFolderId(null);
-            onEdit(app);
-        },
+        onEdit,
         onMove,
         onPin,
         onDelete,
@@ -536,157 +557,183 @@ export function WebAppLauncher({
             tiles.findIndex((tile) => tile.id === event.over?.id),
         );
     }
-    return (
-        <>
-            {apps.length === 0
-                ? (
-                    <div className="launcher-empty">
-                        {emptyMessage}{" "}
-                        {emptyAction && (
-                            <Button onClick={onAdd}>添加 APP</Button>
-                        )}
-                    </div>
-                )
-                : (
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={(args) => {
-                            const targets = pointerWithin(args);
-                            return targets.length
-                                ? targets
-                                : closestCenter(args);
-                        }}
-                        onDragStart={(event) =>
-                            setActiveId(String(event.active.id))}
-                        onDragCancel={() => setActiveId(null)}
-                        onDragEnd={reorder}
-                    >
-                        <SortableContext
-                            items={tiles.map((tile) => tile.id)}
-                            strategy={() => null}
-                        >
-                            <div
-                                ref={gridRef}
-                                className={`pinned-apps launcher-grid launcher-grid--${size}${
-                                    showAppLabels
-                                        ? ""
-                                        : " launcher-grid--icons-only"
-                                }`}
-                                style={{
-                                    "--launcher-columns": columns,
-                                } as React.CSSProperties}
-                            >
-                                {tiles.map((tile, index) => (
-                                    <SortableTile
-                                        key={tile.id}
-                                        tile={tile}
-                                        placement={layout[index]}
-                                        groups={groups}
-                                        managing={managing}
-                                        actions={actions}
-                                        showAppLabels={showAppLabels}
-                                        onFolder={setFolderId}
-                                        onSizeChange={onFolderSizeChange}
-                                        onMoveByKey={(id, direction) =>
-                                            reorderTiles(
-                                                tiles.findIndex((item) =>
-                                                    item.id === id
-                                                ),
-                                                tiles.findIndex((item) =>
-                                                    item.id === id
-                                                ) + direction,
-                                            )}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                        <DragOverlay>
-                            {active && managing
-                                ? (
-                                    <div
-                                        className={`launcher-overlay launcher-grid--${size}${
-                                            showAppLabels
-                                                ? ""
-                                                : " launcher-grid--icons-only"
-                                        }${
-                                            active.group?.folderSize === "large"
-                                                ? " launcher-overlay--large"
-                                                : ""
-                                        }`}
-                                    >
-                                        {active.app
-                                            ? (
-                                                <WebAppIcon
-                                                    app={active.app}
-                                                    onOpen={onOpen}
-                                                    showLabel={showAppLabels}
-                                                />
-                                            )
-                                            : (
-                                                <FolderView
-                                                    tile={active}
-                                                    managing={false}
-                                                    onFolder={setFolderId}
-                                                    showAppLabels={showAppLabels}
-                                                    onOpen={onOpen}
-                                                />
-                                            )}
-                                    </div>
-                                )
-                                : null}
-                        </DragOverlay>
-                    </DndContext>
-                )}
-            <Dialog
-                open={Boolean(folder)}
-                onOpenChange={(value) => {
-                    if (!value) setFolderId(null);
-                }}
+    const folderApps = folder?.apps ?? [];
+    if (folderId && folder && folder.group) {
+        return (
+            <div
+                className="launcher-folder-inline"
+                role="region"
+                aria-label={`文件夹：${folder.group.name}`}
             >
-                <DialogContent className="launcher-folder-dialog">
-                    <DialogTitle>{folder?.group?.name ?? "文件夹"}</DialogTitle>
-                    <DndContext
-                        sensors={sensors}
-                        onDragEnd={(event) => {
-                            if (
-                                !folder?.apps || !event.over ||
-                                event.active.id === event.over.id
-                            ) return;
-                            const oldIndex = folder.apps.findIndex((app) =>
-                                app.id === event.active.id
-                            );
-                            const newIndex = folder.apps.findIndex((app) =>
-                                app.id === event.over?.id
-                            );
-                            if (oldIndex < 0 || newIndex < 0) return;
-                            onReorder(
-                                arrayMove(folder.apps, oldIndex, newIndex).map((
-                                    app,
-                                ) => app.id),
-                            );
-                        }}
-                    >
-                        <SortableContext
-                            items={folder?.apps?.map((app) => app.id) ?? []}
-                            strategy={rectSortingStrategy}
+                <div className="launcher-folder-inline-header flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--border)]">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={closeFolder}
+                            className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
                         >
-                            <div
-                                className={`launcher-folder-contents launcher-grid--${size}`}
+                            <ArrowLeft size={14} />
+                            <span>返回 APP</span>
+                        </Button>
+                        <span
+                            className="text-[var(--muted)]"
+                            aria-hidden="true"
+                        >
+                            /
+                        </span>
+                        <h3 className="text-base font-semibold text-[var(--foreground)] truncate m-0">
+                            {folder.group.name}
+                        </h3>
+                        <span className="text-xs text-[var(--muted)] shrink-0">
+                            ({folderApps.length} 个网站)
+                        </span>
+                    </div>
+                </div>
+
+                {folderApps.length === 0
+                    ? (
+                        <div className="launcher-empty text-center py-12 text-[var(--muted)] text-sm">
+                            文件夹暂无 APP
+                        </div>
+                    )
+                    : (
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={(event) => {
+                                if (
+                                    folderApps.length === 0 || !event.over ||
+                                    event.active.id === event.over.id
+                                ) return;
+                                const oldIndex = folderApps.findIndex((app) =>
+                                    app.id === event.active.id
+                                );
+                                const newIndex = folderApps.findIndex((app) =>
+                                    app.id === event.over?.id
+                                );
+                                if (oldIndex < 0 || newIndex < 0) return;
+                                onReorder(
+                                    arrayMove(folderApps, oldIndex, newIndex)
+                                        .map((
+                                            app,
+                                        ) => app.id),
+                                );
+                            }}
+                        >
+                            <SortableContext
+                                items={folderApps.map((app) => app.id)}
+                                strategy={rectSortingStrategy}
                             >
-                                {folder?.apps?.map((app) => (
-                                    <SortableFolderApp
-                                        key={app.id}
-                                        app={app}
-                                        groups={groups}
-                                        managing={managing}
-                                        actions={actions}
+                                <div
+                                    className={`launcher-folder-contents launcher-grid--${size}`}
+                                >
+                                    {folderApps.map((app) => (
+                                        <SortableFolderApp
+                                            key={app.id}
+                                            app={app}
+                                            groups={groups}
+                                            managing={managing}
+                                            actions={actions}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
+                    )}
+            </div>
+        );
+    }
+
+    if (apps.length === 0) {
+        return (
+            <div className="launcher-empty">
+                {emptyMessage}{" "}
+                {emptyAction && <Button onClick={onAdd}>添加 APP</Button>}
+            </div>
+        );
+    }
+
+    return (
+        <DndContext
+            sensors={sensors}
+            collisionDetection={(args) => {
+                const targets = pointerWithin(args);
+                return targets.length ? targets : closestCenter(args);
+            }}
+            onDragStart={(event) => setActiveId(String(event.active.id))}
+            onDragCancel={() => setActiveId(null)}
+            onDragEnd={reorder}
+        >
+            <SortableContext
+                items={tiles.map((tile) => tile.id)}
+                strategy={() => null}
+            >
+                <div
+                    ref={gridRef}
+                    className={`pinned-apps launcher-grid launcher-grid--${size}${
+                        showAppLabels ? "" : " launcher-grid--icons-only"
+                    }`}
+                    style={{
+                        "--launcher-columns": columns,
+                    } as React.CSSProperties}
+                >
+                    {tiles.map((tile, index) => (
+                        <SortableTile
+                            key={tile.id}
+                            tile={tile}
+                            placement={layout[index]}
+                            groups={groups}
+                            managing={managing}
+                            actions={actions}
+                            showAppLabels={showAppLabels}
+                            onFolder={openFolder}
+                            onSizeChange={onFolderSizeChange}
+                            onMoveByKey={(id, direction) =>
+                                reorderTiles(
+                                    tiles.findIndex((item) => item.id === id),
+                                    tiles.findIndex((item) => item.id === id) +
+                                        direction,
+                                )}
+                        />
+                    ))}
+                </div>
+            </SortableContext>
+            <DragOverlay>
+                {active && managing
+                    ? (
+                        <div
+                            className={`launcher-overlay launcher-grid--${size}${
+                                showAppLabels
+                                    ? ""
+                                    : " launcher-grid--icons-only"
+                            }${
+                                active.group?.folderSize === "large"
+                                    ? " launcher-overlay--large"
+                                    : ""
+                            }`}
+                        >
+                            {active.app
+                                ? (
+                                    <WebAppIcon
+                                        app={active.app}
+                                        onOpen={onOpen}
+                                        showLabel={showAppLabels}
                                     />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
-                </DialogContent>
-            </Dialog>
-        </>
+                                )
+                                : (
+                                    <FolderView
+                                        tile={active}
+                                        managing={false}
+                                        onFolder={openFolder}
+                                        showAppLabels={showAppLabels}
+                                        onOpen={onOpen}
+                                    />
+                                )}
+                        </div>
+                    )
+                    : null}
+            </DragOverlay>
+        </DndContext>
     );
 }
