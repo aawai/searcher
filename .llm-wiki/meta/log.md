@@ -236,3 +236,6 @@
 ## [2026-09-27T04:51:30.360Z] ensure_page
 - page_type: "concept", title: "React 19 Actions and Transitions", path: "concepts/react-19-actions-and-transitions"
 
+## [2026-09-27T07:19:01.374Z] observe
+- slug: "obs-2026-09-27-searcher", title: "Searcher 组件形态联动与多行文本/容器边界保护", relevance: "high"
+

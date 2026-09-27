@@ -401,12 +401,12 @@ export function SettingsPage() {
                                 </h3>
                                 <div className="settings-card">
                                     <Choices
-                                        title="搜索框样式"
-                                        description="选择圆角矩形或药丸形胶囊外观"
+                                        title="组件形态"
+                                        description="统一控制输入框、按钮与操作图标的微圆角或胶囊外观联动"
                                         control="segmented"
                                         value={appearance.shape ?? "rounded"}
                                         values={[
-                                            ["rounded", "圆角 (Rounded)"],
+                                            ["rounded", "微圆角 (Rounded)"],
                                             ["pill", "胶囊 (Pill)"],
                                         ] as const}
                                         select={(v) => set("shape", v)}
