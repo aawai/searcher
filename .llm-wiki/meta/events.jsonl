@@ -64,3 +64,10 @@
 {"source_id":"SRC-2026-09-26-001","url":"https://base-ui.com/react/components/slider","format":"web","timestamp":"2026-09-26T12:50:43.282Z","kind":"capture"}
 {"source_id":"SRC-2026-09-26-002","url":"https://hono.dev/docs/getting-started/deno","format":"web","timestamp":"2026-09-26T12:50:58.399Z","kind":"capture"}
 {"source_id":"SRC-2026-09-26-003","url":"https://hono.dev/docs/concepts/stacks","format":"web","timestamp":"2026-09-26T12:51:05.836Z","kind":"capture"}
+{"slug":"obs-2026-09-26-searcher-ui","title":"Searcher UI 重构与克制效率工具落地完成","relevance":"critical","timestamp":"2026-09-26T23:27:22.372Z","kind":"observe"}
+{"slug":"obs-2026-09-27-2026-09-27-searcher-ui","title":"2026-09-27 Searcher UI 实页复核发现工作区关键偏差","relevance":"high","timestamp":"2026-09-27T00:42:38.928Z","kind":"observe"}
+{"source_id":"SRC-2026-09-27-001","url":"https://base-ui.com/react/components/dialog","format":"web","timestamp":"2026-09-27T02:09:48.116Z","kind":"capture"}
+{"source_id":"SRC-2026-09-27-002","url":"https://tailwindcss.com/blog/tailwindcss-v4","format":"web","timestamp":"2026-09-27T02:09:53.661Z","kind":"capture"}
+{"source_id":"SRC-2026-09-27-003","url":"https://docs.deno.com/examples/http_server_sse/","format":"web","timestamp":"2026-09-27T02:10:02.847Z","kind":"capture"}
+{"page_type":"concept","title":"Modal Layering and Escape Dismissal","path":"concepts/modal-layering-and-escape-dismissal","timestamp":"2026-09-27T02:11:32.081Z","kind":"ensure_page"}
+{"page_type":"concept","title":"Tailwind v4 CSS First Architecture","path":"concepts/tailwind-v4-css-first-architecture","timestamp":"2026-09-27T02:11:35.332Z","kind":"ensure_page"}

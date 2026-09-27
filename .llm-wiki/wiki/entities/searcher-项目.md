@@ -3,7 +3,7 @@ type: entity
 category: project
 title: "Searcher 项目"
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-27
 sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-002,
@@ -26,14 +26,16 @@ sources: [
    [[concepts/session-security-and-isolation]]，数据库操作经由
    [[concepts/database-queue-serialization]] 保护。
 
-## 关联技术栈
+## 关联技术栈与架构规范
 
 - 后端运行时：[[entities/deno-runtime]]
 - Web 路由层：[[entities/hono-framework]]
 - 数据持久化：[[entities/drizzle-sqlite-store]]
 - 前端组件库：[[entities/shadcn-ui-system]]
+- 样式与视口架构：[[concepts/tailwind-v4-css-first-architecture]]
+- 弹出层与键盘流：[[concepts/modal-layering-and-escape-dismissal]]
+- 事件流推送：[[concepts/server-sent-events-sse-与实时事件流]]
 - 综合架构：[[syntheses/searcher-system-architecture]]
-
 ## 来源
 
 - [[sources/SRC-2026-09-25-001]]

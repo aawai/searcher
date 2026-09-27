@@ -200,3 +200,24 @@
 ## [2026-09-26T12:51:05.836Z] capture
 - source_id: "SRC-2026-09-26-003", url: "https://hono.dev/docs/concepts/stacks", format: "web"
 
+## [2026-09-26T23:27:22.372Z] observe
+- slug: "obs-2026-09-26-searcher-ui", title: "Searcher UI 重构与克制效率工具落地完成", relevance: "critical"
+
+## [2026-09-27T00:42:38.928Z] observe
+- slug: "obs-2026-09-27-2026-09-27-searcher-ui", title: "2026-09-27 Searcher UI 实页复核发现工作区关键偏差", relevance: "high"
+
+## [2026-09-27T02:09:48.116Z] capture
+- source_id: "SRC-2026-09-27-001", url: "https://base-ui.com/react/components/dialog", format: "web"
+
+## [2026-09-27T02:09:53.661Z] capture
+- source_id: "SRC-2026-09-27-002", url: "https://tailwindcss.com/blog/tailwindcss-v4", format: "web"
+
+## [2026-09-27T02:10:02.847Z] capture
+- source_id: "SRC-2026-09-27-003", url: "https://docs.deno.com/examples/http_server_sse/", format: "web"
+
+## [2026-09-27T02:11:32.081Z] ensure_page
+- page_type: "concept", title: "Modal Layering and Escape Dismissal", path: "concepts/modal-layering-and-escape-dismissal"
+
+## [2026-09-27T02:11:35.332Z] ensure_page
+- page_type: "concept", title: "Tailwind v4 CSS First Architecture", path: "concepts/tailwind-v4-css-first-architecture"
+

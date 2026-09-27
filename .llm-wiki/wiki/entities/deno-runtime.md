@@ -3,12 +3,13 @@ type: entity
 category: tool
 title: "Deno Runtime"
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-27
 sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-003,
     sources/SRC-2026-09-25-005,
     sources/SRC-2026-09-25-006,
+    sources/SRC-2026-09-27-003,
 ]
 ---
 
@@ -24,12 +25,13 @@ sources: [
 2. **标准 HTTP 服务**：采用内置 `Deno.serve` 接口驱动
    [[entities/hono-framework]] 实例，实现超低延迟的 HTTP/JSON 处理。
 3. **安全权限沙箱**：生产环境中对网络绑定、持久化文件读写进行严密管控。
-4. **工程任务与包管理**：通过 `deno.jsonc`
-   统一锁定项目依赖并编排运行任务，支持标准测试与基准评测。
+4. **工程任务与包管理**：通过 `deno.jsonc` 统一锁定项目依赖并编排运行任务，支持标准测试与基准评测。
+5. **Web 标准流与长连接**：原生提供 WHATWG `ReadableStream` 与生命周期回调（如 `cancel` 钩子），与 `Deno.serve` 无缝结合驱动高并发 Server-Sent Events（SSE）通道。
 
-## 关联架构
+## 关联架构与概念
 
 - [[concepts/single-process-architecture]]
+- [[concepts/server-sent-events-sse-与实时事件流]]
 - [[concepts/contract-first-testing]]
 - [[syntheses/searcher-system-architecture]]
 
@@ -39,3 +41,4 @@ sources: [
 - [[sources/SRC-2026-09-25-003]]
 - [[sources/SRC-2026-09-25-005]]
 - [[sources/SRC-2026-09-25-006]]
+- [[sources/SRC-2026-09-27-003]]
