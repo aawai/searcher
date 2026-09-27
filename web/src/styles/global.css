@@ -1008,8 +1008,7 @@ a {
 .note-editor {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    min-height: 480px;
+    min-height: 100%;
     gap: 12px;
 }
 .note-editor .cn-input {
@@ -2469,6 +2468,7 @@ a {
     margin-top: 20px;
     border-top: 1px solid var(--border);
     padding-top: 14px;
+    flex-shrink: 0;
 }
 .note-versions article {
     border: 1px solid var(--border);

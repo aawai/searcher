@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- 修复便签编辑器打开「版本历史」后编辑区与历史版本文字重叠问题：解除 `.note-editor` 固定高度限制改为 `min-height: 100%`，并在 `.note-versions` 上增加 `flex-shrink: 0`，确保历史版本按内容自适应撑开容器并由外层 Sheet 滚动，消除 Tabs 容器被压缩导致的文本溢出重叠。
 
 - 主题配色与强调色系统重构（多层级 Accent Scale）：
   - 架构升级：建立包含 `--accent`、`--accent-hover`、`--accent-active`、`--accent-soft`（场域底色）、`--accent-subtle`（次级交互底色）、`--accent-border`（柔和轮廓）、`--accent-glow`（色相弥散软投影）与独立校准的 `--accent-foreground` 完整语义阶梯，全面收敛替换全站散落硬编码的不一致 `color-mix`（7%/12%/14%/15%/18%/30%/40%）。
