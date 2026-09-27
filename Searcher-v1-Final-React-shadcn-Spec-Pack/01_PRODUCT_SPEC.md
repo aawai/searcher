@@ -420,12 +420,13 @@ SQLite FTS5 索引 title + body。结果显示 title、snippet、updated time。
 4. **电光紫 (`violet`)**：`#6d28d9` / `#a78bfa`，先锋科技电光紫，神秘未来感；
 5. **暖晨橙 (`orange`)**：`#c2410c` / `#fb923c`，晨曦破晓朝霞橙金，亲和有温度；
 6. **绯红玫瑰 (`rose`)**：`#be123c` / `#fb7185`，精致现代杂志感，打破传统灰调；
-7. **森林翡翠 (`emerald`)**：`#15803d` / `#4ade80`，宁静舒缓草木绿，深度专注（不同于常规纯绿，采用深林草木翠色）；
+7. **森林翡翠 (`emerald`)**：`#15803d` / `#4ade80`，宁静舒缓草木绿，深度专注（与系统连接检测的 `--success: #247c5b / #87d9b2` 状态色保持严格独立的色相通道与语义隔离）；
 8. **金珀破晓 (`amber`)**：`#b45309` / `#fbbf24`，复古金珀暖阳，沉稳内敛有韵味；
 9. **黑曜钛 (`mono`)**：`#27272a` / `#e4e4e7`，纯净黑曜石与金属钛白，极致极简。
 
 **多层级 Accent Scale 规范**：
 强调色不仅是单一主色，而是派生包含 `--accent`, `--accent-hover`, `--accent-active`, `--accent-soft`（8%~12% 场域底色）, `--accent-subtle`（15%~20% 次级底色）, `--accent-border`（柔和轮廓线）, `--accent-glow`（弥散软阴影）与独立校准的 `--accent-foreground` 完整语义阶梯。
+
 ### Wallpaper
 
 支持 Solid、Gradient、Image、Upload。
