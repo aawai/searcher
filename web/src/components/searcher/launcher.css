@@ -84,13 +84,16 @@
 }
 .launcher-grid .webapp-name,
 .launcher-overlay .webapp-name {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    display: block;
+    width: 100%;
     overflow: hidden;
-    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 13px;
+    line-height: 18px;
     max-width: 100%;
-    overflow-wrap: anywhere;
+    color: var(--foreground);
 }
 .launcher-grid--icons-only .webapp-icon {
     gap: 0;
@@ -275,8 +278,22 @@
     line-height: 17px;
     color: var(--foreground);
 }
-.launcher-folder-dialog {
-    width: min(92vw, 480px);
+.launcher-folder-inline {
+    width: 100%;
+    animation: fadeIn .15s ease;
+}
+.launcher-folder-inline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 .launcher-folder-contents {
     display: grid;

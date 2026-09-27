@@ -4,6 +4,7 @@ import {
     Link,
     Route,
     Routes,
+    useLocation,
     useNavigate,
 } from "react-router-dom";
 import {
@@ -40,6 +41,8 @@ import {
 } from "./components/ui/dialog.tsx";
 function Layout() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isHomePage = location.pathname === "/";
     const {
         user,
         ready,
@@ -83,7 +86,7 @@ function Layout() {
                 "--search-opacity": appearance.searchOpacity ?? 1,
             } as React.CSSProperties}
         >
-            <div className="wallpaper" aria-hidden="true" />
+            {isHomePage && <div className="wallpaper" aria-hidden="true" />}
             <header className="topbar">
                 <Link
                     className="wordmark-small"

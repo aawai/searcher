@@ -102,6 +102,14 @@ export function NoteCard(
         <article
             className={"note-card note-" + (note.color || "paper") +
                 (isCompact ? " note-card--compact" : "")}
+            onClick={(e) => {
+                if (
+                    (e.target as HTMLElement).closest(
+                        "button, select, input, a, [role='button'], [data-slot='dropdown-menu-trigger']",
+                    )
+                ) return;
+                onOpen?.();
+            }}
             onDoubleClick={(e) => {
                 if (
                     (e.target as HTMLElement).closest(

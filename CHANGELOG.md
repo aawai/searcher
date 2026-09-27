@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- 修复 APP 与便签工作区的桌面居中、展开及手机全屏布局；Glass 模式下工作区和表单保持实底，Escape 逐层返回；手机端文件夹操作不再裁切，APP 搜索栏占满首行，短屏表单的提交区保持可见。
 - 修复 Slider 控件无障碍与值模型：标量值只渲染单个可操作 Thumb，修正范围与标量判断；为所有滑块 Thumb 的内部范围输入正确关联 `aria-label` 与 `aria-labelledby`，通过 axe 可访问性校验。
 - 修复手机端顶部登录链接无障碍名称：在移动端文字隐藏时为 `<a>` 补充明确的 `aria-label="登录"`，保持 44×44px 触控目标。
 - 消除 Design Lab 重复更新死循环：稳定 `SearcherSearchInput` 的默认参数与状态更新逻辑，避免空搜索联想与依赖对象重新分配导致的 `Maximum update depth exceeded`。

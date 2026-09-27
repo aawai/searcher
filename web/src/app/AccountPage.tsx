@@ -12,10 +12,16 @@ import {
     RefreshCw,
     Shield,
     Smartphone,
-    UserCheck,
 } from "lucide-react";
 import type { UserDto } from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "../components/ui/card.tsx";
+import { Input } from "../components/ui/input.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 
@@ -240,10 +246,10 @@ export function AccountPage() {
                     style={{
                         padding: "36px 24px",
                         textAlign: "center",
-                        background: "var(--surface)",
+                        background: "var(--surface-solid)",
                         borderRadius: "var(--radius)",
                         border: "1px solid var(--border)",
-                        boxShadow: "var(--shadow)",
+                        boxShadow: "none",
                     }}
                 >
                     <Lock
@@ -360,43 +366,350 @@ export function AccountPage() {
                 </div>
             )}
 
-            <div style={{ display: "grid", gap: "28px" }}>
+            <div style={{ display: "grid", gap: "24px" }}>
                 {/* 1. Profile Card */}
-                <section
-                    style={{
-                        padding: "clamp(20px, 3.5vw, 32px)",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "var(--radius)",
-                        boxShadow: "var(--shadow)",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "16px",
-                            marginBottom: "20px",
-                        }}
-                    >
+                <Card className="p-4 md:p-6 bg-[var(--surface-solid)] border-[var(--border)] shadow-none">
+                    <CardHeader className="p-0 pb-5">
                         <div
                             style={{
-                                width: "56px",
-                                height: "56px",
-                                borderRadius: "16px",
-                                background: "var(--accent)",
-                                color: "var(--accent-foreground)",
-                                display: "grid",
-                                placeItems: "center",
-                                fontSize: "24px",
-                                fontWeight: 700,
-                                flexShrink: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "16px",
+                                marginBottom: "20px",
                             }}
                         >
-                            {(user.displayName || user.username).slice(0, 1)
-                                .toUpperCase()}
+                            <div
+                                style={{
+                                    width: "56px",
+                                    height: "56px",
+                                    borderRadius: "16px",
+                                    background: "var(--accent)",
+                                    color: "var(--accent-foreground)",
+                                    display: "grid",
+                                    placeItems: "center",
+                                    fontSize: "24px",
+                                    fontWeight: 700,
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {(user.displayName || user.username).slice(0, 1)
+                                    .toUpperCase()}
+                            </div>
+                            <div>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "10px",
+                                    }}
+                                >
+                                    <h2
+                                        style={{
+                                            margin: 0,
+                                            fontSize: "20px",
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        {user.displayName}
+                                    </h2>
+                                    <span
+                                        style={{
+                                            fontSize: "12px",
+                                            fontWeight: 600,
+                                            padding: "2px 8px",
+                                            borderRadius: "12px",
+                                            background: user.role === "admin"
+                                                ? "var(--accent)"
+                                                : "var(--surface-soft)",
+                                            color: user.role === "admin"
+                                                ? "var(--accent-foreground)"
+                                                : "var(--muted)",
+                                            border: "1px solid var(--border)",
+                                        }}
+                                    >
+                                        {user.role === "admin"
+                                            ? "系统管理员"
+                                            : "标准用户"}
+                                    </span>
+                                </div>
+                                <p
+                                    className="muted"
+                                    style={{
+                                        margin: "4px 0 0",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    @{user.username}
+                                </p>
+                            </div>
                         </div>
-                        <div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <form onSubmit={handleSaveProfile}>
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns:
+                                        "repeat(auto-fit, minmax(240px, 1fr))",
+                                    gap: "16px",
+                                }}
+                            >
+                                <label className="field" style={{ margin: 0 }}>
+                                    <span>
+                                        用户名{" "}
+                                        <span
+                                            className="muted"
+                                            style={{ fontWeight: "normal" }}
+                                        >
+                                            (不可修改)
+                                        </span>
+                                    </span>
+                                    <Input
+                                        type="text"
+                                        value={user.username}
+                                        disabled
+                                        style={{
+                                            cursor: "not-allowed",
+                                            color: "var(--muted)",
+                                            background: "var(--surface-solid)",
+                                        }}
+                                    />
+                                </label>
+                                <label className="field" style={{ margin: 0 }}>
+                                    <span>显示名称</span>
+                                    <Input
+                                        type="text"
+                                        required
+                                        maxLength={40}
+                                        value={displayName}
+                                        onChange={(e) =>
+                                            setDisplayName(e.target.value)}
+                                        placeholder="输入显示名称"
+                                    />
+                                </label>
+                            </div>
+
+                            <label
+                                className="field"
+                                style={{ marginTop: "16px" }}
+                            >
+                                <span>
+                                    邮箱地址{" "}
+                                    <span
+                                        className="muted"
+                                        style={{ fontWeight: "normal" }}
+                                    >
+                                        (可选，用于找回与识别)
+                                    </span>
+                                </span>
+                                <Input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="name@example.com"
+                                />
+                            </label>
+
+                            {profileSuccess && (
+                                <p
+                                    role="status"
+                                    style={{
+                                        color: "var(--success)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        margin: "14px 0 0",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    <CheckCircle2 size={16} />
+                                    {profileSuccess}
+                                </p>
+                            )}
+                            {profileError && (
+                                <p
+                                    role="alert"
+                                    className="error"
+                                    style={{
+                                        margin: "14px 0 0",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    {profileError}
+                                </p>
+                            )}
+
+                            <div
+                                style={{
+                                    marginTop: "20px",
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                }}
+                            >
+                                <Button
+                                    variant="default"
+                                    type="submit"
+                                    disabled={profileSaving ||
+                                        (displayName === user.displayName &&
+                                            email === (user.email ?? ""))}
+                                >
+                                    {profileSaving ? "保存中…" : "保存资料"}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                {/* 2. Password Security Card */}
+                <Card
+                    className={`p-4 md:p-6 bg-[var(--surface-solid)] shadow-none ${
+                        user.mustChangePassword
+                            ? "border-2 border-[var(--accent)]"
+                            : "border border-[var(--border)]"
+                    }`}
+                >
+                    <CardHeader className="p-0 pb-4">
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                                marginBottom: "4px",
+                            }}
+                        >
+                            <Key size={20} style={{ color: "var(--accent)" }} />
+                            <CardTitle className="m-0 text-[19px] font-bold">
+                                {user.mustChangePassword
+                                    ? "重置密码 (必须修改)"
+                                    : "修改密码"}
+                            </CardTitle>
+                        </div>
+                        <p className="muted m-0 text-sm">
+                            修改密码需要提供当前密码。修改成功后，将在所有已登录设备（包括当前设备）退出登录。
+                        </p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <form onSubmit={handleChangePassword}>
+                            <label
+                                className="field"
+                                style={{ margin: "0 0 16px" }}
+                            >
+                                <span>当前密码</span>
+                                <Input
+                                    type="password"
+                                    required
+                                    autoComplete="current-password"
+                                    value={currentPassword}
+                                    onChange={(e) =>
+                                        setCurrentPassword(e.target.value)}
+                                    placeholder="输入当前使用的密码"
+                                />
+                            </label>
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns:
+                                        "repeat(auto-fit, minmax(240px, 1fr))",
+                                    gap: "16px",
+                                }}
+                            >
+                                <label className="field" style={{ margin: 0 }}>
+                                    <span>新密码 (至少 12 个字符)</span>
+                                    <Input
+                                        type="password"
+                                        required
+                                        minLength={12}
+                                        maxLength={128}
+                                        autoComplete="new-password"
+                                        value={newPassword}
+                                        onChange={(e) =>
+                                            setNewPassword(e.target.value)}
+                                        placeholder="输入新密码 (12–128 位)"
+                                    />
+                                </label>
+                                <label className="field" style={{ margin: 0 }}>
+                                    <span>确认新密码</span>
+                                    <Input
+                                        type="password"
+                                        required
+                                        minLength={12}
+                                        maxLength={128}
+                                        autoComplete="new-password"
+                                        value={confirmPassword}
+                                        onChange={(e) =>
+                                            setConfirmPassword(e.target.value)}
+                                        placeholder="再次输入新密码"
+                                    />
+                                </label>
+                            </div>
+
+                            {passwordSuccess && (
+                                <p
+                                    role="status"
+                                    style={{
+                                        color: "var(--success)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        margin: "14px 0 0",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    <CheckCircle2 size={16} />
+                                    {passwordSuccess}
+                                </p>
+                            )}
+                            {passwordError && (
+                                <p
+                                    role="alert"
+                                    className="error"
+                                    style={{
+                                        margin: "14px 0 0",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    {passwordError}
+                                </p>
+                            )}
+
+                            <div
+                                style={{
+                                    marginTop: "20px",
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                }}
+                            >
+                                <Button
+                                    variant="default"
+                                    type="submit"
+                                    disabled={passwordSaving ||
+                                        !currentPassword ||
+                                        !newPassword || !confirmPassword}
+                                >
+                                    {passwordSaving
+                                        ? "正在更新…"
+                                        : user.mustChangePassword
+                                        ? "确认重置密码"
+                                        : "更新密码"}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                {/* 3. Devices Management Card */}
+                <Card className="p-4 md:p-6 bg-[var(--surface-solid)] border-[var(--border)] shadow-none">
+                    <CardHeader className="p-0 pb-4">
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                flexWrap: "wrap",
+                                gap: "12px",
+                                marginBottom: "16px",
+                            }}
+                        >
                             <div
                                 style={{
                                     display: "flex",
@@ -404,613 +717,323 @@ export function AccountPage() {
                                     gap: "10px",
                                 }}
                             >
-                                <h2
-                                    style={{
-                                        margin: 0,
-                                        fontSize: "20px",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    {user.displayName}
-                                </h2>
-                                <span
-                                    style={{
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        padding: "2px 8px",
-                                        borderRadius: "12px",
-                                        background: user.role === "admin"
-                                            ? "var(--accent)"
-                                            : "var(--surface-soft)",
-                                        color: user.role === "admin"
-                                            ? "var(--accent-foreground)"
-                                            : "var(--muted)",
-                                        border: "1px solid var(--border)",
-                                    }}
-                                >
-                                    {user.role === "admin"
-                                        ? "系统管理员"
-                                        : "标准用户"}
-                                </span>
-                            </div>
-                            <p
-                                className="muted"
-                                style={{ margin: "4px 0 0", fontSize: "14px" }}
-                            >
-                                @{user.username}
-                            </p>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSaveProfile}>
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                    "repeat(auto-fit, minmax(240px, 1fr))",
-                                gap: "16px",
-                            }}
-                        >
-                            <label className="field" style={{ margin: 0 }}>
-                                <span>
-                                    用户名{" "}
-                                    <span
+                                <Laptop
+                                    size={20}
+                                    style={{ color: "var(--accent)" }}
+                                />
+                                <div>
+                                    <CardTitle className="m-0 text-[19px] font-bold">
+                                        设备会话管理
+                                    </CardTitle>
+                                    <p
                                         className="muted"
-                                        style={{ fontWeight: "normal" }}
+                                        style={{
+                                            margin: "2px 0 0",
+                                            fontSize: "13px",
+                                        }}
                                     >
-                                        (不可修改)
-                                    </span>
-                                </span>
-                                <input
-                                    type="text"
-                                    value={user.username}
-                                    disabled
-                                    style={{
-                                        opacity: 0.7,
-                                        cursor: "not-allowed",
-                                        background: "var(--surface-soft)",
-                                    }}
-                                />
-                            </label>
-                            <label className="field" style={{ margin: 0 }}>
-                                <span>显示名称</span>
-                                <input
-                                    type="text"
-                                    required
-                                    maxLength={40}
-                                    value={displayName}
-                                    onChange={(e) =>
-                                        setDisplayName(e.target.value)}
-                                    placeholder="输入显示名称"
-                                />
-                            </label>
-                        </div>
-
-                        <label className="field" style={{ marginTop: "16px" }}>
-                            <span>
-                                邮箱地址{" "}
-                                <span
-                                    className="muted"
-                                    style={{ fontWeight: "normal" }}
-                                >
-                                    (可选，用于找回与识别)
-                                </span>
-                            </span>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="name@example.com"
-                            />
-                        </label>
-
-                        {profileSuccess && (
-                            <p
-                                role="status"
-                                style={{
-                                    color: "var(--success)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    margin: "14px 0 0",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                <CheckCircle2 size={16} />
-                                {profileSuccess}
-                            </p>
-                        )}
-                        {profileError && (
-                            <p
-                                role="alert"
-                                className="error"
-                                style={{ margin: "14px 0 0", fontSize: "14px" }}
-                            >
-                                {profileError}
-                            </p>
-                        )}
-
-                        <div
-                            style={{
-                                marginTop: "20px",
-                                display: "flex",
-                                justifyContent: "flex-end",
-                            }}
-                        >
-                            <Button
-                                variant="default"
-                                type="submit"
-                                disabled={profileSaving ||
-                                    (displayName === user.displayName &&
-                                        email === (user.email ?? ""))}
-                            >
-                                {profileSaving ? "保存中…" : "保存资料"}
-                            </Button>
-                        </div>
-                    </form>
-                </section>
-
-                {/* 2. Password Security Card */}
-                <section
-                    style={{
-                        padding: "clamp(20px, 3.5vw, 32px)",
-                        background: "var(--surface)",
-                        border: user.mustChangePassword
-                            ? "2px solid var(--accent)"
-                            : "1px solid var(--border)",
-                        borderRadius: "var(--radius)",
-                        boxShadow: "var(--shadow)",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            marginBottom: "16px",
-                        }}
-                    >
-                        <Key size={20} style={{ color: "var(--accent)" }} />
-                        <h2
-                            style={{
-                                margin: 0,
-                                fontSize: "19px",
-                                fontWeight: 700,
-                            }}
-                        >
-                            {user.mustChangePassword
-                                ? "重置密码 (必须修改)"
-                                : "修改密码"}
-                        </h2>
-                    </div>
-
-                    <p
-                        className="muted"
-                        style={{ margin: "0 0 20px", fontSize: "14px" }}
-                    >
-                        修改密码需要提供当前密码。修改成功后，将在所有已登录设备（包括当前设备）退出登录。
-                    </p>
-
-                    <form onSubmit={handleChangePassword}>
-                        <label className="field" style={{ margin: "0 0 16px" }}>
-                            <span>当前密码</span>
-                            <input
-                                type="password"
-                                required
-                                autoComplete="current-password"
-                                value={currentPassword}
-                                onChange={(e) =>
-                                    setCurrentPassword(e.target.value)}
-                                placeholder="输入当前使用的密码"
-                            />
-                        </label>
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                    "repeat(auto-fit, minmax(240px, 1fr))",
-                                gap: "16px",
-                            }}
-                        >
-                            <label className="field" style={{ margin: 0 }}>
-                                <span>新密码 (至少 12 个字符)</span>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={12}
-                                    maxLength={128}
-                                    autoComplete="new-password"
-                                    value={newPassword}
-                                    onChange={(e) =>
-                                        setNewPassword(e.target.value)}
-                                    placeholder="输入新密码 (12–128 位)"
-                                />
-                            </label>
-                            <label className="field" style={{ margin: 0 }}>
-                                <span>确认新密码</span>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={12}
-                                    maxLength={128}
-                                    autoComplete="new-password"
-                                    value={confirmPassword}
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)}
-                                    placeholder="再次输入新密码"
-                                />
-                            </label>
-                        </div>
-
-                        {passwordSuccess && (
-                            <p
-                                role="status"
-                                style={{
-                                    color: "var(--success)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    margin: "14px 0 0",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                <CheckCircle2 size={16} />
-                                {passwordSuccess}
-                            </p>
-                        )}
-                        {passwordError && (
-                            <p
-                                role="alert"
-                                className="error"
-                                style={{ margin: "14px 0 0", fontSize: "14px" }}
-                            >
-                                {passwordError}
-                            </p>
-                        )}
-
-                        <div
-                            style={{
-                                marginTop: "20px",
-                                display: "flex",
-                                justifyContent: "flex-end",
-                            }}
-                        >
-                            <Button
-                                variant="default"
-                                type="submit"
-                                disabled={passwordSaving || !currentPassword ||
-                                    !newPassword || !confirmPassword}
-                            >
-                                {passwordSaving
-                                    ? "正在更新…"
-                                    : user.mustChangePassword
-                                    ? "确认重置密码"
-                                    : "更新密码"}
-                            </Button>
-                        </div>
-                    </form>
-                </section>
-
-                {/* 3. Devices Management Card */}
-                <section
-                    style={{
-                        padding: "clamp(20px, 3.5vw, 32px)",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "var(--radius)",
-                        boxShadow: "var(--shadow)",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: "12px",
-                            marginBottom: "16px",
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                            }}
-                        >
-                            <Laptop
-                                size={20}
-                                style={{ color: "var(--accent)" }}
-                            />
-                            <div>
-                                <h2
-                                    style={{
-                                        margin: 0,
-                                        fontSize: "19px",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    设备会话管理
-                                </h2>
-                                <p
-                                    className="muted"
-                                    style={{
-                                        margin: "2px 0 0",
-                                        fontSize: "13px",
-                                    }}
-                                >
-                                    当前账号共在 {devices.length}{" "}
-                                    个设备上保持登录
-                                </p>
+                                        当前账号共在 {devices.length}{" "}
+                                        个设备上保持登录
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                            }}
-                        >
-                            <button
-                                type="button"
-                                onClick={() => void loadDevices()}
-                                disabled={devicesLoading}
-                                className="button button--subtle"
+                            <div
                                 style={{
-                                    minHeight: "38px",
-                                    padding: "6px 12px",
-                                    fontSize: "13px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
                                 }}
-                                title="刷新设备列表"
-                                aria-label="刷新设备列表"
                             >
-                                <RefreshCw
-                                    size={15}
-                                    className={devicesLoading ? "spin" : ""}
-                                />
-                                <span>刷新</span>
-                            </button>
-                            {hasOtherDevices && (
-                                <Button
-                                    variant="destructive"
+                                <button
                                     type="button"
-                                    onClick={() => void handleRevokeOthers()}
+                                    onClick={() => void loadDevices()}
                                     disabled={devicesLoading}
+                                    className="button button--subtle"
                                     style={{
                                         minHeight: "38px",
                                         padding: "6px 12px",
                                         fontSize: "13px",
                                     }}
+                                    title="刷新设备列表"
+                                    aria-label="刷新设备列表"
                                 >
-                                    <LogOut size={15} />
-                                    <span>退出其他所有设备</span>
-                                </Button>
-                            )}
+                                    <RefreshCw
+                                        size={15}
+                                        className={devicesLoading ? "spin" : ""}
+                                    />
+                                    <span>刷新</span>
+                                </button>
+                                {hasOtherDevices && (
+                                    <Button
+                                        variant="destructive"
+                                        type="button"
+                                        onClick={() =>
+                                            void handleRevokeOthers()}
+                                        disabled={devicesLoading}
+                                        style={{
+                                            minHeight: "38px",
+                                            padding: "6px 12px",
+                                            fontSize: "13px",
+                                        }}
+                                    >
+                                        <LogOut size={15} />
+                                        <span>退出其他所有设备</span>
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-
-                    {devicesActionMsg && (
-                        <p
-                            role="status"
-                            style={{
-                                color: "var(--success)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                margin: "0 0 16px",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <CheckCircle2 size={16} />
-                            {devicesActionMsg}
-                        </p>
-                    )}
-                    {devicesError && (
-                        <p
-                            role="alert"
-                            className="error"
-                            style={{ margin: "0 0 16px", fontSize: "14px" }}
-                        >
-                            {devicesError}
-                        </p>
-                    )}
-
-                    {devicesLoading && devices.length === 0
-                        ? (
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {devicesActionMsg && (
                             <p
-                                className="muted"
+                                role="status"
                                 style={{
-                                    padding: "24px 0",
-                                    textAlign: "center",
+                                    color: "var(--success)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    margin: "0 0 16px",
+                                    fontSize: "14px",
                                 }}
                             >
-                                正在加载登录设备…
+                                <CheckCircle2 size={16} />
+                                {devicesActionMsg}
                             </p>
-                        )
-                        : devices.length === 0
-                        ? (
+                        )}
+                        {devicesError && (
                             <p
-                                className="muted"
-                                style={{
-                                    padding: "24px 0",
-                                    textAlign: "center",
-                                }}
+                                role="alert"
+                                className="error"
+                                style={{ margin: "0 0 16px", fontSize: "14px" }}
                             >
-                                暂无活跃设备会话记录
+                                {devicesError}
                             </p>
-                        )
-                        : (
-                            <div style={{ display: "grid", gap: "12px" }}>
-                                {devices.map((device) => {
-                                    const parsed = parseUserAgent(
-                                        device.userAgent,
-                                    );
-                                    const isRevoking = revokingId === device.id;
-                                    return (
-                                        <div
-                                            key={device.id}
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "space-between",
-                                                flexWrap: "wrap",
-                                                gap: "12px",
-                                                padding: "16px 18px",
-                                                borderRadius: "12px",
-                                                border:
-                                                    "1px solid var(--border)",
-                                                background: device.isCurrent
-                                                    ? "color-mix(in srgb, var(--accent) 7%, var(--surface))"
-                                                    : "var(--surface-soft)",
-                                            }}
-                                        >
+                        )}
+
+                        {devicesLoading && devices.length === 0
+                            ? (
+                                <p
+                                    className="muted"
+                                    style={{
+                                        padding: "24px 0",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    正在加载登录设备…
+                                </p>
+                            )
+                            : devices.length === 0
+                            ? (
+                                <p
+                                    className="muted"
+                                    style={{
+                                        padding: "24px 0",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    暂无活跃设备会话记录
+                                </p>
+                            )
+                            : (
+                                <div style={{ display: "grid", gap: "12px" }}>
+                                    {devices.map((device) => {
+                                        const parsed = parseUserAgent(
+                                            device.userAgent,
+                                        );
+                                        const isRevoking =
+                                            revokingId === device.id;
+                                        return (
                                             <div
+                                                key={device.id}
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    gap: "14px",
-                                                    minWidth: "220px",
+                                                    justifyContent:
+                                                        "space-between",
+                                                    flexWrap: "wrap",
+                                                    gap: "12px",
+                                                    padding: "16px 18px",
+                                                    borderRadius: "12px",
+                                                    border:
+                                                        "1px solid var(--border)",
+                                                    background: device.isCurrent
+                                                        ? "color-mix(in srgb, var(--accent) 7%, var(--surface-solid))"
+                                                        : "var(--surface-solid)",
                                                 }}
                                             >
                                                 <div
                                                     style={{
-                                                        width: "42px",
-                                                        height: "42px",
-                                                        borderRadius: "10px",
-                                                        background:
-                                                            "var(--surface)",
-                                                        border:
-                                                            "1px solid var(--border)",
-                                                        display: "grid",
-                                                        placeItems: "center",
-                                                        color: device.isCurrent
-                                                            ? "var(--accent)"
-                                                            : "var(--muted)",
-                                                        flexShrink: 0,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "14px",
+                                                        minWidth: "220px",
                                                     }}
                                                 >
-                                                    {parsed.type === "mobile"
-                                                        ? (
-                                                            <Smartphone
-                                                                size={20}
-                                                            />
-                                                        )
-                                                        : parsed.type ===
-                                                                "tablet"
-                                                        ? <Laptop size={20} />
-                                                        : parsed.type ===
-                                                                "desktop"
-                                                        ? <Laptop size={20} />
-                                                        : <Globe size={20} />}
-                                                </div>
-                                                <div>
                                                     <div
                                                         style={{
-                                                            display: "flex",
-                                                            alignItems:
+                                                            width: "42px",
+                                                            height: "42px",
+                                                            borderRadius:
+                                                                "10px",
+                                                            background:
+                                                                "var(--surface-solid)",
+                                                            border:
+                                                                "1px solid var(--border)",
+                                                            display: "grid",
+                                                            placeItems:
                                                                 "center",
-                                                            gap: "8px",
-                                                            flexWrap: "wrap",
+                                                            color:
+                                                                device.isCurrent
+                                                                    ? "var(--accent)"
+                                                                    : "var(--muted)",
+                                                            flexShrink: 0,
                                                         }}
                                                     >
-                                                        <span
+                                                        {parsed.type ===
+                                                                "mobile"
+                                                            ? (
+                                                                <Smartphone
+                                                                    size={20}
+                                                                />
+                                                            )
+                                                            : parsed.type ===
+                                                                    "tablet"
+                                                            ? (
+                                                                <Laptop
+                                                                    size={20}
+                                                                />
+                                                            )
+                                                            : parsed.type ===
+                                                                    "desktop"
+                                                            ? (
+                                                                <Laptop
+                                                                    size={20}
+                                                                />
+                                                            )
+                                                            : (
+                                                                <Globe
+                                                                    size={20}
+                                                                />
+                                                            )}
+                                                    </div>
+                                                    <div>
+                                                        <div
                                                             style={{
-                                                                fontWeight: 650,
-                                                                fontSize:
-                                                                    "15px",
+                                                                display: "flex",
+                                                                alignItems:
+                                                                    "center",
+                                                                gap: "8px",
+                                                                flexWrap:
+                                                                    "wrap",
                                                             }}
                                                         >
-                                                            {parsed.name}
-                                                        </span>
-                                                        {device.isCurrent && (
                                                             <span
                                                                 style={{
-                                                                    fontSize:
-                                                                        "11px",
                                                                     fontWeight:
-                                                                        700,
-                                                                    padding:
-                                                                        "1px 7px",
-                                                                    borderRadius:
-                                                                        "999px",
-                                                                    background:
-                                                                        "var(--accent)",
-                                                                    color:
-                                                                        "var(--accent-foreground)",
+                                                                        650,
+                                                                    fontSize:
+                                                                        "15px",
                                                                 }}
                                                             >
-                                                                当前设备
+                                                                {parsed.name}
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                    <div
-                                                        className="muted"
-                                                        style={{
-                                                            fontSize: "12px",
-                                                            marginTop: "3px",
-                                                            display: "flex",
-                                                            gap: "12px",
-                                                            flexWrap: "wrap",
-                                                        }}
-                                                    >
-                                                        <span>
-                                                            IP: {device.ip ||
-                                                                "本地 / 未知"}
-                                                        </span>
-                                                        <span>
-                                                            登录时间:{" "}
-                                                            {formatTime(
-                                                                device
-                                                                    .createdAt,
-                                                            )}
-                                                        </span>
-                                                        {device.lastActiveAt &&
-                                                            (
-                                                                <span>
-                                                                    最后活动:
-                                                                    {" "}
-                                                                    {formatTime(
-                                                                        device
-                                                                            .lastActiveAt,
-                                                                    )}
-                                                                </span>
-                                                            )}
+                                                            {device.isCurrent &&
+                                                                (
+                                                                    <span
+                                                                        style={{
+                                                                            fontSize:
+                                                                                "11px",
+                                                                            fontWeight:
+                                                                                700,
+                                                                            padding:
+                                                                                "1px 7px",
+                                                                            borderRadius:
+                                                                                "999px",
+                                                                            background:
+                                                                                "var(--accent)",
+                                                                            color:
+                                                                                "var(--accent-foreground)",
+                                                                        }}
+                                                                    >
+                                                                        当前设备
+                                                                    </span>
+                                                                )}
+                                                        </div>
+                                                        <div
+                                                            className="muted"
+                                                            style={{
+                                                                fontSize:
+                                                                    "12px",
+                                                                marginTop:
+                                                                    "3px",
+                                                                display: "flex",
+                                                                gap: "12px",
+                                                                flexWrap:
+                                                                    "wrap",
+                                                            }}
+                                                        >
+                                                            <span>
+                                                                IP:{" "}
+                                                                {device.ip ||
+                                                                    "本地 / 未知"}
+                                                            </span>
+                                                            <span>
+                                                                登录时间:{" "}
+                                                                {formatTime(
+                                                                    device
+                                                                        .createdAt,
+                                                                )}
+                                                            </span>
+                                                            {device
+                                                                .lastActiveAt &&
+                                                                (
+                                                                    <span>
+                                                                        最后活动:
+                                                                        {" "}
+                                                                        {formatTime(
+                                                                            device
+                                                                                .lastActiveAt,
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div>
-                                                <Button
-                                                    variant={device.isCurrent
-                                                        ? "outline"
-                                                        : "destructive"}
-                                                    type="button"
-                                                    disabled={isRevoking ||
-                                                        devicesLoading}
-                                                    onClick={() =>
-                                                        void handleRevokeDevice(
-                                                            device,
-                                                        )}
-                                                    style={{
-                                                        minHeight: "36px",
-                                                        padding: "6px 14px",
-                                                        fontSize: "13px",
-                                                    }}
-                                                >
-                                                    {isRevoking
-                                                        ? "处理中…"
-                                                        : device.isCurrent
-                                                        ? "退出此设备"
-                                                        : "撤销会话"}
-                                                </Button>
+                                                <div>
+                                                    <Button
+                                                        variant={device
+                                                                .isCurrent
+                                                            ? "outline"
+                                                            : "destructive"}
+                                                        type="button"
+                                                        disabled={isRevoking ||
+                                                            devicesLoading}
+                                                        onClick={() =>
+                                                            void handleRevokeDevice(
+                                                                device,
+                                                            )}
+                                                        style={{
+                                                            minHeight: "36px",
+                                                            padding: "6px 14px",
+                                                            fontSize: "13px",
+                                                        }}
+                                                    >
+                                                        {isRevoking
+                                                            ? "处理中…"
+                                                            : device.isCurrent
+                                                            ? "退出此设备"
+                                                            : "撤销会话"}
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                </section>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                    </CardContent>
+                </Card>
             </div>
         </main>
     );

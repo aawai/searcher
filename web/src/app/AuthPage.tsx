@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { UserDto } from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
+import { Input } from "../components/ui/input.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 
@@ -58,9 +59,10 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                     : "账户数据只保存在你的 Searcher 服务上。"}
             </p>
             <form onSubmit={submit}>
-                <label className="field">
-                    用户名
-                    <input
+                <div className="field">
+                    <label htmlFor="auth-username">用户名</label>
+                    <Input
+                        id="auth-username"
                         autoComplete="username"
                         required
                         minLength={3}
@@ -68,21 +70,23 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-                </label>
+                </div>
                 {kind === "register" && (
-                    <label className="field">
-                        显示名称
-                        <input
+                    <div className="field">
+                        <label htmlFor="auth-display-name">显示名称</label>
+                        <Input
+                            id="auth-display-name"
                             required
                             maxLength={40}
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
                         />
-                    </label>
+                    </div>
                 )}
-                <label className="field">
-                    密码
-                    <input
+                <div className="field">
+                    <label htmlFor="auth-password">密码</label>
+                    <Input
+                        id="auth-password"
                         type="password"
                         autoComplete={kind === "login"
                             ? "current-password"
@@ -92,7 +96,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                </label>
+                </div>
                 {error && <p className="error" role="alert">{error}</p>}
                 <Button variant="default" type="submit" disabled={busy}>
                     {busy ? "处理中…" : kind === "login" ? "登录" : "创建账户"}

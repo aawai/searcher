@@ -4,6 +4,10 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { api, ApiError, json } from "../../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
+import { Button } from "../ui/button.tsx";
+import { Input } from "../ui/input.tsx";
+import { Textarea } from "../ui/textarea.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import type { NoteItem } from "./NoteCard.tsx";
 
 type Draft = { body: string; title: string };
@@ -104,7 +108,7 @@ export function NoteEditor(
         };
     }, [note.id]);
 
-    const timer = useRef<number | undefined>(undefined);
+    const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function change(next: Draft) {
         setDraft(next);
         setStatus("unsynced");
@@ -114,7 +118,10 @@ export function NoteEditor(
             updatedAt: Date.now(),
         });
         clearTimeout(timer.current);
-        timer.current = window.setTimeout(() => void save(next, "auto"), 1500);
+        timer.current = globalThis.setTimeout(
+            () => void save(next, "auto"),
+            1500,
+        );
     }
 
     async function save(next?: Draft, trigger: "auto" | "manual" = "auto") {
@@ -207,33 +214,75 @@ export function NoteEditor(
     }
     return (
         <section className="note-editor">
-            <label className="field">
-                标题（可选）<input
+            <div className="field" style={{ margin: 0 }}>
+                <label
+                    className="text-xs text-[var(--muted)] mb-1 block"
+                    htmlFor="note-title-input"
+                >
+                    标题（可选）
+                </label>
+                <Input
+                    id="note-title-input"
+                    placeholder="输入便签标题…"
                     value={draft.title}
                     onChange={(event) =>
                         change({ ...draft, title: event.target.value })}
                     onBlur={() => void save(undefined, "manual")}
                 />
-            </label>
-            <nav className="choice-row" aria-label="便签视图">
-                {(["edit", "preview", "split"] as const).map((id) => (
-                    <button
-                        type="button"
-                        key={id}
-                        aria-pressed={view === id}
-                        onClick={() => setView(id)}
+            </div>
+            <Tabs
+                value={view}
+                onValueChange={(id) =>
+                    setView(id as "edit" | "preview" | "split")}
+                className="flex-1 flex flex-col min-h-0"
+            >
+                <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
+                    <TabsList>
+                        <TabsTrigger value="edit">编辑</TabsTrigger>
+                        <TabsTrigger value="preview">预览</TabsTrigger>
+                        <TabsTrigger value="split">分栏</TabsTrigger>
+                    </TabsList>
+                    <div className="flex items-center gap-3">
+                        <p
+                            className={"save-state save-" + status +
+                                " text-xs m-0"}
+                            role="status"
+                        >
+                            {({
+                                saved: "已保存",
+                                saving: "保存中…",
+                                unsynced: "未同步至云端",
+                                error: "保存失败，草稿仍在此设备",
+                            })[status]}
+                        </p>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void showVersions()}
+                        >
+                            版本历史
+                        </Button>
+                    </div>
+                </div>
+
+                <TabsContent
+                    value="edit"
+                    className="flex-1 flex flex-col mt-3 min-h-[300px]"
+                >
+                    <div
+                        className="field flex-1 flex flex-col"
+                        style={{ margin: 0 }}
                     >
-                        {({ edit: "编辑", preview: "预览", split: "分栏" })[id]}
-                    </button>
-                ))}
-                <button type="button" onClick={() => void showVersions()}>
-                    版本历史
-                </button>
-            </nav>
-            <div className={"editor-view editor-view--" + view}>
-                {view !== "preview" && (
-                    <label className="field">
-                        Markdown 内容<textarea
+                        <label
+                            className="sr-only"
+                            htmlFor="note-body-textarea-edit"
+                        >
+                            Markdown 内容
+                        </label>
+                        <Textarea
+                            id="note-body-textarea-edit"
+                            placeholder="输入 Markdown 内容…"
                             value={draft.body}
                             onChange={(event) =>
                                 change({ ...draft, body: event.target.value })}
@@ -247,19 +296,58 @@ export function NoteEditor(
                                     void save(undefined, "manual");
                                 }
                             }}
+                            className="flex-1 w-full h-full min-h-[260px] resize-none font-mono text-sm"
                         />
-                    </label>
-                )}
-                {view !== "edit" && markdown(draft.body)}
-            </div>
-            <p className={"save-state save-" + status} role="status">
-                {({
-                    saved: "已保存",
-                    saving: "保存中…",
-                    unsynced: "未同步至云端",
-                    error: "保存失败，草稿仍在此设备",
-                })[status]}
-            </p>
+                    </div>
+                </TabsContent>
+
+                <TabsContent
+                    value="preview"
+                    className="flex-1 mt-3 min-h-[300px] overflow-y-auto"
+                >
+                    <div className="preview-pane h-full">
+                        {markdown(draft.body)}
+                    </div>
+                </TabsContent>
+
+                <TabsContent
+                    value="split"
+                    className="flex-1 editor-view--split mt-3 min-h-[300px]"
+                >
+                    <div
+                        className="field flex-1 flex flex-col"
+                        style={{ margin: 0 }}
+                    >
+                        <label
+                            className="sr-only"
+                            htmlFor="note-body-textarea-split"
+                        >
+                            Markdown 内容
+                        </label>
+                        <Textarea
+                            id="note-body-textarea-split"
+                            placeholder="输入 Markdown 内容…"
+                            value={draft.body}
+                            onChange={(event) =>
+                                change({ ...draft, body: event.target.value })}
+                            onBlur={() => void save(undefined, "manual")}
+                            onKeyDown={(event) => {
+                                if (
+                                    (event.metaKey || event.ctrlKey) &&
+                                    event.key.toLowerCase() === "s"
+                                ) {
+                                    event.preventDefault();
+                                    void save(undefined, "manual");
+                                }
+                            }}
+                            className="flex-1 w-full h-full min-h-[260px] resize-none font-mono text-sm"
+                        />
+                    </div>
+                    <div className="preview-pane flex-1 overflow-y-auto">
+                        {markdown(draft.body)}
+                    </div>
+                </TabsContent>
+            </Tabs>
             {status === "error" && !conflict && (
                 <div className="choice-row">
                     <button
