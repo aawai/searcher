@@ -27,11 +27,10 @@ function getInitialPoint(note: NoteItem, index: number): Point {
         };
     }
     const screenW = typeof window !== "undefined" ? window.innerWidth : 1200;
-    const defaultX = Math.max(
-        20,
-        Math.min(screenW - 280, 40 + (index % 3) * 270),
-    );
-    const defaultY = 160 + Math.floor(index / 3) * 160;
+    const defaultX = screenW > 1100
+        ? Math.max(20, screenW - 310 - (index % 2) * 280)
+        : Math.max(20, Math.min(screenW - 280, 40 + (index % 3) * 270));
+    const defaultY = 200 + Math.floor(index / 2) * 180;
     return { x: defaultX, y: defaultY, z: index + 1 };
 }
 
@@ -113,6 +112,7 @@ export function FloatingNotes(
         onToggleHomeFixed,
         onChangeColor,
         onDelete,
+        flow = false,
     }: {
         notes: NoteItem[];
         onOpen?: (note: NoteItem) => void;
@@ -124,6 +124,7 @@ export function FloatingNotes(
         onToggleHomeFixed?: (note: NoteItem) => void;
         onChangeColor?: (note: NoteItem, color: string) => void;
         onDelete?: (note: NoteItem) => void;
+        flow?: boolean;
     },
 ) {
     const [points, setPoints] = useState<Record<string, Point>>({});
@@ -228,6 +229,31 @@ export function FloatingNotes(
     }
 
     if (!notes.length) return null;
+    if (flow) {
+        return (
+            <div className="notes-flow-grid">
+                {notes.map((note, index) => (
+                    <div key={note.id} className="note-flow-item">
+                        <NoteCard
+                            note={note}
+                            mode={note.layout?.expanded === false
+                                ? "compact"
+                                : "full"}
+                            onOpen={() =>
+                                onOpen?.(note)}
+                            onToggleMode={() =>
+                                handleToggleMode(note, index)}
+                            onTogglePin={() => onTogglePin?.(note)}
+                            onToggleHomeFixed={() => onToggleHomeFixed?.(note)}
+                            onChangeColor={(color) =>
+                                onChangeColor?.(note, color)}
+                            onDelete={() => onDelete?.(note)}
+                        />
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <DndContext sensors={sensors} onDragEnd={moved}>

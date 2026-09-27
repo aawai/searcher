@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-09-27-005",
+  "captured": "2026-09-27",
+  "packet_version": "1.0",
+  "title": "Hono HTTP server",
+  "url": "https://docs.deno.com/examples/hono/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -1,7 +1,22 @@
 import type { EngineId } from "./engines.ts";
 
 export type ThemeId = "system" | "light" | "dark";
-export type StylePreset = "quiet" | "minimal" | "glass" | "soft" | "classic";
+export type StylePreset = "zen" | "widgets";
+export type LegacyStylePreset =
+    | "command"
+    | "quiet"
+    | "minimal"
+    | "glass"
+    | "soft"
+    | "classic";
+
+export function normalizeStylePreset(raw: unknown): StylePreset {
+    if (raw === "zen" || raw === "widgets") {
+        return raw;
+    }
+    if (raw === "glass" || raw === "soft") return "widgets";
+    return "zen";
+}
 export type AccentId = "blue" | "cyan" | "teal" | "violet" | "orange" | "mono";
 export type SearchShape = "rounded" | "pill";
 export type UserRole = "user" | "admin";

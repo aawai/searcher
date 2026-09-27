@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-27T02:13:05.461Z",
+  "last_updated": "2026-09-27T04:52:12.323Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -15,6 +15,16 @@
       "domain": "engineering",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/deno-native-serve-architecture": {
+      "type": "concept",
+      "title": "Deno Native Serve Architecture",
+      "tags": [
+        "architecture",
+        "deno",
+        "hono",
+        "http"
+      ]
     },
     "concepts/dnd-kit-2d-grid-sorting-architecture": {
       "type": "concept",
@@ -50,6 +60,12 @@
       "title": "Offline-First 与 Local Draft 持久化架构",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/react-19-actions-and-transitions": {
+      "type": "concept",
+      "title": "React 19 Actions and Transitions",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
     },
     "concepts/server-sent-events-sse-与实时事件流": {
       "type": "concept",
@@ -134,6 +150,12 @@
       "title": "IndexedDB 本地存储引擎",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "entities/react-19-framework": {
+      "type": "entity",
+      "title": "React 19 Framework",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
     },
     "entities/searcher-项目": {
       "type": "entity",
@@ -601,6 +623,24 @@
         "[[concepts/server-sent-events-sse-与实时事件流]]"
       ]
     },
+    "sources/SRC-2026-09-27-004": {
+      "type": "source",
+      "title": "React 19 useActionState Reference",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-27-004/extracted.md",
+      "source_id": "SRC-2026-09-27-004",
+      "format": "web",
+      "captured": "2026-09-27"
+    },
+    "sources/SRC-2026-09-27-005": {
+      "type": "source",
+      "title": "Deno 2 Hono HTTP Server Guide",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-09-27-005/extracted.md",
+      "source_id": "SRC-2026-09-27-005",
+      "format": "web",
+      "captured": "2026-09-27"
+    },
     "sources/obs-2026-09-25-ui-app": {
       "type": "source",
       "title": "Observation: UI 精致化与交互优化：APP 命名对齐、壁纸复合输入、便签全屏与悬浮卡片空间优化",
@@ -703,6 +743,24 @@
       "relevance": "high",
       "observed_at": "2026-09-27T00:42:38.925Z",
       "source_context": ".omp/plans/SEARCHER_UI_REDESIGN_PLAN.md; isolated browser 127.0.0.1:34570",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
+    },
+    "sources/obs-2026-09-27-workspace-layout-style-architecture-decision": {
+      "type": "source",
+      "title": "Observation: Workspace Layout & Style Architecture Decision",
+      "tags": [
+        "ui",
+        "ux",
+        "architecture",
+        "layout-system",
+        "workspace"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-27-workspace-layout-style-architecture-decision",
+      "relevance": "high",
+      "observed_at": "2026-09-27T02:58:54.446Z",
+      "source_context": "UI/UX Redesign Evaluation",
       "created": "2026-09-27",
       "updated": "2026-09-27"
     },

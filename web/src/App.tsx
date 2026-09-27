@@ -13,6 +13,7 @@ import {
     Moon,
     Settings,
     Shield,
+    Sparkles,
     Sun,
     UserRound,
 } from "lucide-react";
@@ -96,6 +97,13 @@ function Layout() {
                     s.
                 </Link>
                 <nav className="top-actions" aria-label="账户与设置">
+                    <Link
+                        to="/ask"
+                        aria-label="AI 问答"
+                        title="AI 问答"
+                    >
+                        <Sparkles size={19} />
+                    </Link>
                     <button
                         type="button"
                         onClick={() => {
@@ -116,6 +124,13 @@ function Layout() {
                             ? <Moon size={20} />
                             : <Monitor size={20} />}
                     </button>
+                    <Link
+                        to="/settings"
+                        aria-label="设置"
+                        title="设置"
+                    >
+                        <Settings size={20} />
+                    </Link>
                     {/* Y-002: 仅在同步异常时展示全局警示 Badge */}
                     {syncFailed && (
                         <Link
@@ -219,24 +234,16 @@ function Layout() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )
-                        : (
-                            <>
-                                <Link
-                                    to="/settings"
-                                    aria-label="设置"
-                                    title="设置"
-                                >
-                                    <Settings size={20} />
-                                </Link>
-                                <Link
-                                    to="/login"
-                                    className="user-link"
-                                    aria-label="登录"
-                                >
-                                    <LogIn size={19} />
-                                    <span>登录</span>
-                                </Link>
-                            </>
+                        : (location.pathname !== "/login" &&
+                            location.pathname !== "/register") && (
+                            <Link
+                                to="/login"
+                                className="user-link"
+                                aria-label="登录"
+                            >
+                                <LogIn size={19} />
+                                <span>登录</span>
+                            </Link>
                         )}
                 </nav>
             </header>

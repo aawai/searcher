@@ -58,8 +58,8 @@ export const preferences = sqliteTable("preferences", {
     })
         .notNull().default("linear-dark"),
     style: text("style", {
-        enum: ["quiet", "minimal", "glass", "soft", "classic"],
-    }).default("quiet"),
+        enum: ["zen", "widgets"],
+    }).default("zen"),
     accent: text("accent", {
         enum: ["blue", "cyan", "teal", "violet", "orange", "mono"],
     }).default("blue"),
@@ -99,7 +99,7 @@ export const preferences = sqliteTable("preferences", {
     ),
     check(
         "preferences_style_check",
-        sql`${t.style} in ('quiet','minimal','glass','soft','classic')`,
+        sql`${t.style} in ('command','zen','widgets','quiet','minimal','glass','soft','classic')`,
     ),
     check(
         "preferences_accent_check",

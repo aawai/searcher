@@ -1,4 +1,5 @@
 @import '../design-system/tokens.css';
+@import '../features/home-layouts/home-layouts.css';
 * {
     box-sizing: border-box;
 }
@@ -527,8 +528,8 @@ a {
 }
 .search-frame:focus-within {
     border-color: var(--ring);
-    box-shadow: var(--shadow),0 0 0 3px color-mix(in srgb,var(--ring)
-        24%,transparent);
+    box-shadow: 0 0 0 1px var(--ring), 0 0 28px -4px color-mix(in srgb, var(--ring) 35%, transparent), var(--shadow);
+    background: color-mix(in srgb, var(--surface) calc(max(var(--search-opacity, 1), 0.88) * 100%), transparent);
 }
 .search-engine {
     display: flex;
@@ -713,8 +714,11 @@ a {
 .pinned-area {
     width: 100%;
     max-width: 720px;
-    margin: 24px auto 60px;
-    padding: 0 16px;
+    margin: 20px auto 48px;
+    padding: 0 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .pinned-apps {
     display: flex;
@@ -807,10 +811,10 @@ a {
 .note-card {
     width: 250px;
     min-height: 146px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius);
     background: var(--surface-solid);
-    box-shadow: none;
+    box-shadow: var(--card-highlight), var(--card-shadow);
     padding: 14px 16px;
     color: var(--foreground);
     transition: box-shadow .15s, border-color .15s;
@@ -1267,19 +1271,24 @@ a {
     margin-bottom: 20px;
 }
 .auth-page {
-    width: min(100% - 32px, 400px);
-    margin: 48px auto 80px;
+    width: min(100% - 32px, 420px);
+    margin: clamp(40px, 10vh, 100px) auto 80px;
+    padding: 32px;
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    box-shadow: var(--card-highlight), var(--card-shadow);
 }
 .auth-page h1 {
-    font-size: 28px;
-    line-height: 36px;
+    font-size: 24px;
+    line-height: 32px;
     font-weight: 600;
     letter-spacing: -0.01em;
-    margin-bottom: 8px;
+    margin: 0 0 6px;
 }
 .auth-page > .muted {
     margin: 0 0 24px;
-    font-size: 14px;
+    font-size: 13px;
 }
 .auth-page form {
     display: flex;
@@ -1302,10 +1311,11 @@ a {
 }
 .settings-layout {
     display: grid;
-    grid-template-columns: 184px minmax(0, 1fr);
-    gap: 32px;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 36px;
     align-items: start;
-    max-width: 936px;
+    max-width: 960px;
+    margin: 0 auto;
 }
 .settings-nav {
     display: flex;
@@ -1376,8 +1386,9 @@ a {
 }
 .settings-card {
     background: var(--surface-solid);
-    border: 1px solid var(--border);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius);
+    box-shadow: var(--card-highlight), var(--card-shadow);
     overflow: hidden;
 }
 .settings-row {
@@ -1470,10 +1481,11 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 20px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--surface);
+    padding: 20px 24px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--surface-solid);
+    box-shadow: var(--card-highlight), var(--card-shadow);
 }
 .settings-action-card__content {
     flex: 1 1 240px;
@@ -1682,6 +1694,46 @@ a {
     min-height: 36px;
     padding: 6px 12px;
     font-size: 13px;
+}
+
+.trash-empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 32px;
+    background: var(--surface-solid);
+    border: 1px dashed var(--card-border);
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--card-highlight), var(--card-shadow);
+    margin: 20px 0;
+}
+
+.trash-empty-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--surface-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    margin-bottom: 16px;
+}
+
+.trash-empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 6px;
+}
+
+.trash-empty-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 20px;
+    max-width: 320px;
 }
 
 /* WebApp Management Styles */
@@ -2411,8 +2463,10 @@ a {
     display: flex;
     flex-direction: column;
     padding: 0;
+    width: min(100% - 32px, 580px);
     max-height: min(90dvh, 720px);
     overflow: hidden;
+    margin: 0 auto;
     background: var(--surface-solid);
     backdrop-filter: none;
 }
@@ -2863,7 +2917,8 @@ a {
     }
 }
 .pinned-area .pinned-apps.launcher-grid {
-    justify-content: start;
+    justify-content: center;
+    margin: 0 auto;
 }
 .launcher-folder-preview--sparse {
     grid-template-columns: repeat(2,minmax(0,1fr));

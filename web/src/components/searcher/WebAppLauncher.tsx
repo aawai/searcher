@@ -399,12 +399,13 @@ function useDesktopColumns(
     showAppLabels: boolean,
 ) {
     const gridRef = useRef<HTMLDivElement>(null);
-    const [columns, setColumns] = useState(2);
+    const [columns, setColumns] = useState(6);
     useEffect(() => {
         const grid = gridRef.current;
         if (!grid) return;
+        const target = grid.parentElement || grid;
         const observer = new ResizeObserver((entries) => {
-            const width = entries[0]?.contentRect.width ?? 0;
+            const width = entries[0]?.contentRect.width ?? target.clientWidth;
             const style = getComputedStyle(grid);
             const cellWidth = parseFloat(
                 style.getPropertyValue("--launcher-col-w"),
@@ -418,7 +419,7 @@ function useDesktopColumns(
                 setColumns((previous) => previous === next ? previous : next);
             }
         });
-        observer.observe(grid);
+        observer.observe(target);
         return () => observer.disconnect();
     }, [size, showAppLabels]);
     return { gridRef, columns };
@@ -475,6 +476,12 @@ export function WebAppLauncher({
         [apps, groups, showFolders],
     );
     const { gridRef, columns } = useDesktopColumns(size, showAppLabels);
+    const effectiveColumns = useMemo(() => {
+        if (!managing && tiles.length > 0 && tiles.length < columns) {
+            return Math.max(1, tiles.length);
+        }
+        return columns;
+    }, [managing, tiles.length, columns]);
     const layout = useMemo(() =>
         calculateDesktopLayout(
             tiles.map((tile) => ({
@@ -482,8 +489,8 @@ export function WebAppLauncher({
                 cols: tile.group?.folderSize === "large" ? 2 : 1,
                 rows: tile.group?.folderSize === "large" ? 2 : 1,
             })),
-            columns,
-        ), [tiles, columns]);
+            effectiveColumns,
+        ), [tiles, effectiveColumns]);
     const [internalFolderId, setInternalFolderId] = useState<string | null>(
         null,
     );
@@ -675,7 +682,7 @@ export function WebAppLauncher({
                         showAppLabels ? "" : " launcher-grid--icons-only"
                     }`}
                     style={{
-                        "--launcher-columns": columns,
+                        "--launcher-columns": effectiveColumns,
                     } as React.CSSProperties}
                 >
                     {tiles.map((tile, index) => (

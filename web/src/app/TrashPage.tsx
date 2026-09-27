@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
@@ -34,6 +34,7 @@ interface TrashNote {
 
 export function TrashPage() {
     const { user } = useAppState();
+    const navigate = useNavigate();
     const [tab, setTab] = useState<"webapps" | "notes">("webapps");
     const [webapps, setWebapps] = useState<TrashWebApp[]>([]);
     const [notes, setNotes] = useState<TrashNote[]>([]);
@@ -208,7 +209,26 @@ export function TrashPage() {
                     aria-label="已删除的 APP"
                 >
                     {webapps.length === 0
-                        ? <p className="empty">回收站中没有 APP</p>
+                        ? (
+                            <div className="trash-empty-card">
+                                <div className="trash-empty-icon">
+                                    <Trash2 size={28} />
+                                </div>
+                                <h3 className="trash-empty-title">
+                                    回收站空空如也
+                                </h3>
+                                <p className="trash-empty-desc">
+                                    没有已删除的网站快捷方式
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate("/")}
+                                >
+                                    返回首页
+                                </Button>
+                            </div>
+                        )
                         : (
                             <div>
                                 {/* Desktop Table */}
@@ -342,7 +362,26 @@ export function TrashPage() {
                     aria-label="已删除的便签"
                 >
                     {notes.length === 0
-                        ? <p className="empty">回收站中没有便签</p>
+                        ? (
+                            <div className="trash-empty-card">
+                                <div className="trash-empty-icon">
+                                    <Trash2 size={28} />
+                                </div>
+                                <h3 className="trash-empty-title">
+                                    回收站空空如也
+                                </h3>
+                                <p className="trash-empty-desc">
+                                    没有已删除的便签记录
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate("/")}
+                                >
+                                    返回首页
+                                </Button>
+                            </div>
+                        )
                         : (
                             <div>
                                 {/* Desktop Table */}

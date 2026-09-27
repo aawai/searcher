@@ -7,14 +7,19 @@ import {
     useRef,
     useState,
 } from "react";
-import type { PreferencesDto, UserDto } from "@shared/contracts.ts";
+import {
+    normalizeStylePreset,
+    type PreferencesDto,
+    type StylePreset,
+    type UserDto,
+} from "@shared/contracts.ts";
 import type { EngineId } from "@shared/engines.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, listLocalKeys, setLocal } from "../lib/local.ts";
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
-    style: "quiet" | "minimal" | "glass" | "soft" | "classic";
+    style: StylePreset;
     accent: "blue" | "cyan" | "teal" | "violet" | "orange" | "mono";
     shape: "rounded" | "pill";
     searchOpacity: number;
@@ -32,7 +37,7 @@ export type Appearance = {
 
 const initial: Appearance = {
     theme: "system",
-    style: "quiet",
+    style: "zen",
     accent: "blue",
     shape: "rounded",
     searchOpacity: 1,
@@ -94,7 +99,11 @@ export function AppState({ children }: { children: ReactNode }) {
         let alive = true;
         void getLocal<Appearance>("visitor_appearance").then((saved) => {
             if (alive && saved && !user) {
-                setValue((prev) => ({ ...prev, ...saved }));
+                setValue((prev) => ({
+                    ...prev,
+                    ...saved,
+                    style: normalizeStylePreset(saved.style),
+                }));
             }
         });
         return () => {
@@ -140,7 +149,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 const cloudAppearance: Partial<Appearance> = {
                     engine: prefs.defaultEngine,
                     theme: prefs.theme,
-                    style: prefs.style,
+                    style: normalizeStylePreset(prefs.style),
                     accent: prefs.accent,
                     shape: prefs.searchShape,
                     searchOpacity: prefs.searchOpacity ?? 1,

@@ -1,12 +1,17 @@
 import { eq } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
-import type { PreferencesDto } from "@shared/contracts.ts";
+import {
+    type LegacyStylePreset,
+    normalizeStylePreset,
+    type PreferencesDto,
+    type StylePreset,
+} from "@shared/contracts.ts";
 import type { SystemSettingsStore } from "../system/settings-store.ts";
 const defaults: PreferencesDto = {
     defaultEngine: "bing",
     theme: "system",
-    style: "quiet",
+    style: "zen",
     accent: "blue",
     searchShape: "rounded",
     searchOpacity: 1,
@@ -25,7 +30,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     return {
         defaultEngine: row.defaultEngine,
         theme: row.theme,
-        style: row.style ?? "quiet",
+        style: normalizeStylePreset(row.style),
         accent: row.accent ?? "blue",
         searchShape: row.searchShape ?? "rounded",
         searchOpacity: row.searchOpacity ?? 1,
@@ -71,11 +76,16 @@ export class PreferencesService {
 
     async update(
         userId: string,
-        updates: Partial<PreferencesDto>,
+        updates: Partial<Omit<PreferencesDto, "style">> & {
+            style?: StylePreset | LegacyStylePreset;
+        },
     ): Promise<PreferencesDto> {
-        const { webAppHomeLimit, ...rest } = updates;
+        const { webAppHomeLimit, style, ...rest } = updates;
         const values = {
             ...rest,
+            ...(style === undefined
+                ? {}
+                : { style: normalizeStylePreset(style) }),
             ...(webAppHomeLimit === undefined ? {} : {
                 webAppHomeLimit: String(webAppHomeLimit) as
                     | "8"

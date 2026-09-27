@@ -1,7 +1,7 @@
 import type * as React from "react";
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 import { cn } from "../../lib/utils.ts";
-import { Button, type ButtonProps } from "./button.tsx";
+import { Button, type ButtonProps, buttonVariants } from "./button.tsx";
 
 function AlertDialog(
     { ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>,
