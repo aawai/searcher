@@ -52,6 +52,7 @@
 - [Observation: 添加 APP 对话框 UI/UX 精致化与实页验证](obs-2026-09-26-app-ui-ux.md)
 - [Observation: Searcher UI 重构与克制效率工具落地完成](obs-2026-09-26-searcher-ui.md)
 - [Observation: 2026-09-27 Searcher UI 实页复核发现工作区关键偏差](obs-2026-09-27-2026-09-27-searcher-ui.md)
+- [Observation: 主题配色与多层级 Accent Scale 重构](obs-2026-09-27-accent-scale.md)
 - [Observation: Searcher 组件形态联动与多行文本/容器边界保护](obs-2026-09-27-searcher.md)
 - [Observation: Workspace Layout & Style Architecture Decision](obs-2026-09-27-workspace-layout-style-architecture-decision.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

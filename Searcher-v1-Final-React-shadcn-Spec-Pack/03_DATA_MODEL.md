@@ -38,7 +38,7 @@ ai_default_model_id nullable
 ai_history_enabled
 theme
 style
-accent
+accent text check in ('blue','cyan','teal','violet','orange','mono','rose','emerald','amber') default 'blue'
 search_shape
 webapp_icon_size
 show_app_labels boolean default true

@@ -1003,7 +1003,7 @@ export function AdminPage() {
                                                                 fontWeight: 650,
                                                                 background:
                                                                     isAdmin
-                                                                        ? "color-mix(in srgb, var(--accent) 15%, var(--surface))"
+                                                                        ? "var(--accent-subtle)"
                                                                         : "var(--surface-soft)",
                                                                 color: isAdmin
                                                                     ? "var(--accent)"

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-27T07:19:01.389Z",
+  "last_updated": "2026-09-27T13:44:06.704Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -743,6 +743,24 @@
       "relevance": "high",
       "observed_at": "2026-09-27T00:42:38.925Z",
       "source_context": ".omp/plans/SEARCHER_UI_REDESIGN_PLAN.md; isolated browser 127.0.0.1:34570",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
+    },
+    "sources/obs-2026-09-27-accent-scale": {
+      "type": "source",
+      "title": "Observation: 主题配色与多层级 Accent Scale 重构",
+      "tags": [
+        "design-system",
+        "theme",
+        "accent-scale",
+        "ui-ux",
+        "database-migration"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-27-accent-scale",
+      "relevance": "high",
+      "observed_at": "2026-09-27T13:44:06.687Z",
+      "source_context": "用户反馈主题配色寡淡单调没有层次，重构强调色设计体系并扩展多样化色板",
       "created": "2026-09-27",
       "updated": "2026-09-27"
     },

@@ -214,15 +214,15 @@
 
 .layout-mode-card:hover {
     background: var(--surface);
-    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    border-color: var(--accent-border);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
 }
 
 .layout-mode-card[data-active="true"] {
-    background: var(--surface);
+    background: var(--accent-soft);
     border-color: var(--accent);
-    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--accent-glow);
 }
 
 .layout-mode-preview {

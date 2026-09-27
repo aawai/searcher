@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { EngineId } from "@shared/engines.ts";
+import { ACCENT_IDS } from "@shared/contracts.ts";
 import { FloatingNotes } from "../components/searcher/FloatingNotes.tsx";
 import { NoteCard, type NoteItem } from "../components/searcher/NoteCard.tsx";
 import { SearcherSearchInput } from "../components/searcher/SearcherSearchInput.tsx";
@@ -47,7 +48,7 @@ const notes: NoteItem[] = [{
 }];
 const themes = ["system", "light", "dark"] as const,
     styles = ["quiet", "minimal", "glass", "soft", "classic"] as const,
-    accents = ["blue", "cyan", "teal", "violet", "orange", "mono"] as const,
+    accents = ACCENT_IDS,
     shapes = ["rounded", "pill"] as const;
 export function DesignLab() {
     const { appearance: savedAppearance } = useAppState();

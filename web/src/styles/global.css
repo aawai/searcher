@@ -61,6 +61,7 @@ a {
 .switch[data-checked] {
     background: var(--accent);
     border-color: var(--accent);
+    box-shadow: var(--accent-glow);
 }
 .switch[data-disabled] {
     opacity: .5;
@@ -102,13 +103,13 @@ a {
 }
 .radio-item:hover {
     background: var(--surface);
-    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    border-color: var(--accent-border);
 }
 .radio-item[data-checked] {
     border-color: var(--accent);
     color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft));
-    box-shadow: inset 0 0 0 1px var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent), var(--accent-glow);
 }
 .radio-item:focus-visible {
     outline: 2px solid var(--ring);
@@ -179,7 +180,7 @@ a {
     border-radius: 999px;
     border: 2px solid var(--accent);
     background: var(--surface);
-    box-shadow: 0 1px 4px #0004;
+    box-shadow: 0 1px 4px #0004, var(--accent-glow);
 }
 .slider-thumb:focus-visible {
     outline: 2px solid var(--ring);
@@ -278,11 +279,16 @@ a {
     }
 }
 .button--primary {
-    background: var(--accent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, #fff), var(--accent));
     color: var(--accent-foreground);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), var(--accent-glow);
+    border: 1px solid color-mix(in srgb, var(--accent) 80%, transparent);
 }
 .button--primary:hover {
-    filter: brightness(.94);
+    background: var(--accent-hover);
+}
+.button--primary:active {
+    background: var(--accent-active);
 }
 .button--subtle {
     border-color: var(--border);
@@ -324,10 +330,14 @@ a {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(145deg,#dce9ee,#ebf0f5 52%,#e3eaf2);
+    background:
+        radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 68%),
+        linear-gradient(155deg, color-mix(in srgb, var(--accent) 3%, #f4f4f5), #fafafa 52%, color-mix(in srgb, var(--accent) 4%, #e4e4e7));
 }
 [data-theme="dark"] .wallpaper {
-    background: linear-gradient(145deg,#162633,#16202d 55%,#253043);
+    background:
+        radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 74%),
+        linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%, #18181b), #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b));
 }
 .wallpaper::before {
     content: "";
@@ -366,8 +376,8 @@ a {
     padding: 8px 16px;
     font-size: 13px;
     color: var(--foreground);
-    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-    border-bottom: 1px solid var(--border);
+    background: var(--accent-soft);
+    border-bottom: 1px solid var(--accent-border);
     position: relative;
     z-index: 10;
 }
@@ -446,7 +456,7 @@ a {
     height: 32px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    background: var(--accent-subtle);
     color: var(--accent);
     font-weight: 700;
     font-size: 13px;
@@ -554,7 +564,7 @@ a {
     height: 23px;
     display: grid;
     place-items: center;
-    background: color-mix(in srgb,var(--accent) 13%,transparent);
+    background: var(--accent-subtle);
     color: var(--accent);
     border-radius: var(--control-radius);
 }
@@ -659,7 +669,7 @@ a {
     flex-shrink: 0;
 }
 .suggestion-item.active .suggestion-badge {
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    background: var(--accent-subtle);
     color: var(--accent);
 }
 .engine-menu {
@@ -846,9 +856,9 @@ a {
 }
 .remote-notice {
     padding: 9px 12px;
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-border);
     border-radius: 8px;
-    background: color-mix(in srgb,var(--accent) 12%,var(--surface));
+    background: var(--accent-soft);
     font-size: 13px;
     margin: 10px 0;
 }
@@ -2691,7 +2701,7 @@ a {
 }
 .app-upload-dropzone:hover {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+    background: var(--accent-soft);
 }
 .app-upload-icon {
     color: var(--muted);
@@ -2863,8 +2873,8 @@ a {
 }
 .app-ai-candidate-card.is-selected {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-    box-shadow: 0 0 0 1px var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent), var(--accent-glow);
 }
 .app-ai-candidate-img-box {
     width: 100%;

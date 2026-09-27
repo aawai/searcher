@@ -14,6 +14,7 @@ import {
     Upload,
 } from "lucide-react";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
+import { ACCENTS } from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
     Dialog,
@@ -47,14 +48,9 @@ const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     data: { label: "数据与同步", icon: RefreshCw },
 };
 
-const ACCENT_COLORS: Record<string, string> = {
-    blue: "#326cae",
-    cyan: "#047b92",
-    teal: "#117968",
-    violet: "#7354b3",
-    orange: "#ae602e",
-    mono: "#465461",
-};
+function getAccentLight(id: string): string {
+    return ACCENTS.find((a) => a.id === id)?.light ?? "var(--accent)";
+}
 
 function Choices<T extends string>(
     {
@@ -151,7 +147,7 @@ function Choices<T extends string>(
                                 aria-label={label}
                                 className={`flex items-center gap-2 p-2 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] text-sm cursor-pointer transition-colors ${
                                     isSelected
-                                        ? "border-[var(--accent)] ring-1 ring-[var(--accent)] font-semibold"
+                                        ? "border-[var(--accent)] ring-1 ring-[var(--accent)] bg-[var(--accent-soft)] font-semibold shadow-[var(--accent-glow)]"
                                         : "hover:bg-[var(--surface-soft)]"
                                 }`}
                             >
@@ -161,8 +157,7 @@ function Choices<T extends string>(
                                         width: 12,
                                         height: 12,
                                         borderRadius: "50%",
-                                        background: ACCENT_COLORS[id] ||
-                                            "#326cae",
+                                        background: getAccentLight(id),
                                         flexShrink: 0,
                                     }}
                                     aria-hidden="true"
@@ -399,14 +394,10 @@ export function SettingsPage() {
                                             description="设置按钮、焦点环与激活标签的主题强调色"
                                             control="swatches"
                                             value={appearance.accent}
-                                            values={[
-                                                ["blue", "经典蓝"],
-                                                ["cyan", "天青蓝"],
-                                                ["teal", "鸭翅绿"],
-                                                ["violet", "紫罗兰"],
-                                                ["orange", "暖晨橙"],
-                                                ["mono", "单色黑白"],
-                                            ] as const}
+                                            values={ACCENTS.map((a) => [
+                                                a.id,
+                                                a.label,
+                                            ])}
                                             select={(v) => set("accent", v)}
                                         />
                                         <div

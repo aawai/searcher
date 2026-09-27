@@ -239,3 +239,6 @@
 ## [2026-09-27T07:19:01.374Z] observe
 - slug: "obs-2026-09-27-searcher", title: "Searcher 组件形态联动与多行文本/容器边界保护", relevance: "high"
 
+## [2026-09-27T13:44:06.689Z] observe
+- slug: "obs-2026-09-27-accent-scale", title: "主题配色与多层级 Accent Scale 重构", relevance: "high"
+

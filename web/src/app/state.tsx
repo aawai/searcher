@@ -8,6 +8,8 @@ import {
     useState,
 } from "react";
 import {
+    type AccentId,
+    normalizeAccent,
     normalizeStylePreset,
     type PreferencesDto,
     type StylePreset,
@@ -20,7 +22,7 @@ import { getLocal, listLocalKeys, setLocal } from "../lib/local.ts";
 export type Appearance = {
     theme: "system" | "light" | "dark";
     style: StylePreset;
-    accent: "blue" | "cyan" | "teal" | "violet" | "orange" | "mono";
+    accent: AccentId;
     shape: "rounded" | "pill";
     searchOpacity: number;
     showTitle?: boolean;
@@ -78,7 +80,12 @@ function getInitialAppearance(): Appearance {
         const raw = localStorage.getItem("visitor_appearance");
         if (raw) {
             const parsed = JSON.parse(raw);
-            return { ...initial, ...parsed };
+            return {
+                ...initial,
+                ...parsed,
+                style: normalizeStylePreset(parsed.style),
+                accent: normalizeAccent(parsed.accent),
+            };
         }
     } catch {
         // fallback
@@ -103,6 +110,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     ...prev,
                     ...saved,
                     style: normalizeStylePreset(saved.style),
+                    accent: normalizeAccent(saved.accent),
                 }));
             }
         });
@@ -150,7 +158,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     engine: prefs.defaultEngine,
                     theme: prefs.theme,
                     style: normalizeStylePreset(prefs.style),
-                    accent: prefs.accent,
+                    accent: normalizeAccent(prefs.accent),
                     shape: prefs.searchShape,
                     searchOpacity: prefs.searchOpacity ?? 1,
                     target: prefs.searchTarget === "new"

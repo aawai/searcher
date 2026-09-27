@@ -855,10 +855,11 @@ export function AccountPage() {
                                                     gap: "12px",
                                                     padding: "16px 18px",
                                                     borderRadius: "12px",
-                                                    border:
-                                                        "1px solid var(--border)",
+                                                    border: device.isCurrent
+                                                        ? "1px solid var(--accent-border)"
+                                                        : "1px solid var(--border)",
                                                     background: device.isCurrent
-                                                        ? "color-mix(in srgb, var(--accent) 7%, var(--surface-solid))"
+                                                        ? "var(--accent-soft)"
                                                         : "var(--surface-solid)",
                                                 }}
                                             >

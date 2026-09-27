@@ -65,9 +65,12 @@ token 与 wrapper 控制。
 
 ## 5. Design Tokens
 
-建议语义
-token：background、foreground、surface-0/1/glass、border、ring、accent、success、danger、radius-*、spacing、typography。
-
+建议语义 token：
+- **基础表面与文字**：`--background`、`--foreground`、`--surface`、`--surface-soft`、`--surface-solid`、`--border`、`--ring`、`--muted`；
+- **多层级 Accent Scale 阶梯**：`--accent`（主焦点/主按钮）、`--accent-hover`、`--accent-active`、`--accent-soft`（8%~12% 场域底色/卡片激活态）、`--accent-subtle`（15%~20% 次级底色/徽标）、`--accent-border`（柔和轮廓线）、`--accent-glow`（色相软阴影）、`--accent-foreground`（独立色相对比度校准）；
+- **环境光壁纸**：纯中性 Zinc 基底自适应融合当前强调色漫反射微光（浅色 7%，深色 14%）；
+- **功能状态**：`--success`、`--danger`；
+- **度量与排版**：`--radius-*`、`--control-radius`、`--sheet-width`、spacing、typography。
 ## 6. Style Presets
 
 Quiet：Searcher 默认，calm / neutral / spacious / subtle border/shadow。

@@ -61,7 +61,17 @@ export const preferences = sqliteTable("preferences", {
         enum: ["zen", "widgets"],
     }).default("zen"),
     accent: text("accent", {
-        enum: ["blue", "cyan", "teal", "violet", "orange", "mono"],
+        enum: [
+            "blue",
+            "cyan",
+            "teal",
+            "violet",
+            "orange",
+            "mono",
+            "rose",
+            "emerald",
+            "amber",
+        ],
     }).default("blue"),
     searchShape: text("search_shape", {
         enum: ["rounded", "pill"],
@@ -103,7 +113,7 @@ export const preferences = sqliteTable("preferences", {
     ),
     check(
         "preferences_accent_check",
-        sql`${t.accent} in ('blue','cyan','teal','violet','orange','mono')`,
+        sql`${t.accent} in ('blue','cyan','teal','violet','orange','mono','rose','emerald','amber')`,
     ),
     check(
         "preferences_shape_check",
