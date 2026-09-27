@@ -385,14 +385,14 @@ Deno.test({
             });
             assertEquals(getDeletedRes.status, STATUS_CODE.NotFound);
 
-            // Oldest wallpaperUrl was evicted earlier by step 10 uploads
+            // The original image is still within the five-image history.
             const getEvictedRes = await app.request(wallpaperUrl!, {
                 method: "GET",
                 headers: {
                     cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
                 },
             });
-            assertEquals(getEvictedRes.status, STATUS_CODE.NotFound);
+            assertEquals(getEvictedRes.status, STATUS_CODE.OK);
             await store.close();
         } finally {
             await Deno.remove(tempDir, { recursive: true }).catch(() => {});
@@ -477,12 +477,8 @@ Deno.test({
             prefix: "searcher_test_quota_",
         });
         try {
-            let fakeTime = 10000;
-            // Deterministic clock advancement to ensure strict monotonic ordering
-            const clock = () => {
-                fakeTime += 1000;
-                return fakeTime;
-            };
+            // Multiple uploads can share the same timestamp; order must still be newest first.
+            const clock = () => 10000;
 
             const { store, app } = await setupTestApp(
                 tempDir,
@@ -492,7 +488,7 @@ Deno.test({
             const user = await createTestUser(app, "quota_user");
 
             const urls: string[] = [];
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 6; i++) {
                 const imgData = new Uint8Array([
                     ...PNG_HEADER,
                     100 + i,
@@ -519,6 +515,29 @@ Deno.test({
                 urls.push(body.data!.url);
             }
 
+            const history = await app.request("/api/wallpaper", {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${user.token}` },
+            });
+            assertEquals(history.status, STATUS_CODE.OK);
+            const listed = await history.json() as Envelope<{ url: string }[]>;
+            assertEquals(
+                listed.data,
+                urls.slice(1).reverse().map((url) => ({ url })),
+            );
+
+            const other = await createTestUser(app, "another_quota_user");
+            const otherHistory = await app.request("/api/wallpaper", {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${other.token}` },
+            });
+            assertEquals(
+                (await otherHistory.json() as Envelope<{ url: string }[]>).data,
+                [],
+            );
+            assertEquals(
+                (await app.request("/api/wallpaper")).status,
+                STATUS_CODE.Unauthorized,
+            );
+
             // Url 0 (oldest) should have been evicted
             const firstId = urls[0].replace("/api/wallpaper/", "");
             const firstFileExists = await Deno.stat(
@@ -537,8 +556,8 @@ Deno.test({
             });
             assertEquals(getOldestRes.status, STATUS_CODE.NotFound);
 
-            // Urls 1, 2, 3 must still exist
-            for (let i = 1; i <= 3; i++) {
+            // The five newest images remain accessible.
+            for (let i = 1; i <= 5; i++) {
                 const getRes = await app.request(urls[i], {
                     headers: {
                         cookie: `${SESSION_COOKIE_NAME}=${user.token}`,
@@ -552,12 +571,12 @@ Deno.test({
                 assertEquals(exists, true);
             }
 
-            // Manifest should have exactly 3 entries
+            // Manifest retains the five most recent uploads.
             const manifestContent = await Deno.readTextFile(
                 join(tempDir, "manifest.json"),
             );
             const manifest = JSON.parse(manifestContent);
-            assertEquals(manifest.length, 3);
+            assertEquals(manifest.length, 5);
 
             await store.close();
         } finally {

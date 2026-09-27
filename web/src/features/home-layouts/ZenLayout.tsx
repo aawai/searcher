@@ -47,9 +47,16 @@ export function ZenLayout(props: HomeLayoutProps) {
     return (
         <>
             <section
-                className="hero hero--zen hero--no-title"
+                className={appearance.showTitle === false
+                    ? "hero hero--zen hero--no-title"
+                    : "hero hero--zen"}
                 aria-label="搜索"
             >
+                {appearance.showTitle !== false && (
+                    <div className="hero-title" aria-hidden="true">
+                        Searcher<span>.</span>
+                    </div>
+                )}
                 <SearcherSearchInput
                     engine={engine}
                     onEngineChange={setEngine}

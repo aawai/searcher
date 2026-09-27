@@ -142,7 +142,11 @@ export function DesignLab() {
                                 e.target.value as Appearance["shape"],
                             )}
                     >
-                        {shapes.map((v) => <option key={v}>{v}</option>)}
+                        {shapes.map((v) => (
+                            <option key={v} value={v}>
+                                {v === "rounded" ? "默认" : "胶囊"}
+                            </option>
+                        ))}
                     </select>
                 </label>
                 <label>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
     buildSearchUrl,
@@ -1654,43 +1655,46 @@ export function SearchHome() {
                                                 })}
                                             </div>
                                         </SortableContext>
-                                        <DragOverlay>
-                                            {activeDrawerNote
-                                                ? (
-                                                    <div
-                                                        className="note-drag-overlay"
-                                                        style={{
-                                                            width:
-                                                                `${notesMasonryLayout.columnWidth}px`,
-                                                        }}
-                                                    >
-                                                        <NoteCard
-                                                            note={activeDrawerNote}
-                                                            dragHandle={
-                                                                <span
-                                                                    className="note-drag"
-                                                                    style={{
-                                                                        border:
-                                                                            0,
-                                                                        background:
-                                                                            "transparent",
-                                                                        padding:
-                                                                            0,
-                                                                        cursor:
-                                                                            "grabbing",
-                                                                    }}
-                                                                >
-                                                                    <GripVertical
-                                                                        size={15}
-                                                                        aria-hidden="true"
-                                                                    />
-                                                                </span>
-                                                            }
-                                                        />
-                                                    </div>
-                                                )
-                                                : null}
-                                        </DragOverlay>
+                                        {createPortal(
+                                            <DragOverlay style={{ zIndex: 60 }}>
+                                                {activeDrawerNote
+                                                    ? (
+                                                        <div
+                                                            className="note-drag-overlay"
+                                                            style={{
+                                                                width:
+                                                                    `${notesMasonryLayout.columnWidth}px`,
+                                                            }}
+                                                        >
+                                                            <NoteCard
+                                                                note={activeDrawerNote}
+                                                                dragHandle={
+                                                                    <span
+                                                                        className="note-drag"
+                                                                        style={{
+                                                                            border:
+                                                                                0,
+                                                                            background:
+                                                                                "transparent",
+                                                                            padding:
+                                                                                0,
+                                                                            cursor:
+                                                                                "grabbing",
+                                                                        }}
+                                                                    >
+                                                                        <GripVertical
+                                                                            size={15}
+                                                                            aria-hidden="true"
+                                                                        />
+                                                                    </span>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )
+                                                    : null}
+                                            </DragOverlay>,
+                                            document.body,
+                                        )}
                                     </DndContext>
                                 )
                                 : (
