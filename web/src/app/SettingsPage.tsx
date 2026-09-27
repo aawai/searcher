@@ -16,6 +16,7 @@ import {
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import { Button } from "../components/ui/button.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Slider } from "../components/ui/slider.tsx";
 import { Separator } from "../components/ui/separator.tsx";
@@ -26,6 +27,7 @@ import {
 } from "../components/ui/native-select.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
+import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
 
 type Tab = "search" | "appearance" | "ai" | "data";
 
@@ -99,22 +101,18 @@ function Choices<T extends string>(
                     )}
                 </div>
                 <div className="settings-row-control">
-                    <RadioGroup
+                    <Tabs
                         value={value}
                         onValueChange={(next) => select(next as T)}
-                        className="flex items-center gap-1.5 flex-wrap"
-                        aria-label={title}
                     >
-                        {values.map(([id, label]) => (
-                            <RadioGroupItem
-                                key={id}
-                                value={id}
-                                aria-label={label}
-                            >
-                                {label}
-                            </RadioGroupItem>
-                        ))}
-                    </RadioGroup>
+                        <TabsList>
+                            {values.map(([id, label]) => (
+                                <TabsTrigger key={id} value={id}>
+                                    {label}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
                 </div>
             </div>
         );
@@ -372,20 +370,28 @@ export function SettingsPage() {
                                         ] as const}
                                         select={(v) => set("accent", v)}
                                     />
-                                    <Choices
-                                        title="界面风格"
-                                        description="调整工作区、卡片与搜索框的圆角、质感与阴影"
-                                        control="select"
-                                        value={appearance.style}
-                                        values={[
-                                            ["quiet", "默认 (Quiet)"],
-                                            ["minimal", "极简 (Minimal)"],
-                                            ["glass", "毛玻璃 (Glass)"],
-                                            ["soft", "柔和 (Soft)"],
-                                            ["classic", "经典 (Classic)"],
-                                        ] as const}
-                                        select={(v) => set("style", v)}
-                                    />
+                                    <div
+                                        className="settings-row"
+                                        style={{
+                                            flexDirection: "column",
+                                            alignItems: "stretch",
+                                            gap: "10px",
+                                        }}
+                                    >
+                                        <div className="settings-row-label">
+                                            <span className="settings-row-title">
+                                                主页工作区风格
+                                            </span>
+                                            <p className="settings-row-desc">
+                                                切换主页的信息架构、排版密度与交互模式
+                                            </p>
+                                        </div>
+                                        <LayoutModeSelector
+                                            value={appearance.style}
+                                            onChange={(newStyle) =>
+                                                set("style", newStyle)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

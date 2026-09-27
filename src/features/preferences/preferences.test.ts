@@ -41,7 +41,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
             },
             body: JSON.stringify({
                 theme: "dark",
-                style: "glass",
+                style: "widgets",
                 accent: "violet",
                 searchShape: "pill",
                 searchOpacity: 0.85,
@@ -56,7 +56,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         });
         assertEquals(response.status, 200);
         const saved = await response.json() as Envelope<PreferencesDto>;
-        assertEquals(saved.data?.style, "glass");
+        assertEquals(saved.data?.style, "widgets");
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.searchOpacity, 0.85);
@@ -75,7 +75,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(partial.status, 200);
         const changed = await partial.json() as Envelope<PreferencesDto>;
         assertEquals(changed.data?.wallpaperMask, 0.4);
-        assertEquals(changed.data?.style, "glass");
+        assertEquals(changed.data?.style, "widgets");
         assertEquals(changed.data?.accent, "violet");
         assertEquals(changed.data?.searchOpacity, 0.85);
         assertEquals(changed.data?.defaultEngine, "google");
@@ -86,7 +86,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
             headers: { cookie: second },
         });
         const isolated = await other.json() as Envelope<PreferencesDto>;
-        assertEquals(isolated.data?.style, "quiet");
+        assertEquals(isolated.data?.style, "zen");
         assertEquals(isolated.data?.defaultEngine, "bing");
         assertEquals(isolated.data?.searchOpacity, 1);
         assertEquals(isolated.data?.webAppHomeLimit, 12);

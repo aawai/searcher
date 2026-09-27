@@ -34,18 +34,16 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { BottomNavigation } from "../components/searcher/BottomNavigation.tsx";
-import { FloatingNotes } from "../components/searcher/FloatingNotes.tsx";
+import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
+import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
+import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
 import { AppFormDialog } from "../components/searcher/AppFormDialog.tsx";
 import { WebAppLauncher } from "../components/searcher/WebAppLauncher.tsx";
 import { mergeVisibleOrder } from "../components/searcher/launcherTiles.ts";
 import { NoteCard, type NoteItem } from "../components/searcher/NoteCard.tsx";
 import { NoteEditor } from "../components/searcher/NoteEditor.tsx";
 import { useMasonryLayout } from "../components/searcher/masonry.ts";
-import {
-    type Reachability,
-    SearcherSearchInput,
-} from "../components/searcher/SearcherSearchInput.tsx";
+import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import { type WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
 import {
@@ -438,7 +436,13 @@ export function SearchHome() {
             globalThis.open(url, "_blank", "noopener,noreferrer");
         } else globalThis.location.assign(url);
     }
-    function openApp(app: ExtendedWebApp) {
+    function openApp(
+        app: {
+            name: string;
+            url: string;
+            openMode?: "current" | "new_tab" | "global" | null;
+        },
+    ) {
         const urlStr = /^https?:\/\//i.test(app.url)
             ? app.url
             : `https://${app.url}`;
@@ -887,6 +891,7 @@ export function SearchHome() {
             );
             setNotes((items) => [note, ...items]);
             setEditing(note);
+            setSheet("notes");
         } catch (e) {
             setError(errorMessage(e));
         }
@@ -977,44 +982,51 @@ export function SearchHome() {
         }
     }
 
+    const layoutStyle = appearance.style; // "command" | "zen" | "widgets"
+    const layoutProps: HomeLayoutProps = {
+        user,
+        appearance,
+        engine,
+        setEngine,
+        mode,
+        setMode,
+        reachability,
+        isCheckingConnections,
+        onCheckConnections: checkConnections,
+        search,
+        apps,
+        pinned,
+        groups,
+        appsStatus,
+        appsError,
+        onReloadApps: () => setReloadApps((count) => count + 1),
+        notes,
+        fixedNotes,
+        isManagingApps,
+        setIsManagingApps,
+        openApp,
+        openAddModal,
+        openEditModal,
+        reorderPinned,
+        togglePinApp,
+        softDeleteApp,
+        moveAppGroup,
+        createNote,
+        editNote,
+        deleteNote,
+        updateNote,
+        updateNoteLayout,
+        sheet,
+        setSheet,
+        setFilter,
+        setActiveGroupFilter,
+        setFormPresentation,
+        error,
+        setError,
+    };
+
     return (
-        <main className="home">
-            <section
-                className={`hero ${
-                    appearance.showTitle === false ? "hero--no-title" : ""
-                }`}
-                aria-label="搜索"
-            >
-                {appearance.showTitle !== false && (
-                    <h1 className="hero-title">
-                        Searcher<span>.</span>
-                    </h1>
-                )}
-                <SearcherSearchInput
-                    engine={engine}
-                    onEngineChange={setEngine}
-                    mode={mode}
-                    onModeChange={(next) => {
-                        if (next === "ai" && !user) {
-                            setError("登录后使用 AI 问答");
-                            return;
-                        }
-                        setMode(next);
-                    }}
-                    onSubmit={search}
-                    disabled={isManagingApps}
-                    reachability={reachability}
-                    onCheck={() => void checkConnections()}
-                    isChecking={isCheckingConnections}
-                    webApps={apps}
-                    onOpenApp={(app) => openApp(app as ExtendedWebApp)}
-                />
-                {mode === "ai" && (
-                    <p className="hero-caption">
-                        问你所想，回答将在独立对话中展开
-                    </p>
-                )}
-            </section>
+        <main className={`home home--${layoutStyle}`}>
             {error && (
                 <div role="alert" className="home-error">
                     <span>{error}</span>
@@ -1028,104 +1040,9 @@ export function SearchHome() {
                 </div>
             )}
 
-            {user && (
-                appsStatus === "loading" ||
-                appsStatus === "error" ||
-                (appsStatus === "offline" && pinned.length > 0) ||
-                pinned.length > 0 ||
-                fixedNotes.length > 0
-            ) && (
-                <section className="pinned-area" aria-label="固定的个人内容">
-                    {appsStatus === "loading" && (
-                        <p role="status" className="launcher-empty">
-                            正在加载常用网站…
-                        </p>
-                    )}
-                    {appsStatus === "error" && (
-                        <div role="alert" className="launcher-empty">
-                            网站加载失败：{appsError}{" "}
-                            <Button
-                                variant="outline"
-                                onClick={() =>
-                                    setReloadApps((count) =>
-                                        count + 1
-                                    )}
-                            >
-                                重试
-                            </Button>
-                        </div>
-                    )}
-                    {appsStatus === "offline" && (
-                        <p role="status" className="launcher-notice">
-                            当前离线，显示此账户上次保存的网站列表；更改需联网。
-                        </p>
-                    )}
-                    {(appsStatus === "ready" || appsStatus === "offline") &&
-                        pinned.length > 0 && (
-                        <WebAppLauncher
-                            apps={pinned}
-                            groups={groups}
-                            showFolders={false}
-                            size={appearance.webAppIconSize}
-                            showAppLabels={appearance.showAppLabels}
-                            managing={isManagingApps}
-                            onToggleManaging={() =>
-                                setIsManagingApps((value) => !value)}
-                            onResetLayout={() =>
-                                void reorderPinned(
-                                    [...pinned].sort((a, b) =>
-                                        (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-                                    ).map((app) => app.id),
-                                )}
-                            onOpen={openApp}
-                            onEdit={(app) => {
-                                setFormPresentation("dialog");
-                                openEditModal(app);
-                            }}
-                            onMove={(app, groupId) =>
-                                void moveAppGroup(app, groupId)}
-                            onPin={(app) => void togglePinApp(app)}
-                            onDelete={(app) => void softDeleteApp(app)}
-                            onReorder={(ids) => void reorderPinned(ids)}
-                            onAdd={() => {
-                                setSheet("apps");
-                                setFormPresentation("panel");
-                                openAddModal();
-                            }}
-                        />
-                    )}
-                    <FloatingNotes
-                        notes={fixedNotes}
-                        onOpen={editNote}
-                        onUpdateLayout={(n, layout) =>
-                            void updateNoteLayout(n, layout)}
-                        onTogglePin={(n) =>
-                            void updateNote(n, { isPinned: !n.isPinned })}
-                        onToggleHomeFixed={(n) =>
-                            void updateNote(n, {
-                                isHomeFixed: !n.isHomeFixed,
-                            })}
-                        onChangeColor={(n, color) =>
-                            void updateNote(n, { color })}
-                        onDelete={(n) => void deleteNote(n)}
-                    />
-                </section>
-            )}
-
-            {user && (
-                <BottomNavigation
-                    onApps={() => {
-                        setSheet("apps");
-                        setFilter("");
-                        setActiveGroupFilter("all");
-                    }}
-                    onNotes={() => {
-                        setSheet("notes");
-                        setFilter("");
-                    }}
-                />
-            )}
-
+            {layoutStyle === "widgets"
+                ? <WidgetsLayout {...layoutProps} />
+                : <ZenLayout {...layoutProps} />}
             {/* Web App Sheet */}
             <ContentSheet
                 open={sheet === "apps"}

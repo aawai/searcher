@@ -14,7 +14,6 @@ import { Button } from "../ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { Switch } from "../ui/switch.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
@@ -514,25 +513,26 @@ export function AppFormDialog({
 
                     <div className="field" style={{ margin: 0 }}>
                         <label>打开方式</label>
-                        <RadioGroup
+                        <Tabs
                             value={appOpenMode}
                             onValueChange={(val) =>
                                 setAppOpenMode(
                                     val as "global" | "current" | "new_tab",
                                 )}
-                            className="flex items-center gap-4 pt-1"
-                            aria-label="打开方式"
+                            className="pt-1 w-full"
                         >
-                            <RadioGroupItem value="global">
-                                跟随全局
-                            </RadioGroupItem>
-                            <RadioGroupItem value="new_tab">
-                                新标签页
-                            </RadioGroupItem>
-                            <RadioGroupItem value="current">
-                                当前标签页
-                            </RadioGroupItem>
-                        </RadioGroup>
+                            <TabsList className="w-full grid grid-cols-3">
+                                <TabsTrigger value="global">
+                                    跟随全局
+                                </TabsTrigger>
+                                <TabsTrigger value="new_tab">
+                                    新标签页
+                                </TabsTrigger>
+                                <TabsTrigger value="current">
+                                    当前标签页
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                         {appOpenMode === "global" && (
                             <p
                                 className="app-dialog-helper-text"

@@ -12,7 +12,16 @@ const Engine = v.optional(
 );
 const Theme = v.optional(v.picklist(["system", "light", "dark"]));
 const Style = v.optional(
-    v.picklist(["quiet", "minimal", "glass", "soft", "classic"]),
+    v.picklist([
+        "command",
+        "zen",
+        "widgets",
+        "quiet",
+        "minimal",
+        "glass",
+        "soft",
+        "classic",
+    ]),
 );
 const Accent = v.optional(
     v.picklist(["blue", "cyan", "teal", "violet", "orange", "mono"]),
