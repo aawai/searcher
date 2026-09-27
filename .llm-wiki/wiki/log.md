@@ -2,6 +2,7 @@
 
 ## 2026-09-27
 
+- **observe**: {"relevance":"high","slug":"obs-2026-09-27-searcher","title":"Searcher 组件形态联动与多行文本/容器边界保护"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/react-19-actions-and-transitions","title":"React 19 Actions and Transitions"}
 - **ensure\_page**: {"page_type":"entity","path":"entities/react-19-framework","title":"React 19 Framework"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-27-005","url":"https://docs.deno.com/examples/hono/"}

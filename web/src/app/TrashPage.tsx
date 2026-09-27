@@ -303,7 +303,7 @@ export function TrashPage() {
                                     {webapps.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="p-3.5 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] flex flex-col gap-2"
+                                            className="p-3.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-solid)] flex flex-col gap-2"
                                         >
                                             <div>
                                                 <div className="font-semibold text-sm text-[var(--foreground)]">
@@ -461,7 +461,7 @@ export function TrashPage() {
                                     {notes.map((note) => (
                                         <div
                                             key={note.id}
-                                            className="p-3.5 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] flex flex-col gap-2"
+                                            className="p-3.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-solid)] flex flex-col gap-2"
                                         >
                                             <div>
                                                 <div className="font-semibold text-sm text-[var(--foreground)]">

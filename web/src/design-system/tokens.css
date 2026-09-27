@@ -111,6 +111,7 @@
 [data-style="command"],
 [data-style="zen"] {
     --radius: 16px;
+
     --shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.1);
 }
 [data-theme="dark"][data-style="command"],
@@ -119,6 +120,7 @@
 }
 [data-style="widgets"] {
     --radius: 22px;
+
     --surface: color-mix(in srgb, var(--background) 65%, transparent);
     --surface-soft: color-mix(in srgb, var(--background) 78%, transparent);
     --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.35);
@@ -129,21 +131,25 @@
 /* Backwards compatible aliases */
 [data-style="quiet"] {
     --radius: 12px;
+
     --shadow: 0 16px 48px #17202e26;
 }
 [data-style="minimal"] {
     --radius: 16px;
+
     --shadow: none;
 }
 [data-style="glass"],
 [data-style="soft"] {
     --radius: 22px;
+
     --surface: color-mix(in srgb, var(--background) 65%, transparent);
     --surface-soft: color-mix(in srgb, var(--background) 78%, transparent);
     --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.35);
 }
 [data-style="classic"] {
     --radius: 8px;
+
     --shadow: none;
 }
 [data-shape="pill"] {

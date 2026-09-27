@@ -93,7 +93,7 @@ a {
     min-height: 44px;
     padding: 10px 16px;
     border: 1px solid var(--border);
-    border-radius: 9px;
+    border-radius: var(--control-radius);
     background: var(--surface-soft);
     color: var(--foreground);
     font-weight: 600;
@@ -592,6 +592,7 @@ a {
     border: 1px solid var(--border);
     padding: 5px 9px;
     border-radius: var(--control-radius);
+    transition: border-radius .16s;
     font-size: 12px;
     max-width: 135px;
     overflow: hidden;
@@ -678,7 +679,7 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    border-radius: 9px;
+    border-radius: var(--control-radius);
     cursor: pointer;
     outline: 0;
 }
@@ -893,7 +894,7 @@ a {
     background: color-mix(in srgb, var(--surface) 88%, transparent);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    border-radius: 4px;
+    border-radius: var(--control-radius);
     padding: 1px;
     z-index: 5;
 }
@@ -915,7 +916,7 @@ a {
     width: 24px;
     height: 24px;
     padding: 0;
-    border-radius: var(--radius-sm, 4px);
+    border-radius: var(--control-radius);
     display: inline-grid;
     place-items: center;
     cursor: pointer;
@@ -1212,7 +1213,7 @@ a {
     min-height: 44px;
     padding: 8px 12px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--control-radius);
     background: var(--surface-soft);
     color: var(--foreground);
 }
@@ -1228,14 +1229,24 @@ a {
     font-weight: 600;
 }
 .field input,
-.field select,
-.field textarea {
+.field select {
     width: 100%;
     min-height: 40px;
     padding: 8px 12px;
     background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: var(--control-radius);
+    color: var(--foreground);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+.field textarea {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--multiline-radius);
     color: var(--foreground);
     font-size: 14px;
     outline: none;
@@ -1645,7 +1656,7 @@ a {
     border: 1px solid var(--border);
     padding: 8px;
     min-height: 40px;
-    border-radius: 8px;
+    border-radius: var(--control-radius);
 }
 /* Trash Page Styles */
 .trash-header {
@@ -1800,7 +1811,7 @@ a {
     padding: 8px 14px;
     min-height: 38px;
     border: 1px solid var(--border);
-    border-radius: 9px;
+    border-radius: var(--control-radius);
     background: var(--surface-soft);
     color: var(--foreground);
     font-size: 13px;
@@ -1904,7 +1915,7 @@ a {
     color: var(--muted);
     border: 0;
     background: transparent;
-    border-radius: 6px;
+    border-radius: var(--control-radius);
 }
 .group-drag-handle:active {
     cursor: grabbing;
@@ -2589,7 +2600,7 @@ a {
     display: flex;
     background: var(--surface-soft);
     border: 1px solid var(--border);
-    border-radius: 9px;
+    border-radius: var(--control-radius);
     padding: 3px;
     gap: 3px;
 }
@@ -2605,7 +2616,7 @@ a {
     color: var(--muted);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: calc(var(--control-radius) - 3px);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
