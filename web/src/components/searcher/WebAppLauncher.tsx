@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, GripVertical } from "lucide-react";
 import {
     closestCenter,
@@ -706,41 +707,44 @@ export function WebAppLauncher({
                     ))}
                 </div>
             </SortableContext>
-            <DragOverlay>
-                {active && managing
-                    ? (
-                        <div
-                            className={`launcher-overlay launcher-grid--${size}${
-                                showAppLabels
-                                    ? ""
-                                    : " launcher-grid--icons-only"
-                            }${
-                                active.group?.folderSize === "large"
-                                    ? " launcher-overlay--large"
-                                    : ""
-                            }`}
-                        >
-                            {active.app
-                                ? (
-                                    <WebAppIcon
-                                        app={active.app}
-                                        onOpen={onOpen}
-                                        showLabel={showAppLabels}
-                                    />
-                                )
-                                : (
-                                    <FolderView
-                                        tile={active}
-                                        managing={false}
-                                        onFolder={openFolder}
-                                        showAppLabels={showAppLabels}
-                                        onOpen={onOpen}
-                                    />
-                                )}
-                        </div>
-                    )
-                    : null}
-            </DragOverlay>
+            {createPortal(
+                <DragOverlay style={{ zIndex: 60 }}>
+                    {active && managing
+                        ? (
+                            <div
+                                className={`launcher-overlay launcher-grid--${size}${
+                                    showAppLabels
+                                        ? ""
+                                        : " launcher-grid--icons-only"
+                                }${
+                                    active.group?.folderSize === "large"
+                                        ? " launcher-overlay--large"
+                                        : ""
+                                }`}
+                            >
+                                {active.app
+                                    ? (
+                                        <WebAppIcon
+                                            app={active.app}
+                                            onOpen={onOpen}
+                                            showLabel={showAppLabels}
+                                        />
+                                    )
+                                    : (
+                                        <FolderView
+                                            tile={active}
+                                            managing={false}
+                                            onFolder={openFolder}
+                                            showAppLabels={showAppLabels}
+                                            onOpen={onOpen}
+                                        />
+                                    )}
+                            </div>
+                        )
+                        : null}
+                </DragOverlay>,
+                document.body,
+            )}
         </DndContext>
     );
 }

@@ -155,7 +155,7 @@ export class ManifestCorruptionError extends Error {
     }
 }
 
-export const MAX_USER_WALLPAPERS = 3;
+export const MAX_USER_WALLPAPERS = 5;
 
 export class WallpaperService {
     readonly #storageDir: string;
@@ -418,7 +418,8 @@ export class WallpaperService {
                     userList.push(r);
                 }
             }
-            return userList.sort((a, b) => b.createdAt - a.createdAt);
+            // Manifest insertion order breaks timestamp ties in favor of later uploads.
+            return userList.sort((a, b) => a.createdAt - b.createdAt).reverse();
         });
     }
 }

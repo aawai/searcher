@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     Link,
     useNavigate,
@@ -15,6 +15,14 @@ import {
 } from "lucide-react";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import { Button } from "../components/ui/button.tsx";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../components/ui/dialog.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import { Switch } from "../components/ui/switch.tsx";
@@ -25,6 +33,7 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from "../components/ui/native-select.tsx";
+import { api } from "../lib/api.ts";
 import { AiSettings } from "./AiSettings.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
@@ -182,43 +191,70 @@ export function SettingsPage() {
     const { appearance, setAppearance, user } = useAppState();
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [wallpaperHistory, setWallpaperHistory] = useState<string[]>([]);
+    const [previewWallpaper, setPreviewWallpaper] = useState<string | null>(
+        null,
+    );
+    const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
+
+    useEffect(() => {
+        setWallpaperHistory([]);
+        if (!user) return;
+        let cancelled = false;
+        void api<{ url: string }[]>("/api/wallpaper").then((records) => {
+            if (!cancelled) {
+                setWallpaperHistory((current) =>
+                    [
+                        ...current,
+                        ...records.map((record) => record.url).filter((url) =>
+                            !current.includes(url)
+                        ),
+                    ].slice(0, 5)
+                );
+            }
+        }).catch(() => {
+            if (!cancelled) alert("无法加载已上传的图片");
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [user?.id]);
 
     async function handleWallpaperUpload(file: File) {
         if (file.size > 5 * 1024 * 1024) {
             alert("壁纸文件大小不能超过 5MB");
             return;
         }
-        if (!user) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (typeof reader.result === "string") {
-                    set("wallpaper", reader.result);
-                }
-            };
-            reader.onerror = () => {
-                alert("读取本地壁纸文件失败");
-            };
-            reader.readAsDataURL(file);
-            return;
-        }
-        const fd = new FormData();
-        fd.append("image", file);
+        setUploadingWallpaper(true);
         try {
-            const res = await fetch("/api/wallpaper", {
-                method: "POST",
-                body: fd,
-            });
-            const data = await res.json();
-            if (data.status && data.data?.url) {
-                set("wallpaper", data.data.url);
+            let url: string;
+            if (user) {
+                const form = new FormData();
+                form.append("image", file);
+                url = (await api<{ url: string }>("/api/wallpaper", {
+                    method: "POST",
+                    body: form,
+                })).url;
             } else {
-                alert(data.message || "上传壁纸失败");
+                url = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () =>
+                        typeof reader.result === "string"
+                            ? resolve(reader.result)
+                            : reject(new Error("读取本地壁纸文件失败"));
+                    reader.onerror = () =>
+                        reject(new Error("读取本地壁纸文件失败"));
+                    reader.readAsDataURL(file);
+                });
             }
-        } catch (err) {
-            alert(
-                "上传壁纸出错: " +
-                    (err instanceof Error ? err.message : String(err)),
+            set("wallpaper", url);
+            setWallpaperHistory((current) =>
+                [url, ...current.filter((item) => item !== url)].slice(0, 5)
             );
+        } catch (error) {
+            alert(error instanceof Error ? error.message : "上传壁纸失败");
+        } finally {
+            setUploadingWallpaper(false);
         }
     }
     const { tab: pathTab } = useParams<{ tab?: string }>();
@@ -246,615 +282,733 @@ export function SettingsPage() {
     }
 
     return (
-        <main className="page">
-            <h1>设置</h1>
-            <div className="settings-layout">
-                <nav className="settings-nav" aria-label="设置分类">
-                    {(Object.keys(tabs) as Tab[]).map((id) => {
-                        const Icon = tabs[id].icon;
-                        return (
-                            <button
-                                type="button"
-                                key={id}
-                                ref={tab === id ? activeNavButtonRef : null}
-                                onClick={() =>
-                                    navigate(
-                                        id === "search"
-                                            ? "/settings"
-                                            : `/settings/${id}`,
-                                    )}
-                                className={tab === id ? "active" : ""}
-                                aria-current={tab === id ? "page" : undefined}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "10px",
-                                }}
-                            >
-                                <Icon size={18} />
-                                <span>{tabs[id].label}</span>
-                            </button>
-                        );
-                    })}
-                </nav>
-                <section className="settings-panel">
-                    <h2>{tabs[tab].label}</h2>
-                    {tab === "search" && (
-                        <div className="settings-section">
-                            <div className="settings-group">
-                                <h3 className="settings-group-title">
-                                    搜索引擎与打开方式
-                                </h3>
-                                <div className="settings-card">
-                                    <Choices
-                                        title="默认搜索引擎"
-                                        description="选择在搜索框内直接回车时使用的搜索引擎"
-                                        control="select"
-                                        value={appearance.engine}
-                                        values={SEARCH_ENGINES.map((e) =>
-                                            [e.id, e.label] as const
+        <>
+            <main className="page">
+                <h1>设置</h1>
+                <div className="settings-layout">
+                    <nav className="settings-nav" aria-label="设置分类">
+                        {(Object.keys(tabs) as Tab[]).map((id) => {
+                            const Icon = tabs[id].icon;
+                            return (
+                                <button
+                                    type="button"
+                                    key={id}
+                                    ref={tab === id ? activeNavButtonRef : null}
+                                    onClick={() =>
+                                        navigate(
+                                            id === "search"
+                                                ? "/settings"
+                                                : `/settings/${id}`,
                                         )}
-                                        select={(v) =>
-                                            set("engine", v as EngineId)}
-                                    />
-                                    <Choices
-                                        title="搜索结果打开方式"
-                                        description="在当前页面跳转或在新标签页中打开搜索结果"
-                                        control="segmented"
-                                        value={appearance.target}
-                                        values={[
-                                            ["current", "当前标签页打开"],
-                                            ["new_tab", "新标签页打开"],
-                                        ] as const}
-                                        select={(v) => set("target", v)}
-                                    />
-                                    <Choices
-                                        title="首页快捷方式数量"
-                                        description="在搜索主页固定的常用 APP 展示上限"
-                                        control="select"
-                                        value={String(
-                                            appearance.webAppHomeLimit,
-                                        )}
-                                        values={[
-                                            ["8", "8 个"],
-                                            ["12", "12 个"],
-                                            ["16", "16 个"],
-                                            ["all", "全部"],
-                                        ] as const}
-                                        select={(v) =>
-                                            set(
-                                                "webAppHomeLimit",
-                                                v === "all"
-                                                    ? "all"
-                                                    : (Number(v) as
-                                                        | 8
-                                                        | 12
-                                                        | 16),
+                                    className={tab === id ? "active" : ""}
+                                    aria-current={tab === id
+                                        ? "page"
+                                        : undefined}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "10px",
+                                    }}
+                                >
+                                    <Icon size={18} />
+                                    <span>{tabs[id].label}</span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                    <section className="settings-panel">
+                        <h2>{tabs[tab].label}</h2>
+                        {tab === "search" && (
+                            <div className="settings-section">
+                                <div className="settings-group">
+                                    <h3 className="settings-group-title">
+                                        搜索引擎与打开方式
+                                    </h3>
+                                    <div className="settings-card">
+                                        <Choices
+                                            title="默认搜索引擎"
+                                            description="选择在搜索框内直接回车时使用的搜索引擎"
+                                            control="select"
+                                            value={appearance.engine}
+                                            values={SEARCH_ENGINES.map((e) =>
+                                                [e.id, e.label] as const
                                             )}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {tab === "appearance" && (
-                        <div className="settings-section">
-                            <div className="settings-group">
-                                <h3 className="settings-group-title">
-                                    主题与配色
-                                </h3>
-                                <div className="settings-card">
-                                    <Choices
-                                        title="主题模式"
-                                        description="切换浅色、深色模式或跟随系统"
-                                        control="segmented"
-                                        value={appearance.theme}
-                                        values={[
-                                            ["system", "跟随系统"],
-                                            ["light", "浅色"],
-                                            ["dark", "深色"],
-                                        ] as const}
-                                        select={(v) => set("theme", v)}
-                                    />
-                                    <Choices
-                                        title="强调色"
-                                        description="设置按钮、焦点环与激活标签的主题强调色"
-                                        control="swatches"
-                                        value={appearance.accent}
-                                        values={[
-                                            ["blue", "经典蓝"],
-                                            ["cyan", "天青蓝"],
-                                            ["teal", "鸭翅绿"],
-                                            ["violet", "紫罗兰"],
-                                            ["orange", "暖晨橙"],
-                                            ["mono", "单色黑白"],
-                                        ] as const}
-                                        select={(v) => set("accent", v)}
-                                    />
-                                    <div
-                                        className="settings-row"
-                                        style={{
-                                            flexDirection: "column",
-                                            alignItems: "stretch",
-                                            gap: "10px",
-                                        }}
-                                    >
-                                        <div className="settings-row-label">
-                                            <span className="settings-row-title">
-                                                主页工作区风格
-                                            </span>
-                                            <p className="settings-row-desc">
-                                                切换主页的信息架构、排版密度与交互模式
-                                            </p>
-                                        </div>
-                                        <LayoutModeSelector
-                                            value={appearance.style}
-                                            onChange={(newStyle) =>
-                                                set("style", newStyle)}
+                                            select={(v) =>
+                                                set("engine", v as EngineId)}
+                                        />
+                                        <Choices
+                                            title="搜索结果打开方式"
+                                            description="在当前页面跳转或在新标签页中打开搜索结果"
+                                            control="segmented"
+                                            value={appearance.target}
+                                            values={[
+                                                ["current", "当前标签页打开"],
+                                                ["new_tab", "新标签页打开"],
+                                            ] as const}
+                                            select={(v) => set("target", v)}
+                                        />
+                                        <Choices
+                                            title="首页快捷方式数量"
+                                            description="在搜索主页固定的常用 APP 展示上限"
+                                            control="select"
+                                            value={String(
+                                                appearance.webAppHomeLimit,
+                                            )}
+                                            values={[
+                                                ["8", "8 个"],
+                                                ["12", "12 个"],
+                                                ["16", "16 个"],
+                                                ["all", "全部"],
+                                            ] as const}
+                                            select={(v) =>
+                                                set(
+                                                    "webAppHomeLimit",
+                                                    v === "all"
+                                                        ? "all"
+                                                        : (Number(v) as
+                                                            | 8
+                                                            | 12
+                                                            | 16),
+                                                )}
                                         />
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="settings-group">
-                                <h3 className="settings-group-title">
-                                    主页与快捷入口
-                                </h3>
-                                <div className="settings-card">
-                                    <Choices
-                                        title="搜索框样式"
-                                        description="选择圆角矩形或药丸形胶囊外观"
-                                        control="segmented"
-                                        value={appearance.shape ?? "rounded"}
-                                        values={[
-                                            ["rounded", "圆角 (Rounded)"],
-                                            ["pill", "胶囊 (Pill)"],
-                                        ] as const}
-                                        select={(v) => set("shape", v)}
-                                    />
-                                    <div className="settings-row settings-row--stack-mobile">
-                                        <div className="settings-row-label">
-                                            <div className="flex justify-between items-center sm:block">
+                        )}
+                        {tab === "appearance" && (
+                            <div className="settings-section">
+                                <div className="settings-group">
+                                    <h3 className="settings-group-title">
+                                        主题与配色
+                                    </h3>
+                                    <div className="settings-card">
+                                        <Choices
+                                            title="主题模式"
+                                            description="切换浅色、深色模式或跟随系统"
+                                            control="segmented"
+                                            value={appearance.theme}
+                                            values={[
+                                                ["system", "跟随系统"],
+                                                ["light", "浅色"],
+                                                ["dark", "深色"],
+                                            ] as const}
+                                            select={(v) => set("theme", v)}
+                                        />
+                                        <Choices
+                                            title="强调色"
+                                            description="设置按钮、焦点环与激活标签的主题强调色"
+                                            control="swatches"
+                                            value={appearance.accent}
+                                            values={[
+                                                ["blue", "经典蓝"],
+                                                ["cyan", "天青蓝"],
+                                                ["teal", "鸭翅绿"],
+                                                ["violet", "紫罗兰"],
+                                                ["orange", "暖晨橙"],
+                                                ["mono", "单色黑白"],
+                                            ] as const}
+                                            select={(v) => set("accent", v)}
+                                        />
+                                        <div
+                                            className="settings-row"
+                                            style={{
+                                                flexDirection: "column",
+                                                alignItems: "stretch",
+                                                gap: "10px",
+                                            }}
+                                        >
+                                            <div className="settings-row-label">
                                                 <span className="settings-row-title">
-                                                    搜索框透明度
+                                                    主页工作区风格
                                                 </span>
-                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                <p className="settings-row-desc">
+                                                    切换主页的信息架构、排版密度与交互模式
+                                                </p>
+                                            </div>
+                                            <LayoutModeSelector
+                                                value={appearance.style}
+                                                onChange={(newStyle) =>
+                                                    set("style", newStyle)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="settings-group">
+                                    <h3 className="settings-group-title">
+                                        主页与快捷入口
+                                    </h3>
+                                    <div className="settings-card">
+                                        <Choices
+                                            title="控件形状"
+                                            description="搜索框及常规按钮、单行输入框联动；便签编辑区与卡片保持原形"
+                                            control="segmented"
+                                            value={appearance.shape ??
+                                                "rounded"}
+                                            values={[
+                                                ["rounded", "默认"],
+                                                ["pill", "胶囊"],
+                                            ] as const}
+                                            select={(v) => set("shape", v)}
+                                        />
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <div className="flex justify-between items-center sm:block">
+                                                    <span className="settings-row-title">
+                                                        搜索框透明度
+                                                    </span>
+                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                        {Math.round(
+                                                            (appearance
+                                                                .searchOpacity ??
+                                                                1) * 100,
+                                                        )}%
+                                                    </span>
+                                                </div>
+                                                <p className="settings-row-desc">
+                                                    调整搜索框背景的不透明度
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {Math.round(
                                                         (appearance
                                                             .searchOpacity ??
                                                             1) * 100,
                                                     )}%
+                                                </div>
+                                                <Slider
+                                                    min={0.1}
+                                                    max={1}
+                                                    step={0.05}
+                                                    value={appearance
+                                                        .searchOpacity ?? 1}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "searchOpacity",
+                                                            typeof v ===
+                                                                    "number"
+                                                                ? v
+                                                                : v[0],
+                                                        )}
+                                                    aria-label="搜索框透明度"
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="settings-row settings-row--inline-mobile">
+                                            <div className="settings-row-label">
+                                                <span className="settings-row-title">
+                                                    显示 Searcher 标题
                                                 </span>
+                                                <p className="settings-row-desc">
+                                                    在首页搜索框上方展示品牌大标题
+                                                </p>
                                             </div>
-                                            <p className="settings-row-desc">
-                                                调整搜索框背景的不透明度
-                                            </p>
-                                        </div>
-                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
-                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                {Math.round(
-                                                    (appearance.searchOpacity ??
-                                                        1) * 100,
-                                                )}%
-                                            </div>
-                                            <Slider
-                                                min={0.1}
-                                                max={1}
-                                                step={0.05}
-                                                value={appearance
-                                                    .searchOpacity ?? 1}
-                                                onValueChange={(v) =>
-                                                    set(
-                                                        "searchOpacity",
-                                                        typeof v === "number"
-                                                            ? v
-                                                            : v[0],
+                                            <div className="settings-row-control">
+                                                <Switch
+                                                    checked={appearance
+                                                        .showTitle !== false}
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => set(
+                                                        "showTitle",
+                                                        checked,
                                                     )}
-                                                aria-label="搜索框透明度"
-                                                className="w-full"
-                                            />
+                                                    aria-label="显示 Searcher 标题"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="settings-row settings-row--inline-mobile">
-                                        <div className="settings-row-label">
-                                            <span className="settings-row-title">
-                                                显示 Searcher 标题
-                                            </span>
-                                            <p className="settings-row-desc">
-                                                在首页搜索框上方展示品牌大标题
-                                            </p>
-                                        </div>
-                                        <div className="settings-row-control">
-                                            <Switch
-                                                checked={appearance
-                                                    .showTitle !== false}
-                                                onCheckedChange={(checked) =>
-                                                    set("showTitle", checked)}
-                                                aria-label="显示 Searcher 标题"
-                                            />
-                                        </div>
-                                    </div>
-                                    <Choices
-                                        title="APP 图标大小"
-                                        description="调整工作区与首页快捷方式的图标尺度"
-                                        control="select"
-                                        value={appearance.webAppIconSize}
-                                        values={[
-                                            ["compact", "紧凑"],
-                                            ["default", "标准"],
-                                            ["large", "大图标"],
-                                        ] as const}
-                                        select={(v) => set("webAppIconSize", v)}
-                                    />
-                                    <div className="settings-row settings-row--inline-mobile">
-                                        <div className="settings-row-label">
-                                            <span className="settings-row-title">
-                                                显示 APP 名称
-                                            </span>
-                                            <p className="settings-row-desc">
-                                                在桌面或快捷列表中展示网站文字标签
-                                            </p>
-                                        </div>
-                                        <div className="settings-row-control">
-                                            <Switch
-                                                checked={appearance
-                                                    .showAppLabels}
-                                                onCheckedChange={(checked) =>
-                                                    set(
+                                        <Choices
+                                            title="APP 图标大小"
+                                            description="调整工作区与首页快捷方式的图标尺度"
+                                            control="select"
+                                            value={appearance.webAppIconSize}
+                                            values={[
+                                                ["compact", "紧凑"],
+                                                ["default", "标准"],
+                                                ["large", "大图标"],
+                                            ] as const}
+                                            select={(v) =>
+                                                set("webAppIconSize", v)}
+                                        />
+                                        <div className="settings-row settings-row--inline-mobile">
+                                            <div className="settings-row-label">
+                                                <span className="settings-row-title">
+                                                    显示 APP 名称
+                                                </span>
+                                                <p className="settings-row-desc">
+                                                    在桌面或快捷列表中展示网站文字标签
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control">
+                                                <Switch
+                                                    checked={appearance
+                                                        .showAppLabels}
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => set(
                                                         "showAppLabels",
                                                         checked,
                                                     )}
-                                                aria-label="显示 APP 名称"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="settings-group">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="settings-group-title m-0">
-                                        壁纸与背景效果
-                                    </h3>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            void setAppearance({
-                                                wallpaper: "",
-                                                mask: 0.75,
-                                                blur: 0,
-                                                grayscale: 0,
-                                            });
-                                        }}
-                                        title="恢复壁纸与效果默认值"
-                                        className="h-8 gap-1 text-xs"
-                                    >
-                                        <RotateCcw size={13} />
-                                        <span>恢复默认</span>
-                                    </Button>
-                                </div>
-                                <div className="settings-card">
-                                    <div className="settings-row settings-row--stack-mobile">
-                                        <div className="settings-row-label">
-                                            <span className="settings-row-title">
-                                                壁纸背景
-                                            </span>
-                                            <p className="settings-row-desc">
-                                                上传本地图片或输入 HTTPS
-                                                图像地址、CSS 渐变
-                                            </p>
-                                        </div>
-                                        <div className="settings-row-control w-full sm:w-auto flex-1 max-w-[380px]">
-                                            <div className="flex gap-2 items-center w-full">
-                                                <input
-                                                    type="file"
-                                                    ref={fileInputRef}
-                                                    style={{ display: "none" }}
-                                                    accept="image/png,image/jpeg,image/webp,image/avif"
-                                                    onChange={(e) => {
-                                                        const file = e.target
-                                                            .files?.[0];
-                                                        if (file) {
-                                                            void handleWallpaperUpload(
-                                                                file,
-                                                            );
-                                                        }
-                                                        e.target.value = "";
-                                                    }}
+                                                    aria-label="显示 APP 名称"
                                                 />
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        fileInputRef.current
-                                                            ?.click()}
-                                                    title="上传本地图片"
-                                                    aria-label="上传本地图片"
-                                                    className="shrink-0"
-                                                >
-                                                    <Upload size={16} />
-                                                </Button>
-                                                <Input
-                                                    id="wallpaper-input"
-                                                    placeholder={appearance
-                                                            .wallpaper
-                                                            .startsWith("data:")
-                                                        ? "当前已使用本地壁纸图片"
-                                                        : "输入图片 HTTPS 地址或 CSS 渐变"}
-                                                    value={appearance.wallpaper
-                                                            .startsWith("data:")
-                                                        ? ""
-                                                        : appearance.wallpaper}
-                                                    onChange={(e) =>
-                                                        set(
-                                                            "wallpaper",
-                                                            e.target.value,
-                                                        )}
-                                                    className="flex-1 min-w-0"
-                                                />
-                                                {appearance.wallpaper && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() =>
-                                                            set(
-                                                                "wallpaper",
-                                                                "",
-                                                            )}
-                                                        title="清除壁纸"
-                                                        aria-label="清除壁纸"
-                                                        className="shrink-0 text-[var(--muted)]"
-                                                    >
-                                                        <RotateCcw size={14} />
-                                                    </Button>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="settings-row settings-row--stack-mobile">
-                                        <div className="settings-row-label">
-                                            <div className="flex justify-between items-center sm:block">
+                                </div>
+
+                                <div className="settings-group">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="settings-group-title m-0">
+                                            壁纸与背景效果
+                                        </h3>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                void setAppearance({
+                                                    wallpaper: "",
+                                                    mask: 0.75,
+                                                    blur: 0,
+                                                    grayscale: 0,
+                                                });
+                                            }}
+                                            title="恢复壁纸与效果默认值"
+                                            className="h-8 gap-1 text-xs"
+                                        >
+                                            <RotateCcw size={13} />
+                                            <span>恢复默认</span>
+                                        </Button>
+                                    </div>
+                                    <div className="settings-card">
+                                        <div className="settings-row settings-row--stack-mobile wallpaper-settings-row">
+                                            <div className="settings-row-label">
                                                 <span className="settings-row-title">
-                                                    遮罩不透明度
+                                                    壁纸背景
                                                 </span>
-                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                <p className="settings-row-desc">
+                                                    上传本地图片或输入 HTTPS
+                                                    图像地址、CSS 渐变
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control w-full sm:w-auto flex-1 max-w-[380px] flex-col items-stretch">
+                                                <div className="flex gap-2 items-center w-full">
+                                                    <input
+                                                        type="file"
+                                                        ref={fileInputRef}
+                                                        style={{
+                                                            display: "none",
+                                                        }}
+                                                        accept="image/png,image/jpeg,image/webp,image/avif"
+                                                        onChange={(e) => {
+                                                            const file = e
+                                                                .target
+                                                                .files?.[0];
+                                                            if (file) {
+                                                                void handleWallpaperUpload(
+                                                                    file,
+                                                                );
+                                                            }
+                                                            e.target.value = "";
+                                                        }}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            fileInputRef.current
+                                                                ?.click()}
+                                                        disabled={uploadingWallpaper}
+                                                        title="上传本地图片"
+                                                        aria-label="上传本地图片"
+                                                        className="shrink-0"
+                                                    >
+                                                        <Upload size={16} />
+                                                    </Button>
+                                                    <Input
+                                                        id="wallpaper-input"
+                                                        placeholder={appearance
+                                                                .wallpaper
+                                                                .startsWith(
+                                                                    "data:",
+                                                                )
+                                                            ? "当前已使用本地壁纸图片"
+                                                            : "输入图片 HTTPS 地址或 CSS 渐变"}
+                                                        value={appearance
+                                                                .wallpaper
+                                                                .startsWith(
+                                                                    "data:",
+                                                                )
+                                                            ? ""
+                                                            : appearance
+                                                                .wallpaper}
+                                                        onChange={(e) =>
+                                                            set(
+                                                                "wallpaper",
+                                                                e.target.value,
+                                                            )}
+                                                        className="flex-1 min-w-0"
+                                                    />
+                                                    {appearance.wallpaper && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() =>
+                                                                set(
+                                                                    "wallpaper",
+                                                                    "",
+                                                                )}
+                                                            title="清除壁纸"
+                                                            aria-label="清除壁纸"
+                                                            className="shrink-0 text-[var(--muted)]"
+                                                        >
+                                                            <RotateCcw
+                                                                size={14}
+                                                            />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                {wallpaperHistory.length > 0 &&
+                                                    (
+                                                        <div
+                                                            className="wallpaper-history"
+                                                            aria-label="最近上传的图片"
+                                                        >
+                                                            <span className="settings-row-desc">
+                                                                最近上传 · 保留
+                                                                5 张
+                                                            </span>
+                                                            <div className="wallpaper-history__grid">
+                                                                {wallpaperHistory
+                                                                    .map((
+                                                                        url,
+                                                                        index,
+                                                                    ) => (
+                                                                        <button
+                                                                            key={url}
+                                                                            type="button"
+                                                                            className="wallpaper-history__item"
+                                                                            aria-label={`查看第 ${
+                                                                                index +
+                                                                                1
+                                                                            } 张已上传图片`}
+                                                                            aria-current={appearance
+                                                                                    .wallpaper ===
+                                                                                    url
+                                                                                ? "true"
+                                                                                : undefined}
+                                                                            onClick={() =>
+                                                                                setPreviewWallpaper(
+                                                                                    url,
+                                                                                )}
+                                                                        >
+                                                                            <img
+                                                                                src={url}
+                                                                                alt=""
+                                                                                loading="lazy"
+                                                                            />
+                                                                        </button>
+                                                                    ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        </div>
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <div className="flex justify-between items-center sm:block">
+                                                    <span className="settings-row-title">
+                                                        遮罩不透明度
+                                                    </span>
+                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                        {Math.round(
+                                                            appearance.mask *
+                                                                100,
+                                                        )}%
+                                                    </span>
+                                                </div>
+                                                <p className="settings-row-desc">
+                                                    覆盖在壁纸上的背景遮罩浓度
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {Math.round(
                                                         appearance.mask * 100,
                                                     )}%
-                                                </span>
+                                                </div>
+                                                <Slider
+                                                    min={0}
+                                                    max={0.8}
+                                                    step={0.05}
+                                                    value={appearance.mask}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "mask",
+                                                            typeof v ===
+                                                                    "number"
+                                                                ? v
+                                                                : v[0],
+                                                        )}
+                                                    aria-label="遮罩不透明度"
+                                                    className="w-full"
+                                                />
                                             </div>
-                                            <p className="settings-row-desc">
-                                                覆盖在壁纸上的背景遮罩浓度
-                                            </p>
                                         </div>
-                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
-                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                {Math.round(
-                                                    appearance.mask * 100,
-                                                )}%
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <div className="flex justify-between items-center sm:block">
+                                                    <span className="settings-row-title">
+                                                        模糊半径
+                                                    </span>
+                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                        {appearance.blur}px
+                                                    </span>
+                                                </div>
+                                                <p className="settings-row-desc">
+                                                    壁纸背景的高斯模糊程度
+                                                </p>
                                             </div>
-                                            <Slider
-                                                min={0}
-                                                max={0.8}
-                                                step={0.05}
-                                                value={appearance.mask}
-                                                onValueChange={(v) =>
-                                                    set(
-                                                        "mask",
-                                                        typeof v === "number"
-                                                            ? v
-                                                            : v[0],
-                                                    )}
-                                                aria-label="遮罩不透明度"
-                                                className="w-full"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="settings-row settings-row--stack-mobile">
-                                        <div className="settings-row-label">
-                                            <div className="flex justify-between items-center sm:block">
-                                                <span className="settings-row-title">
-                                                    模糊半径
-                                                </span>
-                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {appearance.blur}px
-                                                </span>
+                                                </div>
+                                                <Slider
+                                                    min={0}
+                                                    max={24}
+                                                    step={1}
+                                                    value={appearance.blur}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "blur",
+                                                            typeof v ===
+                                                                    "number"
+                                                                ? v
+                                                                : v[0],
+                                                        )}
+                                                    aria-label="模糊半径"
+                                                    className="w-full"
+                                                />
                                             </div>
-                                            <p className="settings-row-desc">
-                                                壁纸背景的高斯模糊程度
-                                            </p>
                                         </div>
-                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
-                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                {appearance.blur}px
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <div className="flex justify-between items-center sm:block">
+                                                    <span className="settings-row-title">
+                                                        灰度滤镜
+                                                    </span>
+                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                        {Math.round(
+                                                            appearance
+                                                                .grayscale *
+                                                                100,
+                                                        )}%
+                                                    </span>
+                                                </div>
+                                                <p className="settings-row-desc">
+                                                    将壁纸转换为黑白灰度
+                                                </p>
                                             </div>
-                                            <Slider
-                                                min={0}
-                                                max={24}
-                                                step={1}
-                                                value={appearance.blur}
-                                                onValueChange={(v) =>
-                                                    set(
-                                                        "blur",
-                                                        typeof v === "number"
-                                                            ? v
-                                                            : v[0],
-                                                    )}
-                                                aria-label="模糊半径"
-                                                className="w-full"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="settings-row settings-row--stack-mobile">
-                                        <div className="settings-row-label">
-                                            <div className="flex justify-between items-center sm:block">
-                                                <span className="settings-row-title">
-                                                    灰度滤镜
-                                                </span>
-                                                <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {Math.round(
                                                         appearance.grayscale *
                                                             100,
                                                     )}%
-                                                </span>
+                                                </div>
+                                                <Slider
+                                                    min={0}
+                                                    max={1}
+                                                    step={0.05}
+                                                    value={appearance.grayscale}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "grayscale",
+                                                            typeof v ===
+                                                                    "number"
+                                                                ? v
+                                                                : v[0],
+                                                        )}
+                                                    aria-label="灰度比例"
+                                                    className="w-full"
+                                                />
                                             </div>
-                                            <p className="settings-row-desc">
-                                                将壁纸转换为黑白灰度
-                                            </p>
-                                        </div>
-                                        <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
-                                            <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                {Math.round(
-                                                    appearance.grayscale * 100,
-                                                )}%
-                                            </div>
-                                            <Slider
-                                                min={0}
-                                                max={1}
-                                                step={0.05}
-                                                value={appearance.grayscale}
-                                                onValueChange={(v) =>
-                                                    set(
-                                                        "grayscale",
-                                                        typeof v === "number"
-                                                            ? v
-                                                            : v[0],
-                                                    )}
-                                                aria-label="灰度比例"
-                                                className="w-full"
-                                            />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                    {tab === "ai" && (
-                        <div className="settings-section">
-                            <div className="settings-subgroup">
-                                <div className="settings-section-head">
-                                    <h3>AI 问答</h3>
-                                    <p>智能 AI 问答工作区与偏好设置</p>
-                                </div>
-                                <div className="settings-action-card">
-                                    <div className="settings-action-card__content">
-                                        <strong>
-                                            AI 问答工作区
-                                        </strong>
-                                        <p>
-                                            AI
-                                            拥有专属的独立对话空间，只在显式选择后响应，不接管普通搜索。
-                                        </p>
+                        )}
+                        {tab === "ai" && (
+                            <div className="settings-section">
+                                <div className="settings-subgroup">
+                                    <div className="settings-section-head">
+                                        <h3>AI 问答</h3>
+                                        <p>智能 AI 问答工作区与偏好设置</p>
                                     </div>
-                                    <Link
-                                        className="button button--primary settings-action-card__action"
-                                        to="/ask"
-                                    >
-                                        打开 AI 问答
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <Separator orientation="horizontal" />
-
-                            <div className="settings-subgroup">
-                                <AiSettings />
-                            </div>
-                        </div>
-                    )}
-                    {tab === "data" && (
-                        <div className="settings-section">
-                            <div className="settings-subgroup">
-                                <div className="settings-section-head">
-                                    <h3>同步</h3>
-                                    <p>
-                                        登录后将偏好设置、网站书签与便签实时同步到您的账户
-                                    </p>
-                                </div>
-                                <div className="settings-action-card">
-                                    <div className="settings-action-card__content">
-                                        <strong>
-                                            {user
-                                                ? "已登录账户"
-                                                : "本地访客模式"}
-                                        </strong>
-                                        <p>
-                                            {user
-                                                ? `已连接为 ${user.displayName}，数据已双向同步`
-                                                : "访客偏好仅在当前页面有效，登录后个人内容由服务端同步。"}
-                                        </p>
-                                    </div>
-                                    <span
-                                        className="settings-action-card__badge"
-                                        style={{
-                                            background: user
-                                                ? "color-mix(in srgb, var(--success) 16%, var(--surface))"
-                                                : "var(--surface-soft)",
-                                            color: user
-                                                ? "var(--success)"
-                                                : "var(--muted)",
-                                        }}
-                                    >
-                                        {user ? "已同步" : "未登录"}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <Separator orientation="horizontal" />
-
-                            <div className="settings-subgroup">
-                                <div className="settings-section-head">
-                                    <h3>数据管理</h3>
-                                    <p>管理已删除的项目或实验性特性</p>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "grid",
-                                        gap: "12px",
-                                    }}
-                                >
-                                    {user && (
-                                        <div className="settings-action-card">
-                                            <div className="settings-action-card__content">
-                                                <strong>
-                                                    回收站
-                                                </strong>
-                                                <p>
-                                                    查看或彻底清理已删除的网站和便签
-                                                </p>
-                                            </div>
-                                            <Link
-                                                to="/trash"
-                                                className="button button--subtle settings-action-card__action"
-                                            >
-                                                打开回收站
-                                            </Link>
-                                        </div>
-                                    )}
                                     <div className="settings-action-card">
                                         <div className="settings-action-card__content">
                                             <strong>
-                                                Design Lab
+                                                AI 问答工作区
                                             </strong>
                                             <p>
-                                                管理与测试实验性的界面配置和组件预览
+                                                AI
+                                                拥有专属的独立对话空间，只在显式选择后响应，不接管普通搜索。
                                             </p>
                                         </div>
                                         <Link
-                                            to="/design-lab"
-                                            className="button button--subtle settings-action-card__action"
+                                            className="button button--primary settings-action-card__action"
+                                            to="/ask"
                                         >
-                                            打开 Design Lab
+                                            打开 AI 问答
                                         </Link>
                                     </div>
                                 </div>
+
+                                <Separator orientation="horizontal" />
+
+                                <div className="settings-subgroup">
+                                    <AiSettings />
+                                </div>
                             </div>
-                        </div>
+                        )}
+                        {tab === "data" && (
+                            <div className="settings-section">
+                                <div className="settings-subgroup">
+                                    <div className="settings-section-head">
+                                        <h3>同步</h3>
+                                        <p>
+                                            登录后将偏好设置、网站书签与便签实时同步到您的账户
+                                        </p>
+                                    </div>
+                                    <div className="settings-action-card">
+                                        <div className="settings-action-card__content">
+                                            <strong>
+                                                {user
+                                                    ? "已登录账户"
+                                                    : "本地访客模式"}
+                                            </strong>
+                                            <p>
+                                                {user
+                                                    ? `已连接为 ${user.displayName}，数据已双向同步`
+                                                    : "访客偏好仅在当前页面有效，登录后个人内容由服务端同步。"}
+                                            </p>
+                                        </div>
+                                        <span
+                                            className="settings-action-card__badge"
+                                            style={{
+                                                background: user
+                                                    ? "color-mix(in srgb, var(--success) 16%, var(--surface))"
+                                                    : "var(--surface-soft)",
+                                                color: user
+                                                    ? "var(--success)"
+                                                    : "var(--muted)",
+                                            }}
+                                        >
+                                            {user ? "已同步" : "未登录"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <Separator orientation="horizontal" />
+
+                                <div className="settings-subgroup">
+                                    <div className="settings-section-head">
+                                        <h3>数据管理</h3>
+                                        <p>管理已删除的项目或实验性特性</p>
+                                    </div>
+                                    <div
+                                        style={{
+                                            display: "grid",
+                                            gap: "12px",
+                                        }}
+                                    >
+                                        {user && (
+                                            <div className="settings-action-card">
+                                                <div className="settings-action-card__content">
+                                                    <strong>
+                                                        回收站
+                                                    </strong>
+                                                    <p>
+                                                        查看或彻底清理已删除的网站和便签
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    to="/trash"
+                                                    className="button button--subtle settings-action-card__action"
+                                                >
+                                                    打开回收站
+                                                </Link>
+                                            </div>
+                                        )}
+                                        <div className="settings-action-card">
+                                            <div className="settings-action-card__content">
+                                                <strong>
+                                                    Design Lab
+                                                </strong>
+                                                <p>
+                                                    管理与测试实验性的界面配置和组件预览
+                                                </p>
+                                            </div>
+                                            <Link
+                                                to="/design-lab"
+                                                className="button button--subtle settings-action-card__action"
+                                            >
+                                                打开 Design Lab
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+                </div>
+            </main>
+            <Dialog
+                open={previewWallpaper !== null}
+                onOpenChange={(open) => {
+                    if (!open) setPreviewWallpaper(null);
+                }}
+            >
+                <DialogContent className="wallpaper-preview">
+                    <DialogHeader>
+                        <DialogTitle>预览已上传图片</DialogTitle>
+                        <DialogDescription>
+                            确认后将其设为当前壁纸，预览不会修改设置。
+                        </DialogDescription>
+                    </DialogHeader>
+                    {previewWallpaper && (
+                        <img
+                            src={previewWallpaper}
+                            alt="壁纸大图预览"
+                            className="wallpaper-preview__image"
+                        />
                     )}
-                </section>
-            </div>
-        </main>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setPreviewWallpaper(null)}
+                        >
+                            关闭
+                        </Button>
+                        <Button
+                            type="button"
+                            disabled={previewWallpaper === appearance.wallpaper}
+                            onClick={() => {
+                                if (previewWallpaper) {
+                                    set("wallpaper", previewWallpaper);
+                                }
+                                setPreviewWallpaper(null);
+                            }}
+                        >
+                            设为壁纸
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

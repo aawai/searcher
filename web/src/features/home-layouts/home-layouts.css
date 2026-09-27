@@ -5,12 +5,9 @@
 /* --------------------------------------------------------------------------
    2. Zen Layout (Minimal Workspace / Arc Style)
    -------------------------------------------------------------------------- */
-.home--zen .hero {
-    padding-top: clamp(100px, 22vh, 220px);
-}
 
 .home--zen .hero-title {
-    display: none;
+    visibility: hidden;
 }
 
 .home--zen .search-frame {
@@ -60,6 +57,7 @@
 /* --------------------------------------------------------------------------
    3. Widgets Layout (Spatial Glass Desktop / iPadOS Bento Style)
    -------------------------------------------------------------------------- */
+.home--zen .hero-title,
 .home--widgets .hero-title {
     font-size: clamp(28px, 3.2vw, 42px);
     margin-bottom: 24px;

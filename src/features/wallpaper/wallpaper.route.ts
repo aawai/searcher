@@ -59,6 +59,24 @@ export function registerWallpaperRoutes(
         }
     });
 
+    routes.get("/api/wallpaper", async (c) => {
+        const user = c.get("user");
+        if (!user) return failResponse(c, 401, "请先登录");
+
+        try {
+            const records = await service.listUserWallpapers(user.id);
+            c.header("Cache-Control", "no-store");
+            return c.success(records.map((record) => ({
+                url: "/api/wallpaper/" + record.id,
+            })));
+        } catch (error) {
+            if (error instanceof ManifestCorruptionError) {
+                return failResponse(c, 500, "壁纸存储元数据损坏，无法写入");
+            }
+            return failResponse(c, 500, "服务器内部错误");
+        }
+    });
+
     // 2. PROTECTED GET /api/wallpaper/:id
     // Returns raw image binary with exact Content-Type, Cache-Control: no-store, nosniff
     routes.get("/api/wallpaper/:id", async (c) => {
