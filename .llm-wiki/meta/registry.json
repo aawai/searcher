@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-27T04:52:12.323Z",
+  "last_updated": "2026-09-27T07:19:01.389Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -743,6 +743,20 @@
       "relevance": "high",
       "observed_at": "2026-09-27T00:42:38.925Z",
       "source_context": ".omp/plans/SEARCHER_UI_REDESIGN_PLAN.md; isolated browser 127.0.0.1:34570",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
+    },
+    "sources/obs-2026-09-27-searcher": {
+      "type": "source",
+      "title": "Observation: Searcher 组件形态联动与多行文本/容器边界保护",
+      "tags": [
+        "[\"ui\",\"design-system\",\"shape\",\"pill\",\"tokens\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-27-searcher",
+      "relevance": "high",
+      "observed_at": "2026-09-27T07:19:01.370Z",
+      "source_context": "组件形态圆角与胶囊联动改版",
       "created": "2026-09-27",
       "updated": "2026-09-27"
     },

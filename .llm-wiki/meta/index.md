@@ -41,6 +41,7 @@
 - [[sources/obs-2026-09-26-app-ui-ux]] — Observation: 添加 APP 对话框 UI/UX 精致化与实页验证 *(created: 2026-09-26)*
 - [[sources/obs-2026-09-26-searcher-ui]] — Observation: Searcher UI 重构与克制效率工具落地完成 *(created: 2026-09-26)*
 - [[sources/obs-2026-09-27-2026-09-27-searcher-ui]] — Observation: 2026-09-27 Searcher UI 实页复核发现工作区关键偏差 *(created: 2026-09-27)*
+- [[sources/obs-2026-09-27-searcher]] — Observation: Searcher 组件形态联动与多行文本/容器边界保护 *(created: 2026-09-27)*
 - [[sources/obs-2026-09-27-workspace-layout-style-architecture-decision]] — Observation: Workspace Layout & Style Architecture Decision *(created: 2026-09-27)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
@@ -94,4 +95,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-09-27T04:52:12.323Z* | *Total pages: 79*
+*Last updated: 2026-09-27T07:19:01.389Z* | *Total pages: 80*

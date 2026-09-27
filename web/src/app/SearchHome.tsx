@@ -1185,7 +1185,7 @@ export function SearchHome() {
                                     className="section-form mb-4"
                                 >
                                     <div className="flex gap-2">
-                                        <input
+                                        <Input
                                             required
                                             placeholder="新文件夹名称（如：开发、娱乐、办公）"
                                             value={newGroupName}
