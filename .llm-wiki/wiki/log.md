@@ -2,6 +2,11 @@
 
 ## 2026-09-27
 
+- **ensure\_page**: {"page_type":"concept","path":"concepts/react-19-actions-and-transitions","title":"React 19 Actions and Transitions"}
+- **ensure\_page**: {"page_type":"entity","path":"entities/react-19-framework","title":"React 19 Framework"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-27-005","url":"https://docs.deno.com/examples/hono/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-09-27-004","url":"https://react.dev/reference/react/useActionState"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-27-workspace-layout-style-architecture-decision","title":"Workspace Layout & Style Architecture Decision"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/tailwind-v4-css-first-architecture","title":"Tailwind v4 CSS First Architecture"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/modal-layering-and-escape-dismissal","title":"Modal Layering and Escape Dismissal"}
 - **capture**: {"format":"web","source_id":"SRC-2026-09-27-003","url":"https://docs.deno.com/examples/http_server_sse/"}

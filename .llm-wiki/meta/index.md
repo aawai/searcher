@@ -6,11 +6,13 @@
 
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
+- [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
 - [[concepts/dnd-kit-2d-grid-sorting-architecture]] — dnd-kit 2D Grid Sorting Architecture *(created: 2026-09-25)*
 - [[concepts/hono-middleware-pipeline-request-intake]] — Hono Middleware Pipeline & Request Intake *(created: 2026-09-25)*
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
@@ -26,6 +28,7 @@
 - [[entities/drizzle-sqlite-store]] — Drizzle SQLite Store *(created: 2026-09-25)*
 - [[entities/hono-framework]] — Hono Framework *(created: 2026-09-25)*
 - [[entities/indexeddb-本地存储引擎]] — IndexedDB 本地存储引擎 *(created: 2026-09-25)*
+- [[entities/react-19-framework]] — React 19 Framework *(created: 2026-09-27)*
 - [[entities/searcher-项目]] — Searcher 项目 *(created: 2026-09-25)*
 - [[entities/shadcn-ui-system]] — shadcn UI System *(created: 2026-09-25)*
 - [[entities/valibot-schema-validator]] — Valibot Schema Validator *(created: 2026-09-25)*
@@ -38,6 +41,7 @@
 - [[sources/obs-2026-09-26-app-ui-ux]] — Observation: 添加 APP 对话框 UI/UX 精致化与实页验证 *(created: 2026-09-26)*
 - [[sources/obs-2026-09-26-searcher-ui]] — Observation: Searcher UI 重构与克制效率工具落地完成 *(created: 2026-09-26)*
 - [[sources/obs-2026-09-27-2026-09-27-searcher-ui]] — Observation: 2026-09-27 Searcher UI 实页复核发现工作区关键偏差 *(created: 2026-09-27)*
+- [[sources/obs-2026-09-27-workspace-layout-style-architecture-decision]] — Observation: Workspace Layout & Style Architecture Decision *(created: 2026-09-27)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -82,10 +86,12 @@
 - [[sources/SRC-2026-09-27-001]] — Base UI Dialog Component Architecture, Nested Modals and Escape Dismissal *(created: unknown)*
 - [[sources/SRC-2026-09-27-002]] — Tailwind CSS v4: CSS-First Architecture, Native Variables and Viewport Adaptations *(created: unknown)*
 - [[sources/SRC-2026-09-27-003]] — Deno HTTP Server: Server-Sent Events with WHATWG ReadableStream *(created: unknown)*
+- [[sources/SRC-2026-09-27-004]] — React 19 useActionState Reference *(created: unknown)*
+- [[sources/SRC-2026-09-27-005]] — Deno 2 Hono HTTP Server Guide *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-09-27T02:13:05.461Z* | *Total pages: 73*
+*Last updated: 2026-09-27T04:52:12.323Z* | *Total pages: 79*

@@ -34,6 +34,9 @@
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
+  "concepts/deno-native-serve-architecture": [
+    "sources/SRC-2026-09-27-005"
+  ],
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
     "concepts/shortest-column-masonry-layout",
     "entities/dnd-kit-system",
@@ -70,6 +73,9 @@
   ],
   "concepts/offline-first-与-local-draft-持久化架构": [
     "sources/SRC-2026-09-25-037"
+  ],
+  "concepts/react-19-actions-and-transitions": [
+    "sources/SRC-2026-09-27-004"
   ],
   "concepts/server-sent-events-sse-与实时事件流": [
     "entities/deno-runtime",
@@ -147,6 +153,7 @@
     "sources/SRC-2026-09-27-002"
   ],
   "entities/deno-runtime": [
+    "concepts/deno-native-serve-architecture",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/single-process-architecture",
     "entities/hono-framework",
@@ -174,6 +181,7 @@
     "sources/SRC-2026-09-25-035",
     "sources/SRC-2026-09-26-002",
     "sources/SRC-2026-09-27-003",
+    "sources/SRC-2026-09-27-005",
     "syntheses/searcher-system-architecture"
   ],
   "entities/dnd-kit-system": [
@@ -212,6 +220,7 @@
     "syntheses/searcher-system-architecture"
   ],
   "entities/hono-framework": [
+    "concepts/deno-native-serve-architecture",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/hono-rpc-type-safe-client",
     "concepts/server-sent-events-sse-与实时事件流",
@@ -232,10 +241,14 @@
     "sources/SRC-2026-09-26-002",
     "sources/SRC-2026-09-26-003",
     "sources/SRC-2026-09-27-003",
+    "sources/SRC-2026-09-27-005",
     "syntheses/searcher-system-architecture"
   ],
   "entities/indexeddb-本地存储引擎": [
     "sources/SRC-2026-09-25-037"
+  ],
+  "entities/react-19-framework": [
+    "sources/SRC-2026-09-27-004"
   ],
   "entities/searcher-项目": [
     "concepts/contract-first-testing",
@@ -467,6 +480,10 @@
     "concepts/server-sent-events-sse-与实时事件流",
     "entities/deno-runtime"
   ],
+  "sources/SRC-2026-09-27-004": [],
+  "sources/SRC-2026-09-27-005": [
+    "concepts/deno-native-serve-architecture"
+  ],
   "sources/obs-2026-09-25-ui-app": [],
   "sources/obs-2026-09-25-ui-ux": [],
   "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [
@@ -475,6 +492,7 @@
   "sources/obs-2026-09-26-app-ui-ux": [],
   "sources/obs-2026-09-26-searcher-ui": [],
   "sources/obs-2026-09-27-2026-09-27-searcher-ui": [],
+  "sources/obs-2026-09-27-workspace-layout-style-architecture-decision": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

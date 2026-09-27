@@ -221,3 +221,18 @@
 ## [2026-09-27T02:11:35.332Z] ensure_page
 - page_type: "concept", title: "Tailwind v4 CSS First Architecture", path: "concepts/tailwind-v4-css-first-architecture"
 
+## [2026-09-27T02:58:54.448Z] observe
+- slug: "obs-2026-09-27-workspace-layout-style-architecture-decision", title: "Workspace Layout & Style Architecture Decision", relevance: "high"
+
+## [2026-09-27T04:50:38.771Z] capture
+- source_id: "SRC-2026-09-27-004", url: "https://react.dev/reference/react/useActionState", format: "web"
+
+## [2026-09-27T04:50:49.345Z] capture
+- source_id: "SRC-2026-09-27-005", url: "https://docs.deno.com/examples/hono/", format: "web"
+
+## [2026-09-27T04:51:16.942Z] ensure_page
+- page_type: "entity", title: "React 19 Framework", path: "entities/react-19-framework"
+
+## [2026-09-27T04:51:30.360Z] ensure_page
+- page_type: "concept", title: "React 19 Actions and Transitions", path: "concepts/react-19-actions-and-transitions"
+
