@@ -80,3 +80,7 @@
 {"slug":"obs-2026-09-27-accent-scale","title":"主题配色与多层级 Accent Scale 重构","relevance":"high","timestamp":"2026-09-27T13:44:06.689Z","kind":"observe"}
 {"slug":"obs-2026-09-27-","title":"便签多版本历史展开文字重叠根因与修复","relevance":"high","timestamp":"2026-09-27T15:19:54.183Z","kind":"observe"}
 {"slug":"obs-2026-09-28-ui-3","title":"UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）","relevance":"critical","timestamp":"2026-09-28T00:05:53.405Z","kind":"observe"}
+{"slug":"obs-2026-09-28-css","title":"便签拟物纸质化改造与CSS层叠特异性避坑","relevance":"high","timestamp":"2026-09-28T05:22:56.358Z","kind":"observe"}
+{"slug":"obs-2026-09-28-","title":"便签纸艺细节增强与确定性微倾角工程落地","relevance":"high","timestamp":"2026-09-28T05:59:29.173Z","kind":"observe"}
+{"slug":"obs-2026-09-28-","title":"便签墨水字色继承修正与多行信笺横线落地","relevance":"high","timestamp":"2026-09-28T06:34:16.811Z","kind":"observe"}
+{"slug":"obs-2026-09-28-","title":"搜索建议选中态主题色层级","relevance":"high","timestamp":"2026-09-28T09:03:34.116Z","kind":"observe"}

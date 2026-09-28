@@ -2,6 +2,10 @@
 
 ## 2026-09-28
 
+- **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"搜索建议选中态主题色层级"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"便签墨水字色继承修正与多行信笺横线落地"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"便签纸艺细节增强与确定性微倾角工程落地"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-28-css","title":"便签拟物纸质化改造与CSS层叠特异性避坑"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-09-28-ui-3","title":"UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）"}
 
 ## 2026-09-27

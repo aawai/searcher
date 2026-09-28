@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-28T00:05:53.445Z",
+  "last_updated": "2026-09-28T09:03:34.140Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -813,6 +813,38 @@
       "source_context": "UI/UX Redesign Evaluation",
       "created": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    "sources/obs-2026-09-28-": {
+      "type": "source",
+      "title": "Observation: 搜索建议选中态主题色层级",
+      "tags": [
+        "search-suggestions,accent-scale,ui,theme"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-28-",
+      "relevance": "high",
+      "observed_at": "2026-09-28T09:03:34.112Z",
+      "source_context": "2026-09-28 Searcher suggestion highlighting and selection design",
+      "created": "2026-09-28",
+      "updated": "2026-09-28"
+    },
+    "sources/obs-2026-09-28-css": {
+      "type": "source",
+      "title": "Observation: 便签拟物纸质化改造与CSS层叠特异性避坑",
+      "tags": [
+        "css",
+        "ui",
+        "skeuomorphism",
+        "sticky-note",
+        "specificity"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-28-css",
+      "relevance": "high",
+      "observed_at": "2026-09-28T05:22:56.354Z",
+      "source_context": "为便签增加拟物纸质感及真机多状态验证",
+      "created": "2026-09-28",
+      "updated": "2026-09-28"
     },
     "sources/obs-2026-09-28-ui-3": {
       "type": "source",

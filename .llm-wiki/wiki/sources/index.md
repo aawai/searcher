@@ -56,5 +56,7 @@
 - [Observation: 主题配色与多层级 Accent Scale 重构](obs-2026-09-27-accent-scale.md)
 - [Observation: Searcher 组件形态联动与多行文本/容器边界保护](obs-2026-09-27-searcher.md)
 - [Observation: Workspace Layout & Style Architecture Decision](obs-2026-09-27-workspace-layout-style-architecture-decision.md)
+- [Observation: 搜索建议选中态主题色层级](obs-2026-09-28-.md)
+- [Observation: 便签拟物纸质化改造与CSS层叠特异性避坑](obs-2026-09-28-css.md)
 - [Observation: UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）](obs-2026-09-28-ui-3.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)
