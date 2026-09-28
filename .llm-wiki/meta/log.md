@@ -260,3 +260,6 @@
 ## [2026-09-28T09:03:34.116Z] observe
 - slug: "obs-2026-09-28-", title: "搜索建议选中态主题色层级", relevance: "high"
 
+## [2026-09-28T11:13:02.897Z] observe
+- slug: "obs-2026-09-28-", title: "精简添加/编辑网站表单视觉层级与轻量化卡片重构", relevance: "high"
+

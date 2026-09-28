@@ -1,4 +1,11 @@
-import { Folder, Plus, Sparkles, StickyNote } from "lucide-react";
+import {
+    ArrowUpDown,
+    Check,
+    Folder,
+    Plus,
+    Sparkles,
+    StickyNote,
+} from "lucide-react";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
@@ -23,6 +30,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
         appsStatus,
         appsError,
         onReloadApps,
+        notes,
         fixedNotes,
         isManagingApps,
         setIsManagingApps,
@@ -88,22 +96,100 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                     {/* Bento Card 1: 常用应用 */}
                     <div className="widgets-bento-card">
                         <div className="widgets-bento-header">
-                            <span className="widgets-bento-title">
-                                <Sparkles size={16} />
-                                <span>常用网站</span>
-                            </span>
-                            <button
-                                type="button"
-                                className="widgets-bento-action"
-                                onClick={() => {
-                                    setSheet("apps");
-                                    setFormPresentation("panel");
-                                    openAddModal();
-                                }}
-                            >
-                                <Plus size={13} />
-                                <span>添加</span>
-                            </button>
+                            <div className="widgets-bento-header-left">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="widgets-bento-title-btn"
+                                    onClick={() => {
+                                        setSheet("apps");
+                                        setFilter("");
+                                        setActiveGroupFilter("all");
+                                    }}
+                                    title="打开常用网站面板浏览全部及分组"
+                                    aria-label="打开常用网站面板"
+                                >
+                                    <Sparkles size={15} />
+                                    <span>常用网站</span>
+                                    <span
+                                        className="widgets-bento-count"
+                                        title={`已固定 ${pinned.length} 个${
+                                            apps.length > pinned.length
+                                                ? `，共 ${apps.length} 个网站`
+                                                : ""
+                                        }`}
+                                    >
+                                        {pinned.length}
+                                        {apps.length > pinned.length && (
+                                            <span className="widgets-bento-count-total">
+                                                /{apps.length}
+                                            </span>
+                                        )}
+                                    </span>
+                                </Button>
+                            </div>
+                            <div className="widgets-bento-actions">
+                                {isManagingApps
+                                    ? (
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="widgets-bento-action"
+                                            onClick={() =>
+                                                setIsManagingApps(false)}
+                                            title="完成排序整理"
+                                        >
+                                            <Check size={13} />
+                                            <span>完成</span>
+                                        </Button>
+                                    )
+                                    : (
+                                        <>
+                                            {pinned.length > 1 && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="widgets-bento-action"
+                                                    onClick={() =>
+                                                        setIsManagingApps(true)}
+                                                    title="调整常用网站顺序"
+                                                >
+                                                    <ArrowUpDown size={13} />
+                                                    <span>整理</span>
+                                                </Button>
+                                            )}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="widgets-bento-action"
+                                                onClick={() => {
+                                                    setSheet("apps");
+                                                    setFilter("");
+                                                    setActiveGroupFilter("all");
+                                                }}
+                                                title="打开常用网站面板"
+                                            >
+                                                <Folder size={13} />
+                                                <span>面板</span>
+                                            </Button>
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="widgets-bento-action"
+                                                onClick={() => {
+                                                    setFormPresentation(
+                                                        "dialog",
+                                                    );
+                                                    openAddModal();
+                                                }}
+                                                title="添加常用网站"
+                                            >
+                                                <Plus size={13} />
+                                                <span>添加</span>
+                                            </Button>
+                                        </>
+                                    )}
+                            </div>
                         </div>
                         {appsStatus === "loading" && (
                             <p className="text-xs text-[var(--muted)]">
@@ -159,16 +245,55 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                             onReorder={(ids) =>
                                                 void reorderPinned(ids)}
                                             onAdd={() => {
-                                                setSheet("apps");
-                                                setFormPresentation("panel");
+                                                setFormPresentation("dialog");
                                                 openAddModal();
                                             }}
                                         />
                                     )
                                     : (
-                                        <p className="text-xs text-[var(--muted)] py-4 text-center">
-                                            暂无固定在首页的网站
-                                        </p>
+                                        <div className="widgets-bento-empty">
+                                            <p className="widgets-bento-empty-text">
+                                                {apps.length > 0
+                                                    ? "暂无固定在首页的网站，可从网站面板固定或添加新网站"
+                                                    : "还没有常用网站，立即添加第一个网站到首页"}
+                                            </p>
+                                            <div className="widgets-bento-empty-actions">
+                                                {apps.length > 0 && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="widgets-bento-empty-btn"
+                                                        onClick={() => {
+                                                            setSheet("apps");
+                                                            setFilter("");
+                                                            setActiveGroupFilter(
+                                                                "all",
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Folder size={13} />
+                                                        <span>
+                                                            浏览网站库 ({apps
+                                                                .length})
+                                                        </span>
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="default"
+                                                    size="sm"
+                                                    className="widgets-bento-empty-btn widgets-bento-empty-btn--primary"
+                                                    onClick={() => {
+                                                        setFormPresentation(
+                                                            "dialog",
+                                                        );
+                                                        openAddModal();
+                                                    }}
+                                                >
+                                                    <Plus size={13} />
+                                                    <span>添加网站</span>
+                                                </Button>
+                                            </div>
+                                        </div>
                                     )
                             )}
                     </div>
@@ -176,18 +301,59 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                     {/* Bento Card 2: 随手便签 */}
                     <div className="widgets-bento-card">
                         <div className="widgets-bento-header">
-                            <span className="widgets-bento-title">
-                                <StickyNote size={16} />
-                                <span>便签看板</span>
-                            </span>
-                            <button
-                                type="button"
-                                className="widgets-bento-action"
-                                onClick={() => void createNote()}
-                            >
-                                <Plus size={13} />
-                                <span>新建</span>
-                            </button>
+                            <div className="widgets-bento-header-left">
+                                <button
+                                    type="button"
+                                    className="widgets-bento-title-btn"
+                                    onClick={() => {
+                                        setSheet("notes");
+                                        setFilter("");
+                                    }}
+                                    title="查看全部便签"
+                                    aria-label="打开便签面板"
+                                >
+                                    <StickyNote size={15} />
+                                    <span>便签看板</span>
+                                    <span
+                                        className="widgets-bento-count"
+                                        title={`已固定 ${fixedNotes.length} 条${
+                                            notes.length > fixedNotes.length
+                                                ? `，共 ${notes.length} 条便签`
+                                                : ""
+                                        }`}
+                                    >
+                                        {fixedNotes.length}
+                                        {notes.length > fixedNotes.length && (
+                                            <span className="widgets-bento-count-total">
+                                                /{notes.length}
+                                            </span>
+                                        )}
+                                    </span>
+                                </button>
+                            </div>
+                            <div className="widgets-bento-actions">
+                                <button
+                                    type="button"
+                                    className="widgets-bento-action"
+                                    onClick={() => {
+                                        setSheet("notes");
+                                        setFilter("");
+                                    }}
+                                    title="查看全部便签"
+                                >
+                                    <StickyNote size={13} />
+                                    <span>面板</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="widgets-bento-action widgets-bento-action--primary"
+                                    onClick={() => void createNote()}
+                                    title="新建便签"
+                                >
+                                    <Plus size={13} />
+                                    <span>新建</span>
+                                </button>
+                            </div>
                         </div>
                         {fixedNotes.length > 0
                             ? (
@@ -211,9 +377,40 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                 />
                             )
                             : (
-                                <p className="text-xs text-[var(--muted)] py-4 text-center">
-                                    还没有固定便签，点击右上角新建速记
-                                </p>
+                                <div className="widgets-bento-empty">
+                                    <p className="widgets-bento-empty-text">
+                                        {notes.length > 0
+                                            ? "还没有固定在首页的便签，可从便签库置顶固定或新建速记"
+                                            : "还没有便签，点击右上角或下方按钮新建速记"}
+                                    </p>
+                                    <div className="widgets-bento-empty-actions">
+                                        {notes.length > 0 && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="widgets-bento-empty-btn"
+                                                onClick={() => {
+                                                    setSheet("notes");
+                                                    setFilter("");
+                                                }}
+                                            >
+                                                <StickyNote size={13} />
+                                                <span>
+                                                    浏览便签库 ({notes.length})
+                                                </span>
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="widgets-bento-empty-btn widgets-bento-empty-btn--primary"
+                                            onClick={() => void createNote()}
+                                        >
+                                            <Plus size={13} />
+                                            <span>新建便签</span>
+                                        </Button>
+                                    </div>
+                                </div>
                             )}
                     </div>
                 </div>
@@ -229,9 +426,10 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                             setFilter("");
                             setActiveGroupFilter("all");
                         }}
+                        title="打开常用网站面板"
                     >
-                        <Folder size={16} />
-                        <span>常用空间</span>
+                        <Folder size={15} />
+                        <span>网站 · {apps.length}</span>
                     </button>
                     <button
                         type="button"
@@ -240,9 +438,10 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                             setSheet("notes");
                             setFilter("");
                         }}
+                        title="打开便签速记"
                     >
-                        <StickyNote size={16} />
-                        <span>便签速记</span>
+                        <StickyNote size={15} />
+                        <span>便签 · {notes.length}</span>
                     </button>
                 </nav>
             )}

@@ -5,6 +5,7 @@ import {
     mergeVisibleOrder,
 } from "./launcherTiles.ts";
 import { computeEffectiveColumns } from "./WebAppLauncher.tsx";
+import { calculateDesktopLayout } from "./desktopLayout.ts";
 
 Deno.test("grouped apps form one folder with every current member in app order", () => {
     const app = (id: string, groupId: string | null): LauncherApp => ({
@@ -97,5 +98,32 @@ Deno.test("computeEffectiveColumns balances row counts to eliminate trailing orp
             showFolders: false,
         }),
         9,
+    );
+});
+
+Deno.test("a large folder leaves first-row space for following websites", () => {
+    const columns = computeEffectiveColumns({
+        tilesCount: 3,
+        columns: 5,
+        showFolders: true,
+        hasLargeFolder: true,
+    });
+    const placement = calculateDesktopLayout([
+        { id: "first", cols: 1, rows: 1 },
+        { id: "folder", cols: 2, rows: 2 },
+        { id: "next", cols: 1, rows: 1 },
+    ], columns);
+    assertEquals(placement.map(({ id, row, col }) => ({ id, row, col })), [
+        { id: "first", row: 0, col: 0 },
+        { id: "folder", row: 0, col: 1 },
+        { id: "next", row: 0, col: 3 },
+    ]);
+    assertEquals(
+        computeEffectiveColumns({
+            tilesCount: 3,
+            columns: 5,
+            showFolders: false,
+        }),
+        3,
     );
 });

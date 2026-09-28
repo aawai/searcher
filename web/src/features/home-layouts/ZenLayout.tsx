@@ -1,4 +1,4 @@
-import { Folder, StickyNote } from "lucide-react";
+import { ArrowUpDown, Check, Folder, StickyNote } from "lucide-react";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
@@ -114,37 +114,84 @@ export function ZenLayout(props: HomeLayoutProps) {
                     )}
                     {(appsStatus === "ready" || appsStatus === "offline") &&
                         pinned.length > 0 && (
-                        <WebAppLauncher
-                            apps={pinned}
-                            groups={groups}
-                            showFolders={false}
-                            size={appearance.webAppIconSize}
-                            showAppLabels={appearance.showAppLabels}
-                            managing={isManagingApps}
-                            onToggleManaging={() =>
-                                setIsManagingApps((value) => !value)}
-                            onResetLayout={() =>
-                                void reorderPinned(
-                                    [...pinned].sort((a, b) =>
-                                        (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-                                    ).map((app) => app.id),
-                                )}
-                            onOpen={openApp}
-                            onEdit={(app) => {
-                                setFormPresentation("dialog");
-                                openEditModal(app);
-                            }}
-                            onMove={(app, groupId) =>
-                                void moveAppGroup(app, groupId)}
-                            onPin={(app) => void togglePinApp(app)}
-                            onDelete={(app) => void softDeleteApp(app)}
-                            onReorder={(ids) => void reorderPinned(ids)}
-                            onAdd={() => {
-                                setSheet("apps");
-                                setFormPresentation("panel");
-                                openAddModal();
-                            }}
-                        />
+                        <>
+                            {isManagingApps && (
+                                <div
+                                    className="home-managing-bar"
+                                    role="status"
+                                    aria-live="polite"
+                                >
+                                    <span className="home-managing-text">
+                                        <ArrowUpDown size={14} />
+                                        <span>
+                                            正在整理常用网站（拖拽调整顺序）
+                                        </span>
+                                    </span>
+                                    <div className="home-managing-actions">
+                                        {pinned.length > 1 && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="home-managing-btn"
+                                                onClick={() =>
+                                                    void reorderPinned(
+                                                        [...pinned].sort((
+                                                            a,
+                                                            b,
+                                                        ) => (a.sortOrder ??
+                                                            0) -
+                                                            (b.sortOrder ?? 0)
+                                                        ).map((app) => app.id),
+                                                    )}
+                                            >
+                                                重置
+                                            </Button>
+                                        )}
+                                        <Button
+                                            size="sm"
+                                            variant="default"
+                                            className="home-managing-btn home-managing-btn--primary"
+                                            onClick={() =>
+                                                setIsManagingApps(false)}
+                                        >
+                                            <Check size={13} />
+                                            <span>完成</span>
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                            <WebAppLauncher
+                                apps={pinned}
+                                groups={groups}
+                                showFolders={false}
+                                size={appearance.webAppIconSize}
+                                showAppLabels={appearance.showAppLabels}
+                                managing={isManagingApps}
+                                onToggleManaging={() =>
+                                    setIsManagingApps((value) => !value)}
+                                onResetLayout={() =>
+                                    void reorderPinned(
+                                        [...pinned].sort((a, b) =>
+                                            (a.sortOrder ?? 0) -
+                                            (b.sortOrder ?? 0)
+                                        ).map((app) => app.id),
+                                    )}
+                                onOpen={openApp}
+                                onEdit={(app) => {
+                                    setFormPresentation("dialog");
+                                    openEditModal(app);
+                                }}
+                                onMove={(app, groupId) =>
+                                    void moveAppGroup(app, groupId)}
+                                onPin={(app) => void togglePinApp(app)}
+                                onDelete={(app) => void softDeleteApp(app)}
+                                onReorder={(ids) => void reorderPinned(ids)}
+                                onAdd={() => {
+                                    setFormPresentation("dialog");
+                                    openAddModal();
+                                }}
+                            />
+                        </>
                     )}
                     <FloatingNotes
                         notes={fixedNotes}

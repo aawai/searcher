@@ -11,6 +11,7 @@ import {
     Folder,
     FolderPlus,
     GripVertical,
+    ListFilter,
     Plus,
     RotateCcw,
     Trash2,
@@ -1064,6 +1065,7 @@ export function SearchHome() {
                     setSheet(v ? "apps" : null);
                     if (!v) {
                         setIsManagingGroups(false);
+                        setIsManagingApps(false);
                         setIsAddingApp(false);
                         setEditingApp(null);
                         setActiveFolderId(null);
@@ -1089,6 +1091,8 @@ export function SearchHome() {
                     : undefined}
                 height={webAppSheetHeight}
                 onHeightChange={setWebAppSheetHeight}
+                compact={!isAddingApp &&
+                    (isManagingGroups || apps.length + groups.length <= 6)}
             >
                 {isAddingApp && formPresentation === "panel" && (
                     <AppFormDialog
@@ -1133,63 +1137,63 @@ export function SearchHome() {
                         ? { display: "none" }
                         : undefined}
                 >
-                    <div className="webapp-manager-header">
-                        <div
-                            className="section-tools"
-                            style={{ margin: 0, flex: 1 }}
-                        >
-                            <label
-                                className="sr-only"
-                                htmlFor="filter-apps"
-                            >
-                                搜索网站
-                            </label>
-                            <input
-                                id="filter-apps"
+                    {!isManagingGroups && (
+                        <div className="webapp-manager-header">
+                            <Input
+                                className="webapp-manager-search"
+                                aria-label="搜索网站"
                                 placeholder="搜索网站名称或网址"
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
                             />
+                            <div className="webapp-manager-actions">
+                                <Button
+                                    variant="outline"
+                                    aria-pressed={isManagingApps}
+                                    onClick={() =>
+                                        setIsManagingApps((value) => !value)}
+                                >
+                                    <ListFilter size={16} />
+                                    <span>
+                                        {isManagingApps
+                                            ? "完成整理"
+                                            : "整理布局"}
+                                    </span>
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    onClick={() => {
+                                        setFormPresentation("panel");
+                                        openAddModal();
+                                    }}
+                                >
+                                    <Plus size={16} />
+                                    <span>添加网站</span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsManagingApps(false);
+                                        setIsManagingGroups(true);
+                                    }}
+                                    title="文件夹管理"
+                                    aria-label="文件夹管理"
+                                >
+                                    <Folder size={16} />
+                                    <span>文件夹</span>
+                                </Button>
+                            </div>
                         </div>
-                        <div className="webapp-manager-actions">
-                            <Button
-                                variant="default"
-                                onClick={() => {
-                                    setFormPresentation("panel");
-                                    openAddModal();
-                                }}
-                            >
-                                <Plus size={16} />
-                                <span>添加网站</span>
-                            </Button>
-                            <Button
-                                variant={isManagingGroups
-                                    ? "default"
-                                    : "outline"}
-                                onClick={() => setIsManagingGroups(
-                                    !isManagingGroups,
-                                )}
-                                title={isManagingGroups
-                                    ? "返回常用网站"
-                                    : "文件夹管理"}
-                                aria-label={isManagingGroups
-                                    ? "返回常用网站"
-                                    : "文件夹管理"}
-                            >
-                                <Folder size={16} />
-                                <span>
-                                    {isManagingGroups ? "返回" : "文件夹"}
-                                </span>
-                            </Button>
-                        </div>
-                    </div>
+                    )}
+                    {isManagingApps && !isManagingGroups && (
+                        <p className="webapp-managing-hint" role="status">
+                            正在整理布局：拖动网站调整顺序，点击网站可编辑。
+                        </p>
+                    )}
 
                     {isManagingGroups
                         ? (
                             <div className="group-manage-section">
-                                <h3 className="text-base font-semibold m-0 mb-1">
-                                    文件夹管理
-                                </h3>
                                 <p className="muted text-xs m-0 mb-3">
                                     文件夹可帮助归类常用网站。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
                                 </p>

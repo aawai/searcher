@@ -18,6 +18,7 @@ export function ContentSheet(
         height = 65,
         onHeightChange,
         onBack,
+        compact = false,
     }: {
         open: boolean;
         onOpenChange: (value: boolean) => void;
@@ -26,6 +27,7 @@ export function ContentSheet(
         height?: 40 | 65 | 90;
         onHeightChange?: (height: 40 | 65 | 90) => void;
         onBack?: () => void;
+        compact?: boolean;
     },
 ) {
     const touchStart = useRef<number | null>(null);
@@ -48,7 +50,9 @@ export function ContentSheet(
             }}
         >
             <SheetContent
-                className={`sheet--apps ${isExpanded ? "sheet--expanded" : ""}`}
+                className={`sheet--apps ${
+                    isExpanded ? "sheet--expanded" : ""
+                } ${compact ? "sheet--compact" : ""}`}
                 style={{
                     "--sheet-mobile-height": mobileHeight,
                 } as CSSProperties}

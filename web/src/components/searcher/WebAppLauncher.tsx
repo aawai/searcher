@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, GripVertical } from "lucide-react";
+import { ArrowLeft, Folder, GripVertical } from "lucide-react";
 import {
     closestCenter,
     DndContext,
@@ -207,7 +207,18 @@ function FolderView({
                             : label}
                         {...dragAttributes}
                     />
-                    <span className="launcher-folder-preview">
+                    <span
+                        className={`launcher-folder-preview ${
+                            preview.length === 0
+                                ? "launcher-folder-preview--empty"
+                                : preview.length === 1
+                                ? "launcher-folder-preview--single"
+                                : ""
+                        }`}
+                    >
+                        {preview.length === 0 && (
+                            <Folder size={large ? 38 : 22} aria-hidden="true" />
+                        )}
                         {preview.map((app) => {
                             const icon = (
                                 <span className="launcher-folder-mini-glyph">
@@ -398,6 +409,7 @@ function SortableTile({
 function useDesktopColumns(
     size: "compact" | "default" | "large",
     showAppLabels: boolean,
+    hasLargeFolder: boolean,
 ) {
     const gridRef = useRef<HTMLDivElement>(null);
     const [columns, setColumns] = useState(6);
@@ -422,7 +434,7 @@ function useDesktopColumns(
         });
         observer.observe(target);
         return () => observer.disconnect();
-    }, [size, showAppLabels]);
+    }, [size, showAppLabels, hasLargeFolder]);
     return { gridRef, columns };
 }
 
@@ -431,14 +443,16 @@ export function computeEffectiveColumns({
     columns,
     managing = false,
     showFolders = true,
+    hasLargeFolder = false,
 }: {
     tilesCount: number;
     columns: number;
     managing?: boolean;
     showFolders?: boolean;
+    hasLargeFolder?: boolean;
 }): number {
     if (!managing && tilesCount > 0) {
-        if (tilesCount < columns) {
+        if (tilesCount < columns && !hasLargeFolder) {
             return Math.max(1, tilesCount);
         }
         // Avoid single trailing orphan by balancing rows on home screen
@@ -503,7 +517,14 @@ export function WebAppLauncher({
         () => launcherTiles(apps, showFolders ? groups : []),
         [apps, groups, showFolders],
     );
-    const { gridRef, columns } = useDesktopColumns(size, showAppLabels);
+    const hasLargeFolder = showFolders && tiles.some(
+        (tile) => tile.group?.folderSize === "large",
+    );
+    const { gridRef, columns } = useDesktopColumns(
+        size,
+        showAppLabels,
+        hasLargeFolder,
+    );
     const effectiveColumns = useMemo(
         () =>
             computeEffectiveColumns({
@@ -511,8 +532,9 @@ export function WebAppLauncher({
                 columns,
                 managing,
                 showFolders,
+                hasLargeFolder,
             }),
-        [managing, tiles.length, columns, showFolders],
+        [managing, tiles.length, columns, showFolders, hasLargeFolder],
     );
     const layout = useMemo(() =>
         calculateDesktopLayout(
@@ -711,8 +733,8 @@ export function WebAppLauncher({
                 <div
                     ref={gridRef}
                     className={`pinned-apps launcher-grid launcher-grid--${size}${
-                        showAppLabels ? "" : " launcher-grid--icons-only"
-                    }`}
+                        hasLargeFolder ? " launcher-grid--folders" : ""
+                    }${showAppLabels ? "" : " launcher-grid--icons-only"}`}
                     style={{
                         "--launcher-columns": effectiveColumns,
                     } as React.CSSProperties}
@@ -744,6 +766,10 @@ export function WebAppLauncher({
                         ? (
                             <div
                                 className={`launcher-overlay launcher-grid--${size}${
+                                    hasLargeFolder
+                                        ? " launcher-grid--folders"
+                                        : ""
+                                }${
                                     showAppLabels
                                         ? ""
                                         : " launcher-grid--icons-only"

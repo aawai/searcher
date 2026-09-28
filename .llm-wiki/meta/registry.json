@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-28T09:03:34.140Z",
+  "last_updated": "2026-09-28T11:13:02.909Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -816,15 +816,20 @@
     },
     "sources/obs-2026-09-28-": {
       "type": "source",
-      "title": "Observation: 搜索建议选中态主题色层级",
+      "title": "Observation: 精简添加/编辑网站表单视觉层级与轻量化卡片重构",
       "tags": [
-        "search-suggestions,accent-scale,ui,theme"
+        "ui-ux",
+        "dialog",
+        "webapp",
+        "app-dialog",
+        "responsive",
+        "dual-theme"
       ],
       "status": "observation",
       "slug": "obs-2026-09-28-",
       "relevance": "high",
-      "observed_at": "2026-09-28T09:03:34.112Z",
-      "source_context": "2026-09-28 Searcher suggestion highlighting and selection design",
+      "observed_at": "2026-09-28T11:13:02.896Z",
+      "source_context": "精简添加/编辑网站表单视觉层级，突出基础 URL/name/folder 并弱化高级设置",
       "created": "2026-09-28",
       "updated": "2026-09-28"
     },

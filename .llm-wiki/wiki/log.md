@@ -2,6 +2,7 @@
 
 ## 2026-09-28
 
+- **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"精简添加/编辑网站表单视觉层级与轻量化卡片重构"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"搜索建议选中态主题色层级"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"便签墨水字色继承修正与多行信笺横线落地"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"便签纸艺细节增强与确定性微倾角工程落地"}

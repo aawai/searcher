@@ -2152,19 +2152,38 @@ a {
 .group-manage-mobile-actions {
     display: none;
 }
+.webapp-manager-search {
+    flex: 1;
+    max-width: 300px;
+    min-width: 180px;
+}
+.webapp-manager-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.webapp-managing-hint {
+    margin: 0 0 18px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+    background: var(--surface-soft);
+    color: var(--foreground);
+    font-size: 13px;
+    line-height: 1.5;
+}
 @media (max-width:767px) {
     .webapp-manager-header {
         display: grid;
         grid-template-columns: minmax(0,1fr);
     }
-    .webapp-manager-header .section-tools,
-    .webapp-manager-header .section-tools input {
+    .webapp-manager-search {
         width: 100%;
+        max-width: none;
         min-width: 0;
     }
-    .webapp-manager-actions {
-        display: flex;
-        gap: 8px;
+    .webapp-manager-actions button[aria-pressed] {
+        order: 3;
     }
     .group-manage-desktop-actions {
         display: none;
@@ -2916,27 +2935,31 @@ a {
     }
 }
 
-/* App Form Dialog (精致化 APP 添加 / 编辑弹窗) */
+/* App Form Dialog (精简视觉层级 APP 添加 / 编辑弹窗) */
 .dialog-panel.app-dialog-panel {
     display: flex;
     flex-direction: column;
     padding: 0;
-    width: min(100% - 32px, 580px);
-    max-height: min(90dvh, 720px);
+    width: min(100% - 32px, 560px);
+    max-height: min(90dvh, 700px);
     overflow: hidden;
     margin: 0 auto;
     background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
     backdrop-filter: none;
 }
 .app-dialog-header {
-    padding: 20px 24px 16px;
+    padding: 16px 20px 14px;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 .app-dialog-header [data-slot="dialog-title"] {
     margin: 0;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--foreground);
 }
 .app-dialog-form {
     display: flex;
@@ -2949,15 +2972,15 @@ a {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 20px 24px;
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
 }
 .app-dialog-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 .app-dialog-section-title {
     font-size: 13px;
@@ -2966,18 +2989,32 @@ a {
     letter-spacing: 0.02em;
     margin: 0;
 }
+.app-dialog-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.app-dialog-field-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 .app-dialog-url-status {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    margin-top: 4px;
+    min-height: 20px;
+    margin-top: 2px;
 }
 .app-dialog-url-status.loading {
     color: var(--muted);
 }
 .app-dialog-url-status.success {
-    color: #10b981;
+    color: var(--success, #10b981);
     font-weight: 500;
 }
 .app-dialog-url-status.error {
@@ -2988,92 +3025,141 @@ a {
     flex-wrap: wrap;
     gap: 8px;
 }
-.app-dialog-segmented {
-    display: flex;
+
+/* 打开设置卡片 (轻量收拢、不喧宾夺主) */
+.app-dialog-options-card {
     background: var(--surface-soft);
     border: 1px solid var(--border);
-    border-radius: var(--control-radius);
-    padding: 3px;
-    gap: 3px;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-.app-dialog-segmented-btn {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 32px;
-    padding: 4px 8px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--muted);
-    background: transparent;
-    border: none;
-    border-radius: calc(var(--control-radius) - 3px);
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-    white-space: nowrap;
-}
-.app-dialog-segmented-btn:hover:not(:disabled) {
-    color: var(--foreground);
-}
-.app-dialog-segmented-btn[data-state="active"] {
-    background: var(--surface);
-    color: var(--foreground);
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-.app-dialog-segmented-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-.app-dialog-pin-row {
+.app-dialog-option-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
+    gap: 12px;
+}
+.app-dialog-option-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--foreground);
+}
+.app-dialog-option-desc {
+    font-size: 11.5px;
+    color: var(--muted);
+}
+.app-dialog-option-divider {
+    height: 1px;
+    background: var(--border);
+    opacity: 0.6;
+    margin: 2px 0;
+}
+
+/* 图标卡片 (清晰预览与来源收拢) */
+.app-dialog-icon-card {
     background: var(--surface-soft);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
-.app-dialog-pin-info {
+.app-dialog-preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.app-dialog-preview-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.app-dialog-preview-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.app-dialog-preview-fallback {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+}
+.app-dialog-preview-meta {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
+    min-width: 0;
 }
-.app-dialog-pin-title {
-    font-size: 13.5px;
-    font-weight: 500;
+.app-dialog-preview-meta-title {
+    font-size: 13px;
+    font-weight: 600;
     color: var(--foreground);
-    cursor: pointer;
 }
-.app-dialog-pin-desc {
-    font-size: 12px;
+.app-dialog-source-badge {
+    font-size: 11px;
+    font-weight: 500;
     color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+.app-dialog-preview-meta-desc {
+    font-size: 11.5px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.app-dialog-preview-reset-btn {
+    font-size: 11.5px;
+    color: var(--muted);
+    flex-shrink: 0;
+    height: 26px;
+    padding: 0 8px;
 }
 .app-dialog-icon-subpanel-wrap {
     margin-top: 2px;
 }
 .app-dialog-icon-subpanel {
-    background: var(--surface-soft);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+}
+.app-dialog-icon-subpanel--auto {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 .app-dialog-helper-text {
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--muted);
     margin: 0;
+    line-height: 1.4;
 }
 .app-upload-dropzone {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 16px;
+    gap: 4px;
+    padding: 14px 12px;
     border: 1.5px dashed var(--border);
     border-radius: 8px;
     background: var(--surface);
@@ -3089,12 +3175,12 @@ a {
     color: var(--muted);
 }
 .app-upload-text {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 500;
     color: var(--foreground);
 }
 .app-upload-hint {
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--muted);
 }
 .app-input-with-button {
@@ -3105,73 +3191,6 @@ a {
 .app-input-with-button input {
     flex: 1;
     margin: 0;
-}
-.app-dialog-preview-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
-}
-.app-dialog-preview-label {
-    font-size: 12px;
-    color: var(--muted);
-}
-.app-dialog-preview-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--surface);
-}
-.app-dialog-preview-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface-soft);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    overflow: hidden;
-}
-.app-dialog-preview-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-.app-dialog-preview-fallback {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
-}
-.app-dialog-preview-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-    min-width: 0;
-}
-.app-dialog-preview-name {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.app-dialog-preview-domain {
-    font-size: 12px;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.app-dialog-preview-reset-btn {
-    font-size: 12px;
-    color: var(--muted);
-    flex-shrink: 0;
 }
 .app-ai-unavailable-card {
     display: flex;
@@ -3296,7 +3315,7 @@ a {
     background: var(--accent);
 }
 .app-dialog-footer {
-    padding: 14px 24px;
+    padding: 12px 20px;
     background: var(--surface-solid);
     border-top: 1px solid var(--border);
     display: flex;
@@ -3304,6 +3323,33 @@ a {
     gap: 10px;
     flex-shrink: 0;
     z-index: 10;
+}
+
+@media (max-width: 640px) {
+    .dialog-panel.app-dialog-panel {
+        width: calc(100% - 20px);
+        max-height: calc(100dvh - 24px);
+        margin: 12px auto;
+    }
+    .app-dialog-header {
+        padding: 14px 16px 12px;
+    }
+    .app-dialog-body {
+        padding: 14px 16px;
+        gap: 14px;
+    }
+    .app-dialog-footer {
+        padding: 10px 16px;
+    }
+    .app-dialog-preview-bar {
+        flex-wrap: wrap;
+    }
+    .app-ai-controls {
+        grid-template-columns: 1fr;
+    }
+    .app-ai-candidates-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 .sheet.sheet--apps {
     top: 50%;
@@ -3323,6 +3369,12 @@ a {
     width: calc(100vw - 48px);
     height: calc(100dvh - 48px);
     transform: translateX(-50%);
+}
+.sheet.sheet--apps.sheet--compact:not(.sheet--expanded) {
+    width: min(760px,calc(100vw - 48px));
+    height: auto;
+    min-height: min(340px,calc(100dvh - 64px));
+    max-height: min(560px,calc(100dvh - 64px));
 }
 .sheet-grip {
     display: none;
@@ -3361,6 +3413,12 @@ a {
         transform: translateX(-50%);
         border-bottom: 0;
         border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .sheet.sheet--apps.sheet--compact:not(.sheet--expanded) {
+        width: 100%;
+        height: auto;
+        min-height: 220px;
+        max-height: var(--sheet-mobile-height,85dvh);
     }
     .sheet.sheet--apps.sheet--expanded {
         top: 0;

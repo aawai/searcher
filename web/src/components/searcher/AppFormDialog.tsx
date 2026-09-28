@@ -415,15 +415,21 @@ export function AppFormDialog({
                         {formError}
                     </p>
                 )}
-                {/* 1. 基础信息 */}
-                <section className="app-dialog-section">
-                    <h3 className="app-dialog-section-title">
-                        基础信息
-                    </h3>
 
-                    <div className="field" style={{ margin: 0 }}>
-                        <label htmlFor="app-url-input">
-                            网址 (URL) *
+                {/* 1. 基础信息 (首要) */}
+                <section className="app-dialog-section">
+                    <h3 className="app-dialog-section-title">基础信息</h3>
+
+                    {/* 网址输入与状态 */}
+                    <div className="app-dialog-field">
+                        <label
+                            htmlFor="app-url-input"
+                            className="app-dialog-field-label"
+                        >
+                            <span>
+                                网址 (URL){" "}
+                                <span className="text-red-500">*</span>
+                            </span>
                         </label>
                         <Input
                             id="app-url-input"
@@ -434,7 +440,7 @@ export function AppFormDialog({
                             onChange={(e) => handleUrlChange(e.target.value)}
                             onBlur={handleUrlBlur}
                             autoFocus={!editingApp}
-                            style={{ width: "100%", margin: 0 }}
+                            className="w-full"
                         />
                         {/* URL 状态反馈 */}
                         {urlFetchStatus === "loading" && (
@@ -457,11 +463,7 @@ export function AppFormDialog({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleRetryFetch}
-                                    style={{
-                                        height: "26px",
-                                        padding: "0 8px",
-                                        fontSize: "12px",
-                                    }}
+                                    className="h-6 px-2 text-xs"
                                 >
                                     重新获取
                                 </Button>
@@ -469,254 +471,132 @@ export function AppFormDialog({
                         )}
                     </div>
 
-                    <div
-                        className="field"
-                        style={{ margin: "10px 0 0" }}
-                    >
-                        <label htmlFor="app-name-input">网站名称</label>
-                        <Input
-                            id="app-name-input"
-                            placeholder="默认使用域名"
-                            value={appName}
-                            onChange={(e) => setAppName(e.target.value)}
-                            style={{ width: "100%", margin: 0 }}
-                        />
-                    </div>
-
-                    <div
-                        className="field"
-                        style={{ margin: "10px 0 0" }}
-                    >
-                        <label htmlFor="app-group-select">文件夹</label>
-                        <NativeSelect
-                            id="app-group-select"
-                            value={appGroupId}
-                            onChange={(e) => setAppGroupId(e.target.value)}
-                        >
-                            <NativeSelectOption value="">
-                                未放入文件夹
-                            </NativeSelectOption>
-                            {groups.map((g) => (
-                                <NativeSelectOption key={g.id} value={g.id}>
-                                    {g.name}
-                                </NativeSelectOption>
-                            ))}
-                        </NativeSelect>
-                    </div>
-                </section>
-
-                {/* 2. 打开设置 */}
-                <section className="app-dialog-section">
-                    <h3 className="app-dialog-section-title">
-                        打开设置
-                    </h3>
-
-                    <div className="field" style={{ margin: 0 }}>
-                        <label>打开方式</label>
-                        <Tabs
-                            value={appOpenMode}
-                            onValueChange={(val) =>
-                                setAppOpenMode(
-                                    val as "global" | "current" | "new_tab",
-                                )}
-                            className="pt-1 w-full"
-                        >
-                            <TabsList className="w-full grid grid-cols-3">
-                                <TabsTrigger value="global">
-                                    跟随全局
-                                </TabsTrigger>
-                                <TabsTrigger value="new_tab">
-                                    新标签页
-                                </TabsTrigger>
-                                <TabsTrigger value="current">
-                                    当前标签页
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                        {appOpenMode === "global" && (
-                            <p
-                                className="app-dialog-helper-text"
-                                style={{ marginTop: "6px" }}
-                            >
-                                当前全局设置：{appearance.target ===
-                                        "new_tab"
-                                    ? "新标签页打开"
-                                    : "当前标签页打开"}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* 固定在搜索首页 */}
-                    <div
-                        className="app-dialog-pin-row"
-                        style={{ marginTop: "12px" }}
-                    >
-                        <div className="app-dialog-pin-info">
+                    {/* 网站名称与文件夹：桌面双列，移动端单列 */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="app-dialog-field">
                             <label
-                                htmlFor="app-pin-switch"
-                                className="app-dialog-pin-title"
+                                htmlFor="app-name-input"
+                                className="app-dialog-field-label"
                             >
-                                固定在搜索首页
+                                网站名称
                             </label>
-                            <span className="app-dialog-pin-desc">
-                                在搜索框下方快速显示
-                            </span>
+                            <Input
+                                id="app-name-input"
+                                placeholder="默认使用域名"
+                                value={appName}
+                                onChange={(e) => setAppName(e.target.value)}
+                                className="w-full"
+                            />
                         </div>
-                        <Switch
-                            id="app-pin-switch"
-                            checked={appIsPinned}
-                            onCheckedChange={setAppIsPinned}
-                            aria-label="固定在搜索首页"
-                        />
+
+                        <div className="app-dialog-field">
+                            <label
+                                htmlFor="app-group-select"
+                                className="app-dialog-field-label"
+                            >
+                                文件夹
+                            </label>
+                            <NativeSelect
+                                id="app-group-select"
+                                value={appGroupId}
+                                onChange={(e) => setAppGroupId(e.target.value)}
+                                className="w-full"
+                            >
+                                <NativeSelectOption value="">
+                                    未放入文件夹
+                                </NativeSelectOption>
+                                {groups.map((g) => (
+                                    <NativeSelectOption key={g.id} value={g.id}>
+                                        {g.name}
+                                    </NativeSelectOption>
+                                ))}
+                            </NativeSelect>
+                        </div>
                     </div>
                 </section>
 
-                {/* 3. 图标设置 */}
+                {/* 2. 打开设置 (清晰紧凑) */}
+                <section className="app-dialog-section">
+                    <h3 className="app-dialog-section-title">打开设置</h3>
+                    <div className="app-dialog-options-card">
+                        {/* 固定在搜索首页 */}
+                        <div className="app-dialog-option-row">
+                            <div className="flex flex-col gap-0.5">
+                                <label
+                                    htmlFor="app-pin-switch"
+                                    className="app-dialog-option-title cursor-pointer"
+                                >
+                                    固定在搜索首页
+                                </label>
+                                <span className="app-dialog-option-desc">
+                                    在搜索框下方快速显示
+                                </span>
+                            </div>
+                            <Switch
+                                id="app-pin-switch"
+                                checked={appIsPinned}
+                                onCheckedChange={setAppIsPinned}
+                                aria-label="固定在搜索首页"
+                            />
+                        </div>
+
+                        <div className="app-dialog-option-divider" />
+
+                        {/* 打开方式 */}
+                        <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="app-dialog-option-title">
+                                    打开方式
+                                </span>
+                                {appOpenMode === "global" && (
+                                    <span className="app-dialog-option-desc">
+                                        当前全局：{appearance.target ===
+                                                "new_tab"
+                                            ? "新标签页"
+                                            : "当前标签页"}
+                                    </span>
+                                )}
+                            </div>
+                            <Tabs
+                                value={appOpenMode}
+                                onValueChange={(val) =>
+                                    setAppOpenMode(
+                                        val as "global" | "current" | "new_tab",
+                                    )}
+                                className="w-full"
+                            >
+                                <TabsList className="w-full grid grid-cols-3 h-8">
+                                    <TabsTrigger
+                                        value="global"
+                                        className="text-xs"
+                                    >
+                                        跟随全局
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="new_tab"
+                                        className="text-xs"
+                                    >
+                                        新标签页
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="current"
+                                        className="text-xs"
+                                    >
+                                        当前标签页
+                                    </TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3. 图标设置 (实时预览 + 4种来源选项卡) */}
                 <section className="app-dialog-section">
                     <h3 className="app-dialog-section-title">图标</h3>
 
-                    {/* 图标来源模式切换 */}
-                    <Tabs
-                        value={iconTab}
-                        onValueChange={(val) =>
-                            setIconTab(val as "auto" | "upload" | "url" | "ai")}
-                    >
-                        <TabsList className="w-full grid grid-cols-4 mb-3">
-                            <TabsTrigger value="auto">自动获取</TabsTrigger>
-                            <TabsTrigger value="upload">上传图片</TabsTrigger>
-                            <TabsTrigger value="url">网络图片</TabsTrigger>
-                            <TabsTrigger value="ai">AI 生成</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-
-                    {/* 来源子面板 */}
-                    <div className="app-dialog-icon-subpanel-wrap">
-                        {iconTab === "auto" && (
-                            <div className="app-dialog-icon-subpanel">
-                                <p className="app-dialog-helper-text">
-                                    根据填写的网址自动获取高清 Favicon
-                                    或网站图标。
-                                </p>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={urlFetchStatus ===
-                                            "loading" || !appUrl.trim()}
-                                    onClick={() => void handleRetryFetch()}
-                                    style={{ alignSelf: "flex-start" }}
-                                >
-                                    {urlFetchStatus === "loading"
-                                        ? (
-                                            <>
-                                                <Loader2
-                                                    size={13}
-                                                    className="spin"
-                                                />
-                                                <span>
-                                                    正在抓取图标…
-                                                </span>
-                                            </>
-                                        )
-                                        : (
-                                            <>
-                                                <RefreshCw size={13} />
-                                                <span>
-                                                    重新获取网站图标
-                                                </span>
-                                            </>
-                                        )}
-                                </Button>
-                            </div>
-                        )}
-
-                        {iconTab === "upload" && (
-                            <div className="app-dialog-icon-subpanel">
-                                <label className="app-upload-dropzone">
-                                    <Upload
-                                        size={20}
-                                        className="app-upload-icon"
-                                    />
-                                    <span className="app-upload-text">
-                                        {isUploadingIcon
-                                            ? "正在上传…"
-                                            : "点击选择本地图片上传"}
-                                    </span>
-                                    <span className="app-upload-hint">
-                                        支持 PNG / JPEG / WebP / AVIF / SVG /
-                                        ICO，文件小于 5MB
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml,image/x-icon"
-                                        style={{ display: "none" }}
-                                        disabled={isUploadingIcon}
-                                        onChange={(e) =>
-                                            void handleFileUpload(e)}
-                                    />
-                                </label>
-                            </div>
-                        )}
-
-                        {iconTab === "url" && (
-                            <div className="app-dialog-icon-subpanel">
-                                <div className="app-input-with-button">
-                                    <Input
-                                        type="url"
-                                        placeholder="https://example.com/icon.png"
-                                        value={iconImageUrl}
-                                        onChange={(e) =>
-                                            setIconImageUrl(
-                                                e.target.value,
-                                            )}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={!iconImageUrl
-                                            .trim() ||
-                                            isFetchingUrlIcon}
-                                        onClick={() => void handleUseImageUrl()}
-                                        style={{
-                                            flexShrink: 0,
-                                            height: "40px",
-                                        }}
-                                    >
-                                        {isFetchingUrlIcon
-                                            ? "获取中…"
-                                            : "使用图片"}
-                                    </Button>
-                                </div>
-                                <p className="app-dialog-helper-text">
-                                    支持公开可直接访问的 PNG、JPG、SVG 或 WebP
-                                    图片链接。
-                                </p>
-                            </div>
-                        )}
-
-                        {iconTab === "ai" && (
-                            <LogoCandidatePicker
-                                siteName={appName.trim() ||
-                                    appUrl.trim()}
-                                onSelect={(asset) => {
-                                    setAppIconAssetId(asset.id);
-                                    setAppIconSource("ai");
-                                    setIconPreviewUrl(asset.url);
-                                    setImageLoadError(false);
-                                }}
-                                onError={(err) => setFormError(err)}
-                                onClose={() => onOpenChange(false)}
-                            />
-                        )}
-                    </div>
-
-                    {/* 实时图标 / APP 预览 */}
-                    <div className="app-dialog-preview-wrapper">
-                        <span className="app-dialog-preview-label">
-                            当前图标预览
-                        </span>
-                        <div className="app-dialog-preview-card">
+                    <div className="app-dialog-icon-card">
+                        {/* 实时图标预览栏 */}
+                        <div className="app-dialog-preview-bar">
                             <div className="app-dialog-preview-icon">
                                 {iconPreviewUrl && !imageLoadError
                                     ? (
@@ -733,18 +613,30 @@ export function AppFormDialog({
                                         </span>
                                     )}
                             </div>
-                            <div className="app-dialog-preview-text">
+                            <div className="app-dialog-preview-meta">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="app-dialog-preview-meta-title">
+                                        当前图标
+                                    </span>
+                                    <span className="app-dialog-source-badge">
+                                        {appIconSource === "website"
+                                            ? "自动获取"
+                                            : appIconSource === "upload"
+                                            ? "本地上传"
+                                            : appIconSource === "url"
+                                            ? "网络图片"
+                                            : appIconSource === "ai"
+                                            ? "AI 生成"
+                                            : "首字母"}
+                                    </span>
+                                </div>
                                 <span
-                                    className="app-dialog-preview-name"
-                                    title={previewName}
+                                    className="app-dialog-preview-meta-desc"
+                                    title={previewName || previewDomain}
                                 >
-                                    {previewName}
-                                </span>
-                                <span
-                                    className="app-dialog-preview-domain"
-                                    title={previewDomain}
-                                >
-                                    {previewDomain}
+                                    {iconPreviewUrl
+                                        ? (previewName || previewDomain)
+                                        : "未设置自定义图标，使用首字母占位"}
                                 </span>
                             </div>
                             {iconPreviewUrl && (
@@ -760,14 +652,150 @@ export function AppFormDialog({
                                         setImageLoadError(false);
                                     }}
                                 >
-                                    重置图标
+                                    重置
                                 </Button>
+                            )}
+                        </div>
+
+                        {/* 图标来源模式切换 */}
+                        <Tabs
+                            value={iconTab}
+                            onValueChange={(val) => setIconTab(
+                                val as "auto" | "upload" | "url" | "ai",
+                            )}
+                            className="w-full"
+                        >
+                            <TabsList className="w-full grid grid-cols-4 h-8">
+                                <TabsTrigger value="auto" className="text-xs">
+                                    自动获取
+                                </TabsTrigger>
+                                <TabsTrigger value="upload" className="text-xs">
+                                    上传图片
+                                </TabsTrigger>
+                                <TabsTrigger value="url" className="text-xs">
+                                    网络图片
+                                </TabsTrigger>
+                                <TabsTrigger value="ai" className="text-xs">
+                                    AI 生成
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+
+                        {/* 来源子面板 */}
+                        <div className="app-dialog-icon-subpanel-wrap">
+                            {iconTab === "auto" && (
+                                <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--auto">
+                                    <span className="app-dialog-helper-text">
+                                        根据填写的网址自动获取高清 Favicon
+                                        或网站图标。
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={urlFetchStatus ===
+                                                "loading" || !appUrl.trim()}
+                                        onClick={() => void handleRetryFetch()}
+                                        className="h-7 text-xs gap-1.5 flex-shrink-0"
+                                    >
+                                        {urlFetchStatus === "loading"
+                                            ? (
+                                                <Loader2
+                                                    size={12}
+                                                    className="spin"
+                                                />
+                                            )
+                                            : <RefreshCw size={12} />}
+                                        <span>
+                                            {urlFetchStatus === "loading"
+                                                ? "正在抓取…"
+                                                : "重新抓取网站图标"}
+                                        </span>
+                                    </Button>
+                                </div>
+                            )}
+
+                            {iconTab === "upload" && (
+                                <div className="app-dialog-icon-subpanel">
+                                    <label className="app-upload-dropzone">
+                                        <Upload
+                                            size={18}
+                                            className="app-upload-icon"
+                                        />
+                                        <span className="app-upload-text">
+                                            {isUploadingIcon
+                                                ? "正在上传…"
+                                                : "点击或拖拽上传本地图片"}
+                                        </span>
+                                        <span className="app-upload-hint">
+                                            支持
+                                            PNG、JPEG、WebP、AVIF、SVG、ICO，文件小于
+                                            5MB
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
+                                            style={{ display: "none" }}
+                                            disabled={isUploadingIcon}
+                                            onChange={(e) =>
+                                                void handleFileUpload(e)}
+                                        />
+                                    </label>
+                                </div>
+                            )}
+
+                            {iconTab === "url" && (
+                                <div className="app-dialog-icon-subpanel">
+                                    <div className="app-input-with-button">
+                                        <Input
+                                            type="url"
+                                            placeholder="https://example.com/icon.png"
+                                            value={iconImageUrl}
+                                            onChange={(e) =>
+                                                setIconImageUrl(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={!iconImageUrl.trim() ||
+                                                isFetchingUrlIcon}
+                                            onClick={() =>
+                                                void handleUseImageUrl()}
+                                            className="h-8 text-xs flex-shrink-0"
+                                        >
+                                            {isFetchingUrlIcon
+                                                ? "提取中…"
+                                                : "使用图片"}
+                                        </Button>
+                                    </div>
+                                    <p className="app-dialog-helper-text">
+                                        支持公开可直接访问的 PNG、JPG、SVG 或
+                                        WebP 图片链接。
+                                    </p>
+                                </div>
+                            )}
+
+                            {iconTab === "ai" && (
+                                <LogoCandidatePicker
+                                    siteName={appName.trim() || appUrl.trim()}
+                                    onSelect={(asset) => {
+                                        setAppIconAssetId(asset.id);
+                                        setAppIconSource("ai");
+                                        setIconPreviewUrl(asset.url);
+                                        setImageLoadError(false);
+                                    }}
+                                    onError={(err) => setFormError(err)}
+                                    onClose={() => onOpenChange(false)}
+                                />
                             )}
                         </div>
                     </div>
                 </section>
             </div>
-            {/* 底部固定操作栏 (Sticky footer) */}
+
+            {/* 底部固定操作栏 */}
             <div className="app-dialog-footer">
                 <Button
                     variant="outline"
