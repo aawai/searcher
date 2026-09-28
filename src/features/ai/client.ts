@@ -53,7 +53,7 @@ export function normalizeBaseUrl(rawUrl: string): string {
     }
     const host = url.hostname.toLowerCase();
     const loopback = host === "localhost" || host === "127.0.0.1" ||
-        host === "[::1]";
+        host === "[::1]" || host === "100.78.0.1";
     const literalIp = /^\d+\.\d+\.\d+\.\d+$/.test(host) || host.startsWith("[");
     if (
         (url.protocol !== "https:" &&

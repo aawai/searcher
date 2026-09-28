@@ -1,11 +1,15 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { DatabaseSync } from "node:sqlite";
 import { DatabaseStore } from "../../db/database.ts";
 import { AiService, AiServiceError } from "./service.ts";
 import { eq } from "drizzle-orm";
 import { aiMessages } from "../../db/ai-schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
-import { fetchOpenAIModels, streamOpenAIChat } from "./client.ts";
+import {
+    fetchOpenAIModels,
+    normalizeBaseUrl,
+    OpenAIClientError,
+} from "./client.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -137,6 +141,34 @@ Deno.test("AI Client: fetchOpenAIModels discovers models correctly", async () =>
     assertEquals(models[0].id, "gpt-4o");
     assertEquals(models[0].supportsVision, true);
     assertEquals(models[1].id, "gpt-4o-mini");
+});
+
+Deno.test("AI Client: normalizeBaseUrl validates allowed endpoints", () => {
+    assertEquals(
+        normalizeBaseUrl("http://localhost:11434"),
+        "http://localhost:11434",
+    );
+    assertEquals(
+        normalizeBaseUrl("http://127.0.0.1:11434/"),
+        "http://127.0.0.1:11434",
+    );
+    assertEquals(
+        normalizeBaseUrl("http://100.78.0.1:11434"),
+        "http://100.78.0.1:11434",
+    );
+    assertEquals(
+        normalizeBaseUrl("https://api.openai.com/v1"),
+        "https://api.openai.com/v1",
+    );
+
+    assertThrows(
+        () => normalizeBaseUrl("http://192.168.1.1:11434"),
+        OpenAIClientError,
+    );
+    assertThrows(
+        () => normalizeBaseUrl("http://example.com"),
+        OpenAIClientError,
+    );
 });
 
 Deno.test("AI Service: Provider creation requires /models discovery & sets default model", async () => {
