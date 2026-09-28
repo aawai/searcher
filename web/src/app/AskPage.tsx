@@ -111,7 +111,9 @@ export function AskPage() {
                         keepalive: true,
                     },
                 ).catch(() => {});
-            } catch {}
+            } catch {
+                // ignore network errors on teardown
+            }
         }
     }
 
@@ -194,7 +196,7 @@ export function AskPage() {
         }
     }
     async function rename(id: string, title: string) {
-        const next = window.prompt("对话标题", title)?.trim();
+        const next = globalThis.prompt("对话标题", title)?.trim();
         if (!next || next === title) return;
         try {
             const result = await api<AiConversationDto>(
@@ -221,7 +223,7 @@ export function AskPage() {
             setHistory((items) => items.filter((item) => item.id !== id));
             if (conversation?.conversation.id === id) setConversation(null);
             if (undoConversation) clearTimeout(undoConversation.timer);
-            const timer = window.setTimeout(() => {
+            const timer = setTimeout(() => {
                 setUndoConversation(null);
             }, 5000);
             setUndoConversation({ id, title, timer });
@@ -383,6 +385,7 @@ export function AskPage() {
                         {grouped[group]!.map((item) => (
                             <div className="history-item" key={item.id}>
                                 <button
+                                    type="button"
                                     onClick={() =>
                                         void openConversation(item.id)}
                                     aria-current={conversation
@@ -607,6 +610,7 @@ export function AskPage() {
                                             </div>
                                             <div className="message-actions">
                                                 <button
+                                                    type="button"
                                                     aria-label="复制消息"
                                                     onClick={() =>
                                                         void navigator.clipboard
@@ -618,6 +622,7 @@ export function AskPage() {
                                                     <Copy size={16} />复制
                                                 </button>
                                                 <button
+                                                    type="button"
                                                     disabled={streaming}
                                                     onClick={() => {
                                                         const prior =
@@ -687,6 +692,7 @@ export function AskPage() {
                                         </div>
                                         <div className="message-actions">
                                             <button
+                                                type="button"
                                                 aria-label="复制消息"
                                                 onClick={() =>
                                                     void navigator.clipboard
@@ -698,6 +704,7 @@ export function AskPage() {
                                             </button>
                                             {item.role === "assistant" && (
                                                 <button
+                                                    type="button"
                                                     disabled={streaming}
                                                     onClick={() => {
                                                         const prior =
