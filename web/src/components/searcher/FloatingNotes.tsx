@@ -26,7 +26,9 @@ function getInitialPoint(note: NoteItem, index: number): Point {
             z: note.layout.zIndex || index + 1,
         };
     }
-    const screenW = typeof window !== "undefined" ? window.innerWidth : 1200;
+    const screenW = typeof globalThis.window !== "undefined"
+        ? globalThis.innerWidth
+        : 1200;
     const defaultX = screenW > 1100
         ? Math.max(20, screenW - 310 - (index % 2) * 280)
         : Math.max(20, Math.min(screenW - 280, 40 + (index % 3) * 270));
@@ -161,7 +163,10 @@ export function FloatingNotes(
         if (current.z === top) return;
         const nextPoint = { ...current, z: top };
         setPoints((old) => ({ ...old, [note.id]: nextPoint }));
-        if (typeof window !== "undefined" && window.innerWidth > 960) {
+        if (
+            typeof globalThis.window !== "undefined" &&
+            globalThis.innerWidth > 960
+        ) {
             void persistLayout(note.id, nextPoint, note.layout?.expanded);
         }
     }
@@ -183,7 +188,8 @@ export function FloatingNotes(
 
     function moved(event: DragEndEvent) {
         if (
-            (typeof window !== "undefined" && window.innerWidth <= 960) ||
+            (typeof globalThis.window !== "undefined" &&
+                globalThis.innerWidth <= 960) ||
             (!event.delta.x && !event.delta.y)
         ) {
             return;
@@ -196,11 +202,11 @@ export function FloatingNotes(
         const current = points[note.id] ?? getInitialPoint(note, index);
 
         const cardWidth = 250;
-        const maxX = typeof window !== "undefined"
-            ? Math.max(0, window.innerWidth - cardWidth)
+        const maxX = typeof globalThis.window !== "undefined"
+            ? Math.max(0, globalThis.innerWidth - cardWidth)
             : 1000;
-        const maxY = typeof window !== "undefined"
-            ? Math.max(0, window.innerHeight - 80)
+        const maxY = typeof globalThis.window !== "undefined"
+            ? Math.max(0, globalThis.innerHeight - 80)
             : 1000;
 
         const nextX = Math.max(0, Math.min(maxX, current.x + event.delta.x));
