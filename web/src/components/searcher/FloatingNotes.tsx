@@ -8,7 +8,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { api, json } from "../../lib/api.ts";
 import { NoteCard, type NoteItem } from "./NoteCard.tsx";
 
@@ -34,6 +34,14 @@ function getInitialPoint(note: NoteItem, index: number): Point {
         : Math.max(20, Math.min(screenW - 280, 40 + (index % 3) * 270));
     const defaultY = 200 + Math.floor(index / 2) * 180;
     return { x: defaultX, y: defaultY, z: index + 1 };
+}
+function getNoteTilt(id: string): string {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = (hash << 5) - hash + id.charCodeAt(i);
+    }
+    const angles = [-0.6, 0.8, -0.3, 0.5];
+    return `${angles[Math.abs(hash) % angles.length]}deg`;
 }
 
 function Floating(
@@ -74,7 +82,8 @@ function Floating(
                 top: point.y,
                 zIndex: isDragging ? 2000 : point.z,
                 transform: CSS.Translate.toString(transform),
-            }}
+                "--note-tilt": getNoteTilt(note.id),
+            } as CSSProperties}
         >
             <NoteCard
                 note={note}

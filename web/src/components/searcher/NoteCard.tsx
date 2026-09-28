@@ -133,6 +133,16 @@ export function NoteCard(
                     <strong className="note-title" title={displayTitle}>
                         {displayTitle}
                     </strong>
+                    {note.isPinned && (
+                        <span
+                            className="note-pin-marker"
+                            role="img"
+                            aria-label="已置顶"
+                            title="已置顶"
+                        >
+                            <Pin size={13} aria-hidden="true" />
+                        </span>
+                    )}
                 </div>
 
                 <div
