@@ -248,3 +248,15 @@
 ## [2026-09-28T00:05:53.405Z] observe
 - slug: "obs-2026-09-28-ui-3", title: "UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）", relevance: "critical"
 
+## [2026-09-28T05:22:56.358Z] observe
+- slug: "obs-2026-09-28-css", title: "便签拟物纸质化改造与CSS层叠特异性避坑", relevance: "high"
+
+## [2026-09-28T05:59:29.173Z] observe
+- slug: "obs-2026-09-28-", title: "便签纸艺细节增强与确定性微倾角工程落地", relevance: "high"
+
+## [2026-09-28T06:34:16.811Z] observe
+- slug: "obs-2026-09-28-", title: "便签墨水字色继承修正与多行信笺横线落地", relevance: "high"
+
+## [2026-09-28T09:03:34.116Z] observe
+- slug: "obs-2026-09-28-", title: "搜索建议选中态主题色层级", relevance: "high"
+

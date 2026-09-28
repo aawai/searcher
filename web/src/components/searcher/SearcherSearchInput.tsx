@@ -52,6 +52,39 @@ export function parseCommandPrefix(raw: string) {
     const hasSpace = /\s/.test(match[0]);
     return { command, rest, isAi, targetEngine, hasSpace, prefix: match[0] };
 }
+type SuggestionSegment = {
+    text: string;
+    kind: "plain" | "match" | "completion";
+};
+
+export function splitSuggestionLabel(
+    label: string,
+    query: string,
+): SuggestionSegment[] {
+    if (!query) return [{ text: label, kind: "plain" }];
+    const pattern = new RegExp(
+        query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "gi",
+    );
+    const segments: SuggestionSegment[] = [];
+    let end = 0;
+    for (const match of label.matchAll(pattern)) {
+        if (match.index > end) {
+            segments.push({
+                text: label.slice(end, match.index),
+                kind: end === 0 ? "plain" : "completion",
+            });
+        }
+        segments.push({ text: match[0], kind: "match" });
+        end = match.index + match[0].length;
+    }
+    if (end === 0) return [{ text: label, kind: "plain" }];
+    if (end < label.length) {
+        segments.push({ text: label.slice(end), kind: "completion" });
+    }
+    return segments;
+}
+
 const EMPTY_REACHABILITY: Reachability = {};
 const EMPTY_MODELS: ModelOption[] = [];
 const EMPTY_WEB_APPS: WebAppCandidate[] = [];
@@ -398,6 +431,9 @@ export function SearcherSearchInput(
         }
     }
 
+    const command = parseCommandPrefix(query);
+    const matchingQuery = command?.hasSpace ? command.rest : query.trim();
+
     return (
         <div className="search-form-wrap" ref={containerRef}>
             <form
@@ -472,6 +508,13 @@ export function SearcherSearchInput(
                 >
                     {suggestions.map((item, idx) => {
                         const isSelected = idx === selectedIndex;
+                        const label = item.source === "command"
+                            ? item.text
+                            : item.description || item.text;
+                        const segments = splitSuggestionLabel(
+                            label,
+                            matchingQuery,
+                        );
                         return (
                             <button
                                 key={`${item.source}-${item.text}-${idx}`}
@@ -521,7 +564,22 @@ export function SearcherSearchInput(
                                         />
                                     )}
                                     <span className="suggestion-text">
-                                        {item.description || item.text}
+                                        {segments.map((segment, index) => (
+                                            <span
+                                                key={index}
+                                                className={segment.kind ===
+                                                        "plain"
+                                                    ? undefined
+                                                    : "suggestion-" +
+                                                        segment.kind}
+                                            >
+                                                {segment.text}
+                                            </span>
+                                        ))}
+                                        {item.source === "command" &&
+                                            item.description?.slice(
+                                                item.text.length,
+                                            )}
                                     </span>
                                 </div>
                                 {(() => {

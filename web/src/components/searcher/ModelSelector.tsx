@@ -28,6 +28,7 @@ export function ModelSelector(
             <DropdownMenuTrigger
                 className="model-pill model-trigger"
                 aria-label="选择 AI 模型"
+                title={current?.label ?? "选择模型"}
             >
                 {current?.label ?? "选择模型"}
                 <ChevronDown size={13} />
