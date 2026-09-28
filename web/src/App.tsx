@@ -81,6 +81,9 @@ function Layout() {
     return (
         <div
             className="app-shell"
+            data-wallpaper-image={wallpaperCss.startsWith("url(")
+                ? "true"
+                : undefined}
             style={{
                 "--wallpaper-image": wallpaperCss,
                 "--wallpaper-blur": appearance.blur + "px",
