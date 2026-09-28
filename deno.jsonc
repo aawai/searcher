@@ -4,7 +4,7 @@
     "nodeModulesDir": "auto",
     "tasks": {
         "dev": "deno run -A npm:vite@7.1.7 --config web/vite.config.ts",
-        "dev:api": "deno run -A --watch src/main.ts",
+        "dev:api": "ENCRYPTION_KEY=abc deno run -A --watch src/main.ts",
         "build": "deno run -A npm:vite@7.1.7 build --config web/vite.config.ts",
         "start": "deno run -A src/main.ts",
         "db:generate": "deno run -A npm:drizzle-kit@0.31.4 generate",
