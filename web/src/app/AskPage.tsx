@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
     Copy,
@@ -17,6 +17,13 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { ModelSelector } from "../components/searcher/ModelSelector.tsx";
 import { Button } from "../components/ui/button.tsx";
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "../components/ui/sheet.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
@@ -85,6 +92,9 @@ export function AskPage() {
     >({});
     const abort = useRef<AbortController | null>(null);
     const convRef = useRef<Conversation | null>(null);
+    const messagesRef = useRef<HTMLDivElement | null>(null);
+    const followLatest = useRef(true);
+    const lastConversationId = useRef<string | null>(null);
     convRef.current = conversation;
 
     // 辅助函数：当切换或退出时清理 history-off 的临时对话
@@ -135,12 +145,27 @@ export function AskPage() {
             abort.current?.abort();
         };
     }, [user?.id]);
+
+    useLayoutEffect(() => {
+        const list = messagesRef.current;
+        if (!list) return;
+        const id = conversation?.conversation.id ?? null;
+        if (lastConversationId.current !== id) {
+            lastConversationId.current = id;
+            followLatest.current = true;
+        }
+        if (followLatest.current) list.scrollTop = list.scrollHeight;
+    }, [conversation, partial, streaming, activeVariants]);
     if (!user) {
         return (
-            <main className="page">
-                <h1>AI 问答</h1>
-                <p>登录后使用 AI 问答。</p>
-                <Link className="button button--primary" to="/login">登录</Link>
+            <main className="page ask-guest">
+                <div className="ask-guest__content">
+                    <h1>AI 问答</h1>
+                    <p>登录后，选择模型并开始对话。</p>
+                    <Link className="button button--primary" to="/login">
+                        登录后提问
+                    </Link>
+                </div>
             </main>
         );
     }
@@ -159,6 +184,7 @@ export function AskPage() {
             const data = await api<Conversation>(
                 "/api/ai/conversations/" + encodeURIComponent(id),
             );
+            followLatest.current = true;
             setConversation(data);
             setHistoryEnabled(data.conversation.historyEnabled);
             setDrawer(false);
@@ -232,6 +258,7 @@ export function AskPage() {
         if (!model) return;
         const controller = new AbortController();
         abort.current = controller;
+        followLatest.current = true;
         setStreaming(true);
         setError("");
         setPartial("");
@@ -322,141 +349,144 @@ export function AskPage() {
         ),
         (item) => bucket(item.updatedAt),
     );
+    const historyContent = (
+        <>
+            <div className="ask-history-head mb-3">
+                <Button
+                    className="w-full justify-center gap-1.5"
+                    onClick={() => {
+                        abort.current?.abort();
+                        purgeTemporaryIfNeeded(conversation);
+                        setConversation(null);
+                        setPartial("");
+                        setDrawer(false);
+                    }}
+                >
+                    <Plus size={16} />
+                    <span>新对话</span>
+                </Button>
+            </div>
+            <label className="field" style={{ margin: "0 0 12px 0" }}>
+                <span className="sr-only">搜索历史</span>
+                <input
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    placeholder="搜索历史…"
+                />
+            </label>
+            {(["今天", "昨天", "最近 7 天", "更早"] as const).map((
+                group,
+            ) => grouped[group]?.length
+                ? (
+                    <section key={group}>
+                        <h2>{group}</h2>
+                        {grouped[group]!.map((item) => (
+                            <div className="history-item" key={item.id}>
+                                <button
+                                    onClick={() =>
+                                        void openConversation(item.id)}
+                                    aria-current={conversation
+                                            ?.conversation.id ===
+                                            item.id
+                                        ? "page"
+                                        : undefined}
+                                >
+                                    {item.title}
+                                </button>
+                                <button
+                                    type="button"
+                                    aria-label={"重命名 " + item.title}
+                                    title="重命名对话"
+                                    onClick={() =>
+                                        void rename(
+                                            item.id,
+                                            item.title,
+                                        )}
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                                <button
+                                    type="button"
+                                    aria-label={"删除 " + item.title}
+                                    title="删除对话"
+                                    onClick={() =>
+                                        void remove(
+                                            item.id,
+                                            item.title,
+                                        )}
+                                >
+                                    <Trash2 size={15} />
+                                </button>
+                            </div>
+                        ))}
+                    </section>
+                )
+                : null
+            )}
+            {!history.length && <p className="muted">暂无历史对话</p>}
+        </>
+    );
     return (
         <main className="page ask-page">
             <h1 className="sr-only">AI 问答</h1>
             <div className="ask-layout">
-                <aside
-                    className={"ask-history " + (drawer ? "open" : "")}
-                    aria-label="对话历史"
-                >
-                    <div className="ask-history-head mb-3">
-                        <Button
-                            className="w-full justify-center gap-1.5"
-                            onClick={() => {
-                                abort.current?.abort();
-                                purgeTemporaryIfNeeded(conversation);
-                                setConversation(null);
-                                setPartial("");
-                            }}
-                        >
-                            <Plus size={16} />
-                            <span>新对话</span>
-                        </Button>
-                    </div>
-                    <label className="field" style={{ margin: "0 0 12px 0" }}>
-                        <span className="sr-only">搜索历史</span>
-                        <input
-                            value={filter}
-                            onChange={(e) => setFilter(e.target.value)}
-                            placeholder="搜索历史…"
-                        />
-                    </label>
-                    {(["今天", "昨天", "最近 7 天", "更早"] as const).map((
-                        group,
-                    ) => grouped[group]?.length
-                        ? (
-                            <section key={group}>
-                                <h2>{group}</h2>
-                                {grouped[group]!.map((item) => (
-                                    <div className="history-item" key={item.id}>
-                                        <button
-                                            onClick={() =>
-                                                void openConversation(item.id)}
-                                            aria-current={conversation
-                                                    ?.conversation.id ===
-                                                    item.id
-                                                ? "page"
-                                                : undefined}
-                                        >
-                                            {item.title}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            aria-label={"重命名 " + item.title}
-                                            title="重命名对话"
-                                            onClick={() =>
-                                                void rename(
-                                                    item.id,
-                                                    item.title,
-                                                )}
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            aria-label={"删除 " + item.title}
-                                            title="删除对话"
-                                            onClick={() =>
-                                                void remove(
-                                                    item.id,
-                                                    item.title,
-                                                )}
-                                        >
-                                            <Trash2 size={15} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </section>
-                        )
-                        : null
-                    )}
-                    {!history.length && <p className="muted">暂无历史对话</p>}
+                <aside className="ask-history" aria-label="对话历史">
+                    <h2 className="ask-workspace-title">AI 问答</h2>
+                    {historyContent}
                 </aside>
                 <section className="ask-main" aria-label="当前对话">
                     <div className="ask-model">
-                        <Button
-                            className="history-toggle mr-2"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setDrawer((value) => !value)}
-                            aria-expanded={drawer}
-                            title="历史对话"
-                        >
-                            <Menu size={16} />
-                        </Button>
-                        <ModelSelector
-                            models={options}
-                            selected={selected}
-                            onChange={setSelected}
-                        />
-                        <div
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "8px",
-                            }}
-                        >
-                            <Switch
-                                id="ask-history-switch"
-                                checked={historyEnabled}
-                                onCheckedChange={setHistoryEnabled}
-                                aria-label="保存历史记录"
-                            />
-                            <label
-                                htmlFor="ask-history-switch"
-                                style={{
-                                    fontSize: "13px",
-                                    cursor: "pointer",
-                                    userSelect: "none",
-                                }}
+                        <div className="ask-model__primary">
+                            <Button
+                                className="history-toggle"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setDrawer(true)}
+                                aria-expanded={drawer}
+                                aria-label="历史对话"
                             >
-                                保存历史
-                            </label>
-                        </div>
-                        <Link
-                            to="/settings/ai"
-                            className="button button--subtle button--sm"
-                            style={{ marginLeft: "auto" }}
-                        >
-                            <SlidersHorizontal
-                                size={14}
-                                style={{ marginRight: 6 }}
+                                <Menu size={16} />
+                            </Button>
+                            <ModelSelector
+                                models={options}
+                                selected={selected}
+                                onChange={setSelected}
                             />
-                            <span>管理 Provider</span>
-                        </Link>
+                        </div>
+                        <div className="ask-model__secondary">
+                            <div className="ask-history-preference">
+                                <Switch
+                                    id="ask-history-switch"
+                                    checked={historyEnabled}
+                                    onCheckedChange={setHistoryEnabled}
+                                    aria-label="保存历史记录"
+                                />
+                                <label htmlFor="ask-history-switch">
+                                    保存历史
+                                </label>
+                            </div>
+                            {options.length > 0 && (
+                                <Link
+                                    to="/settings/ai"
+                                    className="button button--subtle button--sm ask-provider-link"
+                                >
+                                    <SlidersHorizontal size={14} />
+                                    <span>管理 Provider</span>
+                                </Link>
+                            )}
+                        </div>
                     </div>
-                    <div className="ask-messages" aria-live="polite">
+                    <div
+                        className="ask-messages"
+                        ref={messagesRef}
+                        aria-live="polite"
+                        onScroll={(event) => {
+                            const list = event.currentTarget;
+                            followLatest.current =
+                                list.scrollHeight - list.scrollTop -
+                                        list.clientHeight < 80;
+                        }}
+                    >
                         {(() => {
                             if (!conversation?.messages) return null;
                             // J-009 Variant 分组：将属于同一 variantGroupId 的 assistant 消息折叠并提供分页切换
@@ -746,57 +776,83 @@ export function AskPage() {
                             </div>
                         )}
                     </div>
-                    <form
-                        className="ask-composer"
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            void send(input);
-                        }}
-                    >
-                        <label className="sr-only" htmlFor="ask-input">
-                            向 AI 提问
-                        </label>
-                        <textarea
-                            id="ask-input"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (
-                                    e.key === "Enter" && !e.shiftKey &&
-                                    !e.nativeEvent.isComposing
-                                ) {
-                                    e.preventDefault();
-                                    void send(input);
-                                }
+                    {selected && (
+                        <form
+                            className="ask-composer"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                void send(input);
                             }}
-                            placeholder={selected
-                                ? "输入问题，Enter 发送，Shift+Enter 换行"
-                                : "先配置可用模型"}
-                            disabled={!selected}
-                            rows={3}
-                        />
-                        {streaming
-                            ? (
-                                <Button
-                                    type="button"
-                                    onClick={() => abort.current?.abort()}
-                                >
-                                    <Square size={17} />停止
-                                </Button>
-                            )
-                            : (
-                                <Button
-                                    variant="default"
-                                    type="submit"
-                                    disabled={!input.trim() || !selected}
-                                >
-                                    <Send size={17} />发送
-                                </Button>
-                            )}
-                    </form>
+                        >
+                            <label className="sr-only" htmlFor="ask-input">
+                                向 AI 提问
+                            </label>
+                            <textarea
+                                id="ask-input"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (
+                                        e.key === "Enter" && !e.shiftKey &&
+                                        !e.nativeEvent.isComposing
+                                    ) {
+                                        e.preventDefault();
+                                        void send(input);
+                                    }
+                                }}
+                                placeholder="输入问题，Enter 发送，Shift+Enter 换行"
+                                rows={3}
+                            />
+                            {streaming
+                                ? (
+                                    <Button
+                                        type="button"
+                                        onClick={() => abort.current?.abort()}
+                                    >
+                                        <Square size={17} />停止
+                                    </Button>
+                                )
+                                : (
+                                    <Button
+                                        variant="default"
+                                        type="submit"
+                                        disabled={!input.trim() || !selected}
+                                    >
+                                        <Send size={17} />发送
+                                    </Button>
+                                )}
+                        </form>
+                    )}
                     {error && <p role="alert" className="error">{error}</p>}
                 </section>
             </div>
+            <Sheet open={drawer} onOpenChange={setDrawer}>
+                <SheetContent className="ask-history-sheet">
+                    <SheetHeader>
+                        <SheetTitle>历史对话</SheetTitle>
+                        <SheetClose
+                            className="ask-history-sheet__close"
+                            aria-label="关闭历史对话"
+                        >
+                            <X size={18} />
+                        </SheetClose>
+                    </SheetHeader>
+                    <div className="ask-history-sheet__preference">
+                        <Switch
+                            id="ask-history-sheet-switch"
+                            checked={historyEnabled}
+                            onCheckedChange={setHistoryEnabled}
+                            aria-label="保存历史记录"
+                        />
+                        <label htmlFor="ask-history-sheet-switch">
+                            保存历史记录
+                        </label>
+                    </div>
+                    <div className="ask-history-sheet__list">
+                        {historyContent}
+                    </div>
+                </SheetContent>
+            </Sheet>
             {undoConversation && (
                 <div className="webapp-undo-toast" role="status">
                     <span>已删除对话 “{undoConversation.title}”</span>
