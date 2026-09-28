@@ -39,8 +39,8 @@ export interface NoteItem {
     };
 }
 
-const NOTE_COLORS = ["paper", "amber", "rose", "sage", "sky"] as const;
-const COLOR_NAMES: Record<string, string> = {
+export const NOTE_COLORS = ["paper", "amber", "rose", "sage", "sky"] as const;
+export const COLOR_NAMES: Record<string, string> = {
     paper: "纸白",
     amber: "琥珀",
     rose: "玫瑰",
@@ -158,7 +158,7 @@ export function NoteCard(
                     )}
 
                     {(onTogglePin || onToggleHomeFixed || onOpen ||
-                        onChangeColor || onDelete) && (
+                        onDelete) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger
                                 className="note-action-btn"
@@ -225,30 +225,6 @@ export function NoteCard(
                                         <span>编辑便签</span>
                                     </DropdownMenuItem>
                                 )}
-                                {onChangeColor &&
-                                    NOTE_COLORS.map((c) => (
-                                        <DropdownMenuItem
-                                            key={c}
-                                            onClick={(e) => {
-                                                e?.stopPropagation();
-                                                onChangeColor(c);
-                                            }}
-                                            onSelect={() => onChangeColor(c)}
-                                        >
-                                            <span
-                                                className={"note-color-dot note-" +
-                                                    c +
-                                                    (note.color === c
-                                                        ? " is-selected"
-                                                        : "")}
-                                                style={{
-                                                    display: "inline-block",
-                                                    marginRight: 6,
-                                                }}
-                                            />
-                                            <span>{COLOR_NAMES[c]}</span>
-                                        </DropdownMenuItem>
-                                    ))}
                                 {onDelete && (
                                     <DropdownMenuItem
                                         className="note-dropdown-item--delete"
@@ -303,8 +279,57 @@ export function NoteCard(
                         )}
                 </div>
             )}
+            {(!isCompact && (onChangeColor || status)) && (
+                <footer className="note-card-footer">
+                    {onChangeColor
+                        ? (
+                            <div
+                                className="note-color-dots"
+                                role="radiogroup"
+                                aria-label="便签颜色"
+                            >
+                                {NOTE_COLORS.map((c) => {
+                                    const isSelected =
+                                        (note.color || "paper") === c;
+                                    return (
+                                        <button
+                                            key={c}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={isSelected}
+                                            aria-label={COLOR_NAMES[c]}
+                                            title={COLOR_NAMES[c]}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onChangeColor(c);
+                                            }}
+                                            className={`note-color-dot-btn ${
+                                                isSelected ? "is-selected" : ""
+                                            }`}
+                                        >
+                                            <span
+                                                className={`note-quick-dot note-quick-dot--${c}`}
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )
+                        : <span />}
+                    {status && (
+                        <small className={"save-state save-" + status}>
+                            {({
+                                saved: "已保存",
+                                saving: "保存中",
+                                unsynced: "未同步",
+                                error: "保存失败",
+                            })[status]}
+                        </small>
+                    )}
+                </footer>
+            )}
 
-            {status && (
+            {isCompact && status && (
                 <small className={"save-state save-" + status}>
                     {({
                         saved: "已保存",

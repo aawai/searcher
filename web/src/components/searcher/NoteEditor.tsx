@@ -7,7 +7,7 @@ import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
 import { Button } from "../ui/button.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
-import type { NoteItem } from "./NoteCard.tsx";
+import { COLOR_NAMES, NOTE_COLORS, type NoteItem } from "./NoteCard.tsx";
 
 type Draft = { body: string; title: string };
 type StoredDraft = {
@@ -57,6 +57,7 @@ export function NoteEditor(
         body: note.body,
         title: note.title ?? "",
     });
+    const [color, setColor] = useState<string>(note.color || "paper");
     const [status, setStatus] = useState<Status>("saved");
     const [view, setView] = useState<"edit" | "preview" | "split">("edit");
     const [versions, setVersions] = useState<Version[] | null>(null);
@@ -68,6 +69,7 @@ export function NoteEditor(
     const draftRef = useRef(draft);
     latestNoteRef.current = note;
     draftRef.current = draft;
+    const mutationQueue = useRef<Promise<void>>(Promise.resolve());
 
     const key = "note:draft:" + note.id;
 
@@ -82,6 +84,9 @@ export function NoteEditor(
             }
         });
     }, [note.id]);
+    useEffect(() => {
+        setColor(note.color || "paper");
+    }, [note.color]);
 
     // Y-003: 监听 SSE 实时协同事件，当其他端修改当前便签时提示冲突
     useEffect(() => {
@@ -123,37 +128,89 @@ export function NoteEditor(
         );
     }
 
-    async function save(next?: Draft, trigger: "auto" | "manual" = "auto") {
+    function save(next?: Draft, trigger: "auto" | "manual" = "auto") {
         clearTimeout(timer.current);
-        const data = next ?? draft;
+        timer.current = undefined;
+        const data = next ?? draftRef.current;
         setStatus("saving");
-        try {
-            const updated = await api<NoteItem>(
-                "/api/notes/" + encodeURIComponent(latestNoteRef.current.id),
-                json("PATCH", {
-                    title: data.title ? data.title.trim() : null,
-                    body: data.body,
-                    version: latestNoteRef.current.version,
-                    trigger,
-                }),
-            );
-            await deleteLocal(key);
-            onSaved(updated);
-            setStatus("saved");
-            setConflict(null);
-        } catch (error) {
-            if (error instanceof ApiError && error.code === 409) {
-                const serverNote =
-                    (error.data as { note?: NoteItem } | undefined)?.note;
-                if (serverNote) {
-                    setConflict(serverNote);
-                    setMerge(
-                        `<<<<<<< 本地草稿\n${data.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                    );
+        mutationQueue.current = mutationQueue.current.then(async () => {
+            try {
+                const updated = await api<NoteItem>(
+                    "/api/notes/" +
+                        encodeURIComponent(latestNoteRef.current.id),
+                    json("PATCH", {
+                        title: data.title ? data.title.trim() : null,
+                        body: data.body,
+                        version: latestNoteRef.current.version,
+                        trigger,
+                    }),
+                );
+                latestNoteRef.current = updated;
+                await deleteLocal(key);
+                onSaved(updated);
+                if (
+                    draftRef.current.body === data.body &&
+                    draftRef.current.title === data.title
+                ) {
+                    setStatus("saved");
                 }
+                setConflict(null);
+            } catch (error) {
+                if (error instanceof ApiError && error.code === 409) {
+                    const serverNote = error.data as NoteItem | undefined;
+                    if (serverNote) {
+                        setConflict(serverNote);
+                        setMerge(
+                            `<<<<<<< 本地草稿\n${data.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
+                        );
+                    }
+                }
+                setStatus("error");
             }
-            setStatus("error");
-        }
+        });
+        return mutationQueue.current;
+    }
+
+    function selectColor(nextColor: string) {
+        if (nextColor === color) return Promise.resolve();
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        setColor(nextColor);
+        setStatus("saving");
+        mutationQueue.current = mutationQueue.current.then(async () => {
+            try {
+                const updated = await api<NoteItem>(
+                    "/api/notes/" +
+                        encodeURIComponent(latestNoteRef.current.id),
+                    json("PATCH", {
+                        color: nextColor,
+                        version: latestNoteRef.current.version,
+                    }),
+                );
+                latestNoteRef.current = updated;
+                onSaved(updated);
+                const isDraftDirty = draftRef.current.body !== updated.body ||
+                    (draftRef.current.title || "") !== (updated.title || "");
+                if (isDraftDirty) {
+                    setStatus("unsynced");
+                } else {
+                    setStatus("saved");
+                }
+                setConflict(null);
+            } catch (error) {
+                if (error instanceof ApiError && error.code === 409) {
+                    const serverNote = error.data as NoteItem | undefined;
+                    if (serverNote) {
+                        setConflict(serverNote);
+                        setMerge(
+                            `<<<<<<< 本地草稿\n${draftRef.current.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
+                        );
+                    }
+                }
+                setStatus("error");
+            }
+        });
+        return mutationQueue.current;
     }
 
     async function copyDraftToClipboard() {
@@ -168,6 +225,9 @@ export function NoteEditor(
     function useCloud() {
         if (!conflict) return;
         setDraft({ body: conflict.body, title: conflict.title ?? "" });
+        if (conflict.color) {
+            setColor(conflict.color);
+        }
         onSaved(conflict);
         void deleteLocal(key);
         setConflict(null);
@@ -177,6 +237,9 @@ export function NoteEditor(
     function resolve(body: string) {
         if (!conflict) return;
         latestNoteRef.current = conflict;
+        if (conflict.color) {
+            setColor(conflict.color);
+        }
         const next = { ...draft, body };
         setDraft(next);
         void save(next, "manual");
@@ -212,7 +275,7 @@ export function NoteEditor(
         }
     }
     return (
-        <section className="note-editor">
+        <section className={"note-editor note-" + (color || "paper")}>
             <div className="note-title-wrap px-1 pt-1 pb-1">
                 <input
                     id="note-title-input"
@@ -352,6 +415,35 @@ export function NoteEditor(
                     </div>
                 </TabsContent>
             </Tabs>
+            <div className="note-editor-footer">
+                <div
+                    className="note-color-dots"
+                    role="radiogroup"
+                    aria-label="便签颜色"
+                >
+                    {NOTE_COLORS.map((c) => {
+                        const isSelected = (color || "paper") === c;
+                        return (
+                            <button
+                                key={c}
+                                type="button"
+                                role="radio"
+                                aria-checked={isSelected}
+                                aria-label={COLOR_NAMES[c]}
+                                title={COLOR_NAMES[c]}
+                                onClick={() => void selectColor(c)}
+                                className={`note-color-dot-btn ${
+                                    isSelected ? "is-selected" : ""
+                                }`}
+                            >
+                                <span
+                                    className={`note-quick-dot note-quick-dot--${c}`}
+                                />
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
             {status === "error" && !conflict && (
                 <div className="choice-row">
                     <button
