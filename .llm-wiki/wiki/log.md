@@ -1,7 +1,12 @@
 # Wiki Update Log
 
+## 2026-09-28
+
+- **observe**: {"relevance":"critical","slug":"obs-2026-09-28-ui-3","title":"UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）"}
+
 ## 2026-09-27
 
+- **observe**: {"relevance":"high","slug":"obs-2026-09-27-","title":"便签多版本历史展开文字重叠根因与修复"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-27-accent-scale","title":"主题配色与多层级 Accent Scale 重构"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-27-searcher","title":"Searcher 组件形态联动与多行文本/容器边界保护"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/react-19-actions-and-transitions","title":"React 19 Actions and Transitions"}

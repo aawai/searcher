@@ -242,3 +242,9 @@
 ## [2026-09-27T13:44:06.689Z] observe
 - slug: "obs-2026-09-27-accent-scale", title: "主题配色与多层级 Accent Scale 重构", relevance: "high"
 
+## [2026-09-27T15:19:54.183Z] observe
+- slug: "obs-2026-09-27-", title: "便签多版本历史展开文字重叠根因与修复", relevance: "high"
+
+## [2026-09-28T00:05:53.405Z] observe
+- slug: "obs-2026-09-28-ui-3", title: "UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）", relevance: "critical"
+

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-27T13:44:06.704Z",
+  "last_updated": "2026-09-28T00:05:53.445Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -732,6 +732,24 @@
       "created": "2026-09-26",
       "updated": "2026-09-26"
     },
+    "sources/obs-2026-09-27-": {
+      "type": "source",
+      "title": "Observation: 便签多版本历史展开文字重叠根因与修复",
+      "tags": [
+        "ui",
+        "notes",
+        "css",
+        "flexbox",
+        "bugfix"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-27-",
+      "relevance": "high",
+      "observed_at": "2026-09-27T15:19:54.174Z",
+      "source_context": "修复便签存在多个版本时点击版本历史按钮文字重叠",
+      "created": "2026-09-27",
+      "updated": "2026-09-27"
+    },
     "sources/obs-2026-09-27-2026-09-27-searcher-ui": {
       "type": "source",
       "title": "Observation: 2026-09-27 Searcher UI 实页复核发现工作区关键偏差",
@@ -795,6 +813,25 @@
       "source_context": "UI/UX Redesign Evaluation",
       "created": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    "sources/obs-2026-09-28-ui-3": {
+      "type": "source",
+      "title": "Observation: UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）",
+      "tags": [
+        "ui-ux",
+        "design-system",
+        "token-refactor",
+        "ask-page",
+        "note-editor",
+        "webapp-launcher"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-28-ui-3",
+      "relevance": "critical",
+      "observed_at": "2026-09-28T00:05:53.400Z",
+      "source_context": "UI 整体视觉品质诊断、审核改版与三项深度交互优化落地",
+      "created": "2026-09-28",
+      "updated": "2026-09-28"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",
