@@ -9,6 +9,7 @@
 * 优先复用仓库已有实现、当前依赖和 Deno / 标准库；确认现有能力后再新增 abstraction 或 dependency。
 * **设计完整，交付增量。** 大改动拆成可独立验证和回滚的 micro-increments，不得为了减小 diff 降级设计。
 * 如果 Specification、Architecture、类型模型或 public contract 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通工程细节自行判断。
+* 任何页面效果更改，必须实际浏览网站，不要只看源码。验证完成后需关闭服务。
 
 ## 协作约定
 
