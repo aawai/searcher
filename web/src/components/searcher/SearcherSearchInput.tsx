@@ -524,14 +524,30 @@ export function SearcherSearchInput(
                                         {item.description || item.text}
                                     </span>
                                 </div>
-                                <span className="suggestion-badge">
-                                    {item.source === "command" && "快捷命令"}
-                                    {item.source === "webapp" &&
-                                        (item.url || "应用")}
-                                    {item.source === "history" && "历史"}
-                                    {item.source === "engine" &&
-                                        (item.engine || "建议")}
-                                </span>
+                                {(() => {
+                                    const badge = item.source === "command"
+                                        ? "快捷命令"
+                                        : item.source === "webapp"
+                                        ? (item.url
+                                            ? item.url.replace(
+                                                /^https?:\/\//,
+                                                "",
+                                            ).replace(/\/$/, "")
+                                            : "网站")
+                                        : item.source === "history"
+                                        ? "历史"
+                                        : (item.engine &&
+                                                item.engine !== engine)
+                                        ? item.engine
+                                        : null;
+                                    return badge
+                                        ? (
+                                            <span className="suggestion-badge">
+                                                {badge}
+                                            </span>
+                                        )
+                                        : null;
+                                })()}
                             </button>
                         );
                     })}

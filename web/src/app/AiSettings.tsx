@@ -152,9 +152,11 @@ export function AiSettings() {
                 }}
             >
                 <div>
-                    <h3 style={{ margin: 0, fontSize: "16px" }}>
+                    <h4
+                        style={{ margin: 0, fontSize: "15px", fontWeight: 600 }}
+                    >
                         已配置的 Provider
-                    </h3>
+                    </h4>
                     <p
                         className="muted"
                         style={{ margin: "4px 0 0", fontSize: "13px" }}
@@ -325,7 +327,7 @@ export function AiSettings() {
                         添加 Provider 并验证模型后，即可在主页直接切换使用 AI
                         问答。
                     </p>
-                    <Button variant="default" onClick={openAdd}>
+                    <Button variant="outline" onClick={openAdd}>
                         <Plus size={16} />
                         <span>添加第一个 Provider</span>
                     </Button>

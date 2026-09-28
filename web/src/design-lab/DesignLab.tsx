@@ -230,7 +230,7 @@ export function DesignLab() {
                         {({
                             screen: "主页",
                             search: "搜索",
-                            webapps: "APP",
+                            webapps: "常用网站",
                             notes: "便签",
                             navigation: "导航与 Sheet",
                         })[id]}

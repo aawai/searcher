@@ -581,6 +581,19 @@ export function SearchHome() {
         minColumnWidth: 245,
         maxColumns: 3,
     });
+    const positionedNotesRef = useRef<Set<string>>(new Set());
+    useEffect(() => {
+        if (sheet !== "notes") {
+            positionedNotesRef.current.clear();
+        } else if (notesMasonryLayout.placements.size > 0) {
+            const raf = requestAnimationFrame(() => {
+                for (const key of notesMasonryLayout.placements.keys()) {
+                    positionedNotesRef.current.add(key);
+                }
+            });
+            return () => cancelAnimationFrame(raf);
+        }
+    }, [sheet, notesMasonryLayout.placements]);
 
     const drawerNoteSensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -1057,13 +1070,13 @@ export function SearchHome() {
                     }
                 }}
                 title={isAddingApp && formPresentation === "panel"
-                    ? (editingApp ? "编辑 APP" : "添加 APP")
+                    ? (editingApp ? "编辑网站" : "添加网站")
                     : isManagingGroups
                     ? "文件夹管理"
                     : activeFolderId
                     ? (groups.find((g) => g.id === activeFolderId)?.name ??
                         "文件夹")
-                    : "APP"}
+                    : "常用网站"}
                 onBack={isAddingApp && formPresentation === "panel"
                     ? () => {
                         setIsAddingApp(false);
@@ -1147,7 +1160,7 @@ export function SearchHome() {
                                 }}
                             >
                                 <Plus size={16} />
-                                <span>APP</span>
+                                <span>添加网站</span>
                             </Button>
                             <Button
                                 variant={isManagingGroups
@@ -1157,10 +1170,10 @@ export function SearchHome() {
                                     !isManagingGroups,
                                 )}
                                 title={isManagingGroups
-                                    ? "返回 APP 列表"
+                                    ? "返回常用网站"
                                     : "文件夹管理"}
                                 aria-label={isManagingGroups
-                                    ? "返回 APP 列表"
+                                    ? "返回常用网站"
                                     : "文件夹管理"}
                             >
                                 <Folder size={16} />
@@ -1178,8 +1191,7 @@ export function SearchHome() {
                                     文件夹管理
                                 </h3>
                                 <p className="muted text-xs m-0 mb-3">
-                                    文件夹可帮助归类
-                                    APP。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
+                                    文件夹可帮助归类常用网站。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
                                 </p>
                                 <form
                                     onSubmit={createGroup}
@@ -1399,8 +1411,7 @@ export function SearchHome() {
                             删除文件夹“{groupToDelete?.name}”？
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            只删除文件夹，其中的 APP
-                            将移至“未放入文件夹”，不会删除文件夹内的网站。
+                            只删除文件夹，其中的网站将移至“未放入文件夹”，不会删除网站数据。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -1564,13 +1575,21 @@ export function SearchHome() {
                                                                     : undefined,
                                                                 transition:
                                                                     isDragging ||
-                                                                        !pos
-                                                                        ? "none"
+                                                                        !pos ||
+                                                                        !positionedNotesRef
+                                                                            .current
+                                                                            .has(
+                                                                                note.id,
+                                                                            )
+                                                                        ? "opacity 150ms ease"
                                                                         : "transform 200ms ease, opacity 200ms ease",
                                                                 zIndex:
                                                                     isDragging
                                                                         ? 50
                                                                         : 1,
+                                                                opacity: pos
+                                                                    ? 1
+                                                                    : 0,
                                                                 visibility: pos
                                                                     ? "visible"
                                                                     : "hidden",

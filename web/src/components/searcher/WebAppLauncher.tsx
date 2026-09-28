@@ -426,6 +426,33 @@ function useDesktopColumns(
     return { gridRef, columns };
 }
 
+export function computeEffectiveColumns({
+    tilesCount,
+    columns,
+    managing = false,
+    showFolders = true,
+}: {
+    tilesCount: number;
+    columns: number;
+    managing?: boolean;
+    showFolders?: boolean;
+}): number {
+    if (!managing && tilesCount > 0) {
+        if (tilesCount < columns) {
+            return Math.max(1, tilesCount);
+        }
+        // Avoid single trailing orphan by balancing rows on home screen
+        if (!showFolders && tilesCount > columns && columns >= 4) {
+            const rows = Math.ceil(tilesCount / columns);
+            const balanced = Math.ceil(tilesCount / rows);
+            if (balanced >= 4 && balanced <= columns) {
+                return balanced;
+            }
+        }
+    }
+    return columns;
+}
+
 export function WebAppLauncher({
     apps,
     groups,
@@ -477,12 +504,16 @@ export function WebAppLauncher({
         [apps, groups, showFolders],
     );
     const { gridRef, columns } = useDesktopColumns(size, showAppLabels);
-    const effectiveColumns = useMemo(() => {
-        if (!managing && tiles.length > 0 && tiles.length < columns) {
-            return Math.max(1, tiles.length);
-        }
-        return columns;
-    }, [managing, tiles.length, columns]);
+    const effectiveColumns = useMemo(
+        () =>
+            computeEffectiveColumns({
+                tilesCount: tiles.length,
+                columns,
+                managing,
+                showFolders,
+            }),
+        [managing, tiles.length, columns, showFolders],
+    );
     const layout = useMemo(() =>
         calculateDesktopLayout(
             tiles.map((tile) => ({
@@ -582,7 +613,7 @@ export function WebAppLauncher({
                             className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
                         >
                             <ArrowLeft size={14} />
-                            <span>返回 APP</span>
+                            <span>返回常用网站</span>
                         </Button>
                         <span
                             className="text-[var(--muted)]"
@@ -602,7 +633,7 @@ export function WebAppLauncher({
                 {folderApps.length === 0
                     ? (
                         <div className="launcher-empty text-center py-12 text-[var(--muted)] text-sm">
-                            文件夹暂无 APP
+                            文件夹暂无网站
                         </div>
                     )
                     : (
@@ -657,7 +688,7 @@ export function WebAppLauncher({
         return (
             <div className="launcher-empty">
                 {emptyMessage}{" "}
-                {emptyAction && <Button onClick={onAdd}>添加 APP</Button>}
+                {emptyAction && <Button onClick={onAdd}>添加网站</Button>}
             </div>
         );
     }

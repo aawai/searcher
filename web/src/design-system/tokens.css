@@ -35,6 +35,7 @@
     --search-radius: 8px;
     --control-radius: 6px;
     --multiline-radius: 8px;
+    --input-radius: 8px;
     --search-opacity: 1;
     --sheet-width: min(65vw, 960px);
 }
@@ -316,7 +317,6 @@
 }
 [data-shape="pill"] {
     --search-radius: 999px;
-    --control-radius: 999px;
 }
 @theme inline {
     --color-background: var(--background);
@@ -331,4 +331,5 @@
     --color-muted: var(--muted);
     --color-border: var(--border);
     --radius-control: var(--control-radius);
+    --radius-input: var(--input-radius);
 }

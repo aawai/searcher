@@ -324,40 +324,32 @@ export function AskPage() {
     );
     return (
         <main className="page ask-page">
-            <div className="ask-top">
-                <h1>AI 问答</h1>
-                <div className="ask-actions">
-                    <Button
-                        onClick={() => {
-                            abort.current?.abort();
-                            purgeTemporaryIfNeeded(conversation);
-                            setConversation(null);
-                            setPartial("");
-                        }}
-                    >
-                        <Plus size={16} />
-                        <span>新对话</span>
-                    </Button>
-                    <Button
-                        className="history-toggle"
-                        onClick={() => setDrawer((value) => !value)}
-                        aria-expanded={drawer}
-                    >
-                        <Menu size={16} />
-                        <span>历史</span>
-                    </Button>
-                </div>
-            </div>
+            <h1 className="sr-only">AI 问答</h1>
             <div className="ask-layout">
                 <aside
                     className={"ask-history " + (drawer ? "open" : "")}
                     aria-label="对话历史"
                 >
-                    <label className="field">
-                        搜索历史<input
+                    <div className="ask-history-head mb-3">
+                        <Button
+                            className="w-full justify-center gap-1.5"
+                            onClick={() => {
+                                abort.current?.abort();
+                                purgeTemporaryIfNeeded(conversation);
+                                setConversation(null);
+                                setPartial("");
+                            }}
+                        >
+                            <Plus size={16} />
+                            <span>新对话</span>
+                        </Button>
+                    </div>
+                    <label className="field" style={{ margin: "0 0 12px 0" }}>
+                        <span className="sr-only">搜索历史</span>
+                        <input
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            placeholder="搜索标题"
+                            placeholder="搜索历史…"
                         />
                     </label>
                     {(["今天", "昨天", "最近 7 天", "更早"] as const).map((
@@ -413,6 +405,16 @@ export function AskPage() {
                 </aside>
                 <section className="ask-main" aria-label="当前对话">
                     <div className="ask-model">
+                        <Button
+                            className="history-toggle mr-2"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setDrawer((value) => !value)}
+                            aria-expanded={drawer}
+                            title="历史对话"
+                        >
+                            <Menu size={16} />
+                        </Button>
                         <ModelSelector
                             models={options}
                             selected={selected}
