@@ -7,6 +7,7 @@ import { PreferencesService } from "./service.ts";
 import { WallpaperService } from "../wallpaper/service.ts";
 import { parseCookie } from "../auth/middleware.ts";
 import { SESSION_COOKIE_NAME } from "../auth/service.ts";
+import { ACCENT_IDS } from "../../shared/contracts.ts";
 const Engine = v.optional(
     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
 );
@@ -23,9 +24,7 @@ const Style = v.optional(
         "classic",
     ]),
 );
-const Accent = v.optional(
-    v.picklist(["blue", "cyan", "teal", "violet", "orange", "mono"]),
-);
+const Accent = v.optional(v.picklist(ACCENT_IDS));
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
 const SearchOpacity = v.optional(
     v.pipe(v.number(), v.finite(), v.minValue(0.1), v.maxValue(1)),

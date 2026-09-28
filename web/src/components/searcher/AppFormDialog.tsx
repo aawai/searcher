@@ -786,7 +786,7 @@ export function AppFormDialog({
                         ? "保存中…"
                         : editingApp
                         ? "保存更新"
-                        : "添加 APP"}
+                        : "添加网站"}
                 </Button>
             </div>
         </form>
@@ -806,7 +806,7 @@ export function AppFormDialog({
             <DialogContent className="app-dialog-panel">
                 <div className="app-dialog-header">
                     <DialogTitle>
-                        {editingApp ? "编辑 APP" : "添加 APP"}
+                        {editingApp ? "编辑网站" : "添加网站"}
                     </DialogTitle>
                 </div>
                 {formJsx}

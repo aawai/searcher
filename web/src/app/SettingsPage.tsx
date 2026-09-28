@@ -14,6 +14,7 @@ import {
     Upload,
 } from "lucide-react";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
+import { ACCENTS } from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
     Dialog,
@@ -47,14 +48,9 @@ const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     data: { label: "数据与同步", icon: RefreshCw },
 };
 
-const ACCENT_COLORS: Record<string, string> = {
-    blue: "#326cae",
-    cyan: "#047b92",
-    teal: "#117968",
-    violet: "#7354b3",
-    orange: "#ae602e",
-    mono: "#465461",
-};
+function getAccentLight(id: string): string {
+    return ACCENTS.find((a) => a.id === id)?.light ?? "var(--accent)";
+}
 
 function Choices<T extends string>(
     {
@@ -151,7 +147,7 @@ function Choices<T extends string>(
                                 aria-label={label}
                                 className={`flex items-center gap-2 p-2 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] text-sm cursor-pointer transition-colors ${
                                     isSelected
-                                        ? "border-[var(--accent)] ring-1 ring-[var(--accent)] font-semibold"
+                                        ? "border-[var(--accent)] ring-1 ring-[var(--accent)] bg-[var(--accent-soft)] font-semibold shadow-[var(--accent-glow)]"
                                         : "hover:bg-[var(--surface-soft)]"
                                 }`}
                             >
@@ -161,8 +157,7 @@ function Choices<T extends string>(
                                         width: 12,
                                         height: 12,
                                         borderRadius: "50%",
-                                        background: ACCENT_COLORS[id] ||
-                                            "#326cae",
+                                        background: getAccentLight(id),
                                         flexShrink: 0,
                                     }}
                                     aria-hidden="true"
@@ -349,7 +344,7 @@ export function SettingsPage() {
                                         />
                                         <Choices
                                             title="首页快捷方式数量"
-                                            description="在搜索主页固定的常用 APP 展示上限"
+                                            description="在搜索主页固定的常用网站展示上限"
                                             control="select"
                                             value={String(
                                                 appearance.webAppHomeLimit,
@@ -399,14 +394,10 @@ export function SettingsPage() {
                                             description="设置按钮、焦点环与激活标签的主题强调色"
                                             control="swatches"
                                             value={appearance.accent}
-                                            values={[
-                                                ["blue", "经典蓝"],
-                                                ["cyan", "天青蓝"],
-                                                ["teal", "鸭翅绿"],
-                                                ["violet", "紫罗兰"],
-                                                ["orange", "暖晨橙"],
-                                                ["mono", "单色黑白"],
-                                            ] as const}
+                                            values={ACCENTS.map((a) => [
+                                                a.id,
+                                                a.label,
+                                            ])}
                                             select={(v) => set("accent", v)}
                                         />
                                         <div
@@ -441,7 +432,7 @@ export function SettingsPage() {
                                     <div className="settings-card">
                                         <Choices
                                             title="控件形状"
-                                            description="搜索框及常规按钮、单行输入框联动；便签编辑区与卡片保持原形"
+                                            description="搜索框及主要操作按钮切换胶囊外观；表单输入框与卡片保持矩形圆角"
                                             control="segmented"
                                             value={appearance.shape ??
                                                 "rounded"}
@@ -520,7 +511,7 @@ export function SettingsPage() {
                                             </div>
                                         </div>
                                         <Choices
-                                            title="APP 图标大小"
+                                            title="网站图标大小"
                                             description="调整工作区与首页快捷方式的图标尺度"
                                             control="select"
                                             value={appearance.webAppIconSize}
@@ -535,7 +526,7 @@ export function SettingsPage() {
                                         <div className="settings-row settings-row--inline-mobile">
                                             <div className="settings-row-label">
                                                 <span className="settings-row-title">
-                                                    显示 APP 名称
+                                                    显示网站名称
                                                 </span>
                                                 <p className="settings-row-desc">
                                                     在桌面或快捷列表中展示网站文字标签
@@ -845,8 +836,9 @@ export function SettingsPage() {
                             <div className="settings-section">
                                 <div className="settings-subgroup">
                                     <div className="settings-section-head">
-                                        <h3>AI 问答</h3>
-                                        <p>智能 AI 问答工作区与偏好设置</p>
+                                        <p className="muted m-0">
+                                            智能 AI 问答工作区与偏好设置
+                                        </p>
                                     </div>
                                     <div className="settings-action-card">
                                         <div className="settings-action-card__content">
@@ -859,7 +851,7 @@ export function SettingsPage() {
                                             </p>
                                         </div>
                                         <Link
-                                            className="button button--primary settings-action-card__action"
+                                            className="button button--outline settings-action-card__action"
                                             to="/ask"
                                         >
                                             打开 AI 问答

@@ -161,7 +161,7 @@
     aspect-ratio: 1;
     flex: none;
     border-radius: 17px;
-    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    background: var(--accent-soft);
     overflow: hidden;
 }
 .launcher-folder-item--small .launcher-folder-surface {
@@ -185,7 +185,7 @@
     height: calc(2 * var(--launcher-row-h) + var(--launcher-gap-y));
 }
 .launcher-folder-item:hover .launcher-folder-surface {
-    background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+    background: var(--accent-subtle);
 }
 .launcher-folder-background {
     position: absolute;

@@ -44,6 +44,8 @@ function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     const isHomePage = location.pathname === "/";
+    const isAskPage = location.pathname.startsWith("/ask");
+    const isSettingsPage = location.pathname.startsWith("/settings");
     const {
         user,
         ready,
@@ -90,7 +92,11 @@ function Layout() {
             {isHomePage && <div className="wallpaper" aria-hidden="true" />}
             <header className="topbar">
                 <Link
-                    className="wordmark-small"
+                    className={`wordmark-small ${
+                        isHomePage && appearance.showTitle !== false
+                            ? "opacity-0 pointer-events-none select-none transition-opacity"
+                            : "opacity-100 transition-opacity"
+                    }`}
                     to="/"
                     aria-label="Searcher 首页"
                 >
@@ -99,6 +105,9 @@ function Layout() {
                 <nav className="top-actions" aria-label="账户与设置">
                     <Link
                         to="/ask"
+                        className={isAskPage
+                            ? "topbar-link topbar-link--active"
+                            : "topbar-link"}
                         aria-label="AI 问答"
                         title="AI 问答"
                     >
@@ -126,6 +135,9 @@ function Layout() {
                     </button>
                     <Link
                         to="/settings"
+                        className={isSettingsPage
+                            ? "topbar-link topbar-link--active"
+                            : "topbar-link"}
                         aria-label="设置"
                         title="设置"
                     >

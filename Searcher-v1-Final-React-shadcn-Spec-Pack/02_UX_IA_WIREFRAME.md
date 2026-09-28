@@ -154,7 +154,7 @@ Theme：System / Light / Dark。
 
 Style：Quiet / Minimal / Glass / Soft / Classic。
 
-Accent：Blue / Cyan / Teal / Violet / Orange / Mono。
+Accent：Blue / Cyan / Teal / Violet / Orange / Rose / Emerald / Amber / Mono（全量 9 款预设并支持微光层次卡片）。
 
 Search Shape：Rounded / Pill。
 

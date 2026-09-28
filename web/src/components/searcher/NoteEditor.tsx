@@ -5,7 +5,6 @@ import rehypeSanitize from "rehype-sanitize";
 import { api, ApiError, json } from "../../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
 import { Button } from "../ui/button.tsx";
-import { Input } from "../ui/input.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import type { NoteItem } from "./NoteCard.tsx";
@@ -214,20 +213,25 @@ export function NoteEditor(
     }
     return (
         <section className="note-editor">
-            <div className="field" style={{ margin: 0 }}>
-                <label
-                    className="text-xs text-[var(--muted)] mb-1 block"
-                    htmlFor="note-title-input"
-                >
-                    标题（可选）
-                </label>
-                <Input
+            <div className="note-title-wrap px-1 pt-1 pb-1">
+                <input
                     id="note-title-input"
-                    placeholder="输入便签标题…"
+                    type="text"
+                    className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
+                    placeholder="便签标题…"
                     value={draft.title}
                     onChange={(event) =>
                         change({ ...draft, title: event.target.value })}
                     onBlur={() => void save(undefined, "manual")}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                            event.preventDefault();
+                            const targetId = view === "split"
+                                ? "note-body-textarea-split"
+                                : "note-body-textarea-edit";
+                            document.getElementById(targetId)?.focus();
+                        }
+                    }}
                 />
             </div>
             <Tabs

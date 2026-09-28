@@ -70,18 +70,44 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 cookie: first,
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ wallpaperMask: 0.4 }),
+            body: JSON.stringify({ wallpaperMask: 0.4, accent: "rose" }),
         });
         assertEquals(partial.status, 200);
         const changed = await partial.json() as Envelope<PreferencesDto>;
         assertEquals(changed.data?.wallpaperMask, 0.4);
         assertEquals(changed.data?.style, "widgets");
-        assertEquals(changed.data?.accent, "violet");
+        assertEquals(changed.data?.accent, "rose");
         assertEquals(changed.data?.searchOpacity, 0.85);
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.webAppIconSize, "large");
         assertEquals(changed.data?.showAppLabels, false);
+        const updateEmerald = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ accent: "emerald" }),
+        });
+        assertEquals(updateEmerald.status, 200);
+        const emeraldSaved = await updateEmerald.json() as Envelope<
+            PreferencesDto
+        >;
+        assertEquals(emeraldSaved.data?.accent, "emerald");
+        const updateAmber = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ accent: "amber" }),
+        });
+        assertEquals(updateAmber.status, 200);
+        const amberSaved = await updateAmber.json() as Envelope<PreferencesDto>;
+        assertEquals(amberSaved.data?.accent, "amber");
         const other = await app.request("/api/preferences", {
             headers: { cookie: second },
         });
@@ -129,6 +155,7 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { searchOpacity: 0.05 },
                 { searchOpacity: 1.5 },
                 { showAppLabels: "not-a-bool" },
+                { accent: "neon_green" },
             ]
         ) {
             const response = await app.request("/api/preferences", {

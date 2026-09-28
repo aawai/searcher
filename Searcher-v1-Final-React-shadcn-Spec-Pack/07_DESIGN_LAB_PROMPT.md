@@ -79,7 +79,7 @@ Theme：System / Light / Dark。
 
 Style：Quiet / Minimal / Glass / Soft / Classic。
 
-Accent：Blue / Cyan / Teal / Violet / Orange / Mono。
+Accent：Blue / Cyan / Teal / Violet / Orange / Rose / Emerald / Amber / Mono（全量 9 款预设，支持多层级 Scale 阶梯）。
 
 Search Shape：Rounded / Pill。
 
@@ -217,7 +217,7 @@ Home Playground。使用 mock fixtures，不接完整真实业务。
 - 组件来自正式组件目录
 - Quiet/Minimal/Glass/Soft/Classic 可切换
 - Light/Dark/System 可切换
-- Accent 可切换
+- Accent 可切换（支持 9 款多样化色板与多层级 Scale 阶梯）
 - Rounded/Pill 可切换
 - 375/430/768/1440/1920/2560/3840 正常
 - Pinned Web Apps 可展示

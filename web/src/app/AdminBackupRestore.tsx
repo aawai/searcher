@@ -235,10 +235,8 @@ export function AdminBackupRestore() {
                 style={{
                     padding: "16px 20px",
                     borderRadius: "8px",
-                    background:
-                        "color-mix(in srgb, var(--accent) 12%, var(--surface))",
-                    border:
-                        "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+                    background: "var(--accent-soft)",
+                    border: "1px solid var(--accent-border)",
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "12px",

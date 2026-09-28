@@ -11,7 +11,7 @@ function Input({
             type={type}
             data-slot="input"
             className={cn(
-                "cn-input flex h-10 w-full min-w-0 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] px-3 py-1 text-sm text-[var(--foreground)] shadow-xs transition-[color,box-shadow] outline-none",
+                "cn-input flex h-10 w-full min-w-0 rounded-[var(--input-radius)] border border-[var(--border)] bg-[var(--surface-solid)] px-3 py-1 text-sm text-[var(--foreground)] shadow-xs transition-[color,box-shadow] outline-none",
                 "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-[var(--foreground)]",
                 "placeholder:text-[var(--muted)]",
                 "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",

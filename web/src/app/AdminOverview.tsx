@@ -172,8 +172,7 @@ export function AdminOverview({
                                 width: "32px",
                                 height: "32px",
                                 borderRadius: "8px",
-                                background:
-                                    "color-mix(in srgb, var(--accent) 15%, transparent)",
+                                background: "var(--accent-subtle)",
                                 display: "grid",
                                 placeItems: "center",
                                 color: "var(--accent)",
@@ -249,8 +248,7 @@ export function AdminOverview({
                                 width: "32px",
                                 height: "32px",
                                 borderRadius: "8px",
-                                background:
-                                    "color-mix(in srgb, var(--accent) 15%, transparent)",
+                                background: "var(--accent-subtle)",
                                 display: "grid",
                                 placeItems: "center",
                                 color: "var(--accent)",
@@ -321,8 +319,7 @@ export function AdminOverview({
                                 width: "32px",
                                 height: "32px",
                                 borderRadius: "8px",
-                                background:
-                                    "color-mix(in srgb, var(--accent) 15%, transparent)",
+                                background: "var(--accent-subtle)",
                                 display: "grid",
                                 placeItems: "center",
                                 color: "var(--accent)",
@@ -393,8 +390,7 @@ export function AdminOverview({
                                 width: "32px",
                                 height: "32px",
                                 borderRadius: "8px",
-                                background:
-                                    "color-mix(in srgb, var(--accent) 15%, transparent)",
+                                background: "var(--accent-subtle)",
                                 display: "grid",
                                 placeItems: "center",
                                 color: "var(--accent)",
