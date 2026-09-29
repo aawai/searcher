@@ -879,11 +879,8 @@ export function SearchHome() {
         try {
             await api(`/api/webapp-groups/${group.id}`, { method: "DELETE" });
             setGroups((items) => items.filter((g) => g.id !== group.id));
-            setApps((items) =>
-                items.map((
-                    a,
-                ) => (a.groupId === group.id ? { ...a, groupId: null } : a))
-            );
+            const refreshedApps = await api<ExtendedWebApp[]>("/api/webapps");
+            setApps(refreshedApps);
             if (activeGroupFilter === group.id) {
                 setActiveGroupFilter("all");
             }

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-28T11:13:02.909Z",
+  "last_updated": "2026-09-28T15:37:27.050Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -816,20 +816,15 @@
     },
     "sources/obs-2026-09-28-": {
       "type": "source",
-      "title": "Observation: 精简添加/编辑网站表单视觉层级与轻量化卡片重构",
+      "title": "Observation: 常用网站弹出窗口正方形网格与文件夹几何规范",
       "tags": [
-        "ui-ux",
-        "dialog",
-        "webapp",
-        "app-dialog",
-        "responsive",
-        "dual-theme"
+        "[\"frontend\",\"css-grid\",\"webapp-launcher\",\"design-system\",\"geometry\"]"
       ],
       "status": "observation",
       "slug": "obs-2026-09-28-",
       "relevance": "high",
-      "observed_at": "2026-09-28T11:13:02.896Z",
-      "source_context": "精简添加/编辑网站表单视觉层级，突出基础 URL/name/folder 并弱化高级设置",
+      "observed_at": "2026-09-28T15:37:27.035Z",
+      "source_context": "常用网站弹出窗口设计矫正",
       "created": "2026-09-28",
       "updated": "2026-09-28"
     },
@@ -848,6 +843,23 @@
       "relevance": "high",
       "observed_at": "2026-09-28T05:22:56.354Z",
       "source_context": "为便签增加拟物纸质感及真机多状态验证",
+      "created": "2026-09-28",
+      "updated": "2026-09-28"
+    },
+    "sources/obs-2026-09-28-observation-ask": {
+      "type": "source",
+      "title": "Observation: Ask 页面上下留白对称性治理与视口高度规整",
+      "tags": [
+        "ui-ux",
+        "ask-page",
+        "design-system",
+        "layout"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-28-observation-ask",
+      "relevance": "medium",
+      "observed_at": "2026-09-28T14:58:29.505Z",
+      "source_context": "调整 /ask 页面桌面端与移动端工作台及访客态的外边距与高度计算，实现上下留白完全对称",
       "created": "2026-09-28",
       "updated": "2026-09-28"
     },

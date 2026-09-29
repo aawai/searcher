@@ -116,7 +116,7 @@ export function EngineIcon({ id, size = 18 }: { id: EngineId; size?: number }) {
         default:
             return (
                 <span className="engine-mark">
-                    {(id as string)[0]?.toUpperCase()}
+                    {((id as string) ?? "?")[0]?.toUpperCase() ?? "?"}
                 </span>
             );
     }
@@ -153,7 +153,7 @@ export function EngineSelector(
             >
                 {mode === "ai"
                     ? <Sparkles size={18} className="text-accent" />
-                    : <EngineIcon id={engine} size={18} />}
+                    : <EngineIcon id={engine || "bing"} size={18} />}
                 <ChevronDown size={14} className="engine-chevron" />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={10}>

@@ -394,3 +394,238 @@ Deno.test({
         }
     },
 });
+
+Deno.test({
+    name:
+        "webapps contract: moving webapp out of folder defaults sortOrder to max + 1 (placed at the end)",
+    sanitizeOps: false,
+    sanitizeResources: false,
+    async fn() {
+        const { app, store } = await setupTestApp();
+        try {
+            const token = await registerUser(app, "reorderuser");
+            // Create group
+            const groupRes = await app.request("/api/webapp-groups", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ name: "Folder A", sortOrder: 0 }),
+            });
+            const group = (await groupRes.json() as Envelope<WebAppGroupDto>)
+                .data!;
+
+            const targetRes = await app.request("/api/webapp-groups", {
+                method: "POST",
+                headers: {
+                    origin: ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ name: "Folder B", sortOrder: 1 }),
+            });
+            const target = (await targetRes.json() as Envelope<WebAppGroupDto>)
+                .data!;
+            // Create app 1 outside folder (sortOrder: 0)
+            const a1Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "App 1",
+                    url: "https://example1.com",
+                    sortOrder: 0,
+                }),
+            });
+            const a1 = (await a1Res.json() as Envelope<WebAppDto>).data!;
+
+            // Create app 2 outside folder (sortOrder: 5)
+            const a2Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "App 2",
+                    url: "https://example2.com",
+                    sortOrder: 5,
+                }),
+            });
+            const a2 = (await a2Res.json() as Envelope<WebAppDto>).data!;
+
+            // Create app 3 inside folder (sortOrder: 0)
+            const a3Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "App 3",
+                    url: "https://example3.com",
+                    groupId: group.id,
+                    sortOrder: 0,
+                }),
+            });
+            const a3 = (await a3Res.json() as Envelope<WebAppDto>).data!;
+
+            // Moving between folders also appends after existing websites.
+            const intoTarget = await app.request(`/api/webapps/${a3.id}`, {
+                method: "PATCH",
+                headers: {
+                    origin: ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ groupId: target.id }),
+            });
+            assertEquals(intoTarget.status, STATUS_CODE.OK);
+            const movedToTarget =
+                (await intoTarget.json() as Envelope<WebAppDto>).data!;
+            assertEquals(movedToTarget.groupId, target.id);
+            assertEquals(movedToTarget.sortOrder, 6);
+            // Move app 3 out of folder without specifying sortOrder
+            const moveRes = await app.request(`/api/webapps/${a3.id}`, {
+                method: "PATCH",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ groupId: null }),
+            });
+            assertEquals(moveRes.status, STATUS_CODE.OK);
+            const movedApp = (await moveRes.json() as Envelope<WebAppDto>)
+                .data!;
+            assertEquals(movedApp.groupId, null);
+            // The PATCH response carries the new order for immediate UI rendering.
+            assertEquals(movedApp.sortOrder, 7);
+            assertEquals(movedApp.sortOrder > a1.sortOrder, true);
+            assertEquals(movedApp.sortOrder > a2.sortOrder, true);
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "webapps contract: deleting folder migrates members to ungrouped and appends them to end preserving relative order",
+    sanitizeOps: false,
+    sanitizeResources: false,
+    async fn() {
+        const { app, store } = await setupTestApp();
+        try {
+            const token = await registerUser(app, "groupdeleteuser");
+
+            // Create group
+            const groupRes = await app.request("/api/webapp-groups", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ name: "Folder B", sortOrder: 0 }),
+            });
+            const group = (await groupRes.json() as Envelope<WebAppGroupDto>)
+                .data!;
+
+            // Create an existing standalone app (sortOrder: 10)
+            const standaloneRes = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "Standalone",
+                    url: "https://standalone.com",
+                    sortOrder: 10,
+                }),
+            });
+            const standalone =
+                (await standaloneRes.json() as Envelope<WebAppDto>).data!;
+
+            // Create member 1 in group (sortOrder: 1)
+            const m1Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "Member 1",
+                    url: "https://m1.com",
+                    groupId: group.id,
+                    sortOrder: 1,
+                }),
+            });
+            const m1 = (await m1Res.json() as Envelope<WebAppDto>).data!;
+
+            // Create member 2 in group (sortOrder: 2)
+            const m2Res = await app.request("/api/webapps", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    name: "Member 2",
+                    url: "https://m2.com",
+                    groupId: group.id,
+                    sortOrder: 2,
+                }),
+            });
+            const m2 = (await m2Res.json() as Envelope<WebAppDto>).data!;
+
+            // Delete the group
+            const delGroupRes = await app.request(
+                `/api/webapp-groups/${group.id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "origin": ORIGIN,
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                },
+            );
+            assertEquals(delGroupRes.status, STATUS_CODE.OK);
+
+            // Verify all apps are ungrouped and members appended to end preserving relative order
+            const listRes = await app.request("/api/webapps", {
+                method: "GET",
+                headers: {
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+            });
+            assertEquals(listRes.status, STATUS_CODE.OK);
+            const allApps = (await listRes.json() as Envelope<WebAppDto[]>)
+                .data!;
+
+            const updatedM1 = allApps.find((a) => a.id === m1.id)!;
+            const updatedM2 = allApps.find((a) => a.id === m2.id)!;
+
+            assertEquals(updatedM1.groupId, null);
+            assertEquals(updatedM2.groupId, null);
+            // Base was max(sortOrder) = 10; m1 gets 11, m2 gets 12
+            assertEquals(updatedM1.sortOrder, 11);
+            assertEquals(updatedM2.sortOrder, 12);
+            assertEquals(updatedM1.sortOrder > standalone.sortOrder, true);
+            assertEquals(updatedM2.sortOrder > updatedM1.sortOrder, true);
+        } finally {
+            await store.close();
+        }
+    },
+});
