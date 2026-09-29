@@ -48,65 +48,12 @@ Deno.test("sorting a filtered desktop preserves hidden apps in canonical order",
     );
 });
 
-Deno.test("computeEffectiveColumns balances row counts to eliminate trailing orphans", () => {
-    // 10 items in 9 columns -> 5x2 balanced layout
-    assertEquals(
-        computeEffectiveColumns({
-            tilesCount: 10,
-            columns: 9,
-            showFolders: false,
-        }),
-        5,
-    );
-
-    // 13 items in 9 columns -> 7+6 balanced layout
-    assertEquals(
-        computeEffectiveColumns({
-            tilesCount: 13,
-            columns: 9,
-            showFolders: false,
-        }),
-        7,
-    );
-
-    // 8 items in 9 columns -> 8 (single row)
-    assertEquals(
-        computeEffectiveColumns({
-            tilesCount: 8,
-            columns: 9,
-            showFolders: false,
-        }),
-        8,
-    );
-
-    // When showFolders is true (launcher drawer), keeps standard columns
-    assertEquals(
-        computeEffectiveColumns({
-            tilesCount: 10,
-            columns: 9,
-            showFolders: true,
-        }),
-        9,
-    );
-
-    // When managing is true (drag/drop rearrange), keeps standard columns
-    assertEquals(
-        computeEffectiveColumns({
-            tilesCount: 10,
-            columns: 9,
-            managing: true,
-            showFolders: false,
-        }),
-        9,
-    );
-});
-
 Deno.test("a large folder leaves first-row space for following websites", () => {
     const columns = computeEffectiveColumns({
         tilesCount: 3,
         columns: 5,
         showFolders: true,
-        hasLargeFolder: true,
+        largeFolderCount: 1,
     });
     const placement = calculateDesktopLayout([
         { id: "first", cols: 1, rows: 1 },
@@ -118,12 +65,4 @@ Deno.test("a large folder leaves first-row space for following websites", () => 
         { id: "folder", row: 0, col: 1 },
         { id: "next", row: 0, col: 3 },
     ]);
-    assertEquals(
-        computeEffectiveColumns({
-            tilesCount: 3,
-            columns: 5,
-            showFolders: false,
-        }),
-        3,
-    );
 });

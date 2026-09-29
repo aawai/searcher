@@ -45,8 +45,9 @@
 - [[sources/obs-2026-09-27-accent-scale]] — Observation: 主题配色与多层级 Accent Scale 重构 *(created: 2026-09-27)*
 - [[sources/obs-2026-09-27-searcher]] — Observation: Searcher 组件形态联动与多行文本/容器边界保护 *(created: 2026-09-27)*
 - [[sources/obs-2026-09-27-workspace-layout-style-architecture-decision]] — Observation: Workspace Layout & Style Architecture Decision *(created: 2026-09-27)*
-- [[sources/obs-2026-09-28-]] — Observation: 精简添加/编辑网站表单视觉层级与轻量化卡片重构 *(created: 2026-09-28)*
+- [[sources/obs-2026-09-28-]] — Observation: 常用网站弹出窗口正方形网格与文件夹几何规范 *(created: 2026-09-28)*
 - [[sources/obs-2026-09-28-css]] — Observation: 便签拟物纸质化改造与CSS层叠特异性避坑 *(created: 2026-09-28)*
+- [[sources/obs-2026-09-28-observation-ask]] — Observation: Ask 页面上下留白对称性治理与视口高度规整 *(created: 2026-09-28)*
 - [[sources/obs-2026-09-28-ui-3]] — Observation: UI 视觉品质与设计规范治理全量完成（含 3 项交互深化） *(created: 2026-09-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
@@ -100,4 +101,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-09-28T11:13:02.909Z* | *Total pages: 85*
+*Last updated: 2026-09-28T15:37:27.050Z* | *Total pages: 86*

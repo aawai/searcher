@@ -1,64 +1,69 @@
-/* Grid metrics are the single presentation source for both CSS and ResizeObserver. */
+/* Grid metrics are the single presentation source for both CSS and ResizeObserver.
+   [INVARIANT] Square Cell Grid System:
+   1. --launcher-row-h MUST ALWAYS equal var(--launcher-col-w) (aspect-ratio 1:1).
+   2. --launcher-gap-y MUST ALWAYS equal var(--launcher-gap-x).
+   3. Large folder spans 2 cols x 2 rows; its surface frames the four icon glyphs,
+      while its name follows the lower row labels.
+   4. NEVER introduce modifiers (such as icons-only or folder variants) that alter
+      col-w or row-h independently, which distorts icon spacing or tile geometry. */
+.launcher-grid,
+.launcher-folder-contents,
+.launcher-overlay {
+    --launcher-col-w: 64px;
+    --launcher-row-h: var(--launcher-col-w);
+    --launcher-gap-x: 8px;
+    --launcher-gap-y: var(--launcher-gap-x);
+    --launcher-icon: 38px;
+    --launcher-pad-t: 4px;
+    --launcher-pad-b: 4px;
+}
 :where(.pinned-apps).launcher-grid,
 .launcher-grid {
-    --launcher-col-w: 80px;
-    --launcher-row-h: 112px;
-    --launcher-gap-x: 8px;
-    --launcher-gap-y: 9px;
-    --launcher-icon: 56px;
-    --launcher-pad-t: 7px;
-    --launcher-pad-b: 7px;
     display: grid;
     width: 100%;
-    min-width: calc(2 * var(--launcher-col-w) + var(--launcher-gap-x));
     grid-template-columns: repeat(var(--launcher-columns),
         var(--launcher-col-w));
     grid-auto-rows: var(--launcher-row-h);
     justify-content: start;
     gap: var(--launcher-gap-y) var(--launcher-gap-x);
 }
-.pinned-area .launcher-grid {
+.pinned-area .launcher-grid--home {
+    --launcher-gap-x: 6px;
+    --launcher-icon: 42px;
+    --launcher-pad-t: 0px;
+    --launcher-pad-b: 0px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    justify-content: start;
+}
+.pinned-area .launcher-grid--home.launcher-grid--compact {
+    --launcher-icon: 40px;
+}
+.pinned-area .launcher-grid--home.launcher-grid--large {
+    --launcher-icon: 44px;
+}
+.launcher-grid--home .webapp-icon {
+    justify-content: center;
+}
+@media (max-width: 767px) {
+    .pinned-area .launcher-grid--home {
+        width: fit-content;
+        margin: 0 auto;
+        justify-content: center;
+    }
+}
+.sheet-content .pinned-apps.launcher-grid {
     width: fit-content;
     max-width: 100%;
     margin: 0 auto;
     justify-content: center;
 }
-.sheet-content .pinned-apps.launcher-grid {
-    max-width: 100%;
-    justify-content: start;
-}
 .launcher-grid--compact {
-    --launcher-col-w: 68px;
-    --launcher-row-h: 100px;
-    --launcher-icon: 48px;
-    --launcher-gap-x: 8px;
-    --launcher-gap-y: 7px;
-    --launcher-pad-t: 6px;
-    --launcher-pad-b: 6px;
+    --launcher-icon: 36px;
 }
 .launcher-grid--large {
-    --launcher-col-w: 92px;
-    --launcher-row-h: 126px;
-    --launcher-icon: 64px;
-    --launcher-gap-x: 10px;
-    --launcher-gap-y: 9px;
-    --launcher-pad-t: 8px;
-    --launcher-pad-b: 8px;
-}
-.launcher-grid--icons-only {
-    --launcher-col-w: 80px;
-    --launcher-row-h: 70px;
-    --launcher-gap-y: 8px;
-}
-.launcher-grid--compact.launcher-grid--icons-only {
-    --launcher-col-w: 68px;
-    --launcher-row-h: 60px;
-    --launcher-gap-y: 7px;
-}
-.launcher-grid--large.launcher-grid--icons-only {
-    --launcher-col-w: 92px;
-    --launcher-row-h: 80px;
-    --launcher-gap-y: 9px;
+    --launcher-icon: 40px;
 }
 .launcher-tile,
 .launcher-app,
@@ -80,34 +85,31 @@
     outline-offset: 2px;
     border-radius: 17px;
 }
-.launcher-grid .webapp-icon,
+:is(.launcher-grid, .launcher-folder-contents) .webapp-icon,
 .launcher-overlay .webapp-icon {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
     min-height: 0;
     padding: var(--launcher-pad-t) 4px var(--launcher-pad-b) 4px;
-    gap: 6px;
+    gap: 2px;
 }
-.launcher-grid .webapp-glyph,
+:is(.launcher-grid, .launcher-folder-contents) .webapp-glyph,
 .launcher-overlay .webapp-glyph {
     flex: none;
     width: var(--launcher-icon);
     height: var(--launcher-icon);
 }
-.launcher-grid .webapp-name,
+:is(.launcher-grid, .launcher-folder-contents) .webapp-name,
 .launcher-overlay .webapp-name {
-    display: -webkit-box;
+    display: block;
     width: 100%;
     overflow: hidden;
-    white-space: normal;
-    text-overflow: clip;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     text-align: center;
-    font-size: 13px;
-    line-height: 18px;
-    max-width: 100%;
+    font-size: 12px;
+    line-height: 16px;
     color: var(--foreground);
 }
 .launcher-grid--icons-only .webapp-icon {
@@ -154,7 +156,7 @@
     height: 100%;
     min-height: 0;
     padding: var(--launcher-pad-t) 0 var(--launcher-pad-b) 0;
-    gap: 6px;
+    gap: 2px;
 }
 .launcher-folder-surface {
     position: relative;
@@ -174,17 +176,30 @@
     height: var(--launcher-icon);
     border-radius: 17px;
 }
+.launcher-folder-item--large {
+    position: relative;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
 .launcher-folder-item--large .launcher-folder-surface {
-    --launcher-surface-size: calc(var(--launcher-row-h) + var(--launcher-gap-y) + var(--launcher-icon));
+    --launcher-surface-size: calc(var(--launcher-col-w) + var(--launcher-gap-x) + var(--launcher-icon));
+    position: absolute;
+    top: var(--launcher-pad-t);
+    left: calc((var(--launcher-col-w) - var(--launcher-icon)) / 2);
     width: var(--launcher-surface-size);
     height: var(--launcher-surface-size);
 }
-.launcher-grid--icons-only .launcher-folder-item--small .launcher-folder-surface {
-    width: var(--launcher-icon);
-    height: var(--launcher-icon);
-}
-.launcher-grid--icons-only .launcher-folder-item--large {
-    padding: var(--launcher-pad-t) 0 0;
+.launcher-folder-item--large .launcher-folder-name {
+    position: absolute;
+    bottom: calc(var(--launcher-pad-b) + max(0px, var(--launcher-row-h) -
+        var(--launcher-pad-t) - var(--launcher-pad-b) - var(--launcher-icon) -
+        18px));
+    left: 0;
+    width: 100%;
+    padding: 0 4px;
+    height: min(16px, calc(var(--launcher-row-h) - var(--launcher-pad-t) -
+        var(--launcher-pad-b) - var(--launcher-icon) - 2px));
 }
 .launcher-folder-item:hover .launcher-folder-surface {
     background: var(--accent-soft);
@@ -208,26 +223,32 @@
     pointer-events: none;
 }
 .launcher-folder-item--small .launcher-folder-preview {
-    grid-template-columns: repeat(2, 19px);
-    grid-template-rows: repeat(2, 19px);
-    gap: 6px;
-}
-.launcher-grid--compact .launcher-folder-item--small .launcher-folder-preview {
-    grid-template-columns: repeat(2, 16px);
-    grid-template-rows: repeat(2, 16px);
+    grid-template-columns: repeat(2, 14px);
+    grid-template-rows: repeat(2, 14px);
     gap: 4px;
 }
-.launcher-grid--compact .launcher-folder-item--small .launcher-folder-mini-glyph {
-    width: min(100%, 16px);
-    border-radius: 4px;
-    font-size: 10px;
+.launcher-grid--compact .launcher-folder-item--small .launcher-folder-preview {
+    grid-template-columns: repeat(2, 12px);
+    grid-template-rows: repeat(2, 12px);
+}
+.launcher-folder-item--small .launcher-folder-mini-glyph {
+    font-size: 9px;
 }
 .launcher-folder-item--large .launcher-folder-preview {
     --launcher-mini-size: min(42px, calc((var(--launcher-surface-size) - 26px) / 3));
     grid-template-columns: repeat(3, var(--launcher-mini-size));
-    grid-template-rows: repeat(3, var(--launcher-mini-size));
+    grid-auto-rows: var(--launcher-mini-size);
     gap: 4px;
     padding: 8px;
+}
+.launcher-folder-item--large .launcher-folder-preview--sparse,
+.launcher-folder-item--large .launcher-folder-preview--medium {
+    grid-template-columns: repeat(2, 40px);
+    grid-template-rows: repeat(2, 40px);
+    gap: 8px;
+}
+.launcher-folder-item--large .launcher-folder-preview--sparse {
+    grid-template-rows: 40px;
 }
 .launcher-folder-item--large .launcher-folder-preview--single,
 .launcher-folder-item--large .launcher-folder-preview--empty {
@@ -309,15 +330,15 @@
     font-size: 10px;
 }
 .launcher-folder-name {
-    display: -webkit-box;
+    display: block;
     width: 100%;
     flex: none;
     overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     text-align: center;
-    font-size: 13px;
-    line-height: 17px;
+    font-size: 12px;
+    line-height: 16px;
     color: var(--foreground);
 }
 .launcher-folder-inline {
@@ -348,12 +369,17 @@
 }
 .launcher-folder-contents {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
+    grid-auto-rows: var(--launcher-row-h);
+    justify-content: start;
+    gap: var(--launcher-gap-y) var(--launcher-gap-x);
     padding: 12px 0;
 }
-.launcher-folder-contents .webapp-icon {
-    width: 100%;
+.launcher-folder-contents.launcher-grid--compact {
+    --launcher-icon: 36px;
+}
+.launcher-folder-contents.launcher-grid--large {
+    --launcher-icon: 40px;
 }
 .launcher-empty {
     display: flex;
@@ -365,138 +391,13 @@
     padding: 20px;
 }
 .launcher-overlay {
-    --launcher-col-w: 80px;
-    --launcher-row-h: 112px;
-    --launcher-icon: 56px;
-    --launcher-gap-x: 8px;
-    --launcher-gap-y: 9px;
-    --launcher-pad-t: 7px;
-    --launcher-pad-b: 7px;
     width: var(--launcher-col-w);
     height: var(--launcher-row-h);
 }
 .launcher-overlay.launcher-grid--compact {
-    --launcher-col-w: 68px;
-    --launcher-row-h: 100px;
-    --launcher-icon: 48px;
-    --launcher-gap-x: 8px;
-    --launcher-gap-y: 7px;
-    --launcher-pad-t: 6px;
-    --launcher-pad-b: 6px;
-}
-.launcher-overlay.launcher-grid--large {
-    --launcher-col-w: 92px;
-    --launcher-row-h: 126px;
-    --launcher-icon: 64px;
-    --launcher-gap-x: 10px;
-    --launcher-gap-y: 9px;
-    --launcher-pad-t: 8px;
-    --launcher-pad-b: 8px;
-}
-.launcher-overlay.launcher-grid--icons-only {
-    --launcher-col-w: 80px;
-    --launcher-row-h: 70px;
-    --launcher-gap-y: 8px;
-}
-.launcher-overlay.launcher-grid--compact.launcher-grid--icons-only {
-    --launcher-col-w: 68px;
-    --launcher-row-h: 60px;
-    --launcher-gap-y: 7px;
-}
-.launcher-overlay.launcher-grid--large.launcher-grid--icons-only {
-    --launcher-col-w: 92px;
-    --launcher-row-h: 80px;
-    --launcher-gap-y: 9px;
+    --launcher-icon: 36px;
 }
 .launcher-overlay--large {
     width: calc(2 * var(--launcher-col-w) + var(--launcher-gap-x));
-    height: calc(2 * var(--launcher-row-h) + var(--launcher-gap-y));
-}
-@media (max-width: 700px) {
-    .launcher-grid,
-    .launcher-overlay {
-        --launcher-col-w: 84px;
-        --launcher-row-h: 108px;
-        --launcher-gap-x: 6px;
-        --launcher-gap-y: 7px;
-        --launcher-pad-t: 7px;
-        --launcher-pad-b: 7px;
-    }
-    .launcher-grid--compact,
-    .launcher-overlay.launcher-grid--compact {
-        --launcher-col-w: 72px;
-        --launcher-row-h: 98px;
-        --launcher-gap-x: 6px;
-        --launcher-gap-y: 7px;
-        --launcher-pad-t: 6px;
-        --launcher-pad-b: 6px;
-    }
-    .launcher-grid--large,
-    .launcher-overlay.launcher-grid--large {
-        --launcher-col-w: 92px;
-        --launcher-row-h: 120px;
-        --launcher-gap-x: 8px;
-        --launcher-gap-y: 7px;
-        --launcher-pad-t: 8px;
-        --launcher-pad-b: 8px;
-    }
-    .launcher-grid--icons-only,
-    .launcher-overlay.launcher-grid--icons-only {
-        --launcher-col-w: 84px;
-        --launcher-row-h: 64px;
-        --launcher-gap-y: 6px;
-    }
-    .launcher-grid--compact.launcher-grid--icons-only,
-    .launcher-overlay.launcher-grid--compact.launcher-grid--icons-only {
-        --launcher-col-w: 72px;
-        --launcher-row-h: 56px;
-        --launcher-gap-y: 6px;
-    }
-    .launcher-grid--large.launcher-grid--icons-only,
-    .launcher-overlay.launcher-grid--large.launcher-grid--icons-only {
-        --launcher-col-w: 92px;
-        --launcher-row-h: 72px;
-        --launcher-gap-y: 7px;
-    }
-}
-/* Folder grids only: 2 columns + gapX = 2 rows + gapY.
-   The four website tiles and the large folder share a square footprint.
-   Keep pinned-home metrics above unchanged. Values stay numeric for ResizeObserver. */
-.launcher-grid--folders {
-    --launcher-col-w: 112.5px;
-}
-.launcher-grid--folders.launcher-grid--compact {
-    --launcher-col-w: 99.5px;
-}
-.launcher-grid--folders.launcher-grid--large {
-    --launcher-col-w: 125.5px;
-}
-.launcher-grid--folders.launcher-grid--icons-only {
-    --launcher-col-w: 70px;
-}
-.launcher-grid--folders.launcher-grid--compact.launcher-grid--icons-only {
-    --launcher-col-w: 59.5px;
-}
-.launcher-grid--folders.launcher-grid--large.launcher-grid--icons-only {
-    --launcher-col-w: 79.5px;
-}
-@media (max-width: 700px) {
-    .launcher-grid--folders {
-        --launcher-col-w: 108.5px;
-    }
-    .launcher-grid--folders.launcher-grid--compact {
-        --launcher-col-w: 98.5px;
-    }
-    .launcher-grid--folders.launcher-grid--large {
-        --launcher-col-w: 119.5px;
-    }
-    .launcher-grid--folders.launcher-grid--icons-only {
-        --launcher-col-w: 64px;
-    }
-    .launcher-grid--folders.launcher-grid--compact.launcher-grid--icons-only {
-        --launcher-col-w: 56px;
-    }
-    .launcher-grid--folders.launcher-grid--large.launcher-grid--icons-only {
-        --launcher-col-w: 71.5px;
-    }
+    height: calc(2 * var(--launcher-col-w) + var(--launcher-gap-x));
 }

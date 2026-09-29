@@ -213,6 +213,10 @@ function FolderView({
                                 ? "launcher-folder-preview--empty"
                                 : preview.length === 1
                                 ? "launcher-folder-preview--single"
+                                : large && preview.length <= 4
+                                ? preview.length === 2
+                                    ? "launcher-folder-preview--sparse"
+                                    : "launcher-folder-preview--medium"
                                 : ""
                         }`}
                     >
@@ -441,28 +445,19 @@ function useDesktopColumns(
 export function computeEffectiveColumns({
     tilesCount,
     columns,
-    managing = false,
     showFolders = true,
-    hasLargeFolder = false,
+    largeFolderCount = 0,
 }: {
     tilesCount: number;
     columns: number;
-    managing?: boolean;
     showFolders?: boolean;
-    hasLargeFolder?: boolean;
+    largeFolderCount?: number;
 }): number {
-    if (!managing && tilesCount > 0) {
-        if (tilesCount < columns && !hasLargeFolder) {
-            return Math.max(1, tilesCount);
-        }
-        // Avoid single trailing orphan by balancing rows on home screen
-        if (!showFolders && tilesCount > columns && columns >= 4) {
-            const rows = Math.ceil(tilesCount / columns);
-            const balanced = Math.ceil(tilesCount / rows);
-            if (balanced >= 4 && balanced <= columns) {
-                return balanced;
-            }
-        }
+    if (tilesCount > 0) {
+        return Math.min(
+            columns,
+            tilesCount + (showFolders ? largeFolderCount : 0),
+        );
     }
     return columns;
 }
@@ -517,24 +512,23 @@ export function WebAppLauncher({
         () => launcherTiles(apps, showFolders ? groups : []),
         [apps, groups, showFolders],
     );
-    const hasLargeFolder = showFolders && tiles.some(
-        (tile) => tile.group?.folderSize === "large",
-    );
+    const largeFolderCount = showFolders
+        ? tiles.filter((tile) => tile.group?.folderSize === "large").length
+        : 0;
     const { gridRef, columns } = useDesktopColumns(
         size,
         showAppLabels,
-        hasLargeFolder,
+        largeFolderCount > 0,
     );
     const effectiveColumns = useMemo(
         () =>
             computeEffectiveColumns({
                 tilesCount: tiles.length,
                 columns,
-                managing,
                 showFolders,
-                hasLargeFolder,
+                largeFolderCount,
             }),
-        [managing, tiles.length, columns, showFolders, hasLargeFolder],
+        [tiles.length, columns, showFolders, largeFolderCount],
     );
     const layout = useMemo(() =>
         calculateDesktopLayout(
@@ -733,7 +727,7 @@ export function WebAppLauncher({
                 <div
                     ref={gridRef}
                     className={`pinned-apps launcher-grid launcher-grid--${size}${
-                        hasLargeFolder ? " launcher-grid--folders" : ""
+                        showFolders ? "" : " launcher-grid--home"
                     }${showAppLabels ? "" : " launcher-grid--icons-only"}`}
                     style={{
                         "--launcher-columns": effectiveColumns,
@@ -766,10 +760,6 @@ export function WebAppLauncher({
                         ? (
                             <div
                                 className={`launcher-overlay launcher-grid--${size}${
-                                    hasLargeFolder
-                                        ? " launcher-grid--folders"
-                                        : ""
-                                }${
                                     showAppLabels
                                         ? ""
                                         : " launcher-grid--icons-only"

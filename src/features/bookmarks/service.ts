@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, max } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import { webappGroups, webapps } from "../../db/schema.ts";
 
@@ -268,9 +268,27 @@ export class BookmarksService {
             const nextIsPinned = input.isPinned !== undefined
                 ? input.isPinned
                 : current.isPinned;
-            const nextSortOrder = input.sortOrder !== undefined
+            let nextSortOrder = input.sortOrder !== undefined
                 ? input.sortOrder
                 : current.sortOrder;
+            if (
+                input.sortOrder === undefined &&
+                current.groupId !== null &&
+                input.groupId !== undefined &&
+                nextGroupId !== current.groupId
+            ) {
+                const maxRow = await db
+                    .select({ maxOrder: max(webapps.sortOrder) })
+                    .from(webapps)
+                    .where(
+                        and(
+                            eq(webapps.userId, userId),
+                            isNull(webapps.deletedAt),
+                        ),
+                    )
+                    .all();
+                nextSortOrder = (maxRow[0]?.maxOrder ?? -1) + 1;
+            }
             const nextPinnedSortOrder = input.pinnedSortOrder !== undefined
                 ? input.pinnedSortOrder
                 : current.pinnedSortOrder;
@@ -538,13 +556,41 @@ export class BookmarksService {
 
             if (existing.length === 0) throw new WebAppGroupNotFoundError();
 
-            // WebApps in this group migrate to ungrouped (groupId = null)
-            await db
-                .update(webapps)
-                .set({ groupId: null })
-                .where(and(eq(webapps.groupId, id), eq(webapps.userId, userId)))
-                .run();
+            // WebApps in this group migrate to ungrouped (groupId = null) and appended to end
+            const maxRow = await db
+                .select({ maxOrder: max(webapps.sortOrder) })
+                .from(webapps)
+                .where(
+                    and(
+                        eq(webapps.userId, userId),
+                        isNull(webapps.deletedAt),
+                    ),
+                )
+                .all();
+            let baseSortOrder = (maxRow[0]?.maxOrder ?? -1) + 1;
 
+            const groupApps = await db
+                .select({ id: webapps.id })
+                .from(webapps)
+                .where(
+                    and(
+                        eq(webapps.groupId, id),
+                        eq(webapps.userId, userId),
+                        isNull(webapps.deletedAt),
+                    ),
+                )
+                .orderBy(webapps.sortOrder, webapps.createdAt)
+                .all();
+
+            for (const app of groupApps) {
+                await db
+                    .update(webapps)
+                    .set({ groupId: null, sortOrder: baseSortOrder++ })
+                    .where(
+                        and(eq(webapps.id, app.id), eq(webapps.userId, userId)),
+                    )
+                    .run();
+            }
             await db
                 .delete(webappGroups)
                 .where(

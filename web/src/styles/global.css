@@ -754,13 +754,12 @@ a {
     cursor: pointer;
 }
 .pinned-area {
-    width: 100%;
+    width: calc(100% - 32px);
     max-width: 720px;
     margin: 20px auto 48px;
-    padding: 0 8px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
 }
 .pinned-apps {
     display: flex;
@@ -2272,10 +2271,7 @@ a {
         max-width: 66px;
     }
     .pinned-area {
-        width: 100%;
-        max-width: 720px;
         margin: 24px auto 40px;
-        padding: 0 12px;
     }
     .floating-notes {
         display: grid;
@@ -2320,7 +2316,8 @@ a {
 
 /* Explicit AI workspace */
 .ask-guest {
-    min-height: calc(100dvh - 112px);
+    min-height: calc(100dvh - 96px);
+    margin: 16px auto;
     display: grid;
     place-items: center;
     text-align: center;
@@ -2339,13 +2336,13 @@ a {
 }
 .ask-page {
     width: min(100% - 64px, 1280px);
-    margin: 16px auto 20px;
+    margin: 16px auto;
 }
 .ask-layout {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
     gap: 0;
-    height: calc(100dvh - 100px);
+    height: calc(100dvh - 96px);
 }
 .ask-history,
 .ask-main,
@@ -2663,11 +2660,15 @@ a {
 @media (max-width:900px) {
     .ask-page {
         width: calc(100% - 24px);
-        margin: 16px auto 20px;
+        margin: 16px auto;
         padding: 0;
+    }
+    .ask-guest {
+        margin: 16px auto;
     }
     .ask-layout {
         display: block;
+        height: calc(100dvh - 96px);
     }
     .ask-history {
         display: none;
@@ -3433,9 +3434,10 @@ a {
         min-width: 32px;
     }
 }
-.pinned-area .pinned-apps.launcher-grid {
-    justify-content: center;
-    margin: 0 auto;
+@media (max-width: 700px) {
+    .sheet--apps .sheet-content {
+        padding-inline: 16px;
+    }
 }
 .launcher-folder-preview--sparse {
     grid-template-columns: repeat(2,minmax(0,1fr));

@@ -2,6 +2,8 @@
 
 ## 2026-09-28
 
+- **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"常用网站弹出窗口正方形网格与文件夹几何规范"}
+- **observe**: {"relevance":"medium","slug":"obs-2026-09-28-observation-ask","title":"Observation: Ask 页面上下留白对称性治理与视口高度规整"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"精简添加/编辑网站表单视觉层级与轻量化卡片重构"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"搜索建议选中态主题色层级"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-28-","title":"便签墨水字色继承修正与多行信笺横线落地"}

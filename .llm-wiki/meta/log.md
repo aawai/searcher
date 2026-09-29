@@ -263,3 +263,9 @@
 ## [2026-09-28T11:13:02.897Z] observe
 - slug: "obs-2026-09-28-", title: "精简添加/编辑网站表单视觉层级与轻量化卡片重构", relevance: "high"
 
+## [2026-09-28T14:58:29.508Z] observe
+- slug: "obs-2026-09-28-observation-ask", title: "Observation: Ask 页面上下留白对称性治理与视口高度规整", relevance: "medium"
+
+## [2026-09-28T15:37:27.037Z] observe
+- slug: "obs-2026-09-28-", title: "常用网站弹出窗口正方形网格与文件夹几何规范", relevance: "high"
+
