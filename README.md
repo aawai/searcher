@@ -22,11 +22,13 @@
 
 ### AI 应用图标
 
-添加或编辑网站时，在“图标 → AI 生成”选择支持 `/images/generations` 的图片模型。风格包括极简、几何、符号、线性、双色、柔和渐变、柔和 3D 和图形角色；生成的是原创 Launcher App Icon，不是官方品牌标志。
+添加或编辑网站时，在“图标 → AI 生成”选择图片模型及“图片生成协议”：默认 OpenAI Images（`/images/generations`），仅当服务商支持 Gemini 原生接口时选择 Gemini 原生（`v1beta/models/:model:generateContent`）。协议仅用于本次图片请求，不修改 Provider、文本模型配置、模型发现或聊天 SSE。风格包括极简、几何、符号、线性、双色、柔和渐变、柔和 3D 和图形角色。
 
-网站名称为必填上下文，域名从网址提取且只发送 hostname，不发送路径、query 或 fragment。可选“图标语义/用途”最多 300 字，用于说明产品功能或视觉隐喻；该描述仅用于本次生成，不保存为网站字段。生成前会展示 Provider、模型、风格及实际发送的名称、域名和用途；取消不发起请求。
+网站名称为必填上下文，域名从网址提取且只发送 hostname，不发送路径、query 或 fragment。可选“图标语义/用途”最多 300 字，仅用于本次生成，不保存为网站字段。生成前展示 Provider、模型、图片协议、风格及实际发送的名称、域名和用途；取消不发起请求。
 
-每次生成只发送一次 OpenAI-compatible 请求，保持 `n: 3`、`size: "1024x1024"` 和现有图片校验。Prompt 统一约束 32／48／64px 可读性、单焦点、安全边距、原创性，以及候选的视觉隐喻、轮廓和构图差异；实际效果取决于 Provider／模型。选中候选后沿用上传与图片校验流程，图标文件上限 2 MiB。请求可能产生 Provider 费用。
+每次生成发起三个独立的单图请求：OpenAI Images 使用 `n: 1`、`size: "1024x1024"`；Gemini 原生使用 `responseModalities: ["IMAGE"]`，解析 `inlineData`。Gemini 原生接口从 Base URL 去掉末尾 `/v1`、`/v1beta` 或对应的 `/openai` 后缀，保留代理前缀；模型 ID 仅去掉原生 `models/` 前缀，不推断命名空间。Google 官方域名使用 `x-goog-api-key`，其他代理沿用 Bearer。API 请求字段 `imageProtocol` 可选值为 `openai`、`gemini`，省略时使用 `openai`。
+
+Prompt 以已知官网/品牌图标的核心视觉语言为身份基线，要求单张画布只展示一个图标，并约束 32／48／64px 可读性、单焦点、安全边距和候选差异；实际效果取决于 Provider／模型。选中候选后沿用上传与图片校验流程，文件上限 2 MiB。请求可能产生 Provider 费用；单次上游请求超时仍为 60 秒，失败详情会遮蔽当前 Provider 的 API Key。
 
 
 ## 本地开发

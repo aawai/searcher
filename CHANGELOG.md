@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+- AI 应用图标可独立选择 OpenAI Images 或 Gemini
+  原生协议，不再根据模型名称自动切换，且不修改文本模型、Provider 配置或聊天
+  SSE。修复 Google OpenAI-compatible Base URL 转原生图片接口的路径与 API Key
+  认证；代理保留 Base URL
+  前缀和模型命名空间。每个候选独立生成单张图片，避免将三个方案拼进同一画布。
+- AI 应用图标的 HTTP 和连接失败详情遮蔽当前 Provider 的 API
+  Key，保留排查所需的状态及错误信息。
+
 - 主页视觉层级收敛：Zen 移除隐藏标题占位，Zen / Widgets
   及标题开关共用稳定搜索锚点；搜索、Bento、浮动导航与临时浮层采用分层材质，减轻深色描边与阴影，统一内外圆角并保留键盘焦点及
   reduced motion 支持。

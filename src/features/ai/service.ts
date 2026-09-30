@@ -8,12 +8,7 @@ import {
 } from "../../db/ai-schema.ts";
 import { auditLogs } from "../../db/schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
-import {
-    fetchOpenAIModels,
-    OpenAIClientError,
-    type StreamEvent,
-    streamOpenAIChat,
-} from "./client.ts";
+import { fetchOpenAIModels, streamOpenAIChat } from "./client.ts";
 import { generateLogoCandidates } from "./images.ts";
 import type {
     AiConversationDto,
@@ -22,6 +17,7 @@ import type {
     AiProviderDto,
     ChatStreamRequest,
     CreateProviderInput,
+    ImageProtocol,
     LogoStyle,
     ProviderScope,
     UpdateModelInput,
@@ -423,7 +419,7 @@ export class AiService {
             const providerIds = Array.from(providerMap.keys());
             if (providerIds.length === 0) return [];
 
-            let query = db.select().from(aiModels);
+            const query = db.select().from(aiModels);
             if (providerId) {
                 if (!providerMap.has(providerId)) {
                     return [];
@@ -991,6 +987,7 @@ export class AiService {
         siteDomain: string | undefined,
         description: string | undefined,
         style: LogoStyle,
+        imageProtocol: ImageProtocol,
     ) {
         const { provider, model } = await this.resolveTargetModel(
             userId,
@@ -1009,6 +1006,7 @@ export class AiService {
             siteDomain,
             description,
             style,
+            imageProtocol,
             this.#fetchFn,
         );
     }
