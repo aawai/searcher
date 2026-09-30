@@ -54,12 +54,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
 
     return (
         <>
-            <section
-                className={`hero ${
-                    appearance.showTitle === false ? "hero--no-title" : ""
-                }`}
-                aria-label="搜索"
-            >
+            <section className="hero" aria-label="搜索">
                 {appearance.showTitle !== false && (
                     <h1 className="hero-title">
                         Searcher<span>.</span>
@@ -281,7 +276,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                                 <Button
                                                     variant="default"
                                                     size="sm"
-                                                    className="widgets-bento-empty-btn widgets-bento-empty-btn--primary"
+                                                    className="widgets-bento-empty-btn"
                                                     onClick={() => {
                                                         setFormPresentation(
                                                             "dialog",
@@ -302,8 +297,9 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                     <div className="widgets-bento-card">
                         <div className="widgets-bento-header">
                             <div className="widgets-bento-header-left">
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     className="widgets-bento-title-btn"
                                     onClick={() => {
                                         setSheet("notes");
@@ -329,11 +325,12 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                             </span>
                                         )}
                                     </span>
-                                </button>
+                                </Button>
                             </div>
                             <div className="widgets-bento-actions">
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="widgets-bento-action"
                                     onClick={() => {
                                         setSheet("notes");
@@ -343,16 +340,17 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                 >
                                     <StickyNote size={13} />
                                     <span>面板</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    className="widgets-bento-action widgets-bento-action--primary"
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="widgets-bento-action"
                                     onClick={() => void createNote()}
                                     title="新建便签"
                                 >
                                     <Plus size={13} />
                                     <span>新建</span>
-                                </button>
+                                </Button>
                             </div>
                         </div>
                         {fixedNotes.length > 0
@@ -403,7 +401,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                         <Button
                                             variant="default"
                                             size="sm"
-                                            className="widgets-bento-empty-btn widgets-bento-empty-btn--primary"
+                                            className="widgets-bento-empty-btn"
                                             onClick={() => void createNote()}
                                         >
                                             <Plus size={13} />

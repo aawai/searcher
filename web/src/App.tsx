@@ -99,7 +99,8 @@ function Layout() {
             <header className="topbar">
                 <Link
                     className={`wordmark-small ${
-                        isHomePage && appearance.showTitle !== false
+                        isHomePage && appearance.style === "widgets" &&
+                            appearance.showTitle !== false
                             ? "opacity-0 pointer-events-none select-none transition-opacity"
                             : "opacity-100 transition-opacity"
                     }`}
