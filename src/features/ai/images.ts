@@ -2,7 +2,7 @@ import { fetchWithSafeLimit } from "../webapp-icons/fetcher.ts";
 import { validateImageBytes } from "../webapp-icons/validator.ts";
 import { normalizeBaseUrl, OpenAIClientError } from "./client.ts";
 
-import type { LogoStyle } from "./types.ts";
+import type { ImageProtocol, LogoStyle } from "./types.ts";
 
 export interface LogoCandidate {
     dataUrl: string;
@@ -73,7 +73,9 @@ export function buildLogoPrompt(input: {
         "AVOID",
         "No words, letters, initials, numbers, typography or captions. No UI screenshots, browser windows, phones, laptops or device mockups. No complex scenes, landscapes or multiple unrelated objects. No tiny details, thin strokes, visual noise or complex textures. No watermarks, signatures, badges or labels. Do not wrap the artwork in an unnecessary app-store-style rounded-square frame. Never show multiple icon alternatives, a grid, triptych, contact sheet, comparison board, swatches or before/after variants inside the same image.",
         "VARIATION",
-        `This is candidate ${candidateIndex} of ${CANDIDATE_COUNT}. ${candidateDirection[candidateIndex - 1]}`,
+        `This is candidate ${candidateIndex} of ${CANDIDATE_COUNT}. ${
+            candidateDirection[candidateIndex - 1]
+        }`,
         "OUTPUT",
         "Return one image only: a single production-ready square launcher app icon with no text explanation.",
     ].join("\n");
@@ -83,28 +85,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
 }
 
-function isGeminiNativeImageModel(modelId: string): boolean {
-    const normalized = modelId.trim().replace(/^\/+/, "");
-    return normalized.split("/").some((part) => /^gemini.*image/i.test(part));
-}
-
-function geminiModelName(modelId: string): string {
-    const normalized = modelId.trim().replace(/^\/+/, "");
-    const parts = normalized.split("/");
-    for (let index = parts.length - 1; index >= 0; index--) {
-        if (/^gemini.*image/i.test(parts[index])) return parts[index];
-    }
-    return normalized.replace(/^models\//i, "");
-}
-
 function geminiGenerateContentUrl(baseUrl: string, modelId: string): string {
     const url = new URL(normalizeBaseUrl(baseUrl));
     const basePath = url.pathname.replace(/\/+$/, "").replace(
-        /\/v1(?:beta)?$/i,
+        /\/v1(?:beta)?(?:\/openai)?$/i,
         "",
     );
     url.pathname = `${basePath}/v1beta/models/${
-        encodeURIComponent(geminiModelName(modelId))
+        encodeURIComponent(modelId.trim().replace(/^models\//i, ""))
     }:generateContent`;
     return url.toString();
 }
@@ -141,7 +129,13 @@ async function readResponseBytes(response: Response): Promise<Uint8Array> {
     return payload;
 }
 
-function providerErrorMessage(text: string): string {
+function redactApiKey(text: string, apiKey: string): string {
+    if (!apiKey) return text;
+    return text.replaceAll(JSON.stringify(apiKey).slice(1, -1), "[redacted]")
+        .replaceAll(apiKey, "[redacted]");
+}
+
+function providerErrorMessage(text: string, apiKey: string): string {
     const trimmed = text.trim();
     if (!trimmed) return "";
     try {
@@ -153,36 +147,40 @@ function providerErrorMessage(text: string): string {
                 typeof error.message === "string" &&
                 error.message.trim()
             ) {
-                return error.message.trim().slice(0, 500);
+                return redactApiKey(error.message, apiKey).trim().slice(0, 500);
             }
             if (
                 typeof parsed.message === "string" &&
                 parsed.message.trim()
             ) {
-                return parsed.message.trim().slice(0, 500);
+                return redactApiKey(parsed.message, apiKey).trim().slice(
+                    0,
+                    500,
+                );
             }
         }
     } catch {
         // Fall through to a compact text response.
     }
-    return trimmed.replace(/\s+/g, " ").slice(0, 500);
+    return redactApiKey(trimmed, apiKey).replace(/\s+/g, " ").slice(0, 500);
 }
 
 async function readJsonResponse(
     response: Response,
     errorPrefix: string,
+    apiKey: string,
 ): Promise<unknown> {
     const payload = await readResponseBytes(response);
     const text = new TextDecoder().decode(payload);
 
     if (!response.ok) {
-        const detail = providerErrorMessage(text);
+        const detail = providerErrorMessage(text, apiKey);
         throw new OpenAIClientError(
             `${errorPrefix}: HTTP ${response.status}${
                 detail ? ` - ${detail}` : ""
             }`,
             response.status,
-            text.slice(0, 4096),
+            redactApiKey(text, apiKey).slice(0, 4096),
         );
     }
     if (!text.trim()) {
@@ -330,13 +328,16 @@ async function generateOpenAICandidate(
     } catch (error) {
         throw new OpenAIClientError(
             `图像 Provider 连接失败；确认其支持 /images/generations: ${
-                error instanceof Error ? error.message : String(error)
+                redactApiKey(
+                    error instanceof Error ? error.message : String(error),
+                    apiKey,
+                )
             }`,
         );
     }
 
     return await extractOpenAICandidate(
-        await readJsonResponse(response, "图像生成失败"),
+        await readJsonResponse(response, "图像生成失败", apiKey),
         style,
     );
 }
@@ -357,7 +358,10 @@ async function generateGeminiCandidate(
             redirect: "error",
             signal: AbortSignal.timeout(60_000),
             headers: {
-                Authorization: `Bearer ${apiKey}`,
+                ...(new URL(target).hostname ===
+                        "generativelanguage.googleapis.com"
+                    ? { "x-goog-api-key": apiKey }
+                    : { Authorization: "Bearer " + apiKey }),
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -373,13 +377,16 @@ async function generateGeminiCandidate(
     } catch (error) {
         throw new OpenAIClientError(
             `Gemini 图像 Provider 连接失败: ${
-                error instanceof Error ? error.message : String(error)
+                redactApiKey(
+                    error instanceof Error ? error.message : String(error),
+                    apiKey,
+                )
             }`,
         );
     }
 
     return extractGeminiCandidate(
-        await readJsonResponse(response, "Gemini 图像生成失败"),
+        await readJsonResponse(response, "Gemini 图像生成失败", apiKey),
         style,
     );
 }
@@ -392,9 +399,10 @@ export async function generateLogoCandidates(
     siteDomain: string | undefined,
     description: string | undefined,
     style: LogoStyle,
+    imageProtocol: ImageProtocol,
     fetchFn: typeof fetch = fetch,
 ): Promise<LogoCandidate[]> {
-    const generator = isGeminiNativeImageModel(modelId)
+    const generator = imageProtocol === "gemini"
         ? generateGeminiCandidate
         : generateOpenAICandidate;
 

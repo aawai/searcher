@@ -5,7 +5,7 @@ import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { AiService, AiServiceError } from "./service.ts";
 import { OpenAIClientError } from "./client.ts";
-import { LOGO_STYLES } from "./types.ts";
+import { IMAGE_PROTOCOLS, LOGO_STYLES } from "./types.ts";
 import type {
     ChatStreamRequest,
     CreateProviderInput,
@@ -98,6 +98,7 @@ const LogoSchema = {
     siteDomain: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(253))),
     description: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(300))),
     style: v.picklist(LOGO_STYLES),
+    imageProtocol: v.optional(v.picklist(IMAGE_PROTOCOLS), "openai"),
 };
 
 export function registerAiRoutes(
@@ -545,6 +546,7 @@ export function registerAiRoutes(
             siteDomain: json(LogoSchema.siteDomain),
             description: json(LogoSchema.description),
             style: json(LogoSchema.style),
+            imageProtocol: json(LogoSchema.imageProtocol),
         }),
         async (c, data) => {
             try {
@@ -556,6 +558,7 @@ export function registerAiRoutes(
                     data.siteDomain,
                     data.description,
                     data.style,
+                    data.imageProtocol,
                 );
                 return c.success({ images });
             } catch (err) {

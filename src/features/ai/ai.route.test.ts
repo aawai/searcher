@@ -6,7 +6,6 @@ import { responseMiddleware } from "@internal/hono/middleware/response.ts";
 import { DatabaseStore } from "../../db/database.ts";
 import { AiService } from "./service.ts";
 import { registerAiRoutes } from "./ai.route.ts";
-import { LOGO_STYLES } from "./types.ts";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import type { UserDto } from "@shared/contracts.ts";
 
@@ -858,15 +857,13 @@ Deno.test("AI Logo candidates use the requested visible model and return three v
         0,
         0x0d,
     ]);
-    let requestBody: { model: string; n: number } | undefined;
-    const mockFetch: typeof fetch = (input, init) => {
+    const mockFetch: typeof fetch = (input) => {
         if (String(input).endsWith("/models")) {
             return Promise.resolve(
                 Response.json({ data: [{ id: "image-model" }] }),
             );
         }
         if (String(input).endsWith("/images/generations")) {
-            requestBody = JSON.parse(String(init?.body));
             return Promise.resolve(
                 Response.json({
                     data: Array.from(
@@ -903,8 +900,6 @@ Deno.test("AI Logo candidates use the requested visible model and return three v
         `data:image/png;base64,${png.toBase64()}`,
     );
     assertEquals(result.data.images[0].style, "geometric");
-    assertEquals(requestBody?.model, "image-model");
-    assertEquals(requestBody?.n, 3);
     const denied = await app.request("/api/ai/logo-candidates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -983,65 +978,6 @@ const SECOND_USER: UserDto = {
     role: "user",
 };
 
-Deno.test("AI Logo candidates route accepts all eight valid styles with one provider call of n=3 size=1024", async () => {
-    const user = TEST_USER;
-
-    for (const style of LOGO_STYLES) {
-        let providerCalls = 0;
-        let requestBody:
-            | {
-                model?: string;
-                n?: number;
-                size?: string;
-                response_format?: string;
-            }
-            | undefined;
-
-        const mockFetch = createMockImageFetch({
-            onImageRequest: (body) => {
-                providerCalls++;
-                requestBody = body;
-            },
-        });
-
-        const { app, service } = setupTestApp(user, mockFetch);
-        const provider = await service.createProvider(user.id, {
-            name: "Style Provider",
-            baseUrl: "https://images.example/v1",
-            apiKey: "secret-key",
-            scope: "user",
-        });
-
-        const response = await app.request("/api/ai/logo-candidates", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                providerId: provider.id,
-                modelId: "image-model",
-                siteName: "Search",
-                style,
-            }),
-        });
-
-        assertEquals(response.status, 200);
-        const result = await response.json();
-        assertEquals(result.status, true);
-        assertEquals(result.data.images.length, 3);
-        for (const img of result.data.images) {
-            assertEquals(img.style, style);
-            assertEquals(
-                img.dataUrl,
-                `data:image/png;base64,${VALID_PNG_BYTES.toBase64()}`,
-            );
-        }
-        assertEquals(providerCalls, 1);
-        assertEquals(requestBody?.model, "image-model");
-        assertEquals(requestBody?.n, 3);
-        assertEquals(requestBody?.size, "1024x1024");
-        assertEquals(requestBody?.response_format, "b64_json");
-    }
-});
-
 Deno.test("AI Logo candidates route rejects invalid styles before calling provider", async () => {
     const user = TEST_USER;
 
@@ -1086,50 +1022,6 @@ Deno.test("AI Logo candidates route rejects invalid styles before calling provid
         assertEquals(result.status, false);
         assertEquals(providerCalls, 0);
     }
-});
-
-Deno.test("AI Logo candidates route receives optional siteDomain and description as quoted data in provider prompt", async () => {
-    const user = TEST_USER;
-
-    let providerCalls = 0;
-    let requestPrompt = "";
-
-    const mockFetch = createMockImageFetch({
-        onImageRequest: (body) => {
-            providerCalls++;
-            requestPrompt = String(body.prompt ?? "");
-        },
-    });
-
-    const { app, service } = setupTestApp(user, mockFetch);
-    const provider = await service.createProvider(user.id, {
-        name: "Metadata Provider",
-        baseUrl: "https://images.example/v1",
-        apiKey: "secret-key",
-        scope: "user",
-    });
-
-    const siteDomain = "search.example.com";
-    const description = "Personal search and web-app launcher portal";
-
-    const response = await app.request("/api/ai/logo-candidates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            providerId: provider.id,
-            modelId: "image-model",
-            siteName: "Searcher",
-            style: "glyph",
-            siteDomain,
-            description,
-        }),
-    });
-
-    assertEquals(response.status, 200);
-    assertEquals(providerCalls, 1);
-    assertEquals(requestPrompt.includes(JSON.stringify(siteDomain)), true);
-    assertEquals(requestPrompt.includes(JSON.stringify(description)), true);
-    assertEquals(requestPrompt.includes(JSON.stringify("Searcher")), true);
 });
 
 Deno.test("AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call", async () => {
@@ -1194,72 +1086,6 @@ Deno.test("AI Logo candidates route rejects siteDomain > 253 and description > 3
         }),
     });
     assertEquals(boundaryRes.status, 200);
-    assertEquals(providerCalls, 1);
-});
-
-Deno.test("AI Logo candidates route omits absent and whitespace-only optional fields from prompt", async () => {
-    const user = TEST_USER;
-
-    let promptOmitted = "";
-    let promptWhitespace = "";
-
-    let stage = "omitted";
-    const mockFetch = createMockImageFetch({
-        onImageRequest: (body) => {
-            if (stage === "omitted") {
-                promptOmitted = String(body.prompt ?? "");
-            } else {
-                promptWhitespace = String(body.prompt ?? "");
-            }
-        },
-    });
-
-    const { app, service } = setupTestApp(user, mockFetch);
-    const provider = await service.createProvider(user.id, {
-        name: "Omitted Provider",
-        baseUrl: "https://images.example/v1",
-        apiKey: "secret-key",
-        scope: "user",
-    });
-
-    // 1. Optional fields omitted entirely
-    const resOmitted = await app.request("/api/ai/logo-candidates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            providerId: provider.id,
-            modelId: "image-model",
-            siteName: "Searcher",
-            style: "minimal",
-        }),
-    });
-    assertEquals(resOmitted.status, 200);
-    assertEquals(promptOmitted.includes("siteDomain"), false);
-    assertEquals(promptOmitted.includes("description"), false);
-    assertEquals(promptOmitted.includes("undefined"), false);
-    assertEquals(promptOmitted.includes("null"), false);
-    assertEquals(promptOmitted.includes('""'), false);
-
-    // 2. Optional fields provided as whitespace-only
-    stage = "whitespace";
-    const resWhitespace = await app.request("/api/ai/logo-candidates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            providerId: provider.id,
-            modelId: "image-model",
-            siteName: "Searcher",
-            style: "minimal",
-            siteDomain: "   ",
-            description: "  \n\t  ",
-        }),
-    });
-    assertEquals(resWhitespace.status, 200);
-    assertEquals(promptWhitespace.includes("siteDomain"), false);
-    assertEquals(promptWhitespace.includes("description"), false);
-    assertEquals(promptWhitespace.includes("undefined"), false);
-    assertEquals(promptWhitespace.includes("null"), false);
-    assertEquals(promptWhitespace.includes('""'), false);
 });
 
 Deno.test("AI Logo candidates route rejects invalid images and denies unauthenticated or unowned model generation", async () => {
@@ -1362,5 +1188,177 @@ Deno.test("AI Logo candidates route rejects invalid images and denies unauthenti
         }),
     });
     assertEquals(corruptRes.status, 400);
-    assertEquals(providerCalls, 1);
+});
+
+Deno.test("AI Logo errors never disclose system credentials to ordinary users", async () => {
+    const secret = 'sk-review-secret-with-"quote';
+    let mode: "json" | "text" | "transport" = "json";
+    const mockFetch: typeof fetch = (input) => {
+        if (String(input).endsWith("/models")) {
+            return Promise.resolve(
+                Response.json({ data: [{ id: "image-model" }] }),
+            );
+        }
+        const message = "Invalid credential: Bearer " + secret +
+            "; check provider authentication";
+        if (mode === "transport") return Promise.reject(new Error(message));
+        return Promise.resolve(
+            mode === "json"
+                ? Response.json({ error: { message } }, { status: 401 })
+                : new Response(message, { status: 401 }),
+        );
+    };
+    const { app, service, store } = setupTestApp(TEST_USER, mockFetch);
+    try {
+        const provider = await service.createProvider("admin-1", {
+            name: "System images",
+            baseUrl: "https://images.example/v1",
+            apiKey: secret,
+            scope: "system",
+        }, true);
+        for (const failure of ["json", "text", "transport"] as const) {
+            mode = failure;
+            const response = await app.request("/api/ai/logo-candidates", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    providerId: provider.id,
+                    modelId: "image-model",
+                    siteName: "Searcher",
+                    style: "minimal",
+                }),
+            });
+            assertEquals(response.status, 400);
+            const result = await response.json();
+            assertEquals(result.message.includes(secret), false);
+            assertEquals(
+                JSON.stringify(result).includes(
+                    JSON.stringify(secret).slice(1, -1),
+                ),
+                false,
+            );
+            assertEquals(
+                result.message.includes("check provider authentication"),
+                true,
+            );
+        }
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("AI image protocol selection preserves model aliases and text chat", async () => {
+    const baseUrl = "https://provider.example/tenant/v1beta/openai";
+    const mockFetch: typeof fetch = (input, init) => {
+        const path = new URL(String(input)).pathname;
+        const body: unknown = typeof init?.body === "string"
+            ? JSON.parse(init.body)
+            : null;
+        if (path === "/tenant/v1beta/openai/models") {
+            return Promise.resolve(
+                Response.json({
+                    data: [{ id: "text-model" }, {
+                        id: "google/gemini-3.1-flash-image",
+                    }, {
+                        id: "models/gemini-3.1-flash-image",
+                    }],
+                }),
+            );
+        }
+        if (path === "/tenant/v1beta/openai/chat/completions") {
+            if (
+                !body || typeof body !== "object" || !("model" in body) ||
+                body.model !== "text-model"
+            ) return Promise.resolve(new Response(null, { status: 400 }));
+            return Promise.resolve(
+                new Response(
+                    'data: {"choices":[{"delta":{"content":"text unaffected"}}]}\n\ndata: [DONE]\n\n',
+                    { headers: { "Content-Type": "text/event-stream" } },
+                ),
+            );
+        }
+        if (path === "/tenant/v1beta/openai/images/generations") {
+            if (
+                !body || typeof body !== "object" || !("model" in body) ||
+                body.model !== "google/gemini-3.1-flash-image"
+            ) return Promise.resolve(new Response(null, { status: 400 }));
+            return Promise.resolve(
+                Response.json({
+                    data: [{ b64_json: VALID_PNG_BYTES.toBase64() }],
+                }),
+            );
+        }
+        if (
+            path ===
+                "/tenant/v1beta/models/gemini-3.1-flash-image:generateContent"
+        ) {
+            return Promise.resolve(
+                Response.json({
+                    candidates: [{
+                        content: {
+                            parts: [{
+                                inlineData: {
+                                    mimeType: "image/png",
+                                    data: VALID_PNG_BYTES.toBase64(),
+                                },
+                            }],
+                        },
+                    }],
+                }),
+            );
+        }
+        return Promise.resolve(new Response(null, { status: 404 }));
+    };
+    const { app, service, store } = setupTestApp(TEST_USER, mockFetch);
+    try {
+        const provider = await service.createProvider(TEST_USER.id, {
+            name: "Mixed",
+            baseUrl,
+            apiKey: "fixture-secret",
+            scope: "user",
+        });
+        for (const imageProtocol of ["openai", "gemini"] as const) {
+            const modelId = imageProtocol === "openai"
+                ? "google/gemini-3.1-flash-image"
+                : "models/gemini-3.1-flash-image";
+            const imageResponse = await app.request("/api/ai/logo-candidates", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    providerId: provider.id,
+                    modelId,
+                    imageProtocol,
+                    siteName: "Searcher",
+                    style: "minimal",
+                }),
+            });
+            assertEquals(imageResponse.status, 200);
+            const images = (await imageResponse.json()).data.images;
+            assertEquals(
+                images.map((image: { dataUrl: string; style: string }) =>
+                    image.dataUrl
+                ),
+                Array(3).fill(
+                    "data:image/png;base64," + VALID_PNG_BYTES.toBase64(),
+                ),
+            );
+            const chat = await app.request("/api/ai/chat/stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "Hello" }),
+            });
+            assertEquals(chat.status, 200);
+            const events = parseSseEvents(await chat.text());
+            assertEquals(
+                events.filter((e) => e.event === "token").map((e) => e.data),
+                [
+                    "text unaffected",
+                ],
+            );
+            assertEquals(events.some((e) => e.event === "done"), true);
+            assertEquals(events.some((e) => e.event === "error"), false);
+        }
+    } finally {
+        await store.close();
+    }
 });

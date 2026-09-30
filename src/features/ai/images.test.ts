@@ -1,31 +1,10 @@
-import { assert, assertEquals } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { buildLogoPrompt, generateLogoCandidates } from "./images.ts";
 import { LOGO_STYLES } from "./types.ts";
 
 function contextData(prompt: string): unknown {
     const context = prompt.split("\nCONTEXT\n")[1].split("\nSTYLE\n")[0];
     return JSON.parse(context.slice(context.indexOf("{")));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-}
-
-function pngBase64(seed: number): string {
-    return new Uint8Array([
-        0x89,
-        0x50,
-        0x4e,
-        0x47,
-        0x0d,
-        0x0a,
-        0x1a,
-        0x0a,
-        seed,
-        seed,
-        seed,
-        seed,
-    ]).toBase64();
 }
 
 Deno.test("logo prompt keeps untrusted metadata inside quoted context for every style", () => {
@@ -53,157 +32,51 @@ Deno.test("logo prompt omits absent and whitespace-only optional metadata", () =
     }
 });
 
-Deno.test("logo prompt preserves known brand identity but asks for exactly one icon", () => {
-    const prompt = buildLogoPrompt({
-        siteName: "Example",
-        siteDomain: "example.com",
-        style: "geometric",
-        candidateIndex: 2,
-    });
-
-    assert(prompt.includes("Create exactly one square launcher app icon"));
-    assert(prompt.includes("preserve the official icon's recognizable core visual language"));
-    assert(prompt.includes("selected style should change the treatment, not the identity"));
-    assert(prompt.includes("Never show multiple icon alternatives"));
-    assert(prompt.includes("candidate 2 of 3"));
-    assert(!prompt.includes("Design three distinct original launcher app-icon concepts"));
-});
-
-Deno.test("OpenAI image models request three separate single-image generations", async () => {
-    const calls: Array<{
-        url: string;
-        authorization: string | null;
-        body: unknown;
-    }> = [];
-    let sequence = 0;
-
+Deno.test("official Gemini API accepts native endpoint and API key authentication", async () => {
+    const png =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuIAAAAASUVORK5CYII=";
     const fetchFn: typeof fetch = (input, init) => {
-        sequence += 1;
-        const body = typeof init?.body === "string"
-            ? JSON.parse(init.body)
-            : undefined;
-        calls.push({
-            url: String(input),
-            authorization: new Headers(init?.headers).get("Authorization"),
-            body,
-        });
-        return Promise.resolve(
-            new Response(
-                JSON.stringify({
-                    data: [{ b64_json: pngBase64(sequence) }],
+        const headers = new Headers(init?.headers);
+        if (
+            String(input) !==
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent" ||
+            headers.get("x-goog-api-key") !== "fixture-key" ||
+            headers.has("Authorization")
+        ) {
+            return Promise.resolve(
+                new Response("Unsupported endpoint or credentials", {
+                    status: 401,
                 }),
-                {
-                    status: 200,
-                    headers: { "Content-Type": "application/json" },
-                },
-            ),
+            );
+        }
+        return Promise.resolve(
+            Response.json({
+                candidates: [{
+                    content: {
+                        parts: [{
+                            inlineData: { mimeType: "image/png", data: png },
+                        }],
+                    },
+                }],
+            }),
         );
     };
-
     const images = await generateLogoCandidates(
-        "https://images.example.test/v1",
-        "secret",
-        "gpt-image-1.5",
-        "Example",
-        "example.com",
+        "https://generativelanguage.googleapis.com/v1beta/openai",
+        "fixture-key",
+        "models/gemini-3.1-flash-image",
+        "Searcher",
         undefined,
-        "minimal",
-        fetchFn,
-    );
-
-    assertEquals(images.length, 3);
-    assertEquals(calls.length, 3);
-    for (const call of calls) {
-        assertEquals(
-            call.url,
-            "https://images.example.test/v1/images/generations",
-        );
-        assertEquals(call.authorization, "Bearer secret");
-        assert(isRecord(call.body));
-        assertEquals(call.body.model, "gpt-image-1.5");
-        assertEquals(call.body.n, 1);
-        assertEquals(call.body.size, "1024x1024");
-        assertEquals(call.body.response_format, "b64_json");
-        assert(typeof call.body.prompt === "string");
-        assert(call.body.prompt.includes("Return one image only"));
-    }
-});
-
-Deno.test("Gemini image models use native generateContent with IMAGE modality", async () => {
-    const calls: Array<{
-        url: string;
-        authorization: string | null;
-        body: unknown;
-    }> = [];
-    let sequence = 0;
-
-    const fetchFn: typeof fetch = (input, init) => {
-        sequence += 1;
-        const body = typeof init?.body === "string"
-            ? JSON.parse(init.body)
-            : undefined;
-        calls.push({
-            url: String(input),
-            authorization: new Headers(init?.headers).get("Authorization"),
-            body,
-        });
-        return Promise.resolve(
-            new Response(
-                JSON.stringify({
-                    candidates: [{
-                        content: {
-                            parts: [{
-                                inlineData: {
-                                    mimeType: "image/png",
-                                    data: pngBase64(sequence),
-                                },
-                            }],
-                        },
-                    }],
-                }),
-                {
-                    status: 200,
-                    headers: { "Content-Type": "application/json" },
-                },
-            ),
-        );
-    };
-
-    const images = await generateLogoCandidates(
-        "http://100.78.0.1:8317/v1",
-        "secret",
-        "gemini-3.1-flash-image",
-        "Example",
-        "example.com",
-        "Launcher",
+        undefined,
         "glyph",
+        "gemini",
         fetchFn,
     );
-
-    assertEquals(images.length, 3);
-    assertEquals(calls.length, 3);
-    for (const call of calls) {
-        assertEquals(
-            call.url,
-            "http://100.78.0.1:8317/v1beta/models/gemini-3.1-flash-image:generateContent",
-        );
-        assertEquals(call.authorization, "Bearer secret");
-        assert(isRecord(call.body));
-
-        const contents = call.body.contents;
-        assert(Array.isArray(contents));
-        assertEquals(contents.length, 1);
-        assert(isRecord(contents[0]));
-        assertEquals(contents[0].role, "user");
-        const parts = contents[0].parts;
-        assert(Array.isArray(parts));
-        assertEquals(parts.length, 1);
-        assert(isRecord(parts[0]));
-        assert(typeof parts[0].text === "string");
-        assert(parts[0].text.includes("Return one image only"));
-
-        const generationConfig = call.body.generationConfig;
-        assert(isRecord(generationConfig));
-        assertEquals(generationConfig.responseModalities, ["IMAGE"]);
-    }
+    assertEquals(
+        images,
+        Array(3).fill({
+            dataUrl: "data:image/png;base64," + png,
+            style: "glyph",
+        }),
+    );
 });

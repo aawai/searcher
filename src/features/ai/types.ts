@@ -1,4 +1,6 @@
 export type ProviderScope = "system" | "user";
+export const IMAGE_PROTOCOLS = ["openai", "gemini"] as const;
+export type ImageProtocol = typeof IMAGE_PROTOCOLS[number];
 export const LOGO_STYLES = [
     "minimal",
     "geometric",

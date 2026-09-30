@@ -4,6 +4,7 @@ import { AlertCircle, Check, Loader2, Sparkles } from "lucide-react";
 import {
     type AiModelDto,
     type AiProviderDto,
+    type ImageProtocol,
     LOGO_STYLES,
     type LogoStyle,
 } from "../../../../src/features/ai/types.ts";
@@ -44,6 +45,7 @@ interface ConfirmedRequestSnapshot {
     providerName: string;
     baseUrl: string;
     modelId: string;
+    imageProtocol: ImageProtocol;
     modelDisplayName: string;
     style: LogoStyle;
     styleLabel: string;
@@ -70,6 +72,7 @@ export function LogoCandidatePicker({
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
     const [selectedId, setSelectedId] = useState("");
     const [style, setStyle] = useState<LogoStyle>("minimal");
+    const [imageProtocol, setImageProtocol] = useState<ImageProtocol>("openai");
     const [description, setDescription] = useState("");
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [confirmSnapshot, setConfirmSnapshot] = useState<
@@ -130,6 +133,7 @@ export function LogoCandidatePicker({
             providerName: provider.name,
             baseUrl: provider.baseUrl,
             modelId: model.modelId,
+            imageProtocol,
             modelDisplayName: model.displayName || model.modelId,
             style,
             styleLabel: LOGO_STYLE_LABELS[style] ?? style,
@@ -150,6 +154,7 @@ export function LogoCandidatePicker({
             const body: {
                 providerId: string;
                 modelId: string;
+                imageProtocol: ImageProtocol;
                 siteName: string;
                 style: LogoStyle;
                 siteDomain?: string;
@@ -157,6 +162,7 @@ export function LogoCandidatePicker({
             } = {
                 providerId: snapshot.providerId,
                 modelId: snapshot.modelId,
+                imageProtocol: snapshot.imageProtocol,
                 siteName: snapshot.siteName,
                 style: snapshot.style,
             };
@@ -296,6 +302,26 @@ export function LogoCandidatePicker({
                             </option>
                         ))}
                     </NativeSelect>
+                </div>
+                <div className="app-ai-field">
+                    <label htmlFor="ai-image-protocol">图片生成协议</label>
+                    <NativeSelect
+                        id="ai-image-protocol"
+                        value={imageProtocol}
+                        disabled={busy}
+                        onChange={(event) => {
+                            const value = event.target.value;
+                            if (
+                                value === "openai" || value === "gemini"
+                            ) setImageProtocol(value);
+                        }}
+                    >
+                        <option value="openai">OpenAI Images</option>
+                        <option value="gemini">Gemini 原生</option>
+                    </NativeSelect>
+                    <p className="app-ai-dialog-helper-text">
+                        仅用于本次图片生成，不修改文本模型配置。请选择服务商支持的协议。
+                    </p>
                 </div>
                 <div className="app-ai-field app-ai-field--full">
                     <div className="app-ai-field-header">
@@ -441,6 +467,17 @@ export function LogoCandidatePicker({
                                     <span className="app-ai-confirm-value">
                                         {confirmSnapshot.modelDisplayName}{" "}
                                         ({confirmSnapshot.modelId})
+                                    </span>
+                                </div>
+                                <div className="app-ai-confirm-item">
+                                    <span className="app-ai-confirm-label">
+                                        图片协议
+                                    </span>
+                                    <span className="app-ai-confirm-value">
+                                        {confirmSnapshot.imageProtocol ===
+                                                "gemini"
+                                            ? "Gemini 原生"
+                                            : "OpenAI Images"}
                                     </span>
                                 </div>
                                 <div className="app-ai-confirm-item">
