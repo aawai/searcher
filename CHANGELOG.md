@@ -4,6 +4,9 @@
 
 - AI 应用图标生成按模型协议适配：Gemini image 模型使用原生 `v1beta/models/:model:generateContent` + `IMAGE` modality；OpenAI Images 每个候选独立生成单张图片，避免把三个方案拼进同一画布。生成 Prompt 以已知官网/品牌图标的核心视觉语言为身份基线，仅用所选风格改变表现方式。
 
+- 主页视觉层级收敛：Zen 移除隐藏标题占位，Zen / Widgets
+  及标题开关共用稳定搜索锚点；搜索、Bento、浮动导航与临时浮层采用分层材质，减轻深色描边与阴影，统一内外圆角并保留键盘焦点及
+  reduced motion 支持。
 - 修复 Settings/Admin 子页面直访、刷新和分享链接的服务端
   404；未知普通页面统一显示客户端 404，API 与静态资源继续保持各自的 404 边界。
 - 从 AI 问答、回收站、账户及 AI 设置进入登录或注册后恢复原页面及

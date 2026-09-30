@@ -6,16 +6,22 @@
     --surface: #FFFFFF;
     --surface-soft: #F0F2F5;
     --surface-solid: #FFFFFF;
-    --surface-l0: #F5F6F8;
-    --surface-l1: #FFFFFF;
-    --surface-l2: rgba(255, 255, 255, 0.88);
-    --surface-l3: #FFFFFF;
+    /* Material levels: canvas, content, primary search, temporary overlay. */
+    --surface-l0: var(--background);
+    --surface-l1: color-mix(in srgb, var(--surface-solid) 86%, transparent);
+    --surface-l2: var(--surface-solid);
+    --surface-l3: var(--surface-solid);
+    --surface-navigation: color-mix(in srgb, var(--surface-solid) 94%, transparent);
+    --shadow-l1: 0 4px 16px -8px rgba(0, 0, 0, 0.10);
+    --shadow-l2: 0 10px 28px -10px rgba(0, 0, 0, 0.18);
+    --shadow-l3: 0 24px 64px -16px rgba(0, 0, 0, 0.24);
+    --shadow-navigation: 0 2px 8px -4px rgba(0, 0, 0, 0.08);
+    --material-blur-content: 12px;
+    --material-blur-search: 16px;
+    --material-blur-navigation: 8px;
     --muted: #606975;
     --border: #D9DEE6;
     --border-subtle: rgba(0, 0, 0, 0.08);
-    --glass-bg: rgba(255, 255, 255, 0.76);
-    --glass-border: rgba(255, 255, 255, 0.45);
-    --glass-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.12);
     --accent: #1d4ed8;
     --accent-hover: #1e40af;
     --accent-active: #172554;
@@ -32,8 +38,9 @@
     --ring: color-mix(in srgb, #1d4ed8 55%, transparent);
     --shadow: 0 16px 48px #17202e26;
     --radius: 12px;
-    --search-radius: 8px;
+    --search-radius: 16px;
     --control-radius: 6px;
+    --search-inner-radius: max(var(--control-radius), calc(var(--search-radius) - 8px));
     --multiline-radius: 8px;
     --input-radius: 8px;
     --search-opacity: 1;
@@ -69,6 +76,8 @@
     --layout-form-max: 560px;
     --layout-search-max: 720px;
     --layout-home-feedback-max: clamp(680px, 52vw, 1080px);
+    --home-title-size: clamp(28px, 3.2vw, 42px);
+    --home-hero-inset: clamp(80px, 18dvh, 180px);
     --layout-bento-max: 820px;
     --layout-home-content-max: 720px;
     --layout-sheet-max: 960px;
@@ -99,16 +108,14 @@
     --surface: #1D2128;
     --surface-soft: #262C35;
     --surface-solid: #1D2128;
-    --surface-l0: #14171C;
-    --surface-l1: #1C2027;
-    --surface-l2: rgba(29, 33, 40, 0.88);
     --surface-l3: #222730;
+    --shadow-l1: 0 4px 16px -8px rgba(0, 0, 0, 0.28);
+    --shadow-l2: 0 10px 28px -10px rgba(0, 0, 0, 0.55);
+    --shadow-l3: 0 24px 64px -16px rgba(0, 0, 0, 0.70);
+    --shadow-navigation: 0 2px 8px -4px rgba(0, 0, 0, 0.20);
     --muted: #A6AFBC;
     --border: #3C4654;
     --border-subtle: rgba(255, 255, 255, 0.08);
-    --glass-bg: rgba(22, 27, 34, 0.72);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.5);
     --accent: #60a5fa;
     --accent-hover: #93c5fd;
     --accent-active: #bfdbfe;
@@ -347,6 +354,11 @@
 @media (max-width: 767px) {
     :root {
         --space-page-inline: var(--space-4);
+    }
+}
+@media (max-width: 700px) {
+    :root {
+        --home-hero-inset: clamp(72px, 16dvh, 130px);
     }
 }
 @media (max-width: 640px) {

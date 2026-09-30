@@ -487,7 +487,9 @@ export function SettingsPage() {
                                                     显示 Searcher 标题
                                                 </span>
                                                 <p className="settings-row-desc">
-                                                    在首页搜索框上方展示品牌大标题
+                                                    在 Widgets
+                                                    搜索框上方展示品牌大标题；Zen
+                                                    始终保持极简
                                                 </p>
                                             </div>
                                             <div className="settings-row-control">
