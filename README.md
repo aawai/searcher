@@ -29,6 +29,23 @@ deno task dev
 `127.0.0.1:34567`。`deno task test` 运行后端契约测试，`deno task build`
 构建生产前端。
 
+## AI Provider transport
+
+Provider 仍使用 OpenAI-compatible Chat Completions API，支持自定义 Base URL；
+模型通过该地址下的 `/models` 自动发现，聊天请求发送到 `/chat/completions`。
+后端 `src/features/ai/client.ts` 使用固定版本的 OpenAI 官方 npm SDK；SDK 类型不进入
+`AiService`、共享 DTO 或前端的 `meta/token/done/error` SSE 协议。
+
+模型发现和聊天均禁用自动 retry，不自动切换 Provider 或模型。Base URL
+继续由 Searcher 校验，并拒绝 HTTP 重定向。为接近原 transport 无请求超时的行为，
+SDK 等待响应头的 timeout 显式设为运行时 timer 安全上限（约 24.8 天），
+不使用 SDK 默认的 10 分钟；该 timer 不限制流式正文读取。
+
+Abort 会取消上游请求，已输出的内容保留并标记为 `interrupted`。Provider HTTP
+错误、SSE error 消息或损坏的 SSE JSON 转换为 Searcher 错误事件；
+已输出的内容保留并标记为 `failed`，不会误报为完成。
+`AiServiceDeps.fetchFn` 继续支持注入 custom fetch，便于独立验证 Provider contract。
+
 ## 部署与管理
 
 ```sh

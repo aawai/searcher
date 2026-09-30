@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- AI Provider 流式错误处理：Provider 的 SSE error 消息与损坏的 SSE JSON
+  返回错误事件，不再忽略后误报为完成；已输出的内容继续保留。
+
 - Design Lab 风格预览与主页契约一致，仅提供 Zen /
   Widgets；历史风格偏好继续在加载时归一化。
 
