@@ -1,7 +1,7 @@
 {
     "version": 1,
-    "generatedAt": "2026-09-30T10:00:38.852Z",
-    "totalViolations": 796,
+    "generatedAt": "2026-09-30T15:07:58.783Z",
+    "totalViolations": 759,
     "allowances": {
         "web/src/app/AccountPage.tsx": [
             {
@@ -765,85 +765,6 @@
                 "count": 1
             }
         ],
-        "web/src/app/SearchHome.tsx": [
-            {
-                "rule": "inline-visual-style",
-                "property": "background",
-                "snippet": "background: \"transparent\"",
-                "fingerprint": "inline-visual-style:background:background: \"transparent\"",
-                "count": 2
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "border",
-                "snippet": "border: 0",
-                "fingerprint": "inline-visual-style:border:border: 0",
-                "count": 2
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "cursor",
-                "snippet": "cursor: \"grabbing\"",
-                "fingerprint": "inline-visual-style:cursor:cursor: \"grabbing\"",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "cursor",
-                "snippet": "cursor: disabled ? \"default\" : \"grab\"",
-                "fingerprint": "inline-visual-style:cursor:cursor: disabled ? \"default\" : \"grab\"",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "height",
-                "snippet": "height: `${notesMasonryLayout.containerHeight}px`",
-                "fingerprint": "inline-visual-style:height:height: `${notesMasonryLayout.containerHeight}px`",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "minHeight",
-                "snippet": "minHeight: `${notesMasonryLayout.containerHeight}px`",
-                "fingerprint": "inline-visual-style:minHeight:minHeight: `${notesMasonryLayout.containerHeight}px`",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "opacity",
-                "snippet": "opacity: pos ? 1 : 0",
-                "fingerprint": "inline-visual-style:opacity:opacity: pos ? 1 : 0",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "visibility",
-                "snippet": "visibility: pos ? \"visible\" : \"hidden\"",
-                "fingerprint": "inline-visual-style:visibility:visibility: pos ? \"visible\" : \"hidden\"",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "width",
-                "snippet": "width: `${ pos?.width ?? notesMasonryLayout .columnWidth }px`",
-                "fingerprint": "inline-visual-style:width:width: `${ pos?.width ?? notesMasonryLayout .columnWidth }px`",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "width",
-                "snippet": "width: `${notesMasonryLayout.columnWidth}px`",
-                "fingerprint": "inline-visual-style:width:width: `${notesMasonryLayout.columnWidth}px`",
-                "count": 1
-            },
-            {
-                "rule": "inline-visual-style",
-                "property": "zIndex",
-                "snippet": "zIndex: \"var(--elevation-drag)\"",
-                "fingerprint": "inline-visual-style:zIndex:zIndex: \"var(--elevation-drag)\"",
-                "count": 1
-            }
-        ],
         "web/src/app/SettingsPage.tsx": [
             {
                 "rule": "inline-visual-style",
@@ -857,15 +778,6 @@
                 "property": "color",
                 "snippet": "color: user ? \"var(--success)\" : \"var(--muted)\"",
                 "fingerprint": "inline-visual-style:color:color: user ? \"var(--success)\" : \"var(--muted)\"",
-                "count": 1
-            }
-        ],
-        "web/src/components/searcher/AppFormDialog.tsx": [
-            {
-                "rule": "inline-visual-style",
-                "property": "display",
-                "snippet": "display: \"none\"",
-                "fingerprint": "inline-visual-style:display:display: \"none\"",
                 "count": 1
             }
         ],
@@ -1594,28 +1506,28 @@
                 "property": "font-size",
                 "snippet": "font-size: 12.5px",
                 "fingerprint": "raw-font-size:font-size:font-size: 12.5px",
-                "count": 2
+                "count": 1
             },
             {
                 "rule": "raw-font-size",
                 "property": "font-size",
                 "snippet": "font-size: 12px",
                 "fingerprint": "raw-font-size:font-size:font-size: 12px",
-                "count": 6
+                "count": 4
             },
             {
                 "rule": "raw-spacing-literal",
                 "property": "gap",
                 "snippet": "gap: 5px",
                 "fingerprint": "raw-spacing-literal:gap:gap: 5px",
-                "count": 2
+                "count": 1
             },
             {
                 "rule": "raw-spacing-literal",
                 "property": "gap",
                 "snippet": "gap: 6px",
                 "fingerprint": "raw-spacing-literal:gap:gap: 6px",
-                "count": 4
+                "count": 3
             },
             {
                 "rule": "raw-spacing-literal",
@@ -1685,13 +1597,6 @@
                 "property": "margin-bottom",
                 "snippet": "margin-bottom: 4px",
                 "fingerprint": "raw-spacing-literal:margin-bottom:margin-bottom: 4px",
-                "count": 1
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "margin-left",
-                "snippet": "margin-left: -6px",
-                "fingerprint": "raw-spacing-literal:margin-left:margin-left: -6px",
                 "count": 1
             },
             {
@@ -1767,13 +1672,6 @@
             {
                 "rule": "raw-spacing-literal",
                 "property": "padding",
-                "snippet": "padding: 6px 10px",
-                "fingerprint": "raw-spacing-literal:padding:padding: 6px 10px",
-                "count": 2
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "padding",
                 "snippet": "padding: 6px 12px",
                 "fingerprint": "raw-spacing-literal:padding:padding: 6px 12px",
                 "count": 1
@@ -1781,16 +1679,9 @@
             {
                 "rule": "raw-spacing-literal",
                 "property": "padding",
-                "snippet": "padding: 6px 14px",
-                "fingerprint": "raw-spacing-literal:padding:padding: 6px 14px",
-                "count": 1
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "padding",
                 "snippet": "padding: 6px 8px",
                 "fingerprint": "raw-spacing-literal:padding:padding: 6px 8px",
-                "count": 2
+                "count": 1
             },
             {
                 "rule": "raw-spacing-literal",
@@ -1804,13 +1695,6 @@
                 "property": "padding",
                 "snippet": "padding: var(--bento-padding)",
                 "fingerprint": "raw-spacing-literal:padding:padding: var(--bento-padding)",
-                "count": 1
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "padding-inline",
-                "snippet": "padding-inline: 6px",
-                "fingerprint": "raw-spacing-literal:padding-inline:padding-inline: 6px",
                 "count": 1
             },
             {
@@ -1897,13 +1781,6 @@
                 "property": "box-shadow",
                 "snippet": "box-shadow: 0 1px 3px #0004",
                 "fingerprint": "raw-box-shadow:box-shadow:box-shadow: 0 1px 3px #0004",
-                "count": 1
-            },
-            {
-                "rule": "raw-box-shadow",
-                "property": "box-shadow",
-                "snippet": "box-shadow: 0 4px 20px #00000010",
-                "fingerprint": "raw-box-shadow:box-shadow:box-shadow: 0 4px 20px #00000010",
                 "count": 1
             },
             {
@@ -2107,7 +1984,7 @@
                 "property": "font-size",
                 "snippet": "font-size: 14px",
                 "fingerprint": "raw-font-size:font-size:font-size: 14px",
-                "count": 12
+                "count": 11
             },
             {
                 "rule": "raw-font-size",
@@ -2121,7 +1998,7 @@
                 "property": "font-size",
                 "snippet": "font-size: 16px",
                 "fingerprint": "raw-font-size:font-size:font-size: 16px",
-                "count": 7
+                "count": 6
             },
             {
                 "rule": "raw-font-size",
@@ -2205,7 +2082,7 @@
                 "property": "gap",
                 "snippet": "gap: 2px",
                 "fingerprint": "raw-spacing-literal:gap:gap: 2px",
-                "count": 4
+                "count": 3
             },
             {
                 "rule": "raw-spacing-literal",
@@ -2240,7 +2117,7 @@
                 "property": "gap",
                 "snippet": "gap: 8px",
                 "fingerprint": "raw-spacing-literal:gap:gap: 8px",
-                "count": 21
+                "count": 19
             },
             {
                 "rule": "raw-spacing-literal",
@@ -2304,13 +2181,6 @@
                 "snippet": "margin: 10px 0",
                 "fingerprint": "raw-spacing-literal:margin:margin: 10px 0",
                 "count": 4
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "margin",
-                "snippet": "margin: 12px auto",
-                "fingerprint": "raw-spacing-literal:margin:margin: 12px auto",
-                "count": 1
             },
             {
                 "rule": "raw-spacing-literal",
@@ -2679,13 +2549,6 @@
             {
                 "rule": "raw-spacing-literal",
                 "property": "padding",
-                "snippet": "padding: 14px 16px 12px",
-                "fingerprint": "raw-spacing-literal:padding:padding: 14px 16px 12px",
-                "count": 1
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "padding",
                 "snippet": "padding: 14px 18px",
                 "fingerprint": "raw-spacing-literal:padding:padding: 14px 18px",
                 "count": 1
@@ -2702,13 +2565,6 @@
                 "property": "padding",
                 "snippet": "padding: 16px 20px",
                 "fingerprint": "raw-spacing-literal:padding:padding: 16px 20px",
-                "count": 1
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "padding",
-                "snippet": "padding: 16px 20px 14px",
-                "fingerprint": "raw-spacing-literal:padding:padding: 16px 20px 14px",
                 "count": 1
             },
             {
@@ -2779,7 +2635,7 @@
                 "property": "padding",
                 "snippet": "padding: 22px clamp(20px,3vw,34px)",
                 "fingerprint": "raw-spacing-literal:padding:padding: 22px clamp(20px,3vw,34px)",
-                "count": 2
+                "count": 1
             },
             {
                 "rule": "raw-spacing-literal",
@@ -2814,7 +2670,7 @@
                 "property": "padding",
                 "snippet": "padding: 4px",
                 "fingerprint": "raw-spacing-literal:padding:padding: 4px",
-                "count": 2
+                "count": 1
             },
             {
                 "rule": "raw-spacing-literal",
@@ -2856,13 +2712,6 @@
                 "property": "padding",
                 "snippet": "padding: 64px 32px",
                 "fingerprint": "raw-spacing-literal:padding:padding: 64px 32px",
-                "count": 1
-            },
-            {
-                "rule": "raw-spacing-literal",
-                "property": "padding",
-                "snippet": "padding: 6px",
-                "fingerprint": "raw-spacing-literal:padding:padding: 6px",
                 "count": 1
             },
             {

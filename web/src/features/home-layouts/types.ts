@@ -60,11 +60,7 @@ export interface HomeLayoutProps {
         layout: NonNullable<NoteItem["layout"]>,
     ) => Promise<void>;
     // sheet controls
-    sheet: "apps" | "notes" | null;
-    setSheet: (sheet: "apps" | "notes" | null) => void;
-    setFilter: (f: string) => void;
-    setActiveGroupFilter: (g: string | "all" | "ungrouped") => void;
-    setFormPresentation: (p: "dialog" | "panel") => void;
+    openWorkspace: (workspace: "apps" | "notes") => void;
     // error
     error: string;
     setError: (err: string) => void;

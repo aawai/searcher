@@ -47,6 +47,8 @@ interface Actions {
     onDelete: (app: LauncherApp) => void;
     onToggleManaging?: () => void;
     onResetLayout?: () => void;
+    onManage?: (app: LauncherApp) => void;
+    presentation?: "default" | "quick" | "workspace";
 }
 
 function AppActions({
@@ -68,6 +70,35 @@ function AppActions({
     dragListeners?: object;
     isDragging?: boolean;
 }) {
+    if (actions.presentation === "quick") {
+        return (
+            <ContextMenu>
+                <ContextMenuTrigger className="launcher-app">
+                    <WebAppIcon
+                        app={app}
+                        onOpen={() => actions.onOpen(app)}
+                        showLabel={showAppLabels}
+                        dragAttributes={dragAttributes}
+                        dragListeners={dragListeners}
+                        movable={managing && Boolean(dragListeners)}
+                        isDragging={isDragging}
+                    />
+                </ContextMenuTrigger>
+                <ContextMenuContent aria-label={`${app.name} 的操作`}>
+                    <ContextMenuItem onClick={() => actions.onOpen(app)}>
+                        打开
+                    </ContextMenuItem>
+                    {actions.onManage && (
+                        <ContextMenuItem
+                            onClick={() => actions.onManage?.(app)}
+                        >
+                            在工作区中管理
+                        </ContextMenuItem>
+                    )}
+                </ContextMenuContent>
+            </ContextMenu>
+        );
+    }
     return (
         <ContextMenu>
             <ContextMenuTrigger className="launcher-app">
@@ -176,6 +207,7 @@ function FolderView({
     onSizeChange,
     dragAttributes,
     dragListeners,
+    actions,
 }: {
     tile: Extract<LauncherTile, { group: LauncherGroup }>;
     managing: boolean;
@@ -185,6 +217,7 @@ function FolderView({
     onSizeChange?: (group: LauncherGroup, size: "small" | "large") => void;
     dragAttributes?: object;
     dragListeners?: object;
+    actions?: Actions;
 }) {
     const large = tile.group.folderSize === "large";
     const preview = tile.apps.slice(0, large ? 9 : 4);
@@ -297,14 +330,34 @@ function FolderView({
                 <ContextMenuItem onClick={() => onFolder(tile.group.id)}>
                     打开文件夹
                 </ContextMenuItem>
-                {onSizeChange && (
-                    <ContextMenuItem
-                        onClick={() =>
-                            onSizeChange(tile.group, large ? "small" : "large")}
-                    >
-                        显示为{large ? "小" : "大"}文件夹
-                    </ContextMenuItem>
-                )}
+                {actions?.presentation === "quick"
+                    ? (
+                        actions.onManage && (
+                            <ContextMenuItem
+                                onClick={() =>
+                                    actions.onManage?.({
+                                        id: tile.group.id,
+                                        name: tile.group.name,
+                                        url: "",
+                                    } as LauncherApp)}
+                            >
+                                在工作区中管理
+                            </ContextMenuItem>
+                        )
+                    )
+                    : (
+                        onSizeChange && (
+                            <ContextMenuItem
+                                onClick={() =>
+                                    onSizeChange(
+                                        tile.group,
+                                        large ? "small" : "large",
+                                    )}
+                            >
+                                显示为{large ? "小" : "大"}文件夹
+                            </ContextMenuItem>
+                        )
+                    )}
             </ContextMenuContent>
         </ContextMenu>
     );
@@ -403,6 +456,7 @@ function SortableTile({
                         onSizeChange={onSizeChange}
                         dragAttributes={managing ? attributes : undefined}
                         dragListeners={dragListeners}
+                        actions={actions}
                     />
                 )}
         </div>
@@ -414,9 +468,12 @@ function useDesktopColumns(
     size: "compact" | "default" | "large",
     showAppLabels: boolean,
     hasLargeFolder: boolean,
+    presentation?: "default" | "quick" | "workspace",
 ) {
     const gridRef = useRef<HTMLDivElement>(null);
-    const [columns, setColumns] = useState(6);
+    const [columns, setColumns] = useState(
+        presentation === "workspace" ? 4 : 6,
+    );
     useEffect(() => {
         const grid = gridRef.current;
         if (!grid) return;
@@ -438,7 +495,7 @@ function useDesktopColumns(
         });
         observer.observe(target);
         return () => observer.disconnect();
-    }, [size, showAppLabels, hasLargeFolder]);
+    }, [size, showAppLabels, hasLargeFolder, presentation]);
     return { gridRef, columns };
 }
 
@@ -483,6 +540,8 @@ export function WebAppLauncher({
     emptyAction = true,
     activeFolderId,
     onFolderChange,
+    presentation = "default",
+    onManage,
 }: {
     apps: LauncherApp[];
     groups: LauncherGroup[];
@@ -507,6 +566,8 @@ export function WebAppLauncher({
     emptyAction?: boolean;
     activeFolderId?: string | null;
     onFolderChange?: (folderId: string | null) => void;
+    presentation?: "default" | "quick" | "workspace";
+    onManage?: (app: LauncherApp) => void;
 }) {
     const tiles = useMemo(
         () => launcherTiles(apps, showFolders ? groups : []),
@@ -519,6 +580,7 @@ export function WebAppLauncher({
         size,
         showAppLabels,
         largeFolderCount > 0,
+        presentation,
     );
     const effectiveColumns = useMemo(
         () =>
@@ -595,6 +657,8 @@ export function WebAppLauncher({
         onDelete,
         onToggleManaging,
         onResetLayout,
+        onManage,
+        presentation,
     };
     function reorderTiles(oldIndex: number, newIndex: number) {
         if (oldIndex < 0 || newIndex < 0 || newIndex >= tiles.length) return;
@@ -728,7 +792,16 @@ export function WebAppLauncher({
                     ref={gridRef}
                     className={`pinned-apps launcher-grid launcher-grid--${size}${
                         showFolders ? "" : " launcher-grid--home"
-                    }${showAppLabels ? "" : " launcher-grid--icons-only"}`}
+                    }${showAppLabels ? "" : " launcher-grid--icons-only"}${
+                        presentation === "workspace"
+                            ? " launcher-grid--workspace"
+                            : ""
+                    }${
+                        presentation === "quick"
+                            ? " launcher-grid--quick"
+                            : ""
+                    }`}
+                    data-presentation={presentation}
                     style={{
                         "--launcher-columns": effectiveColumns,
                     } as React.CSSProperties}

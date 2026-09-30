@@ -38,10 +38,7 @@ export function ZenLayout(props: HomeLayoutProps) {
         deleteNote,
         updateNote,
         updateNoteLayout,
-        setSheet,
-        setFilter,
-        setActiveGroupFilter,
-        setFormPresentation,
+        openWorkspace,
     } = props;
 
     return (
@@ -167,19 +164,13 @@ export function ZenLayout(props: HomeLayoutProps) {
                                         ).map((app) => app.id),
                                     )}
                                 onOpen={openApp}
-                                onEdit={(app) => {
-                                    setFormPresentation("dialog");
-                                    openEditModal(app);
-                                }}
+                                onEdit={openEditModal}
                                 onMove={(app, groupId) =>
                                     void moveAppGroup(app, groupId)}
                                 onPin={(app) => void togglePinApp(app)}
                                 onDelete={(app) => void softDeleteApp(app)}
                                 onReorder={(ids) => void reorderPinned(ids)}
-                                onAdd={() => {
-                                    setFormPresentation("dialog");
-                                    openAddModal();
-                                }}
+                                onAdd={openAddModal}
                             />
                         </>
                     )}
@@ -206,11 +197,9 @@ export function ZenLayout(props: HomeLayoutProps) {
                     <button
                         type="button"
                         className="zen-edge-btn"
-                        onClick={() => {
-                            setSheet("apps");
-                            setFilter("");
-                            setActiveGroupFilter("all");
-                        }}
+                        data-workspace="apps"
+                        onClick={() =>
+                            openWorkspace("apps")}
                     >
                         <Folder size={13} />
                         <span>网站 · {apps.length}</span>
@@ -218,10 +207,9 @@ export function ZenLayout(props: HomeLayoutProps) {
                     <button
                         type="button"
                         className="zen-edge-btn"
-                        onClick={() => {
-                            setSheet("notes");
-                            setFilter("");
-                        }}
+                        data-workspace="notes"
+                        onClick={() =>
+                            openWorkspace("notes")}
                     >
                         <StickyNote size={13} />
                         <span>便签 · {notes.length}</span>

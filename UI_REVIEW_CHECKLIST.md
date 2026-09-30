@@ -104,3 +104,74 @@
       不重复验收无关组件状态。浏览器组合是实页 smoke，不新增源码快照或 CSS
       文本测试。 gradient 验证仅证明前端渲染；既有登录态 gradient
       持久化限制未纳入本次修复。
+
+## Issue #36 Workspace Shell 与空间轻桌面重构（2026-09-30）
+
+### 代码与契约实现（已落地）
+
+- [x] Workspace
+      语义表面与分层契约：桌面端（>=768px）实现为非模态右侧边面板（`<aside>`），使用
+      `--surface-workspace: var(--surface-solid)`（非模态 L3
+      覆盖层）、`--shadow-workspace: var(--shadow-l2)`、`--elevation-workspace: 45`；几何约束采用
+      `--workspace-width: 400px`、`--workspace-inset: var(--space-4)`、`--workspace-top-inset: calc(var(--control-height) + var(--space-6))`（安全避让顶栏）；面板不设
+      backdrop 背景遮罩，不执行全局
+      focus-trap，主页底层的搜索框与画布内容保持可直接交互；支持 Escape
+      键或头部按钮收起，收起后焦点归还至唤起入口。
+- [x] 移动端模态适配：移动端（<768px）适配为模态底部抽屉（`Sheet`），使用
+      `--elevation-sheet: 50` 与 `--elevation-sheet-backdrop: 49`，高度受
+      `--workspace-mobile-height: 820px`
+      约束；顶部带有居中抓手条（`.workspace-grip`），支持手势向下滑动收起与
+      safe-area 安全区避让。
+- [x] 导航与 Switcher 融合：首页
+      Dock（Widgets）与边缘入口（Zen，`.zen-edge-trigger`）作为进入工作区（apps
+      / notes）的轻量入口，Zen 边缘唤起不强加 Bento 桌面卡片；工作区内部底栏整合
+      WorkspaceNavigation
+      Switcher（应用与便签平滑切换）；根视图（apps/root、notes/root）提供搜索与单一
+      primary 主操作（“添加应用” / “新建便签”）；二级嵌套视图头部提供 `onBack`
+      返回按钮。
+- [x] 应用表单 Back/Close 通过 AlertDialog 保护未保存修改；Nested view 隐藏
+      Switcher。
+- [x] 便签编辑器依靠本地草稿与 autosave 保护 Close
+      后立即重开的内容；冲突与版本历史回归通过。
+- [x] 文件夹删除等破坏性操作保留真正模态确认。
+- [x] 废弃组件清理与职责收敛：彻底删除废弃的 `ContentSheet.tsx` 与
+      `AppFormDialog.tsx`；应用表单改为纯面板组件 `AppForm.tsx`；`NoteEditor`
+      作用域限定于 `NotesWorkspace` 面板主体内部，保留 scoped
+      本地草稿与自动保存机制；状态由 `workspace-state.ts` 集中管理，独立维护
+      apps 与 notes 搜索词。
+- [x] 主页职责正交分离与 QuickLaunch
+      移除：主页专注于“使用内容”，完全移除主页卡片上的管理模式切换、浮动管理条（`.home-managing-bar`）及卡片内竞争的启动管理按钮；所有应用新建、编辑、分组管理及便签编辑统一下沉至
+      Workspace 内部完成。
+- [x] Controlled Notes 便签大盘：筛选至多 5
+      张固定的主页便签（`selectHomeNotes`），按 `sortOrder` 升序及 `id`
+      确定性排序；基于 CSS 槽位与
+      `--notes-board-step: 54px`、`--notes-board-tilt: 1.2deg` 及
+      `--space-1`~`--space-5` 交错内联偏移呈现叠放质感；hover / focus-within
+      平整（`transform: none`）并提升层级（`z-index: 6`）；视口 >=768px 且容器
+      >280px 时保持重叠槽位大盘；移动端（<=767px）或容器
+      <=280px（`@container bento-card (max-width: 280px)`）强制回流为单列垂直流（`align-self: stretch`）；采用网格内在高度布局，不再向服务器写入或持久化绝对
+      x/y 坐标；支持 `prefers-reduced-motion`。
+- [x] Bento 5:3 容器网格：Widgets 布局使用
+      `@container bento-wrapper (min-width: 680px)` 5fr 3fr 不对称比例（应用卡片
+      5fr，便签卡片 3fr），卡片高度自适应内容，不强制等高。
+
+### 实页与视觉验证（2026-10-01）
+
+- [x] 390×844 / 768×1024 / 1440×900：light/dark
+      实页截图与交互通过；真实上传壁纸组合无页面/面板横向溢出，Apps 面板 axe
+      WCAG A/AA 无已确认违规（各有 2 项需人工判断）。
+- [x] 640/767/768/960/1280 临界宽度：验证 768px desktop/mobile 切换、Bento 5:3
+      与 <=280px 便签容器的流式回退；卡片宽度未溢出容器。
+- [x] Zen / Widgets × light / dark：375/390/768/1024/1440/1920 实页通过；Zen
+      edge trigger、FloatingNotes
+      与桌面布局保留。另验证空、少量、多条内容、长标题及 reduced-motion。
+- [x] 键盘与状态：Header/Footer 不随 Body
+      滚动；桌面无焦点陷阱、移动端有焦点陷阱与 swipe close；菜单先处理
+      Escape，随后收起 Workspace
+      并回焦入口。应用保存失败保留表单，便签保存失败保留草稿；列表请求错误与离线缓存可重试恢复。
+- [x] 构建、typecheck、198 项测试、生产 Workspace 7 个回归步骤及 check:ui
+      通过（0 新违规，既有 baseline 从 796 缩至
+      759）。应用排序修复前失败、修复后即时更新及刷新持久化通过；图标大小与标签偏好通过。
+- [x] 本次修改范围 lint/format 单独验证；全仓 lint 的 13 项问题及 format 的
+      settings.css 问题均位于相对 HEAD 未修改文件，保留既有债务、不扩大本次
+      scope。

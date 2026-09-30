@@ -354,7 +354,8 @@ a {
     pointer-events: none;
     background: var(--wallpaper-glow);
     transform-origin: var(--wallpaper-glow-origin);
-    animation: wallpaper-glow-breathe var(--wallpaper-glow-duration) ease-in-out infinite;
+    animation: wallpaper-glow-breathe var(--wallpaper-glow-duration) ease-in-out
+        infinite;
 }
 .wallpaper::after {
     content: "";
@@ -1298,45 +1299,6 @@ a {
     position: absolute;
     touch-action: none;
 }
-.bottom-navigation {
-    position: fixed;
-    bottom: max(16px, env(safe-area-inset-bottom, 16px));
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-solid);
-    box-shadow: 0 4px 20px #00000010;
-    z-index: 20;
-}
-.bottom-navigation button {
-    min-width: 110px;
-    min-height: 44px;
-    border: 1px solid transparent;
-    border-radius: var(--control-radius);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: transparent;
-    color: var(--foreground);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background .15s, border-color .15s;
-}
-.bottom-navigation button:hover {
-    background: var(--surface-soft);
-}
-.bottom-navigation button svg {
-    width: 18px;
-    height: 18px;
-}
-
 .sheet-backdrop {
     position: fixed;
     inset: 0;
@@ -1374,25 +1336,10 @@ a {
     font-size: 19px;
     font-weight: 690;
 }
-.sheet-content {
-    min-height: 0;
-    padding: 22px clamp(20px,3vw,34px);
-    overflow: auto;
-    flex: 1;
-}
-.sheet-content:has(> .app-panel-form-container) {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 0;
-}
 .app-panel-form-container {
     display: flex;
     flex: 1;
     min-height: 0;
-}
-.sheet-content .pinned-apps {
-    justify-content: flex-start;
 }
 .section-tools {
     display: flex;
@@ -2727,32 +2674,7 @@ a {
     }
 }
 
-/* App Form Dialog (精简视觉层级 APP 添加 / 编辑弹窗) */
-.dialog-panel.app-dialog-panel {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    width: min(100% - 2 * var(--space-4), var(--layout-form-max));
-    max-height: min(90dvh, 700px);
-    overflow: hidden;
-    margin: 0 auto;
-    background: var(--surface-l3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-l3);
-    backdrop-filter: none;
-}
-.app-dialog-header {
-    padding: 16px 20px 14px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-}
-.app-dialog-header [data-slot="dialog-title"] {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--foreground);
-}
+/* App Form 内容：由 Workspace 承担标题与关闭导航。 */
 .app-dialog-form {
     display: flex;
     flex-direction: column;
@@ -3118,14 +3040,6 @@ a {
 }
 
 @media (max-width: 640px) {
-    .dialog-panel.app-dialog-panel {
-        width: calc(100% - 20px);
-        max-height: calc(100dvh - 24px);
-        margin: 12px auto;
-    }
-    .app-dialog-header {
-        padding: 14px 16px 12px;
-    }
     .app-dialog-body {
         padding: 14px 16px;
         gap: 14px;
@@ -3141,93 +3055,6 @@ a {
     }
     .app-ai-candidates-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-}
-.sheet.sheet--apps {
-    top: 50%;
-    bottom: auto;
-    width: min(var(--layout-sheet-max),calc(100vw - 2 * var(--space-7)));
-    height: min(720px,calc(100dvh - 96px));
-    max-height: none;
-    transform: translate(-50%,-50%);
-    border-bottom: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-l3);
-    box-shadow: var(--shadow-l3);
-}
-.sheet.sheet--apps.sheet--expanded {
-    top: 24px;
-    bottom: 24px;
-    width: calc(100vw - 48px);
-    height: calc(100dvh - 48px);
-    transform: translateX(-50%);
-}
-.sheet.sheet--apps.sheet--compact:not(.sheet--expanded) {
-    width: min(760px,calc(100vw - 48px));
-    height: auto;
-    min-height: min(340px,calc(100dvh - 64px));
-    max-height: min(560px,calc(100dvh - 64px));
-}
-.sheet-grip {
-    display: none;
-    position: absolute;
-    top: 7px;
-    left: 50%;
-    width: 38px;
-    height: 5px;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    background: var(--muted);
-    opacity: .5;
-}
-.sheet-sizes {
-    display: flex;
-    gap: 2px;
-    margin-left: auto;
-}
-.sheet-sizes button {
-    min-width: 36px;
-    min-height: 36px;
-    padding: 4px;
-}
-.sheet-sizes button[aria-pressed=true] {
-    color: var(--accent);
-    background: var(--surface-soft);
-}
-@media (max-width:767px) {
-    .sheet.sheet--apps {
-        top: auto;
-        bottom: 0;
-        width: 100%;
-        height: auto;
-        max-height: var(--sheet-mobile-height, 85dvh);
-        min-height: 220px;
-        transform: translateX(-50%);
-        border-bottom: 0;
-        border-radius: var(--radius) var(--radius) 0 0;
-    }
-    .sheet.sheet--apps.sheet--compact:not(.sheet--expanded) {
-        width: 100%;
-        height: auto;
-        min-height: 220px;
-        max-height: var(--sheet-mobile-height,85dvh);
-    }
-    .sheet.sheet--apps.sheet--expanded {
-        top: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100dvh;
-    }
-    .sheet-grip {
-        display: block;
-    }
-    .sheet-sizes button {
-        min-width: 32px;
-    }
-}
-@media (max-width: 700px) {
-    .sheet--apps .sheet-content {
-        padding-inline: var(--space-4);
     }
 }
 .context-menu-positioner {

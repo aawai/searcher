@@ -46,11 +46,9 @@ const markdown = (text: string) => (
     </div>
 );
 export function NoteEditor(
-    { note, userId: _userId, onSaved, onClose: _onClose }: {
+    { note, onSaved }: {
         note: NoteItem;
-        userId?: string;
         onSaved: (note: NoteItem) => void;
-        onClose?: () => void;
     },
 ) {
     const [draft, setDraft] = useState<Draft>({
@@ -67,7 +65,10 @@ export function NoteEditor(
     const [copiedDraft, setCopiedDraft] = useState(false);
     const latestNoteRef = useRef(note);
     const draftRef = useRef(draft);
-    latestNoteRef.current = note;
+    // Accepted conflict/save versions must not regress to a stale parent prop.
+    if (note.version > latestNoteRef.current.version) {
+        latestNoteRef.current = note;
+    }
     draftRef.current = draft;
     const mutationQueue = useRef<Promise<void>>(Promise.resolve());
 
@@ -112,6 +113,9 @@ export function NoteEditor(
         };
     }, [note.id]);
 
+    useEffect(() => () => {
+        clearTimeout(timer.current);
+    }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function change(next: Draft) {
         setDraft(next);
@@ -123,12 +127,15 @@ export function NoteEditor(
         });
         clearTimeout(timer.current);
         timer.current = globalThis.setTimeout(
-            () => void save(next, "auto"),
+            () => void save(next, "autosave"),
             1500,
         );
     }
 
-    function save(next?: Draft, trigger: "auto" | "manual" = "auto") {
+    function save(
+        next?: Draft,
+        origin: "autosave" | "manual" | "conflict_resolution" = "autosave",
+    ) {
         clearTimeout(timer.current);
         timer.current = undefined;
         const data = next ?? draftRef.current;
@@ -142,7 +149,7 @@ export function NoteEditor(
                         title: data.title ? data.title.trim() : null,
                         body: data.body,
                         version: latestNoteRef.current.version,
-                        trigger,
+                        origin,
                     }),
                 );
                 latestNoteRef.current = updated;
@@ -242,7 +249,7 @@ export function NoteEditor(
         }
         const next = { ...draft, body };
         setDraft(next);
-        void save(next, "manual");
+        void save(next, "conflict_resolution");
     }
 
     async function showVersions() {
@@ -282,6 +289,7 @@ export function NoteEditor(
                     type="text"
                     className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
                     placeholder="便签标题…"
+                    aria-label="便签标题"
                     value={draft.title}
                     onChange={(event) =>
                         change({ ...draft, title: event.target.value })}

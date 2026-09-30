@@ -75,8 +75,12 @@ import {
 } from "../components/searcher/WebAppIcon.tsx";
 import { FloatingNotes } from "../components/searcher/FloatingNotes.tsx";
 import { NoteCard, type NoteItem } from "../components/searcher/NoteCard.tsx";
-import { BottomNavigation } from "../components/searcher/BottomNavigation.tsx";
-import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
+import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
+import { WorkspaceNavigation } from "../features/workspace/WorkspaceNavigation.tsx";
+import {
+    parentWorkspaceRoute,
+    type WorkspaceState,
+} from "../features/workspace/workspace-state.ts";
 
 import "./design-lab.css";
 
@@ -149,7 +153,9 @@ export function DesignLab() {
     const [engine, setEngine] = useState<EngineId>("bing");
     const [searchMode, setSearchMode] = useState<"search" | "ai">("search");
     const [model, setModel] = useState("fixture-a");
-    const [sheetOpen, setSheetOpen] = useState(false);
+    const [workspace, setWorkspace] = useState<WorkspaceState>({
+        view: "closed",
+    });
     const [feedbackMessage, setFeedbackMessage] = useState("");
 
     // Lab navigation tabs
@@ -892,9 +898,10 @@ export function DesignLab() {
                                     {/* Sheet trigger */}
                                     <Button
                                         variant="default"
-                                        onClick={() => setSheetOpen(true)}
+                                        onClick={() =>
+                                            setWorkspace({ view: "apps/root" })}
                                     >
-                                        打开标准 ContentSheet
+                                        打开 Workspace
                                     </Button>
                                 </div>
                             </Section>
@@ -1196,9 +1203,12 @@ export function DesignLab() {
                                     ))}
                                 </div>
 
-                                <BottomNavigation
-                                    onApps={() => setSheetOpen(true)}
-                                    onNotes={() => setSheetOpen(true)}
+                                <WorkspaceNavigation
+                                    onSelect={(kind) => setWorkspace({
+                                        view: kind === "apps"
+                                            ? "apps/root"
+                                            : "notes/root",
+                                    })}
                                 />
                             </div>
                         </div>
@@ -1461,17 +1471,20 @@ export function DesignLab() {
                                                     Overlay Open (浮层弹开展现)
                                                 </TableCell>
                                                 <TableCell>
-                                                    材质层级提升至
-                                                    L3，背景滚动锁定，层级遮罩阻断
+                                                    桌面非模态侧栏；移动端模态
+                                                    Bottom Sheet
                                                 </TableCell>
                                                 <TableCell>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() =>
-                                                            setSheetOpen(true)}
+                                                            setWorkspace({
+                                                                view:
+                                                                    "apps/root",
+                                                            })}
                                                     >
-                                                        呼出 ContentSheet
+                                                        呼出 Workspace
                                                     </Button>
                                                 </TableCell>
                                                 <TableCell>
@@ -1748,33 +1761,25 @@ export function DesignLab() {
                 </Tabs>
             </div>
 
-            {/* Official ContentSheet Preview */}
-            <ContentSheet
-                open={sheetOpen}
-                onOpenChange={setSheetOpen}
-                title="设计预览 ContentSheet"
+            <WorkspaceShell
+                state={workspace}
+                title={workspace.view.startsWith("apps/") ? "应用" : "便签"}
+                dock={false}
+                navigate={setWorkspace}
+                onBack={() => setWorkspace(parentWorkspaceRoute(workspace))}
+                onClose={() => setWorkspace({ view: "closed" })}
+                onCreate={() => setFeedbackMessage("Workspace primary action")}
             >
-                <div className="lab-tabs">
-                    <p className="lab-stage-desc">
-                        此 ContentSheet
-                        与真实全站使用同一实现，验证高度拖拽手势、全屏展开与遮罩层级。
-                    </p>
-                    <SettingsCard>
-                        <SettingsRow
-                            title="Sheet 内部组件"
-                            description="层级提升至 L3 Overlay，严格继承主题与强调色。"
-                        >
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSheetOpen(false)}
-                            >
-                                关闭 Sheet
-                            </Button>
-                        </SettingsRow>
-                    </SettingsCard>
-                </div>
-            </ContentSheet>
+                <Input
+                    data-workspace-search
+                    aria-label="搜索 Workspace 示例"
+                    placeholder="搜索"
+                />
+                <p className="lab-stage-desc">
+                    桌面使用非模态侧栏，移动端使用 Bottom Sheet；Header
+                    与底部导航固定，内容区独立滚动。
+                </p>
+            </WorkspaceShell>
         </PageShell>
     );
 }

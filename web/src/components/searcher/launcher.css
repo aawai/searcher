@@ -156,12 +156,6 @@
         justify-content: center;
     }
 }
-.sheet-content .pinned-apps.launcher-grid {
-    width: fit-content;
-    max-width: 100%;
-    margin: 0 auto;
-    justify-content: center;
-}
 .launcher-grid--compact {
     --launcher-icon: 36px;
 }

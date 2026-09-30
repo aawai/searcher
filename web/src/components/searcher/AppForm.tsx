@@ -11,7 +11,6 @@ import { api, json } from "../../lib/api.ts";
 import type { Appearance } from "../../app/state.tsx";
 import { errorMessage } from "../../app/state.tsx";
 import { Button } from "../ui/button.tsx";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
 import { Switch } from "../ui/switch.tsx";
@@ -19,29 +18,27 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 
-export interface AppFormDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+export interface AppFormProps {
+    onClose: () => void;
     editingApp: ExtendedWebApp | null;
     groups: WebAppGroup[];
     appearance: Appearance;
     existingApps: ExtendedWebApp[];
     defaultGroupId?: string;
-    presentation: "dialog" | "panel";
     onSaved: (app: ExtendedWebApp, isEdit: boolean) => void;
+    onDirtyChange?: (isDirty: boolean) => void;
 }
 
-export function AppFormDialog({
-    open,
-    onOpenChange,
+export function AppForm({
+    onClose,
     editingApp,
     groups,
     appearance,
     existingApps,
     defaultGroupId = "",
-    presentation,
     onSaved,
-}: AppFormDialogProps) {
+    onDirtyChange,
+}: AppFormProps) {
     // Form fields
     const [appUrl, setAppUrl] = useState("");
     const [appName, setAppName] = useState("");
@@ -165,6 +162,44 @@ export function AppFormDialog({
             clearTimeout(debounceTimerRef.current);
         };
     }, []);
+    const isDirty = useMemo(() => {
+        if (editingApp) {
+            return (
+                appUrl !== editingApp.url ||
+                appName !== editingApp.name ||
+                appGroupId !== (editingApp.groupId || "") ||
+                appOpenMode !== (editingApp.openMode ?? "global") ||
+                appIsPinned !== Boolean(editingApp.isPinned) ||
+                appIconAssetId !== (editingApp.iconAssetId || null) ||
+                appIconSource !== (editingApp.iconSource || "website") ||
+                Boolean(iconImageUrl)
+            );
+        }
+        return (
+            Boolean(appUrl.trim()) ||
+            Boolean(appName.trim()) ||
+            appGroupId !== defaultGroupId ||
+            appOpenMode !== "global" ||
+            appIsPinned !== false ||
+            appIconAssetId !== null ||
+            Boolean(iconImageUrl)
+        );
+    }, [
+        editingApp,
+        appUrl,
+        appName,
+        appGroupId,
+        appOpenMode,
+        appIsPinned,
+        appIconAssetId,
+        appIconSource,
+        iconImageUrl,
+        defaultGroupId,
+    ]);
+
+    useEffect(() => {
+        onDirtyChange?.(isDirty);
+    }, [isDirty, onDirtyChange]);
 
     // Perform URL detection
     async function doDetectUrl(targetUrl: string) {
@@ -388,7 +423,8 @@ export function AppFormDialog({
                     false,
                 );
             }
-            onOpenChange(false);
+            onDirtyChange?.(false);
+            onClose();
         } catch (err) {
             setFormError(`保存失败：${errorMessage(err)}`);
         } finally {
@@ -746,7 +782,7 @@ export function AppFormDialog({
                                         <input
                                             type="file"
                                             accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
-                                            style={{ display: "none" }}
+                                            hidden
                                             disabled={isUploadingIcon}
                                             onChange={(e) =>
                                                 void handleFileUpload(e)}
@@ -800,7 +836,7 @@ export function AppFormDialog({
                                         setImageLoadError(false);
                                     }}
                                     onError={(err) => setFormError(err)}
-                                    onClose={() => onOpenChange(false)}
+                                    onClose={onClose}
                                 />
                             )}
                         </div>
@@ -814,7 +850,7 @@ export function AppFormDialog({
                     variant="outline"
                     type="button"
                     disabled={isSubmitting}
-                    onClick={() => onOpenChange(false)}
+                    onClick={onClose}
                 >
                     取消
                 </Button>
@@ -833,25 +869,5 @@ export function AppFormDialog({
         </form>
     );
 
-    if (presentation === "panel") {
-        if (!open) return null;
-        return (
-            <div className="app-panel-form-container max-w-[640px] mx-auto w-full">
-                {formJsx}
-            </div>
-        );
-    }
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="app-dialog-panel">
-                <div className="app-dialog-header">
-                    <DialogTitle>
-                        {editingApp ? "编辑网站" : "添加网站"}
-                    </DialogTitle>
-                </div>
-                {formJsx}
-            </DialogContent>
-        </Dialog>
-    );
+    return <div className="app-panel-form-container">{formJsx}</div>;
 }

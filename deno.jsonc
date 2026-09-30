@@ -13,6 +13,7 @@
         "admin:reset": "deno run -A src/commands/admin.ts reset",
         "test": "deno test -A src web/src",
         "test:routing": "deno task build && NODE_ENV=test deno test -A web/e2e/navigation.test.ts",
+        "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts",
         "check:ui": "deno run -A scripts/check-ui.ts"
     },
     "imports": {
