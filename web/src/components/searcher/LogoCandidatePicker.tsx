@@ -1,26 +1,66 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Check, Loader2, Sparkles } from "lucide-react";
-import type {
-    AiModelDto,
-    AiProviderDto,
+import {
+    type AiModelDto,
+    type AiProviderDto,
+    LOGO_STYLES,
+    type LogoStyle,
 } from "../../../../src/features/ai/types.ts";
 import { api, json } from "../../lib/api.ts";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../ui/alert-dialog.tsx";
 import { Button } from "../ui/button.tsx";
 import { routes } from "../../app/routes.ts";
+import { Input } from "../ui/input.tsx";
+import { NativeSelect } from "../ui/native-select.tsx";
 
 interface Candidate {
     dataUrl: string;
-    style: "minimal" | "geometric" | "gradient";
+    style: LogoStyle;
+}
+
+export const LOGO_STYLE_LABELS: Record<LogoStyle, string> = {
+    minimal: "极简",
+    geometric: "几何",
+    glyph: "符号",
+    monoline: "线性",
+    duotone: "双色",
+    gradient: "柔和渐变",
+    soft3d: "柔和3D",
+    mascot: "图形角色",
+};
+
+interface ConfirmedRequestSnapshot {
+    providerId: string;
+    providerName: string;
+    baseUrl: string;
+    modelId: string;
+    modelDisplayName: string;
+    style: LogoStyle;
+    styleLabel: string;
+    siteName: string;
+    siteDomain?: string;
+    description?: string;
 }
 
 export function LogoCandidatePicker({
     siteName,
+    siteDomain,
     onSelect,
     onError,
     onClose,
 }: {
     siteName: string;
+    siteDomain?: string;
     onSelect: (asset: { id: string; url: string }) => void;
     onError: (message: string) => void;
     onClose?: () => void;
@@ -29,7 +69,12 @@ export function LogoCandidatePicker({
     const [models, setModels] = useState<AiModelDto[]>([]);
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
     const [selectedId, setSelectedId] = useState("");
-    const [style, setStyle] = useState<Candidate["style"]>("minimal");
+    const [style, setStyle] = useState<LogoStyle>("minimal");
+    const [description, setDescription] = useState("");
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmSnapshot, setConfirmSnapshot] = useState<
+        ConfirmedRequestSnapshot | null
+    >(null);
     const [candidates, setCandidates] = useState<Candidate[]>([]);
     const [selectedCandidateIndex, setSelectedCandidateIndex] = useState<
         number | null
@@ -60,7 +105,7 @@ export function LogoCandidatePicker({
         };
     }, []);
 
-    async function generate() {
+    function promptGenerateConfirm() {
         const model = models.find((item) => item.id === selectedId);
         if (!model) return;
         const name = siteName.trim().slice(0, 100);
@@ -73,23 +118,58 @@ export function LogoCandidatePicker({
             onError("所选模型的 Provider 不可用");
             return;
         }
-        if (
-            !globalThis.confirm(
-                `将向 ${provider.name} (${provider.baseUrl}) 发送网站名称「${name}」，使用模型 ${model.modelId}、${style} 风格生成 3 个原创图标候选。Provider 可能产生费用。确认生成？`,
-            )
-        ) return;
+
+        const trimmedDomain = siteDomain?.trim().slice(0, 253);
+        const finalDomain = trimmedDomain ? trimmedDomain : undefined;
+
+        const trimmedDesc = description.trim().slice(0, 300);
+        const finalDesc = trimmedDesc ? trimmedDesc : undefined;
+
+        const snapshot: ConfirmedRequestSnapshot = {
+            providerId: model.providerId,
+            providerName: provider.name,
+            baseUrl: provider.baseUrl,
+            modelId: model.modelId,
+            modelDisplayName: model.displayName || model.modelId,
+            style,
+            styleLabel: LOGO_STYLE_LABELS[style] ?? style,
+            siteName: name,
+            siteDomain: finalDomain,
+            description: finalDesc,
+        };
+
+        setConfirmSnapshot(snapshot);
+        setConfirmOpen(true);
+    }
+
+    async function executeGenerate(snapshot: ConfirmedRequestSnapshot) {
         setBusy(true);
         setCandidates([]);
         setSelectedCandidateIndex(null);
         try {
+            const body: {
+                providerId: string;
+                modelId: string;
+                siteName: string;
+                style: LogoStyle;
+                siteDomain?: string;
+                description?: string;
+            } = {
+                providerId: snapshot.providerId,
+                modelId: snapshot.modelId,
+                siteName: snapshot.siteName,
+                style: snapshot.style,
+            };
+            if (snapshot.siteDomain) {
+                body.siteDomain = snapshot.siteDomain;
+            }
+            if (snapshot.description) {
+                body.description = snapshot.description;
+            }
+
             const result = await api<{ images: Candidate[] }>(
                 "/api/ai/logo-candidates",
-                json("POST", {
-                    providerId: model.providerId,
-                    modelId: model.modelId,
-                    siteName: name,
-                    style,
-                }),
+                json("POST", body),
             );
             setCandidates(result.images);
         } catch (error) {
@@ -179,12 +259,13 @@ export function LogoCandidatePicker({
     return (
         <div className="app-dialog-icon-subpanel">
             <p className="app-dialog-helper-text">
-                基于网站名称生成 3 个原创极简概念图标（非官方品牌标志）。
+                根据网站名称、域名和可选用途生成 3
+                个原创应用图标候选（非官方品牌标志）。
             </p>
             <div className="app-ai-controls">
                 <div className="app-ai-field">
                     <label htmlFor="ai-model-select">模型</label>
-                    <select
+                    <NativeSelect
                         id="ai-model-select"
                         value={selectedId}
                         onChange={(event) => setSelectedId(event.target.value)}
@@ -198,21 +279,48 @@ export function LogoCandidatePicker({
                                 )?.name ?? "未知"} · {item.modelId}
                             </option>
                         ))}
-                    </select>
+                    </NativeSelect>
                 </div>
                 <div className="app-ai-field">
                     <label htmlFor="ai-style-select">风格</label>
-                    <select
+                    <NativeSelect
                         id="ai-style-select"
                         value={style}
                         onChange={(event) =>
-                            setStyle(event.target.value as Candidate["style"])}
+                            setStyle(event.target.value as LogoStyle)}
                         disabled={busy}
                     >
-                        <option value="minimal">极简</option>
-                        <option value="geometric">几何</option>
-                        <option value="gradient">柔和渐变</option>
-                    </select>
+                        {LOGO_STYLES.map((styleKey) => (
+                            <option key={styleKey} value={styleKey}>
+                                {LOGO_STYLE_LABELS[styleKey]}
+                            </option>
+                        ))}
+                    </NativeSelect>
+                </div>
+                <div className="app-ai-field app-ai-field--full">
+                    <div className="app-ai-field-header">
+                        <label htmlFor="ai-description-input">
+                            图标语义/用途（可选）
+                        </label>
+                        {description.length > 0 && (
+                            <span className="app-ai-char-counter">
+                                {description.length}/300
+                            </span>
+                        )}
+                    </div>
+                    <Input
+                        id="ai-description-input"
+                        type="text"
+                        placeholder="例如：个人探索与常用网站启动器"
+                        maxLength={300}
+                        value={description}
+                        onChange={(event) => setDescription(event.target.value)}
+                        disabled={busy}
+                    />
+                    <p className="app-dialog-helper-text app-ai-field-helper">
+                        可补充图标视觉隐喻或功能倾向，将随请求发送至
+                        Provider（最多 300 字）。
+                    </p>
                 </div>
             </div>
             <div className="app-ai-action-row">
@@ -221,7 +329,7 @@ export function LogoCandidatePicker({
                     variant="outline"
                     size="sm"
                     disabled={busy || !selectedId || !siteName.trim()}
-                    onClick={() => void generate()}
+                    onClick={promptGenerateConfirm}
                 >
                     {busy
                         ? (
@@ -295,6 +403,111 @@ export function LogoCandidatePicker({
                     </div>
                 </div>
             )}
+            <AlertDialog
+                open={confirmOpen}
+                onOpenChange={(open) => {
+                    setConfirmOpen(open);
+                    if (!open) {
+                        setConfirmSnapshot(null);
+                    }
+                }}
+            >
+                <AlertDialogContent className="max-w-md max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]">
+                    {confirmSnapshot && (
+                        <>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    确认生成 AI 图标
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    即将向 AI
+                                    服务商发起生成请求，请确认以下配置与上下文信息。
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="app-ai-confirm-body min-h-0 overflow-y-auto">
+                                <div className="app-ai-confirm-item">
+                                    <span className="app-ai-confirm-label">
+                                        服务商
+                                    </span>
+                                    <span className="app-ai-confirm-value font-medium">
+                                        {confirmSnapshot.providerName}{" "}
+                                        ({confirmSnapshot.baseUrl})
+                                    </span>
+                                </div>
+                                <div className="app-ai-confirm-item">
+                                    <span className="app-ai-confirm-label">
+                                        模型
+                                    </span>
+                                    <span className="app-ai-confirm-value">
+                                        {confirmSnapshot.modelDisplayName}{" "}
+                                        ({confirmSnapshot.modelId})
+                                    </span>
+                                </div>
+                                <div className="app-ai-confirm-item">
+                                    <span className="app-ai-confirm-label">
+                                        风格
+                                    </span>
+                                    <span className="app-ai-confirm-value">
+                                        {confirmSnapshot.styleLabel}
+                                    </span>
+                                </div>
+                                <div className="app-ai-confirm-item">
+                                    <span className="app-ai-confirm-label">
+                                        网站名称
+                                    </span>
+                                    <span className="app-ai-confirm-value font-medium">
+                                        {confirmSnapshot.siteName}
+                                    </span>
+                                </div>
+                                {confirmSnapshot.siteDomain && (
+                                    <div className="app-ai-confirm-item">
+                                        <span className="app-ai-confirm-label">
+                                            网站域名
+                                        </span>
+                                        <span className="app-ai-confirm-value">
+                                            {confirmSnapshot.siteDomain}
+                                        </span>
+                                    </div>
+                                )}
+                                {confirmSnapshot.description && (
+                                    <div className="app-ai-confirm-item">
+                                        <span className="app-ai-confirm-label">
+                                            用途描述
+                                        </span>
+                                        <span className="app-ai-confirm-value">
+                                            {confirmSnapshot.description}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="app-ai-confirm-hint">
+                                    本次请求将生成 3
+                                    个原创应用图标候选（非官方品牌标志）。Provider
+                                    可能产生费用。
+                                </div>
+                            </div>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel disabled={busy}>
+                                    取消
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    variant="default"
+                                    disabled={busy}
+                                    onClick={() => {
+                                        const snapshot = confirmSnapshot;
+                                        setConfirmOpen(false);
+                                        setConfirmSnapshot(null);
+                                        if (snapshot) {
+                                            void executeGenerate(snapshot);
+                                        }
+                                    }}
+                                >
+                                    确认生成
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </>
+                    )}
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

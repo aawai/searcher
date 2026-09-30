@@ -5,6 +5,7 @@ import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { AiService, AiServiceError } from "./service.ts";
 import { OpenAIClientError } from "./client.ts";
+import { LOGO_STYLES } from "./types.ts";
 import type {
     ChatStreamRequest,
     CreateProviderInput,
@@ -94,7 +95,9 @@ const LogoSchema = {
     providerId: v.pipe(v.string(), v.minLength(1)),
     modelId: v.pipe(v.string(), v.minLength(1)),
     siteName: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
-    style: v.picklist(["minimal", "geometric", "gradient"]),
+    siteDomain: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(253))),
+    description: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(300))),
+    style: v.picklist(LOGO_STYLES),
 };
 
 export function registerAiRoutes(
@@ -539,6 +542,8 @@ export function registerAiRoutes(
             providerId: json(LogoSchema.providerId),
             modelId: json(LogoSchema.modelId),
             siteName: json(LogoSchema.siteName),
+            siteDomain: json(LogoSchema.siteDomain),
+            description: json(LogoSchema.description),
             style: json(LogoSchema.style),
         }),
         async (c, data) => {
@@ -548,6 +553,8 @@ export function registerAiRoutes(
                     data.providerId,
                     data.modelId,
                     data.siteName,
+                    data.siteDomain,
+                    data.description,
                     data.style,
                 );
                 return c.success({ images });

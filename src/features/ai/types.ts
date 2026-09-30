@@ -1,4 +1,16 @@
 export type ProviderScope = "system" | "user";
+export const LOGO_STYLES = [
+    "minimal",
+    "geometric",
+    "glyph",
+    "monoline",
+    "duotone",
+    "gradient",
+    "soft3d",
+    "mascot",
+] as const;
+
+export type LogoStyle = typeof LOGO_STYLES[number];
 
 export interface AiProviderDto {
     id: string;

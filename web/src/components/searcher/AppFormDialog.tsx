@@ -93,6 +93,17 @@ export function AppFormDialog({
         }
     }
 
+    const siteDomain = useMemo(() => {
+        const normalized = normalizeUrl(appUrl);
+        if (!normalized) return undefined;
+        try {
+            const parsed = new URL(normalized);
+            return parsed.hostname || undefined;
+        } catch {
+            return undefined;
+        }
+    }, [appUrl]);
+
     // Initialize or reset form when dialog opens or editingApp changes
     useEffect(() => {
         if (!open) {
@@ -779,7 +790,9 @@ export function AppFormDialog({
 
                             {iconTab === "ai" && (
                                 <LogoCandidatePicker
-                                    siteName={appName.trim() || appUrl.trim()}
+                                    siteName={appName.trim() || siteDomain ||
+                                        ""}
+                                    siteDomain={siteDomain}
                                     onSelect={(asset) => {
                                         setAppIconAssetId(asset.id);
                                         setAppIconSource("ai");

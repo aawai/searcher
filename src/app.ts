@@ -64,14 +64,19 @@ export function createApp(
         ),
     );
     app.use("/api/*", async (c, next) => {
+        const isIconUpload = c.req.path === "/api/webapp-icons/upload" &&
+            c.req.method.toUpperCase() === "POST";
         if (
+            isIconUpload ||
             (c.req.path === "/api/wallpaper" &&
                 c.req.method.toUpperCase() === "POST") ||
             (c.req.path.startsWith("/api/admin/backup/") &&
                 c.req.method.toUpperCase() === "POST")
         ) {
             return await bodyLimit({
-                maxSize: 50 * 1024 * 1024,
+                maxSize: isIconUpload
+                    ? 2 * 1024 * 1024 + 64 * 1024
+                    : 50 * 1024 * 1024,
                 onError: (c) => c.fail(413, "上传文件大小超过限制"),
             })(c, next);
         }
