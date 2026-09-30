@@ -73,6 +73,8 @@
     --space-row-gap: var(--space-4);
     --space-row-block: var(--space-3);
     --space-inline-gap: var(--space-2);
+    --notes-board-step: 54px;
+    --notes-board-tilt: 1.2deg;
 
     --font-body-size: 14px;
     --font-body-line-height: 1.57;
@@ -109,7 +111,7 @@
     --layout-home-feedback-max: clamp(680px, 52vw, 1080px);
     --home-title-size: clamp(28px, 3.2vw, 42px);
     --home-hero-inset: clamp(80px, 18dvh, 180px);
-    --layout-bento-max: 820px;
+    --layout-bento-max: 960px;
     --layout-home-content-max: 720px;
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
@@ -130,6 +132,13 @@
     --elevation-modal: 71;
     --elevation-drag: 60;
     --elevation-suggestions: 90;
+    --workspace-width: 400px;
+    --workspace-inset: var(--space-4);
+    --workspace-top-inset: calc(var(--control-height) + var(--space-6));
+    --workspace-mobile-height: 820px;
+    --surface-workspace: var(--surface-solid);
+    --shadow-workspace: var(--shadow-l2);
+    --elevation-workspace: 45;
     --elevation-menu: 1000;
 }
 [data-theme="dark"] {

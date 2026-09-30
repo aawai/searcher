@@ -3,8 +3,7 @@
    ========================================================================== */
 
 /* Shared navigation remains lighter than content and primary search. */
-.zen-edge-trigger,
-.widgets-dock {
+.zen-edge-trigger {
     background: var(--surface-navigation);
     backdrop-filter: blur(var(--material-blur-navigation));
     -webkit-backdrop-filter: blur(var(--material-blur-navigation));
@@ -14,8 +13,7 @@
     z-index: var(--elevation-floating);
 }
 
-.zen-edge-btn:focus-visible,
-.widgets-dock-btn:focus-visible {
+.zen-edge-btn:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -104,15 +102,40 @@
     max-width: var(--layout-bento-max);
 }
 
-.widgets-bento-container {
+.widgets-bento-wrapper {
+    container: bento-wrapper / inline-size;
     width: 100%;
-    max-width: var(--layout-bento-max);
+    max-width: var(--layout-bento-max, 960px);
     margin: 28px auto 80px;
     padding: 0 16px;
+}
+
+.widgets-bento-container {
+    width: 100%;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-5);
     align-items: start;
+}
+
+/* Asymmetrical 5:3 wide container query: Apps gets 5fr, Notes gets 3fr */
+@container bento-wrapper (min-width: 680px) {
+    .widgets-bento-container {
+        grid-template-columns: 5fr 3fr;
+    }
+}
+
+@media (min-width: 960px) {
+    .widgets-bento-container {
+        grid-template-columns: 5fr 3fr;
+    }
+}
+
+/* Narrow single-column fallback */
+@container bento-wrapper (max-width: 679px) {
+    .widgets-bento-container {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .widgets-bento-card {
@@ -147,11 +170,14 @@
     flex-shrink: 0;
 }
 
-.widgets-bento-title-btn {
-    padding-inline: 6px;
-    margin-left: -6px;
+.widgets-bento-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--font-body-size);
     font-weight: 600;
+    color: var(--foreground);
+    user-select: none;
 }
 
 .widgets-bento-count {
@@ -167,11 +193,6 @@
     border: 1px solid var(--border-subtle);
 }
 
-.widgets-bento-count-total {
-    opacity: 0.65;
-    font-weight: 400;
-}
-
 .widgets-bento-actions {
     display: flex;
     flex-wrap: wrap;
@@ -179,19 +200,6 @@
     gap: 6px;
     flex-shrink: 0;
     margin-left: auto;
-}
-
-@media (min-width: 960px) {
-    .widgets-bento-container {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@container bento-card (max-width: 360px) {
-    .widgets-bento-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
 }
 
 .widgets-bento-action {
@@ -206,6 +214,13 @@
     max-width: 100%;
     margin: 0;
     justify-content: start;
+}
+
+/* Balance apps when 1 to 3 items */
+.widgets-bento-card[data-few-apps="true"] .pinned-apps.launcher-grid,
+.widgets-bento-card--few-apps .pinned-apps.launcher-grid,
+.widgets-bento-card .pinned-apps.launcher-grid:has(> .launcher-tile:last-child:nth-child(-n+3)) {
+    justify-content: center;
 }
 
 /* Empty state inside bento card */
@@ -230,91 +245,113 @@
     margin: 0;
 }
 
-.widgets-bento-empty-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-    justify-content: center;
+/* --------------------------------------------------------------------------
+   Controlled Notes Board in Bento Card
+   -------------------------------------------------------------------------- */
+.controlled-notes-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    isolation: isolate;
+    padding-block: var(--space-2);
 }
-
-.widgets-bento-empty-btn {
-    height: 30px;
-    font-size: 12px;
-    gap: 5px;
+.controlled-note-slot {
+    grid-area: 1 / 1;
+    align-self: start;
+    margin-block-start: calc(var(--note-slot) * var(--notes-board-step));
+    margin-inline-start: var(--space-note-inset);
+    margin-inline-end: var(--space-2);
+    transform: rotate(var(--note-tilt));
+    transition: transform .18s ease;
+    min-width: 0;
 }
-
-.widgets-bento-card .button--primary {
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-color: var(--accent-border);
-    box-shadow: none;
+.controlled-note-slot[data-slot-index="0"] {
+    --note-slot: 0;
+    --space-note-inset: var(--space-1);
+    --note-tilt: calc(-1 * var(--notes-board-tilt));
+    z-index: 1;
 }
-
-.widgets-bento-card .button--primary:hover {
-    background: var(--accent-subtle);
-    color: var(--accent);
-    box-shadow: none;
+.controlled-note-slot[data-slot-index="1"] {
+    --note-slot: 1;
+    --space-note-inset: var(--space-4);
+    --note-tilt: var(--notes-board-tilt);
+    z-index: 2;
 }
-
-.widgets-dock {
-    position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
-    left: 50%;
-    transform: translateX(-50%);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 6px 10px;
+.controlled-note-slot[data-slot-index="2"] {
+    --note-slot: 2;
+    --space-note-inset: var(--space-2);
+    --note-tilt: calc(-1 * var(--notes-board-tilt));
+    z-index: 3;
 }
-
-.widgets-dock-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 14px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s
-        ease;
+.controlled-note-slot[data-slot-index="3"] {
+    --note-slot: 3;
+    --space-note-inset: var(--space-5);
+    --note-tilt: var(--notes-board-tilt);
+    z-index: 4;
 }
-
-.widgets-dock-btn:hover {
-    color: var(--foreground);
-    background: var(--surface);
-    border-color: var(--border-subtle);
+.controlled-note-slot[data-slot-index="4"] {
+    --note-slot: 4;
+    --space-note-inset: var(--space-3);
+    --note-tilt: calc(-1 * var(--notes-board-tilt));
+    z-index: 5;
 }
-
+.controlled-note-slot:hover,
+.controlled-note-slot:focus-within {
+    z-index: 6;
+    transform: none;
+}
+.controlled-note-slot .note-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+.controlled-note-slot .note-drag {
+    display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .controlled-note-slot {
+        transform: none;
+        transition: none;
+    }
+}
+@container bento-card (max-width: 280px) {
+    .controlled-notes-board {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+    .controlled-note-slot {
+        margin: 0;
+        transform: none;
+        align-self: stretch;
+    }
+}
+@media (max-width: 767px) {
+    .controlled-notes-board {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+    .controlled-note-slot {
+        margin: 0;
+        transform: none;
+        align-self: stretch;
+    }
+}
 @media (max-width: 640px) {
     .zen-edge-trigger {
         bottom: max(16px, env(safe-area-inset-bottom, 16px));
         right: max(16px, env(safe-area-inset-right, 16px));
         padding: 4px 6px;
     }
-    .widgets-bento-container {
+    .widgets-bento-wrapper {
         margin: 20px auto 72px;
         padding: 0 12px;
+    }
+    .widgets-bento-container {
         gap: var(--space-4);
     }
     .widgets-bento-card {
         --bento-padding: var(--space-4);
         gap: var(--space-3);
-    }
-    .widgets-dock {
-        bottom: max(16px, env(safe-area-inset-bottom, 16px));
-        padding: 6px 8px;
-        width: min(calc(100% - 24px), 320px);
-        justify-content: space-around;
-    }
-    .widgets-dock-btn {
-        padding: 6px 10px;
-        font-size: 12px;
     }
     .home-managing-bar {
         flex-direction: column;

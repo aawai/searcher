@@ -27,6 +27,9 @@ role，不把 muted 文字色当作 surface。
 | weight                                   | --font-title-weight / --font-label-weight / --font-body-weight                                |
 | card / control / input / search radius   | --radius / --control-radius / --input-radius / --search-radius                                |
 | control / compact / input / touch height | --control-height / --control-compact-height / --control-input-height / --control-touch-target |
+| workspace geometry / layout              | --workspace-width / --workspace-inset / --workspace-top-inset / --workspace-mobile-height     |
+| workspace surface / shadow / elevation   | --surface-workspace / --shadow-workspace / --elevation-workspace                              |
+| notes board step / tilt / bento max      | --notes-board-step / --notes-board-tilt / --layout-bento-max                                  |
 
 每页最多一个 h1；section 使用 h2；component title 不抬高到 page
 层级。caption/muted 不承载唯一关键提示。code 使用 code role/monospace。
@@ -41,16 +44,39 @@ Token 的可互换 alias。尤其 `--space-card` 在 640px 以下为 16px，而
 
 ## Surface / elevation
 
-| level                  | 背景                     | 边框                        | 阴影                | blur                                          | 状态                                       |
-| ---------------------- | ------------------------ | --------------------------- | ------------------- | --------------------------------------------- | ------------------------------------------ |
-| L0 Canvas              | --surface-l0 / wallpaper | 无                          | 无                  | 壁纸 runtime filter                           | 无交互                                     |
-| L1 Content             | --surface-l1             | --border-subtle             | --shadow-l1         | 壁纸 material 才用 --material-blur-content    | hover 不改变 geometry；selected 有语义标记 |
-| L2 Primary interaction | --surface-l2             | --surface-l2-border         | --shadow-l2         | 壁纸 material 可用 --material-blur-search     | focus/loading/error 不改变 geometry        |
-| L3 Overlay             | --surface-l3             | --surface-l3-border         | --shadow-l3         | 不叠加大 blur                                 | Dialog/Sheet/Popover 管理 focus/open/close |
-| Navigation             | --surface-navigation     | --surface-navigation-border | --shadow-navigation | 壁纸 material 可用 --material-blur-navigation | hover/current/focus 不升为 L2              |
+| level                  | 背景                     | 边框                        | 阴影                | blur                                          | 状态                                                         |
+| ---------------------- | ------------------------ | --------------------------- | ------------------- | --------------------------------------------- | ------------------------------------------------------------ |
+| L0 Canvas              | --surface-l0 / wallpaper | 无                          | 无                  | 壁纸 runtime filter                           | 无交互                                                       |
+| L1 Content             | --surface-l1             | --border-subtle             | --shadow-l1         | 壁纸 material 才用 --material-blur-content    | hover 不改变 geometry；selected 有语义标记                   |
+| L2 Primary interaction | --surface-l2             | --surface-l2-border         | --shadow-l2         | 壁纸 material 可用 --material-blur-search     | focus/loading/error 不改变 geometry                          |
+| L3 Overlay             | --surface-l3             | --surface-l3-border         | --shadow-l3         | 不叠加大 blur                                 | 破坏性 Dialog/AlertDialog 管理 focus/open/close              |
+| Workspace              | --surface-workspace      | --border-subtle             | --shadow-workspace  | 不叠加大 blur                                 | 桌面非模态 aside (elevation 45)；移动端 Sheet (elevation 50) |
+| Navigation             | --surface-navigation     | --surface-navigation-border | --shadow-navigation | 壁纸 material 可用 --material-blur-navigation | hover/current/focus 不升为 L2                                |
 
 material 与 z-index 分离：--elevation-* 只表达叠放顺序，不授权更强阴影。普通
 content 不叠加强 border/glow/highlight。
+
+### Workspace semantic surface
+
+Workspace 是常驻内容管理载体，与模态 L3 Overlay（破坏性 Dialog /
+AlertDialog）具有严格不同的交互与视觉语义：
+
+- **桌面端（>=768px）**：呈现为右侧固定非模态侧边栏（`<aside>`，宽度
+  `--workspace-width: 400px`，边距
+  `--workspace-inset: var(--space-4)`，顶栏安全避让
+  `--workspace-top-inset: calc(var(--control-height) + var(--space-6))`）。采用
+  `--surface-workspace: var(--surface-solid)`（非模态 L3
+  覆盖层）、`--shadow-workspace: var(--shadow-l2)`、`--elevation-workspace: 45`。面板不设
+  backdrop 背景遮罩，不执行全局
+  focus-trap；主页底层的搜索框与画布内容保持可直接交互，仅阻断面板容器内的滚动与按键；支持
+  `Escape` 键或头部收起按钮关闭，关闭后焦点平滑归还至唤起按钮。
+- **移动端（<768px）**：呈现为模态底部抽屉（`Sheet`），使用
+  `--elevation-sheet: 50` 与 `--elevation-sheet-backdrop: 49`，最大高度受
+  `--workspace-mobile-height: 820px`（`min(88dvh, var(--workspace-mobile-height))`）约束，顶部带有居中抓手条（`.workspace-grip`），支持手势向下滑动收起并严格避让底部
+  `safe-area-inset-bottom`。
+- **真正的模态语义保留**：破坏性操作（如删除文件夹、放弃未保存表单修改）必须使用模态确认弹窗（`AlertDialog`，`--surface-l3`、`--elevation-modal: 71`、完整
+  backdrop 与
+  focus-trap），严禁将普通工作区浏览和常规表单伪装成模态弹窗，也严禁将破坏性操作静默退化为非模态。
 
 ### Wallpaper canvas
 
@@ -79,9 +105,49 @@ glow，不为强化光晕绕过 mask。
 | Workbench       | Ask/Note editor           | workspace navigation → context toolbar → content canvas → composer/action；降低 box-on-box，保留编辑/会话模型 |
 | Data Management | Admin/Trash               | PageHeader → local navigation → filters/controls → table/structured content → pagination；表格局部横滚        |
 
-PageShell archetype 是稳定布局语义，不按页面新增分支。NoteEditor overlay
-使用既有 Dialog 的 workspace composition，不在 overlay 内再造 main。direct entry
-有 breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
+PageShell archetype 是稳定布局语义，不按页面新增分支。NoteEditor
+不再作为独立居中 Dialog overlay，而是作为 NotesWorkspace
+面板的主体内容视图（`NotesWorkspace`），具有 scoped
+局部草稿与自动保存机制，不在工作区内部再造 main。direct entry 有
+breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
+
+### Search Canvas 与空间轻桌面布局
+
+- **Zen 与 Widgets 模式**：
+  - Zen
+    模式遵循极简克制，保留右下角轻量边缘入口（`.zen-edge-trigger`），不强制引入
+    Bento 桌面卡片。
+  - Widgets 模式采用 Bento 桌面网格，最大宽度 `--layout-bento-max: 960px`；在
+    `@container bento-wrapper (min-width: 680px)` 与 `@media (min-width: 960px)`
+    下呈现 `5fr 3fr` 不对称列比（应用卡片 5fr，便签卡片
+    3fr）；卡片高度由内部内容决定，不强制等高；底部居中
+    Dock（`.workspace-dock`）作为工作区入口。
+- **首页职责收敛与 QuickLaunch 移除**：
+  - 首页专注于“使用内容”，完全移除 QuickLaunch
+    管理模式切换、管理条（`.home-managing-bar`）及卡片内竞争的启动管理按钮。所有应用新建、编辑、分组管理及便签编辑统一下沉至
+    Workspace 内部完成。
+- **空间轻桌面 Controlled Notes 便签大盘**：
+  - 筛选至多 5 张固定的主页便签（`selectHomeNotes`），按 `sortOrder` 升序及 `id`
+    确定性排序。
+  - 采用纯 CSS
+    阶梯与微倾斜槽位定位（`--notes-board-step: 54px`，`--notes-board-tilt: 1.2deg`），槽位
+    0~4 交错应用 `--space-1`、`--space-4`、`--space-2`、`--space-5`、`--space-3`
+    的内联偏移与正负倾角；悬浮或聚焦（`:hover, :focus-within`）时平整（`transform: none`）并提升层级（`z-index: 6`）。
+  - 网格采用内在高度布局（`grid-area: 1 / 1; align-self: start` 与
+    `margin-block-start`），不向服务器写入或持久化绝对 x/y
+    坐标；在桌面视口（>=768px）且卡片容器宽于 280px
+    时保持重叠槽位大盘（intrinsic grid overlapping
+    slots），在移动端视口（<=767px）或卡片容器窄于等于
+    280px（`@container bento-card (max-width: 280px)`）时强制回退为单列垂直流（`align-self: stretch`）；支持
+    `prefers-reduced-motion` 禁用倾斜与过渡。
+- **Workspace 导航与操作层级**：
+  - 根视图（`apps/root`、`notes/root`）统一为“搜索框 +
+    单一主操作按钮”（`workspace-primary`：“添加应用” / “新建便签”）；
+  - 嵌套视图头部提供单级 `onBack` 返回上一级；
+  - 底部整合 Switcher
+    切换应用与便签；在表单或编辑状态（`apps/create`、`apps/edit`、`notes/edit`）下自动隐藏
+    Switcher，防止未保存数据丢失（dirty protection）；未保存修改被导航拦截时触发
+    `AlertDialog` 模态确认。
 
 ## Semantic components
 
@@ -90,7 +156,10 @@ navigation。Section/SectionHeader 管理分组；SettingsCard/SettingsRow 管�
 label/description/control；ActionGroup 管理动作；EmptyState/StatusBanner
 管理空/状态；WorkspaceToolbar 管理上下文；LocalNavigation 管理
 route-current；ManagementTable 复用 shadcn Table 与局部 overflow。基础交互继续由
-shadcn 提供。
+shadcn 提供。 WorkspaceShell / WorkspacePanel
+作为统一工作区语义容器，在桌面端渲染非模态 aside，在移动端渲染 Sheet；内部由
+WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 ContentSheet
+与居中 Dialog。
 
 ## Interactive / responsive contract
 

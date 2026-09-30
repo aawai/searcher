@@ -1,63 +1,21 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { routes } from "./routes.ts";
 import {
     buildSearchUrl,
     type EngineId,
     SEARCH_ENGINES,
 } from "@shared/engines.ts";
-import {
-    Ellipsis,
-    Folder,
-    FolderPlus,
-    GripVertical,
-    ListFilter,
-    Plus,
-    RotateCcw,
-    Trash2,
-    X,
-} from "lucide-react";
-import {
-    closestCenter,
-    DndContext,
-    type DragEndEvent,
-    DragOverlay,
-    KeyboardSensor,
-    PointerSensor,
-    pointerWithin,
-    useSensor,
-    useSensors,
-} from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { X } from "lucide-react";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
-import { AppFormDialog } from "../components/searcher/AppFormDialog.tsx";
-import { WebAppLauncher } from "../components/searcher/WebAppLauncher.tsx";
 import { mergeVisibleOrder } from "../components/searcher/launcherTiles.ts";
-import { NoteCard, type NoteItem } from "../components/searcher/NoteCard.tsx";
-import { NoteEditor } from "../components/searcher/NoteEditor.tsx";
-import { useMasonryLayout } from "../components/searcher/masonry.ts";
+import type { NoteItem } from "../components/searcher/NoteCard.tsx";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
-import { type WebAppItem } from "../components/searcher/WebAppIcon.tsx";
+import type { WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu.tsx";
-import { Input } from "../components/ui/input.tsx";
-import { ContentSheet } from "../components/searcher/ContentSheet.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -71,6 +29,17 @@ import {
 import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
+import { AppsWorkspace } from "../features/workspace/AppsWorkspace.tsx";
+import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
+import {
+    initialWorkspaceState,
+    isAppsWorkspaceView,
+    parentWorkspaceRoute,
+    type WorkspaceKind,
+    workspaceReducer,
+    type WorkspaceState,
+} from "../features/workspace/workspace-state.ts";
 
 export interface WebAppGroup {
     id: string;
@@ -87,166 +56,6 @@ export interface ExtendedWebApp extends WebAppItem {
     pinnedSortOrder?: number;
     openMode?: "global" | "current" | "new_tab";
     groupId?: string | null;
-}
-
-function SortableGroupManageItem({
-    group,
-    onRename,
-    onSizeChange,
-    onDelete,
-}: {
-    group: WebAppGroup;
-    onRename: (group: WebAppGroup, name: string) => void;
-    onSizeChange: (group: WebAppGroup, size: "small" | "large") => void;
-    onDelete: (group: WebAppGroup) => void;
-}) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: group.id });
-
-    const style: React.CSSProperties = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 50 : undefined,
-        opacity: isDragging ? 0.5 : undefined,
-    };
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className="group-manage-item"
-        >
-            <button
-                type="button"
-                className="group-drag-handle"
-                aria-label={`拖动排序文件夹 ${group.name}`}
-                {...attributes}
-                {...listeners}
-            >
-                <GripVertical size={16} />
-            </button>
-            <Input
-                aria-label={"文件夹名称：" + group.name}
-                defaultValue={group.name}
-                onBlur={(e) => void onRename(group, e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") e.currentTarget.blur();
-                }}
-            />
-            <div className="group-manage-desktop-actions">
-                <Button
-                    variant="outline"
-                    onClick={() =>
-                        onSizeChange(
-                            group,
-                            group.folderSize === "large" ? "small" : "large",
-                        )}
-                    aria-label={group.name + " 当前为" +
-                        (group.folderSize === "large" ? "大" : "小") +
-                        "文件夹，切换大小"}
-                >
-                    {group.folderSize === "large" ? "大文件夹" : "小文件夹"}
-                </Button>
-                <Button
-                    variant="destructive"
-                    onClick={() => void onDelete(group)}
-                    title="删除文件夹"
-                >
-                    <Trash2 size={15} />
-                    <span>删除</span>
-                </Button>
-            </div>
-            <div className="group-manage-mobile-actions">
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={<Button variant="outline" size="icon" />}
-                        aria-label={"更多操作：" + group.name}
-                    >
-                        <Ellipsis size={18} />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem
-                            onClick={() =>
-                                onSizeChange(
-                                    group,
-                                    group.folderSize === "large"
-                                        ? "small"
-                                        : "large",
-                                )}
-                        >
-                            {group.folderSize === "large"
-                                ? "切换为小文件夹"
-                                : "切换为大文件夹"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void onDelete(group)}>
-                            删除文件夹
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        </div>
-    );
-}
-function SortableDrawerNoteItem({
-    note,
-    disabled,
-    isOverlayActive,
-    children,
-}: {
-    note: NoteItem;
-    disabled: boolean;
-    isOverlayActive?: boolean;
-    children: (dragHandle: React.ReactNode) => React.ReactNode;
-}) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-        isOver,
-    } = useSortable({ id: note.id, disabled });
-    const style: React.CSSProperties = {
-        transform: isOverlayActive
-            ? undefined
-            : CSS.Transform.toString(transform),
-        transition,
-    };
-    const dragHandle = (
-        <button
-            type="button"
-            {...attributes}
-            {...listeners}
-            className="note-drag"
-            aria-label={"拖拽排序 " + (note.title || "便签")}
-            style={{
-                border: 0,
-                background: "transparent",
-                padding: 0,
-                cursor: disabled ? "default" : "grab",
-            }}
-        >
-            <GripVertical size={15} aria-hidden="true" />
-        </button>
-    );
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={`note-list-item${
-                isOver && isOverlayActive && !isDragging ? " is-over" : ""
-            }`}
-        >
-            {children(dragHandle)}
-        </div>
-    );
 }
 
 export function SearchHome() {
@@ -266,50 +75,47 @@ export function SearchHome() {
     const [appsError, setAppsError] = useState("");
     const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
     const [reloadApps, setReloadApps] = useState(0);
-    const [sheet, setSheet] = useState<"apps" | "notes" | null>(null);
-    const [filter, setFilter] = useState("");
-    const [editing, setEditing] = useState<NoteItem | null>(null);
+    const [workspace, dispatchWorkspace] = useReducer(
+        workspaceReducer,
+        initialWorkspaceState,
+    );
+    const dirtyForm = useRef(false);
+    const [pendingRoute, setPendingRoute] = useState<WorkspaceState | null>(
+        null,
+    );
+    const [notesLoading, setNotesLoading] = useState(true);
+    const [notesError, setNotesError] = useState("");
+    function navigateWorkspace(route: WorkspaceState) {
+        if (dirtyForm.current) {
+            setPendingRoute(route);
+            return;
+        }
+        dispatchWorkspace({ type: "navigate", route });
+    }
+    function openWorkspace(kind: WorkspaceKind) {
+        navigateWorkspace({
+            view: kind === "apps" ? "apps/root" : "notes/root",
+        });
+    }
+    useEffect(() => {
+        dirtyForm.current = false;
+        dispatchWorkspace({ type: "reset" });
+        setPendingRoute(null);
+        setIsManagingApps(false);
+        setNotes([]);
+        setNotesError("");
+        setError("");
+        setUndoApp(null);
+        setNoteUndo(null);
+    }, [user?.id]);
     const [error, setError] = useState("");
     const [noteUndo, setNoteUndo] = useState<
         { note: NoteItem; timer: ReturnType<typeof setTimeout> } | null
     >(null);
-    // Sensors for dnd-kit (Pointer with activation constraint + Keyboard with sortable coordinates)
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: { distance: 5 },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        }),
-    );
-
-    // WebApp Management State
-    const [activeGroupFilter, setActiveGroupFilter] = useState<
-        string | "all" | "ungrouped"
-    >("all");
-    const [isManagingGroups, setIsManagingGroups] = useState(false);
     const [isManagingApps, setIsManagingApps] = useState(false);
-    const [webAppSheetHeight, setWebAppSheetHeight] = useState<40 | 65 | 90>(
-        65,
-    );
-    const [notesSheetHeight, setNotesSheetHeight] = useState<40 | 65 | 90>(
-        65,
-    );
-    const [editingApp, setEditingApp] = useState<ExtendedWebApp | null>(null);
-    const [isAddingApp, setIsAddingApp] = useState(false);
     const [undoApp, setUndoApp] = useState<
         { app: ExtendedWebApp; timer: ReturnType<typeof setTimeout> } | null
     >(null);
-    const [groupToDelete, setGroupToDelete] = useState<WebAppGroup | null>(
-        null,
-    );
-    const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-    const [formPresentation, setFormPresentation] = useState<
-        "dialog" | "panel"
-    >("panel");
-
-    // Group Management Form State
-    const [newGroupName, setNewGroupName] = useState("");
     useEffect(() => setEngine(appearance.engine), [appearance.engine]);
     useEffect(() => {
         void getLocal<Reachability>("reachability").then((value) => {
@@ -366,10 +172,21 @@ export function SearchHome() {
                 setAppsStatus("error");
             }
         });
+        setNotesLoading(true);
+        setNotesError("");
         api<NoteItem[]>("/api/notes").then((items) => {
-            if (active) setNotes(items);
-        }).catch((cause) => {
-            if (active) setError(errorMessage(cause));
+            if (!active) return;
+            setNotes(items);
+        }).catch(async (cause: unknown) => {
+            if (!active) return;
+            try {
+                const cached = await getLocal<NoteItem[]>("notes:" + userId);
+                if (!active) return;
+                if (cached && Array.isArray(cached)) setNotes(cached);
+            } catch { /* local cache unavailable */ }
+            if (active) setNotesError(errorMessage(cause));
+        }).finally(() => {
+            if (active) setNotesLoading(false);
         });
         return () => {
             active = false;
@@ -378,11 +195,16 @@ export function SearchHome() {
 
     useEffect(() => {
         if (user && loadedUserId === user.id && appsStatus === "ready") {
-            void setLocal(`webapps:${user.id}`, { apps, groups }).catch(
+            void setLocal("webapps:" + user.id, { apps, groups }).catch(
                 () => {},
             );
         }
     }, [user?.id, loadedUserId, appsStatus, apps, groups]);
+    useEffect(() => {
+        if (user && !notesLoading && !notesError) {
+            void setLocal("notes:" + user.id, notes).catch(() => {});
+        }
+    }, [user?.id, notes, notesLoading, notesError]);
 
     async function checkConnections() {
         setIsCheckingConnections(true);
@@ -484,253 +306,35 @@ export function SearchHome() {
                 ),
         [apps, appearance.webAppHomeLimit],
     );
-
-    const groupIds = useMemo(() => groups.map((g) => g.id), [groups]);
-
-    // Drag end handlers
     async function reorderPinned(ids: string[]) {
         const updates = ids.map((id, pinnedSortOrder) => ({
             id,
             pinnedSortOrder,
         }));
-
         try {
             await api("/api/webapps/reorder", json("PUT", { items: updates }));
-            const positions = new Map(
+            const orders = new Map(
                 updates.map((item) => [item.id, item.pinnedSortOrder]),
             );
             setApps((items) =>
-                items.map((app) => ({
-                    ...app,
-                    pinnedSortOrder: positions.get(app.id) ??
-                        app.pinnedSortOrder,
-                }))
+                items.map((item) =>
+                    orders.has(item.id)
+                        ? { ...item, pinnedSortOrder: orders.get(item.id) }
+                        : item
+                )
             );
-        } catch (e) {
-            setError(errorMessage(e));
-        }
-    }
-
-    async function handleGroupDragEnd(event: DragEndEvent) {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-
-        const oldIndex = groups.findIndex((g) => g.id === active.id);
-        const newIndex = groups.findIndex((g) => g.id === over.id);
-        if (oldIndex < 0 || newIndex < 0) return;
-
-        const reordered = arrayMove(groups, oldIndex, newIndex);
-        const total = reordered.length;
-        // Backend listGroups orders by desc(webappGroups.sortOrder)
-        // reordered[0] should have highest sortOrder: total - 0, reordered[1]: total - 1, etc.
-        const updates = reordered.map((group, idx) => ({
-            group,
-            sortOrder: total - idx,
-        }));
-
-        // Optimistically update groups state
-        setGroups(
-            reordered.map((g, idx) => ({ ...g, sortOrder: total - idx })),
-        );
-
-        // Submit updated sortOrder for changed groups to server
-        try {
-            await Promise.all(
-                updates.map(({ group, sortOrder }) =>
-                    api(
-                        `/api/webapp-groups/${group.id}`,
-                        json("PATCH", { sortOrder }),
-                    )
-                ),
-            );
-        } catch (e) {
-            setError(errorMessage(e));
+        } catch (cause) {
+            setError(errorMessage(cause));
         }
     }
     const fixedNotes = useMemo(() => notes.filter((note) => note.isHomeFixed), [
         notes,
     ]);
-    const visibleNotes = useMemo(() => {
-        return notes
-            .filter((note) =>
-                ((note.title ?? "") + " " + note.body).toLowerCase()
-                    .includes(filter.toLowerCase())
-            )
-            .sort((a, b) =>
-                Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) ||
-                Number(Boolean(b.isHomeFixed)) -
-                    Number(Boolean(a.isHomeFixed)) ||
-                (b.sortOrder ?? 0) - (a.sortOrder ?? 0) ||
-                (b.updatedAt ?? 0) - (a.updatedAt ?? 0) ||
-                b.id.localeCompare(a.id)
-            );
-    }, [notes, filter]);
-    const [activeDrawerNoteId, setActiveDrawerNoteId] = useState<string | null>(
-        null,
-    );
-    const activeDrawerNote = useMemo(
-        () =>
-            visibleNotes.find((note) => note.id === activeDrawerNoteId) ?? null,
-        [visibleNotes, activeDrawerNoteId],
-    );
-
-    const {
-        containerRef: notesMasonryRef,
-        registerCard: registerNoteCard,
-        layout: notesMasonryLayout,
-    } = useMasonryLayout({
-        items: visibleNotes,
-        gap: 16,
-        minColumnWidth: 245,
-        maxColumns: 3,
-    });
-    const positionedNotesRef = useRef<Set<string>>(new Set());
-    useEffect(() => {
-        if (sheet !== "notes") {
-            positionedNotesRef.current.clear();
-        } else if (notesMasonryLayout.placements.size > 0) {
-            const raf = requestAnimationFrame(() => {
-                for (const key of notesMasonryLayout.placements.keys()) {
-                    positionedNotesRef.current.add(key);
-                }
-            });
-            return () => cancelAnimationFrame(raf);
-        }
-    }, [sheet, notesMasonryLayout.placements]);
-
-    const drawerNoteSensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        }),
-    );
-
-    async function handleDrawerNotesDragEnd(event: DragEndEvent) {
-        const { active, over } = event;
-        setActiveDrawerNoteId(null);
-        if (!over || active.id === over.id || filter.trim()) return;
-        const oldIndex = visibleNotes.findIndex((n) => n.id === active.id);
-        const overIndex = visibleNotes.findIndex((n) => n.id === over.id);
-        if (oldIndex < 0 || overIndex < 0) return;
-
-        const activeItem = visibleNotes[oldIndex];
-        const overItem = visibleNotes[overIndex];
-        if (!activeItem || !overItem) return;
-
-        const translatedRect = active.rect.current.translated;
-        const activeCenterY = translatedRect
-            ? translatedRect.top + translatedRect.height / 2
-            : null;
-        const overCenterY = over.rect
-            ? over.rect.top + over.rect.height / 2
-            : null;
-
-        let insertAfter = false;
-        if (activeCenterY !== null && overCenterY !== null) {
-            insertAfter = activeCenterY > overCenterY;
-        } else {
-            insertAfter = oldIndex < overIndex;
-        }
-
-        let targetIndex = overIndex;
-        if (insertAfter) {
-            targetIndex = oldIndex < overIndex ? overIndex : overIndex + 1;
-        } else {
-            targetIndex = oldIndex < overIndex ? overIndex - 1 : overIndex;
-        }
-
-        const pinnedCount = visibleNotes.filter((n) => n.isPinned).length;
-        if (activeItem.isPinned) {
-            targetIndex = Math.max(0, Math.min(pinnedCount - 1, targetIndex));
-        } else {
-            targetIndex = Math.max(
-                pinnedCount,
-                Math.min(visibleNotes.length - 1, targetIndex),
-            );
-        }
-
-        if (targetIndex === oldIndex) return;
-
-        const reordered = arrayMove(visibleNotes, oldIndex, targetIndex);
-        const snapshot = [...notes];
-
-        const newOrders = new Map<string, number>();
-        reordered.forEach((note, idx) => {
-            newOrders.set(note.id, (reordered.length - idx) * 10);
-        });
-
-        const nextNotes = notes.map((item) => {
-            const o = newOrders.get(item.id);
-            return o !== undefined ? { ...item, sortOrder: o } : item;
-        });
-        setNotes(nextNotes);
-
-        try {
-            for (const item of reordered) {
-                const o = newOrders.get(item.id);
-                if (o !== undefined && o !== item.sortOrder) {
-                    const updated = await api<NoteItem>(
-                        "/api/notes/" + encodeURIComponent(item.id),
-                        json("PATCH", { sortOrder: o, version: item.version }),
-                    );
-                    setNotes((current) =>
-                        current.map((n) => (n.id === updated.id ? updated : n))
-                    );
-                }
-            }
-        } catch (err) {
-            setNotes(snapshot);
-            setError(errorMessage(err));
-        }
-    }
-
-    // Filtered apps in the Bottom Sheet
-    const displayedApps = useMemo(() => {
-        let filtered = apps;
-        if (activeGroupFilter === "ungrouped") {
-            filtered = filtered.filter((app) => !app.groupId);
-        } else if (activeGroupFilter !== "all") {
-            filtered = filtered.filter((app) =>
-                app.groupId === activeGroupFilter
-            );
-        }
-        if (filter.trim()) {
-            const q = filter.trim().toLowerCase();
-            const matches = (app: ExtendedWebApp) =>
-                (app.name + " " + app.url).toLowerCase().includes(q);
-            const matchingGroups = new Set(
-                activeGroupFilter === "all"
-                    ? groups.filter((group) =>
-                        group.name.toLowerCase().includes(q)
-                    ).map((group) => group.id)
-                    : [],
-            );
-            if (activeGroupFilter === "all") {
-                for (const app of filtered) {
-                    if (app.groupId && matches(app)) {
-                        matchingGroups.add(app.groupId);
-                    }
-                }
-            }
-            filtered = filtered.filter((app) =>
-                matches(app) ||
-                (app.groupId !== null && app.groupId !== undefined &&
-                    matchingGroups.has(app.groupId))
-            );
-        }
-        return filtered.slice().sort((a, b) =>
-            (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-        );
-    }, [apps, groups, activeGroupFilter, filter]);
-
     function openAddModal() {
-        setEditingApp(null);
-        setIsAddingApp(true);
+        navigateWorkspace({ view: "apps/create" });
     }
-
     function openEditModal(app: ExtendedWebApp) {
-        setEditingApp(app);
-        setIsAddingApp(true);
+        navigateWorkspace({ view: "apps/edit", id: app.id });
     }
 
     async function togglePinApp(app: ExtendedWebApp) {
@@ -802,7 +406,7 @@ export function SearchHome() {
         }
     }
 
-    async function undoDelete() {
+    async function undoDeleteApp() {
         if (!undoApp) return;
         const { app } = undoApp;
         clearTimeout(undoApp.timer);
@@ -817,84 +421,6 @@ export function SearchHome() {
             setError(errorMessage(e));
         }
     }
-
-    // Group Management Actions
-    async function createGroup(e: React.FormEvent) {
-        e.preventDefault();
-        if (!newGroupName.trim()) return;
-        setError("");
-        try {
-            const group = await api<WebAppGroup>(
-                "/api/webapp-groups",
-                json("POST", {
-                    name: newGroupName.trim(),
-                    sortOrder: groups.length,
-                }),
-            );
-            setGroups((items) => [...items, group]);
-            setNewGroupName("");
-        } catch (err) {
-            setError(errorMessage(err));
-        }
-    }
-
-    async function renameGroup(group: WebAppGroup, name: string) {
-        if (!name.trim() || name === group.name) return;
-        setError("");
-        try {
-            const updated = await api<WebAppGroup>(
-                `/api/webapp-groups/${group.id}`,
-                json("PATCH", { name: name.trim() }),
-            );
-            setGroups((items) =>
-                items.map((
-                    g,
-                ) => (g.id === group.id ? { ...g, name: updated.name } : g))
-            );
-        } catch (err) {
-            setError(errorMessage(err));
-        }
-    }
-
-    async function changeFolderSize(
-        group: Pick<WebAppGroup, "id">,
-        folderSize: "small" | "large",
-    ) {
-        try {
-            const updated = await api<WebAppGroup>(
-                `/api/webapp-groups/${group.id}`,
-                json("PATCH", { folderSize }),
-            );
-            setGroups((items) =>
-                items.map((item) => item.id === group.id ? updated : item)
-            );
-        } catch (cause) {
-            setError(errorMessage(cause));
-        }
-    }
-    function deleteGroup(group: WebAppGroup) {
-        setGroupToDelete(group);
-    }
-
-    async function confirmDeleteGroup(group: WebAppGroup) {
-        setError("");
-        try {
-            await api(`/api/webapp-groups/${group.id}`, { method: "DELETE" });
-            setGroups((items) => items.filter((g) => g.id !== group.id));
-            const refreshedApps = await api<ExtendedWebApp[]>("/api/webapps");
-            setApps(refreshedApps);
-            if (activeGroupFilter === group.id) {
-                setActiveGroupFilter("all");
-            }
-            if (activeFolderId === group.id) {
-                setActiveFolderId(null);
-            }
-            setGroupToDelete(null);
-        } catch (err) {
-            setError(errorMessage(err));
-        }
-    }
-
     // Note actions
     async function createNote() {
         setError("");
@@ -904,16 +430,14 @@ export function SearchHome() {
                 json("POST", { title: null, body: "", isHomeFixed: false }),
             );
             setNotes((items) => [note, ...items]);
-            setEditing(note);
-            setSheet("notes");
+            navigateWorkspace({ view: "notes/edit", id: note.id });
         } catch (e) {
             setError(errorMessage(e));
         }
     }
 
     function editNote(note: NoteItem) {
-        setEditing(note);
-        setSheet("notes");
+        navigateWorkspace({ view: "notes/edit", id: note.id });
     }
     async function updateNote(note: NoteItem, patch: Record<string, unknown>) {
         const lockKey = `${note.id}:${JSON.stringify(patch)}`;
@@ -996,6 +520,31 @@ export function SearchHome() {
         }
     }
 
+    async function reorderNotes(ordered: NoteItem[]) {
+        const snapshot = notes;
+        const orders = new Map(ordered.map((note, index) => [note.id, index]));
+        setNotes((items) =>
+            items.map((note) => ({
+                ...note,
+                sortOrder: orders.get(note.id) ?? note.sortOrder,
+            }))
+        );
+        try {
+            for (const [index, note] of ordered.entries()) {
+                if (note.sortOrder === index) continue;
+                const updated = await api<NoteItem>(
+                    "/api/notes/" + encodeURIComponent(note.id),
+                    json("PATCH", { sortOrder: index, version: note.version }),
+                );
+                setNotes((items) =>
+                    items.map((item) => item.id === updated.id ? updated : item)
+                );
+            }
+        } catch (cause) {
+            setNotes(snapshot);
+            setError(errorMessage(cause));
+        }
+    }
     const layoutStyle = appearance.style;
     const layoutProps: HomeLayoutProps = {
         user,
@@ -1030,22 +579,35 @@ export function SearchHome() {
         deleteNote,
         updateNote,
         updateNoteLayout,
-        sheet,
-        setSheet,
-        setFilter,
-        setActiveGroupFilter,
-        setFormPresentation,
+        openWorkspace,
         error,
         setError,
     };
-
+    const route = workspace.route;
+    const appsView = isAppsWorkspaceView(route);
+    const title = route.view === "apps/create"
+        ? "添加应用"
+        : route.view === "apps/edit"
+        ? "编辑应用"
+        : route.view === "apps/groups"
+        ? "文件夹管理"
+        : route.view === "apps/group"
+        ? (route.id === "ungrouped"
+            ? "未分组"
+            : groups.find((group) => group.id === route.id)?.name ?? "文件夹")
+        : route.view === "notes/edit"
+        ? "编辑便签"
+        : appsView
+        ? "应用"
+        : "便签";
     return (
-        <PageShell archetype="search" className={`home home--${layoutStyle}`}>
+        <PageShell archetype="search" className={"home home-" + layoutStyle}>
             {error && (
-                <div role="alert" className="home-error">
+                <div role="alert" className="home-error-toast">
                     <span>{error}</span>
                     <Button
                         variant="ghost"
+                        size="icon"
                         aria-label="关闭错误提示"
                         onClick={() => setError("")}
                     >
@@ -1053,696 +615,129 @@ export function SearchHome() {
                     </Button>
                 </div>
             )}
-
             {layoutStyle === "widgets"
                 ? <WidgetsLayout {...layoutProps} />
                 : <ZenLayout {...layoutProps} />}
-            {/* Web App Sheet */}
-            <ContentSheet
-                open={sheet === "apps"}
-                onOpenChange={(v) => {
-                    setSheet(v ? "apps" : null);
-                    if (!v) {
-                        setIsManagingGroups(false);
-                        setIsManagingApps(false);
-                        setIsAddingApp(false);
-                        setEditingApp(null);
-                        setActiveFolderId(null);
-                    }
-                }}
-                title={isAddingApp && formPresentation === "panel"
-                    ? (editingApp ? "编辑网站" : "添加网站")
-                    : isManagingGroups
-                    ? "文件夹管理"
-                    : activeFolderId
-                    ? (groups.find((g) =>
-                        g.id === activeFolderId
-                    )?.name ??
-                        "文件夹")
-                    : "常用网站"}
-                onBack={isAddingApp && formPresentation === "panel"
-                    ? () => {
-                        setIsAddingApp(false);
-                        setEditingApp(null);
-                    }
-                    : isManagingGroups
-                    ? () => setIsManagingGroups(false)
-                    : activeFolderId
-                    ? () => setActiveFolderId(null)
-                    : undefined}
-                height={webAppSheetHeight}
-                onHeightChange={setWebAppSheetHeight}
-                compact={!isAddingApp &&
-                    (isManagingGroups || apps.length + groups.length <= 6)}
-            >
-                {isAddingApp && formPresentation === "panel" && (
-                    <AppFormDialog
-                        open
-                        presentation="panel"
-                        onOpenChange={(open) => {
-                            setIsAddingApp(open);
-                            if (!open) setEditingApp(null);
-                        }}
-                        editingApp={editingApp}
-                        groups={groups}
-                        appearance={appearance}
-                        existingApps={apps}
-                        defaultGroupId={activeFolderId ||
-                            (activeGroupFilter !== "all" &&
-                                    activeGroupFilter !== "ungrouped"
-                                ? activeGroupFilter
-                                : "")}
-                        onSaved={(savedApp, isEdit) => {
-                            if (isEdit) {
-                                setApps((items) =>
-                                    items.map((item) =>
-                                        item.id === savedApp.id
-                                            ? { ...item, ...savedApp }
-                                            : item
-                                    )
-                                );
-                            } else {
-                                setApps((items) => [...items, savedApp]);
-                            }
-                            setIsAddingApp(false);
-                            setEditingApp(null);
-                        }}
-                    />
-                )}
-                <div
-                    hidden={isAddingApp && formPresentation === "panel"}
-                    inert={isAddingApp && formPresentation === "panel"
-                        ? true
-                        : undefined}
-                    className={isAddingApp && formPresentation === "panel"
-                        ? "hidden"
-                        : undefined}
+            {user && (
+                <WorkspaceShell
+                    state={route}
+                    title={title}
+                    dock={layoutStyle === "widgets"}
+                    navigate={navigateWorkspace}
+                    onBack={() =>
+                        navigateWorkspace(parentWorkspaceRoute(route))}
+                    onClose={() => navigateWorkspace({ view: "closed" })}
+                    onCreate={() =>
+                        appsView
+                            ? navigateWorkspace({ view: "apps/create" })
+                            : void createNote()}
                 >
-                    {!isManagingGroups && (
-                        <div className="webapp-manager-header">
-                            <Input
-                                className="webapp-manager-search"
-                                aria-label="搜索网站"
-                                placeholder="搜索网站名称或网址"
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                            />
-                            <div className="webapp-manager-actions">
-                                <Button
-                                    variant="outline"
-                                    aria-pressed={isManagingApps}
-                                    onClick={() =>
-                                        setIsManagingApps((value) => !value)}
-                                >
-                                    <ListFilter size={16} />
-                                    <span>
-                                        {isManagingApps
-                                            ? "完成整理"
-                                            : "整理布局"}
-                                    </span>
-                                </Button>
-                                <Button
-                                    variant="default"
-                                    onClick={() => {
-                                        setFormPresentation("panel");
-                                        openAddModal();
-                                    }}
-                                >
-                                    <Plus size={16} />
-                                    <span>添加网站</span>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        setIsManagingApps(false);
-                                        setIsManagingGroups(true);
-                                    }}
-                                    title="文件夹管理"
-                                    aria-label="文件夹管理"
-                                >
-                                    <Folder size={16} />
-                                    <span>文件夹</span>
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                    {isManagingApps && !isManagingGroups && (
-                        <p className="webapp-managing-hint" role="status">
-                            正在整理布局：拖动网站调整顺序，点击网站可编辑。
-                        </p>
-                    )}
-
-                    {isManagingGroups
+                    {appsView
                         ? (
-                            <div className="group-manage-section">
-                                <p className="muted text-xs m-0 mb-3">
-                                    文件夹可帮助归类常用网站。删除文件夹不会删除其中的网站，网站将自动移至“未放入文件夹”。
-                                </p>
-                                <form
-                                    onSubmit={createGroup}
-                                    className="section-form mb-4"
-                                >
-                                    <div className="flex gap-2">
-                                        <Input
-                                            required
-                                            placeholder="新文件夹名称（如：开发、娱乐、办公）"
-                                            value={newGroupName}
-                                            onChange={(e) =>
-                                                setNewGroupName(
-                                                    e.target.value,
-                                                )}
-                                            className="flex-1"
-                                        />
-                                        <Button
-                                            variant="default"
-                                            type="submit"
-                                            disabled={!newGroupName
-                                                .trim()}
-                                        >
-                                            <FolderPlus size={16} />
-                                            <span>创建文件夹</span>
-                                        </Button>
-                                    </div>
-                                </form>
-                                <div className="group-manage-list">
-                                    {groups.length === 0
-                                        ? (
-                                            <p className="empty">
-                                                暂无文件夹
-                                            </p>
-                                        )
-                                        : (
-                                            <DndContext
-                                                sensors={sensors}
-                                                onDragEnd={(e) =>
-                                                    void handleGroupDragEnd(
-                                                        e,
-                                                    )}
-                                            >
-                                                <SortableContext
-                                                    items={groupIds}
-                                                    strategy={verticalListSortingStrategy}
-                                                >
-                                                    {groups.map((g) => (
-                                                        <SortableGroupManageItem
-                                                            key={g.id}
-                                                            group={g}
-                                                            onRename={renameGroup}
-                                                            onDelete={deleteGroup}
-                                                            onSizeChange={(
-                                                                group,
-                                                                size,
-                                                            ) => void changeFolderSize(
-                                                                group,
-                                                                size,
-                                                            )}
-                                                        />
-                                                    ))}
-                                                </SortableContext>
-                                            </DndContext>
-                                        )}
-                                </div>
-                            </div>
+                            <AppsWorkspace
+                                state={route}
+                                navigate={navigateWorkspace}
+                                apps={apps}
+                                groups={groups}
+                                setApps={setApps}
+                                setGroups={setGroups}
+                                query={workspace.queries.apps}
+                                onQueryChange={(value) =>
+                                    dispatchWorkspace({
+                                        type: "query",
+                                        workspace: "apps",
+                                        value,
+                                    })}
+                                appearance={appearance}
+                                status={appsStatus}
+                                error={appsError}
+                                onRetry={layoutProps.onReloadApps}
+                                onOpen={openApp}
+                                onPin={togglePinApp}
+                                onMove={moveAppGroup}
+                                onDelete={softDeleteApp}
+                                onReorder={reorderApps}
+                                onDirtyChange={(dirty) => {
+                                    dirtyForm.current = dirty;
+                                }}
+                            />
                         )
                         : (
-                            <>
-                                {appsStatus === "loading" && (
-                                    <p
-                                        role="status"
-                                        className="launcher-empty"
-                                    >
-                                        正在加载网站…
-                                    </p>
-                                )}
-                                {appsStatus === "error" && (
-                                    <div
-                                        role="alert"
-                                        className="launcher-empty"
-                                    >
-                                        网站加载失败：{appsError}{" "}
-                                        <Button
-                                            variant="outline"
-                                            onClick={() =>
-                                                setReloadApps((count) =>
-                                                    count + 1
-                                                )}
-                                        >
-                                            重试
-                                        </Button>
-                                    </div>
-                                )}
-                                {appsStatus === "offline" && (
-                                    <div
-                                        role="status"
-                                        className="launcher-notice"
-                                    >
-                                        当前离线，显示此账户上次保存的网站列表。
-                                        {" "}
-                                        <Button
-                                            variant="outline"
-                                            onClick={() =>
-                                                setReloadApps((count) =>
-                                                    count + 1
-                                                )}
-                                        >
-                                            重试连接
-                                        </Button>
-                                    </div>
-                                )}
-                                {(appsStatus === "ready" ||
-                                    appsStatus === "offline") && (
-                                    <WebAppLauncher
-                                        apps={displayedApps}
-                                        emptyMessage={filter.trim() ||
-                                                (activeGroupFilter !==
-                                                        "all" &&
-                                                    displayedApps
-                                                            .length ===
-                                                        0)
-                                            ? "没有匹配的网站"
-                                            : "还没有常用网站"}
-                                        emptyAction={!filter.trim() &&
-                                            activeGroupFilter === "all"}
-                                        groups={groups}
-                                        showFolders={activeGroupFilter ===
-                                            "all"}
-                                        size={appearance.webAppIconSize}
-                                        showAppLabels={appearance
-                                            .showAppLabels}
-                                        activeFolderId={activeFolderId}
-                                        onFolderChange={setActiveFolderId}
-                                        onFolderSizeChange={(
-                                            group,
-                                            folderSize,
-                                        ) => void changeFolderSize(
-                                            group,
-                                            folderSize,
-                                        )}
-                                        managing={isManagingApps}
-                                        onToggleManaging={() =>
-                                            setIsManagingApps((value) =>
-                                                !value
-                                            )}
-                                        onOpen={openApp}
-                                        onEdit={(app) => {
-                                            setFormPresentation(
-                                                "panel",
-                                            );
-                                            openEditModal(app);
-                                        }}
-                                        onMove={(app, groupId) =>
-                                            void moveAppGroup(
-                                                app,
-                                                groupId,
-                                            )}
-                                        onPin={(app) => void togglePinApp(app)}
-                                        onDelete={(app) =>
-                                            void softDeleteApp(app)}
-                                        onReorder={(ids) =>
-                                            void reorderApps(ids)}
-                                        onAdd={() => {
-                                            setFormPresentation(
-                                                "panel",
-                                            );
-                                            openAddModal();
-                                        }}
-                                    />
-                                )}
-                            </>
+                            <NotesWorkspace
+                                state={route}
+                                notes={notes}
+                                userId={user.id}
+                                query={workspace.queries.notes}
+                                onQueryChange={(value) =>
+                                    dispatchWorkspace({
+                                        type: "query",
+                                        workspace: "notes",
+                                        value,
+                                    })}
+                                onSaved={(next) =>
+                                    setNotes((items) =>
+                                        items.map((item) =>
+                                            item.id === next.id ? next : item
+                                        )
+                                    )}
+                                onReorder={reorderNotes}
+                                actions={layoutProps}
+                                loading={notesLoading}
+                                error={notesError}
+                                onRetry={layoutProps.onReloadApps}
+                            />
                         )}
-                </div>
-            </ContentSheet>
-
-            {/* Standalone Add / Edit WebApp Dialog for pinned apps */}
-            {formPresentation === "dialog" && isAddingApp && (
-                <AppFormDialog
-                    open
-                    presentation="dialog"
-                    onOpenChange={(open) => {
-                        setIsAddingApp(open);
-                        if (!open) setEditingApp(null);
-                    }}
-                    editingApp={editingApp}
-                    groups={groups}
-                    appearance={appearance}
-                    existingApps={apps}
-                    defaultGroupId=""
-                    onSaved={(savedApp, isEdit) => {
-                        if (isEdit) {
-                            setApps((items) =>
-                                items.map((item) =>
-                                    item.id === savedApp.id
-                                        ? { ...item, ...savedApp }
-                                        : item
-                                )
-                            );
-                        } else {
-                            setApps((items) => [...items, savedApp]);
-                        }
-                        setIsAddingApp(false);
-                        setEditingApp(null);
-                    }}
-                />
+                </WorkspaceShell>
             )}
-
-            {/* Folder Deletion Alert Dialog */}
+            {(undoApp || noteUndo) && (
+                <div className="webapp-undo-toast" role="status">
+                    <span>
+                        {undoApp ? "应用已移至回收站" : "便签已移至回收站"}
+                    </span>
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            undoApp
+                                ? void undoDeleteApp()
+                                : void undoDeleteNote()}
+                    >
+                        撤销
+                    </Button>
+                </div>
+            )}
             <AlertDialog
-                open={Boolean(groupToDelete)}
-                onOpenChange={(open) => !open && setGroupToDelete(null)}
+                open={pendingRoute !== null}
+                onOpenChange={(open) => {
+                    if (!open) setPendingRoute(null);
+                }}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            删除文件夹“{groupToDelete?.name}”？
+                            放弃未保存的应用修改？
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            只删除文件夹，其中的网站将移至“未放入文件夹”，不会删除网站数据。
+                            返回或收起工作区后，当前未保存的表单内容将丢失。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogCancel>继续编辑</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
-                                if (groupToDelete) {void confirmDeleteGroup(
-                                        groupToDelete,
-                                    );}
+                                if (!pendingRoute) return;
+                                dirtyForm.current = false;
+                                dispatchWorkspace({
+                                    type: "navigate",
+                                    route: pendingRoute,
+                                });
+                                setPendingRoute(null);
                             }}
                         >
-                            删除文件夹
+                            放弃修改
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            {/* Undo Toast */}
-            {undoApp && (
-                <div className="webapp-undo-toast" role="status">
-                    <span>已删除网站 “{undoApp.app.name}”</span>
-                    <Button
-                        variant="default"
-                        onClick={() => void undoDelete()}
-                    >
-                        <RotateCcw size={15} />
-                        <span>撤销</span>
-                    </Button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            clearTimeout(undoApp.timer);
-                            setUndoApp(null);
-                        }}
-                        className="p-0 border-0 bg-transparent text-inherit cursor-pointer inline-flex items-center"
-                        aria-label="关闭"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
-
-            {/* Notes Sheet */}
-            <ContentSheet
-                open={sheet === "notes"}
-                onOpenChange={(v) => {
-                    setSheet(v ? "notes" : null);
-                    if (!v) setEditing(null);
-                }}
-                title={editing ? (editing.title?.trim() || "编辑便签") : "便签"}
-                onBack={editing ? () => setEditing(null) : undefined}
-                height={notesSheetHeight}
-                onHeightChange={setNotesSheetHeight}
-            >
-                {editing && user
-                    ? (
-                        <NoteEditor
-                            key={editing.id}
-                            note={editing}
-                            userId={user.id}
-                            onSaved={(next) => {
-                                setNotes((items) =>
-                                    items.map((
-                                        item,
-                                    ) => (item.id === next.id ? next : item))
-                                );
-                                setEditing(next);
-                            }}
-                        />
-                    )
-                    : (
-                        <div>
-                            <div className="section-tools">
-                                <label
-                                    className="sr-only"
-                                    htmlFor="filter-notes"
-                                >
-                                    搜索便签
-                                </label>
-                                <input
-                                    id="filter-notes"
-                                    placeholder="搜索便签内容"
-                                    value={filter}
-                                    onChange={(e) => setFilter(e.target.value)}
-                                />
-                                <Button
-                                    variant="default"
-                                    onClick={() => void createNote()}
-                                >
-                                    新建便签
-                                </Button>
-                            </div>
-                            {visibleNotes.length
-                                ? (
-                                    <DndContext
-                                        sensors={drawerNoteSensors}
-                                        collisionDetection={(args) => {
-                                            const targets = pointerWithin(args);
-                                            return targets.length
-                                                ? targets
-                                                : closestCenter(args);
-                                        }}
-                                        onDragStart={(event) =>
-                                            setActiveDrawerNoteId(
-                                                String(event.active.id),
-                                            )}
-                                        onDragCancel={() =>
-                                            setActiveDrawerNoteId(null)}
-                                        onDragEnd={handleDrawerNotesDragEnd}
-                                    >
-                                        <SortableContext
-                                            items={visibleNotes.map((n) =>
-                                                n.id
-                                            )}
-                                            strategy={() => null}
-                                            disabled={Boolean(filter.trim())}
-                                        >
-                                            <div
-                                                ref={notesMasonryRef}
-                                                className="note-masonry-container"
-                                                style={{
-                                                    minHeight:
-                                                        `${notesMasonryLayout.containerHeight}px`,
-                                                    height:
-                                                        `${notesMasonryLayout.containerHeight}px`,
-                                                }}
-                                            >
-                                                {visibleNotes.map((note) => {
-                                                    const pos =
-                                                        notesMasonryLayout
-                                                            .placements.get(
-                                                                note.id,
-                                                            );
-                                                    const isDragging =
-                                                        activeDrawerNoteId ===
-                                                            note.id;
-                                                    return (
-                                                        <div
-                                                            key={note.id}
-                                                            ref={(el) =>
-                                                                registerNoteCard(
-                                                                    note.id,
-                                                                    el,
-                                                                )}
-                                                            className={"note-masonry-item" +
-                                                                (isDragging
-                                                                    ? " is-dragging"
-                                                                    : "")}
-                                                            style={{
-                                                                width: `${
-                                                                    pos?.width ??
-                                                                        notesMasonryLayout
-                                                                            .columnWidth
-                                                                }px`,
-                                                                transform: pos
-                                                                    ? `translate3d(${pos.x}px, ${pos.y}px, 0)`
-                                                                    : undefined,
-                                                                transition:
-                                                                    isDragging ||
-                                                                        !pos ||
-                                                                        !positionedNotesRef
-                                                                            .current
-                                                                            .has(
-                                                                                note.id,
-                                                                            )
-                                                                        ? "opacity 150ms ease"
-                                                                        : "transform 200ms ease, opacity 200ms ease",
-                                                                zIndex:
-                                                                    isDragging
-                                                                        ? 50
-                                                                        : 1,
-                                                                opacity: pos
-                                                                    ? 1
-                                                                    : 0,
-                                                                visibility: pos
-                                                                    ? "visible"
-                                                                    : "hidden",
-                                                            }}
-                                                        >
-                                                            <SortableDrawerNoteItem
-                                                                note={note}
-                                                                disabled={Boolean(
-                                                                    filter
-                                                                        .trim(),
-                                                                )}
-                                                                isOverlayActive={Boolean(
-                                                                    activeDrawerNoteId,
-                                                                )}
-                                                            >
-                                                                {(
-                                                                    dragHandle,
-                                                                ) => (
-                                                                    <NoteCard
-                                                                        note={note}
-                                                                        dragHandle={dragHandle}
-                                                                        onOpen={() =>
-                                                                            editNote(
-                                                                                note,
-                                                                            )}
-                                                                        onTogglePin={() =>
-                                                                            void updateNote(
-                                                                                note,
-                                                                                {
-                                                                                    isPinned:
-                                                                                        !note
-                                                                                            .isPinned,
-                                                                                },
-                                                                            )}
-                                                                        onToggleHomeFixed={() =>
-                                                                            void updateNote(
-                                                                                note,
-                                                                                {
-                                                                                    isHomeFixed:
-                                                                                        !note
-                                                                                            .isHomeFixed,
-                                                                                },
-                                                                            )}
-                                                                        onToggleMode={() =>
-                                                                            void updateNoteLayout(
-                                                                                note,
-                                                                                {
-                                                                                    ...(note
-                                                                                        .layout ??
-                                                                                        {
-                                                                                            deviceClass:
-                                                                                                "desktop" as const,
-                                                                                            zIndex:
-                                                                                                1,
-                                                                                            expanded:
-                                                                                                true,
-                                                                                        }),
-                                                                                    expanded:
-                                                                                        !(note
-                                                                                            .layout
-                                                                                            ?.expanded ??
-                                                                                            true),
-                                                                                },
-                                                                            )}
-                                                                        onChangeColor={(
-                                                                            color,
-                                                                        ) => void updateNote(
-                                                                            note,
-                                                                            {
-                                                                                color,
-                                                                            },
-                                                                        )}
-                                                                        onDelete={() =>
-                                                                            void deleteNote(
-                                                                                note,
-                                                                            )}
-                                                                    />
-                                                                )}
-                                                            </SortableDrawerNoteItem>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </SortableContext>
-                                        {createPortal(
-                                            <DragOverlay
-                                                style={{
-                                                    zIndex:
-                                                        "var(--elevation-drag)",
-                                                }}
-                                            >
-                                                {activeDrawerNote
-                                                    ? (
-                                                        <div
-                                                            className="note-drag-overlay"
-                                                            style={{
-                                                                width:
-                                                                    `${notesMasonryLayout.columnWidth}px`,
-                                                            }}
-                                                        >
-                                                            <NoteCard
-                                                                note={activeDrawerNote}
-                                                                dragHandle={
-                                                                    <span
-                                                                        className="note-drag"
-                                                                        style={{
-                                                                            border:
-                                                                                0,
-                                                                            background:
-                                                                                "transparent",
-                                                                            padding:
-                                                                                0,
-                                                                            cursor:
-                                                                                "grabbing",
-                                                                        }}
-                                                                    >
-                                                                        <GripVertical
-                                                                            size={15}
-                                                                            aria-hidden="true"
-                                                                        />
-                                                                    </span>
-                                                                }
-                                                            />
-                                                        </div>
-                                                    )
-                                                    : null}
-                                            </DragOverlay>,
-                                            document.body,
-                                        )}
-                                    </DndContext>
-                                )
-                                : (
-                                    <p className="empty">
-                                        还没有便签。点击上方新建开始记录。
-                                    </p>
-                                )}
-                            {noteUndo && (
-                                <div
-                                    className="webapp-undo-toast"
-                                    role="status"
-                                >
-                                    便签已移至回收站{" "}
-                                    <button
-                                        type="button"
-                                        onClick={() => void undoDeleteNote()}
-                                    >
-                                        撤销
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-            </ContentSheet>
         </PageShell>
     );
 }
