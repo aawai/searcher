@@ -85,7 +85,7 @@ export function AskPage() {
         {
             id: string;
             title: string;
-            timer: ReturnType<typeof setTimeout>;
+            timer: number;
         } | null
     >(null);
     // J-009 Assistant Variant：记录每个 variant 组当前激活的回复索引
