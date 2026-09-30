@@ -1,3 +1,5 @@
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import { EmptyState } from "../components/searcher/semantic.tsx";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -7,7 +9,6 @@ import {
     Globe,
     Key,
     Laptop,
-    Lock,
     LogOut,
     RefreshCw,
     Shield,
@@ -244,96 +245,52 @@ export function AccountPage() {
 
     if (!user) {
         return (
-            <main className="page" style={{ maxWidth: 540 }}>
+            <PageShell archetype="utility" className="page account-page">
                 <PageHeader
-                    items={[
-                        { label: "首页", to: routes.home },
-                        { label: "账户与安全" },
-                    ]}
+                    title="账户与安全"
+                    items={[{ label: "首页", to: routes.home }, {
+                        label: "账户与安全",
+                    }]}
                 />
-                <div
-                    style={{
-                        padding: "36px 24px",
-                        textAlign: "center",
-                        background: "var(--surface-solid)",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid var(--border)",
-                        boxShadow: "none",
-                    }}
-                >
-                    <Lock
-                        size={44}
-                        style={{ color: "var(--muted)", margin: "0 auto 16px" }}
-                    />
-                    <h1 style={{ fontSize: "24px", marginBottom: "12px" }}>
-                        未登录
-                    </h1>
-                    <p className="muted" style={{ marginBottom: "24px" }}>
-                        请先登录以访问账户设置、安全配置及设备管理。
-                    </p>
-                    <Link
-                        to={authPath("login", location)}
-                        className="button button--primary"
-                    >
-                        前往登录
-                    </Link>
-                </div>
-            </main>
+                <EmptyState
+                    title="未登录"
+                    description="请先登录以访问账户设置、安全配置及设备管理。"
+                    action={
+                        <Link
+                            to={authPath("login", location)}
+                            className="button button--primary"
+                        >
+                            前往登录
+                        </Link>
+                    }
+                />
+            </PageShell>
         );
     }
 
     const hasOtherDevices = devices.some((d) => !d.isCurrent);
 
     return (
-        <main className="page" style={{ maxWidth: 860 }}>
+        <PageShell archetype="utility" className="page account-page">
             <PageHeader
-                items={[
-                    { label: "首页", to: routes.home },
-                    { label: "账户与安全" },
-                ]}
+                title="账户与安全"
+                description="管理您的个人资料、密码凭据与已登录设备"
+                items={[{ label: "首页", to: routes.home }, {
+                    label: "账户与安全",
+                }]}
+                actions={user.role === "admin"
+                    ? (
+                        <Link
+                            to={routes.admin()}
+                            className="button button--subtle"
+                        >
+                            <Shield size={18} />
+                            <span>管理后台</span>
+                            <ArrowRight size={16} />
+                        </Link>
+                    )
+                    : undefined}
             />
-            {/* Page Header */}
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: "16px",
-                    marginBottom: "28px",
-                }}
-            >
-                <div>
-                    <h1
-                        style={{
-                            margin: 0,
-                            fontSize: "clamp(24px, 3.2vw, 34px)",
-                        }}
-                    >
-                        账户与安全
-                    </h1>
-                    <p className="muted" style={{ margin: "6px 0 0" }}>
-                        管理您的个人资料、密码凭据与已登录设备
-                    </p>
-                </div>
-                {user.role === "admin" && (
-                    <Link
-                        to={routes.admin()}
-                        className="button button--subtle"
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            borderColor: "var(--accent)",
-                            color: "var(--accent)",
-                        }}
-                    >
-                        <Shield size={18} />
-                        <span>管理后台</span>
-                        <ArrowRight size={16} />
-                    </Link>
-                )}
-            </div>
 
             {/* Forced Password Reset Banner */}
             {user.mustChangePassword && (
@@ -1054,6 +1011,6 @@ export function AccountPage() {
                     </CardContent>
                 </Card>
             </div>
-        </main>
+        </PageShell>
     );
 }

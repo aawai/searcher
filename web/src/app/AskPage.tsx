@@ -1,3 +1,5 @@
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import { WorkspaceToolbar } from "../components/searcher/semantic.tsx";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -162,15 +164,15 @@ export function AskPage() {
     }, [conversation, partial, streaming, activeVariants]);
     if (!user) {
         return (
-            <main className="page ask-guest">
+            <PageShell archetype="workbench" className="page ask-guest">
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
                         { label: "AI 问答" },
                     ]}
+                    title="AI 问答"
                 />
                 <div className="ask-guest__content">
-                    <h1>AI 问答</h1>
                     <p>登录后，选择模型并开始对话。</p>
                     <Link
                         className="button button--primary"
@@ -179,7 +181,7 @@ export function AskPage() {
                         登录后提问
                     </Link>
                 </div>
-            </main>
+            </PageShell>
         );
     }
     const options = models.map((model) => ({
@@ -441,21 +443,22 @@ export function AskPage() {
         </>
     );
     return (
-        <main className="page ask-page">
+        <PageShell archetype="workbench" className="page ask-page">
             <PageHeader
                 items={[
                     { label: "首页", to: routes.home },
                     { label: "AI 问答" },
                 ]}
+                title="AI 问答"
             />
-            <h1 className="sr-only">AI 问答</h1>
+
             <div className="ask-layout">
                 <aside className="ask-history" aria-label="对话历史">
-                    <h2 className="ask-workspace-title">AI 问答</h2>
+                    <h2 className="ask-workspace-title">历史对话</h2>
                     {historyContent}
                 </aside>
                 <section className="ask-main" aria-label="当前对话">
-                    <div className="ask-model">
+                    <WorkspaceToolbar className="ask-model">
                         <div className="ask-model__primary">
                             <Button
                                 className="history-toggle"
@@ -495,7 +498,7 @@ export function AskPage() {
                                 </Link>
                             )}
                         </div>
-                    </div>
+                    </WorkspaceToolbar>
                     <div
                         className="ask-messages"
                         ref={messagesRef}
@@ -906,6 +909,6 @@ export function AskPage() {
                     </button>
                 </div>
             )}
-        </main>
+        </PageShell>
     );
 }

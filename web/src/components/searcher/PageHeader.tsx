@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
     Breadcrumb,
@@ -7,23 +7,33 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "../ui/breadcrumb.tsx";
+import { ActionGroup } from "./semantic.tsx";
+import "./semantic.css";
 
 export function PageHeader(
-    { items }: { items: { label: string; to?: string }[] },
+    { items, title, titleLevel = 1, description, actions, navigation }: {
+        titleLevel?: 1 | 2;
+        items: { label: string; to?: string }[];
+        title?: string;
+        description?: string;
+        actions?: ReactNode;
+        navigation?: ReactNode;
+    },
 ) {
+    const Title = titleLevel === 1 ? "h1" : "h2";
     return (
-        <header className="mb-4 min-w-0">
+        <header className="page-header">
             <Breadcrumb aria-label="页面层级">
                 <BreadcrumbList>
                     {items.map((item, index) => (
-                        <Fragment key={`${item.label}-${index}`}>
+                        <Fragment key={item.to ?? item.label}>
                             {index > 0 && <BreadcrumbSeparator />}
                             <BreadcrumbItem>
                                 {item.to
                                     ? (
                                         <Link
                                             to={item.to}
-                                            className="rounded-sm break-words transition-colors hover:text-[var(--foreground)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
+                                            className="page-breadcrumb-link"
                                         >
                                             {item.label}
                                         </Link>
@@ -38,6 +48,18 @@ export function PageHeader(
                     ))}
                 </BreadcrumbList>
             </Breadcrumb>
+            {(title || actions) && (
+                <div className="page-header-main">
+                    <div>
+                        {title && <Title className="page-title">{title}</Title>}
+                        {description && (
+                            <p className="page-description">{description}</p>
+                        )}
+                    </div>
+                    {actions && <ActionGroup>{actions}</ActionGroup>}
+                </div>
+            )}
+            {navigation}
         </header>
     );
 }

@@ -58,6 +58,12 @@
     --space-card: var(--space-6);
     --space-card-gap: var(--space-3);
     --space-control-gap: var(--space-2);
+    --space-page-block: var(--space-7);
+    --space-section-gap: var(--space-6);
+    --space-card-padding: var(--space-6);
+    --space-row-gap: var(--space-4);
+    --space-row-block: var(--space-3);
+    --space-inline-gap: var(--space-2);
 
     --font-body-size: 14px;
     --font-body-line-height: 1.57;
@@ -67,6 +73,22 @@
     --font-section-title-line-height: 28px;
     --font-page-title-size: 28px;
     --font-page-title-line-height: 36px;
+    --font-component-title-size: 16px;
+    --font-component-title-line-height: 24px;
+    --font-metadata-size: 12px;
+    --font-metadata-line-height: 18px;
+    --font-code-size: 13px;
+    --font-code-line-height: 20px;
+    --font-title-weight: 600;
+    --font-body-weight: 400;
+    --font-label-weight: 500;
+    --font-code-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    --surface-l2-border: var(--accent-border);
+    --surface-l3-border: var(--border);
+    --surface-navigation-border: var(--border-subtle);
+    --row-min-height: 64px;
+    --layout-workbench-max: 1280px;
+    --layout-management-max: 1100px;
 
     --layout-page-max: 1040px;
     --layout-settings-max: 960px;
@@ -376,6 +398,13 @@
     --color-accent-subtle: var(--accent-subtle);
     --color-accent-border: var(--accent-border);
     --color-accent-foreground: var(--accent-foreground);
+    --color-primary: var(--accent);
+    --color-primary-foreground: var(--accent-foreground);
+    --color-secondary: var(--surface-soft);
+    --color-secondary-foreground: var(--foreground);
+    --color-muted-foreground: var(--muted);
+    --color-destructive: var(--danger);
+    --color-ring: var(--ring);
     --color-muted: var(--muted);
     --color-border: var(--border);
     --radius-control: var(--control-radius);

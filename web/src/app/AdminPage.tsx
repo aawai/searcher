@@ -1,29 +1,36 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { type AdminTab, adminTab, routes } from "./routes.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import {
+    ActionGroup,
+    EmptyState,
+    LocalNavigation,
+    ManagementTable,
+    StatusBanner,
+    WorkspaceToolbar,
+} from "../components/searcher/semantic.tsx";
+import {
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "../components/ui/table.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
 import {
-    Activity,
-    AlertTriangle,
-    Bot,
-    CheckCircle2,
+    AlertCircle,
     ChevronLeft,
     ChevronRight,
     Clock,
-    FileText,
-    HardDrive,
     KeyRound,
     RefreshCw,
     Search,
-    Shield,
-    Sliders,
     Trash2,
     UserCheck,
     UserPlus,
-    Users,
     UserX,
-    X,
 } from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
@@ -38,8 +45,15 @@ import {
     DialogTitle,
 } from "../components/ui/dialog.tsx";
 import { Button } from "../components/ui/button.tsx";
+import { Input } from "../components/ui/input.tsx";
+import { Badge } from "../components/ui/badge.tsx";
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from "../components/ui/native-select.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import "./admin.css";
 
 interface AuditLogItem {
     id: string;
@@ -73,6 +87,7 @@ function formatTime(timestamp: number | null | undefined): string {
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
+        second: "2-digit",
         hour12: false,
     });
 }
@@ -114,6 +129,7 @@ export function AdminPage() {
     const setActiveTab = (tab: AdminTab) => {
         navigate(routes.admin(tab), { replace: true });
     };
+
     // User management state
     const [users, setUsers] = useState<AdminUserDto[]>([]);
     const [userTotal, setUserTotal] = useState(0);
@@ -125,6 +141,8 @@ export function AdminPage() {
     const [userSuccess, setUserSuccess] = useState("");
 
     // Create user modal state
+    const modalTriggerRef = useRef<HTMLButtonElement>(null);
+    const createTriggerRef = useRef<HTMLButtonElement>(null);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [newUsername, setNewUsername] = useState("");
     const [newDisplayName, setNewDisplayName] = useState("");
@@ -374,7 +392,10 @@ export function AdminPage() {
     // Non-admin permission check
     if (!currentUser || currentUser.role !== "admin") {
         return (
-            <main className="page" style={{ maxWidth: 540 }}>
+            <PageShell
+                archetype="management"
+                className="admin-unauthorized-shell"
+            >
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
@@ -382,34 +403,28 @@ export function AdminPage() {
                         { label: adminTabLabels[activeTab] },
                     ]}
                 />
-                <div
-                    style={{
-                        padding: "40px 24px",
-                        textAlign: "center",
-                        background: "var(--surface)",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid var(--border)",
-                        boxShadow: "var(--shadow)",
-                    }}
-                >
-                    <Shield
-                        size={44}
-                        style={{
-                            color: "var(--danger)",
-                            margin: "0 auto 16px",
-                        }}
-                    />
-                    <h1 style={{ fontSize: "24px", marginBottom: "12px" }}>
-                        无权访问
-                    </h1>
-                    <p className="muted" style={{ marginBottom: "24px" }}>
-                        管理后台仅对系统管理员开放。当前账户未获得管理员授权。
-                    </p>
-                    <Link to={routes.home} className="button button--subtle">
-                        返回首页
-                    </Link>
-                </div>
-            </main>
+                <EmptyState
+                    title="无权访问"
+                    description="管理后台仅限具有管理员角色的账户访问。若您是管理员，请使用正确的管理员账户登录。"
+                    action={currentUser
+                        ? (
+                            <Button
+                                variant="default"
+                                render={<Link to={routes.home} />}
+                            >
+                                返回主页
+                            </Button>
+                        )
+                        : (
+                            <Button
+                                variant="default"
+                                render={<Link to={routes.login} />}
+                            >
+                                前往登录
+                            </Button>
+                        )}
+                />
+            </PageShell>
         );
     }
 
@@ -417,251 +432,65 @@ export function AdminPage() {
     const auditTotalPages = Math.max(1, Math.ceil(auditTotal / 25));
 
     return (
-        <main className="page" style={{ maxWidth: 1100 }}>
+        <PageShell archetype="management">
             <PageHeader
                 items={[
                     { label: "首页", to: routes.home },
                     { label: "管理后台", to: routes.admin() },
                     { label: adminTabLabels[activeTab] },
                 ]}
-            />
-            {/* Header */}
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: "16px",
-                    marginBottom: "24px",
-                }}
-            >
-                <div>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                        }}
+                title="系统管理后台"
+                description="用户账户维护、权限控制及系统审计日志"
+                actions={
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        render={<Link to={routes.account} />}
                     >
-                        <Shield size={24} style={{ color: "var(--accent)" }} />
-                        <h1
-                            style={{
-                                margin: 0,
-                                fontSize: "clamp(24px, 3.2vw, 34px)",
-                            }}
-                        >
-                            系统管理后台
-                        </h1>
-                    </div>
-                    <p className="muted" style={{ margin: "6px 0 0" }}>
-                        用户账户维护、权限控制及系统审计日志
-                    </p>
-                </div>
-
-                <div style={{ display: "flex", gap: "8px" }}>
-                    <Link to={routes.account} className="button button--subtle">
                         个人安全设置
-                    </Link>
-                </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div
-                style={{
-                    display: "flex",
-                    gap: "8px",
-                    borderBottom: "1px solid var(--border)",
-                    marginBottom: "24px",
-                    paddingBottom: "8px",
-                }}
-            >
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("overview")}
-                    className="button"
-                    style={{
-                        background: activeTab === "overview"
-                            ? "var(--surface)"
-                            : "transparent",
-                        borderColor: activeTab === "overview"
-                            ? "var(--accent)"
-                            : "transparent",
-                        color: activeTab === "overview"
-                            ? "var(--accent)"
-                            : "var(--foreground)",
-                        fontWeight: activeTab === "overview" ? 700 : 500,
-                    }}
-                >
-                    <Activity size={18} />
-                    <span>系统概览</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("users")}
-                    className="button"
-                    style={{
-                        background: activeTab === "users"
-                            ? "var(--surface)"
-                            : "transparent",
-                        borderColor: activeTab === "users"
-                            ? "var(--accent)"
-                            : "transparent",
-                        color: activeTab === "users"
-                            ? "var(--accent)"
-                            : "var(--foreground)",
-                        fontWeight: activeTab === "users" ? 700 : 500,
-                    }}
-                >
-                    <Users size={18} />
-                    <span>用户管理 ({userTotal})</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("settings")}
-                    className="button"
-                    style={{
-                        background: activeTab === "settings"
-                            ? "var(--surface)"
-                            : "transparent",
-                        borderColor: activeTab === "settings"
-                            ? "var(--accent)"
-                            : "transparent",
-                        color: activeTab === "settings"
-                            ? "var(--accent)"
-                            : "var(--foreground)",
-                        fontWeight: activeTab === "settings" ? 700 : 500,
-                    }}
-                >
-                    <Sliders size={18} />
-                    <span>系统设置</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("audit")}
-                    className="button"
-                    style={{
-                        background: activeTab === "audit"
-                            ? "var(--surface)"
-                            : "transparent",
-                        borderColor: activeTab === "audit"
-                            ? "var(--accent)"
-                            : "transparent",
-                        color: activeTab === "audit"
-                            ? "var(--accent)"
-                            : "var(--foreground)",
-                        fontWeight: activeTab === "audit" ? 700 : 500,
-                    }}
-                >
-                    <FileText size={18} />
-                    <span>审计日志</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("backup")}
-                    className="button"
-                    style={{
-                        background: activeTab === "backup"
-                            ? "var(--surface)"
-                            : "transparent",
-                        borderColor: activeTab === "backup"
-                            ? "var(--accent)"
-                            : "transparent",
-                        color: activeTab === "backup"
-                            ? "var(--accent)"
-                            : "var(--foreground)",
-                        fontWeight: activeTab === "backup" ? 700 : 500,
-                    }}
-                >
-                    <HardDrive size={18} />
-                    <span>备份与恢复</span>
-                </button>
-                <Link
-                    to={routes.settings("ai")}
-                    className="button button--subtle"
-                    style={{
-                        marginLeft: "auto",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                    }}
-                >
-                    <Bot size={16} />
-                    <span>AI Providers</span>
-                </Link>
-            </div>
-
-            {/* Notifications */}
-            {userSuccess && (
-                <div
-                    role="status"
-                    style={{
-                        padding: "12px 18px",
-                        borderRadius: "10px",
-                        background:
-                            "color-mix(in srgb, var(--success) 12%, var(--surface))",
-                        border: "1px solid var(--success)",
-                        color: "var(--foreground)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginBottom: "20px",
-                        fontSize: "14px",
-                    }}
-                >
-                    <CheckCircle2
-                        size={18}
-                        style={{ color: "var(--success)", flexShrink: 0 }}
+                    </Button>
+                }
+                navigation={
+                    <LocalNavigation
+                        label="管理后台主导航"
+                        items={[
+                            { label: "系统概览", to: routes.admin("overview") },
+                            {
+                                label: `用户管理 (${userTotal})`,
+                                to: routes.admin("users"),
+                            },
+                            {
+                                label: "系统设置",
+                                to: routes.admin("settings"),
+                            },
+                            {
+                                label: "审计日志",
+                                to: routes.admin("audit"),
+                            },
+                            {
+                                label: "备份与恢复",
+                                to: routes.admin("backup"),
+                            },
+                        ]}
                     />
-                    <span>{userSuccess}</span>
-                    <button
-                        type="button"
-                        onClick={() => setUserSuccess("")}
-                        style={{
-                            marginLeft: "auto",
-                            border: "none",
-                            background: "none",
-                            color: "var(--muted)",
-                            cursor: "pointer",
-                        }}
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
+                }
+            />
+
             {userError && (
-                <div
-                    role="alert"
-                    style={{
-                        padding: "12px 18px",
-                        borderRadius: "10px",
-                        background:
-                            "color-mix(in srgb, var(--danger) 12%, var(--surface))",
-                        border: "1px solid var(--danger)",
-                        color: "var(--danger)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginBottom: "20px",
-                        fontSize: "14px",
-                    }}
-                >
-                    <AlertTriangle size={18} style={{ flexShrink: 0 }} />
-                    <span>{userError}</span>
-                    <button
-                        type="button"
-                        onClick={() => setUserError("")}
-                        style={{
-                            marginLeft: "auto",
-                            border: "none",
-                            background: "none",
-                            color: "inherit",
-                            cursor: "pointer",
-                        }}
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
+                <StatusBanner tone="error">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={16} className="shrink-0" />
+                        <span>{userError}</span>
+                    </div>
+                </StatusBanner>
+            )}
+
+            {userSuccess && (
+                <StatusBanner tone="success">
+                    <div className="flex items-center gap-2">
+                        <span>{userSuccess}</span>
+                    </div>
+                </StatusBanner>
             )}
 
             {/* ===================== Tab 0: Overview ===================== */}
@@ -671,499 +500,237 @@ export function AdminPage() {
 
             {/* ===================== Tab 1: Users ===================== */}
             {activeTab === "users" && (
-                <section
-                    style={{
-                        background: "var(--surface)",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid var(--border)",
-                        boxShadow: "var(--shadow)",
-                        padding: "clamp(18px, 3vw, 28px)",
-                    }}
-                >
+                <div className="semantic-section">
                     {/* Toolbar */}
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: "12px",
-                            marginBottom: "20px",
-                        }}
-                    >
+                    <WorkspaceToolbar className="admin-toolbar">
                         <form
                             onSubmit={handleSearchSubmit}
-                            style={{
-                                display: "flex",
-                                gap: "8px",
-                                flex: "1 1 280px",
-                                maxWidth: "460px",
-                            }}
+                            className="admin-search-form"
                         >
-                            <div
-                                style={{ position: "relative", width: "100%" }}
-                            >
+                            <div className="admin-search-input-wrapper">
                                 <Search
-                                    size={18}
-                                    style={{
-                                        position: "absolute",
-                                        left: "12px",
-                                        top: "50%",
-                                        transform: "translateY(-50%)",
-                                        color: "var(--muted)",
-                                    }}
+                                    size={16}
+                                    className="admin-search-icon"
+                                    aria-hidden="true"
                                 />
-                                <input
+                                <Input
                                     type="text"
                                     value={userSearch}
                                     onChange={(e) =>
                                         setUserSearch(e.target.value)}
                                     placeholder="按用户名、显示名称或邮箱搜索…"
-                                    style={{
-                                        width: "100%",
-                                        minHeight: "42px",
-                                        padding: "8px 12px 8px 38px",
-                                        borderRadius: "9px",
-                                        border: "1px solid var(--border)",
-                                        background: "var(--surface-soft)",
-                                        color: "var(--foreground)",
-                                    }}
+                                    className="admin-search-input"
                                 />
                             </div>
-                            <Button
-                                variant="outline"
-                                type="submit"
-                                style={{ minHeight: "42px", padding: "0 14px" }}
-                            >
+                            <Button variant="outline" type="submit">
                                 搜索
                             </Button>
                             {submittedSearch && (
-                                <button
+                                <Button
+                                    variant="ghost"
                                     type="button"
                                     onClick={() => {
                                         setUserSearch("");
                                         setSubmittedSearch("");
                                     }}
-                                    className="button button--subtle"
-                                    style={{
-                                        minHeight: "42px",
-                                        padding: "0 12px",
-                                    }}
                                     title="清空搜索"
                                 >
                                     清除
-                                </button>
+                                </Button>
                             )}
                         </form>
 
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <button
+                        <ActionGroup>
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={() => void loadUsers()}
                                 disabled={usersLoading}
-                                className="button button--subtle"
-                                style={{ minHeight: "42px", padding: "0 14px" }}
                                 title="刷新用户列表"
                             >
                                 <RefreshCw
-                                    size={16}
-                                    className={usersLoading ? "spin" : ""}
+                                    size={15}
+                                    className={usersLoading
+                                        ? "animate-spin"
+                                        : ""}
                                 />
                                 <span>刷新</span>
-                            </button>
+                            </Button>
                             <Button
+                                ref={createTriggerRef}
                                 variant="default"
                                 type="button"
-                                onClick={() => setCreateModalOpen(true)}
-                                style={{ minHeight: "42px", padding: "0 16px" }}
+                                onClick={(event) => {
+                                    modalTriggerRef.current =
+                                        event.currentTarget;
+                                    setCreateModalOpen(true);
+                                }}
                             >
-                                <UserPlus size={18} />
+                                <UserPlus size={16} />
                                 <span>添加新用户</span>
                             </Button>
-                        </div>
-                    </div>
+                        </ActionGroup>
+                    </WorkspaceToolbar>
 
                     {/* Table */}
                     {usersLoading && users.length === 0
                         ? (
-                            <p
-                                className="muted"
-                                style={{
-                                    padding: "48px 0",
-                                    textAlign: "center",
-                                }}
-                            >
+                            <div className="text-muted text-center py-12">
                                 正在载入用户数据…
-                            </p>
+                            </div>
                         )
                         : users.length === 0
                         ? (
-                            <div
-                                style={{
-                                    padding: "48px 0",
-                                    textAlign: "center",
-                                }}
-                            >
-                                <p
-                                    className="muted"
-                                    style={{ margin: "0 0 16px" }}
-                                >
-                                    未找到符合条件的用户
-                                </p>
-                                {submittedSearch && (
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => {
-                                            setUserSearch("");
-                                            setSubmittedSearch("");
-                                        }}
-                                    >
-                                        清空搜索重试
-                                    </Button>
-                                )}
-                            </div>
-                        )
-                        : (
-                            <div style={{ overflowX: "auto" }}>
-                                <table
-                                    style={{
-                                        width: "100%",
-                                        borderCollapse: "collapse",
-                                        textAlign: "left",
-                                        fontSize: "14px",
-                                    }}
-                                >
-                                    <thead>
-                                        <tr
-                                            style={{
-                                                borderBottom:
-                                                    "1px solid var(--border)",
-                                                color: "var(--muted)",
+                            <EmptyState
+                                title="未找到符合条件的用户"
+                                description={submittedSearch
+                                    ? `未找到与「${submittedSearch}」匹配的用户`
+                                    : "暂无用户数据"}
+                                action={submittedSearch
+                                    ? (
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                setUserSearch("");
+                                                setSubmittedSearch("");
                                             }}
                                         >
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                用户
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                角色
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                状态
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                创建时间
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                    textAlign: "right",
-                                                }}
-                                            >
+                                            清空搜索重试
+                                        </Button>
+                                    )
+                                    : undefined}
+                            />
+                        )
+                        : (
+                            <>
+                                <ManagementTable
+                                    caption={userTotal > 0
+                                        ? `共 ${userTotal} 位用户`
+                                        : undefined}
+                                >
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>用户</TableHead>
+                                            <TableHead>角色</TableHead>
+                                            <TableHead>状态</TableHead>
+                                            <TableHead>创建时间</TableHead>
+                                            <TableHead className="text-right">
                                                 操作
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {users.map((u) => {
                                             const isSelf =
                                                 u.id === currentUser.id;
                                             const isAdmin = u.role === "admin";
                                             const isToggling =
                                                 togglingId === u.id;
+                                            const initial = (
+                                                u.displayName || u.username
+                                            ).slice(0, 1).toUpperCase();
 
                                             return (
-                                                <tr
-                                                    key={u.id}
-                                                    style={{
-                                                        borderBottom:
-                                                            "1px solid var(--border)",
-                                                    }}
-                                                >
-                                                    {/* User Info */}
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                        }}
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                alignItems:
-                                                                    "center",
-                                                                gap: "10px",
-                                                            }}
-                                                        >
+                                                <TableRow key={u.id}>
+                                                    <TableCell>
+                                                        <div className="admin-user-cell">
                                                             <div
-                                                                style={{
-                                                                    width:
-                                                                        "36px",
-                                                                    height:
-                                                                        "36px",
-                                                                    borderRadius:
-                                                                        "10px",
-                                                                    background:
-                                                                        isAdmin
-                                                                            ? "var(--accent)"
-                                                                            : "var(--surface-soft)",
-                                                                    color:
-                                                                        isAdmin
-                                                                            ? "var(--accent-foreground)"
-                                                                            : "var(--foreground)",
-                                                                    border:
-                                                                        "1px solid var(--border)",
-                                                                    display:
-                                                                        "grid",
-                                                                    placeItems:
-                                                                        "center",
-                                                                    fontWeight:
-                                                                        700,
-                                                                    fontSize:
-                                                                        "14px",
-                                                                    flexShrink:
-                                                                        0,
-                                                                }}
+                                                                className={`admin-user-avatar ${
+                                                                    isAdmin
+                                                                        ? "admin-user-avatar--admin"
+                                                                        : ""
+                                                                }`}
                                                             >
-                                                                {(u.displayName ||
-                                                                    u.username)
-                                                                    .slice(
-                                                                        0,
-                                                                        1,
-                                                                    )
-                                                                    .toUpperCase()}
+                                                                {initial}
                                                             </div>
-                                                            <div>
-                                                                <div
-                                                                    style={{
-                                                                        display:
-                                                                            "flex",
-                                                                        alignItems:
-                                                                            "center",
-                                                                        gap: "6px",
-                                                                    }}
-                                                                >
-                                                                    <span
-                                                                        style={{
-                                                                            fontWeight:
-                                                                                650,
-                                                                        }}
-                                                                    >
-                                                                        {u.displayName}
+                                                            <div className="admin-user-names">
+                                                                <div className="admin-user-display">
+                                                                    <span>
+                                                                        {u.displayName ||
+                                                                            u.username}
                                                                     </span>
-                                                                    {isSelf &&
+                                                                    {isSelf && (
+                                                                        <Badge variant="secondary">
+                                                                            当前登录
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="admin-user-meta">
+                                                                    @{u.username}
+                                                                    {u.email &&
                                                                         (
-                                                                            <span
-                                                                                style={{
-                                                                                    fontSize:
-                                                                                        "10px",
-                                                                                    padding:
-                                                                                        "1px 5px",
-                                                                                    borderRadius:
-                                                                                        "4px",
-                                                                                    background:
-                                                                                        "var(--accent)",
-                                                                                    color:
-                                                                                        "var(--accent-foreground)",
-                                                                                    fontWeight:
-                                                                                        700,
-                                                                                }}
-                                                                            >
-                                                                                当前登录
+                                                                            <span>
+                                                                                {" "}·
+                                                                                {" "}
+                                                                                {u.email}
                                                                             </span>
                                                                         )}
                                                                 </div>
-                                                                <div
-                                                                    className="muted"
-                                                                    style={{
-                                                                        fontSize:
-                                                                            "12px",
-                                                                    }}
-                                                                >
-                                                                    @{u.username}
-                                                                    {" "}
-                                                                    {u.email
-                                                                        ? `· ${u.email}`
-                                                                        : ""}
-                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </td>
-
-                                                    {/* Role */}
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                        }}
-                                                    >
-                                                        <span
-                                                            style={{
-                                                                fontSize:
-                                                                    "12px",
-                                                                padding:
-                                                                    "2px 8px",
-                                                                borderRadius:
-                                                                    "6px",
-                                                                fontWeight: 650,
-                                                                background:
-                                                                    isAdmin
-                                                                        ? "var(--accent-subtle)"
-                                                                        : "var(--surface-soft)",
-                                                                color: isAdmin
-                                                                    ? "var(--accent)"
-                                                                    : "var(--muted)",
-                                                                border:
-                                                                    "1px solid var(--border)",
-                                                            }}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant={isAdmin
+                                                                ? "default"
+                                                                : "outline"}
                                                         >
                                                             {isAdmin
-                                                                ? "管理员"
-                                                                : "标准用户"}
-                                                        </span>
-                                                    </td>
-
-                                                    {/* Status */}
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                        }}
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                alignItems:
-                                                                    "center",
-                                                                gap: "6px",
-                                                            }}
+                                                                ? "系统管理员"
+                                                                : "普通用户"}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant={u.disabled
+                                                                ? "destructive"
+                                                                : "secondary"}
                                                         >
-                                                            <span
-                                                                style={{
-                                                                    display:
-                                                                        "inline-block",
-                                                                    width:
-                                                                        "8px",
-                                                                    height:
-                                                                        "8px",
-                                                                    borderRadius:
-                                                                        "50%",
-                                                                    background:
-                                                                        u.disabled
-                                                                            ? "var(--danger)"
-                                                                            : "var(--success)",
-                                                                }}
-                                                            />
-                                                            <span
-                                                                style={{
-                                                                    color:
-                                                                        u.disabled
-                                                                            ? "var(--danger)"
-                                                                            : "var(--foreground)",
-                                                                }}
-                                                            >
-                                                                {u.disabled
-                                                                    ? "已禁用"
-                                                                    : "正常"}
-                                                            </span>
-                                                            {u.mustChangePassword &&
-                                                                (
-                                                                    <span
-                                                                        style={{
-                                                                            fontSize:
-                                                                                "11px",
-                                                                            padding:
-                                                                                "1px 6px",
-                                                                            borderRadius:
-                                                                                "4px",
-                                                                            background:
-                                                                                "color-mix(in srgb, var(--danger) 10%, var(--surface))",
-                                                                            color:
-                                                                                "var(--danger)",
-                                                                            border:
-                                                                                "1px solid var(--danger)",
-                                                                        }}
-                                                                    >
-                                                                        待重置密码
-                                                                    </span>
-                                                                )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Created At */}
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                            color:
-                                                                "var(--muted)",
-                                                            fontSize: "13px",
-                                                        }}
-                                                    >
+                                                            {u.disabled
+                                                                ? "已禁用"
+                                                                : "正常"}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-muted text-sm whitespace-nowrap">
                                                         {formatTime(
                                                             u.createdAt,
                                                         )}
-                                                    </td>
-
-                                                    {/* Actions */}
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                            textAlign: "right",
-                                                        }}
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                display:
-                                                                    "inline-flex",
-                                                                gap: "6px",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                                justifyContent:
-                                                                    "flex-end",
-                                                            }}
-                                                        >
-                                                            {/* Toggle disable */}
-                                                            {!isAdmin &&
-                                                                !isSelf && (
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <ActionGroup className="justify-end">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={(
+                                                                    event,
+                                                                ) => {
+                                                                    modalTriggerRef
+                                                                        .current =
+                                                                            event
+                                                                                .currentTarget;
+                                                                    setResetModalUser(
+                                                                        u,
+                                                                    );
+                                                                }}
+                                                                title="重置用户密码"
+                                                            >
+                                                                <KeyRound
+                                                                    size={14}
+                                                                />
+                                                                <span>
+                                                                    重置密码
+                                                                </span>
+                                                            </Button>
+                                                            {!isSelf &&
+                                                                !isAdmin && (
                                                                 <Button
-                                                                    variant={u
-                                                                            .disabled
-                                                                        ? "outline"
-                                                                        : "destructive"}
-                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
                                                                     disabled={isToggling}
                                                                     onClick={() =>
                                                                         void handleToggleDisable(
                                                                             u,
                                                                         )}
-                                                                    style={{
-                                                                        minHeight:
-                                                                            "32px",
-                                                                        padding:
-                                                                            "4px 10px",
-                                                                        fontSize:
-                                                                            "12px",
-                                                                    }}
-                                                                    title={u
-                                                                            .disabled
-                                                                        ? "启用该用户"
-                                                                        : "禁用该用户"}
                                                                 >
                                                                     {u.disabled
                                                                         ? (
@@ -1183,49 +750,17 @@ export function AdminPage() {
                                                                     </span>
                                                                 </Button>
                                                             )}
-
-                                                            {/* Reset Password */}
-                                                            {!isAdmin && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setResetModalUser(
-                                                                            u,
-                                                                        );
-                                                                        setResetNewPassword(
-                                                                            "",
-                                                                        );
-                                                                        setResetError(
-                                                                            "",
-                                                                        );
-                                                                    }}
-                                                                    style={{
-                                                                        minHeight:
-                                                                            "32px",
-                                                                        padding:
-                                                                            "4px 10px",
-                                                                        fontSize:
-                                                                            "12px",
-                                                                    }}
-                                                                    title="重置用户密码"
-                                                                >
-                                                                    <KeyRound
-                                                                        size={14}
-                                                                    />
-                                                                    <span>
-                                                                        重置密码
-                                                                    </span>
-                                                                </Button>
-                                                            )}
-
-                                                            {/* Soft Delete */}
-                                                            {!isAdmin &&
-                                                                !isSelf && (
+                                                            {!isSelf && (
                                                                 <Button
                                                                     variant="destructive"
-                                                                    type="button"
-                                                                    onClick={() => {
+                                                                    size="sm"
+                                                                    onClick={(
+                                                                        event,
+                                                                    ) => {
+                                                                        modalTriggerRef
+                                                                            .current =
+                                                                                event
+                                                                                    .currentTarget;
                                                                         setDeleteModalUser(
                                                                             u,
                                                                         );
@@ -1236,15 +771,6 @@ export function AdminPage() {
                                                                             "",
                                                                         );
                                                                     }}
-                                                                    style={{
-                                                                        minHeight:
-                                                                            "32px",
-                                                                        padding:
-                                                                            "4px 10px",
-                                                                        fontSize:
-                                                                            "12px",
-                                                                    }}
-                                                                    title="删除用户"
                                                                 >
                                                                     <Trash2
                                                                         size={14}
@@ -1254,282 +780,179 @@ export function AdminPage() {
                                                                     </span>
                                                                 </Button>
                                                             )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                        </ActionGroup>
+                                                    </TableCell>
+                                                </TableRow>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                    </TableBody>
+                                </ManagementTable>
 
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginTop: "20px",
-                                paddingTop: "16px",
-                                borderTop: "1px solid var(--border)",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <span className="muted">
-                                第 {userPage} / {totalPages} 页 · 共 {userTotal}
-                                {" "}
-                                条记录
-                            </span>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                                <Button
-                                    variant="outline"
-                                    disabled={userPage <= 1 || usersLoading}
-                                    onClick={() =>
-                                        setUserPage((p) => Math.max(1, p - 1))}
-                                    style={{
-                                        minHeight: "36px",
-                                        padding: "0 12px",
-                                    }}
-                                >
-                                    <ChevronLeft size={16} />
-                                    <span>上一页</span>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    disabled={userPage >= totalPages ||
-                                        usersLoading}
-                                    onClick={() =>
-                                        setUserPage((p) =>
-                                            Math.min(totalPages, p + 1)
-                                        )}
-                                    style={{
-                                        minHeight: "36px",
-                                        padding: "0 12px",
-                                    }}
-                                >
-                                    <span>下一页</span>
-                                    <ChevronRight size={16} />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </section>
+                                <div className="admin-pagination">
+                                    <div className="admin-pagination-info">
+                                        共 {userTotal} 位用户 · 第 {userPage} /
+                                        {" "}
+                                        {totalPages} 页
+                                    </div>
+                                    <ActionGroup>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={userPage <= 1 ||
+                                                usersLoading}
+                                            onClick={() =>
+                                                void loadUsers(userPage - 1)}
+                                        >
+                                            <ChevronLeft size={16} />
+                                            <span>上一页</span>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={userPage >= totalPages ||
+                                                usersLoading}
+                                            onClick={() =>
+                                                void loadUsers(userPage + 1)}
+                                        >
+                                            <span>下一页</span>
+                                            <ChevronRight size={16} />
+                                        </Button>
+                                    </ActionGroup>
+                                </div>
+                            </>
+                        )}
+                </div>
             )}
 
             {/* ===================== Tab 2: Audit Logs ===================== */}
             {activeTab === "audit" && (
-                <section
-                    style={{
-                        background: "var(--surface)",
-                        borderRadius: "var(--radius)",
-                        border: "1px solid var(--border)",
-                        boxShadow: "var(--shadow)",
-                        padding: "clamp(18px, 3vw, 28px)",
-                    }}
-                >
-                    {/* Audit Filter Toolbar */}
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: "12px",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                                flexWrap: "wrap",
-                            }}
-                        >
-                            <span
-                                className="muted"
-                                style={{ fontSize: "14px" }}
-                            >
+                <div className="semantic-section">
+                    <WorkspaceToolbar className="admin-toolbar">
+                        <div className="admin-filter-group">
+                            <span className="admin-filter-label">
                                 动作筛选:
                             </span>
-                            <select
-                                value={auditActionFilter}
-                                onChange={(e) => {
-                                    setAuditActionFilter(e.target.value);
-                                    setAuditPage(1);
-                                }}
-                                style={{
-                                    minHeight: "40px",
-                                    padding: "6px 12px",
-                                    borderRadius: "8px",
-                                    border: "1px solid var(--border)",
-                                    background: "var(--surface-soft)",
-                                    color: "var(--foreground)",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                <option value="">全部管理员操作</option>
-                                <option value="admin.user.create">
-                                    创建用户
-                                </option>
-                                <option value="admin.user.disable">
-                                    禁用用户
-                                </option>
-                                <option value="admin.user.enable">
-                                    启用用户
-                                </option>
-                                <option value="admin.user.reset_password">
-                                    重置密码
-                                </option>
-                                <option value="admin.user.delete">
-                                    删除用户
-                                </option>
-                            </select>
+                            <div className="admin-select-wrapper">
+                                <NativeSelect
+                                    size="sm"
+                                    value={auditActionFilter}
+                                    onChange={(e) => {
+                                        setAuditActionFilter(e.target.value);
+                                        setAuditPage(1);
+                                    }}
+                                >
+                                    <NativeSelectOption value="">
+                                        全部管理员操作
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="admin.user.create">
+                                        创建用户
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="admin.user.disable">
+                                        禁用用户
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="admin.user.enable">
+                                        启用用户
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="admin.user.reset_password">
+                                        重置密码
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="admin.user.delete">
+                                        删除用户
+                                    </NativeSelectOption>
+                                </NativeSelect>
+                            </div>
+                            {auditActionFilter && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    type="button"
+                                    onClick={() => {
+                                        setAuditActionFilter("");
+                                        setAuditPage(1);
+                                    }}
+                                >
+                                    清除筛选
+                                </Button>
+                            )}
                         </div>
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => void loadAuditLogs()}
-                            disabled={auditLoading}
-                            style={{ height: "40px", padding: "0 14px" }}
-                            title="刷新审计日志"
-                        >
-                            <RefreshCw
-                                size={16}
-                                className={auditLoading ? "spin" : ""}
-                            />
-                            <span>刷新</span>
-                        </Button>
-                    </div>
+                        <ActionGroup>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => void loadAuditLogs()}
+                                disabled={auditLoading}
+                                title="刷新审计日志"
+                            >
+                                <RefreshCw
+                                    size={14}
+                                    className={auditLoading
+                                        ? "animate-spin"
+                                        : ""}
+                                />
+                                <span>刷新</span>
+                            </Button>
+                        </ActionGroup>
+                    </WorkspaceToolbar>
 
                     {auditError && (
-                        <p
-                            role="alert"
-                            className="error"
-                            style={{ marginBottom: "16px" }}
-                        >
-                            {auditError}
-                        </p>
+                        <StatusBanner tone="error">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={16} className="shrink-0" />
+                                <span>{auditError}</span>
+                            </div>
+                        </StatusBanner>
                     )}
 
                     {auditLoading && auditLogs.length === 0
                         ? (
-                            <p
-                                className="muted"
-                                style={{
-                                    padding: "48px 0",
-                                    textAlign: "center",
-                                }}
-                            >
-                                正在加载审计日志…
-                            </p>
+                            <div className="text-muted text-center py-12">
+                                正在载入审计日志…
+                            </div>
                         )
                         : auditLogs.length === 0
                         ? (
-                            <p
-                                className="muted"
-                                style={{
-                                    padding: "48px 0",
-                                    textAlign: "center",
-                                }}
-                            >
-                                暂无审计日志记录
-                            </p>
+                            <EmptyState
+                                title="暂无符合条件的审计记录"
+                                description={auditActionFilter
+                                    ? "未找到该操作类型的审计日志"
+                                    : "系统中尚无审计事件记录"}
+                            />
                         )
                         : (
-                            <div style={{ overflowX: "auto" }}>
-                                <table
-                                    style={{
-                                        width: "100%",
-                                        borderCollapse: "collapse",
-                                        textAlign: "left",
-                                        fontSize: "14px",
-                                    }}
+                            <>
+                                <ManagementTable
+                                    caption={auditTotal > 0
+                                        ? `共 ${auditTotal} 条审计记录`
+                                        : undefined}
                                 >
-                                    <thead>
-                                        <tr
-                                            style={{
-                                                borderBottom:
-                                                    "1px solid var(--border)",
-                                                color: "var(--muted)",
-                                            }}
-                                        >
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                时间
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                操作类型
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                目标类型 / ID
-                                            </th>
-                                            <th
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    fontWeight: 650,
-                                                }}
-                                            >
-                                                操作明细
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>时间</TableHead>
+                                            <TableHead>操作类型</TableHead>
+                                            <TableHead>目标类型 / ID</TableHead>
+                                            <TableHead>操作明细</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {auditLogs.map((log) => {
                                             const { label, tone } = actionLabel(
                                                 log.action,
                                             );
-                                            const color = tone === "danger"
-                                                ? "var(--danger)"
-                                                : tone === "warning"
-                                                ? "var(--accent)"
-                                                : tone === "success"
-                                                ? "var(--success)"
-                                                : "var(--foreground)";
+                                            const badgeVariant =
+                                                tone === "danger"
+                                                    ? "destructive"
+                                                    : tone === "warning"
+                                                    ? "secondary"
+                                                    : tone === "success"
+                                                    ? "default"
+                                                    : "outline";
 
                                             return (
-                                                <tr
-                                                    key={log.id}
-                                                    style={{
-                                                        borderBottom:
-                                                            "1px solid var(--border)",
-                                                    }}
-                                                >
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                            color:
-                                                                "var(--muted)",
-                                                            whiteSpace:
-                                                                "nowrap",
-                                                            fontSize: "13px",
-                                                        }}
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                alignItems:
-                                                                    "center",
-                                                                gap: "6px",
-                                                            }}
-                                                        >
+                                                <TableRow key={log.id}>
+                                                    <TableCell className="text-muted text-sm whitespace-nowrap">
+                                                        <div className="flex items-center gap-1.5">
                                                             <Clock size={14} />
                                                             <span>
                                                                 {formatTime(
@@ -1537,184 +960,111 @@ export function AdminPage() {
                                                                 )}
                                                             </span>
                                                         </div>
-                                                    </td>
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                        }}
-                                                    >
-                                                        <span
-                                                            style={{
-                                                                fontSize:
-                                                                    "12px",
-                                                                padding:
-                                                                    "2px 8px",
-                                                                borderRadius:
-                                                                    "6px",
-                                                                fontWeight: 650,
-                                                                border:
-                                                                    "1px solid var(--border)",
-                                                                background:
-                                                                    "var(--surface-soft)",
-                                                                color,
-                                                            }}
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <Badge
+                                                            variant={badgeVariant}
                                                         >
                                                             {label}
-                                                        </span>
-                                                    </td>
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                            fontSize: "13px",
-                                                        }}
-                                                    >
-                                                        <span
-                                                            style={{
-                                                                fontWeight: 600,
-                                                            }}
-                                                        >
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-sm">
+                                                        <span className="font-semibold">
                                                             {log.targetType}
                                                         </span>
-                                                        <span
-                                                            className="muted"
-                                                            style={{
-                                                                marginLeft:
-                                                                    "6px",
-                                                                fontFamily:
-                                                                    "monospace",
-                                                                fontSize:
-                                                                    "12px",
-                                                            }}
-                                                        >
-                                                            {log.targetId.slice(
-                                                                0,
-                                                                10,
-                                                            )}…
-                                                        </span>
-                                                    </td>
-                                                    <td
-                                                        style={{
-                                                            padding: "14px",
-                                                            fontSize: "13px",
-                                                        }}
-                                                    >
+                                                        {log.targetId && (
+                                                            <span className="text-muted font-mono text-xs ml-1.5">
+                                                                {log.targetId
+                                                                    .slice(
+                                                                        0,
+                                                                        10,
+                                                                    )}…
+                                                            </span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm">
                                                         {log.metadata
                                                             ? (
-                                                                <div
-                                                                    style={{
-                                                                        display:
-                                                                            "flex",
-                                                                        gap: "8px",
-                                                                        flexWrap:
-                                                                            "wrap",
-                                                                    }}
-                                                                >
+                                                                <div className="flex flex-wrap gap-1.5">
                                                                     {Object
                                                                         .entries(
                                                                             log.metadata,
-                                                                        ).map((
-                                                                            [
-                                                                                k,
-                                                                                v,
-                                                                            ],
-                                                                        ) => (
-                                                                            <span
-                                                                                key={k}
-                                                                                style={{
-                                                                                    padding:
-                                                                                        "1px 6px",
-                                                                                    borderRadius:
-                                                                                        "4px",
-                                                                                    background:
-                                                                                        "var(--surface-soft)",
-                                                                                    border:
-                                                                                        "1px solid var(--border)",
-                                                                                    fontSize:
-                                                                                        "12px",
-                                                                                }}
-                                                                            >
-                                                                                <strong
-                                                                                    style={{
-                                                                                        fontWeight:
-                                                                                            600,
-                                                                                    }}
-                                                                                >
-                                                                                    {k}:
-                                                                                </strong>
-                                                                                {" "}
-                                                                                {String(
+                                                                        ).map(
+                                                                            (
+                                                                                [
+                                                                                    k,
                                                                                     v,
-                                                                                )}
-                                                                            </span>
-                                                                        ))}
+                                                                                ],
+                                                                            ) => (
+                                                                                <Badge
+                                                                                    key={k}
+                                                                                    variant="outline"
+                                                                                    className="font-normal text-xs"
+                                                                                >
+                                                                                    <strong className="font-semibold">
+                                                                                        {k}:
+                                                                                    </strong>
+                                                                                    {" "}
+                                                                                    {String(
+                                                                                        v,
+                                                                                    )}
+                                                                                </Badge>
+                                                                            ),
+                                                                        )}
                                                                 </div>
                                                             )
                                                             : (
-                                                                <span className="muted">
-                                                                    —
+                                                                <span className="text-muted">
+                                                                    无
                                                                 </span>
                                                             )}
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                    </TableBody>
+                                </ManagementTable>
 
-                    {/* Audit Pagination */}
-                    {auditTotalPages > 1 && (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginTop: "20px",
-                                paddingTop: "16px",
-                                borderTop: "1px solid var(--border)",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <span className="muted">
-                                第 {auditPage} / {auditTotalPages} 页 · 共{" "}
-                                {auditTotal} 条记录
-                            </span>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                                <Button
-                                    variant="outline"
-                                    disabled={auditPage <= 1 || auditLoading}
-                                    onClick={() =>
-                                        setAuditPage((p) => Math.max(1, p - 1))}
-                                    style={{
-                                        minHeight: "36px",
-                                        padding: "0 12px",
-                                    }}
-                                >
-                                    <ChevronLeft size={16} />
-                                    <span>上一页</span>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    disabled={auditPage >= auditTotalPages ||
-                                        auditLoading}
-                                    onClick={() =>
-                                        setAuditPage((p) =>
-                                            Math.min(auditTotalPages, p + 1)
-                                        )}
-                                    style={{
-                                        minHeight: "36px",
-                                        padding: "0 12px",
-                                    }}
-                                >
-                                    <span>下一页</span>
-                                    <ChevronRight size={16} />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </section>
+                                <div className="admin-pagination">
+                                    <div className="admin-pagination-info">
+                                        共 {auditTotal} 条审计日志 · 第{" "}
+                                        {auditPage} / {auditTotalPages} 页
+                                    </div>
+                                    <ActionGroup>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={auditPage <= 1 ||
+                                                auditLoading}
+                                            onClick={() =>
+                                                void loadAuditLogs(
+                                                    auditPage - 1,
+                                                )}
+                                        >
+                                            <ChevronLeft size={16} />
+                                            <span>上一页</span>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={auditPage >=
+                                                    auditTotalPages ||
+                                                auditLoading}
+                                            onClick={() =>
+                                                void loadAuditLogs(
+                                                    auditPage + 1,
+                                                )}
+                                        >
+                                            <span>下一页</span>
+                                            <ChevronRight size={16} />
+                                        </Button>
+                                    </ActionGroup>
+                                </div>
+                            </>
+                        )}
+                </div>
             )}
+
             {/* ===================== Tab 3: System Settings ===================== */}
             {activeTab === "settings" && <AdminSystemSettings />}
 
@@ -1730,59 +1080,55 @@ export function AdminPage() {
                     if (!createBusy) setCreateModalOpen(open);
                 }}
             >
-                <DialogContent style={{ maxWidth: "520px" }}>
+                <DialogContent
+                    className="max-w-md"
+                    finalFocus={modalTriggerRef}
+                >
                     <DialogHeader>
-                        <DialogTitle
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                            }}
-                        >
-                            <UserPlus
-                                size={20}
-                                style={{ color: "var(--accent)" }}
-                            />
+                        <DialogTitle className="flex items-center gap-2">
+                            <UserPlus size={20} className="text-accent" />
                             <span>创建新用户</span>
                         </DialogTitle>
-                        <DialogDescription className="sr-only">
+                        <DialogDescription>
                             输入用户名、显示名称、邮箱及初始密码以创建新用户。
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form onSubmit={handleCreateUser}>
-                        <label
-                            className="field"
-                            style={{ margin: "0 0 14px" }}
-                        >
-                            <span>
+                    <form
+                        onSubmit={handleCreateUser}
+                        className="admin-modal-form"
+                    >
+                        <div className="admin-modal-field">
+                            <label
+                                htmlFor="create-username"
+                                className="admin-modal-label"
+                            >
                                 用户名{" "}
-                                <span style={{ color: "var(--danger)" }}>
-                                    *
-                                </span>{" "}
+                                <span className="text-destructive">*</span>{" "}
                                 (3–32 位字母、数字、下划线)
-                            </span>
-                            <input
+                            </label>
+                            <Input
+                                id="create-username"
                                 type="text"
                                 required
                                 pattern="^[a-zA-Z0-9_]{3,32}$"
                                 value={newUsername}
                                 onChange={(e) => setNewUsername(e.target.value)}
                                 placeholder="例如: alice"
+                                autoFocus
                             />
-                        </label>
+                        </div>
 
-                        <label
-                            className="field"
-                            style={{ margin: "0 0 14px" }}
-                        >
-                            <span>
+                        <div className="admin-modal-field">
+                            <label
+                                htmlFor="create-display-name"
+                                className="admin-modal-label"
+                            >
                                 显示名称{" "}
-                                <span style={{ color: "var(--danger)" }}>
-                                    *
-                                </span>
-                            </span>
-                            <input
+                                <span className="text-destructive">*</span>
+                            </label>
+                            <Input
+                                id="create-display-name"
                                 type="text"
                                 required
                                 maxLength={40}
@@ -1791,33 +1137,35 @@ export function AdminPage() {
                                     setNewDisplayName(e.target.value)}
                                 placeholder="例如: 爱丽丝"
                             />
-                        </label>
+                        </div>
 
-                        <label
-                            className="field"
-                            style={{ margin: "0 0 14px" }}
-                        >
-                            <span>邮箱 (可选)</span>
-                            <input
+                        <div className="admin-modal-field">
+                            <label
+                                htmlFor="create-email"
+                                className="admin-modal-label"
+                            >
+                                电子邮箱 (可选)
+                            </label>
+                            <Input
+                                id="create-email"
                                 type="email"
                                 value={newEmail}
                                 onChange={(e) => setNewEmail(e.target.value)}
                                 placeholder="alice@example.com"
                             />
-                        </label>
+                        </div>
 
-                        <label
-                            className="field"
-                            style={{ margin: "0 0 18px" }}
-                        >
-                            <span>
+                        <div className="admin-modal-field">
+                            <label
+                                htmlFor="create-password"
+                                className="admin-modal-label"
+                            >
                                 初始密码{" "}
-                                <span style={{ color: "var(--danger)" }}>
-                                    *
-                                </span>{" "}
+                                <span className="text-destructive">*</span>{" "}
                                 (至少 12 位)
-                            </span>
-                            <input
+                            </label>
+                            <Input
+                                id="create-password"
                                 type="password"
                                 required
                                 minLength={12}
@@ -1826,28 +1174,21 @@ export function AdminPage() {
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="设置初始安全密码"
                             />
-                        </label>
+                        </div>
 
                         {createError && (
-                            <p
-                                role="alert"
-                                className="error"
-                                style={{
-                                    margin: "0 0 16px",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                {createError}
-                            </p>
+                            <StatusBanner tone="error">
+                                <div className="flex items-center gap-2">
+                                    <AlertCircle
+                                        size={16}
+                                        className="shrink-0"
+                                    />
+                                    <span>{createError}</span>
+                                </div>
+                            </StatusBanner>
                         )}
 
-                        <DialogFooter
-                            style={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: "10px",
-                            }}
-                        >
+                        <DialogFooter>
                             <Button
                                 variant="outline"
                                 type="button"
@@ -1859,10 +1200,15 @@ export function AdminPage() {
                             <Button
                                 variant="default"
                                 type="submit"
-                                disabled={createBusy || !newUsername ||
-                                    !newDisplayName || !newPassword}
+                                disabled={createBusy ||
+                                    !newUsername ||
+                                    !newDisplayName ||
+                                    !newPassword}
                             >
-                                {createBusy ? "正在创建…" : "确认创建"}
+                                <UserPlus size={16} />
+                                <span>
+                                    {createBusy ? "正在创建…" : "确认创建"}
+                                </span>
                             </Button>
                         </DialogFooter>
                     </form>
@@ -1876,44 +1222,37 @@ export function AdminPage() {
                     if (!resetBusy && !open) setResetModalUser(null);
                 }}
             >
-                <DialogContent style={{ maxWidth: "480px" }}>
+                <DialogContent
+                    className="max-w-md"
+                    finalFocus={modalTriggerRef}
+                >
                     <DialogHeader>
-                        <DialogTitle
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                            }}
-                        >
-                            <KeyRound
-                                size={20}
-                                style={{ color: "var(--accent)" }}
-                            />
+                        <DialogTitle className="flex items-center gap-2">
+                            <KeyRound size={20} className="text-accent" />
                             <span>
                                 重置密码: @{resetModalUser?.username}
                             </span>
                         </DialogTitle>
-                        <DialogDescription
-                            className="muted"
-                            style={{
-                                margin: "0 0 16px",
-                                fontSize: "14px",
-                                lineHeight: "1.6",
-                            }}
-                        >
+                        <DialogDescription>
                             重置密码将<strong>
                                 立即注销该用户的所有设备会话
                             </strong>，并强制该用户在下次登录时必须修改密码。
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form onSubmit={handleResetPasswordSubmit}>
-                        <label
-                            className="field"
-                            style={{ margin: "0 0 18px" }}
-                        >
-                            <span>输入新密码 (至少 12 位)</span>
-                            <input
+                    <form
+                        onSubmit={handleResetPasswordSubmit}
+                        className="admin-modal-form"
+                    >
+                        <div className="admin-modal-field">
+                            <label
+                                htmlFor="reset-new-password"
+                                className="admin-modal-label"
+                            >
+                                输入新密码 (至少 12 位)
+                            </label>
+                            <Input
+                                id="reset-new-password"
                                 type="password"
                                 required
                                 minLength={12}
@@ -1924,28 +1263,21 @@ export function AdminPage() {
                                 placeholder="输入该用户的临时新密码"
                                 autoFocus
                             />
-                        </label>
+                        </div>
 
                         {resetError && (
-                            <p
-                                role="alert"
-                                className="error"
-                                style={{
-                                    margin: "0 0 16px",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                {resetError}
-                            </p>
+                            <StatusBanner tone="error">
+                                <div className="flex items-center gap-2">
+                                    <AlertCircle
+                                        size={16}
+                                        className="shrink-0"
+                                    />
+                                    <span>{resetError}</span>
+                                </div>
+                            </StatusBanner>
                         )}
 
-                        <DialogFooter
-                            style={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: "10px",
-                            }}
-                        >
+                        <DialogFooter>
                             <Button
                                 variant="outline"
                                 type="button"
@@ -1959,7 +1291,10 @@ export function AdminPage() {
                                 type="submit"
                                 disabled={resetBusy || !resetNewPassword}
                             >
-                                {resetBusy ? "正在重置…" : "确认重置"}
+                                <KeyRound size={16} />
+                                <span>
+                                    {resetBusy ? "正在重置…" : "确认重置"}
+                                </span>
                             </Button>
                         </DialogFooter>
                     </form>
@@ -1974,57 +1309,15 @@ export function AdminPage() {
                 }}
             >
                 <DialogContent
-                    style={{
-                        maxWidth: "480px",
-                        border: "2px solid var(--danger)",
-                    }}
+                    className="max-w-md"
+                    finalFocus={createTriggerRef}
                 >
                     <DialogHeader>
-                        <DialogTitle
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "12px",
-                                marginBottom: "4px",
-                                color: "var(--danger)",
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    borderRadius: "10px",
-                                    background:
-                                        "color-mix(in srgb, var(--danger) 15%, var(--surface))",
-                                    color: "var(--danger)",
-                                    display: "grid",
-                                    placeItems: "center",
-                                    flexShrink: 0,
-                                }}
-                            >
-                                <Trash2 size={22} />
-                            </div>
-                            <div>
-                                <div>确认删除用户</div>
-                                <div
-                                    className="muted"
-                                    style={{
-                                        margin: "2px 0 0",
-                                        fontSize: "13px",
-                                        fontWeight: 400,
-                                    }}
-                                >
-                                    此操作需要二次确认
-                                </div>
-                            </div>
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <Trash2 size={20} />
+                            <span>确认删除用户</span>
                         </DialogTitle>
-                        <DialogDescription
-                            style={{
-                                margin: "0 0 16px",
-                                fontSize: "14px",
-                                lineHeight: "1.6",
-                            }}
-                        >
+                        <DialogDescription>
                             确定要删除用户{" "}
                             <strong>@{deleteModalUser?.username}</strong>{" "}
                             ({deleteModalUser?.displayName}) 吗？
@@ -2032,18 +1325,32 @@ export function AdminPage() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form onSubmit={handleDeleteSubmit}>
-                        <label
-                            className="field"
-                            style={{ margin: "0 0 18px" }}
-                        >
-                            <span>
+                    <form
+                        onSubmit={handleDeleteSubmit}
+                        className="admin-modal-form"
+                    >
+                        <div className="admin-modal-delete-warning">
+                            <AlertCircle
+                                size={18}
+                                className="text-destructive shrink-0 mt-0.5"
+                            />
+                            <div>
+                                删除用户后，该用户的会话将被立即强制终止，其创建的便签、应用及偏好将不可再被访问。此操作不可撤销。
+                            </div>
+                        </div>
+
+                        <div className="admin-modal-field">
+                            <label
+                                htmlFor="delete-confirm-input"
+                                className="admin-modal-label"
+                            >
                                 请输入完整的用户名{" "}
                                 <strong>@{deleteModalUser?.username}</strong>
                                 {" "}
                                 确认:
-                            </span>
-                            <input
+                            </label>
+                            <Input
+                                id="delete-confirm-input"
                                 type="text"
                                 required
                                 value={deleteConfirmText}
@@ -2052,28 +1359,21 @@ export function AdminPage() {
                                 placeholder={deleteModalUser?.username}
                                 autoFocus
                             />
-                        </label>
+                        </div>
 
                         {deleteError && (
-                            <p
-                                role="alert"
-                                className="error"
-                                style={{
-                                    margin: "0 0 16px",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                {deleteError}
-                            </p>
+                            <StatusBanner tone="error">
+                                <div className="flex items-center gap-2">
+                                    <AlertCircle
+                                        size={16}
+                                        className="shrink-0"
+                                    />
+                                    <span>{deleteError}</span>
+                                </div>
+                            </StatusBanner>
                         )}
 
-                        <DialogFooter
-                            style={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: "10px",
-                            }}
-                        >
+                        <DialogFooter>
                             <Button
                                 variant="outline"
                                 type="button"
@@ -2091,12 +1391,15 @@ export function AdminPage() {
                                             deleteModalUser.username &&
                                         deleteConfirmText !== "CONFIRM")}
                             >
-                                {deleteBusy ? "正在删除…" : "确认删除用户"}
+                                <Trash2 size={16} />
+                                <span>
+                                    {deleteBusy ? "正在删除…" : "确认删除用户"}
+                                </span>
                             </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
-        </main>
+        </PageShell>
     );
 }

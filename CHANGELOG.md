@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+- 建立正式 UI Contract、四类 Page Archetype 与共享
+  PageHeader/语义组件；Settings、Admin、Ask 和 Design Lab
+  统一页面层级、状态与响应式布局，保留各页面业务流程；管理弹窗支持键盘关闭后的焦点归还，Badge/Table
+  使用一致的主题色与表面层级。
+- Design Lab 使用正式 shadcn/Searcher 组件，提供
+  Token、表面层级、全交互状态和多宽度响应式预览。新增 `deno task check:ui` 与 CI
+  门禁，阻止新增 raw 视觉值及任意 inline presentation；历史 baseline
+  仅允许缩减。
 - 修复匿名外观偏好意外落盘和刷新后恢复的问题；登录用户的设备外观缓存按账号隔离，退出登录或会话失效后恢复匿名默认外观，保留登录用户的云端偏好同步。
 
 - AI 应用图标可独立选择 OpenAI Images 或 Gemini

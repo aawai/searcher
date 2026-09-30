@@ -348,7 +348,7 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
-        "admin exact children, tab Back and both AI Provider entry points",
+        "admin exact children, tab Back and AI Provider workspace entry",
         async () => {
             await store.run((db) =>
                 db.update(users).set({ role: "admin" }).where(
@@ -398,26 +398,51 @@ Deno.test("production navigation contracts", async (t) => {
                     "备份与恢复",
                 ]
             ) {
-                await page.getByRole("button", {
-                    name: new RegExp("^" + label),
-                })
-                    .first().click();
+                await page.getByRole("navigation", { name: "管理后台主导航" })
+                    .getByRole("link", { name: new RegExp("^" + label) })
+                    .click();
             }
             await page.waitForURL(origin + "/admin/backup");
             await page.goBack();
             await page.waitForURL(origin + "/");
             await visit("/admin");
-            await page.getByRole("link", { name: "AI Providers", exact: true })
-                .click();
-            await page.waitForURL(origin + "/settings/ai");
-            await page.goBack();
-            await page.waitForURL(origin + "/admin");
             await page.getByRole("link", {
                 name: /^配置 AI Provider/,
             }).click();
             await page.waitForURL(origin + "/settings/ai");
             await page.goBack();
             await page.waitForURL(origin + "/admin");
+        },
+    );
+    await t.step(
+        "admin dialog keyboard close restores focus to its opener",
+        async () => {
+            await visit("/admin/users");
+            const opener = page.getByRole("button", {
+                name: "重置密码",
+                exact: true,
+            }).first();
+            const handle = await opener.elementHandle();
+            assertEquals(handle !== null, true);
+            await opener.click();
+            const dialog = page.getByRole("dialog");
+            await dialog.waitFor({ state: "visible" });
+            try {
+                await page.keyboard.press("Escape");
+                await dialog.waitFor({ state: "hidden" });
+                await page.waitForFunction(
+                    (element) => document.activeElement === element,
+                    handle,
+                );
+                assertEquals(
+                    await opener.evaluate((element) =>
+                        document.activeElement === element
+                    ),
+                    true,
+                );
+            } finally {
+                await handle?.dispose();
+            }
         },
     );
     await t.step(

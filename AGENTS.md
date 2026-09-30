@@ -11,6 +11,9 @@
 * **Design completely, deliver incrementally.** 先确定完整的正确设计，再将大改动拆成可独立验证和回滚的 micro-increments。Increment 是交付边界，不是削减必要 scope 的理由。
 * **Escalate only real conflicts.** 若 Specification、Invariants、Architecture、type model 或 contracts 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通、可逆的工程决策自行判断。
 * 任何页面效果修改，必须实际浏览网站，检查实际样式变化，不要只看源码。
+* UI Contract：[DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)、[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)、[UI_REVIEW_CHECKLIST.md](UI_REVIEW_CHECKLIST.md)。UI 变更先消费已有 Page Archetype、Token、semantic component，再组合 shadcn primitives。
+* 现有实现不是设计正确性的证据；视觉例外必须定义新的系统级语义与验证边界，不以“已经这样实现”新增 raw visual value。
+* UI PR 执行 `deno task check:ui` 并填写 checklist；390/768/1440、light/dark 实页验证不可用 build/test 替代。
 
 ## 协作约定
 

@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import {
+    Section,
+    SettingsCard,
+    SettingsRow,
+} from "../components/searcher/semantic.tsx";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { routes, type SettingsTab, settingsTab } from "./routes.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
@@ -36,6 +42,7 @@ import { api } from "../lib/api.ts";
 import { AiSettings } from "./AiSettings.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
+import "./settings.css";
 
 type Tab = SettingsTab;
 
@@ -67,112 +74,76 @@ function Choices<T extends string>(
         select: (v: T) => void;
     },
 ) {
+    let input: ReactNode;
     if (control === "select") {
-        return (
-            <div className="settings-row">
-                <div className="settings-row-label">
-                    <span className="settings-row-title">{title}</span>
-                    {description && (
-                        <p className="settings-row-desc">{description}</p>
-                    )}
-                </div>
-                <div className="settings-row-control">
-                    <NativeSelect
-                        value={value}
-                        onChange={(e) => select(e.target.value as T)}
-                        className="w-[180px]"
-                        aria-label={title}
-                    >
-                        {values.map(([id, label]) => (
-                            <NativeSelectOption key={id} value={id}>
-                                {label}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </div>
-            </div>
+        input = (
+            <NativeSelect
+                value={value}
+                onChange={(e) => select(e.target.value as T)}
+                className="settings-choice-select"
+                aria-label={title}
+            >
+                {values.map(([id, label]) => (
+                    <NativeSelectOption key={id} value={id}>
+                        {label}
+                    </NativeSelectOption>
+                ))}
+            </NativeSelect>
         );
-    }
-
-    if (control === "segmented") {
-        return (
-            <div className="settings-row">
-                <div className="settings-row-label">
-                    <span className="settings-row-title">{title}</span>
-                    {description && (
-                        <p className="settings-row-desc">{description}</p>
-                    )}
-                </div>
-                <div className="settings-row-control">
-                    <Tabs
-                        value={value}
-                        onValueChange={(next) => select(next as T)}
-                    >
-                        <TabsList>
-                            {values.map(([id, label]) => (
-                                <TabsTrigger key={id} value={id}>
-                                    {label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </Tabs>
-                </div>
-            </div>
+    } else if (control === "segmented") {
+        input = (
+            <Tabs value={value} onValueChange={(next) => select(next as T)}>
+                <TabsList>
+                    {values.map(([id, label]) => (
+                        <TabsTrigger key={id} value={id}>{label}</TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
         );
-    }
-
-    return (
-        <div className="settings-row settings-row--stack-mobile">
-            <div className="settings-row-label">
-                <span className="settings-row-title">{title}</span>
-                {description && (
-                    <p className="settings-row-desc">{description}</p>
-                )}
-            </div>
-            <div className="settings-row-control w-full sm:w-80">
-                <RadioGroup
-                    value={value}
-                    onValueChange={(next) => select(next as T)}
-                    className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full"
-                    aria-label={title}
-                >
-                    {values.map(([id, label]) => {
-                        const isSelected = value === id;
-                        return (
-                            <RadioGroupItem
-                                key={id}
-                                value={id}
-                                aria-label={label}
-                                className={`flex items-center gap-2 p-2 rounded-[var(--control-radius)] border border-[var(--border)] bg-[var(--surface-solid)] text-sm cursor-pointer transition-colors ${
-                                    isSelected
-                                        ? "border-[var(--accent)] ring-1 ring-[var(--accent)] bg-[var(--accent-soft)] font-semibold shadow-[var(--accent-glow)]"
-                                        : "hover:bg-[var(--surface-soft)]"
-                                }`}
+    } else {
+        input = (
+            <RadioGroup
+                value={value}
+                onValueChange={(next) => select(next as T)}
+                className="settings-swatch-grid"
+                aria-label={title}
+            >
+                {values.map(([id, label]) => (
+                    <RadioGroupItem
+                        key={id}
+                        value={id}
+                        aria-label={label}
+                        className="settings-swatch-option"
+                    >
+                        <span
+                            className="settings-swatch-color"
+                            style={{ background: getAccentLight(id) }}
+                            aria-hidden="true"
+                        />
+                        <span>{label}</span>
+                        {value === id && (
+                            <span
+                                className="settings-swatch-selected"
+                                aria-hidden="true"
                             >
-                                <span
-                                    className="inline-block w-3 h-3 rounded-full shrink-0"
-                                    style={{
-                                        background: getAccentLight(id),
-                                    }}
-                                    aria-hidden="true"
-                                />
-                                <span className="text-xs truncate">
-                                    {label}
-                                </span>
-                                {isSelected && (
-                                    <span
-                                        className="ml-auto text-xs text-[var(--accent)]"
-                                        aria-hidden="true"
-                                    >
-                                        ✓
-                                    </span>
-                                )}
-                            </RadioGroupItem>
-                        );
-                    })}
-                </RadioGroup>
-            </div>
-        </div>
+                                ✓
+                            </span>
+                        )}
+                    </RadioGroupItem>
+                ))}
+            </RadioGroup>
+        );
+    }
+    return (
+        <SettingsRow
+            title={title}
+            description={description}
+            className={control === "swatches"
+                ? "settings-row--stack-mobile"
+                : undefined}
+        >
+            {input}
+        </SettingsRow>
     );
 }
 
@@ -276,15 +247,16 @@ export function SettingsPage() {
 
     return (
         <>
-            <main className="page">
+            <PageShell archetype="utility" className="page">
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
                         { label: "设置", to: routes.settings() },
                         { label: tabs[tab].label },
                     ]}
+                    title="设置"
                 />
-                <h1 className="sr-only">设置</h1>
+
                 <div className="settings-layout">
                     <nav className="settings-nav" aria-label="设置分类">
                         {(Object.keys(tabs) as Tab[]).map((id) => {
@@ -316,11 +288,8 @@ export function SettingsPage() {
                         <h2>{tabs[tab].label}</h2>
                         {tab === "search" && (
                             <div className="settings-section">
-                                <div className="settings-group">
-                                    <h3 className="settings-group-title">
-                                        搜索引擎与打开方式
-                                    </h3>
-                                    <div className="settings-card">
+                                <Section title="搜索引擎与打开方式">
+                                    <SettingsCard>
                                         <Choices
                                             title="默认搜索引擎"
                                             description="选择在搜索框内直接回车时使用的搜索引擎"
@@ -367,17 +336,14 @@ export function SettingsPage() {
                                                             | 16),
                                                 )}
                                         />
-                                    </div>
-                                </div>
+                                    </SettingsCard>
+                                </Section>
                             </div>
                         )}
                         {tab === "appearance" && (
                             <div className="settings-section">
-                                <div className="settings-group">
-                                    <h3 className="settings-group-title">
-                                        主题与配色
-                                    </h3>
-                                    <div className="settings-card">
+                                <Section title="主题与配色">
+                                    <SettingsCard>
                                         <Choices
                                             title="主题模式"
                                             description="切换浅色、深色模式或跟随系统"
@@ -416,14 +382,11 @@ export function SettingsPage() {
                                                     set("style", newStyle)}
                                             />
                                         </div>
-                                    </div>
-                                </div>
+                                    </SettingsCard>
+                                </Section>
 
-                                <div className="settings-group">
-                                    <h3 className="settings-group-title">
-                                        主页与快捷入口
-                                    </h3>
-                                    <div className="settings-card">
+                                <Section title="主页与快捷入口">
+                                    <SettingsCard>
                                         <Choices
                                             title="控件形状"
                                             description="搜索框及主要操作按钮切换胶囊外观；表单输入框与卡片保持矩形圆角"
@@ -542,14 +505,12 @@ export function SettingsPage() {
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    </SettingsCard>
+                                </Section>
 
-                                <div className="settings-group">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="settings-group-title m-0">
-                                            壁纸与背景效果
-                                        </h3>
+                                <Section
+                                    title="壁纸与背景效果"
+                                    actions={
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -562,13 +523,13 @@ export function SettingsPage() {
                                                 });
                                             }}
                                             title="恢复壁纸与效果默认值"
-                                            className="h-8 gap-1 text-xs"
                                         >
                                             <RotateCcw size={13} />
                                             <span>恢复默认</span>
                                         </Button>
-                                    </div>
-                                    <div className="settings-card">
+                                    }
+                                >
+                                    <SettingsCard>
                                         <div className="settings-row settings-row--stack-mobile wallpaper-settings-row">
                                             <div className="settings-row-label">
                                                 <span className="settings-row-title">
@@ -822,8 +783,8 @@ export function SettingsPage() {
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    </SettingsCard>
+                                </Section>
                             </div>
                         )}
                         {tab === "ai" && (
@@ -946,7 +907,7 @@ export function SettingsPage() {
                         )}
                     </section>
                 </div>
-            </main>
+            </PageShell>
             <Dialog
                 open={previewWallpaper !== null}
                 onOpenChange={(open) => {

@@ -1,0 +1,30 @@
+name: UI Guard & Visual Contract
+
+on:
+    push:
+        branches:
+            - main
+            - "refactor/**"
+            - "feature/**"
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    check-ui:
+        name: UI Visual Presentation & Static Guard
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Deno
+              uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.9.7
+
+            - name: Verify UI guard against baseline (deno task check:ui)
+              run: deno task check:ui
+
+            - name: Run UI guard regression test suite
+              run: deno test -A scripts/ui-guard/

@@ -1,3 +1,4 @@
+import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
@@ -151,45 +152,37 @@ export function TrashPage() {
 
     if (!user) {
         return (
-            <main className="page trash-page">
+            <PageShell archetype="management" className="page trash-page">
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
                         { label: "回收站" },
                     ]}
+                    title="回收站"
                 />
                 <p>
                     <Link to={authPath("login", location)}>请先登录</Link>{" "}
                     以查看回收站内容。
                 </p>
-            </main>
+            </PageShell>
         );
     }
 
     return (
-        <main className="page trash-page">
+        <PageShell archetype="management" className="page trash-page">
             <PageHeader
-                items={[
-                    { label: "首页", to: routes.home },
-                    { label: "回收站" },
-                ]}
-            />
-            <div className="flex items-center justify-between gap-4 mb-2">
-                <div>
-                    <h1 className="m-0 mb-1 text-2xl font-bold">回收站</h1>
-                    <p className="muted m-0 text-sm">
-                        已删除的 APP 与便签将在此保留 30
-                        天，可随时恢复或彻底删除。
-                    </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
+                title="回收站"
+                description="已删除的 APP 与便签将在此保留 30 天，可随时恢复或彻底删除。"
+                items={[{ label: "首页", to: routes.home }, {
+                    label: "回收站",
+                }]}
+                actions={
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => void loadTrash()}
                         disabled={loading}
-                        className="gap-1.5"
                     >
                         <RefreshCw
                             size={14}
@@ -197,8 +190,8 @@ export function TrashPage() {
                         />
                         <span>刷新</span>
                     </Button>
-                </div>
-            </div>
+                }
+            />
 
             <Tabs
                 value={tab}
@@ -530,6 +523,6 @@ export function TrashPage() {
                         )}
                 </section>
             )}
-        </main>
+        </PageShell>
     );
 }
