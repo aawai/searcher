@@ -57,5 +57,21 @@ Provider Key。不要将备份 ZIP、密钥或 `data/` 提交到 Git。
 调整；`web/components.json` 记录 registry 配置。业务组合组件位于
 `web/src/components/searcher/`，`/design-lab` 用于检查正式组件与主题。
 
+### 前端样式维护
+
+- `web/src/design-system/tokens.css` 定义颜色、材质、圆角、阴影，以及共享的
+  `--space-*`、`--font-*`、`--layout-*`、`--control-*` 和
+  `--elevation-*`。通用页面、表单、卡片和控件优先消费这些 Token；调整布局时不要重复写入相同固定尺寸。
+- `web/src/styles/global.css` 保留页面骨架、通用控件与跨业务公共规则；
+  Zen / Widgets 专属布局归入 `web/src/features/home-layouts/home-layouts.css`，
+  网站图标和文件夹网格归入 `web/src/components/searcher/launcher.css`。
+  `web/src/main.tsx` 按首页布局、全局样式、Launcher 的顺序加载，保持公共交互状态和网格覆盖的级联关系。
+- 页面横向留白在 767px 以下切换为 16px，通用卡片内边距在 640px 以下切换为
+  16px；触屏常规控件使用 44px 点击目标。不要把所有不同用途的尺寸合并成同一个 Token。
+- 稳定布局使用语义 class 或 Tailwind 标准 utility；壁纸、拖拽变换和瀑布流位置等
+  runtime 值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何继续由组件维护。
+- 渲染层只消费 `zen | widgets`；旧风格仅在输入边界通过
+  `normalizeStylePreset` 映射。样式调整后构建前端，并实页检查两种布局、设置、登录和网站面板的浅深色与壁纸组合。
+
 完整产品规格见
 [`Searcher-v1-Final-React-shadcn-Spec-Pack/`](Searcher-v1-Final-React-shadcn-Spec-Pack/README.md)。
