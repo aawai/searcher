@@ -126,6 +126,37 @@ function setupTestApp(currentUser: UserDto, mockFetch?: typeof fetch) {
 
     return { app, service };
 }
+interface ParsedSseEvent {
+    event: string;
+    data: unknown;
+}
+
+function parseSseEvents(sseText: string): ParsedSseEvent[] {
+    const blocks = sseText.split(/\n\n+/);
+    const events: ParsedSseEvent[] = [];
+    for (const block of blocks) {
+        const trimmed = block.trim();
+        if (!trimmed) continue;
+        let event = "message";
+        const dataLines: string[] = [];
+        for (const line of trimmed.split("\n")) {
+            if (line.startsWith("event:")) {
+                event = line.slice(6).trim();
+            } else if (line.startsWith("data:")) {
+                dataLines.push(line.slice(5).trim());
+            }
+        }
+        const dataRaw = dataLines.join("\n");
+        let parsedData: unknown = dataRaw;
+        try {
+            parsedData = JSON.parse(dataRaw);
+        } catch {
+            // retain raw string if not valid JSON
+        }
+        events.push({ event, data: parsedData });
+    }
+    return events;
+}
 
 Deno.test("AI Route: HTTP POST /api/ai/providers creates provider & /models endpoint lists them", async () => {
     const adminUser: UserDto = {
@@ -198,7 +229,7 @@ Deno.test("AI Route: HTTP POST /api/ai/chat/stream returns SSE stream without le
         role: "user",
     };
 
-    const mockFetch: typeof fetch = (input, init) => {
+    const mockFetch: typeof fetch = (input) => {
         const urlStr = String(input);
         if (urlStr.endsWith("/models")) {
             return Promise.resolve(
@@ -277,13 +308,325 @@ Deno.test("AI Route: HTTP POST /api/ai/chat/stream returns SSE stream without le
     );
 
     const text = await chatRes.text();
-    assertEquals(text.includes("event: meta"), true);
-    assertEquals(text.includes("event: token"), true);
-    assertEquals(text.includes("Streaming "), true);
-    assertEquals(text.includes("response!"), true);
-    assertEquals(text.includes("event: done"), true);
+    const events = parseSseEvents(text);
+    assertEquals(events.map((e) => e.event), [
+        "meta",
+        "token",
+        "token",
+        "done",
+    ]);
+
+    const meta = events[0].data as {
+        conversationId: string;
+        messageId: string;
+        providerId: string;
+        modelId: string;
+    };
+    assertEquals(typeof meta.conversationId, "string");
+    assertEquals(typeof meta.messageId, "string");
+    assertEquals(meta.modelId, "sse-model");
+
+    const tokens = events
+        .filter((e) => e.event === "token")
+        .map((e) => e.data as string)
+        .join("");
+    assertEquals(tokens, "Streaming response!");
+    assertEquals(events[3].data, null);
+
     // 确保绝对不包含明文 key
     assertEquals(text.includes("sk-user-secret-99999"), false);
+
+    // 验证会话及消息在数据库中已持久化为完成状态
+    const convRes = await app.request(
+        `/api/ai/conversations/${meta.conversationId}`,
+    );
+    assertEquals(convRes.status, 200);
+    const convBody = await convRes.json();
+    assertEquals(convBody.status, true);
+    const assistantMsg = convBody.data.messages.find(
+        (m: { id: string }) => m.id === meta.messageId,
+    );
+    assertEquals(assistantMsg?.status, "complete");
+    assertEquals(assistantMsg?.content, "Streaming response!");
+});
+
+Deno.test("AI Route: HTTP POST /api/ai/chat/stream emits meta, token, and error events on provider stream failure", async () => {
+    const normalUser: UserDto = {
+        id: "user-1",
+        username: "testuser",
+        displayName: "Test User",
+        role: "user",
+    };
+
+    let streamPulls = 0;
+    const mockFetch: typeof fetch = (input) => {
+        const urlStr = String(input);
+        if (urlStr.endsWith("/models")) {
+            return Promise.resolve(
+                new Response(
+                    JSON.stringify({
+                        data: [{ id: "fail-stream-model" }],
+                    }),
+                    {
+                        status: 200,
+                        headers: { "Content-Type": "application/json" },
+                    },
+                ),
+            );
+        }
+        if (urlStr.endsWith("/chat/completions")) {
+            const stream = new ReadableStream({
+                pull(controller) {
+                    if (streamPulls === 0) {
+                        streamPulls++;
+                        controller.enqueue(
+                            new TextEncoder().encode(
+                                `data: ${
+                                    JSON.stringify({
+                                        choices: [{
+                                            delta: {
+                                                content:
+                                                    "Partial stream token ",
+                                            },
+                                        }],
+                                    })
+                                }\n\n`,
+                            ),
+                        );
+                    } else {
+                        controller.error(
+                            new Error("upstream provider socket hang up"),
+                        );
+                    }
+                },
+            });
+
+            return Promise.resolve(
+                new Response(stream, {
+                    status: 200,
+                    headers: { "Content-Type": "text/event-stream" },
+                }),
+            );
+        }
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
+    };
+
+    const { app, service } = setupTestApp(normalUser, mockFetch);
+
+    const provider = await service.createProvider("user-1", {
+        name: "Failing Provider",
+        baseUrl: "https://api.ai.com/v1",
+        apiKey: "sk-fail-secret-99999",
+        scope: "user",
+    }, false);
+
+    const chatRes = await app.request("/api/ai/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            providerId: provider.id,
+            modelId: "fail-stream-model",
+            message: "Test message for stream failure",
+        }),
+    });
+
+    assertEquals(chatRes.status, 200);
+    assertEquals(
+        chatRes.headers.get("Content-Type")?.includes("text/event-stream"),
+        true,
+    );
+
+    const text = await chatRes.text();
+    const events = parseSseEvents(text);
+
+    // 验证事件流为 meta -> token -> error，且不包含 done
+    assertEquals(events.map((e) => e.event), ["meta", "token", "error"]);
+
+    const meta = events[0].data as {
+        conversationId: string;
+        messageId: string;
+        providerId: string;
+        modelId: string;
+    };
+    assertEquals(typeof meta.conversationId, "string");
+    assertEquals(typeof meta.messageId, "string");
+    assertEquals(meta.modelId, "fail-stream-model");
+
+    assertEquals(events[1].data, "Partial stream token ");
+
+    // 确保绝对不包含明文 key
+    assertEquals(text.includes("sk-fail-secret-99999"), false);
+
+    // 验证局部内容已持久化为 failed 状态
+    const convRes = await app.request(
+        `/api/ai/conversations/${meta.conversationId}`,
+    );
+    assertEquals(convRes.status, 200);
+    const convBody = await convRes.json();
+    assertEquals(convBody.status, true);
+    const assistantMsg = convBody.data.messages.find(
+        (m: { id: string }) => m.id === meta.messageId,
+    );
+    assertEquals(assistantMsg?.status, "failed");
+    assertEquals(assistantMsg?.content, "Partial stream token ");
+});
+
+Deno.test("AI Route: HTTP POST /api/ai/chat/stream propagates request abort to provider and persists partial content", async () => {
+    const normalUser: UserDto = {
+        id: "user-1",
+        username: "testuser",
+        displayName: "Test User",
+        role: "user",
+    };
+
+    let providerSignal: AbortSignal | null | undefined;
+    let providerAborted = false;
+
+    const mockFetch: typeof fetch = (input, init) => {
+        const urlStr = String(input);
+        if (urlStr.endsWith("/models")) {
+            return Promise.resolve(
+                new Response(
+                    JSON.stringify({
+                        data: [{ id: "abort-model" }],
+                    }),
+                    {
+                        status: 200,
+                        headers: { "Content-Type": "application/json" },
+                    },
+                ),
+            );
+        }
+        if (urlStr.endsWith("/chat/completions")) {
+            providerSignal = init?.signal;
+            if (providerSignal?.aborted) {
+                providerAborted = true;
+            } else {
+                providerSignal?.addEventListener("abort", () => {
+                    providerAborted = true;
+                });
+            }
+
+            const stream = new ReadableStream({
+                async start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${
+                                JSON.stringify({
+                                    choices: [{
+                                        delta: {
+                                            content:
+                                                "Partial token before abort ",
+                                        },
+                                    }],
+                                })
+                            }\n\n`,
+                        ),
+                    );
+
+                    if (init?.signal) {
+                        if (init.signal.aborted) {
+                            controller.error(
+                                new DOMException(
+                                    "The operation was aborted.",
+                                    "AbortError",
+                                ),
+                            );
+                            return;
+                        }
+                        await new Promise<void>((resolve) => {
+                            init.signal?.addEventListener("abort", () => {
+                                controller.error(
+                                    new DOMException(
+                                        "The operation was aborted.",
+                                        "AbortError",
+                                    ),
+                                );
+                                resolve();
+                            });
+                        });
+                    }
+                },
+            });
+
+            return Promise.resolve(
+                new Response(stream, {
+                    status: 200,
+                    headers: { "Content-Type": "text/event-stream" },
+                }),
+            );
+        }
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
+    };
+
+    const { app, service } = setupTestApp(normalUser, mockFetch);
+
+    const provider = await service.createProvider("user-1", {
+        name: "Abort Provider",
+        baseUrl: "https://api.ai.com/v1",
+        apiKey: "sk-abort-secret-99999",
+        scope: "user",
+    }, false);
+
+    const clientAbort = new AbortController();
+
+    const chatRes = await app.request("/api/ai/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            providerId: provider.id,
+            modelId: "abort-model",
+            message: "Test abort handling",
+        }),
+        signal: clientAbort.signal,
+    });
+
+    assertEquals(chatRes.status, 200);
+
+    const reader = chatRes.body!.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    while (true) {
+        try {
+            const { done, value } = await reader.read();
+            if (done) break;
+            text += decoder.decode(value, { stream: true });
+            if (text.includes("Partial token before abort")) {
+                clientAbort.abort();
+            }
+        } catch {
+            break;
+        }
+    }
+
+    // 验证 provider 层的 fetch 确实收到了 AbortSignal 且被触发
+    assertEquals(providerAborted, true);
+    assertEquals(providerSignal?.aborted, true);
+
+    const events = parseSseEvents(text);
+    const metaEvent = events.find((e) => e.event === "meta");
+    const meta = metaEvent?.data as {
+        conversationId: string;
+        messageId: string;
+    };
+    assertEquals(typeof meta?.conversationId, "string");
+    assertEquals(typeof meta?.messageId, "string");
+
+    // 验证局部内容已持久化为 interrupted 状态
+    const convRes = await app.request(
+        `/api/ai/conversations/${meta.conversationId}`,
+    );
+    assertEquals(convRes.status, 200);
+    const convBody = await convRes.json();
+    assertEquals(convBody.status, true);
+    const assistantMsg = convBody.data.messages.find(
+        (m: { id: string }) => m.id === meta.messageId,
+    );
+    assertEquals(assistantMsg?.status, "interrupted");
+    assertEquals(assistantMsg?.content, "Partial token before abort ");
+
+    // 确保没有泄漏 key
+    assertEquals(text.includes("sk-abort-secret-99999"), false);
 });
 
 Deno.test("AI Route: HTTP POST /api/ai/conversations/:id/restore restores deleted conversation", async () => {

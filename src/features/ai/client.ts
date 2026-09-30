@@ -1,23 +1,7 @@
+import OpenAI from "openai";
 import type { DiscoveredModel } from "./types.ts";
 
-export interface OpenAIModelItem {
-    id: string;
-    object?: string;
-    created?: number;
-    owned_by?: string;
-    [key: string]: unknown;
-}
-
-export interface OpenAIModelsResponse {
-    object?: string;
-    data?: OpenAIModelItem[];
-    error?: {
-        message: string;
-        type?: string;
-        code?: string | number;
-    };
-}
-
+// Searcher 的文本聊天边界；SDK 类型仅存在于 adapter 内部。
 export interface OpenAIChatMessage {
     role: "system" | "user" | "assistant";
     content: string;
@@ -68,63 +52,72 @@ export function normalizeBaseUrl(rawUrl: string): string {
     return url.href.replace(/\/+$/, "");
 }
 
+function createClient(
+    baseUrl: string,
+    apiKey: string,
+    fetchFn: typeof fetch,
+): OpenAI {
+    return new OpenAI({
+        baseURL: normalizeBaseUrl(baseUrl),
+        apiKey: apiKey.trim(),
+        fetch: fetchFn,
+        fetchOptions: { redirect: "error" },
+        // 原 transport 无请求超时；使用运行时可安全表示的最长 timer。
+        timeout: 2 ** 31 - 1,
+        organization: null,
+        project: null,
+        // models 和 chat 均保持单次请求，不继承 SDK 的自动重试。
+        maxRetries: 0,
+    });
+}
+
 export async function fetchOpenAIModels(
     baseUrl: string,
     apiKey: string,
     fetchFn: typeof fetch = fetch,
 ): Promise<DiscoveredModel[]> {
-    const normalized = normalizeBaseUrl(baseUrl);
-    const targetUrl = `${normalized}/models`;
-
-    let response: Response;
+    const client = createClient(baseUrl, apiKey, fetchFn);
+    let page;
     try {
-        response = await fetchFn(targetUrl, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${apiKey.trim()}`,
-                "Accept": "application/json",
-            },
-            redirect: "error",
-        });
-    } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new OpenAIClientError(`网络连接失败无法访问 /models: ${msg}`);
-    }
-
-    if (!response.ok) {
-        const text = await response.text().catch(() => "");
+        // 只读取 /models 的首个响应，不触发 SDK 自动分页。
+        page = await client.models.list();
+    } catch (error: unknown) {
+        if (error instanceof OpenAI.APIError && error.status !== undefined) {
+            throw new OpenAIClientError(
+                `获取模型列表失败: HTTP ${error.status} ${error.message}`,
+                error.status,
+                error.error === undefined
+                    ? error.message
+                    : JSON.stringify(error.error),
+            );
+        }
+        if (error instanceof SyntaxError) {
+            throw new OpenAIClientError("模型列表返回结果不是合法的 JSON");
+        }
         throw new OpenAIClientError(
-            `获取模型列表失败: HTTP ${response.status} ${response.statusText}`,
-            response.status,
-            text,
+            `网络连接失败无法访问 /models: ${
+                error instanceof Error ? error.message : String(error)
+            }`,
         );
     }
 
-    let json: OpenAIModelsResponse;
-    try {
-        json = await response.json();
-    } catch {
-        throw new OpenAIClientError("模型列表返回结果不是合法的 JSON");
-    }
-
-    if (!json.data || !Array.isArray(json.data) || json.data.length === 0) {
+    if (!Array.isArray(page.data) || page.data.length === 0) {
         throw new OpenAIClientError(
             "未从 /models 发现可用模型列表（data 为空或不是数组）",
         );
     }
 
-    return json.data
+    return page.data
         .filter((item) =>
-            typeof item.id === "string" && item.id.trim().length > 0
+            typeof item?.id === "string" && item.id.trim().length > 0
         )
         .map((item) => {
             const modelId = item.id.trim();
-            const isVision = /vision|vl|-v\b|4o|gemini/i.test(modelId);
             return {
                 id: modelId,
                 displayName: modelId,
                 supportsText: true,
-                supportsVision: isVision,
+                supportsVision: /vision|vl|-v\b|4o|gemini/i.test(modelId),
                 supportsTools: true,
                 supportsStreaming: true,
             };
@@ -146,125 +139,46 @@ export async function* streamOpenAIChat(
     fetchFn: typeof fetch = fetch,
     signal?: AbortSignal,
 ): AsyncGenerator<StreamEvent, void, unknown> {
-    const normalized = normalizeBaseUrl(baseUrl);
-    const targetUrl = `${normalized}/chat/completions`;
-
-    let response: Response;
+    const client = createClient(baseUrl, apiKey, fetchFn);
+    let streaming = false;
     try {
-        response = await fetchFn(targetUrl, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey.trim()}`,
-                "Content-Type": "application/json",
-                "Accept": "text/event-stream",
-            },
-            body: JSON.stringify({
-                ...request,
-                stream: true,
-            }),
-            signal,
-            redirect: "error",
-        });
-    } catch (err: unknown) {
-        if (signal?.aborted) {
-            yield { type: "error", error: "请求已中断" };
-            return;
-        }
-        const msg = err instanceof Error ? err.message : String(err);
-        yield { type: "error", error: `连接 AI Provider 失败: ${msg}` };
-        return;
-    }
-
-    if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        yield {
-            type: "error",
-            error: `AI Provider 返回错误 HTTP ${response.status}: ${
-                text || response.statusText
-            }`,
-        };
-        return;
-    }
-
-    if (!response.body) {
-        yield { type: "error", error: "AI Provider 未提供流式响应正文" };
-        return;
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    try {
-        while (true) {
+        const stream = await client.chat.completions.create(
+            { ...request, stream: true },
+            { signal, headers: { Accept: "text/event-stream" } },
+        );
+        streaming = true;
+        for await (const chunk of stream) {
             if (signal?.aborted) {
                 yield { type: "error", error: "请求已中断" };
                 return;
             }
-
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() ?? "";
-
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed.startsWith(":")) continue;
-
-                if (trimmed.startsWith("data:")) {
-                    const dataStr = trimmed.slice(5).trim();
-                    if (dataStr === "[DONE]") {
-                        yield { type: "done" };
-                        return;
-                    }
-
-                    try {
-                        const parsed = JSON.parse(dataStr);
-                        const choices = parsed.choices;
-                        if (Array.isArray(choices) && choices.length > 0) {
-                            const delta = choices[0].delta;
-                            if (delta?.content) {
-                                yield { type: "token", token: delta.content };
-                            }
-                        }
-                    } catch {
-                        // 忽略非 JSON 行或格式异常行
-                    }
-                }
+            const content = chunk?.choices?.[0]?.delta?.content;
+            if (typeof content === "string" && content.length > 0) {
+                yield { type: "token", token: content };
             }
         }
-
-        if (buffer.trim()) {
-            const trimmed = buffer.trim();
-            if (trimmed.startsWith("data:")) {
-                const dataStr = trimmed.slice(5).trim();
-                if (dataStr === "[DONE]") {
-                    yield { type: "done" };
-                    return;
-                }
-                try {
-                    const parsed = JSON.parse(dataStr);
-                    const delta = parsed.choices?.[0]?.delta;
-                    if (delta?.content) {
-                        yield { type: "token", token: delta.content };
-                    }
-                } catch {
-                    // ignore
-                }
-            }
-        }
-
-        yield { type: "done" };
-    } catch (err: unknown) {
+        // SDK 将流读取时的 Abort 当作正常迭代结束，不能误报 complete。
+        yield signal?.aborted
+            ? { type: "error", error: "请求已中断" }
+            : { type: "done" };
+    } catch (error: unknown) {
         if (signal?.aborted) {
             yield { type: "error", error: "请求已中断" };
-        } else {
-            const msg = err instanceof Error ? err.message : String(err);
-            yield { type: "error", error: `读取流失败: ${msg}` };
+            return;
         }
-    } finally {
-        reader.releaseLock();
+        if (error instanceof OpenAI.APIError && error.status !== undefined) {
+            yield {
+                type: "error",
+                error:
+                    `AI Provider 返回错误 HTTP ${error.status}: ${error.message}`,
+            };
+            return;
+        }
+        yield {
+            type: "error",
+            error: `${
+                streaming ? "读取流发生异常" : "连接 AI Provider 失败"
+            }: ${error instanceof Error ? error.message : String(error)}`,
+        };
     }
 }
