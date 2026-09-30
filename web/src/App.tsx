@@ -95,7 +95,11 @@ function Layout() {
                 "--search-opacity": appearance.searchOpacity ?? 1,
             } as React.CSSProperties}
         >
-            {isHomePage && <div className="wallpaper" aria-hidden="true" />}
+            {isHomePage && (
+                <div className="wallpaper" aria-hidden="true">
+                    <div className="wallpaper__image" />
+                </div>
+            )}
             <header className="topbar">
                 <Link
                     className={`wordmark-small ${

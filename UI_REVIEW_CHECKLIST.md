@@ -17,6 +17,10 @@
 
 ## 实页证据
 
+- [ ] 仓库固定实页要求与明确验收场景逐项覆盖；额外维度的代表场景、边界值、成对组合或全组合范围及依据：____。
+- [ ] 批量验收脚本已校准媒体偏好、状态提交、动画/transition
+      完成条件及断言时机：____。
+- [ ] 如有失败或重跑，记录产品/脚本/环境原因与复查范围；脚本缺陷导致原结果不可信时重新验证受影响范围，必要时整组重跑；无变化且证据有效的已通过检查不重复：____。
 - [ ] 390×844 / 768×1024 / 1440×900 页面和 screenshot：____。
 - [ ] 640/960/1280 临界宽度、长文案、guest/authenticated：____。
 - [ ] light/dark、Zen/Widgets、wallpaper on/off、title preference：____。
@@ -28,6 +32,9 @@
 
 ## 自动化门禁
 
+- [ ] 组合覆盖与重跑策略遵循
+      [仓库指南](AGENTS.md#验证范围与重复执行)，不替代既有验证阶梯及测试、typecheck、lint、format
+      和 UI 门禁；full suite 按风险和仓库要求执行。
 - [ ] deno task check:ui；baseline 只删除迁移旧项，不增加 allowlist 债务。
 - [ ] deno task build 与 affected focused tests；路由变更用 deno task
       test:routing。
@@ -62,3 +69,38 @@
 - 旧 Note/壁纸控件的 focus 色与 offset 尚未全部收敛，check:ui
   不覆盖这些语义；Badge/Table 主题映射、历史语法错误、lint
   示例与路由测试的最终通过证据见本次原验收，不重复运行已通过检查。
+
+## Issue #23 壁纸 canvas 验收（2026-09-30）
+
+- [x] Search Canvas；primary interaction 仍为搜索。未新增控件、标题、CTA、
+      surface level 或卡片材质；新增 glow Token 由 tokens.css 负责，边界见
+      Design System。
+- [x] 图片/glow/mask 内部层级为 0/1/2，滤镜仅在图片层；mask、图片专属材质标记、
+      appearance 数据模型与 API 未改变。无新增静态 raw
+      spacing/font/shadow/radius。
+- [x] 生产实站匿名 2,880 个组合：390×844 / 768×1024 / 1440×900、light/dark、
+      blue/cyan/violet/orange/mono、无壁纸/不透明 SVG 图片/linear/radial
+      gradient、 blur 0/30、grayscale 0/1、mask
+      0/.75/.95、Zen/Widgets；图层、滤镜、 mask、reduced-motion、URL
+      材质标记与横向 overflow 检查均通过。 30px
+      是超出设置上限的匿名渲染压力值，不表示 API 接受该值。
+- [x] 独立临时数据库真实注册/登录、PNG 上传及 owner 图片读取返回 200； 390px
+      下合法最大 blur=24、grayscale=1 的 light Zen / dark Widgets
+      截图无边缘漏白或同步错误。登录态三视口×两主题×两模式共 12 张代表截图；
+      640/960/1280 无壁纸、隐藏标题的 Widgets 实页均无横向溢出。
+- [x] 浏览器实际动画 duration=8000ms；keyframes 仅含 opacity/transform， opacity
+      .88→1→.88、scale 1→1.025→1。连续观察约 6 秒，opacity
+      .881317→.960171→.996269；glow filter 始终为 none。reduced-motion 的
+      computed animation-name 为 none。
+- [x] 搜索输入、Tab 到搜索按钮、常用网站 Dialog 打开与 Escape 关闭可用； 关闭后
+      focus 回到“打开常用网站面板”。装饰层不拦截交互。
+- [x] 有效配置场景的 page errors / console errors 为 0；首页 axe WCAG A/AA 为 0
+      confirmed violations、1 incomplete。装饰层未进入 Accessibility Tree。
+- [x] check:ui：60 个文件、796 个历史违规；新增/增加计数/stale allowance 均为
+      0， baseline 未修改。build 通过，保留 >500 kB chunk 警告；11
+      项相关契约测试、 App.tsx typecheck/lint/format 通过，隔离工作区基线 195
+      项测试通过。
+- [x] 本次未修改 Design Lab、业务状态、权限、history 或 conversation model，
+      不重复验收无关组件状态。浏览器组合是实页 smoke，不新增源码快照或 CSS
+      文本测试。 gradient 验证仅证明前端渲染；既有登录态 gradient
+      持久化限制未纳入本次修复。

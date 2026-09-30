@@ -323,34 +323,58 @@ a {
     position: fixed;
     inset: 0;
     z-index: -1;
+    isolation: isolate;
+    overflow: hidden;
+    pointer-events: none;
     background:
-        radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--accent) 7%,
-        transparent), transparent 68%),
         linear-gradient(155deg, color-mix(in srgb, var(--accent) 3%, #f4f4f5),
         #fafafa 52%, color-mix(in srgb, var(--accent) 4%, #e4e4e7));
 }
 [data-theme="dark"] .wallpaper {
     background:
-        radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--accent) 14%,
-        transparent), transparent 74%),
         linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%, #18181b),
         #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b));
 }
-.wallpaper::before {
-    content: "";
+.wallpaper__image {
     position: absolute;
-    inset: 0;
+    /* Three blur radii keep the clipped viewport inside the opaque image. */
+    inset: calc(-3 * var(--wallpaper-blur,0px));
+    z-index: 0;
+    pointer-events: none;
     background: var(--wallpaper-image,none) center/cover no-repeat;
     filter: blur(var(--wallpaper-blur,0px))
         grayscale(var(--wallpaper-grayscale,0));
     transform: scale(1.06);
 }
+.wallpaper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: var(--wallpaper-glow);
+    transform-origin: var(--wallpaper-glow-origin);
+    animation: wallpaper-glow-breathe var(--wallpaper-glow-duration) ease-in-out infinite;
+}
 .wallpaper::after {
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 2;
+    pointer-events: none;
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask,.7);
+}
+@keyframes wallpaper-glow-breathe {
+    0%,
+    100% {
+        opacity: var(--wallpaper-glow-rest-opacity);
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(var(--wallpaper-glow-peak-scale));
+    }
 }
 .topbar {
     height: 64px;
@@ -2078,6 +2102,9 @@ a {
         animation-duration: .01ms!important;
         transition-duration: .01ms!important;
         scroll-behavior: auto!important;
+    }
+    .wallpaper::before {
+        animation: none;
     }
 }
 
