@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import {
-    Link,
-    useNavigate,
-    useParams,
-    useSearchParams,
-} from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { routes, type SettingsTab, settingsTab } from "./routes.ts";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { NotFoundPage } from "./NotFoundPage.tsx";
 import {
     Palette,
     RefreshCw,
@@ -39,7 +37,7 @@ import { AiSettings } from "./AiSettings.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
 
-type Tab = "search" | "appearance" | "ai" | "data";
+type Tab = SettingsTab;
 
 const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     search: { label: "搜索", icon: Search },
@@ -248,14 +246,8 @@ export function SettingsPage() {
             setUploadingWallpaper(false);
         }
     }
-    const { tab: pathTab } = useParams<{ tab?: string }>();
-    const [params] = useSearchParams();
-    const queryTab = params.get("tab");
-    const tab: Tab = (pathTab && pathTab in tabs)
-        ? (pathTab as Tab)
-        : (queryTab && queryTab in tabs)
-        ? (queryTab as Tab)
-        : "search";
+    const location = useLocation();
+    const tab = settingsTab(location.pathname);
     const activeNavButtonRef = useRef<HTMLButtonElement | null>(null);
 
     useEffect(() => {
@@ -272,10 +264,27 @@ export function SettingsPage() {
         void setAppearance({ [key]: value });
     }
 
+    if (location.pathname === "/settings/search") {
+        return <Navigate to={routes.settings()} replace />;
+    }
+
+    if (!tab) {
+        return (
+            <NotFoundPage parent={{ label: "设置", to: routes.settings() }} />
+        );
+    }
+
     return (
         <>
             <main className="page">
-                <h1>设置</h1>
+                <PageHeader
+                    items={[
+                        { label: "首页", to: routes.home },
+                        { label: "设置", to: routes.settings() },
+                        { label: tabs[tab].label },
+                    ]}
+                />
+                <h1 className="sr-only">设置</h1>
                 <div className="settings-layout">
                     <nav className="settings-nav" aria-label="设置分类">
                         {(Object.keys(tabs) as Tab[]).map((id) => {
@@ -287,9 +296,8 @@ export function SettingsPage() {
                                     ref={tab === id ? activeNavButtonRef : null}
                                     onClick={() =>
                                         navigate(
-                                            id === "search"
-                                                ? "/settings"
-                                                : `/settings/${id}`,
+                                            routes.settings(id),
+                                            { replace: true },
                                         )}
                                     className={`flex items-center gap-2.5 ${
                                         tab === id ? "active" : ""
@@ -836,7 +844,7 @@ export function SettingsPage() {
                                         </div>
                                         <Link
                                             className="button button--outline settings-action-card__action"
-                                            to="/ask"
+                                            to={routes.ask}
                                         >
                                             打开 AI 问答
                                         </Link>
@@ -907,7 +915,7 @@ export function SettingsPage() {
                                                     </p>
                                                 </div>
                                                 <Link
-                                                    to="/trash"
+                                                    to={routes.trash}
                                                     className="button button--subtle settings-action-card__action"
                                                 >
                                                     打开回收站
@@ -924,7 +932,7 @@ export function SettingsPage() {
                                                 </p>
                                             </div>
                                             <Link
-                                                to="/design-lab"
+                                                to={routes.designLab}
                                                 className="button button--subtle settings-action-card__action"
                                             >
                                                 打开 Design Lab

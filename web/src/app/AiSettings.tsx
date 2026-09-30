@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Eye, EyeOff, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Eye, EyeOff, Plus } from "lucide-react";
 import type {
     AiModelDto,
     AiProviderDto,
@@ -15,9 +15,11 @@ import {
 } from "../components/ui/dialog.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import { authPath } from "./routes.ts";
 
 export function AiSettings() {
     const { user } = useAppState();
+    const location = useLocation();
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
     const [models, setModels] = useState<AiModelDto[]>([]);
     const [name, setName] = useState("");
@@ -45,7 +47,9 @@ export function AiSettings() {
     if (!user) {
         return (
             <p>
-                <Link to="/login">登录后配置 Provider</Link>
+                <Link to={authPath("login", location)}>
+                    登录后配置 Provider
+                </Link>
             </p>
         );
     }
@@ -129,7 +133,7 @@ export function AiSettings() {
         }
     }
     async function remove(id: string) {
-        if (!window.confirm("删除 Provider 及其模型？")) return;
+        if (!globalThis.confirm("删除 Provider 及其模型？")) return;
         try {
             await api("/api/ai/providers/" + encodeURIComponent(id), {
                 method: "DELETE",

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { routes } from "./routes.ts";
 import {
     Activity,
     AlertCircle,
@@ -8,10 +9,8 @@ import {
     FileText,
     Globe,
     HardDrive,
-    Layers,
     RefreshCw,
     Shield,
-    Sliders,
     Users,
 } from "lucide-react";
 import { Button } from "../components/ui/button.tsx";
@@ -274,7 +273,7 @@ export function AdminOverview({
                         </div>
                     </div>
                     <Link
-                        to="/"
+                        to={routes.home}
                         style={{
                             color: "var(--accent)",
                             fontSize: "13px",
@@ -345,7 +344,7 @@ export function AdminOverview({
                         </div>
                     </div>
                     <Link
-                        to="/settings"
+                        to={routes.settings("ai")}
                         style={{
                             color: "var(--accent)",
                             fontSize: "13px",

@@ -2227,12 +2227,17 @@ a {
 .ask-guest {
     min-height: calc(100dvh - 96px);
     margin: 16px auto;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
     text-align: center;
+}
+.ask-guest > header {
+    align-self: stretch;
+    text-align: left;
 }
 .ask-guest__content {
     max-width: 400px;
+    margin: auto;
     padding: 24px;
 }
 .ask-guest__content h1 {
@@ -2246,12 +2251,16 @@ a {
 .ask-page {
     width: min(100% - 64px, 1280px);
     margin: 16px auto;
+    height: calc(100dvh - 96px);
+    display: flex;
+    flex-direction: column;
 }
 .ask-layout {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
     gap: 0;
-    height: calc(100dvh - 96px);
+    flex: 1;
+    min-height: 0;
 }
 .ask-history,
 .ask-main,
@@ -2572,7 +2581,6 @@ a {
     }
     .ask-layout {
         display: block;
-        height: calc(100dvh - 96px);
     }
     .ask-history {
         display: none;

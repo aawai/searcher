@@ -1,14 +1,15 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { UserDto } from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
-
+import { authDestination, routes } from "./routes.ts";
 export function AuthPage({ kind }: { kind: "login" | "register" }) {
     const navigate = useNavigate();
-    const { login } = useAppState();
+    const location = useLocation();
+    const { login, user, ready } = useAppState();
     const [username, setUsername] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [password, setPassword] = useState("");
@@ -25,6 +26,11 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                 .catch(() => setAllowRegistration(true));
         }
     }, [kind]);
+    useEffect(() => {
+        if (ready && user) {
+            navigate(authDestination(location.search), { replace: true });
+        }
+    }, [ready, user, location.search, navigate]);
 
     async function submit(event: FormEvent) {
         event.preventDefault();
@@ -42,13 +48,19 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                 json("POST", body),
             );
             login(result.user);
-            navigate("/");
+            navigate(authDestination(location.search), { replace: true });
         } catch (err) {
             setError(errorMessage(err));
         } finally {
             setBusy(false);
         }
     }
+    const destination = authDestination(location.search);
+    const nextQuery = destination !== routes.home
+        ? `?${new URLSearchParams({ next: destination })}`
+        : "";
+    const toggleToRegister = `${routes.register}${nextQuery}`;
+    const toggleToLogin = `${routes.login}${nextQuery}`;
 
     return (
         <main className="page auth-page">
@@ -107,13 +119,15 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                     ? (
                         allowRegistration !== false && (
                             <>
-                                没有账户？<Link to="/register">注册</Link>
+                                没有账户？<Link to={toggleToRegister}>
+                                    注册
+                                </Link>
                             </>
                         )
                     )
                     : (
                         <>
-                            已有账户？<Link to="/login">登录</Link>
+                            已有账户？<Link to={toggleToLogin}>登录</Link>
                         </>
                     )}
             </p>
