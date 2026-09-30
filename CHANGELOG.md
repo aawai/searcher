@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- 设置页与 Widgets 中间宽度响应式布局：960px
+  以下使用单栏，设置行与操作卡片按面板可用宽度重排；窄 Bento
+  卡片的标题、计数和操作区分行显示，普通与整理模式保持可用，Launcher 仍为
+  64×64px 方格。
+
 - AI Provider 流式错误处理：Provider 的 SSE error 消息与损坏的 SSE JSON
   返回错误事件，不再忽略后误报为完成；已输出的内容继续保留。
 

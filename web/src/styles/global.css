@@ -1531,7 +1531,7 @@ a {
     border-color: var(--border);
     font-weight: 600;
 }
-@media (max-width: 767px) {
+@media (max-width: 959px) {
     .settings-layout {
         display: flex;
         flex-direction: column;
@@ -1539,13 +1539,16 @@ a {
     }
     .settings-nav {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
         gap: var(--space-control-gap);
         margin-bottom: var(--space-section);
         position: static;
     }
 }
 .settings-panel {
+    container: settings-panel / inline-size;
+    min-width: 0;
     max-width: var(--layout-settings-panel-max);
     width: 100%;
 }
@@ -1650,7 +1653,7 @@ a {
     height: 100%;
     object-fit: cover;
 }
-@media (max-width: 640px) {
+@container settings-panel (max-width: 600px) {
     .settings-row {
         flex-direction: column;
         align-items: stretch;
@@ -1663,6 +1666,11 @@ a {
     }
     .settings-row-control {
         justify-content: flex-start;
+        width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+    .settings-row--stack-mobile .settings-row-control {
         width: 100%;
     }
     .settings-row.settings-row--inline-mobile .settings-row-control {
@@ -1742,6 +1750,11 @@ a {
     border: 1px solid var(--border);
     white-space: nowrap;
     flex-shrink: 0;
+}
+@container settings-panel (max-width: 560px) {
+    .settings-action-card__content {
+        flex-basis: 100%;
+    }
 }
 .setting-group {
     margin: 22px 0;
