@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { routes } from "./routes.ts";
 import {
     buildSearchUrl,
     type EngineId,
@@ -423,7 +424,7 @@ export function SearchHome() {
                 setError("登录后使用 AI 问答");
                 return;
             }
-            navigate("/ask?q=" + encodeURIComponent(trimmed));
+            navigate(routes.ask + "?" + new URLSearchParams({ q: trimmed }));
             return;
         }
         const url = buildSearchUrl(effEngine, trimmed);

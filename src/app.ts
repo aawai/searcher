@@ -27,7 +27,18 @@ import type { AppDeps, AppEnv } from "./serve/env.ts";
 const frontend = new URL("../web/dist/", import.meta.url);
 const frontendPath = decodeURIComponent(frontend.pathname);
 
-export function createApp(deps: AppDeps): Hono<AppEnv> {
+export interface CreateAppOptions {
+    frontendPath?: string;
+}
+
+export function createApp(
+    deps: AppDeps,
+    options?: CreateAppOptions,
+): Hono<AppEnv> {
+    const staticRoot = (options?.frontendPath ?? frontendPath).replace(
+        /\/+$/,
+        "",
+    );
     const settingsStore = deps.settings ?? new SystemSettingsStore();
     const sharedDeps: AppDeps = {
         ...deps,
@@ -84,19 +95,16 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     registerWebAppIconsRoutes(routes, sharedDeps);
     registerSystemRoutes(routes, sharedDeps, systemService);
     routes.mount(app, [createSessionMiddleware(deps.auth)]);
-    app.on(["GET", "HEAD"], "/assets/*", serveStatic({ root: frontendPath }));
-    app.on(["GET", "HEAD"], [
-        "/",
-        "/ask",
-        "/settings",
-        "/login",
-        "/register",
-        "/design-lab",
-        "/admin",
-        "/account",
-        "/trash",
-    ], async (c) => {
-        const html = await Deno.readTextFile(`${frontendPath}/index.html`);
+    app.on(["GET", "HEAD"], "/assets/*", serveStatic({ root: staticRoot }));
+    app.all("/assets/*", (c) => c.text("Not Found", 404));
+    app.all("/assets", (c) => c.text("Not Found", 404));
+
+    app.on(["GET", "HEAD"], "*", async (c) => {
+        const path = c.req.path;
+        if (path === "/api" || path.startsWith("/api/")) {
+            return notFoundResponse(c);
+        }
+        const html = await Deno.readTextFile(`${staticRoot}/index.html`);
         c.header("Cache-Control", "no-cache");
         return c.html(html);
     });

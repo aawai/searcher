@@ -26,8 +26,16 @@ deno task dev
 ```
 
 打开 `http://localhost:5173`。Vite 将 `/api` 代理到
-`127.0.0.1:34567`。`deno task test` 运行后端契约测试，`deno task build`
-构建生产前端。
+`127.0.0.1:34567`。`deno task test` 运行后端与前端契约测试，`deno task build` 构建生产前端。
+
+浏览器路由回归使用已固定的 Playwright 1.56.1。首次安装 Chromium 后运行：
+
+```sh
+deno run -A npm:playwright@1.56.1 install chromium
+deno task test:routing
+```
+
+`test:routing` 先构建生产前端，再启动隔离的真实 Hono 服务、内存数据库与临时资源目录，验证直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航；不连接开发实例或使用真实账户。
 
 ## AI Provider transport
 
@@ -60,6 +68,10 @@ deno task admin:create -- <username>
 加密，部署时设置稳定、足够长的密钥并单独保管；丢失密钥后无法解密既有 Provider
 Key。管理员密码只在真实终端交互输入；重置使用
 `deno task admin:reset -- <username>`。
+
+同一服务先处理 `/api` 与 `/api/*`，再处理 `/assets` 与 `/assets/*`；其余 GET/HEAD 返回 SPA shell。Settings/Admin 子页面可直访、刷新和分享；未知普通页面由 React 显示统一 404（shell HTTP 状态为 200），未知 API 返回 JSON 404，缺失 assets 返回静态 404，非 GET/HEAD 不回退 HTML。反向代理应将页面请求交给 Searcher，不自行维护前端 URL 白名单。
+
+前端路径统一由 `web/src/app/routes.ts` 维护。`/settings/search` replace 到 `/settings`，未知 Settings/Admin 子路径显示 404。登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。Settings/Admin 内部 Tab replace 当前 history entry，外部进入具体 Tab 保留正常 entry；二级页面 breadcrumb 提供稳定的上层与首页目标。
 
 数据目录需要持久本地磁盘，单进程运行。数据库采用
 WAL；不要在服务运行中直接复制单个 `.sqlite` 文件当备份。管理员后台可导出包含

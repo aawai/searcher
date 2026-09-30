@@ -7,6 +7,7 @@ import type {
 } from "../../../../src/features/ai/types.ts";
 import { api, json } from "../../lib/api.ts";
 import { Button } from "../ui/button.tsx";
+import { routes } from "../../app/routes.ts";
 
 interface Candidate {
     dataUrl: string;
@@ -73,7 +74,7 @@ export function LogoCandidatePicker({
             return;
         }
         if (
-            !window.confirm(
+            !globalThis.confirm(
                 `将向 ${provider.name} (${provider.baseUrl}) 发送网站名称「${name}」，使用模型 ${model.modelId}、${style} 风格生成 3 个原创图标候选。Provider 可能产生费用。确认生成？`,
             )
         ) return;
@@ -159,7 +160,7 @@ export function LogoCandidatePicker({
                     </p>
                 </div>
                 <Link
-                    to="/settings/ai"
+                    to={routes.settings("ai")}
                     className="button button--subtle"
                     style={{
                         flexShrink: 0,
