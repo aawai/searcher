@@ -106,10 +106,17 @@ export function createApiSecurityMiddleware(options: {
             if (!reqOrigin || reqOrigin !== expectedOrigin) {
                 return failResponse(c, 403, "Origin 校验失败，禁止跨站请求");
             }
-            const isFileUpload = (c.req.path === "/api/wallpaper" ||
-                c.req.path.startsWith("/api/admin/backup/")) &&
+            const isIconUpload = c.req.path === "/api/webapp-icons/upload" &&
                 method === "POST";
-            const maxAllowedBody = isFileUpload ? 50 * 1024 * 1024 : 64 * 1024;
+            const isFileUpload = isIconUpload ||
+                (c.req.path === "/api/wallpaper" ||
+                        c.req.path.startsWith("/api/admin/backup/")) &&
+                    method === "POST";
+            const maxAllowedBody = isIconUpload
+                ? 2 * 1024 * 1024 + 64 * 1024
+                : isFileUpload
+                ? 50 * 1024 * 1024
+                : 64 * 1024;
             const contentLengthHeader = c.req.header("content-length");
             const contentLength = contentLengthHeader
                 ? parseInt(contentLengthHeader, 10)

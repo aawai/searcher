@@ -14,7 +14,7 @@ import {
     type StreamEvent,
     streamOpenAIChat,
 } from "./client.ts";
-import { generateLogoCandidates, type LogoStyle } from "./images.ts";
+import { generateLogoCandidates } from "./images.ts";
 import type {
     AiConversationDto,
     AiMessageDto,
@@ -22,6 +22,7 @@ import type {
     AiProviderDto,
     ChatStreamRequest,
     CreateProviderInput,
+    LogoStyle,
     ProviderScope,
     UpdateModelInput,
     UpdateProviderInput,
@@ -987,6 +988,8 @@ export class AiService {
         providerId: string,
         modelId: string,
         siteName: string,
+        siteDomain: string | undefined,
+        description: string | undefined,
         style: LogoStyle,
     ) {
         const { provider, model } = await this.resolveTargetModel(
@@ -1003,6 +1006,8 @@ export class AiService {
             apiKey,
             model.modelId,
             siteName,
+            siteDomain,
+            description,
             style,
             this.#fetchFn,
         );

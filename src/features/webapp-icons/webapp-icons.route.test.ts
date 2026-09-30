@@ -1,17 +1,13 @@
 import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http";
-import { Hono } from "hono";
-import { Routes } from "@internal/hono/routes.ts";
-import { responseMiddleware } from "@internal/hono/middleware/response.ts";
+import { createApp } from "../../app.ts";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
-import { createSessionMiddleware } from "../auth/middleware.ts";
-import { registerAuthRoutes } from "../auth/auth.route.ts";
-import { registerWebAppIconsRoutes } from "./webapp-icons.route.ts";
 import { WebAppIconService } from "./service.ts";
+import { SystemSettingsStore } from "../system/settings-store.ts";
 import type { Envelope } from "@shared/contracts.ts";
-import type { AppDeps, AppEnv } from "../../serve/env.ts";
+import type { AppDeps } from "../../serve/env.ts";
 
 const ORIGIN = "http://localhost:8000";
 
@@ -19,8 +15,8 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
     const tempDir = await Deno.makeTempDir({
         prefix: "searcher-icon-route-test-",
     });
+    const store = openDatabase(":memory:");
     try {
-        const store = openDatabase(":memory:");
         await migrateDatabase(store);
         const auth = new AuthService({
             store,
@@ -33,20 +29,15 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
             auth,
             origin: ORIGIN,
             now: () => Date.now(),
+            settings: new SystemSettingsStore(":memory:"),
         };
 
-        const app = new Hono<AppEnv>();
-        app.use("*", responseMiddleware);
-
-        const routes = new Routes<AppEnv>();
-        registerAuthRoutes(routes, deps);
-        registerWebAppIconsRoutes(routes, deps, service);
-        routes.mount(app, [createSessionMiddleware(deps.auth)]);
+        const app = createApp({ ...deps, icons: service });
 
         // 1. Register a test user
         const regRes = await app.request(`${ORIGIN}/api/auth/register`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", Origin: ORIGIN },
             body: JSON.stringify({
                 username: "icontester",
                 displayName: "Icon Tester",
@@ -83,15 +74,18 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
             0x00,
             0x0d,
         ]);
+        const imageBytes = new Uint8Array(2 * 1024 * 1024);
+        imageBytes.set(pngHeader);
         const form1 = new FormData();
         form1.append(
             "icon",
-            new File([pngHeader], "test.png", { type: "image/png" }),
+            new File([imageBytes], "test.png", { type: "image/png" }),
         );
         const unauthRes = await app.request(
             `${ORIGIN}/api/webapp-icons/upload`,
             {
                 method: "POST",
+                headers: { Origin: ORIGIN },
                 body: form1,
             },
         );
@@ -101,13 +95,13 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
         const form2 = new FormData();
         form2.append(
             "icon",
-            new File([pngHeader], "test.png", { type: "image/png" }),
+            new File([imageBytes], "test.png", { type: "image/png" }),
         );
         const uploadRes = await app.request(
             `${ORIGIN}/api/webapp-icons/upload`,
             {
                 method: "POST",
-                headers: { Cookie: cookieHeader },
+                headers: { Cookie: cookieHeader, Origin: ORIGIN },
                 body: form2,
             },
         );
@@ -128,8 +122,56 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
             true,
         );
         const resBytes = new Uint8Array(await getRes.arrayBuffer());
-        assertEquals(resBytes.length, pngHeader.length);
+        assertEquals(resBytes, imageBytes);
+        const oversized = new FormData();
+        oversized.append(
+            "icon",
+            new File([new Uint8Array(2 * 1024 * 1024 + 1)], "large.png", {
+                type: "image/png",
+            }),
+        );
+        const oversizedRes = await app.request(
+            `${ORIGIN}/api/webapp-icons/upload`,
+            {
+                method: "POST",
+                headers: { Cookie: cookieHeader, Origin: ORIGIN },
+                body: oversized,
+            },
+        );
+        assertEquals(oversizedRes.status, STATUS_CODE.ContentTooLarge);
+        const crossOriginRes = await app.request(
+            `${ORIGIN}/api/webapp-icons/upload`,
+            {
+                method: "POST",
+                headers: {
+                    Cookie: cookieHeader,
+                    Origin: "https://untrusted.example",
+                },
+                body: form2,
+            },
+        );
+        assertEquals(crossOriginRes.status, STATUS_CODE.Forbidden);
+        const wrongTypeRes = await app.request(
+            `${ORIGIN}/api/webapp-icons/upload`,
+            {
+                method: "POST",
+                headers: {
+                    Cookie: cookieHeader,
+                    Origin: ORIGIN,
+                    "Content-Type": "application/json",
+                },
+                body: "{}",
+            },
+        );
+        assertEquals(wrongTypeRes.status, STATUS_CODE.UnsupportedMediaType);
+        const largeJsonRes = await app.request(`${ORIGIN}/api/auth/login`, {
+            method: "POST",
+            headers: { Origin: ORIGIN, "Content-Type": "application/json" },
+            body: JSON.stringify({ password: "a".repeat(64 * 1024) }),
+        });
+        assertEquals(largeJsonRes.status, STATUS_CODE.ContentTooLarge);
     } finally {
+        store.close();
         await Deno.remove(tempDir, { recursive: true }).catch(() => {});
     }
 });
