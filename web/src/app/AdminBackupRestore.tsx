@@ -1,16 +1,10 @@
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import {
     AlertCircle,
-    AlertTriangle,
     CheckCircle2,
-    Database,
     Download,
     FileCheck,
-    FileJson,
-    FolderArchive,
     HardDrive,
-    Info,
-    RefreshCw,
     RotateCcw,
     ShieldAlert,
     Upload,
@@ -24,8 +18,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../components/ui/dialog.tsx";
+import {
+    ActionGroup,
+    Section,
+    SectionHeader,
+    StatusBanner,
+} from "../components/searcher/semantic.tsx";
 import { api } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
+import "./admin.css";
 
 export interface BackupManifest {
     version: "1.0.0";
@@ -46,11 +47,12 @@ export interface BackupManifest {
 }
 
 export function AdminBackupRestore() {
+    const configFileRef = useRef<HTMLInputElement>(null);
+    const restoreTriggerRef = useRef<HTMLButtonElement>(null);
     // Config export/import state
     const [configImporting, setConfigImporting] = useState(false);
     const [configSuccess, setConfigSuccess] = useState("");
     const [configError, setConfigError] = useState("");
-
     // Full ZIP backup state
     const [backupExporting, setBackupExporting] = useState(false);
     const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
@@ -68,7 +70,7 @@ export function AdminBackupRestore() {
 
     // 1. Export Config JSON
     const handleExportConfig = () => {
-        window.open("/api/admin/system/config/export", "_blank");
+        globalThis.open("/api/admin/system/config/export", "_blank");
     };
 
     // 2. Import Config JSON
@@ -131,7 +133,7 @@ export function AdminBackupRestore() {
     // 3. Export Full Backup ZIP
     const handleExportFullBackup = () => {
         setBackupExporting(true);
-        window.open("/api/admin/backup/export", "_blank");
+        globalThis.open("/api/admin/backup/export", "_blank");
         setTimeout(() => setBackupExporting(false), 2000);
     };
 
@@ -186,13 +188,11 @@ export function AdminBackupRestore() {
             const formData = new FormData();
             formData.append("backup", selectedZipFile);
 
-            const result = await api<
-                {
-                    manifest: BackupManifest;
-                    snapshotCreated: boolean;
-                    snapshotPath: string;
-                }
-            >(
+            await api<{
+                manifest: BackupManifest;
+                snapshotCreated: boolean;
+                snapshotPath: string;
+            }>(
                 "/api/admin/backup/restore",
                 {
                     method: "POST",
@@ -213,170 +213,73 @@ export function AdminBackupRestore() {
     };
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-            <div>
-                <h2 style={{ fontSize: "20px", fontWeight: 700, margin: 0 }}>
-                    备份与恢复 (Backup & Restore)
-                </h2>
-                <p
-                    style={{
-                        color: "var(--muted)",
-                        margin: "4px 0 0",
-                        fontSize: "14px",
-                    }}
-                >
-                    遵循规范 §15 / §18：配置导入导出、全量打包
-                    ZIP、预验证与安全快照回滚
-                </p>
-            </div>
+        <div className="semantic-section">
+            <SectionHeader
+                title="备份与恢复 (Backup & Restore)"
+                description="遵循规范 §15 / §18：配置导入导出、全量打包 ZIP、预验证与安全快照回滚"
+            />
 
             {/* Security Isolation Banner */}
-            <div
-                style={{
-                    padding: "16px 20px",
-                    borderRadius: "8px",
-                    background: "var(--accent-soft)",
-                    border: "1px solid var(--accent-border)",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "12px",
-                    fontSize: "14px",
-                }}
-            >
-                <HardDrive
-                    size={22}
-                    style={{
-                        color: "var(--accent)",
-                        flexShrink: 0,
-                        marginTop: "2px",
-                    }}
-                />
-                <div style={{ lineHeight: 1.5 }}>
-                    <strong style={{ color: "var(--foreground)" }}>
-                        密钥隔离与数据安全保障：
-                    </strong>
-                    <span style={{ color: "var(--muted)" }}>
-                        系统加密主密钥 (Encryption Key)
-                        永不包含在数据库、备份文件或配置导出中。备份 ZIP
-                        包含完整{" "}
-                        <code>manifest.json</code>、<code>database.sqlite</code>
-                        {" "}
-                        以及 <code>assets/</code> 资源目录。
-                    </span>
+            <StatusBanner tone="info">
+                <div className="flex items-start gap-3">
+                    <HardDrive
+                        size={20}
+                        className="text-accent shrink-0 mt-0.5"
+                    />
+                    <div className="leading-relaxed">
+                        <strong className="text-foreground">
+                            密钥隔离与数据安全保障：
+                        </strong>
+                        <span className="text-muted">
+                            系统加密主密钥 (Encryption Key)
+                            永不包含在数据库、备份文件或配置导出中。备份 ZIP
+                            包含完整 <code>manifest.json</code>、<code>
+                                database.sqlite
+                            </code>{" "}
+                            以及 <code>assets/</code> 资源目录。
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </StatusBanner>
 
             {/* Module 1: Configuration Export / Import */}
-            <section
-                style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--radius)",
-                    padding: "24px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "16px",
-                }}
+            <Section
+                title="配置导入 / 导出 (Configuration Export / Import)"
+                description="轻量导出系统设置、AI 提供商元数据及模型可见性（不包含用户私人数据、聊天历史或 API Key 密文）。新导入的 AI 提供商默认处于禁用状态，导入后必须在 AI 设置中手动配置 API Key 并刷新可用模型方可启用。"
             >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                    }}
-                >
-                    <FileJson size={18} style={{ color: "var(--accent)" }} />
-                    <h3
-                        style={{ fontSize: "16px", fontWeight: 600, margin: 0 }}
-                    >
-                        配置导入 / 导出 (Configuration Export / Import)
-                    </h3>
-                </div>
-                <p
-                    style={{
-                        margin: 0,
-                        fontSize: "13px",
-                        color: "var(--muted)",
-                        lineHeight: 1.5,
-                    }}
-                >
-                    轻量导出系统设置、AI
-                    提供商元数据及模型可见性（不包含用户私人数据、聊天历史或 API
-                    Key 密文）。新导入的 AI 提供商默认处于禁用状态，导入后必须在
-                    AI 设置中手动配置 API Key 并刷新可用模型方可启用。
-                </p>
-
                 {configError && (
-                    <div
-                        role="alert"
-                        style={{
-                            padding: "10px 14px",
-                            borderRadius: "6px",
-                            background:
-                                "color-mix(in srgb, var(--danger) 15%, var(--surface))",
-                            color: "var(--danger)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            fontSize: "13px",
-                        }}
-                    >
-                        <AlertCircle size={16} />
-                        <span>{configError}</span>
-                    </div>
+                    <StatusBanner tone="error">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle size={16} className="shrink-0" />
+                            <span>{configError}</span>
+                        </div>
+                    </StatusBanner>
                 )}
 
                 {configSuccess && (
-                    <div
-                        role="status"
-                        style={{
-                            padding: "10px 14px",
-                            borderRadius: "6px",
-                            background:
-                                "color-mix(in srgb, var(--success) 15%, var(--surface))",
-                            color: "var(--success)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            fontSize: "13px",
-                        }}
-                    >
-                        <CheckCircle2 size={16} />
-                        <span>{configSuccess}</span>
-                    </div>
+                    <StatusBanner tone="success">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="shrink-0" />
+                            <span>{configSuccess}</span>
+                        </div>
+                    </StatusBanner>
                 )}
 
-                <div
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "12px",
-                        marginTop: "8px",
-                    }}
-                >
+                <ActionGroup>
                     <Button
                         type="button"
                         variant="outline"
                         onClick={handleExportConfig}
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                        }}
                     >
                         <Download size={16} />
                         <span>导出系统配置 (JSON)</span>
                     </Button>
 
-                    <label
-                        className="button button--subtle"
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            cursor: configImporting ? "not-allowed" : "pointer",
-                            opacity: configImporting ? 0.6 : 1,
-                        }}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={configImporting}
+                        onClick={() => configFileRef.current?.click()}
                     >
                         <Upload size={16} />
                         <span>
@@ -384,65 +287,25 @@ export function AdminBackupRestore() {
                                 ? "正在导入…"
                                 : "导入系统配置 (JSON)"}
                         </span>
-                        <input
-                            type="file"
-                            accept=".json,application/json"
-                            onChange={handleConfigFileChange}
-                            disabled={configImporting}
-                            style={{ display: "none" }}
-                        />
-                    </label>
-                </div>
-            </section>
+                    </Button>
+                    <input
+                        ref={configFileRef}
+                        type="file"
+                        accept=".json,application/json"
+                        onChange={handleConfigFileChange}
+                        disabled={configImporting}
+                        className="sr-only"
+                    />
+                </ActionGroup>
+            </Section>
 
             {/* Module 2: Full ZIP Backup & Safe Restore */}
-            <section
-                style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--radius)",
-                    padding: "24px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "20px",
-                }}
+            <Section
+                title="全量 ZIP 备份与恢复 (Full Backup / Restore)"
+                description="遵循规范 §18 安全还原管线：预检格式清单、PRAGMA 完整性核验、当前快照存档与安全原子替换。"
             >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                    }}
-                >
-                    <FolderArchive
-                        size={18}
-                        style={{ color: "var(--accent)" }}
-                    />
-                    <h3
-                        style={{ fontSize: "16px", fontWeight: 600, margin: 0 }}
-                    >
-                        全量 ZIP 备份与恢复 (Full Backup / Restore)
-                    </h3>
-                </div>
-
-                <div
-                    style={{
-                        padding: "16px",
-                        borderRadius: "8px",
-                        background: "var(--background)",
-                        border: "1px solid var(--border)",
-                        fontSize: "13px",
-                        lineHeight: 1.6,
-                        color: "var(--muted)",
-                    }}
-                >
-                    <div
-                        style={{
-                            fontWeight: 600,
-                            color: "var(--foreground)",
-                            marginBottom: "4px",
-                        }}
-                    >
+                <div className="admin-pipeline-card">
+                    <div className="admin-pipeline-title">
                         恢复执行管线规范 (Specification §18 Safe Restore
                         Pipeline):
                     </div>
@@ -469,73 +332,41 @@ export function AdminBackupRestore() {
                 </div>
 
                 {restoreError && (
-                    <div
-                        role="alert"
-                        style={{
-                            padding: "12px 16px",
-                            borderRadius: "8px",
-                            background:
-                                "color-mix(in srgb, var(--danger) 15%, var(--surface))",
-                            color: "var(--danger)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            fontSize: "14px",
-                        }}
-                    >
-                        <AlertCircle size={18} />
-                        <span>{restoreError}</span>
-                    </div>
+                    <StatusBanner tone="error">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle size={16} className="shrink-0" />
+                            <span>{restoreError}</span>
+                        </div>
+                    </StatusBanner>
                 )}
 
                 {restoreSuccess && (
-                    <div
-                        role="status"
-                        style={{
-                            padding: "12px 16px",
-                            borderRadius: "8px",
-                            background:
-                                "color-mix(in srgb, var(--success) 15%, var(--surface))",
-                            color: "var(--success)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            fontSize: "14px",
-                        }}
-                    >
-                        <CheckCircle2 size={18} />
-                        <div style={{ flex: 1 }}>{restoreSuccess}</div>
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => window.location.reload()}
-                        >
-                            重新加载页面
-                        </Button>
-                    </div>
+                    <StatusBanner tone="success">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 size={16} className="shrink-0" />
+                            <div className="flex-1">{restoreSuccess}</div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => globalThis.location.reload()}
+                            >
+                                重新加载页面
+                            </Button>
+                        </div>
+                    </StatusBanner>
                 )}
 
                 {/* Step A: Download Backup */}
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                    }}
-                >
-                    <div style={{ fontWeight: 600, fontSize: "14px" }}>
+                <div className="admin-step-block">
+                    <h4 className="admin-step-title">
                         1. 创建全量备份 (Download Full Backup)
-                    </div>
+                    </h4>
                     <div>
                         <Button
                             type="button"
                             onClick={handleExportFullBackup}
                             disabled={backupExporting}
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                            }}
                         >
                             <Download size={16} />
                             <span>
@@ -547,39 +378,18 @@ export function AdminBackupRestore() {
                     </div>
                 </div>
 
-                <hr
-                    style={{
-                        border: "none",
-                        borderTop: "1px solid var(--border)",
-                        margin: 0,
-                    }}
-                />
-
                 {/* Step B: Restore from Backup */}
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "12px",
-                    }}
-                >
-                    <div style={{ fontWeight: 600, fontSize: "14px" }}>
+                <div className="admin-step-block">
+                    <h4 className="admin-step-title">
                         2. 从备份文件还原 (Restore from Backup)
-                    </div>
+                    </h4>
 
-                    <div
-                        style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            alignItems: "center",
-                            gap: "12px",
-                        }}
-                    >
+                    <div className="admin-file-input-group">
                         <input
                             type="file"
                             accept=".zip,application/zip"
                             onChange={handleZipFileChange}
-                            style={{ fontSize: "14px" }}
+                            className="admin-file-input"
                         />
 
                         <Button
@@ -587,11 +397,6 @@ export function AdminBackupRestore() {
                             variant="outline"
                             onClick={handlePreValidate}
                             disabled={!selectedZipFile || validating}
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                            }}
                         >
                             <FileCheck size={16} />
                             <span>
@@ -603,49 +408,17 @@ export function AdminBackupRestore() {
                     </div>
 
                     {validationError && (
-                        <div
-                            role="alert"
-                            style={{
-                                padding: "10px 14px",
-                                borderRadius: "6px",
-                                background:
-                                    "color-mix(in srgb, var(--danger) 15%, var(--surface))",
-                                color: "var(--danger)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                fontSize: "13px",
-                            }}
-                        >
-                            <AlertCircle size={16} />
-                            <span>预检失败: {validationError}</span>
-                        </div>
+                        <StatusBanner tone="error">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={16} className="shrink-0" />
+                                <span>预检失败: {validationError}</span>
+                            </div>
+                        </StatusBanner>
                     )}
 
                     {validatedManifest && (
-                        <div
-                            style={{
-                                padding: "16px",
-                                borderRadius: "8px",
-                                background:
-                                    "color-mix(in srgb, var(--success) 8%, var(--surface))",
-                                border:
-                                    "1px solid color-mix(in srgb, var(--success) 30%, transparent)",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "12px",
-                                marginTop: "6px",
-                            }}
-                        >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    color: "var(--success)",
-                                    fontWeight: 600,
-                                }}
-                            >
+                        <div className="admin-validated-card">
+                            <div className="admin-validated-header">
                                 <CheckCircle2 size={18} />
                                 <span>
                                     备份验证通过 (SQLite
@@ -653,15 +426,7 @@ export function AdminBackupRestore() {
                                 </span>
                             </div>
 
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "repeat(auto-fit, minmax(180px, 1fr))",
-                                    gap: "10px",
-                                    fontSize: "13px",
-                                }}
-                            >
+                            <div className="admin-manifest-grid">
                                 <div>
                                     备份生成时间：{new Date(
                                         validatedManifest.createdAt,
@@ -671,8 +436,7 @@ export function AdminBackupRestore() {
                                     用户总数：{validatedManifest.counts.users}
                                 </div>
                                 <div>
-                                    APP 数量：{validatedManifest.counts
-                                        .webapps}
+                                    APP 数量：{validatedManifest.counts.webapps}
                                 </div>
                                 <div>
                                     便签总数：{validatedManifest.counts.notes}
@@ -689,16 +453,12 @@ export function AdminBackupRestore() {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: "4px" }}>
+                            <div>
                                 <Button
+                                    ref={restoreTriggerRef}
                                     type="button"
                                     variant="destructive"
                                     onClick={() => setRestoreModalOpen(true)}
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                    }}
                                 >
                                     <RotateCcw size={16} />
                                     <span>确认还原此备份…</span>
@@ -707,7 +467,7 @@ export function AdminBackupRestore() {
                         </div>
                     )}
                 </div>
-            </section>
+            </Section>
 
             <Dialog
                 open={restoreModalOpen}
@@ -715,11 +475,14 @@ export function AdminBackupRestore() {
                     if (!restoring) setRestoreModalOpen(open);
                 }}
             >
-                <DialogContent style={{ maxWidth: "480px" }}>
+                <DialogContent
+                    className="max-w-md"
+                    finalFocus={restoreTriggerRef}
+                >
                     <DialogHeader>
-                        <DialogTitle>
-                            <ShieldAlert size={20} aria-hidden="true" />{" "}
-                            警告：即将执行全量数据还原
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <ShieldAlert size={20} aria-hidden="true" />
+                            <span>警告：即将执行全量数据还原</span>
                         </DialogTitle>
                         <DialogDescription>
                             将使用「{selectedZipFile?.name}」覆盖当前系统的
@@ -727,7 +490,7 @@ export function AdminBackupRestore() {
                             备份时间：{validatedManifest
                                 ? new Date(validatedManifest.createdAt)
                                     .toLocaleString()
-                                : "未知"}。 操作前会在数据库旁保存当前完整 ZIP
+                                : "未知"}。操作前会在数据库旁保存当前完整 ZIP
                             快照；失败时尝试回滚。请确认目标文件与范围。
                         </DialogDescription>
                     </DialogHeader>
@@ -747,7 +510,9 @@ export function AdminBackupRestore() {
                             disabled={restoring}
                         >
                             <RotateCcw size={16} aria-hidden="true" />
-                            {restoring ? "正在还原中…" : "确认覆盖并还原"}
+                            <span>
+                                {restoring ? "正在还原中…" : "确认覆盖并还原"}
+                            </span>
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -1,0 +1,8 @@
+.settings-choice-select { width: calc(var(--control-height) * 4 + var(--space-5)); max-width: 100%; }
+.settings-swatch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-control-gap); width: calc(var(--control-height) * 8); max-width: 100%; }
+.settings-swatch-option { display: flex; align-items: center; gap: var(--space-control-gap); padding: var(--space-inline-gap); min-height: var(--control-touch-target); border: 1px solid var(--border); border-radius: var(--control-radius); background: var(--surface-solid); font-size: var(--font-caption-size); }
+.settings-swatch-option:hover { background: var(--surface-soft); }
+.settings-swatch-option[data-checked] { border-color: var(--accent); background: var(--accent-soft); }
+.settings-swatch-color { width: var(--space-3); height: var(--space-3); border-radius: var(--control-radius); flex-shrink: 0; }
+.settings-swatch-selected { margin-left: auto; color: var(--accent); }
+@container settings-panel (max-width: 600px) { .settings-swatch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; } }

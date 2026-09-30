@@ -1,3 +1,4 @@
+import { PageShell } from "../components/searcher/PageShell.tsx";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
@@ -16,20 +17,19 @@ export function NotFoundPage(
             ? { label: "管理后台", to: routes.admin() }
             : undefined);
     return (
-        <main className="page">
+        <PageShell archetype="utility" className="page">
             <PageHeader
                 items={[
                     { label: "首页", to: routes.home },
                     ...(workspace ? [workspace] : []),
                     { label: "页面不存在" },
                 ]}
+                title="页面不存在"
+                description="当前页面不存在，请检查地址或返回上层页面。"
             />
             <div className="space-y-4">
                 <p className="text-sm font-medium text-[var(--muted)]">404</p>
-                <h1>页面不存在</h1>
-                <p className="muted">
-                    当前页面不存在，请检查地址或返回上层页面。
-                </p>
+
                 <div className="flex flex-wrap gap-2">
                     <Button render={<Link to={routes.home} />}>返回首页</Button>
                     {workspace && (
@@ -39,6 +39,6 @@ export function NotFoundPage(
                     )}
                 </div>
             </div>
-        </main>
+        </PageShell>
     );
 }

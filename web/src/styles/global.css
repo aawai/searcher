@@ -1567,64 +1567,12 @@ a {
     font-weight: 600;
     margin: 0 0 20px;
 }
-.settings-group {
-    margin-bottom: var(--space-section);
-}
 .settings-group-title {
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 600;
-    margin: 0 0 10px;
+    margin-block: 0 var(--space-row-gap);
+    font-size: var(--font-component-title-size);
+    line-height: var(--font-component-title-line-height);
+    font-weight: var(--font-title-weight);
     color: var(--foreground);
-}
-.settings-card {
-    background: var(--surface-solid);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius);
-    box-shadow: var(--card-highlight), var(--card-shadow);
-    overflow: hidden;
-}
-.settings-row {
-    min-height: 64px;
-    padding: 14px var(--space-4);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    border-bottom: 1px solid var(--border);
-}
-.settings-row.settings-row--vertical {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-}
-.settings-card > .settings-row:last-child {
-    border-bottom: 0;
-}
-.settings-row-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-    flex: 1;
-}
-.settings-row-title {
-    font-size: var(--font-body-size);
-    line-height: 22px;
-    font-weight: 500;
-    color: var(--foreground);
-}
-.settings-row-desc {
-    font-size: var(--font-caption-size);
-    line-height: var(--font-caption-line-height);
-    color: var(--muted);
-    margin: 0;
-}
-.settings-row-control {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex-shrink: 0;
 }
 .wallpaper-settings-row {
     align-items: flex-start;
@@ -1662,30 +1610,7 @@ a {
     height: 100%;
     object-fit: cover;
 }
-@container settings-panel (max-width: 600px) {
-    .settings-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-    .settings-row.settings-row--inline-mobile {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .settings-row-control {
-        justify-content: flex-start;
-        width: 100%;
-        min-width: 0;
-        flex-wrap: wrap;
-    }
-    .settings-row--stack-mobile .settings-row-control {
-        width: 100%;
-    }
-    .settings-row.settings-row--inline-mobile .settings-row-control {
-        width: auto;
-    }
-}
+
 .settings-section-head h3 {
     margin: 0;
     font-size: 16px;
@@ -1775,78 +1700,7 @@ a {
 .muted {
     color: var(--muted);
 }
-.lab-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 24px;
-}
-.lab-nav button {
-    min-height: 44px;
-    text-align: left;
-    border: 0;
-    background: none;
-    color: var(--foreground);
-    border-radius: var(--control-radius);
-    padding: 10px 14px;
-    font-size: 14px;
-    transition: background .15s, color .15s;
-    cursor: pointer;
-}
-.lab-nav button:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-}
-.lab-nav button:hover {
-    background: var(--surface-soft);
-}
-.lab-nav button[aria-current="page"] {
-    background: var(--surface);
-    color: var(--accent);
-    font-weight: 700;
-    box-shadow: 0 1px 3px #0001;
-}
-.lab-stage {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-soft);
-    min-height: 500px;
-    padding: 30px 20px;
-    text-align: center;
-    max-width: 100%;
-}
-.lab-stage .search-form-wrap {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-}
-.lab-stage .search-form {
-    width: 100%;
-    max-width: 100%;
-    margin: auto;
-}
-.lab-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 20px;
-}
-.lab-controls label {
-    display: grid;
-    gap: 4px;
-    font-size: 12px;
-    color: var(--muted);
-}
-.lab-controls select,
-.lab-controls input {
-    background: var(--surface);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    padding: 8px;
-    min-height: 40px;
-    border-radius: var(--control-radius);
-}
+
 /* Trash Page Styles */
 .trash-header {
     display: flex;
@@ -2244,18 +2098,12 @@ a {
     margin: auto;
     padding: 24px;
 }
-.ask-guest__content h1 {
-    font-size: clamp(28px, 4vw, 38px);
-    letter-spacing: -.04em;
-}
+
 .ask-guest__content p {
     margin: 8px 0 24px;
     color: var(--muted);
 }
 .ask-page {
-    width: min(100% - 64px, 1280px);
-    margin: 16px auto;
-    height: calc(100dvh - 96px);
     display: flex;
     flex-direction: column;
 }

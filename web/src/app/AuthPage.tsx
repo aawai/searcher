@@ -1,3 +1,5 @@
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { UserDto } from "@shared/contracts.ts";
@@ -63,13 +65,16 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
     const toggleToLogin = `${routes.login}${nextQuery}`;
 
     return (
-        <main className="page auth-page">
-            <h1>{kind === "login" ? "登录 Searcher" : "创建账户"}</h1>
-            <p className="muted">
-                {kind === "login"
+        <PageShell archetype="utility" className="page auth-page">
+            <PageHeader
+                title={kind === "login" ? "登录 Searcher" : "创建账户"}
+                description={kind === "login"
                     ? "登录后同步 APP、便签与偏好。"
                     : "账户数据只保存在你的 Searcher 服务上。"}
-            </p>
+                items={[{ label: "首页", to: routes.home }, {
+                    label: kind === "login" ? "登录" : "注册",
+                }]}
+            />
             <form onSubmit={submit}>
                 <div className="field">
                     <label htmlFor="auth-username">用户名</label>
@@ -131,6 +136,6 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                         </>
                     )}
             </p>
-        </main>
+        </PageShell>
     );
 }

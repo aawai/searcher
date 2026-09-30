@@ -53,6 +53,18 @@ deno task test:routing
 ```
 
 `test:routing` 先构建生产前端，再启动隔离的真实 Hono 服务、内存数据库与临时资源目录，验证直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航；不连接开发实例或使用真实账户。
+## UI Contract 与门禁
+
+UI 变更遵循 [Design Principles](DESIGN_PRINCIPLES.md)、[Design System](DESIGN_SYSTEM.md) 和 [UI Review Checklist](UI_REVIEW_CHECKLIST.md)。复用 `PageShell`、`PageHeader` 和 Searcher semantic components；`/design-lab` 覆盖正式组件、交互状态和响应式预览，但不能替代真实业务页面验收。既有 UI 计划和 Spec Pack 是历史设计资料；当前 UI 规则、存量迁移边界及 advisor 裁决见 Design System，实际验收和未覆盖项见 Checklist。baseline 通过不表示历史样式债务、focus 语义或所有业务流程已清零。
+
+```sh
+deno task check:ui
+deno test -A scripts/ui-guard/
+# 迁移旧样式后，仅删除已经解决的历史 allowance
+deno task check:ui --update
+```
+
+门禁按文件、rule 和具体值计数；已有文件中新加的 raw spacing/font/shadow/radius、arbitrary Tailwind 或 inline presentation 同样失败。runtime geometry 与 domain-specific value 例外只限明确的 owner 和表达式，见 `scripts/ui-guard/exceptions.ts`。`--update` 不接受新增或数量增加的违规；CI 运行检查和门禁回归测试。390/768/1440、light/dark 与真实页面交互证据按 checklist 人工验收。
 
 ## AI Provider transport
 

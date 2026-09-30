@@ -1,0 +1,383 @@
+/* Searcher Admin System Styles */
+
+.admin-unauthorized-shell {
+    max-width: var(--layout-form-max);
+}
+
+.admin-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+}
+
+.admin-metric-card {
+    background: var(--surface-l1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: var(--space-card-padding);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.admin-metric-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.admin-metric-card-title {
+    font-size: var(--font-body-size);
+    color: var(--muted);
+    font-weight: var(--font-label-weight);
+    line-height: var(--font-body-line-height);
+}
+
+.admin-metric-card-icon {
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--control-radius);
+    background: var(--accent-subtle);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.admin-metric-card-value {
+    font-size: var(--font-page-title-size);
+    line-height: var(--font-page-title-line-height);
+    font-weight: var(--font-title-weight);
+    color: var(--foreground);
+}
+
+.admin-metric-card-sub {
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    color: var(--muted);
+    margin-top: var(--space-1);
+}
+
+.admin-metric-card-link {
+    background: transparent;
+    border: 0;
+    color: var(--accent);
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    font-weight: var(--font-label-weight);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.admin-metric-card-link:hover {
+    text-decoration: underline;
+}
+
+.admin-spec-card-container {
+    background: var(--surface-l1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: var(--space-card-padding);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.admin-spec-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--accent);
+}
+
+.admin-spec-card-header h3 {
+    margin: 0;
+    font-size: var(--font-component-title-size);
+    line-height: var(--font-component-title-line-height);
+    font-weight: var(--font-title-weight);
+    color: var(--foreground);
+}
+
+.admin-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+}
+
+.admin-spec-card {
+    padding: var(--space-4);
+    border-radius: var(--control-radius);
+    background: var(--background);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.admin-spec-card-title {
+    font-weight: var(--font-title-weight);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--foreground);
+}
+
+.admin-spec-card-desc {
+    color: var(--muted);
+    margin: 0;
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+}
+
+.admin-toolbar {
+    margin-bottom: var(--space-4);
+}
+
+.admin-search-form {
+    display: flex;
+    gap: var(--space-2);
+    flex: 1 1 280px;
+    max-width: 460px;
+}
+
+.admin-search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.admin-search-icon {
+    position: absolute;
+    left: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.admin-search-input {
+    padding-left: var(--space-8);
+}
+
+.admin-filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.admin-filter-label {
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+    font-weight: var(--font-label-weight);
+    white-space: nowrap;
+}
+
+.admin-select-wrapper {
+    min-width: 180px;
+}
+
+.admin-user-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.admin-user-avatar {
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: 50%;
+    background: var(--surface-soft);
+    color: var(--foreground);
+    display: grid;
+    place-items: center;
+    font-weight: var(--font-title-weight);
+    font-size: var(--font-body-size);
+    flex-shrink: 0;
+}
+
+.admin-user-avatar--admin {
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+
+.admin-user-names {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.admin-user-display {
+    font-weight: var(--font-label-weight);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.admin-user-meta {
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    color: var(--muted);
+}
+
+.admin-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+}
+
+.admin-pagination-info {
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    color: var(--muted);
+}
+
+.admin-retention-input-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.admin-number-input {
+    width: 120px;
+}
+
+.admin-select-control {
+    width: 220px;
+    max-width: 100%;
+}
+
+.admin-form-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.admin-step-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-card-padding);
+    background: var(--surface-l1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+}
+
+.admin-step-title {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-title-weight);
+    margin: 0;
+    color: var(--foreground);
+}
+
+.admin-file-input-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.admin-file-input {
+    font-size: var(--font-body-size);
+    color: var(--foreground);
+}
+
+.admin-validated-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--control-radius);
+    background: var(--surface-soft);
+    border: 1px solid var(--border-subtle);
+}
+
+.admin-validated-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--success);
+    font-weight: var(--font-title-weight);
+    font-size: var(--font-body-size);
+}
+
+.admin-manifest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-2);
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    color: var(--muted);
+}
+
+.admin-pipeline-card {
+    padding: var(--space-4);
+    border-radius: var(--control-radius);
+    background: var(--background);
+    border: 1px solid var(--border-subtle);
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.admin-pipeline-title {
+    font-weight: var(--font-title-weight);
+    color: var(--foreground);
+    margin-bottom: var(--space-1);
+}
+
+.admin-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.admin-modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.admin-modal-label {
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+}
+
+.admin-modal-hint {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
+
+.admin-modal-delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--control-radius);
+    background: var(--surface-soft);
+    border: 1px solid var(--border-subtle);
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    color: var(--muted);
+}

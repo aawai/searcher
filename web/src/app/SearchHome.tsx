@@ -1,3 +1,4 @@
+import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -1039,7 +1040,7 @@ export function SearchHome() {
     };
 
     return (
-        <main className={`home home--${layoutStyle}`}>
+        <PageShell archetype="search" className={`home home--${layoutStyle}`}>
             {error && (
                 <div role="alert" className="home-error">
                     <span>{error}</span>
@@ -1074,7 +1075,9 @@ export function SearchHome() {
                     : isManagingGroups
                     ? "文件夹管理"
                     : activeFolderId
-                    ? (groups.find((g) => g.id === activeFolderId)?.name ??
+                    ? (groups.find((g) =>
+                        g.id === activeFolderId
+                    )?.name ??
                         "文件夹")
                     : "常用网站"}
                 onBack={isAddingApp && formPresentation === "panel"
@@ -1740,6 +1743,6 @@ export function SearchHome() {
                         </div>
                     )}
             </ContentSheet>
-        </main>
+        </PageShell>
     );
 }
