@@ -60,4 +60,5 @@
 - [Observation: 便签拟物纸质化改造与CSS层叠特异性避坑](obs-2026-09-28-css.md)
 - [Observation: Ask 页面上下留白对称性治理与视口高度规整](obs-2026-09-28-observation-ask.md)
 - [Observation: UI 视觉品质与设计规范治理全量完成（含 3 项交互深化）](obs-2026-09-28-ui-3.md)
+- [Observation: 设置页与 Widgets 中间视口采用容器查询重排](obs-2026-09-30-widgets.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

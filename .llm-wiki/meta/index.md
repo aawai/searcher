@@ -49,6 +49,7 @@
 - [[sources/obs-2026-09-28-css]] — Observation: 便签拟物纸质化改造与CSS层叠特异性避坑 *(created: 2026-09-28)*
 - [[sources/obs-2026-09-28-observation-ask]] — Observation: Ask 页面上下留白对称性治理与视口高度规整 *(created: 2026-09-28)*
 - [[sources/obs-2026-09-28-ui-3]] — Observation: UI 视觉品质与设计规范治理全量完成（含 3 项交互深化） *(created: 2026-09-28)*
+- [[sources/obs-2026-09-30-widgets]] — Observation: 设置页与 Widgets 中间视口采用容器查询重排 *(created: 2026-09-30)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -101,4 +102,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-09-28T15:37:27.050Z* | *Total pages: 86*
+*Last updated: 2026-09-30T05:52:28.368Z* | *Total pages: 87*
