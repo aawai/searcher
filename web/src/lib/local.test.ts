@@ -232,30 +232,3 @@ Deno.test({
         await deleteLocal("search_history");
     },
 });
-
-Deno.test({
-    name:
-        "web/local: visitor appearance persistence supports custom local data URL wallpaper",
-    async fn() {
-        setupMockIndexedDB();
-        const mockAppearance = {
-            theme: "dark",
-            style: "glass",
-            accent: "cyan",
-            shape: "pill",
-            engine: "duckduckgo",
-            target: "new_tab",
-            wallpaper:
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-            blur: 8,
-            grayscale: 0.2,
-            mask: 0.5,
-        };
-        await setLocal("visitor_appearance", mockAppearance);
-        const loaded = await getLocal<typeof mockAppearance>(
-            "visitor_appearance",
-        );
-        assertEquals(loaded, mockAppearance);
-        await deleteLocal("visitor_appearance");
-    },
-});

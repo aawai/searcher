@@ -41,7 +41,7 @@ Deno.test("production navigation contracts", async (t) => {
         args: ["--no-sandbox"],
     });
     cleanup.defer(() => browser.close());
-    const context = await browser.newContext();
+    const context = await browser.newContext({ colorScheme: "light" });
     const page = await context.newPage();
     const username = "navigation_user";
     const password = "Navigation-test-password-28";
@@ -93,6 +93,47 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
+        "anonymous appearance stays within the current page and is not persisted",
+        async () => {
+            await visit("/settings/appearance");
+            await page.getByRole("tab", { name: "深色", exact: true }).click();
+            await page.getByText("空间轻桌面", { exact: true }).click();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "widgets" &&
+                document.documentElement.dataset.theme === "dark"
+            );
+            await page.getByRole("link", { name: "Searcher 首页" }).click();
+            await page.waitForURL(origin + "/");
+            assertEquals(
+                await page.evaluate(() =>
+                    document.documentElement.dataset.style
+                ),
+                "widgets",
+            );
+            assertEquals(
+                await page.evaluate(() =>
+                    localStorage.getItem("visitor_appearance")
+                ),
+                null,
+            );
+            await page.evaluate(() =>
+                localStorage.setItem(
+                    "visitor_appearance",
+                    JSON.stringify({
+                        theme: "dark",
+                        style: "widgets",
+                        showTitle: false,
+                    }),
+                )
+            );
+            await page.reload();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "zen" &&
+                document.documentElement.dataset.theme === "light"
+            );
+        },
+    );
+    await t.step(
         "unknown pages and workspace children render the same recoverable 404",
         async () => {
             for (
@@ -136,6 +177,143 @@ Deno.test("production navigation contracts", async (t) => {
             await page.locator("#auth-password").fill(password);
             await page.locator('form button[type="submit"]').click();
             await page.waitForURL(origin + "/trash?filter=notes");
+        },
+    );
+    await t.step(
+        "account appearance survives reload and syncs without leaking on logout or expiry",
+        async () => {
+            await visit("/settings/appearance");
+            await page.locator(".user-avatar-badge").waitFor();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "zen"
+            );
+            await Promise.all([
+                page.waitForResponse((r) =>
+                    r.url().endsWith("/api/preferences") &&
+                    r.request().method() === "PATCH" && r.ok()
+                ),
+                page.getByRole("tab", { name: "深色", exact: true }).click(),
+            ]);
+            await Promise.all([
+                page.waitForResponse((r) =>
+                    r.url().endsWith("/api/preferences") &&
+                    r.request().method() === "PATCH" && r.ok()
+                ),
+                page.getByText("空间轻桌面", { exact: true }).click(),
+            ]);
+            await page.getByRole("switch", {
+                name: "显示 Searcher 标题",
+                exact: true,
+            })
+                .uncheck();
+            await page.waitForFunction(async () => {
+                const db = await new Promise<IDBDatabase>((resolve, reject) => {
+                    const open = indexedDB.open("searcher-client");
+                    open.onsuccess = () => resolve(open.result);
+                    open.onerror = () => reject(open.error);
+                });
+                try {
+                    return await new Promise<boolean>((resolve, reject) => {
+                        const request = db.transaction("state", "readonly")
+                            .objectStore("state").getAll();
+                        request.onsuccess = () => {
+                            const values: unknown[] = request.result;
+                            resolve(
+                                values.some((value) =>
+                                    typeof value === "object" &&
+                                    value !== null &&
+                                    "showTitle" in value &&
+                                    value.showTitle === false
+                                ),
+                            );
+                        };
+                        request.onerror = () => reject(request.error);
+                    });
+                } finally {
+                    db.close();
+                }
+            });
+            await page.reload();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "widgets" &&
+                document.documentElement.dataset.theme === "dark"
+            );
+            assertEquals(
+                await page.getByRole("switch", {
+                    name: "显示 Searcher 标题",
+                    exact: true,
+                })
+                    .isChecked(),
+                false,
+            );
+
+            const otherDevice = await browser.newContext({
+                colorScheme: "light",
+            });
+            try {
+                const remote = await otherDevice.newPage();
+                await visit("/login", remote);
+                await signIn(remote);
+                await remote.waitForURL(origin + "/");
+                await remote.waitForFunction(() =>
+                    document.documentElement.dataset.style === "widgets" &&
+                    document.documentElement.dataset.theme === "dark"
+                );
+            } finally {
+                await otherDevice.close();
+            }
+
+            await page.getByRole("button", { name: /^用户菜单/ }).click();
+            await page.getByRole("menuitem", { name: "退出登录", exact: true })
+                .click();
+            await page.getByRole("link", { name: "登录", exact: true })
+                .waitFor();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "zen" &&
+                document.documentElement.dataset.theme === "light"
+            );
+            await visit("/register");
+            await page.locator("#auth-username").fill(username + "_other");
+            await page.locator("#auth-display-name").fill("Other account");
+            await page.locator("#auth-password").fill(password);
+            await page.locator("form button[type=submit]").click();
+            await page.waitForURL(origin + "/");
+            await Promise.all([
+                page.waitForResponse((r) =>
+                    r.url().endsWith("/api/preferences") &&
+                    r.request().method() === "GET" && r.ok()
+                ),
+                visit("/settings/appearance"),
+            ]);
+            assertEquals(
+                await page.getByRole("switch", {
+                    name: "显示 Searcher 标题",
+                    exact: true,
+                })
+                    .isChecked(),
+                true,
+            );
+            await page.getByRole("button", { name: /^用户菜单/ }).click();
+            await page.getByRole("menuitem", { name: "退出登录", exact: true })
+                .click();
+            await page.getByRole("link", { name: "登录", exact: true })
+                .waitFor();
+            await visit("/login");
+            await signIn();
+            await page.waitForURL(origin + "/");
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "widgets"
+            );
+            await context.clearCookies();
+            await page.getByRole("link", { name: "设置", exact: true }).click();
+            await page.getByRole("navigation", { name: "设置分类" })
+                .getByRole("button", { name: "AI 问答", exact: true }).click();
+            await page.getByRole("link", { name: "登录", exact: true })
+                .waitFor();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "zen" &&
+                document.documentElement.dataset.theme === "light"
+            );
         },
     );
     await t.step(

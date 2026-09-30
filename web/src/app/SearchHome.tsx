@@ -996,7 +996,7 @@ export function SearchHome() {
         }
     }
 
-    const layoutStyle = appearance.style; // "command" | "zen" | "widgets"
+    const layoutStyle = appearance.style;
     const layoutProps: HomeLayoutProps = {
         user,
         appearance,
