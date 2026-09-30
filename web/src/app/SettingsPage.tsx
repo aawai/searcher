@@ -131,7 +131,7 @@ function Choices<T extends string>(
                     <p className="settings-row-desc">{description}</p>
                 )}
             </div>
-            <div className="settings-row-control w-full sm:w-[320px]">
+            <div className="settings-row-control w-full sm:w-80">
                 <RadioGroup
                     value={value}
                     onValueChange={(next) => select(next as T)}
@@ -152,13 +152,9 @@ function Choices<T extends string>(
                                 }`}
                             >
                                 <span
+                                    className="inline-block w-3 h-3 rounded-full shrink-0"
                                     style={{
-                                        display: "inline-block",
-                                        width: 12,
-                                        height: 12,
-                                        borderRadius: "50%",
                                         background: getAccentLight(id),
-                                        flexShrink: 0,
                                     }}
                                     aria-hidden="true"
                                 />
@@ -295,15 +291,12 @@ export function SettingsPage() {
                                                 ? "/settings"
                                                 : `/settings/${id}`,
                                         )}
-                                    className={tab === id ? "active" : ""}
+                                    className={`flex items-center gap-2.5 ${
+                                        tab === id ? "active" : ""
+                                    }`}
                                     aria-current={tab === id
                                         ? "page"
                                         : undefined}
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "10px",
-                                    }}
                                 >
                                     <Icon size={18} />
                                     <span>{tabs[id].label}</span>
@@ -400,14 +393,7 @@ export function SettingsPage() {
                                             ])}
                                             select={(v) => set("accent", v)}
                                         />
-                                        <div
-                                            className="settings-row"
-                                            style={{
-                                                flexDirection: "column",
-                                                alignItems: "stretch",
-                                                gap: "10px",
-                                            }}
-                                        >
+                                        <div className="settings-row settings-row--vertical">
                                             <div className="settings-row-label">
                                                 <span className="settings-row-title">
                                                     主页工作区风格
@@ -460,7 +446,7 @@ export function SettingsPage() {
                                                     调整搜索框背景的不透明度
                                                 </p>
                                             </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
                                                 <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {Math.round(
                                                         (appearance
@@ -588,9 +574,7 @@ export function SettingsPage() {
                                                     <input
                                                         type="file"
                                                         ref={fileInputRef}
-                                                        style={{
-                                                            display: "none",
-                                                        }}
+                                                        className="hidden"
                                                         accept="image/png,image/jpeg,image/webp,image/avif"
                                                         onChange={(e) => {
                                                             const file = e
@@ -725,7 +709,7 @@ export function SettingsPage() {
                                                     覆盖在壁纸上的背景遮罩浓度
                                                 </p>
                                             </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
                                                 <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {Math.round(
                                                         appearance.mask * 100,
@@ -763,7 +747,7 @@ export function SettingsPage() {
                                                     壁纸背景的高斯模糊程度
                                                 </p>
                                             </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
                                                 <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {appearance.blur}px
                                                 </div>
@@ -803,7 +787,7 @@ export function SettingsPage() {
                                                     将壁纸转换为黑白灰度
                                                 </p>
                                             </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-[240px]">
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
                                                 <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
                                                     {Math.round(
                                                         appearance.grayscale *
@@ -911,12 +895,7 @@ export function SettingsPage() {
                                         <h3>数据管理</h3>
                                         <p>管理已删除的项目或实验性特性</p>
                                     </div>
-                                    <div
-                                        style={{
-                                            display: "grid",
-                                            gap: "12px",
-                                        }}
-                                    >
+                                    <div className="grid gap-3">
                                         {user && (
                                             <div className="settings-action-card">
                                                 <div className="settings-action-card__content">

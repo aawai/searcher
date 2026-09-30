@@ -1130,8 +1130,8 @@ export function SearchHome() {
                     inert={isAddingApp && formPresentation === "panel"
                         ? true
                         : undefined}
-                    style={isAddingApp && formPresentation === "panel"
-                        ? { display: "none" }
+                    className={isAddingApp && formPresentation === "panel"
+                        ? "hidden"
                         : undefined}
                 >
                     {!isManagingGroups && (
@@ -1446,12 +1446,7 @@ export function SearchHome() {
                             clearTimeout(undoApp.timer);
                             setUndoApp(null);
                         }}
-                        style={{
-                            border: 0,
-                            background: "none",
-                            color: "inherit",
-                            cursor: "pointer",
-                        }}
+                        className="p-0 border-0 bg-transparent text-inherit cursor-pointer inline-flex items-center"
                         aria-label="关闭"
                     >
                         <X size={16} />
@@ -1676,7 +1671,12 @@ export function SearchHome() {
                                             </div>
                                         </SortableContext>
                                         {createPortal(
-                                            <DragOverlay style={{ zIndex: 60 }}>
+                                            <DragOverlay
+                                                style={{
+                                                    zIndex:
+                                                        "var(--elevation-drag)",
+                                                }}
+                                            >
                                                 {activeDrawerNote
                                                     ? (
                                                         <div

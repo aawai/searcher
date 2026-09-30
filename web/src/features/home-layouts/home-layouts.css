@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Home Workspace Layout Styles: Command, Zen, Widgets
+   Home Workspace Layout Styles: Zen, Widgets
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -31,7 +31,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 999px;
     box-shadow: var(--glass-shadow);
-    z-index: 40;
+    z-index: var(--elevation-floating);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -59,7 +59,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--space-3);
     width: 100%;
     max-width: 640px;
     margin: 0 auto 16px;
@@ -77,7 +77,7 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    font-size: 13px;
+    font-size: var(--font-caption-size);
     font-weight: 500;
     color: var(--foreground);
 }
@@ -90,7 +90,7 @@
 .home-managing-actions {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-shrink: 0;
 }
 
@@ -106,23 +106,23 @@
 .home--zen .hero-title,
 .home--widgets .hero-title {
     font-size: clamp(28px, 3.2vw, 42px);
-    margin-bottom: 24px;
+    margin-bottom: var(--space-section);
 }
 
 .home--widgets .search-form-wrap,
 .home--widgets .search-form,
 .home--widgets .search-frame {
-    max-width: 820px;
+    max-width: var(--layout-bento-max);
 }
 
 .widgets-bento-container {
     width: 100%;
-    max-width: 820px;
+    max-width: var(--layout-bento-max);
     margin: 28px auto 80px;
     padding: 0 16px;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 20px;
+    gap: var(--space-5);
     align-items: start;
 }
 
@@ -132,11 +132,11 @@
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: var(--space-5);
     box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s
         ease;
 }
@@ -151,20 +151,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .widgets-bento-header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     min-width: 0;
 }
 
 .widgets-bento-title-btn {
     padding-inline: 6px;
     margin-left: -6px;
-    font-size: 14px;
+    font-size: var(--font-body-size);
     font-weight: 600;
 }
 
@@ -215,7 +215,7 @@
     justify-content: center;
     padding: 22px 16px;
     text-align: center;
-    gap: 12px;
+    gap: var(--space-3);
     background: color-mix(in srgb, var(--surface) 35%, transparent);
     border: 1px dashed var(--border-subtle);
     border-radius: var(--radius);
@@ -232,7 +232,7 @@
 .widgets-bento-empty-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -255,7 +255,7 @@
     transform: translateX(-50%);
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     padding: 6px 10px;
     background: var(--glass-bg);
     backdrop-filter: blur(24px);
@@ -263,7 +263,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 999px;
     box-shadow: var(--glass-shadow);
-    z-index: 40;
+    z-index: var(--elevation-floating);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -300,11 +300,11 @@
         grid-template-columns: 1fr;
         margin: 20px auto 72px;
         padding: 0 12px;
-        gap: 16px;
+        gap: var(--space-4);
     }
     .widgets-bento-card {
         padding: 16px 14px;
-        gap: 12px;
+        gap: var(--space-3);
     }
     .widgets-bento-header {
         flex-wrap: wrap;
@@ -325,7 +325,7 @@
     .home-managing-bar {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: var(--space-2);
         padding: 10px 12px;
         margin: 0 12px 14px;
     }
@@ -340,7 +340,7 @@
 .layout-mode-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    gap: var(--space-4);
     width: 100%;
     margin-top: 14px;
 }
@@ -388,7 +388,7 @@
 }
 
 .layout-mode-name {
-    font-size: 14px;
+    font-size: var(--font-body-size);
     font-weight: 600;
     color: var(--foreground);
     margin-bottom: 4px;
@@ -409,9 +409,9 @@
 .notes-flow-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+    gap: var(--space-4);
     width: 100%;
-    max-width: 720px;
+    max-width: var(--layout-home-content-max);
     margin: 20px auto 0;
     justify-content: center;
 }
@@ -428,7 +428,22 @@
 
 .widgets-bento-card .notes-flow-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--space-3);
     margin: 0;
     max-width: 100%;
+}
+
+.pinned-area {
+    width: calc(100% - 2 * var(--space-4));
+    max-width: var(--layout-home-content-max);
+    margin: var(--space-5) auto 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+@media (max-width: 700px) {
+    .pinned-area {
+        margin: var(--space-section) auto 40px;
+    }
 }

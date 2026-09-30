@@ -1,3 +1,106 @@
+.pinned-apps {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(13px, 2.4vw, 34px);
+}
+.webapp-icon {
+    border: 0;
+    background: transparent;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: var(--space-2);
+    position: relative;
+    width: 92px;
+    min-height: 96px;
+    border-radius: 14px;
+    padding: var(--space-2);
+}
+.webapp-icon:hover {
+    background: color-mix(in srgb,var(--surface) 65%,transparent);
+}
+.webapp-glyph {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 23px -16px #192b45;
+    border-radius: 17px;
+    color: var(--accent);
+    font-weight: 750;
+    font-size: 24px;
+    overflow: hidden;
+}
+.webapp-glyph img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 9px;
+}
+.webapp-icon--compact .webapp-glyph {
+    width: 48px;
+    height: 48px;
+}
+.webapp-icon--large .webapp-glyph {
+    width: 64px;
+    height: 64px;
+}
+.webapp-name {
+    font-size: var(--font-caption-size);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+.webapp-arrow {
+    position: absolute;
+    top: 7px;
+    right: 3px;
+    opacity: 0;
+}
+.webapp-icon:hover .webapp-arrow {
+    opacity: 1;
+}
+
+.launcher-folder-preview--sparse {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    grid-template-rows: 1fr;
+}
+.launcher-folder-preview--sparse:has(> :only-child) {
+    grid-template-columns: 1fr;
+}
+.launcher-folder-preview--medium {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    grid-template-rows: repeat(2,minmax(0,1fr));
+}
+.launcher-folder-preview--sparse .launcher-folder-mini {
+    font-size: 22px;
+}
+.launcher-folder-preview--medium .launcher-folder-mini {
+    font-size: 20px;
+}
+@media (max-width:700px) {
+    .launcher-folder-mini {
+        max-width: 50px;
+    }
+    .launcher-folder-preview--sparse .launcher-folder-mini {
+        font-size: 20px;
+    }
+}
+.launcher-notice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+    padding: 8px 0;
+}
+
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.
    [INVARIANT] Square Cell Grid System:
    1. --launcher-row-h MUST ALWAYS equal var(--launcher-col-w) (aspect-ratio 1:1).
@@ -352,9 +455,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
+    gap: var(--space-card-gap);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--border);
 }
 @keyframes fadeIn {
@@ -373,7 +476,7 @@
     grid-auto-rows: var(--launcher-row-h);
     justify-content: start;
     gap: var(--launcher-gap-y) var(--launcher-gap-x);
-    padding: 12px 0;
+    padding: var(--space-3) 0;
 }
 .launcher-folder-contents.launcher-grid--compact {
     --launcher-icon: 36px;
@@ -388,7 +491,7 @@
     gap: 14px;
     flex-wrap: wrap;
     color: var(--muted);
-    padding: 20px;
+    padding: var(--space-5);
 }
 .launcher-overlay {
     width: var(--launcher-col-w);

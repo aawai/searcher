@@ -47,7 +47,7 @@ const notes: NoteItem[] = [{
     version: 1,
 }];
 const themes = ["system", "light", "dark"] as const,
-    styles = ["quiet", "minimal", "glass", "soft", "classic"] as const,
+    styles = ["zen", "widgets"] as const,
     accents = ACCENT_IDS,
     shapes = ["rounded", "pill"] as const;
 export function DesignLab() {

@@ -150,11 +150,10 @@ function Layout() {
                     {syncFailed && (
                         <Link
                             to="/settings/data"
-                            className="sync-failed-badge"
+                            className="sync-failed-badge text-[var(--danger)]"
                             role="alert"
                             aria-label="偏好设置同步失败，点击查看"
                             title="部分设置未能同步到云端，点击前往设置检查"
-                            style={{ color: "var(--danger)" }}
                         >
                             !
                         </Link>
@@ -173,26 +172,11 @@ function Layout() {
                                     </span>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent sideOffset={8}>
-                                    <div
-                                        style={{
-                                            padding: "8px 12px 6px",
-                                            borderBottom:
-                                                "1px solid var(--border)",
-                                            marginBottom: "4px",
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                fontWeight: 600,
-                                                fontSize: "14px",
-                                            }}
-                                        >
+                                    <div className="px-3 pt-2 pb-1.5 border-b border-[var(--border)] mb-1">
+                                        <div className="font-semibold text-sm">
                                             {user.displayName}
                                         </div>
-                                        <div
-                                            className="muted"
-                                            style={{ fontSize: "12px" }}
-                                        >
+                                        <div className="muted text-xs">
                                             @{user.username}
                                         </div>
                                     </div>
@@ -201,7 +185,7 @@ function Layout() {
                                     >
                                         <UserRound
                                             size={15}
-                                            style={{ marginRight: 8 }}
+                                            className="mr-2"
                                         />
                                         <span>账户与安全</span>
                                     </DropdownMenuItem>
@@ -210,7 +194,7 @@ function Layout() {
                                     >
                                         <Settings
                                             size={15}
-                                            style={{ marginRight: 8 }}
+                                            className="mr-2"
                                         />
                                         <span>偏好设置</span>
                                     </DropdownMenuItem>
@@ -220,7 +204,7 @@ function Layout() {
                                         >
                                             <Shield
                                                 size={15}
-                                                style={{ marginRight: 8 }}
+                                                className="mr-2"
                                             />
                                             <span>管理后台</span>
                                         </DropdownMenuItem>
@@ -239,10 +223,7 @@ function Layout() {
                                     >
                                         <LogIn
                                             size={15}
-                                            style={{
-                                                transform: "rotate(180deg)",
-                                                marginRight: 8,
-                                            }}
+                                            className="mr-2 rotate-180"
                                         />
                                         <span>退出登录</span>
                                     </DropdownMenuItem>
