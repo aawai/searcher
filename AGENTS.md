@@ -4,11 +4,12 @@
 
 ## 工程原则
 
-* 优先满足 Specification、Invariants 和 external contract；
-* 解决根因，不使用 stopgap、Hack 或特殊 case 堆叠。
-* 优先复用仓库已有实现、当前依赖和 Deno / 标准库；确认现有能力后再新增 abstraction 或 dependency。
-* **设计完整，交付增量。** 大改动拆成可独立验证和回滚的 micro-increments，不得为了减小 diff 降级设计。
-* 如果 Specification、Architecture、类型模型或 public contract 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通工程细节自行判断。
+* **Correctness first.** 优先满足 `Specification`、`Invariants` 和 external / public contract；其次遵循 Architecture 和 type model。在满足约束的方案中，选择最简单、长期可维护的设计。
+* **Determine the complete required scope.** 不要把“用户明确提到的内容”自动等同于完整需求。结合 specification、现有行为、领域模型和 contracts，识别使功能正确且自洽所必需的关联行为。必要部分应一并纳入设计；
+* **Fix root causes.** 不使用 stopgap、Hack、workaround 或 special case 堆叠。不要为了减小 diff 或缩短实现时间而降低设计质量。
+* **Reuse before adding.** 优先复用仓库现有实现、依赖以及 Deno / 标准库；仅在现有能力确实不足时新增 abstraction 或 dependency。
+* **Design completely, deliver incrementally.** 先确定完整的正确设计，再将大改动拆成可独立验证和回滚的 micro-increments。Increment 是交付边界，不是削减必要 scope 的理由。
+* **Escalate only real conflicts.** 若 Specification、Invariants、Architecture、type model 或 contracts 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通、可逆的工程决策自行判断。
 * 任何页面效果修改，必须实际浏览网站，检查实际样式变化，不要只看源码。
 
 ## 协作约定
