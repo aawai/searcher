@@ -2,19 +2,22 @@
    Home Workspace Layout Styles: Zen, Widgets
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   2. Zen Layout (Minimal Workspace / Arc Style)
-   -------------------------------------------------------------------------- */
-
-.home--zen .hero-title {
-    visibility: hidden;
+/* Shared navigation remains lighter than content and primary search. */
+.zen-edge-trigger,
+.widgets-dock {
+    background: var(--surface-navigation);
+    backdrop-filter: blur(var(--material-blur-navigation));
+    -webkit-backdrop-filter: blur(var(--material-blur-navigation));
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    box-shadow: var(--shadow-navigation);
+    z-index: var(--elevation-floating);
 }
 
-.home--zen .search-frame {
-    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.08);
-    border-color: color-mix(in srgb, var(--border) 60%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+.zen-edge-btn:focus-visible,
+.widgets-dock-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
 }
 
 .zen-edge-trigger {
@@ -25,14 +28,6 @@
     align-items: center;
     gap: 6px;
     padding: 6px 8px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 999px;
-    box-shadow: var(--glass-shadow);
-    z-index: var(--elevation-floating);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .zen-edge-btn {
@@ -46,7 +41,7 @@
     background: transparent;
     border: none;
     border-radius: 999px;
-    transition: all 0.15s ease;
+    transition: color 0.15s ease, background 0.15s ease;
 }
 
 .zen-edge-btn:hover {
@@ -64,13 +59,12 @@
     max-width: 640px;
     margin: 0 auto 16px;
     padding: 8px 14px;
-    background: color-mix(in srgb, var(--surface) 92%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--accent-border, color-mix(in srgb, var(--accent) 35%,
-        transparent));
+    background: var(--surface-l1);
+    backdrop-filter: blur(var(--material-blur-content));
+    -webkit-backdrop-filter: blur(var(--material-blur-content));
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
+    box-shadow: var(--shadow-l1);
 }
 
 .home-managing-text {
@@ -103,11 +97,6 @@
 /* --------------------------------------------------------------------------
    3. Widgets Layout (Spatial Glass Desktop / iPadOS Bento Style)
    -------------------------------------------------------------------------- */
-.home--zen .hero-title,
-.home--widgets .hero-title {
-    font-size: clamp(28px, 3.2vw, 42px);
-    margin-bottom: var(--space-section);
-}
 
 .home--widgets .search-form-wrap,
 .home--widgets .search-form,
@@ -129,24 +118,18 @@
 .widgets-bento-card {
     container: bento-card / inline-size;
     min-width: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border);
+    --bento-padding: var(--space-5);
+    --bento-inner-radius: max(var(--control-radius), calc(var(--radius) - var(--bento-padding)));
+    background: var(--surface-l1);
+    backdrop-filter: blur(var(--material-blur-content));
+    -webkit-backdrop-filter: blur(var(--material-blur-content));
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius);
-    padding: var(--space-5);
-    box-shadow: var(--glass-shadow);
+    padding: var(--bento-padding);
+    box-shadow: var(--shadow-l1);
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s
-        ease;
-}
-
-.widgets-bento-card:hover {
-    box-shadow: 0 20px 44px -10px rgba(0, 0, 0, 0.25);
-    border-color: color-mix(in srgb, var(--glass-border) 60%, var(--accent)
-        35%);
 }
 
 .widgets-bento-header {
@@ -234,9 +217,9 @@
     padding: 22px 16px;
     text-align: center;
     gap: var(--space-3);
-    background: color-mix(in srgb, var(--surface) 35%, transparent);
+    background: color-mix(in srgb, var(--surface-solid) 35%, transparent);
     border: 1px dashed var(--border-subtle);
-    border-radius: var(--radius);
+    border-radius: var(--bento-inner-radius);
 }
 
 .widgets-bento-empty-text {
@@ -261,9 +244,17 @@
     gap: 5px;
 }
 
-.widgets-bento-empty-btn--primary {
-    background: var(--accent);
-    color: var(--accent-foreground, #fff);
+.widgets-bento-card .button--primary {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent-border);
+    box-shadow: none;
+}
+
+.widgets-bento-card .button--primary:hover {
+    background: var(--accent-subtle);
+    color: var(--accent);
+    box-shadow: none;
 }
 
 .widgets-dock {
@@ -275,14 +266,6 @@
     align-items: center;
     gap: var(--space-2);
     padding: 6px 10px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border);
-    border-radius: 999px;
-    box-shadow: var(--glass-shadow);
-    z-index: var(--elevation-floating);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .widgets-dock-btn {
@@ -298,14 +281,14 @@
     border: 1px solid transparent;
     border-radius: 999px;
     cursor: pointer;
-    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s
+        ease;
 }
 
 .widgets-dock-btn:hover {
     color: var(--foreground);
     background: var(--surface);
     border-color: var(--border-subtle);
-    transform: translateY(-1px);
 }
 
 @media (max-width: 640px) {
@@ -320,7 +303,7 @@
         gap: var(--space-4);
     }
     .widgets-bento-card {
-        padding: 16px 14px;
+        --bento-padding: var(--space-4);
         gap: var(--space-3);
     }
     .widgets-dock {
