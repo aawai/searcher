@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     AlertTriangle,
     ArrowRight,
@@ -24,6 +24,8 @@ import {
 import { Input } from "../components/ui/input.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { authPath, routes } from "./routes.ts";
 
 interface SessionDevice {
     id: string;
@@ -80,6 +82,7 @@ function formatTime(timestamp: number | null | undefined): string {
 export function AccountPage() {
     const { user, login, logout } = useAppState();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Profile state
     const [displayName, setDisplayName] = useState(user?.displayName ?? "");
@@ -189,7 +192,7 @@ export function AccountPage() {
             setConfirmPassword("");
             // Logout after short delay
             setTimeout(() => {
-                void logout().then(() => navigate("/login"));
+                void logout().then(() => navigate(routes.login));
             }, 2500);
         } catch (err) {
             setPasswordError(errorMessage(err));
@@ -203,7 +206,7 @@ export function AccountPage() {
         if (device.isCurrent) {
             if (confirm("确定要退出当前设备吗？")) {
                 await logout();
-                navigate("/login");
+                navigate(routes.login);
             }
             return;
         }
@@ -242,6 +245,12 @@ export function AccountPage() {
     if (!user) {
         return (
             <main className="page" style={{ maxWidth: 540 }}>
+                <PageHeader
+                    items={[
+                        { label: "首页", to: routes.home },
+                        { label: "账户与安全" },
+                    ]}
+                />
                 <div
                     style={{
                         padding: "36px 24px",
@@ -262,7 +271,10 @@ export function AccountPage() {
                     <p className="muted" style={{ marginBottom: "24px" }}>
                         请先登录以访问账户设置、安全配置及设备管理。
                     </p>
-                    <Link to="/login" className="button button--primary">
+                    <Link
+                        to={authPath("login", location)}
+                        className="button button--primary"
+                    >
                         前往登录
                     </Link>
                 </div>
@@ -274,6 +286,12 @@ export function AccountPage() {
 
     return (
         <main className="page" style={{ maxWidth: 860 }}>
+            <PageHeader
+                items={[
+                    { label: "首页", to: routes.home },
+                    { label: "账户与安全" },
+                ]}
+            />
             {/* Page Header */}
             <div
                 style={{
@@ -300,7 +318,7 @@ export function AccountPage() {
                 </div>
                 {user.role === "admin" && (
                     <Link
-                        to="/admin"
+                        to={routes.admin()}
                         className="button button--subtle"
                         style={{
                             display: "inline-flex",

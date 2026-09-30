@@ -1,5 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { type AdminTab, adminTab, routes } from "./routes.ts";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { NotFoundPage } from "./NotFoundPage.tsx";
 import {
     Activity,
     AlertTriangle,
@@ -93,24 +96,23 @@ function actionLabel(
     }
 }
 
+const adminTabLabels: Record<AdminTab, string> = {
+    overview: "概览",
+    users: "用户管理",
+    settings: "系统设置",
+    audit: "审计日志",
+    backup: "备份与恢复",
+};
+
 export function AdminPage() {
     const { user: currentUser } = useAppState();
     const location = useLocation();
     const navigate = useNavigate();
 
-    // 根据当前 URL 路径解析 activeTab
-    const pathTab = location.pathname.replace(/^\/admin\/?/, "").split("/")[0];
-    const activeTab =
-        (pathTab === "users" || pathTab === "settings" || pathTab === "audit" ||
-                pathTab === "backup")
-            ? pathTab
-            : "overview";
+    const activeTab = adminTab(location.pathname);
 
-    const setActiveTab = (
-        tab: "overview" | "users" | "settings" | "audit" | "backup",
-    ) => {
-        const targetPath = tab === "overview" ? "/admin" : `/admin/${tab}`;
-        navigate(targetPath);
+    const setActiveTab = (tab: AdminTab) => {
+        navigate(routes.admin(tab), { replace: true });
     };
     // User management state
     const [users, setUsers] = useState<AdminUserDto[]>([]);
@@ -209,7 +211,7 @@ export function AdminPage() {
     };
 
     useEffect(() => {
-        if (currentUser?.role === "admin") {
+        if (currentUser?.role === "admin" && activeTab) {
             void loadUsers(userPage, submittedSearch);
             if (activeTab === "audit") {
                 void loadAuditLogs(auditPage, auditActionFilter);
@@ -363,10 +365,23 @@ export function AdminPage() {
         }
     };
 
+    if (!activeTab) {
+        return (
+            <NotFoundPage parent={{ label: "管理后台", to: routes.admin() }} />
+        );
+    }
+
     // Non-admin permission check
     if (!currentUser || currentUser.role !== "admin") {
         return (
             <main className="page" style={{ maxWidth: 540 }}>
+                <PageHeader
+                    items={[
+                        { label: "首页", to: routes.home },
+                        { label: "管理后台", to: routes.admin() },
+                        { label: adminTabLabels[activeTab] },
+                    ]}
+                />
                 <div
                     style={{
                         padding: "40px 24px",
@@ -390,7 +405,7 @@ export function AdminPage() {
                     <p className="muted" style={{ marginBottom: "24px" }}>
                         管理后台仅对系统管理员开放。当前账户未获得管理员授权。
                     </p>
-                    <Link to="/" className="button button--subtle">
+                    <Link to={routes.home} className="button button--subtle">
                         返回首页
                     </Link>
                 </div>
@@ -403,6 +418,13 @@ export function AdminPage() {
 
     return (
         <main className="page" style={{ maxWidth: 1100 }}>
+            <PageHeader
+                items={[
+                    { label: "首页", to: routes.home },
+                    { label: "管理后台", to: routes.admin() },
+                    { label: adminTabLabels[activeTab] },
+                ]}
+            />
             {/* Header */}
             <div
                 style={{
@@ -438,7 +460,7 @@ export function AdminPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: "8px" }}>
-                    <Link to="/account" className="button button--subtle">
+                    <Link to={routes.account} className="button button--subtle">
                         个人安全设置
                     </Link>
                 </div>
@@ -555,7 +577,7 @@ export function AdminPage() {
                     <span>备份与恢复</span>
                 </button>
                 <Link
-                    to="/settings"
+                    to={routes.settings("ai")}
                     className="button button--subtle"
                     style={{
                         marginLeft: "auto",

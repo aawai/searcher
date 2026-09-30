@@ -19,6 +19,7 @@ import {
     AlertDialogTitle,
 } from "../ui/alert-dialog.tsx";
 import { Button } from "../ui/button.tsx";
+import { routes } from "../../app/routes.ts";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect } from "../ui/native-select.tsx";
 
@@ -239,7 +240,7 @@ export function LogoCandidatePicker({
                     </p>
                 </div>
                 <Link
-                    to="/settings/ai"
+                    to={routes.settings("ai")}
                     className="button button--subtle"
                     style={{
                         flexShrink: 0,

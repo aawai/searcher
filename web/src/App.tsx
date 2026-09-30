@@ -26,6 +26,8 @@ import { AskPage } from "./app/AskPage.tsx";
 import { AccountPage } from "./app/AccountPage.tsx";
 import { AdminPage } from "./app/AdminPage.tsx";
 import { TrashPage } from "./app/TrashPage.tsx";
+import { authPath, routes } from "./app/routes.ts";
+import { NotFoundPage } from "./app/NotFoundPage.tsx";
 import { Button } from "./components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -43,9 +45,10 @@ import {
 function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
-    const isHomePage = location.pathname === "/";
-    const isAskPage = location.pathname.startsWith("/ask");
-    const isSettingsPage = location.pathname.startsWith("/settings");
+    const isHomePage = location.pathname === routes.home;
+    const isAskPage = location.pathname === routes.ask;
+    const isSettingsPage = location.pathname === routes.settings() ||
+        location.pathname.startsWith(`${routes.settings()}/`);
     const {
         user,
         ready,
@@ -101,14 +104,14 @@ function Layout() {
                             ? "opacity-0 pointer-events-none select-none transition-opacity"
                             : "opacity-100 transition-opacity"
                     }`}
-                    to="/"
+                    to={routes.home}
                     aria-label="Searcher 首页"
                 >
                     s.
                 </Link>
                 <nav className="top-actions" aria-label="账户与设置">
                     <Link
-                        to="/ask"
+                        to={routes.ask}
                         className={isAskPage
                             ? "topbar-link topbar-link--active"
                             : "topbar-link"}
@@ -138,7 +141,7 @@ function Layout() {
                             : <Monitor size={20} />}
                     </button>
                     <Link
-                        to="/settings"
+                        to={routes.settings()}
                         className={isSettingsPage
                             ? "topbar-link topbar-link--active"
                             : "topbar-link"}
@@ -150,7 +153,7 @@ function Layout() {
                     {/* Y-002: 仅在同步异常时展示全局警示 Badge */}
                     {syncFailed && (
                         <Link
-                            to="/settings/data"
+                            to={routes.settings("data")}
                             className="sync-failed-badge text-[var(--danger)]"
                             role="alert"
                             aria-label="偏好设置同步失败，点击查看"
@@ -182,7 +185,7 @@ function Layout() {
                                         </div>
                                     </div>
                                     <DropdownMenuItem
-                                        onClick={() => navigate("/account")}
+                                        onClick={() => navigate(routes.account)}
                                     >
                                         <UserRound
                                             size={15}
@@ -191,7 +194,8 @@ function Layout() {
                                         <span>账户与安全</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => navigate("/settings")}
+                                        onClick={() =>
+                                            navigate(routes.settings())}
                                     >
                                         <Settings
                                             size={15}
@@ -201,7 +205,8 @@ function Layout() {
                                     </DropdownMenuItem>
                                     {user.role === "admin" && (
                                         <DropdownMenuItem
-                                            onClick={() => navigate("/admin")}
+                                            onClick={() =>
+                                                navigate(routes.admin())}
                                         >
                                             <Shield
                                                 size={15}
@@ -231,10 +236,10 @@ function Layout() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )
-                        : (location.pathname !== "/login" &&
-                            location.pathname !== "/register") && (
+                        : (location.pathname !== routes.login &&
+                            location.pathname !== routes.register) && (
                             <Link
-                                to="/login"
+                                to={authPath("login", location)}
                                 className="user-link"
                                 aria-label="登录"
                             >
@@ -290,28 +295,28 @@ function Layout() {
             </Dialog>
             {!ready ? <p className="page muted">正在加载…</p> : (
                 <Routes>
-                    <Route path="/" element={<SearchHome />} />
-                    <Route path="/design-lab" element={<DesignLab />} />
-                    <Route path="/login" element={<AuthPage kind="login" />} />
+                    <Route path={routes.home} element={<SearchHome />} />
+                    <Route path={routes.designLab} element={<DesignLab />} />
                     <Route
-                        path="/register"
+                        path={routes.login}
+                        element={<AuthPage kind="login" />}
+                    />
+                    <Route
+                        path={routes.register}
                         element={<AuthPage kind="register" />}
                     />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/settings/:tab" element={<SettingsPage />} />
-                    <Route path="/ask" element={<AskPage />} />
-                    <Route path="/account" element={<AccountPage />} />
-                    <Route path="/admin/*" element={<AdminPage />} />
-                    <Route path="/trash" element={<TrashPage />} />
                     <Route
-                        path="*"
-                        element={
-                            <div className="page">
-                                <h1>页面不存在</h1>
-                                <Link to="/">返回首页</Link>
-                            </div>
-                        }
+                        path={`${routes.settings()}/*`}
+                        element={<SettingsPage />}
                     />
+                    <Route path={routes.ask} element={<AskPage />} />
+                    <Route path={routes.account} element={<AccountPage />} />
+                    <Route
+                        path={`${routes.admin()}/*`}
+                        element={<AdminPage />}
+                    />
+                    <Route path={routes.trash} element={<TrashPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             )}
         </div>

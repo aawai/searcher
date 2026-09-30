@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { Button } from "../components/ui/button.tsx";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { authPath, routes } from "./routes.ts";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 
 interface TrashWebApp {
@@ -35,6 +37,7 @@ interface TrashNote {
 export function TrashPage() {
     const { user } = useAppState();
     const navigate = useNavigate();
+    const location = useLocation();
     const [tab, setTab] = useState<"webapps" | "notes">("webapps");
     const [webapps, setWebapps] = useState<TrashWebApp[]>([]);
     const [notes, setNotes] = useState<TrashNote[]>([]);
@@ -149,8 +152,15 @@ export function TrashPage() {
     if (!user) {
         return (
             <main className="page trash-page">
+                <PageHeader
+                    items={[
+                        { label: "首页", to: routes.home },
+                        { label: "回收站" },
+                    ]}
+                />
                 <p>
-                    <Link to="/login">请先登录</Link> 以查看回收站内容。
+                    <Link to={authPath("login", location)}>请先登录</Link>{" "}
+                    以查看回收站内容。
                 </p>
             </main>
         );
@@ -158,6 +168,12 @@ export function TrashPage() {
 
     return (
         <main className="page trash-page">
+            <PageHeader
+                items={[
+                    { label: "首页", to: routes.home },
+                    { label: "回收站" },
+                ]}
+            />
             <div className="flex items-center justify-between gap-4 mb-2">
                 <div>
                     <h1 className="m-0 mb-1 text-2xl font-bold">回收站</h1>
@@ -223,7 +239,7 @@ export function TrashPage() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => navigate("/")}
+                                    onClick={() => navigate(routes.home)}
                                 >
                                     返回首页
                                 </Button>
@@ -376,7 +392,7 @@ export function TrashPage() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => navigate("/")}
+                                    onClick={() => navigate(routes.home)}
                                 >
                                     返回首页
                                 </Button>

@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { ModelSelector } from "../components/searcher/ModelSelector.tsx";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { Button } from "../components/ui/button.tsx";
 import {
     Sheet,
@@ -33,6 +34,7 @@ import type {
     AiModelDto,
     AiProviderDto,
 } from "../../../src/features/ai/types.ts";
+import { authPath, routes } from "./routes.ts";
 
 type Conversation = {
     conversation: AiConversationDto;
@@ -161,10 +163,19 @@ export function AskPage() {
     if (!user) {
         return (
             <main className="page ask-guest">
+                <PageHeader
+                    items={[
+                        { label: "首页", to: routes.home },
+                        { label: "AI 问答" },
+                    ]}
+                />
                 <div className="ask-guest__content">
                     <h1>AI 问答</h1>
                     <p>登录后，选择模型并开始对话。</p>
-                    <Link className="button button--primary" to="/login">
+                    <Link
+                        className="button button--primary"
+                        to={authPath("login", location)}
+                    >
                         登录后提问
                     </Link>
                 </div>
@@ -223,7 +234,7 @@ export function AskPage() {
             setHistory((items) => items.filter((item) => item.id !== id));
             if (conversation?.conversation.id === id) setConversation(null);
             if (undoConversation) clearTimeout(undoConversation.timer);
-            const timer = setTimeout(() => {
+            const timer = globalThis.window.setTimeout(() => {
                 setUndoConversation(null);
             }, 5000);
             setUndoConversation({ id, title, timer });
@@ -431,6 +442,12 @@ export function AskPage() {
     );
     return (
         <main className="page ask-page">
+            <PageHeader
+                items={[
+                    { label: "首页", to: routes.home },
+                    { label: "AI 问答" },
+                ]}
+            />
             <h1 className="sr-only">AI 问答</h1>
             <div className="ask-layout">
                 <aside className="ask-history" aria-label="对话历史">
@@ -470,7 +487,7 @@ export function AskPage() {
                             </div>
                             {options.length > 0 && (
                                 <Link
-                                    to="/settings/ai"
+                                    to={routes.settings("ai")}
                                     className="button button--subtle button--sm ask-provider-link"
                                 >
                                     <SlidersHorizontal size={14} />
@@ -772,7 +789,7 @@ export function AskPage() {
                                                 后即可使用 AI 智能问答。
                                             </p>
                                             <Link
-                                                to="/settings/ai"
+                                                to={routes.settings("ai")}
                                                 className="button button--primary mt-3 inline-flex items-center gap-1.5"
                                             >
                                                 <SlidersHorizontal size={14} />
