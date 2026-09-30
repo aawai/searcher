@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- 修复匿名外观偏好意外落盘和刷新后恢复的问题；登录用户的设备外观缓存按账号隔离，退出登录或会话失效后恢复匿名默认外观，保留登录用户的云端偏好同步。
+
 - AI 应用图标可独立选择 OpenAI Images 或 Gemini
   原生协议，不再根据模型名称自动切换，且不修改文本模型、Provider 配置或聊天
   SSE。修复 Google OpenAI-compatible Base URL 转原生图片接口的路径与 API Key

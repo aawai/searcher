@@ -17,7 +17,12 @@ import {
 } from "@shared/contracts.ts";
 import type { EngineId } from "@shared/engines.ts";
 import { api, ApiError, json } from "../lib/api.ts";
-import { getLocal, listLocalKeys, setLocal } from "../lib/local.ts";
+import {
+    deleteLocal,
+    getLocal,
+    listLocalKeys,
+    setLocal,
+} from "../lib/local.ts";
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
@@ -75,49 +80,24 @@ export function useAppState() {
     return state;
 }
 
-function getInitialAppearance(): Appearance {
-    try {
-        const raw = localStorage.getItem("visitor_appearance");
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            return {
-                ...initial,
-                ...parsed,
-                style: normalizeStylePreset(parsed.style),
-                accent: normalizeAccent(parsed.accent),
-            };
-        }
-    } catch {
-        // fallback
-    }
-    return initial;
-}
-
 export function AppState({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserDto | null>(null);
     const [ready, setReady] = useState(false);
-    const [appearance, setValue] = useState<Appearance>(getInitialAppearance);
+    const [appearance, setValue] = useState<Appearance>(initial);
+    const [appearanceOwner, setAppearanceOwner] = useState<string | null>(null);
     const [syncFailed, setSyncFailed] = useState(false);
     const [connectionError, setConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
     userRef.current = user;
-    // 访客偏好启动时从 IndexedDB 恢复（包含可能存储在本地的大体积壁纸等）
     useEffect(() => {
-        let alive = true;
-        void getLocal<Appearance>("visitor_appearance").then((saved) => {
-            if (alive && saved && !user) {
-                setValue((prev) => ({
-                    ...prev,
-                    ...saved,
-                    style: normalizeStylePreset(saved.style),
-                    accent: normalizeAccent(saved.accent),
-                }));
-            }
-        });
-        return () => {
-            alive = false;
-        };
-    }, [user?.id]);
+        // 旧缓存未关联用户，不能作为匿名或账号偏好继续使用。
+        try {
+            localStorage.removeItem("visitor_appearance");
+        } catch {
+            // 浏览器可能禁用 localStorage。
+        }
+        void deleteLocal("visitor_appearance").catch(() => {});
+    }, []);
 
     const checkAuth = useCallback(async () => {
         try {
@@ -146,72 +126,68 @@ export function AppState({ children }: { children: ReactNode }) {
         void checkAuth();
     }, [checkAuth]);
 
-    // 登录后拉取云端偏好，默认直接覆盖本地配置，不再弹窗询问
+    // 登录后只读取当前用户的设备缓存，再由云端覆盖共享偏好。
     useEffect(() => {
         if (!user) return;
+        const userId = user.id;
         let alive = true;
-        api<PreferencesDto>("/api/preferences")
-            .then((prefs) => {
-                if (!alive) return;
-                setSyncFailed(false);
-                const cloudAppearance: Partial<Appearance> = {
-                    engine: prefs.defaultEngine,
-                    theme: prefs.theme,
-                    style: normalizeStylePreset(prefs.style),
-                    accent: normalizeAccent(prefs.accent),
-                    shape: prefs.searchShape,
-                    searchOpacity: prefs.searchOpacity ?? 1,
-                    target: prefs.searchTarget === "new"
-                        ? "new_tab"
-                        : "current",
-                    wallpaper: prefs.backgroundImage ?? "",
-                    blur: prefs.wallpaperBlur,
-                    grayscale: prefs.wallpaperGrayscale,
-                    mask: prefs.wallpaperMask,
-                    webAppHomeLimit: prefs.webAppHomeLimit,
-                    webAppIconSize: prefs.webAppIconSize,
-                    showAppLabels: prefs.showAppLabels,
-                };
-                // 默认使用云端配置覆盖本地配置，同时保留当前设备专属配置（如 showTitle）并同步回写本地存储
-                setValue((prev) => {
-                    const merged: Appearance = {
-                        ...prev,
-                        ...cloudAppearance,
-                        showTitle: prev.showTitle ?? true,
-                    };
-                    void setLocal("visitor_appearance", merged).catch(() => {});
-                    try {
-                        localStorage.setItem(
-                            "visitor_appearance",
-                            JSON.stringify(merged),
-                        );
-                    } catch {
-                        // ignore quota or disabled local storage
-                    }
-                    return merged;
-                });
-            }).catch((err) => {
-                if (alive && !(err instanceof ApiError && err.code === 401)) {
-                    setSyncFailed(true);
-                }
+        setAppearanceOwner(null);
+        setValue(initial);
+        const active = () => alive && userRef.current?.id === userId;
+        async function loadAppearance() {
+            const saved = await getLocal<Appearance>("appearance:" + userId)
+                .catch(() => undefined);
+            if (!active()) return;
+            setAppearanceOwner(userId);
+            setValue({
+                ...initial,
+                ...saved,
+                style: normalizeStylePreset(saved?.style ?? initial.style),
+                accent: normalizeAccent(saved?.accent ?? initial.accent),
             });
+            const prefs = await api<PreferencesDto>("/api/preferences");
+            if (!active()) return;
+            setSyncFailed(false);
+            setValue((prev) => ({
+                ...prev,
+                engine: prefs.defaultEngine,
+                theme: prefs.theme,
+                style: normalizeStylePreset(prefs.style),
+                accent: normalizeAccent(prefs.accent),
+                shape: prefs.searchShape,
+                searchOpacity: prefs.searchOpacity ?? 1,
+                target: prefs.searchTarget === "new" ? "new_tab" : "current",
+                wallpaper: prefs.backgroundImage ?? "",
+                blur: prefs.wallpaperBlur,
+                grayscale: prefs.wallpaperGrayscale,
+                mask: prefs.wallpaperMask,
+                webAppHomeLimit: prefs.webAppHomeLimit,
+                webAppIconSize: prefs.webAppIconSize,
+                showAppLabels: prefs.showAppLabels,
+            }));
+        }
+        void loadAppearance().catch((err) => {
+            if (active() && !(err instanceof ApiError && err.code === 401)) {
+                setSyncFailed(true);
+            }
+        });
         return () => {
             alive = false;
         };
     }, [user?.id]);
 
     useEffect(() => {
+        if (!user || appearanceOwner !== user.id) return;
+        void setLocal("appearance:" + user.id, appearance).catch(() => {});
+    }, [user?.id, appearanceOwner, appearance]);
+
+    useEffect(() => {
         const expired = () => {
+            if (userRef.current) setValue(initial);
+            setAppearanceOwner(null);
             setUser(null);
             setSyncFailed(false);
             setConnectionError(false);
-            void getLocal<Appearance>("visitor_appearance").then((saved) => {
-                if (saved) {
-                    setValue((prev) => ({ ...prev, ...saved }));
-                } else {
-                    setValue(getInitialAppearance());
-                }
-            });
         };
         globalThis.addEventListener("searcher:auth-expired", expired);
         return () =>
@@ -247,28 +223,7 @@ export function AppState({ children }: { children: ReactNode }) {
     ]);
 
     const setAppearance = (next: Partial<Appearance>) => {
-        setValue((current) => {
-            const updated = { ...current, ...next };
-            // 无论登录与否，均同步写入本地存储 (IndexedDB + localStorage) 作为即时缓存，保证刷新立即可见
-            void setLocal("visitor_appearance", updated).catch(() => {});
-            try {
-                if (updated.wallpaper?.startsWith("data:")) {
-                    const { wallpaper: _, ...rest } = updated;
-                    localStorage.setItem(
-                        "visitor_appearance",
-                        JSON.stringify(rest),
-                    );
-                } else {
-                    localStorage.setItem(
-                        "visitor_appearance",
-                        JSON.stringify(updated),
-                    );
-                }
-            } catch {
-                // 忽略 localStorage 配额错误
-            }
-            return updated;
-        });
+        setValue((current) => ({ ...current, ...next }));
         if (user) {
             const updates: Record<string, unknown> = {};
             if (next.theme !== undefined) updates.theme = next.theme;
@@ -324,13 +279,8 @@ export function AppState({ children }: { children: ReactNode }) {
         }
         await api("/api/auth/logout", { method: "POST" });
         setUser(null);
-        void getLocal<Appearance>("visitor_appearance").then((saved) => {
-            if (saved) {
-                setValue((prev) => ({ ...prev, ...saved }));
-            } else {
-                setValue(getInitialAppearance());
-            }
-        });
+        setAppearanceOwner(null);
+        setValue(initial);
         return true;
     };
 
