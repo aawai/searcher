@@ -52,6 +52,24 @@ Token 的可互换 alias。尤其 `--space-card` 在 640px 以下为 16px，而
 material 与 z-index 分离：--elevation-* 只表达叠放顺序，不授权更强阴影。普通
 content 不叠加强 border/glow/highlight。
 
+### Wallpaper canvas
+
+首页 canvas 固定在 app-shell 的隔离层级中，自身裁切并建立 stacking context。
+base gradient → wallpaper image（内部 z-index 0）→ theme glow（1）→ readability
+mask（2）；装饰层均不接收 pointer events，且由 aria-hidden 容器排除可访问性树。
+blur/grayscale 仅作用于图片层；图片按三倍 blur 半径扩展裁切区域，并保留原有
+scale(1.06)。图片层继续接受 URL 图片及 linear/radial
+gradient，图片专属材质标记仍只匹配 URL。
+
+glow 由 tokens.css 的 --wallpaper-glow / --wallpaper-glow-origin 定义：light
+沿用 7% accent、50% 16% 原点；dark 沿用 14% accent、50% 18% 原点。 Issue #23
+明确允许这一处低频背景动效：--wallpaper-glow-duration 为 8s，
+--wallpaper-glow-rest-opacity 为 .88，峰值 opacity 为 1，
+--wallpaper-glow-peak-scale 为 1.025。只动画
+opacity/transform，不动画滤镜或渐变； reduced-motion 下 animation:
+none，保留静态 glow。mask 仍使用 --surface-l0 和用户原有不透明度，始终覆盖
+glow，不为强化光晕绕过 mask。
+
 ## Page Archetypes
 
 | 类型            | 页面                      | 结构与边界                                                                                                    |
@@ -86,6 +104,13 @@ shadcn 提供。
 - 390/768/1440 最小实页矩阵；640/960/1280
   和长文案检查临界布局；guest/authenticated、light/dark、Zen/Widgets、wallpaper
   on/off 都检查。
+
+验证组合与重复执行遵循
+[仓库指南](AGENTS.md#验证范围与重复执行)：上述固定实页要求和明确列举的验收场景不得裁剪；仅列出的验证维度默认采用代表场景、边界值及必要的成对组合，不默认展开完整笛卡尔积。明确要求全组合或存在已知维度交互风险时扩大覆盖。
+
+批量视觉验收先校准媒体偏好、状态提交和动画/transition
+完成条件；失败先区分产品、脚本和环境问题。优先复查失败子集，但脚本缺陷导致原结果不可信时必须重新验证受影响范围，必要时整组重跑。这些规则不替代测试、typecheck、lint、format、build
+或 check:ui 门禁。
 
 ## Static guard
 

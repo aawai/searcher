@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- 自定义壁纸上保留主题光晕：图片滤镜与光晕分层，可读性遮罩继续覆盖最上层，
+  高模糊值下裁切图片边缘；光晕加入 8 秒轻微呼吸动效，减少动态偏好下保持静态。
 - 建立正式 UI Contract、四类 Page Archetype 与共享
   PageHeader/语义组件；Settings、Admin、Ask 和 Design Lab
   统一页面层级、状态与响应式布局，保留各页面业务流程；管理弹窗支持键盘关闭后的焦点归还，Badge/Table
