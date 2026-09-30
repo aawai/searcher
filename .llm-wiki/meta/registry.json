@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-28T15:37:27.050Z",
+  "last_updated": "2026-09-30T05:52:28.368Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -881,6 +881,23 @@
       "source_context": "UI 整体视觉品质诊断、审核改版与三项深度交互优化落地",
       "created": "2026-09-28",
       "updated": "2026-09-28"
+    },
+    "sources/obs-2026-09-30-widgets": {
+      "type": "source",
+      "title": "Observation: 设置页与 Widgets 中间视口采用容器查询重排",
+      "tags": [
+        "ui",
+        "responsive",
+        "css-container-queries",
+        "bento-layout"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-30-widgets",
+      "relevance": "high",
+      "observed_at": "2026-09-30T05:52:28.306Z",
+      "source_context": "Issue #19: 加固设置页与 Widgets 的中间宽度响应式布局",
+      "created": "2026-09-30",
+      "updated": "2026-09-30"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

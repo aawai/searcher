@@ -269,3 +269,6 @@
 ## [2026-09-28T15:37:27.037Z] observe
 - slug: "obs-2026-09-28-", title: "常用网站弹出窗口正方形网格与文件夹几何规范", relevance: "high"
 
+## [2026-09-30T05:52:28.321Z] observe
+- slug: "obs-2026-09-30-widgets", title: "设置页与 Widgets 中间视口采用容器查询重排", relevance: "high"
+
