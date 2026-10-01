@@ -18,7 +18,14 @@ import {
     Upload,
 } from "lucide-react";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
-import { ACCENTS } from "@shared/contracts.ts";
+import {
+    ACCENTS,
+    type AmbientMotionMode,
+    DEFAULT_AMBIENT_MOTION_MODE,
+    DEFAULT_AMBIENT_MOTION_STRENGTH,
+    DEFAULT_WALLPAPER_GLOW_STRENGTH,
+    DEFAULT_WALLPAPER_MASK,
+} from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
     Dialog,
@@ -517,9 +524,16 @@ export function SettingsPage() {
                                             onClick={() => {
                                                 void setAppearance({
                                                     wallpaper: "",
-                                                    mask: 0.75,
+                                                    mask:
+                                                        DEFAULT_WALLPAPER_MASK,
                                                     blur: 0,
                                                     grayscale: 0,
+                                                    wallpaperGlowStrength:
+                                                        DEFAULT_WALLPAPER_GLOW_STRENGTH,
+                                                    ambientMotionMode:
+                                                        DEFAULT_AMBIENT_MOTION_MODE,
+                                                    ambientMotionStrength:
+                                                        DEFAULT_AMBIENT_MOTION_STRENGTH,
                                                 });
                                             }}
                                             title="恢复壁纸与效果默认值"
@@ -779,6 +793,148 @@ export function SettingsPage() {
                                                                 : v[0],
                                                         )}
                                                     aria-label="灰度比例"
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <div className="flex justify-between items-center sm:block">
+                                                    <span className="settings-row-title">
+                                                        主题光晕强度
+                                                    </span>
+                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                        {Math.round(
+                                                            (appearance
+                                                                .wallpaperGlowStrength ??
+                                                                DEFAULT_WALLPAPER_GLOW_STRENGTH) *
+                                                                100,
+                                                        )}%
+                                                    </span>
+                                                </div>
+                                                <p className="settings-row-desc">
+                                                    控制搜索页主题色环境光的明显程度
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
+                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                    {Math.round(
+                                                        (appearance
+                                                            .wallpaperGlowStrength ??
+                                                            DEFAULT_WALLPAPER_GLOW_STRENGTH) *
+                                                            100,
+                                                    )}%
+                                                </div>
+                                                <Slider
+                                                    min={0}
+                                                    max={0.30}
+                                                    step={0.01}
+                                                    value={appearance
+                                                        .wallpaperGlowStrength ??
+                                                        DEFAULT_WALLPAPER_GLOW_STRENGTH}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "wallpaperGlowStrength",
+                                                            typeof v ===
+                                                                    "number"
+                                                                ? v
+                                                                : v[0],
+                                                        )}
+                                                    aria-label="主题光晕强度"
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <span className="settings-row-title">
+                                                    动态氛围
+                                                </span>
+                                                <p className="settings-row-desc">
+                                                    选择背景环境光的动态效果
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control">
+                                                <RadioGroup
+                                                    value={appearance
+                                                        .ambientMotionMode ??
+                                                        DEFAULT_AMBIENT_MOTION_MODE}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "ambientMotionMode",
+                                                            v as AmbientMotionMode,
+                                                        )}
+                                                    aria-label="动态氛围"
+                                                >
+                                                    <RadioGroupItem
+                                                        value="off"
+                                                        aria-label="关闭"
+                                                    >
+                                                        关闭
+                                                    </RadioGroupItem>
+                                                    <RadioGroupItem
+                                                        value="breathe"
+                                                        aria-label="呼吸"
+                                                    >
+                                                        呼吸
+                                                    </RadioGroupItem>
+                                                    <RadioGroupItem
+                                                        value="breathe_ripple"
+                                                        aria-label="呼吸 + 涟漪"
+                                                    >
+                                                        呼吸 + 涟漪
+                                                    </RadioGroupItem>
+                                                </RadioGroup>
+                                            </div>
+                                        </div>
+                                        <div className="settings-row settings-row--stack-mobile">
+                                            <div className="settings-row-label">
+                                                <div className="flex justify-between items-center sm:block">
+                                                    <span className="settings-row-title">
+                                                        动态强度
+                                                    </span>
+                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                        {Math.round(
+                                                            (appearance
+                                                                .ambientMotionStrength ??
+                                                                DEFAULT_AMBIENT_MOTION_STRENGTH) *
+                                                                100,
+                                                        )}%
+                                                    </span>
+                                                </div>
+                                                <p className="settings-row-desc">
+                                                    控制呼吸与涟漪的可见程度
+                                                </p>
+                                            </div>
+                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
+                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                    {Math.round(
+                                                        (appearance
+                                                            .ambientMotionStrength ??
+                                                            DEFAULT_AMBIENT_MOTION_STRENGTH) *
+                                                            100,
+                                                    )}%
+                                                </div>
+                                                <Slider
+                                                    min={0}
+                                                    max={1}
+                                                    step={0.05}
+                                                    value={appearance
+                                                        .ambientMotionStrength ??
+                                                        DEFAULT_AMBIENT_MOTION_STRENGTH}
+                                                    disabled={(appearance
+                                                        .ambientMotionMode ??
+                                                        DEFAULT_AMBIENT_MOTION_MODE) ===
+                                                        "off"}
+                                                    onValueChange={(v) =>
+                                                        set(
+                                                            "ambientMotionStrength",
+                                                            typeof v ===
+                                                                    "number"
+                                                                ? v
+                                                                : v[0],
+                                                        )}
+                                                    aria-label="动态强度"
                                                     className="w-full"
                                                 />
                                             </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     BrowserRouter,
     Link,
@@ -18,6 +18,12 @@ import {
     UserRound,
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
+import {
+    DEFAULT_AMBIENT_MOTION_MODE,
+    DEFAULT_AMBIENT_MOTION_STRENGTH,
+    DEFAULT_WALLPAPER_GLOW_STRENGTH,
+    DEFAULT_WALLPAPER_MASK,
+} from "@shared/contracts.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
 import { DesignLab } from "./design-lab/DesignLab.tsx";
 import { AuthPage } from "./app/AuthPage.tsx";
@@ -81,8 +87,43 @@ function Layout() {
         }
         return "none";
     })();
+    const glowStrength = appearance.wallpaperGlowStrength ??
+        DEFAULT_WALLPAPER_GLOW_STRENGTH;
+    const motionMode = appearance.ambientMotionMode ??
+        DEFAULT_AMBIENT_MOTION_MODE;
+    const motionStrength = appearance.ambientMotionStrength ??
+        DEFAULT_AMBIENT_MOTION_STRENGTH;
+
+    const S = motionMode === "off" ? 0 : motionStrength;
+    const glowRestOpacity = 1 - 0.18 * S;
+    const glowPeakScale = 1 + 0.05 * S;
+    const ripplePeakOpacity = 0.18 * S;
+    const ripplePeakScale = 1 + 0.20 * S;
+    const shellRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const root = document.documentElement;
+        const shell = shellRef.current;
+        const setProp = (k: string, v: string) => {
+            root.style.setProperty(k, v);
+            shell?.style.setProperty(k, v);
+        };
+        setProp("--wallpaper-glow-strength", `${glowStrength * 100}%`);
+        setProp("--wallpaper-glow-duration", "8s");
+        setProp("--wallpaper-glow-rest-opacity", String(glowRestOpacity));
+        setProp("--wallpaper-glow-peak-scale", String(glowPeakScale));
+        setProp("--wallpaper-ripple-peak-opacity", String(ripplePeakOpacity));
+        setProp("--wallpaper-ripple-peak-scale", String(ripplePeakScale));
+    }, [
+        glowStrength,
+        glowRestOpacity,
+        glowPeakScale,
+        ripplePeakOpacity,
+        ripplePeakScale,
+    ]);
+
     return (
         <div
+            ref={shellRef}
             className="app-shell"
             data-wallpaper-image={wallpaperCss.startsWith("url(")
                 ? "true"
@@ -91,13 +132,18 @@ function Layout() {
                 "--wallpaper-image": wallpaperCss,
                 "--wallpaper-blur": appearance.blur + "px",
                 "--wallpaper-grayscale": appearance.grayscale,
-                "--wallpaper-mask": appearance.mask,
+                "--wallpaper-mask": appearance.mask ?? DEFAULT_WALLPAPER_MASK,
                 "--search-opacity": appearance.searchOpacity ?? 1,
             } as React.CSSProperties}
         >
             {isHomePage && (
-                <div className="wallpaper" aria-hidden="true">
+                <div
+                    className="wallpaper"
+                    data-ambient-motion={motionMode}
+                    aria-hidden="true"
+                >
                     <div className="wallpaper__image" />
+                    <div className="wallpaper__ripple" />
                 </div>
             )}
             <header className="topbar">

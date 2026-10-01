@@ -81,7 +81,14 @@ export const preferences = sqliteTable("preferences", {
     backgroundOpacity: real("background_opacity").notNull().default(0.36),
     wallpaperBlur: real("wallpaper_blur").notNull().default(0),
     wallpaperGrayscale: real("wallpaper_grayscale").notNull().default(0),
-    wallpaperMask: real("wallpaper_mask").notNull().default(0),
+    wallpaperMask: real("wallpaper_mask").notNull().default(0.36),
+    wallpaperGlowStrength: real("wallpaper_glow_strength")
+        .notNull().default(0.14),
+    ambientMotionMode: text("ambient_motion_mode", {
+        enum: ["off", "breathe", "breathe_ripple"],
+    }).notNull().default("breathe_ripple"),
+    ambientMotionStrength: real("ambient_motion_strength")
+        .notNull().default(0.35),
     searchTarget: text("search_target", { enum: ["same", "new"] })
         .notNull().default("same"),
     searchHistoryEnabled: integer("search_history_enabled", { mode: "boolean" })
@@ -139,6 +146,18 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_webapp_icon_size_check",
         sql`${t.webAppIconSize} in ('compact','default','large')`,
+    ),
+    check(
+        "preferences_wallpaper_glow_strength_check",
+        sql`${t.wallpaperGlowStrength} >= 0 and ${t.wallpaperGlowStrength} <= 0.3`,
+    ),
+    check(
+        "preferences_ambient_motion_mode_check",
+        sql`${t.ambientMotionMode} in ('off','breathe','breathe_ripple')`,
+    ),
+    check(
+        "preferences_ambient_motion_strength_check",
+        sql`${t.ambientMotionStrength} >= 0 and ${t.ambientMotionStrength} <= 1`,
     ),
 ]);
 

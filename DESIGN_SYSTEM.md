@@ -80,20 +80,35 @@ AlertDialog）具有严格不同的交互与视觉语义：
 ### Wallpaper canvas
 
 首页 canvas 固定在 app-shell 的隔离层级中，自身裁切并建立 stacking context。
-base gradient → wallpaper image（内部 z-index 0）→ theme glow（1）→ readability
-mask（2）；装饰层均不接收 pointer events，且由 aria-hidden 容器排除可访问性树。
-blur/grayscale 仅作用于图片层；图片按三倍 blur 半径扩展裁切区域，并保留原有
-scale(1.06)。图片层继续接受 URL 图片及 linear/radial
-gradient，图片专属材质标记仍只匹配 URL。
+base gradient → wallpaper image（内部 z-index 0）→ readability mask（1）→ theme
+glow（2）→ ambient ripple（3）。图片由 `.wallpaper__image` 拥有， mask 由
+`.wallpaper::after` 拥有，glow 由 `.wallpaper::before` 拥有， 涟漪由真实 DOM
+`.wallpaper__ripple` 拥有。装饰层均为 pointer-events: none， 并由 aria-hidden
+容器排除可访问性树；不产生布局或可点击区域。 blur/grayscale
+仅作用于图片层；图片按三倍 blur 半径扩展裁切区域，保留 scale(1.06)。URL 图片及
+linear/radial gradient 仍可渲染，图片材质标记只匹配 URL。
 
-glow 由 tokens.css 的 --wallpaper-glow / --wallpaper-glow-origin 定义：light
-沿用 7% accent、50% 16% 原点；dark 沿用 14% accent、50% 18% 原点。 Issue #23
-明确允许这一处低频背景动效：--wallpaper-glow-duration 为 8s，
---wallpaper-glow-rest-opacity 为 .88，峰值 opacity 为 1，
---wallpaper-glow-peak-scale 为 1.025。只动画
-opacity/transform，不动画滤镜或渐变； reduced-motion 下 animation:
-none，保留静态 glow。mask 仍使用 --surface-l0 和用户原有不透明度，始终覆盖
-glow，不为强化光晕绕过 mask。
+`wallpaperMask` 范围 0–0.8、canonical default 0.36，只控制图片可读性， 不控制
+glow/ripple；迁移不改写历史 mask（包括用户选择的 0）。 `wallpaperGlowStrength`
+范围 0–0.30、default 0.14，由单一 `--wallpaper-glow-strength` 控制 accent
+color-mix；light/dark 均为 14%。 主题原点仍由 `--wallpaper-glow-origin`
+拥有（light 50% 16%，dark 50% 18%）。
+
+`ambientMotionMode` 为 off / breathe / breathe_ripple（default
+breathe_ripple）： off 保留静态 glow，breathe 只启用 glow，breathe_ripple
+同时启用柔和 radial 涟漪（无高对比环或多环）。`ambientMotionStrength` 范围
+0–1、default 0.35， 只控制幅度；S=0 与静态 glow 视觉等价，off 时 Slider disabled
+且保留原值。 React 将 S 映射为 glow rest opacity = 1−0.18S、glow peak scale =
+1+0.05S、 ripple peak opacity = 0.18S、ripple peak scale = 1+0.20S。周期固定为
+8s， glow 使用 ease-in-out，ripple 使用 ease-out 并延迟 1.5s；只动画
+opacity/transform。 prefers-reduced-motion: reduce 优先关闭两类动画、隐藏
+ripple，保留静态 glow； 不改保存值，系统偏好关闭后自动恢复用户模式。
+
+默认值由 `src/shared/contracts.ts` 导出，Appearance 初始态、Settings reset、
+PreferencesService 与 schema 同步引用；首次 partial PATCH 基于完整服务默认值
+叠加 patch，后续 PATCH 只修改提交字段。匿名设置仅持久化到独立设备缓存，
+账号设备缓存按用户隔离，云端保存共享设置；旧缓存/API 缺字段时 normalize
+到默认值。
 
 ## Page Archetypes
 

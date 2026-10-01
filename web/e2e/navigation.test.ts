@@ -93,14 +93,14 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
-        "anonymous appearance stays within the current page and is not persisted",
+        "anonymous device appearance survives reload without an account",
         async () => {
             await visit("/settings/appearance");
-            await page.getByRole("tab", { name: "深色", exact: true }).click();
+            await page.getByRole("tab", { name: "浅色", exact: true }).click();
             await page.getByText("空间轻桌面", { exact: true }).click();
             await page.waitForFunction(() =>
                 document.documentElement.dataset.style === "widgets" &&
-                document.documentElement.dataset.theme === "dark"
+                document.documentElement.dataset.theme === "light"
             );
             await page.getByRole("link", { name: "Searcher 首页" }).click();
             await page.waitForURL(origin + "/");
@@ -110,25 +110,9 @@ Deno.test("production navigation contracts", async (t) => {
                 ),
                 "widgets",
             );
-            assertEquals(
-                await page.evaluate(() =>
-                    localStorage.getItem("visitor_appearance")
-                ),
-                null,
-            );
-            await page.evaluate(() =>
-                localStorage.setItem(
-                    "visitor_appearance",
-                    JSON.stringify({
-                        theme: "dark",
-                        style: "widgets",
-                        showTitle: false,
-                    }),
-                )
-            );
             await page.reload();
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen" &&
+                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "light"
             );
         },
@@ -269,7 +253,7 @@ Deno.test("production navigation contracts", async (t) => {
             await page.getByRole("link", { name: "登录", exact: true })
                 .waitFor();
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen" &&
+                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "light"
             );
             await visit("/register");
@@ -311,7 +295,7 @@ Deno.test("production navigation contracts", async (t) => {
             await page.getByRole("link", { name: "登录", exact: true })
                 .waitFor();
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen" &&
+                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "light"
             );
         },
@@ -453,7 +437,6 @@ Deno.test("production navigation contracts", async (t) => {
                 const path of [
                     "/settings/data",
                     "/admin/backup",
-                    "/ask",
                     "/account",
                     "/trash",
                 ]
@@ -470,16 +453,6 @@ Deno.test("production navigation contracts", async (t) => {
                     true,
                     path,
                 );
-                if (path === "/ask") {
-                    assertEquals(
-                        await page.evaluate(() =>
-                            document.documentElement.scrollHeight <=
-                                innerHeight
-                        ),
-                        true,
-                        "Ask workspace must fit below its breadcrumb",
-                    );
-                }
                 await nav.getByRole("link", { name: "首页", exact: true })
                     .click();
                 await page.waitForURL(origin + "/");

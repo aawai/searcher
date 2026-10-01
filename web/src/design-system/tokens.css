@@ -8,15 +8,18 @@
     --surface-solid: #FFFFFF;
     /* Material levels: canvas, content, primary search, temporary overlay. */
     --surface-l0: var(--background);
+    --wallpaper-glow-strength: 14%;
     --wallpaper-glow: radial-gradient(
         circle at 50% 16%,
-        color-mix(in srgb, var(--accent) 7%, transparent),
+        color-mix(in srgb, var(--accent) var(--wallpaper-glow-strength), transparent),
         transparent 68%
     );
     --wallpaper-glow-origin: 50% 16%;
     --wallpaper-glow-duration: 8s;
-    --wallpaper-glow-rest-opacity: .88;
-    --wallpaper-glow-peak-scale: 1.025;
+    --wallpaper-glow-rest-opacity: .937;
+    --wallpaper-glow-peak-scale: 1.0175;
+    --wallpaper-ripple-peak-opacity: .063;
+    --wallpaper-ripple-peak-scale: 1.07;
     --surface-l1: color-mix(in srgb, var(--surface-solid) 86%, transparent);
     --surface-l2: var(--surface-solid);
     --surface-l3: var(--surface-solid);
@@ -193,7 +196,7 @@
     --surface-l3: #222730;
     --wallpaper-glow: radial-gradient(
         circle at 50% 18%,
-        color-mix(in srgb, var(--accent) 14%, transparent),
+        color-mix(in srgb, var(--accent) var(--wallpaper-glow-strength), transparent),
         transparent 74%
     );
     --wallpaper-glow-origin: 50% 18%;

@@ -164,6 +164,17 @@ export interface AiGenerationDefaultsDto {
     models?: Record<string, UserGenerationConfig>;
 }
 
+export const DEFAULT_WALLPAPER_MASK = 0.36;
+export const DEFAULT_WALLPAPER_GLOW_STRENGTH = 0.14;
+export const AMBIENT_MOTION_MODES = [
+    "off",
+    "breathe",
+    "breathe_ripple",
+] as const;
+export type AmbientMotionMode = typeof AMBIENT_MOTION_MODES[number];
+export const DEFAULT_AMBIENT_MOTION_MODE: AmbientMotionMode = "breathe_ripple";
+export const DEFAULT_AMBIENT_MOTION_STRENGTH = 0.35;
+
 export interface PreferencesDto {
     defaultEngine: EngineId;
     theme: ThemeId;
@@ -176,6 +187,9 @@ export interface PreferencesDto {
     wallpaperBlur: number;
     wallpaperGrayscale: number;
     wallpaperMask: number;
+    wallpaperGlowStrength: number;
+    ambientMotionMode: AmbientMotionMode;
+    ambientMotionStrength: number;
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";
