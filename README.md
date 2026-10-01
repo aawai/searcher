@@ -74,6 +74,11 @@ deno task check:ui --update
 
 AI 问答工作区（`/ask`）提供多模型对话、多分支推理和个人上下文集成的完整工作台体验：
 
+登录后，Conversation Workspace 直接占据 Topbar 与连接状态提示以下的可用空间，
+会话标题位于工作区 Header；不再重复展示页面 breadcrumb / “AI 问答”大标题。
+历史与消息各自滚动，输入面板保留在工作区内；移动端通过历史入口打开 Sheet。
+未登录时保留页面标题与登录入口。
+
 ### 交互架构与数据契约
 - **前端原语与 Runtime 适配**：前端基于 `@assistant-ui/react` 提供的标准会话交互原语（Thread、Message、Composer、BranchPicker、附件渲染与平滑滚屏），并通过定制的 `SearcherAssistantRuntimeProvider`（基于 `useExternalStoreRuntime` 与 `ExportedMessageRepository.fromBranchableArray`）建立双向驱动。
 - **后端完全掌控与数据驻留**：全部会话数据、分支树持久化、SQLite 数据库表（`ai_conversations`、`ai_messages`、`ai_blobs`、`ai_providers`、`ai_models`）、AES-256-GCM 加密密钥（`ENCRYPTION_KEY`）、模型注册表、能力裁决与鉴权均完全由 Searcher 本地服务掌控。不依赖任何第三方前端云或外部托管会话服务，所有凭证与私有会话均保留在本地。
@@ -122,6 +127,7 @@ AI 问答工作区（`/ask`）提供多模型对话、多分支推理和个人�
 - **容量与数量限制**：单条消息最多支持 4 个附件（`MAX_ATTACHMENTS = 4`）。
 - **图片附件**：单张上限 5 MiB，支持 PNG、JPEG、WebP。服务端验证 base64 数据大小及文件头与声明 MIME 是否一致；文件头检查不等同于完整图片解码。图片存于 SQLite `ai_blobs`，通过 owner 鉴权的 `/api/ai/blobs/:id` 读取，并以 base64 发送给视觉模型。Blob 响应采用 `Cache-Control: no-store`，删除会话后重新请求返回 404，不从浏览器磁盘缓存重放。
 - **文本附件**：界面支持 TXT、Markdown、CSV、JSON，单文件上限 1 MiB；API 同时接受 `text/*`，内容均作为纯文本传给模型，不按 HTML 执行或渲染。
+- **请求体策略**：由 Hono `bodyLimit` 作为唯一字节级 enforcement；`POST /api/ai/chat/stream` 限制 32 MiB 以容纳多模态 base64 附件，普通 API 限制默认 64 KiB，图标上传限制 2 MiB + 64 KiB，壁纸与备份上传限制 50 MiB。
 
 ### 工具调用与联网搜索
 - **只读 Opt-in 工具**：提供便签检索（`lookup_notes`）与应用快捷方式检索（`lookup_apps`），均为严格只读（Read-only）工具，且必须由用户在会话配置中显式勾选启用（`tools: { notes: boolean, apps: boolean }`），未启用的工具调用会被后端主动拦截。

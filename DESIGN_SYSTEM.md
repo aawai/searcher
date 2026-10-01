@@ -155,6 +155,17 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
 持久化；assistant-ui 的 external-store runtime 与 branchable repository 负责
 Thread、Message、Composer、编辑、重新生成和分支导航。
 
+- 登录态 Workspace 是页面第一层主体，不渲染外层 PageHeader 或 breadcrumb；
+  Conversation Header 的会话标题是唯一 H1。Guest 保留 PageHeader，空态保留
+  “有什么可以帮你的？”主标题，不添加无状态语义的身份 badge。
+- AppShell 的 Topbar / connection banner 不收缩，Ask Page 与 Workspace 沿 flex
+  链填满剩余高度（min-height: 0），上下留白统一为 --space-4；不通过固定 viewport
+  减法计算 Workspace 高度。Sidebar / Header / Body 共用
+  --surface-solid，外缘使用 --border-subtle 与 --radius-card；main 不添加 card
+  阴影，Sidebar 保留 divider。
+- 移动历史 Sheet 的中间容器必须可收缩，Header 与新建/搜索区不收缩；
+  历史列表独立滚动，不允许长历史撑出 Sheet。
+
 - Conversation Header
   只放标题、历史入口、会话内搜索和会话菜单；模型、推理强度、高级参数及只读 Tools
   都位于 Composer，避免重复模型入口。

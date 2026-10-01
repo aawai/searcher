@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono";
 import { getConnInfo } from "hono/deno";
 import { failResponse } from "@internal/hono/middleware/response.ts";
+import { resolveBodyPolicy } from "@internal/hono/body-policy.ts";
 
 export interface RateLimiterOptions {
     windowMs: number;
@@ -106,37 +107,18 @@ export function createApiSecurityMiddleware(options: {
             if (!reqOrigin || reqOrigin !== expectedOrigin) {
                 return failResponse(c, 403, "Origin 校验失败，禁止跨站请求");
             }
-            const isIconUpload = c.req.path === "/api/webapp-icons/upload" &&
-                method === "POST";
-            const isFileUpload = isIconUpload ||
-                (c.req.path === "/api/wallpaper" ||
-                        c.req.path.startsWith("/api/admin/backup/")) &&
-                    method === "POST";
-            const maxAllowedBody = isIconUpload
-                ? 2 * 1024 * 1024 + 64 * 1024
-                : isFileUpload
-                ? 50 * 1024 * 1024
-                : 64 * 1024;
+            const policy = resolveBodyPolicy(method, c.req.path);
             const contentLengthHeader = c.req.header("content-length");
             const contentLength = contentLengthHeader
                 ? parseInt(contentLengthHeader, 10)
                 : 0;
-            if (contentLength > maxAllowedBody) {
-                return failResponse(
-                    c,
-                    413,
-                    isFileUpload
-                        ? "上传文件大小超过限制"
-                        : "请求体超过 64 KiB 上限",
-                );
-            }
-
             const contentType = c.req.header("content-type");
-            const hasBody = (contentLengthHeader && contentLength > 0) ||
-                (contentType !== undefined && contentType.length > 0);
+            const hasBody =
+                (contentLengthHeader !== undefined && contentLength > 0) ||
+                (contentType !== undefined && contentType.trim().length > 0);
 
             if (hasBody) {
-                if (isFileUpload) {
+                if (policy.bodyType === "multipart") {
                     if (
                         !contentType ||
                         !contentType.toLowerCase().startsWith(

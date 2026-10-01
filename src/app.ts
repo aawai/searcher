@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
+import { createBodyLimitMiddleware } from "@internal/hono/body-policy.ts";
 import { serveStatic } from "hono/deno";
 import { Routes } from "@internal/hono/routes.ts";
 import { responseMiddleware } from "@internal/hono/middleware/response.ts";
@@ -63,39 +63,7 @@ export function createApp(
             Deno.env.get("NODE_ENV") === "test" ? false : "console",
         ),
     );
-    app.use("/api/*", async (c, next) => {
-        const isIconUpload = c.req.path === "/api/webapp-icons/upload" &&
-            c.req.method.toUpperCase() === "POST";
-        const isAiChatStream = c.req.path === "/api/ai/chat/stream" &&
-            c.req.method.toUpperCase() === "POST";
-        if (
-            isIconUpload ||
-            isAiChatStream ||
-            (c.req.path === "/api/wallpaper" &&
-                c.req.method.toUpperCase() === "POST") ||
-            (c.req.path.startsWith("/api/admin/backup/") &&
-                c.req.method.toUpperCase() === "POST")
-        ) {
-            return await bodyLimit({
-                maxSize: isIconUpload
-                    ? 2 * 1024 * 1024 + 64 * 1024
-                    : isAiChatStream
-                    ? 32 * 1024 * 1024
-                    : 50 * 1024 * 1024,
-                onError: (c) =>
-                    c.fail(
-                        413,
-                        isAiChatStream
-                            ? "AI 请求体超过 32 MiB 上限"
-                            : "上传文件大小超过限制",
-                    ),
-            })(c, next);
-        }
-        return await bodyLimit({
-            maxSize: 64 * 1024,
-            onError: (c) => c.fail(413, "请求体超过 64 KiB 上限"),
-        })(c, next);
-    });
+    app.use("/api/*", createBodyLimitMiddleware());
     app.use("/api/*", createApiSecurityMiddleware({ origin: deps.origin }));
 
     const routes = new Routes<AppEnv>();

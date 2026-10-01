@@ -1,6 +1,6 @@
 import { ThreadPrimitive } from "@assistant-ui/react";
 import { useEffect, useRef } from "react";
-import { ArrowDown, SlidersHorizontal, Sparkles } from "lucide-react";
+import { ArrowDown, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
@@ -78,14 +78,8 @@ export function SearcherThread({
                 <div className="ask-empty-layout">
                     <div className="ask-empty-centered-unit">
                         <div className="ask-empty-hero">
-                            <div className="ask-empty-hero__badge">
-                                <Sparkles size={16} className="text-accent" />
-                                <span>AI 智能问答工作区</span>
-                            </div>
                             <h2 className="ask-empty-hero__title">
-                                {selectedModelId
-                                    ? "有什么可以帮你的？"
-                                    : "未配置可用 AI 模型"}
+                                有什么可以帮你的？
                             </h2>
                             <p className="ask-empty-hero__subtitle">
                                 {selectedModelId
