@@ -9,6 +9,7 @@ import { parseCookie } from "../auth/middleware.ts";
 import { SESSION_COOKIE_NAME } from "../auth/service.ts";
 import {
     ACCENT_IDS,
+    AMBIENT_MOTION_MODES,
     CANONICAL_REASONING_EFFORTS,
 } from "../../shared/contracts.ts";
 const Engine = v.optional(
@@ -61,6 +62,13 @@ const Grayscale = v.optional(
 );
 const Mask = v.optional(
     v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(0.8)),
+);
+const GlowStrength = v.optional(
+    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(0.3)),
+);
+const MotionMode = v.optional(v.picklist(AMBIENT_MOTION_MODES));
+const MotionStrength = v.optional(
+    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(1)),
 );
 
 const GenerationConfig = v.object({
@@ -147,6 +155,9 @@ export function registerPreferencesRoutes(
             wallpaperBlur: json(Blur),
             wallpaperGrayscale: json(Grayscale),
             wallpaperMask: json(Mask),
+            wallpaperGlowStrength: json(GlowStrength),
+            ambientMotionMode: json(MotionMode),
+            ambientMotionStrength: json(MotionStrength),
             aiGenerationDefaults: json(AiGenerationDefaults),
         }),
         async (c, data) => {

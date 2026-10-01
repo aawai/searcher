@@ -431,3 +431,64 @@
       的真实错误横幅 computed gap 均为 12px、padding 均为 8px 16px，
       无页面横向溢出；恢复网络后点击重试，横幅移除。最终 build 与 UI Guard 31
       项复查通过。compact button padding 仍为 6px 12px，不扩大到语义命名重构。
+
+## Issue #55 背景光晕与动态偏好（2026-10-01）
+
+- [x] Search Canvas / Utility Settings，primary 仍为搜索；复用现有 Slider、
+      RadioGroup、SettingsRow 和 surface/spacing/typography
+      Token，未新增基础控件。 图片/遮罩/glow/ripple ownership 见 Design
+      System；本记录取代 #23 的旧图层顺序。
+- [x] 30 个实页场景：390×844 / 768×1024 / 1440×900 × light/dark ×
+      off、breathe、breathe_ripple、动态强度 0、动态强度 1；内部 z-index
+      0/1/2/3、pointer-events none、image-only filter、无横向溢出。
+      光晕默认两主题均 14%；S=0 的 glow 关键帧无 opacity/scale 幅度，ripple
+      全程透明。
+- [x] 12 个 mask=0/.8 对照场景，glow computed gradient 完全一致； 18 个
+      reduced-motion 场景两类 animation-name 均为 none、ripple 隐藏、静态 glow
+      保留。 关闭系统偏好后恢复保存模式。640/960/1280 的 Home/Settings 另有 3
+      组临界宽度检查。
+- [x] 已校准缓存 transaction 完成、认证/偏好同步、两帧 React/CSS
+      状态提交及媒体条件。 初次 reduced-motion 实测发现模式选择器 specificity
+      高于媒体覆盖，已修复并重查上述 18 场景。
+      登录控件操作必须等待账号/偏好恢复，避免把启动初始态误当同步完成。
+- [x] 六视口/主题的匿名 Home 与背景 Settings 共 12 张截图，六种登录态 Home
+      使用真实上传 PNG、 blur=24/grayscale=1 及应用/主页便签，另有移动登录态
+      Settings 截图；均已审阅。 截图已在验收时审阅；/tmp
+      文件为临时产物，不作为长期证据链接，以下复核 记录保留实际 viewport、DPR
+      和运行结果。
+- [x] Slider 键盘 0/30% 边界、1% 步长和即时 glow 更新；off 的动态 Slider
+      disabled， 原 35% 值保留。恢复默认的实际 mask/glow/motion 为 .36/.14/.35。
+      匿名刷新、账号保存后刷新/重新登录、登出恢复独立匿名值均通过。
+- [x] 搜索输入、快捷建议命中与选择、应用 Launcher
+      打开/收起、便签卡片打开编辑器可用， elementFromPoint
+      未命中壁纸层；未触发外部搜索或应用导航。 默认自然动画 8 秒采样：glow
+      opacity .937162–.999872、ripple opacity 0–.0625888，glow filter 恒为
+      none。
+- [x] Settings / Home axe WCAG A/AA 无 confirmed violations，分别 1–2 / 2 项
+      incomplete。 最后生产导航无 console error/page error；便签 SSE
+      在页面离开时的 ERR_ABORTED 属于正常取消。
+- [x] build、typecheck、scoped lint/format 通过；UI Guard 扫描 87 文件、0
+      violations、0 drift。 全量契约测试通过；历史 mask 0/.8 从 0015 升级到 0016
+      后保留，future-row mask 默认 .36。 生产导航 9 steps 通过；移除已被 #49
+      废弃的 Ask breadcrumb 断言，不重新固定旧实现。
+- [x] Design Lab、权限、history、conversation model
+      未改，相关组件全状态不重复验收； README、Design System、仓库匿名存储
+      contract 与 Unreleased 同步最终行为。
+- [x] 冷启动 /settings/appearance console errors 为 0；auth/me 延迟 3 秒时只显示
+      Shell loading、不渲染设置控件，认证完成后恢复值与服务端一致。deps 长度
+      warning 出现在 5185 旧开发热更新会话，冷生产页未复现；现行 effect 依赖
+      数组固定为 [ready, user?.id, appearanceOwner, appearance]，无条件展开。
+      不以旧日志推断现行构建仍有此缺陷。
+- [x] 已记录 React Doctor 扫描 web 的 58/100、14 warnings（含 .vite vendor）；
+      这不是诊断全绿。未报告 state.tsx 的 effect 依赖问题，Settings 的提示指向
+      既有壁纸历史数组查找；本次不扩展到全站诊断整改，也不安装新的诊断依赖。
+- [x] Advisor 复核（2026-10-01）：对 Home/Settings 分别读取 innerWidth、
+      innerHeight、devicePixelRatio，并核对 browser.observe 的 viewport；
+      390×844 / 768×1024 / 1440×900 均为 CSS viewport，DPR 均为 1.25。 对应 Home
+      原始截图为 488×1055 / 960×1280 / 1800×1125； 工具展示的 474×1024 /
+      768×1024 / 1024×640 是图片缩放，不是 viewport。 三档 × light/dark
+      无横向溢出；off 时静态 glow alpha=.14、opacity=1、
+      animation-name=none、ripple display=none，动态 Slider 禁用。
+- [x] Advisor 复核匿名主题转换：匿名 dark → 登录账号改 light → 登出恢复 dark →
+      匿名改 light → 刷新仍为 light。每一步核对 DOM dataset.theme 和 IndexedDB
+      appearance:anonymous，均一致；console errors 为 0。

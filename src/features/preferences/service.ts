@@ -3,6 +3,11 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
 import {
     type AiGenerationDefaultsDto,
+    type AmbientMotionMode,
+    DEFAULT_AMBIENT_MOTION_MODE,
+    DEFAULT_AMBIENT_MOTION_STRENGTH,
+    DEFAULT_WALLPAPER_GLOW_STRENGTH,
+    DEFAULT_WALLPAPER_MASK,
     type LegacyStylePreset,
     normalizeStylePreset,
     type PreferencesDto,
@@ -44,7 +49,10 @@ const defaults: PreferencesDto = {
     backgroundImage: null,
     wallpaperBlur: 0,
     wallpaperGrayscale: 0,
-    wallpaperMask: 0.36,
+    wallpaperMask: DEFAULT_WALLPAPER_MASK,
+    wallpaperGlowStrength: DEFAULT_WALLPAPER_GLOW_STRENGTH,
+    ambientMotionMode: DEFAULT_AMBIENT_MOTION_MODE,
+    ambientMotionStrength: DEFAULT_AMBIENT_MOTION_STRENGTH,
     searchTarget: "same",
     searchHistoryEnabled: false,
     webAppHomeLimit: 12,
@@ -122,7 +130,13 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         backgroundImage: row.backgroundImage,
         wallpaperBlur: row.wallpaperBlur,
         wallpaperGrayscale: row.wallpaperGrayscale,
-        wallpaperMask: row.wallpaperMask,
+        wallpaperMask: row.wallpaperMask ?? DEFAULT_WALLPAPER_MASK,
+        wallpaperGlowStrength: row.wallpaperGlowStrength ??
+            DEFAULT_WALLPAPER_GLOW_STRENGTH,
+        ambientMotionMode: (row.ambientMotionMode as AmbientMotionMode) ??
+            DEFAULT_AMBIENT_MOTION_MODE,
+        ambientMotionStrength: row.ambientMotionStrength ??
+            DEFAULT_AMBIENT_MOTION_STRENGTH,
         searchTarget: row.searchTarget,
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
         webAppHomeLimit: row.webAppHomeLimit === "all"
@@ -171,6 +185,7 @@ export class PreferencesService {
                 aiGenerationDefaults?: UpdateAiGenerationDefaultsInput;
             },
     ): Promise<PreferencesDto> {
+        const canonicalDefaults = await this.getDefaults();
         const { webAppHomeLimit, style, aiGenerationDefaults, ...rest } =
             updates;
         return await this.store.run(async (db) => {
@@ -225,26 +240,67 @@ export class PreferencesService {
                 serializedAiDefaults = JSON.stringify(merged);
             }
 
-            const values = {
-                ...rest,
-                ...(serializedAiDefaults !== undefined
-                    ? { aiGenerationDefaults: serializedAiDefaults }
-                    : {}),
-                ...(style === undefined
-                    ? {}
-                    : { style: normalizeStylePreset(style) }),
-                ...(webAppHomeLimit === undefined ? {} : {
-                    webAppHomeLimit: String(webAppHomeLimit) as
-                        | "8"
-                        | "12"
-                        | "16"
-                        | "all",
-                }),
+            const patchValues: Record<string, unknown> = {};
+            for (const [key, val] of Object.entries(rest)) {
+                if (val !== undefined) {
+                    patchValues[key] = val;
+                }
+            }
+            if (serializedAiDefaults !== undefined) {
+                patchValues.aiGenerationDefaults = serializedAiDefaults;
+            }
+            if (style !== undefined) {
+                patchValues.style = normalizeStylePreset(style);
+            }
+            if (webAppHomeLimit !== undefined) {
+                patchValues.webAppHomeLimit = String(webAppHomeLimit);
+            }
+
+            if (Object.keys(patchValues).length === 0) {
+                const rows = await db.select().from(preferences)
+                    .where(eq(preferences.userId, userId)).limit(1).all();
+                return rows[0] ? toDto(rows[0]) : canonicalDefaults;
+            }
+
+            const defaultRowValues = {
+                userId,
+                defaultEngine: canonicalDefaults.defaultEngine,
+                theme: canonicalDefaults.theme,
+                style: canonicalDefaults.style,
+                accent: canonicalDefaults.accent,
+                searchShape: canonicalDefaults.searchShape,
+                searchOpacity: canonicalDefaults.searchOpacity,
+                backgroundImage: canonicalDefaults.backgroundImage,
+                wallpaperBlur: canonicalDefaults.wallpaperBlur,
+                wallpaperGrayscale: canonicalDefaults.wallpaperGrayscale,
+                wallpaperMask: canonicalDefaults.wallpaperMask,
+                wallpaperGlowStrength: canonicalDefaults.wallpaperGlowStrength,
+                ambientMotionMode: canonicalDefaults.ambientMotionMode,
+                ambientMotionStrength: canonicalDefaults.ambientMotionStrength,
+                searchTarget: canonicalDefaults.searchTarget,
+                searchHistoryEnabled: canonicalDefaults.searchHistoryEnabled ??
+                    false,
+                webAppHomeLimit: String(canonicalDefaults.webAppHomeLimit) as
+                    | "8"
+                    | "12"
+                    | "16"
+                    | "all",
+                webAppIconSize: canonicalDefaults.webAppIconSize,
+                showAppLabels: canonicalDefaults.showAppLabels,
+                aiGenerationDefaults: JSON.stringify(
+                    canonicalDefaults.aiGenerationDefaults ?? { models: {} },
+                ),
             };
-            await db.insert(preferences).values({ userId, ...values })
+
+            const insertValues = {
+                ...defaultRowValues,
+                ...patchValues,
+            };
+
+            await db.insert(preferences).values(insertValues)
                 .onConflictDoUpdate({
                     target: preferences.userId,
-                    set: values,
+                    set: patchValues,
                 }).run();
             const rows = await db.select().from(preferences)
                 .where(eq(preferences.userId, userId)).limit(1).all();

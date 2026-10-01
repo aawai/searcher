@@ -9,6 +9,12 @@ import {
 } from "react";
 import {
     type AccentId,
+    AMBIENT_MOTION_MODES,
+    type AmbientMotionMode,
+    DEFAULT_AMBIENT_MOTION_MODE,
+    DEFAULT_AMBIENT_MOTION_STRENGTH,
+    DEFAULT_WALLPAPER_GLOW_STRENGTH,
+    DEFAULT_WALLPAPER_MASK,
     normalizeAccent,
     normalizeStylePreset,
     type PreferencesDto,
@@ -37,6 +43,9 @@ export type Appearance = {
     blur: number;
     grayscale: number;
     mask: number;
+    wallpaperGlowStrength: number;
+    ambientMotionMode: AmbientMotionMode;
+    ambientMotionStrength: number;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
@@ -54,12 +63,73 @@ const initial: Appearance = {
     wallpaper: "",
     blur: 0,
     grayscale: 0,
-    mask: .75,
+    mask: DEFAULT_WALLPAPER_MASK,
+    wallpaperGlowStrength: DEFAULT_WALLPAPER_GLOW_STRENGTH,
+    ambientMotionMode: DEFAULT_AMBIENT_MOTION_MODE,
+    ambientMotionStrength: DEFAULT_AMBIENT_MOTION_STRENGTH,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
     showAppLabels: true,
 };
 
+/** 旧设备缓存和旧 API 响应缺少字段时，仍生成有效的背景参数。 */
+export function normalizeAppearance(raw: unknown): Appearance {
+    const saved = raw && typeof raw === "object" && !Array.isArray(raw)
+        ? raw as Record<string, unknown>
+        : {};
+    const result = { ...initial };
+    result.style = normalizeStylePreset(saved.style);
+    result.accent = normalizeAccent(saved.accent);
+    if (
+        saved.theme === "system" || saved.theme === "light" ||
+        saved.theme === "dark"
+    ) result.theme = saved.theme;
+    if (saved.shape === "rounded" || saved.shape === "pill") {
+        result.shape = saved.shape;
+    }
+    if (
+        saved.engine === "bing" || saved.engine === "google" ||
+        saved.engine === "baidu" || saved.engine === "duckduckgo"
+    ) result.engine = saved.engine;
+    if (saved.target === "current" || saved.target === "new_tab") {
+        result.target = saved.target;
+    }
+    if (typeof saved.wallpaper === "string") result.wallpaper = saved.wallpaper;
+    if (typeof saved.showTitle === "boolean") {
+        result.showTitle = saved.showTitle;
+    }
+    if (typeof saved.showAppLabels === "boolean") {
+        result.showAppLabels = saved.showAppLabels;
+    }
+    if (
+        saved.webAppHomeLimit === 8 || saved.webAppHomeLimit === 12 ||
+        saved.webAppHomeLimit === 16 || saved.webAppHomeLimit === "all"
+    ) result.webAppHomeLimit = saved.webAppHomeLimit;
+    if (
+        saved.webAppIconSize === "compact" ||
+        saved.webAppIconSize === "default" || saved.webAppIconSize === "large"
+    ) result.webAppIconSize = saved.webAppIconSize;
+    for (
+        const [key, min, max] of [
+            ["searchOpacity", 0.1, 1],
+            ["blur", 0, 24],
+            ["grayscale", 0, 1],
+            ["mask", 0, 0.8],
+            ["wallpaperGlowStrength", 0, 0.3],
+            ["ambientMotionStrength", 0, 1],
+        ] as const
+    ) {
+        const value = saved[key];
+        if (
+            typeof value === "number" && Number.isFinite(value) &&
+            value >= min && value <= max
+        ) result[key] = value;
+    }
+    if (AMBIENT_MOTION_MODES.some((mode) => mode === saved.ambientMotionMode)) {
+        result.ambientMotionMode = saved.ambientMotionMode as AmbientMotionMode;
+    }
+    return result;
+}
 type State = {
     user: UserDto | null;
     ready: boolean;
@@ -126,45 +196,49 @@ export function AppState({ children }: { children: ReactNode }) {
         void checkAuth();
     }, [checkAuth]);
 
-    // 登录后只读取当前用户的设备缓存，再由云端覆盖共享偏好。
+    // 设备缓存按 owner 隔离；账号共享偏好始终以云端为准。
     useEffect(() => {
-        if (!user) return;
-        const userId = user.id;
+        if (!ready) return;
+        const userId = user?.id ?? null;
+        const key = userId ? "appearance:" + userId : "appearance:anonymous";
         let alive = true;
         setAppearanceOwner(null);
         setValue(initial);
-        const active = () => alive && userRef.current?.id === userId;
+        const active = () => alive && (userRef.current?.id ?? null) === userId;
         async function loadAppearance() {
-            const saved = await getLocal<Appearance>("appearance:" + userId)
+            const saved = await getLocal<unknown>(key)
                 .catch(() => undefined);
             if (!active()) return;
-            setAppearanceOwner(userId);
-            setValue({
-                ...initial,
-                ...saved,
-                style: normalizeStylePreset(saved?.style ?? initial.style),
-                accent: normalizeAccent(saved?.accent ?? initial.accent),
-            });
+            setValue(normalizeAppearance(saved));
+            setAppearanceOwner(key);
+            if (!userId) return;
             const prefs = await api<PreferencesDto>("/api/preferences");
             if (!active()) return;
             setSyncFailed(false);
-            setValue((prev) => ({
-                ...prev,
-                engine: prefs.defaultEngine,
-                theme: prefs.theme,
-                style: normalizeStylePreset(prefs.style),
-                accent: normalizeAccent(prefs.accent),
-                shape: prefs.searchShape,
-                searchOpacity: prefs.searchOpacity ?? 1,
-                target: prefs.searchTarget === "new" ? "new_tab" : "current",
-                wallpaper: prefs.backgroundImage ?? "",
-                blur: prefs.wallpaperBlur,
-                grayscale: prefs.wallpaperGrayscale,
-                mask: prefs.wallpaperMask,
-                webAppHomeLimit: prefs.webAppHomeLimit,
-                webAppIconSize: prefs.webAppIconSize,
-                showAppLabels: prefs.showAppLabels,
-            }));
+            setValue((prev) =>
+                normalizeAppearance({
+                    ...prev,
+                    engine: prefs.defaultEngine,
+                    theme: prefs.theme,
+                    style: normalizeStylePreset(prefs.style),
+                    accent: normalizeAccent(prefs.accent),
+                    shape: prefs.searchShape,
+                    searchOpacity: prefs.searchOpacity ?? 1,
+                    target: prefs.searchTarget === "new"
+                        ? "new_tab"
+                        : "current",
+                    wallpaper: prefs.backgroundImage ?? "",
+                    blur: prefs.wallpaperBlur,
+                    grayscale: prefs.wallpaperGrayscale,
+                    mask: prefs.wallpaperMask,
+                    wallpaperGlowStrength: prefs.wallpaperGlowStrength,
+                    ambientMotionMode: prefs.ambientMotionMode,
+                    ambientMotionStrength: prefs.ambientMotionStrength,
+                    webAppHomeLimit: prefs.webAppHomeLimit,
+                    webAppIconSize: prefs.webAppIconSize,
+                    showAppLabels: prefs.showAppLabels,
+                })
+            );
         }
         void loadAppearance().catch((err) => {
             if (active() && !(err instanceof ApiError && err.code === 401)) {
@@ -174,12 +248,13 @@ export function AppState({ children }: { children: ReactNode }) {
         return () => {
             alive = false;
         };
-    }, [user?.id]);
+    }, [ready, user?.id]);
 
     useEffect(() => {
-        if (!user || appearanceOwner !== user.id) return;
-        void setLocal("appearance:" + user.id, appearance).catch(() => {});
-    }, [user?.id, appearanceOwner, appearance]);
+        const key = user ? "appearance:" + user.id : "appearance:anonymous";
+        if (!ready || appearanceOwner !== key) return;
+        void setLocal(key, appearance).catch(() => {});
+    }, [ready, user?.id, appearanceOwner, appearance]);
 
     useEffect(() => {
         const expired = () => {
@@ -223,7 +298,7 @@ export function AppState({ children }: { children: ReactNode }) {
     ]);
 
     const setAppearance = (next: Partial<Appearance>) => {
-        setValue((current) => ({ ...current, ...next }));
+        setValue((current) => normalizeAppearance({ ...current, ...next }));
         if (user) {
             const updates: Record<string, unknown> = {};
             if (next.theme !== undefined) updates.theme = next.theme;
@@ -240,6 +315,15 @@ export function AppState({ children }: { children: ReactNode }) {
                     : "same";
             }
             if (next.mask !== undefined) updates.wallpaperMask = next.mask;
+            if (next.wallpaperGlowStrength !== undefined) {
+                updates.wallpaperGlowStrength = next.wallpaperGlowStrength;
+            }
+            if (next.ambientMotionMode !== undefined) {
+                updates.ambientMotionMode = next.ambientMotionMode;
+            }
+            if (next.ambientMotionStrength !== undefined) {
+                updates.ambientMotionStrength = next.ambientMotionStrength;
+            }
             if (next.blur !== undefined) updates.wallpaperBlur = next.blur;
             if (next.grayscale !== undefined) {
                 updates.wallpaperGrayscale = next.grayscale;

@@ -346,25 +346,47 @@ a {
         grayscale(var(--wallpaper-grayscale,0));
     transform: scale(1.06);
 }
-.wallpaper::before {
+.wallpaper::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: var(--wallpaper-glow);
-    transform-origin: var(--wallpaper-glow-origin);
-    animation: wallpaper-glow-breathe var(--wallpaper-glow-duration) ease-in-out
-        infinite;
+    background: var(--surface-l0);
+    opacity: var(--wallpaper-mask, .36);
 }
-.wallpaper::after {
+.wallpaper::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 2;
     pointer-events: none;
-    background: var(--surface-l0);
-    opacity: var(--wallpaper-mask,.7);
+    background: var(--wallpaper-glow);
+    transform-origin: var(--wallpaper-glow-origin);
+}
+.wallpaper__ripple {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    transform-origin: var(--wallpaper-glow-origin);
+    background: radial-gradient(
+        circle at var(--wallpaper-glow-origin),
+        var(--accent) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    display: none;
+}
+.wallpaper[data-ambient-motion="breathe"]::before,
+.wallpaper[data-ambient-motion="breathe_ripple"]::before {
+    animation: wallpaper-glow-breathe var(--wallpaper-glow-duration, 8s)
+        ease-in-out infinite;
+}
+.wallpaper[data-ambient-motion="breathe_ripple"] .wallpaper__ripple {
+    display: block;
+    animation: wallpaper-ripple-drift var(--wallpaper-glow-duration, 8s)
+        ease-out 1.5s infinite;
 }
 @keyframes wallpaper-glow-breathe {
     0%,
@@ -375,6 +397,20 @@ a {
     50% {
         opacity: 1;
         transform: scale(var(--wallpaper-glow-peak-scale));
+    }
+}
+@keyframes wallpaper-ripple-drift {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    35% {
+        opacity: var(--wallpaper-ripple-peak-opacity);
+    }
+    75%,
+    100% {
+        opacity: 0;
+        transform: scale(var(--wallpaper-ripple-peak-scale));
     }
 }
 .topbar {
@@ -2026,8 +2062,12 @@ a {
         transition-duration: .01ms!important;
         scroll-behavior: auto!important;
     }
-    .wallpaper::before {
+    .wallpaper[data-ambient-motion]::before {
         animation: none;
+    }
+    .wallpaper[data-ambient-motion] .wallpaper__ripple {
+        animation: none;
+        display: none;
     }
 }
 
