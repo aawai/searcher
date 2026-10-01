@@ -1,0 +1,1 @@
+ALTER TABLE `preferences` ADD `ai_generation_defaults` text;

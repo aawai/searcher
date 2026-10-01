@@ -1,15 +1,39 @@
 import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 import type { DatabaseStore, SearchDatabase } from "../../db/database.ts";
 import {
+    aiBlobs,
     aiConversations,
     aiMessages,
     aiModels,
     aiProviders,
 } from "../../db/ai-schema.ts";
-import { auditLogs } from "../../db/schema.ts";
+import { auditLogs, preferences } from "../../db/schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
-import { fetchOpenAIModels, streamOpenAIChat } from "./client.ts";
+import { type OpenAIChatMessage, streamOpenAIChat } from "./client.ts";
 import { generateLogoCandidates } from "./images.ts";
+import {
+    buildProviderGenerationParams,
+    resolveEffectiveGenerationConfig,
+} from "./reasoning.ts";
+import {
+    applyManualOverride,
+    isStrictReasoningModel,
+    mergeModelMetadata,
+    parseModelMetadata,
+    populateModelDtoCapabilities,
+    resolveEffectiveCapability,
+    resolveReasoningTransport,
+} from "./model-capabilities.ts";
+import type { AiGenerationDefaultsDto } from "@shared/contracts.ts";
+import {
+    type DiscoveredModelWithCapabilities,
+    discoverProviderModels,
+} from "./provider-adapter.ts";
+import {
+    processAndStoreAttachments,
+    validateAttachments,
+} from "./attachments.ts";
+import { buildToolDefinitions, executeToolCall } from "./tools.ts";
 import type {
     AiConversationDto,
     AiMessageDto,
@@ -17,8 +41,10 @@ import type {
     AiProviderDto,
     ChatStreamRequest,
     CreateProviderInput,
+    DiscoveryMode,
     ImageProtocol,
     LogoStyle,
+    MessageContentPart,
     ProviderScope,
     UpdateModelInput,
     UpdateProviderInput,
@@ -31,6 +57,25 @@ export class AiServiceError extends Error {
         super(message);
         this.name = "AiServiceError";
         this.statusCode = statusCode;
+    }
+}
+function sanitizePublicMetadataJson(
+    metadataJson: string | null | undefined,
+): string | null {
+    if (!metadataJson) return null;
+    try {
+        const parsed = JSON.parse(metadataJson);
+        if (!parsed || typeof parsed !== "object") return null;
+        const sanitized: Record<string, unknown> = {};
+        if (parsed.capabilities && typeof parsed.capabilities === "object") {
+            sanitized.capabilities = parsed.capabilities;
+        }
+        if (typeof parsed.discoveryMode === "string") {
+            sanitized.discoveryMode = parsed.discoveryMode;
+        }
+        return JSON.stringify(sanitized);
+    } catch {
+        return null;
     }
 }
 
@@ -100,6 +145,7 @@ export class AiService {
                 name: r.name,
                 baseUrl: r.baseUrl,
                 apiKeyMasked: "********",
+                discoveryMode: (r.discoveryMode as DiscoveryMode) ?? "auto",
                 enabled: r.enabled,
                 createdAt: r.createdAt,
                 updatedAt: r.updatedAt,
@@ -126,15 +172,27 @@ export class AiService {
             throw new AiServiceError("API Key 不能为空", 400);
         }
 
-        // 1. 验证 /models，必须获取成功才能配置
-        const discovered = await fetchOpenAIModels(
-            input.baseUrl,
-            trimmedApiKey,
-            this.#fetchFn,
-        );
+        const discoveryMode: DiscoveryMode = input.discoveryMode ?? "auto";
+
+        // 1. 验证 Provider 模型列表，通过 adapter 发现
+        let discovered: DiscoveredModelWithCapabilities[];
+        try {
+            discovered = await discoverProviderModels(
+                input.baseUrl,
+                trimmedApiKey,
+                { fetchFn: this.#fetchFn, discoveryMode },
+            );
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            throw new AiServiceError(
+                `未能从 Provider 获取到可用模型: ${msg}`,
+                400,
+            );
+        }
+
         if (discovered.length === 0) {
             throw new AiServiceError(
-                "未能从 Provider 的 /models 获取到可用模型，Provider 不可用",
+                "未能从 Provider 获取到可用模型，Provider 不可用",
                 400,
             );
         }
@@ -155,14 +213,19 @@ export class AiService {
                 name: input.name.trim(),
                 baseUrl: input.baseUrl.trim(),
                 encryptedApiKey: encrypted,
+                discoveryMode,
                 enabled: input.enabled ?? true,
                 createdAt: now,
                 updatedAt: now,
             }).run();
 
-            // 批量将发现的模型插入 ai_models
+            // 批量将发现的模型插入 ai_models，并持久化推理能力与元数据
             for (let i = 0; i < discovered.length; i++) {
                 const model = discovered[i];
+                const initialMetadata = mergeModelMetadata(
+                    null,
+                    model.reasoningCapability,
+                );
                 await db.insert(aiModels).values({
                     id: crypto.randomUUID(),
                     providerId,
@@ -175,7 +238,7 @@ export class AiService {
                     supportsVision: model.supportsVision ?? false,
                     supportsTools: model.supportsTools ?? false,
                     supportsStreaming: model.supportsStreaming ?? true,
-                    metadataJson: null,
+                    metadataJson: initialMetadata,
                     updatedAt: now,
                 }).run();
             }
@@ -188,6 +251,7 @@ export class AiService {
                 name: input.name.trim(),
                 baseUrl: input.baseUrl.trim(),
                 apiKeyMasked: maskApiKey(trimmedApiKey),
+                discoveryMode,
                 enabled: input.enabled ?? true,
                 createdAt: now,
                 updatedAt: now,
@@ -216,19 +280,33 @@ export class AiService {
             return row;
         });
         const baseUrl = input.baseUrl?.trim() ?? existing.baseUrl;
+        const discoveryMode = input.discoveryMode ??
+            (existing.discoveryMode as DiscoveryMode) ?? "auto";
         let encryptedApiKey = existing.encryptedApiKey;
-        let discovered: Awaited<ReturnType<typeof fetchOpenAIModels>> = [];
-        if (input.apiKey !== undefined || input.baseUrl !== undefined) {
+        let discovered: DiscoveredModelWithCapabilities[] = [];
+        if (
+            input.apiKey !== undefined ||
+            input.baseUrl !== undefined ||
+            input.discoveryMode !== undefined
+        ) {
             const effectiveKey = input.apiKey?.trim() ||
                 await decryptApiKey(
                     existing.encryptedApiKey,
                     this.#encryptionKey,
                 );
-            discovered = await fetchOpenAIModels(
-                baseUrl,
-                effectiveKey,
-                this.#fetchFn,
-            );
+            try {
+                discovered = await discoverProviderModels(
+                    baseUrl,
+                    effectiveKey,
+                    { fetchFn: this.#fetchFn, discoveryMode },
+                );
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                throw new AiServiceError(
+                    `更新后未能获取到可用模型: ${msg}`,
+                    400,
+                );
+            }
             if (discovered.length === 0) {
                 throw new AiServiceError(
                     "更新后未能获取到可用模型，Provider 不可用",
@@ -255,9 +333,30 @@ export class AiService {
             if (discovered.length) {
                 const models = await db.select().from(aiModels)
                     .where(eq(aiModels.providerId, providerId)).all();
-                const known = new Set(models.map((model) => model.modelId));
+                const known = new Map(
+                    models.map((model) => [model.modelId, model]),
+                );
                 for (const model of discovered) {
-                    if (known.has(model.id)) continue;
+                    const existingModel = known.get(model.id);
+                    if (existingModel) {
+                        const mergedMetadata = mergeModelMetadata(
+                            existingModel.metadataJson,
+                            model.reasoningCapability,
+                        );
+                        await db.update(aiModels).set({
+                            metadataJson: mergedMetadata,
+                            supportsText: model.supportsText,
+                            supportsVision: model.supportsVision,
+                            supportsTools: model.supportsTools,
+                            supportsStreaming: model.supportsStreaming,
+                            updatedAt: now,
+                        }).where(eq(aiModels.id, existingModel.id)).run();
+                        continue;
+                    }
+                    const initialMetadata = mergeModelMetadata(
+                        null,
+                        model.reasoningCapability,
+                    );
                     await db.insert(aiModels).values({
                         id: crypto.randomUUID(),
                         providerId,
@@ -270,7 +369,7 @@ export class AiService {
                         supportsVision: model.supportsVision ?? false,
                         supportsTools: model.supportsTools ?? false,
                         supportsStreaming: model.supportsStreaming ?? true,
-                        metadataJson: null,
+                        metadataJson: initialMetadata,
                         updatedAt: now,
                     }).run();
                 }
@@ -281,6 +380,7 @@ export class AiService {
                 name,
                 baseUrl,
                 encryptedApiKey,
+                discoveryMode,
                 enabled,
                 updatedAt: now,
             }).where(eq(aiProviders.id, providerId)).run();
@@ -292,6 +392,7 @@ export class AiService {
                 name,
                 baseUrl,
                 apiKeyMasked: "********",
+                discoveryMode,
                 enabled,
                 createdAt: current.createdAt,
                 updatedAt: now,
@@ -355,10 +456,14 @@ export class AiService {
             existing.encryptedApiKey,
             this.#encryptionKey,
         );
-        const discovered = await fetchOpenAIModels(
+        const discovered = await discoverProviderModels(
             existing.baseUrl,
             apiKey,
-            this.#fetchFn,
+            {
+                fetchFn: this.#fetchFn,
+                discoveryMode: (existing.discoveryMode as DiscoveryMode) ??
+                    "auto",
+            },
         );
         await this.#store.run(async (db) => {
             const [current] = await db.select().from(aiProviders)
@@ -371,10 +476,31 @@ export class AiService {
             }
             const models = await db.select().from(aiModels)
                 .where(eq(aiModels.providerId, providerId)).all();
-            const known = new Set(models.map((model) => model.modelId));
+            const known = new Map(
+                models.map((model) => [model.modelId, model]),
+            );
             const now = this.#now();
             for (const model of discovered) {
-                if (known.has(model.id)) continue;
+                const existingModel = known.get(model.id);
+                if (existingModel) {
+                    const mergedMetadata = mergeModelMetadata(
+                        existingModel.metadataJson,
+                        model.reasoningCapability,
+                    );
+                    await db.update(aiModels).set({
+                        metadataJson: mergedMetadata,
+                        supportsText: model.supportsText,
+                        supportsVision: model.supportsVision,
+                        supportsTools: model.supportsTools,
+                        supportsStreaming: model.supportsStreaming,
+                        updatedAt: now,
+                    }).where(eq(aiModels.id, existingModel.id)).run();
+                    continue;
+                }
+                const initialMetadata = mergeModelMetadata(
+                    null,
+                    model.reasoningCapability,
+                );
                 await db.insert(aiModels).values({
                     id: crypto.randomUUID(),
                     providerId,
@@ -387,7 +513,7 @@ export class AiService {
                     supportsVision: model.supportsVision ?? false,
                     supportsTools: model.supportsTools ?? false,
                     supportsStreaming: model.supportsStreaming ?? true,
-                    metadataJson: null,
+                    metadataJson: initialMetadata,
                     updatedAt: now,
                 }).run();
             }
@@ -447,21 +573,29 @@ export class AiService {
                 if (isAdmin) return true;
                 return r.enabled && r.visibleToUsers;
             })
-            .map((r) => ({
-                id: r.id,
-                providerId: r.providerId,
-                modelId: r.modelId,
-                displayName: r.displayName,
-                enabled: r.enabled,
-                visibleToUsers: r.visibleToUsers,
-                isDefault: r.isDefault,
-                supportsText: r.supportsText,
-                supportsVision: r.supportsVision,
-                supportsTools: r.supportsTools,
-                supportsStreaming: r.supportsStreaming,
-                metadataJson: r.metadataJson,
-                updatedAt: r.updatedAt,
-            }));
+            .map((r) => {
+                const caps = populateModelDtoCapabilities(r);
+                return {
+                    id: r.id,
+                    providerId: r.providerId,
+                    modelId: r.modelId,
+                    displayName: r.displayName,
+                    enabled: r.enabled,
+                    visibleToUsers: r.visibleToUsers,
+                    isDefault: r.isDefault,
+                    supportsText: r.supportsText,
+                    supportsVision: r.supportsVision,
+                    supportsTools: r.supportsTools,
+                    supportsStreaming: r.supportsStreaming,
+                    supportsReasoning: caps.supportsReasoning,
+                    reasoningEfforts: caps.reasoningEfforts,
+                    defaultReasoningEffort: caps.defaultReasoningEffort,
+                    reasoningCapabilitySource: caps.reasoningCapabilitySource,
+                    isReasoningStrict: caps.isReasoningStrict,
+                    metadataJson: sanitizePublicMetadataJson(r.metadataJson),
+                    updatedAt: r.updatedAt,
+                };
+            });
     }
 
     async updateModel(
@@ -513,6 +647,16 @@ export class AiService {
                     .run();
             }
 
+            let updatedMetadata = model.metadataJson;
+            if (input.reasoningOverride !== undefined) {
+                updatedMetadata = applyManualOverride(
+                    updatedMetadata,
+                    input.reasoningOverride,
+                );
+            } else if (input.metadataJson !== undefined) {
+                updatedMetadata = input.metadataJson;
+            }
+
             await db.update(aiModels)
                 .set({
                     displayName: input.displayName ?? model.displayName,
@@ -520,26 +664,44 @@ export class AiService {
                     visibleToUsers: input.visibleToUsers ??
                         model.visibleToUsers,
                     isDefault: input.isDefault ?? model.isDefault,
+                    metadataJson: updatedMetadata,
                     updatedAt: now,
                 })
                 .where(eq(aiModels.id, modelPk))
                 .run();
             await this.#audit(db, userId, "ai.model.update", model.providerId);
 
+            const [updated] = await db
+                .select()
+                .from(aiModels)
+                .where(eq(aiModels.id, modelPk))
+                .limit(1)
+                .all();
+            const currentRecord = updated ??
+                { ...model, metadataJson: updatedMetadata };
+            const caps = populateModelDtoCapabilities(currentRecord);
+
             return {
-                id: model.id,
-                providerId: model.providerId,
-                modelId: model.modelId,
-                displayName: input.displayName ?? model.displayName,
-                enabled: input.enabled ?? model.enabled,
-                visibleToUsers: input.visibleToUsers ?? model.visibleToUsers,
-                isDefault: input.isDefault ?? model.isDefault,
-                supportsText: model.supportsText,
-                supportsVision: model.supportsVision,
-                supportsTools: model.supportsTools,
-                supportsStreaming: model.supportsStreaming,
-                metadataJson: model.metadataJson,
-                updatedAt: now,
+                id: currentRecord.id,
+                providerId: currentRecord.providerId,
+                modelId: currentRecord.modelId,
+                displayName: currentRecord.displayName,
+                enabled: currentRecord.enabled,
+                visibleToUsers: currentRecord.visibleToUsers,
+                isDefault: currentRecord.isDefault,
+                supportsText: currentRecord.supportsText,
+                supportsVision: currentRecord.supportsVision,
+                supportsTools: currentRecord.supportsTools,
+                supportsStreaming: currentRecord.supportsStreaming,
+                supportsReasoning: caps.supportsReasoning,
+                reasoningEfforts: caps.reasoningEfforts,
+                defaultReasoningEffort: caps.defaultReasoningEffort,
+                reasoningCapabilitySource: caps.reasoningCapabilitySource,
+                isReasoningStrict: caps.isReasoningStrict,
+                metadataJson: sanitizePublicMetadataJson(
+                    currentRecord.metadataJson,
+                ),
+                updatedAt: currentRecord.updatedAt,
             };
         });
     }
@@ -587,6 +749,8 @@ export class AiService {
                 userId: r.userId,
                 title: r.title,
                 historyEnabled: r.historyEnabled,
+                activeLeafMessageId: r.activeLeafMessageId,
+                systemInstruction: r.systemInstruction,
                 deletedAt: r.deletedAt,
                 createdAt: r.createdAt,
                 updatedAt: r.updatedAt,
@@ -632,24 +796,59 @@ export class AiService {
                     userId: conv.userId,
                     title: conv.title,
                     historyEnabled: conv.historyEnabled,
+                    activeLeafMessageId: conv.activeLeafMessageId,
+                    systemInstruction: conv.systemInstruction,
                     deletedAt: conv.deletedAt,
                     createdAt: conv.createdAt,
                     updatedAt: conv.updatedAt,
                 },
-                messages: msgs.map((m) => ({
-                    id: m.id,
-                    conversationId: m.conversationId,
-                    parentMessageId: m.parentMessageId,
-                    role: m.role as AiMessageDto["role"],
-                    content: m.content,
-                    providerId: m.providerId,
-                    modelId: m.modelId,
-                    status: m.status as AiMessageDto["status"],
-                    variantGroupId: m.variantGroupId,
-                    inputTokens: m.inputTokens,
-                    outputTokens: m.outputTokens,
-                    createdAt: m.createdAt,
-                })),
+                messages: msgs.map((m) => {
+                    let parts: MessageContentPart[] | undefined;
+                    if (m.partsJson) {
+                        try {
+                            const parsed = JSON.parse(m.partsJson);
+                            if (Array.isArray(parsed)) {
+                                parts = parsed.map((p: unknown) => {
+                                    if (
+                                        p &&
+                                        typeof p === "object" &&
+                                        "type" in p &&
+                                        p.type === "attachment" &&
+                                        "mimeType" in p &&
+                                        typeof p.mimeType === "string" &&
+                                        p.mimeType.toLowerCase().startsWith(
+                                            "image/",
+                                        )
+                                    ) {
+                                        const copy = {
+                                            ...(p as Record<string, unknown>),
+                                        };
+                                        delete copy.data;
+                                        return copy as unknown as MessageContentPart;
+                                    }
+                                    return p as MessageContentPart;
+                                });
+                            }
+                        } catch {
+                            // ignore parse error
+                        }
+                    }
+                    return {
+                        id: m.id,
+                        conversationId: m.conversationId,
+                        parentMessageId: m.parentMessageId,
+                        role: m.role as AiMessageDto["role"],
+                        content: m.content,
+                        parts,
+                        providerId: m.providerId,
+                        modelId: m.modelId,
+                        status: m.status as AiMessageDto["status"],
+                        variantGroupId: m.variantGroupId,
+                        inputTokens: m.inputTokens,
+                        outputTokens: m.outputTokens,
+                        createdAt: m.createdAt,
+                    };
+                }),
             };
         });
     }
@@ -693,11 +892,210 @@ export class AiService {
                 userId: conv.userId,
                 title: trimmed,
                 historyEnabled: conv.historyEnabled,
+                activeLeafMessageId: conv.activeLeafMessageId,
+                systemInstruction: conv.systemInstruction,
                 deletedAt: conv.deletedAt,
                 createdAt: conv.createdAt,
                 updatedAt: now,
             };
         });
+    }
+
+    async updateConversation(
+        userId: string,
+        conversationId: string,
+        input: {
+            title?: string;
+            historyEnabled?: boolean;
+            activeLeafMessageId?: string | null;
+            systemInstruction?: string | null;
+        },
+    ): Promise<AiConversationDto> {
+        return await this.#store.run(async (db: SearchDatabase) => {
+            const [conv] = await db
+                .select()
+                .from(aiConversations)
+                .where(
+                    and(
+                        eq(aiConversations.id, conversationId),
+                        eq(aiConversations.userId, userId),
+                        isNull(aiConversations.deletedAt),
+                    ),
+                )
+                .limit(1)
+                .all();
+
+            if (!conv) {
+                throw new AiServiceError("对话不存在", 404);
+            }
+
+            const now = this.#now();
+            const setObj: Record<string, unknown> = { updatedAt: now };
+            if (input.title !== undefined) {
+                const trimmed = input.title.trim();
+                if (!trimmed) throw new AiServiceError("标题不能为空", 400);
+                setObj.title = trimmed;
+            }
+            if (input.historyEnabled !== undefined) {
+                setObj.historyEnabled = input.historyEnabled;
+            }
+            if (input.activeLeafMessageId !== undefined) {
+                setObj.activeLeafMessageId = input.activeLeafMessageId;
+            }
+            if (input.systemInstruction !== undefined) {
+                setObj.systemInstruction = input.systemInstruction;
+            }
+
+            await db.update(aiConversations)
+                .set(setObj)
+                .where(eq(aiConversations.id, conversationId))
+                .run();
+
+            const [updated] = await db
+                .select()
+                .from(aiConversations)
+                .where(eq(aiConversations.id, conversationId))
+                .limit(1)
+                .all();
+
+            return {
+                id: updated.id,
+                userId: updated.userId,
+                title: updated.title,
+                historyEnabled: updated.historyEnabled,
+                activeLeafMessageId: updated.activeLeafMessageId,
+                systemInstruction: updated.systemInstruction,
+                deletedAt: updated.deletedAt,
+                createdAt: updated.createdAt,
+                updatedAt: updated.updatedAt,
+            };
+        });
+    }
+
+    async searchConversationMessages(
+        userId: string,
+        conversationId: string,
+        query: string,
+    ): Promise<
+        Array<{
+            messageId: string;
+            role: string;
+            content: string;
+            createdAt: number;
+            matchSnippet: string;
+        }>
+    > {
+        const trimmed = query.trim().toLowerCase();
+        if (!trimmed) return [];
+
+        return await this.#store.run(async (db: SearchDatabase) => {
+            const [conv] = await db
+                .select()
+                .from(aiConversations)
+                .where(
+                    and(
+                        eq(aiConversations.id, conversationId),
+                        eq(aiConversations.userId, userId),
+                        isNull(aiConversations.deletedAt),
+                    ),
+                )
+                .limit(1)
+                .all();
+
+            if (!conv) {
+                throw new AiServiceError("对话不存在", 404);
+            }
+
+            const msgs = await db
+                .select()
+                .from(aiMessages)
+                .where(eq(aiMessages.conversationId, conversationId))
+                .orderBy(aiMessages.createdAt)
+                .all();
+
+            const results: Array<{
+                messageId: string;
+                role: string;
+                content: string;
+                createdAt: number;
+                matchSnippet: string;
+            }> = [];
+
+            for (const m of msgs) {
+                const idx = m.content.toLowerCase().indexOf(trimmed);
+                if (idx >= 0) {
+                    const start = Math.max(0, idx - 40);
+                    const end = Math.min(
+                        m.content.length,
+                        idx + trimmed.length + 40,
+                    );
+                    const snippet = (start > 0 ? "..." : "") +
+                        m.content.slice(start, end) +
+                        (end < m.content.length ? "..." : "");
+                    results.push({
+                        messageId: m.id,
+                        role: m.role,
+                        content: m.content,
+                        createdAt: m.createdAt,
+                        matchSnippet: snippet,
+                    });
+                }
+            }
+
+            return results;
+        });
+    }
+
+    async exportConversation(
+        userId: string,
+        conversationId: string,
+        format: "markdown" | "json",
+    ): Promise<{ filename: string; mimeType: string; content: string }> {
+        const { conversation, messages } = await this.getConversation(
+            userId,
+            conversationId,
+        );
+
+        const safeTitle =
+            conversation.title.replace(/[^\w\u4e00-\u9fa5-_]/g, "_") ||
+            "conversation";
+
+        if (format === "json") {
+            return {
+                filename: `${safeTitle}.json`,
+                mimeType: "application/json; charset=utf-8",
+                content: JSON.stringify({ conversation, messages }, null, 2),
+            };
+        }
+
+        const msgMap = new Map(messages.map((m) => [m.id, m]));
+        const path: AiMessageDto[] = [];
+        let currId = conversation.activeLeafMessageId ??
+            (messages.length > 0 ? messages[messages.length - 1].id : null);
+        while (currId) {
+            const m = msgMap.get(currId);
+            if (!m) break;
+            path.unshift(m);
+            currId = m.parentMessageId;
+        }
+
+        const msgsToExport = path.length > 0 ? path : messages;
+
+        let md = `# ${conversation.title}\n\n`;
+        for (const m of msgsToExport) {
+            const roleName = m.role === "user"
+                ? "User"
+                : m.role === "assistant"
+                ? "Assistant"
+                : "System";
+            md += `### ${roleName}\n\n${m.content}\n\n`;
+        }
+
+        return {
+            filename: `${safeTitle}.md`,
+            mimeType: "text/markdown; charset=utf-8",
+            content: md,
+        };
     }
 
     async deleteConversation(
@@ -824,7 +1222,6 @@ export class AiService {
                 .all();
 
             if (!expired.length) return 0;
-
             for (const { id } of expired) {
                 await db.delete(aiMessages)
                     .where(eq(aiMessages.conversationId, id))
@@ -849,52 +1246,107 @@ export class AiService {
         model: typeof aiModels.$inferSelect;
     }> {
         return await this.#store.run(async (db: SearchDatabase) => {
-            if (requestedProviderId && requestedModelId) {
-                const [provider] = await db
+            if (requestedModelId) {
+                if (requestedProviderId) {
+                    const [provider] = await db
+                        .select()
+                        .from(aiProviders)
+                        .where(
+                            and(
+                                eq(aiProviders.id, requestedProviderId),
+                                eq(aiProviders.enabled, true),
+                                or(
+                                    eq(aiProviders.scope, "system"),
+                                    eq(aiProviders.ownerUserId, userId),
+                                ),
+                            ),
+                        )
+                        .limit(1)
+                        .all();
+
+                    if (!provider) {
+                        throw new AiServiceError(
+                            "指定的 AI Provider 不存在或已被禁用",
+                            404,
+                        );
+                    }
+
+                    const [model] = await db
+                        .select()
+                        .from(aiModels)
+                        .where(
+                            and(
+                                eq(aiModels.providerId, requestedProviderId),
+                                or(
+                                    eq(aiModels.modelId, requestedModelId),
+                                    eq(aiModels.id, requestedModelId),
+                                ),
+                                eq(aiModels.enabled, true),
+                                eq(aiModels.visibleToUsers, true),
+                            ),
+                        )
+                        .limit(1)
+                        .all();
+
+                    if (!model) {
+                        throw new AiServiceError(
+                            `模型 ${requestedModelId} 不可用或未对用户开放`,
+                            404,
+                        );
+                    }
+
+                    return { provider, model };
+                }
+
+                // When requestedProviderId is omitted, find matching model across accessible providers
+                const accessibleProviders = await db
                     .select()
                     .from(aiProviders)
                     .where(
                         and(
-                            eq(aiProviders.id, requestedProviderId),
                             eq(aiProviders.enabled, true),
                             or(
-                                eq(aiProviders.scope, "system"),
                                 eq(aiProviders.ownerUserId, userId),
+                                eq(aiProviders.scope, "system"),
                             ),
                         ),
                     )
-                    .limit(1)
                     .all();
 
-                if (!provider) {
-                    throw new AiServiceError(
-                        "指定的 AI Provider 不存在或已被禁用",
-                        404,
-                    );
+                // Search user providers first, then system providers
+                accessibleProviders.sort((a, b) => {
+                    if (a.scope === "user" && b.scope !== "user") return -1;
+                    if (a.scope !== "user" && b.scope === "user") return 1;
+                    return 0;
+                });
+
+                for (const p of accessibleProviders) {
+                    const [model] = await db
+                        .select()
+                        .from(aiModels)
+                        .where(
+                            and(
+                                eq(aiModels.providerId, p.id),
+                                or(
+                                    eq(aiModels.modelId, requestedModelId),
+                                    eq(aiModels.id, requestedModelId),
+                                ),
+                                eq(aiModels.enabled, true),
+                                eq(aiModels.visibleToUsers, true),
+                            ),
+                        )
+                        .limit(1)
+                        .all();
+
+                    if (model) {
+                        return { provider: p, model };
+                    }
                 }
 
-                const [model] = await db
-                    .select()
-                    .from(aiModels)
-                    .where(
-                        and(
-                            eq(aiModels.providerId, requestedProviderId),
-                            eq(aiModels.modelId, requestedModelId),
-                            eq(aiModels.enabled, true),
-                            eq(aiModels.visibleToUsers, true),
-                        ),
-                    )
-                    .limit(1)
-                    .all();
-
-                if (!model) {
-                    throw new AiServiceError(
-                        `模型 ${requestedModelId} 不可用或未对用户开放`,
-                        404,
-                    );
-                }
-
-                return { provider, model };
+                throw new AiServiceError(
+                    `模型 ${requestedModelId} 不可用或未对用户开放`,
+                    404,
+                );
             }
 
             // 自动解析默认模型：
@@ -1017,112 +1469,253 @@ export class AiService {
         signal?: AbortSignal,
     ): AsyncGenerator<
         {
-            event: "meta" | "token" | "done" | "error";
+            event:
+                | "meta"
+                | "token"
+                | "tool-call"
+                | "tool-result"
+                | "sources"
+                | "done"
+                | "error";
             data: unknown;
         },
         void,
         unknown
     > {
-        // 1. 查找目标 Provider & Model (禁止自动静默 failover)
+        // 0. Preliminary validation (zero mutations on 4xx)
+        if (
+            !request.regenerateMessageId &&
+            !request.message &&
+            (!request.attachments || request.attachments.length === 0)
+        ) {
+            throw new AiServiceError("消息内容不能为空", 400);
+        }
+
+        if (request.attachments && request.attachments.length > 0) {
+            validateAttachments(request.attachments);
+        }
+
+        // 1. Resolve Target Provider & Model
         const { provider, model } = await this.resolveTargetModel(
             userId,
             request.providerId,
             request.modelId,
         );
 
-        const now = this.#now();
-        let convId = request.conversationId;
-        const historyEnabled = request.historyEnabled ?? true;
+        // Check image capability: non-vision models reject images before mutations
+        const hasImages = request.attachments &&
+            request.attachments.some((a) =>
+                a.type === "image" ||
+                a.mimeType.toLowerCase().startsWith("image/")
+            );
+        if (hasImages && !model.supportsVision) {
+            throw new AiServiceError("当前模型不支持图片多模态分析", 400);
+        }
 
-        // 2. 会话管理
-        await this.#store.run(async (db: SearchDatabase) => {
-            if (convId) {
-                const [existing] = await db
-                    .select()
-                    .from(aiConversations)
-                    .where(
-                        and(
-                            eq(aiConversations.id, convId),
-                            eq(aiConversations.userId, userId),
-                            isNull(aiConversations.deletedAt),
-                        ),
-                    )
-                    .limit(1)
-                    .all();
-                if (!existing) {
-                    throw new AiServiceError("对话不存在", 404);
+        // Load user defaults from preferences (graceful fallback if preferences table not present in partial test schema)
+        let userDefaults: AiGenerationDefaultsDto | undefined = undefined;
+        try {
+            const userPrefs = await this.#store.run(
+                async (db: SearchDatabase) => {
+                    const [row] = await db
+                        .select()
+                        .from(preferences)
+                        .where(eq(preferences.userId, userId))
+                        .limit(1)
+                        .all();
+                    return row;
+                },
+            );
+
+            if (userPrefs?.aiGenerationDefaults) {
+                const parsed = JSON.parse(userPrefs.aiGenerationDefaults);
+                if (parsed && typeof parsed === "object") {
+                    userDefaults = parsed;
                 }
+            }
+        } catch {
+            // Ignore if preferences table not in isolated store or malformed JSON
+        }
+
+        const capability = resolveEffectiveCapability(
+            model.metadataJson,
+            model.modelId,
+        );
+        const transport = resolveReasoningTransport(model.metadataJson);
+        const metadata = parseModelMetadata(model.metadataJson);
+        const isReasoningStrict = isStrictReasoningModel(
+            model.modelId,
+            metadata,
+        );
+
+        // Resolve generation params with strict precedence: request -> per-model user default -> global default -> model default
+        const resolvedConfig = resolveEffectiveGenerationConfig({
+            requestConfig: {
+                reasoningEffort: request.reasoningEffort,
+                temperature: request.temperature,
+                topP: request.topP,
+                maxTokens: request.maxTokens,
+            },
+            userDefaults,
+            modelId: model.modelId,
+            modelDbId: model.id,
+            capability,
+            transport,
+            isReasoningStrict,
+        });
+
+        // BUILD GENERATION PARAMS BEFORE ANY DB MUTATION (throws 400 if strict reasoning receives temp/topP)
+        const generationParams = buildProviderGenerationParams(
+            resolvedConfig,
+            capability,
+            transport,
+            { isReasoningStrict },
+        );
+
+        const now = this.#now();
+        const existingConvId = request.conversationId;
+        let convId: string;
+        const historyEnabled = request.historyEnabled ?? true;
+        let systemInstruction = request.systemInstruction;
+        let title = "新对话";
+
+        let userMsgParentId: string | null = null;
+        let variantGroupId: string | null = null;
+        let branchStartParentId: string | null = null;
+        const branchChain: typeof aiMessages.$inferSelect[] = [];
+
+        // 2. Validate conversation & targets BEFORE blob storage or any DB mutations
+        if (existingConvId) {
+            convId = existingConvId;
+            const existing = await this.#store.run(
+                async (db: SearchDatabase) => {
+                    const [c] = await db
+                        .select()
+                        .from(aiConversations)
+                        .where(
+                            and(
+                                eq(aiConversations.id, existingConvId),
+                                eq(aiConversations.userId, userId),
+                                isNull(aiConversations.deletedAt),
+                            ),
+                        )
+                        .limit(1)
+                        .all();
+                    return c;
+                },
+            );
+            if (!existing) {
+                throw new AiServiceError("对话不存在", 404);
+            }
+            title = existing.title;
+            if (!systemInstruction && existing.systemInstruction) {
+                systemInstruction = existing.systemInstruction;
+            }
+
+            const allMsgs = await this.#store.run(
+                async (db: SearchDatabase) => {
+                    return await db
+                        .select()
+                        .from(aiMessages)
+                        .where(eq(aiMessages.conversationId, existingConvId))
+                        .all();
+                },
+            );
+            const msgMap = new Map(allMsgs.map((m) => [m.id, m]));
+
+            if (request.regenerateMessageId) {
+                const targetMsg = msgMap.get(request.regenerateMessageId);
+                if (!targetMsg || targetMsg.role !== "assistant") {
+                    throw new AiServiceError("要重新生成的助手回复不存在", 404);
+                }
+                variantGroupId = targetMsg.variantGroupId ?? targetMsg.id;
+                userMsgParentId = targetMsg.parentMessageId;
+                branchStartParentId = targetMsg.parentMessageId;
+            } else if (request.editMessageId) {
+                const editedMsg = msgMap.get(request.editMessageId);
+                if (!editedMsg || editedMsg.role !== "user") {
+                    throw new AiServiceError("要编辑的用户消息不存在", 404);
+                }
+                userMsgParentId = editedMsg.parentMessageId;
+                branchStartParentId = editedMsg.parentMessageId;
+            } else if (request.parentMessageId) {
+                const parentMsg = msgMap.get(request.parentMessageId);
+                if (!parentMsg) {
+                    throw new AiServiceError("指定的父消息不存在", 404);
+                }
+                userMsgParentId = request.parentMessageId;
+                branchStartParentId = request.parentMessageId;
             } else {
-                convId = crypto.randomUUID();
-                const title = request.message.trim().slice(0, 30) || "新对话";
+                userMsgParentId = existing.activeLeafMessageId ?? null;
+                branchStartParentId = existing.activeLeafMessageId ?? null;
+            }
+
+            let currId: string | null = branchStartParentId;
+            const visited = new Set<string>();
+            while (currId && !visited.has(currId)) {
+                visited.add(currId);
+                const m = msgMap.get(currId);
+                if (!m) break;
+                branchChain.unshift(m);
+                currId = m.parentMessageId;
+            }
+        } else {
+            if (request.regenerateMessageId) {
+                throw new AiServiceError("无法在未指定对话时重新生成回复", 400);
+            }
+            if (request.editMessageId) {
+                throw new AiServiceError("无法在未指定对话时编辑消息", 400);
+            }
+            if (request.parentMessageId) {
+                throw new AiServiceError("无法在未指定对话时指定父消息", 400);
+            }
+            const newConvId = crypto.randomUUID();
+            convId = newConvId;
+            title = request.message.trim().slice(0, 30) || "新对话";
+            await this.#store.run(async (db: SearchDatabase) => {
                 await db.insert(aiConversations).values({
-                    id: convId,
+                    id: newConvId,
                     userId,
                     title,
                     historyEnabled,
+                    systemInstruction: systemInstruction ?? null,
                     deletedAt: null,
                     createdAt: now,
                     updatedAt: now,
                 }).run();
+            });
+        }
+
+        // 3. Process and store attachments safely tied to conversation
+        const attachmentParts = await processAndStoreAttachments(
+            userId,
+            convId,
+            request.attachments,
+            this.#store,
+        );
+
+        // 4. Insert new user message if not regenerate
+        let userMsgId: string;
+        if (!request.regenerateMessageId) {
+            userMsgId = crypto.randomUUID();
+            const userParts: MessageContentPart[] = [];
+            if (request.message) {
+                userParts.push({ type: "text", text: request.message });
             }
-        });
+            for (const att of attachmentParts) {
+                userParts.push(att);
+            }
 
-        // 3. 构建历史消息上下文
-        const contextMessages: {
-            role: "system" | "user" | "assistant";
-            content: string;
-        }[] = [];
-
-        let parentMsgId: string | null = null;
-        let variantGroupId: string | null = null;
-
-        await this.#store.run(async (db: SearchDatabase) => {
-            if (request.regenerateMessageId) {
-                // Regenerate Assistant 回复：创建 Assistant Variant
-                const [targetMsg] = await db
-                    .select()
-                    .from(aiMessages)
-                    .where(
-                        and(
-                            eq(aiMessages.id, request.regenerateMessageId),
-                            eq(aiMessages.conversationId, convId!),
-                        ),
-                    )
-                    .limit(1)
-                    .all();
-
-                if (!targetMsg || targetMsg.role !== "assistant") {
-                    throw new AiServiceError("要重新生成的助手回复不存在", 404);
-                }
-
-                variantGroupId = targetMsg.variantGroupId ?? targetMsg.id;
-                parentMsgId = targetMsg.parentMessageId;
-
-                // 查询此助手消息之前的上下文
-                const priorMsgs = await db
-                    .select()
-                    .from(aiMessages)
-                    .where(eq(aiMessages.conversationId, convId!))
-                    .orderBy(aiMessages.createdAt)
-                    .all();
-
-                for (const m of priorMsgs) {
-                    if (m.createdAt < targetMsg.createdAt) {
-                        contextMessages.push({
-                            role: m.role as "system" | "user" | "assistant",
-                            content: m.content,
-                        });
-                    }
-                }
-            } else {
-                // 普通问答：插入 User Message
-                const userMsgId = crypto.randomUUID();
+            await this.#store.run(async (db: SearchDatabase) => {
                 await db.insert(aiMessages).values({
                     id: userMsgId,
                     conversationId: convId!,
-                    parentMessageId: null,
+                    parentMessageId: userMsgParentId,
                     role: "user",
                     content: request.message,
+                    partsJson: userParts.length > 0
+                        ? JSON.stringify(userParts)
+                        : null,
                     providerId: null,
                     modelId: null,
                     status: "complete",
@@ -1131,34 +1724,25 @@ export class AiService {
                     outputTokens: null,
                     createdAt: now,
                 }).run();
+            });
+        } else {
+            userMsgId = branchStartParentId ?? "";
+        }
 
-                parentMsgId = userMsgId;
-
-                const priorMsgs = await db
-                    .select()
-                    .from(aiMessages)
-                    .where(eq(aiMessages.conversationId, convId!))
-                    .orderBy(aiMessages.createdAt)
-                    .all();
-
-                for (const m of priorMsgs) {
-                    contextMessages.push({
-                        role: m.role as "system" | "user" | "assistant",
-                        content: m.content,
-                    });
-                }
-            }
-        });
-
-        // 4. 创建一条待填充的 Assistant Message (status: "streaming")
+        // 5. Create Assistant message (status: "streaming")
         const assistantMsgId = crypto.randomUUID();
+        const assistantParentId = !request.regenerateMessageId
+            ? userMsgId
+            : branchStartParentId;
+
         await this.#store.run(async (db: SearchDatabase) => {
             await db.insert(aiMessages).values({
                 id: assistantMsgId,
                 conversationId: convId!,
-                parentMessageId: parentMsgId,
+                parentMessageId: assistantParentId,
                 role: "assistant",
                 content: "",
+                partsJson: null,
                 providerId: provider.id,
                 modelId: model.modelId,
                 status: "streaming",
@@ -1169,18 +1753,133 @@ export class AiService {
             }).run();
         });
 
-        // 发送 meta 事件让客户端感知 messageId, provider, model
+        // Emit meta event
         yield {
             event: "meta",
             data: {
                 conversationId: convId,
                 messageId: assistantMsgId,
+                userMessageId: userMsgId,
+                assistantMessageId: assistantMsgId,
+                title,
                 providerId: provider.id,
                 modelId: model.modelId,
             },
         };
 
-        // 5. 解密 API Key 并发起流式请求
+        // 6. Prepare LLM message history with attachment replay
+        const llmMessages: OpenAIChatMessage[] = [];
+        if (systemInstruction) {
+            llmMessages.push({ role: "system", content: systemInstruction });
+        }
+
+        for (const m of branchChain) {
+            if (m.role === "user" && m.partsJson) {
+                try {
+                    const parts = JSON.parse(m.partsJson);
+                    if (Array.isArray(parts)) {
+                        const blocks: Array<
+                            | { type: "text"; text: string }
+                            | { type: "image_url"; image_url: { url: string } }
+                        > = [];
+                        for (const p of parts) {
+                            if (
+                                p.type === "attachment" &&
+                                p.mimeType?.startsWith("image/")
+                            ) {
+                                if (model.supportsVision) {
+                                    const blob = await this.#store.run(
+                                        async (db) => {
+                                            const [row] = await db
+                                                .select()
+                                                .from(aiBlobs)
+                                                .where(eq(aiBlobs.id, p.id))
+                                                .limit(1)
+                                                .all();
+                                            return row;
+                                        },
+                                    );
+                                    if (blob && blob.data) {
+                                        blocks.push({
+                                            type: "image_url",
+                                            image_url: { url: blob.data },
+                                        });
+                                    }
+                                } else {
+                                    blocks.push({
+                                        type: "text",
+                                        text: `[Attached image: ${p.name}]`,
+                                    });
+                                }
+                            } else if (p.type === "attachment" && p.data) {
+                                blocks.push({
+                                    type: "text",
+                                    text:
+                                        `[Attached file: ${p.name}]\n${p.data}\n`,
+                                });
+                            } else if (p.type === "text" && p.text) {
+                                blocks.push({ type: "text", text: p.text });
+                            }
+                        }
+                        if (blocks.length > 0) {
+                            llmMessages.push({ role: "user", content: blocks });
+                            continue;
+                        }
+                    }
+                } catch {
+                    // fallback
+                }
+            }
+            llmMessages.push({
+                role: m.role as "system" | "user" | "assistant",
+                content: m.content,
+            });
+        }
+
+        if (!request.regenerateMessageId) {
+            if (model.supportsVision && hasImages) {
+                const blocks: Array<
+                    | { type: "text"; text: string }
+                    | { type: "image_url"; image_url: { url: string } }
+                > = [];
+                for (const att of attachmentParts) {
+                    if (att.mimeType.startsWith("image/") && att.data) {
+                        blocks.push({
+                            type: "image_url",
+                            image_url: { url: att.data },
+                        });
+                    } else if (att.data) {
+                        blocks.push({
+                            type: "text",
+                            text: `[Attached file: ${att.name}]\n${att.data}\n`,
+                        });
+                    }
+                }
+                if (request.message) {
+                    blocks.push({ type: "text", text: request.message });
+                }
+                llmMessages.push({ role: "user", content: blocks });
+            } else {
+                let userText = request.message;
+                const textAtts = attachmentParts.filter((a) =>
+                    !a.mimeType.startsWith("image/") && a.data
+                );
+                if (textAtts.length > 0) {
+                    const prefix = textAtts.map((a) =>
+                        `[Attached file: ${a.name}]\n${a.data}\n`
+                    ).join("\n");
+                    userText = `${prefix}\n${userText}`;
+                }
+                llmMessages.push({ role: "user", content: userText });
+            }
+        }
+
+        const toolDefs = buildToolDefinitions(
+            request.tools,
+            model.supportsTools,
+        );
+
+        // 7. Stream and multi-round tool loop
         const apiKey = await decryptApiKey(
             provider.encryptedApiKey,
             this.#encryptionKey,
@@ -1188,57 +1887,304 @@ export class AiService {
 
         let fullContent = "";
         let finalStatus: "complete" | "interrupted" | "failed" = "complete";
+        let totalInputTokens = 0;
+        let totalOutputTokens = 0;
+        const assistantParts: MessageContentPart[] = [];
+        let round = 0;
+        const MAX_TOOL_ROUNDS = 3;
+        let hadToolCalls = false;
 
         try {
-            const stream = streamOpenAIChat(
-                provider.baseUrl,
-                apiKey,
-                {
-                    model: model.modelId,
-                    messages: contextMessages,
-                    temperature: request.temperature,
-                    top_p: request.topP,
-                    max_tokens: request.maxTokens,
-                },
-                this.#fetchFn,
-                signal,
-            );
+            while (round < MAX_TOOL_ROUNDS) {
+                round++;
+                const stream = streamOpenAIChat(
+                    provider.baseUrl,
+                    apiKey,
+                    {
+                        model: model.modelId,
+                        messages: llmMessages,
+                        ...generationParams,
+                        tools: toolDefs.length > 0 ? toolDefs : undefined,
+                    },
+                    this.#fetchFn,
+                    signal,
+                );
 
-            for await (const chunk of stream) {
-                if (chunk.type === "token" && chunk.token) {
-                    fullContent += chunk.token;
-                    yield { event: "token", data: chunk.token };
-                } else if (chunk.type === "done") {
-                    finalStatus = "complete";
-                    yield { event: "done", data: null };
-                    break;
-                } else if (chunk.type === "error") {
-                    finalStatus = signal?.aborted ? "interrupted" : "failed";
-                    yield { event: "error", data: chunk.error };
+                let roundHadToolCalls = false;
+                for await (const chunk of stream) {
+                    if (signal?.aborted) {
+                        finalStatus = "interrupted";
+                        yield { event: "error", data: "请求已中断" };
+                        break;
+                    }
+
+                    if (chunk.type === "token" && chunk.token) {
+                        fullContent += chunk.token;
+                        yield { event: "token", data: chunk.token };
+                    } else if (
+                        chunk.type === "tool_calls" &&
+                        chunk.toolCalls &&
+                        chunk.toolCalls.length > 0
+                    ) {
+                        roundHadToolCalls = true;
+                        hadToolCalls = true;
+                        if (typeof chunk.inputTokens === "number") {
+                            totalInputTokens += chunk.inputTokens;
+                        }
+                        if (typeof chunk.outputTokens === "number") {
+                            totalOutputTokens += chunk.outputTokens;
+                        }
+
+                        const toolCallMessages: Array<{
+                            id: string;
+                            type: "function";
+                            function: { name: string; arguments: string };
+                        }> = [];
+
+                        for (const tc of chunk.toolCalls) {
+                            let parsedArgs: Record<string, unknown> = {};
+                            try {
+                                parsedArgs = JSON.parse(tc.arguments || "{}");
+                            } catch {
+                                parsedArgs = { raw: tc.arguments };
+                            }
+
+                            const canonicalName:
+                                | "notes"
+                                | "apps"
+                                | "webSearch" = tc.name === "lookup_notes" ||
+                                        tc.name === "notes"
+                                    ? "notes"
+                                    : tc.name === "lookup_apps" ||
+                                            tc.name === "apps"
+                                    ? "apps"
+                                    : "webSearch";
+
+                            yield {
+                                event: "tool-call",
+                                data: {
+                                    callId: tc.id,
+                                    toolName: canonicalName,
+                                    args: parsedArgs,
+                                },
+                            };
+
+                            const execResult = await executeToolCall(
+                                tc.name,
+                                parsedArgs,
+                                {
+                                    userId,
+                                    store: this.#store,
+                                    allowedTools: request.tools,
+                                    signal,
+                                },
+                            );
+
+                            yield {
+                                event: "tool-result",
+                                data: {
+                                    callId: tc.id,
+                                    toolName: canonicalName,
+                                    result: execResult.result,
+                                    error: execResult.error,
+                                },
+                            };
+
+                            if (
+                                execResult.sources &&
+                                execResult.sources.length > 0
+                            ) {
+                                yield {
+                                    event: "sources",
+                                    data: { sources: execResult.sources },
+                                };
+                                assistantParts.push({
+                                    type: "sources",
+                                    sources: execResult.sources,
+                                });
+                            }
+
+                            assistantParts.push({
+                                type: "tool-call",
+                                callId: tc.id,
+                                toolName: canonicalName,
+                                args: parsedArgs,
+                            });
+                            assistantParts.push({
+                                type: "tool-result",
+                                callId: tc.id,
+                                toolName: canonicalName,
+                                result: execResult.result,
+                                error: execResult.error,
+                            });
+
+                            toolCallMessages.push({
+                                id: tc.id,
+                                type: "function",
+                                function: {
+                                    name: tc.name,
+                                    arguments: tc.arguments,
+                                },
+                            });
+
+                            llmMessages.push({
+                                role: "tool",
+                                tool_call_id: tc.id,
+                                content: typeof execResult.result === "string"
+                                    ? execResult.result
+                                    : JSON.stringify(
+                                        execResult.result ?? {
+                                            error: execResult.error,
+                                        },
+                                    ),
+                            });
+                        }
+
+                        llmMessages.splice(
+                            llmMessages.length - toolCallMessages.length,
+                            0,
+                            {
+                                role: "assistant",
+                                content: "",
+                                tool_calls: toolCallMessages,
+                            },
+                        );
+
+                        break; // re-invoke next round
+                    } else if (chunk.type === "done") {
+                        if (typeof chunk.inputTokens === "number") {
+                            totalInputTokens += chunk.inputTokens;
+                        }
+                        if (typeof chunk.outputTokens === "number") {
+                            totalOutputTokens += chunk.outputTokens;
+                        }
+                        finalStatus = "complete";
+                        break;
+                    } else if (chunk.type === "error") {
+                        finalStatus = signal?.aborted
+                            ? "interrupted"
+                            : "failed";
+                        yield { event: "error", data: chunk.error };
+                        break;
+                    }
+                }
+
+                if (
+                    !roundHadToolCalls || finalStatus !== "complete" ||
+                    signal?.aborted
+                ) {
                     break;
                 }
+            }
+
+            // If max tool rounds reached and tool calls occurred without a final textual answer,
+            // force one final turn without tools so the model must provide text.
+            if (
+                hadToolCalls && !fullContent && finalStatus === "complete" &&
+                !signal?.aborted
+            ) {
+                const finalStream = streamOpenAIChat(
+                    provider.baseUrl,
+                    apiKey,
+                    {
+                        model: model.modelId,
+                        messages: llmMessages,
+                        ...generationParams,
+                        tools: undefined,
+                    },
+                    this.#fetchFn,
+                    signal,
+                );
+                for await (const chunk of finalStream) {
+                    if (signal?.aborted) {
+                        finalStatus = "interrupted";
+                        yield { event: "error", data: "请求已中断" };
+                        break;
+                    }
+                    if (chunk.type === "token" && chunk.token) {
+                        fullContent += chunk.token;
+                        yield { event: "token", data: chunk.token };
+                    } else if (chunk.type === "done") {
+                        if (typeof chunk.inputTokens === "number") {
+                            totalInputTokens += chunk.inputTokens;
+                        }
+                        if (typeof chunk.outputTokens === "number") {
+                            totalOutputTokens += chunk.outputTokens;
+                        }
+                        finalStatus = "complete";
+                        break;
+                    } else if (chunk.type === "error") {
+                        finalStatus = signal?.aborted
+                            ? "interrupted"
+                            : "failed";
+                        yield { event: "error", data: chunk.error };
+                        break;
+                    }
+                }
+            }
+
+            if (hadToolCalls && !fullContent && finalStatus === "complete") {
+                finalStatus = "failed";
+                fullContent = "已达到工具调用轮数上限，未能生成最终回答";
             }
         } catch (err: unknown) {
             finalStatus = signal?.aborted ? "interrupted" : "failed";
             const msg = err instanceof Error ? err.message : String(err);
             yield { event: "error", data: msg };
         } finally {
-            // 6. 将最终内容持久化回数据库
             const finishedNow = this.#now();
+            if (signal?.aborted) {
+                finalStatus = "interrupted";
+            }
+
+            if (fullContent) {
+                assistantParts.unshift({ type: "text", text: fullContent });
+            }
+
+            // Commit to DB BEFORE yielding done!
             await this.#store.run(async (db: SearchDatabase) => {
                 await db.update(aiMessages)
                     .set({
                         content: fullContent,
+                        partsJson: assistantParts.length > 0
+                            ? JSON.stringify(assistantParts)
+                            : null,
                         status: finalStatus,
+                        inputTokens: totalInputTokens > 0
+                            ? totalInputTokens
+                            : null,
+                        outputTokens: totalOutputTokens > 0
+                            ? totalOutputTokens
+                            : null,
                     })
                     .where(eq(aiMessages.id, assistantMsgId))
                     .run();
 
                 await db.update(aiConversations)
-                    .set({ updatedAt: finishedNow })
+                    .set({
+                        activeLeafMessageId: assistantMsgId,
+                        updatedAt: finishedNow,
+                    })
                     .where(eq(aiConversations.id, convId!))
                     .run();
             });
+
+            // NOW emit done event AFTER persistence is committed!
+            if (finalStatus === "complete") {
+                yield {
+                    event: "done",
+                    data: {
+                        assistantMessageId: assistantMsgId,
+                        status: finalStatus,
+                        inputTokens: totalInputTokens > 0
+                            ? totalInputTokens
+                            : null,
+                        outputTokens: totalOutputTokens > 0
+                            ? totalOutputTokens
+                            : null,
+                    },
+                };
+            }
         }
     }
 }

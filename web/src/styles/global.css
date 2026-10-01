@@ -2396,6 +2396,72 @@ a {
     white-space: nowrap;
     font-size: 13px;
 }
+.model-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+.model-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+.model-manual-tag {
+    margin-left: var(--space-1);
+    opacity: 0.85;
+}
+.model-config-dialog-body {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+}
+.model-capabilities-summary {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: var(--font-caption-size);
+}
+.reasoning-toggle-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+}
+.reasoning-toggle-label {
+    font-weight: var(--font-title-weight);
+    cursor: pointer;
+}
+.reasoning-levels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+.reasoning-level-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-caption-size);
+    cursor: pointer;
+}
+.model-config-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-3);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+.model-config-action-group {
+    display: flex;
+    gap: var(--space-2);
+}
 @media (max-width:900px) {
     .ask-page {
         width: calc(100% - 24px);
