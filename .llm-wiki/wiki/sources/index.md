@@ -65,5 +65,7 @@
 - [Observation: Workspace contract regression tests and non-modal desktop verification](obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve.md)
 - [Observation: Ask workspace CSS normalized to semantic tokens](obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens.md)
 - [Observation: AskPage streaming lifecycle extracted to useAskStream hook](obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook.md)
+- [Observation: Bento ratio token, intrinsic height and empty expansion contract implementation (#44)](obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr.md)
+- [Observation: Notes workspace Issue #44 contract matrix regression tests and visual evidence](obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an.md)
 - [Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard](obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)
