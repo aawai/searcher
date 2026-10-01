@@ -316,11 +316,16 @@ Deno.test("production workspace contracts", async (t) => {
             await page.locator('.app-dialog-footer button[type="submit"]')
                 .click();
 
-            // Returns to Apps root, app appears in the workspace
+            // Unpinned apps are browsed in All Apps, not duplicated at Root.
             await page.locator(".workspace-switcher").waitFor();
+            await panel.getByRole("button", { name: "全部网站", exact: false })
+                .click();
             await page.locator(".apps-workspace").getByText("Hacker News", {
                 exact: false,
             }).waitFor();
+            await page.locator(
+                '.workspace-header button[aria-label="返回上一级"]',
+            ).click();
 
             // App is persisted to real server
             const serverApps = await page.evaluate(async () => {
@@ -332,6 +337,164 @@ Deno.test("production workspace contracts", async (t) => {
                 serverApps.some((a) => a.name === "Hacker News"),
                 true,
             );
+        },
+    );
+
+    await t.step(
+        "Apps folder IA, search, ordering and contextual Back",
+        async () => {
+            const fixtures = await page.evaluate(async () => {
+                const create = async (path: string, body: object) => {
+                    const response = await fetch(path, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body),
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    return (await response.json()).data;
+                };
+                const group = await create("/api/webapp-groups", {
+                    name: "Work Folder",
+                });
+                const empty = await create("/api/webapp-groups", {
+                    name: "Empty Folder",
+                });
+                const first = await create("/api/webapps", {
+                    name: "First Pin",
+                    url: "https://example.org/first",
+                    groupId: group.id,
+                    isPinned: true,
+                    pinnedSortOrder: 1,
+                    sortOrder: 2,
+                });
+                const second = await create("/api/webapps", {
+                    name: "Second Pin",
+                    url: "https://example.org/second",
+                    groupId: group.id,
+                    isPinned: true,
+                    pinnedSortOrder: 2,
+                    sortOrder: 1,
+                });
+                return { group, empty, first, second };
+            });
+            await page.reload();
+            await page.locator(
+                '.workspace-dock button[aria-label="应用工作区"]',
+            ).click();
+            const panel = page.locator("aside.workspace-panel");
+            const title = panel.locator(".workspace-title");
+            const back = panel.getByRole("button", { name: "返回上一级" });
+            const appNames = async () =>
+                await panel.locator(".webapp-icon").evaluateAll(
+                    (elements) =>
+                        elements.map((el) => el.getAttribute("aria-label")),
+                );
+            // Root only launches pinned Apps, in pinned rather than business order.
+            assertEquals(await appNames(), [
+                "打开 First Pin",
+                "打开 Second Pin",
+            ]);
+            const groupEntry = () =>
+                panel.getByRole("button", { name: /打开文件夹 Work Folder/ });
+            const allEntry = () =>
+                panel.getByRole("button", { name: /浏览全部网站/ });
+            const ungroupedEntry = () =>
+                panel.getByRole("button", { name: /打开未分组/ });
+            await groupEntry().click();
+            assertEquals(await title.textContent(), "Work Folder");
+            assertEquals(await appNames(), [
+                "打开 Second Pin",
+                "打开 First Pin",
+            ]);
+            await panel.getByRole("button", { name: "向Work Folder添加网站" })
+                .click();
+            await back.click();
+            assertEquals(await title.textContent(), "Work Folder");
+            await back.click();
+            assertEquals(await title.textContent(), "应用");
+            await ungroupedEntry().click();
+            assertEquals(await appNames(), ["打开 Hacker News"]);
+            await back.click();
+            assertEquals(await title.textContent(), "应用");
+            await allEntry().click();
+            assertEquals(await title.textContent(), "全部网站");
+            assertEquals(await appNames(), ["打开 Hacker News"]);
+            assertEquals(
+                await panel.locator(".launcher-folder-item").count(),
+                2,
+            );
+            await groupEntry().click();
+            assertEquals(await title.textContent(), "Work Folder");
+            await back.click();
+            assertEquals(await title.textContent(), "全部网站");
+            await panel.getByRole("button", { name: "未分组", exact: true })
+                .click();
+            assertEquals(await title.textContent(), "未分组");
+            await back.click();
+            assertEquals(await title.textContent(), "全部网站");
+            await panel.getByRole("button", { name: /打开文件夹 Empty Folder/ })
+                .click();
+            assertEquals(await panel.getByText("此文件夹暂无网站").count(), 1);
+            await back.click();
+            await back.click();
+            const query = panel.locator("input[data-workspace-search]");
+            await query.fill("Work Folder");
+            assertEquals(await appNames(), []);
+            assertEquals(await groupEntry().count(), 1);
+            await query.fill("First Pin");
+            assertEquals(await appNames(), ["打开 First Pin"]);
+            await query.fill("/second");
+            assertEquals(await appNames(), ["打开 Second Pin"]);
+            await query.fill("未分组");
+            assertEquals(await appNames(), []);
+            assertEquals(await ungroupedEntry().count(), 1);
+            await query.fill("");
+            assertEquals(await appNames(), [
+                "打开 First Pin",
+                "打开 Second Pin",
+            ]);
+            await panel.getByRole("button", { name: "管理网站文件夹" }).click();
+            await back.click();
+            assertEquals(await title.textContent(), "应用");
+            await panel.getByRole("button", { name: "管理网站文件夹" }).click();
+            await panel.getByRole("button", { name: "删除文件夹 Work Folder" })
+                .click();
+            await page.getByRole("button", { name: "确认删除", exact: true })
+                .click();
+            await page.getByRole("alertdialog").waitFor({ state: "detached" });
+            await back.click();
+            await ungroupedEntry().click();
+            assertEquals(await appNames(), [
+                "打开 Hacker News",
+                "打开 Second Pin",
+                "打开 First Pin",
+            ]);
+            const remaining = await page.evaluate(async () =>
+                (await (await fetch("/api/webapps")).json()).data
+            );
+            for (const id of [fixtures.first.id, fixtures.second.id]) {
+                assertEquals(
+                    remaining.find((app: { id: string }) => app.id === id)
+                        ?.groupId,
+                    null,
+                );
+            }
+            await back.click();
+            await page.evaluate(async ({ first, second, empty }) => {
+                for (const id of [first.id, second.id]) {
+                    const response = await fetch(`/api/webapps/${id}`, {
+                        method: "DELETE",
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                }
+                await fetch(`/api/webapp-groups/${empty.id}`, {
+                    method: "DELETE",
+                });
+            }, fixtures);
+            await page.reload();
+            await page.locator(
+                '.workspace-dock button[aria-label="应用工作区"]',
+            ).click();
         },
     );
 
@@ -408,17 +571,20 @@ Deno.test("production workspace contracts", async (t) => {
                 "Local unpersisted draft content",
             );
 
-            // Now wait for autosave debounce (1500ms) to trigger and persist to server
+            // Observe the save for this body, not a previous saved-state label.
+            const autosave = page.waitForResponse((response) => {
+                const request = response.request();
+                return request.method() === "PATCH" &&
+                    request.url().endsWith(
+                        `/api/notes/${encodeURIComponent(createdNoteId)}`,
+                    ) &&
+                    request.postDataJSON()?.body ===
+                        "Persisted content after autosave";
+            }, { timeout: 5000 });
             await page.locator("#note-body-textarea-edit").fill(
                 "Persisted content after autosave",
             );
-            await page.waitForFunction(
-                () =>
-                    document.querySelector(".save-state")?.textContent
-                        ?.includes("已保存"),
-                undefined,
-                { timeout: 5000 },
-            );
+            assertEquals((await autosave).status(), 200);
 
             // Verify real server received the autosave
             const updatedNote = await page.evaluate(async (id) => {
