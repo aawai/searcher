@@ -51,6 +51,8 @@ deno task dev
 打开 `http://localhost:5173`。Vite 将 `/api` 代理到
 `127.0.0.1:34567`。`deno task test` 运行后端与前端契约测试，`deno task build` 构建生产前端。
 
+本仓库是应用而非可发布的 Deno library，`deno.jsonc` 不声明包 `name` 或 `exports`。生产构建在 `web/vite.config.ts` 按 React runtime、AI 会话、Markdown 与 UI 依赖设置 `manualChunks`，保留 Vite 默认的 500 kB chunk 警告阈值。分包不等于按需加载，也不减少总 JS 体积。
+
 浏览器路由回归使用已固定的 Playwright 1.56.1。首次安装 Chromium 后运行：
 
 ```sh

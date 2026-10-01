@@ -24,7 +24,34 @@ export default defineConfig({
         },
     },
     plugins: [deno(), react(), tailwindcss()],
-    build: { outDir: "dist", emptyOutDir: true },
+    build: {
+        outDir: "dist",
+        emptyOutDir: true,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    "react-vendor": [
+                        "react",
+                        "react-dom",
+                        "react-dom/client",
+                        "react-router-dom",
+                    ],
+                    "assistant-vendor": ["@assistant-ui/react"],
+                    "markdown-vendor": [
+                        "react-markdown",
+                        "remark-gfm",
+                        "rehype-sanitize",
+                    ],
+                    "ui-vendor": [
+                        "@base-ui/react",
+                        "@dnd-kit/core",
+                        "@dnd-kit/sortable",
+                        "lucide-react",
+                    ],
+                },
+            },
+        },
+    },
     server: {
         host: "127.0.0.1",
         port: 5173,
