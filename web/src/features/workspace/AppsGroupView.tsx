@@ -4,10 +4,9 @@ import { Button } from "../../components/ui/button.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 
 export interface AppsGroupViewProps {
-    group: WebAppGroup;
+    group: WebAppGroup | null;
     apps: ExtendedWebApp[];
     groups: WebAppGroup[];
-    onBack?: () => void;
     onAddApp: () => void;
     onOpen: (app: ExtendedWebApp) => void;
     onEdit: (app: ExtendedWebApp) => void;
@@ -21,7 +20,6 @@ export function AppsGroupView({
     group,
     apps,
     groups,
-    onBack: _onBack,
     onAddApp,
     onOpen,
     onEdit,
@@ -30,7 +28,9 @@ export function AppsGroupView({
     onDelete,
     onReorder,
 }: AppsGroupViewProps) {
-    const groupApps = apps.filter((app) => app.groupId === group.id);
+    const groupName = group?.name ?? "未分组";
+    const groupApps = apps.filter((app) => app.groupId === (group?.id ?? null))
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
     return (
         <div className="apps-workspace-section">
@@ -43,7 +43,7 @@ export function AppsGroupView({
                     size="sm"
                     onClick={onAddApp}
                     className="gap-1.5 text-xs"
-                    aria-label={`向文件夹 ${group.name} 添加网站`}
+                    aria-label={`向${groupName}添加网站`}
                 >
                     <Plus size={14} />
                     <span>添加网站</span>
@@ -54,9 +54,13 @@ export function AppsGroupView({
                 ? (
                     <div className="apps-workspace-empty">
                         <p className="apps-workspace-empty-title">
-                            此文件夹暂无网站
+                            {group ? "此文件夹暂无网站" : "暂无未分组网站"}
                         </p>
-                        <p>将现有网站移入该文件夹，或直接添加新网站</p>
+                        <p>
+                            {group
+                                ? "将现有网站移入该文件夹，或直接添加新网站"
+                                : "移出文件夹的网站会显示在这里，也可直接添加新网站"}
+                        </p>
                         <Button
                             variant="default"
                             size="sm"

@@ -4,7 +4,7 @@
 
 ## 工程原则
 
-* **Correctness first.** 优先满足 `Specification`、`Invariants` 和 external / public contract；其次遵循 Architecture 和 type model。在满足约束的方案中，选择最简单、长期可维护的设计。
+* **Correctness first.** 优先满足 `Specification`、`Invariants` 和 external / public contract；其次遵循 Architecture 和 type model。
 * **Determine the complete required scope.** 不要把“用户明确提到的内容”自动等同于完整需求。结合 specification、现有行为、领域模型和 contracts，识别使功能正确且自洽所必需的关联行为。必要部分应一并纳入设计；
 * **Fix root causes.** 不使用 stopgap、Hack、workaround 或 special case 堆叠。不要为了减小 diff 或缩短实现时间而降低设计质量。
 * **Reuse before adding.** 优先复用仓库现有实现、依赖以及 Deno / 标准库；仅在现有能力确实不足时新增 abstraction 或 dependency。

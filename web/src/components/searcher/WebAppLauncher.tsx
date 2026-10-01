@@ -614,7 +614,7 @@ export function WebAppLauncher({
     const scrollPosRef = useRef<number>(0);
 
     const setFolderId = (id: string | null) => {
-        setInternalFolderId(id);
+        if (activeFolderId === undefined) setInternalFolderId(id);
         onFolderChange?.(id);
     };
 

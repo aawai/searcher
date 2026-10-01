@@ -1,7 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { WorkspaceState } from "./workspace-state.ts";
-import { parentWorkspaceRoute } from "./workspace-state.ts";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import type { Appearance } from "../../app/state.tsx";
 import { errorMessage } from "../../app/state.tsx";
@@ -10,16 +9,20 @@ import { Button } from "../../components/ui/button.tsx";
 import { AppForm } from "../../components/searcher/AppForm.tsx";
 import { AppsRootView } from "./AppsRootView.tsx";
 import { AppsGroupView } from "./AppsGroupView.tsx";
+import { AppsAllView } from "./AppsAllView.tsx";
 import { AppsGroupsManageView } from "./AppsGroupsManageView.tsx";
 import "./apps-workspace.css";
 
 export interface AppsWorkspaceProps {
     state: WorkspaceState;
     navigate: (next: WorkspaceState) => void;
+    onBack: () => void;
     apps: ExtendedWebApp[];
     groups: WebAppGroup[];
     setApps: React.Dispatch<React.SetStateAction<ExtendedWebApp[]>>;
     setGroups: React.Dispatch<React.SetStateAction<WebAppGroup[]>>;
+    isArranging: boolean;
+    onArrangeChange: (arranging: boolean) => void;
     query: string;
     onQueryChange: (query: string) => void;
     appearance: Appearance;
@@ -44,10 +47,13 @@ export interface AppsWorkspaceProps {
 export function AppsWorkspace({
     state,
     navigate,
+    onBack,
     apps,
     groups,
     setApps,
     setGroups,
+    isArranging,
+    onArrangeChange,
     query,
     onQueryChange,
     appearance,
@@ -168,7 +174,7 @@ export function AppsWorkspace({
         } else {
             setApps((prev) => [...prev, savedApp]);
         }
-        navigate(parentWorkspaceRoute(state));
+        onBack();
     };
 
     // Render nested view body
@@ -177,12 +183,15 @@ export function AppsWorkspace({
     if (state.view === "apps/root") {
         viewContent = (
             <AppsRootView
+                isArranging={isArranging}
+                onArrangeChange={onArrangeChange}
                 apps={apps}
                 groups={groups}
                 query={query}
                 onQueryChange={onQueryChange}
                 onNavigateToGroup={(groupId) =>
                     navigate({ view: "apps/group", id: groupId })}
+                onNavigateAll={() => navigate({ view: "apps/all" })}
                 onNavigateToGroupsManage={() =>
                     navigate({ view: "apps/groups" })}
                 onNavigateToEdit={(appId) =>
@@ -194,9 +203,25 @@ export function AppsWorkspace({
                 onReorder={onReorder}
             />
         );
+    } else if (state.view === "apps/all") {
+        viewContent = (
+            <AppsAllView
+                apps={apps}
+                groups={groups}
+                onNavigateToGroup={(id) => navigate({ view: "apps/group", id })}
+                onNavigateToEdit={(id) => navigate({ view: "apps/edit", id })}
+                onOpen={onOpen}
+                onPin={onPin}
+                onMove={onMove}
+                onDelete={onDelete}
+                onReorder={onReorder}
+                onFolderSizeChange={handleChangeGroupSize}
+                onAddApp={() => navigate({ view: "apps/create" })}
+            />
+        );
     } else if (state.view === "apps/group") {
-        const currentGroup = groups.find((g) => g.id === state.id);
-        if (!currentGroup) {
+        const currentGroup = groups.find((g) => g.id === state.id) ?? null;
+        if (!currentGroup && state.id !== "ungrouped") {
             viewContent = (
                 <div className="apps-workspace-section">
                     <div className="apps-workspace-empty">
@@ -219,11 +244,10 @@ export function AppsWorkspace({
                     group={currentGroup}
                     apps={apps}
                     groups={groups}
-                    onBack={() => navigate({ view: "apps/root" })}
                     onAddApp={() =>
                         navigate({
                             view: "apps/create",
-                            groupId: currentGroup.id,
+                            groupId: currentGroup?.id,
                         })}
                     onOpen={onOpen}
                     onEdit={(app) =>
@@ -239,7 +263,7 @@ export function AppsWorkspace({
         viewContent = (
             <AppsGroupsManageView
                 groups={groups}
-                onBack={() => navigate({ view: "apps/root" })}
+                onBack={onBack}
                 onCreateGroup={handleCreateGroup}
                 onRenameGroup={handleRenameGroup}
                 onSizeChange={handleChangeGroupSize}
@@ -257,7 +281,7 @@ export function AppsWorkspace({
                     appearance={appearance}
                     existingApps={apps}
                     onSaved={handleAppSaved}
-                    onClose={() => navigate(parentWorkspaceRoute(state))}
+                    onClose={onBack}
                     onDirtyChange={onDirtyChange}
                 />
             </div>
@@ -273,7 +297,7 @@ export function AppsWorkspace({
                     appearance={appearance}
                     existingApps={apps}
                     onSaved={handleAppSaved}
-                    onClose={() => navigate(parentWorkspaceRoute(state))}
+                    onClose={onBack}
                     onDirtyChange={onDirtyChange}
                 />
             </div>

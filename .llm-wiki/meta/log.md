@@ -272,3 +272,15 @@
 ## [2026-09-30T05:52:28.321Z] observe
 - slug: "obs-2026-09-30-widgets", title: "设置页与 Widgets 中间视口采用容器查询重排", relevance: "high"
 
+## [2026-09-30T14:20:38.990Z] observe
+- slug: "obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis", title: "Widgets spatial desktop Bento and ControlledNotes deterministic layout implementation", relevance: "high"
+
+## [2026-09-30T15:08:48.138Z] observe
+- slug: "obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve", title: "Workspace contract regression tests and non-modal desktop verification", relevance: "high"
+
+## [2026-10-01T01:09:02.460Z] observe
+- slug: "obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook", title: "AskPage streaming lifecycle extracted to useAskStream hook", relevance: "high"
+
+## [2026-10-01T01:22:45.164Z] observe
+- slug: "obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens", title: "Ask workspace CSS normalized to semantic tokens", relevance: "high"
+

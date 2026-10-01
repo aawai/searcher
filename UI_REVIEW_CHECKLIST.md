@@ -222,3 +222,48 @@
       innerHeight=844、visualViewport.height=675.2，约束后的 Thread
       bottom=675.1875；临时去掉约束后 bottom=820。证明 CSS-only
       不能处理该缩放边界；仍不声称已验收实体手机软键盘。
+
+## Issue #41 Apps Folder IA 与上下文导航（2026-10-01）
+
+- [x] 复用 Workspace archetype、既有 folder/launcher semantic classes 和
+      Button；不新增视觉 Token，不修改 Notes/Bento 或后端 schema。
+- [x] Root 中每个 App 最多直接展示一次，仅常用网站使用
+      pinnedSortOrder；文件夹、未分组与全部网站保留导航实体。
+- [x] apps/all 显示 Folder tiles + ungrouped apps；Folder 点击进入 Workspace
+      route，不再显示 Launcher internal FolderView。
+- [x] Root/All → group/ungrouped → Back 返回进入上下文；create/edit
+      保留上下文，group management 保持独立 nested view。
+- [x] name/URL 返回 App，group name 返回 Folder，未分组返回导航结果；清空 query
+      恢复 Root，Apps/Notes query 独立保存。
+- [x] 390×844 / 768×1024 / 1440×900，light/dark：Root 与 All 实页截图通过；14
+      个大小混合文件夹、空文件夹、长名称及 12
+      个成员的文件夹正常浏览，无页面/面板横向溢出；大小切换后三种宽度无横向溢出。
+- [x] 空未分组、Folder 编辑返回、删除 group 保留成员已验证；浏览器无 page
+      errors。
+- [x] 205 项源码测试、生产 Workspace 8 个回归步骤、build/typecheck、修改范围
+      lint/format 通过；check:ui 为 0 新违规、0 drift。
+
+## Issue #42 Workspace Apps 几何与单一主操作（2026-10-01）
+
+- [x] 基于已合入的 #41 IA；仅作用于 Workspace presentation，不改 Home/Zen
+      launcher 样式、后端或 route。
+- [x] 复用固定宽度 tracks 和既有空间 Token；通过 grid alignment 居中，不用左右
+      padding 模拟居中。
+- [x] 1/2/3/4 tile：常用、搜索、All、未分组及普通 group 共 144
+      次浏览器几何检查通过，左右剩余空间差 <=8px；375px mobile 和 400px desktop
+      Workspace 均通过。
+- [x] 40 Apps（含 80 字符名称）、12 个长名称 small/large folder 混排，在
+      375/390/768/1440、light/dark 下无横向 overflow；行列 gap 均为 4px，large
+      folder 保持 140×140 的 2×2 tracks；1–4 tile 检查同时断言内部图标未越过
+      tile 边界。
+- [x] 方形几何补充修正后重新检查上述六种实页：图标 68×68、四 tile 左右余量差均为
+      0px、grid 无横向 overflow；生产 Workspace 9 步回归重新通过。
+- [x] Root 正常仅“添加应用”为 primary，整理仅“完成整理”为
+      primary，完成或搜索后恢复添加；nested 不增加 footer primary。
+- [x] Quick Apps 三种 icon size × 两种 label preference、pinned ordering
+      与仅打开/在工作区中管理的菜单契约通过；打开 Workspace 不改变 Quick Apps 或
+      Zen grid 的对齐和宽度。
+- [x] 390×844 / 768×1024 / 1440×900，light/dark 六种实际页面截图已检查；375px
+      长文件夹名整理列表实页无 overflow、无竞争 primary，浏览器无 page errors。
+- [x] 205 项源码测试、生产 Workspace 9 个回归步骤、build/typecheck、修改范围
+      lint 通过；check:ui 为 0 新违规、0 drift。

@@ -88,3 +88,7 @@
 {"slug":"obs-2026-09-28-observation-ask","title":"Observation: Ask 页面上下留白对称性治理与视口高度规整","relevance":"medium","timestamp":"2026-09-28T14:58:29.508Z","kind":"observe"}
 {"slug":"obs-2026-09-28-","title":"常用网站弹出窗口正方形网格与文件夹几何规范","relevance":"high","timestamp":"2026-09-28T15:37:27.037Z","kind":"observe"}
 {"slug":"obs-2026-09-30-widgets","title":"设置页与 Widgets 中间视口采用容器查询重排","relevance":"high","timestamp":"2026-09-30T05:52:28.321Z","kind":"observe"}
+{"slug":"obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis","title":"Widgets spatial desktop Bento and ControlledNotes deterministic layout implementation","relevance":"high","timestamp":"2026-09-30T14:20:38.990Z","kind":"observe"}
+{"slug":"obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve","title":"Workspace contract regression tests and non-modal desktop verification","relevance":"high","timestamp":"2026-09-30T15:08:48.138Z","kind":"observe"}
+{"slug":"obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook","title":"AskPage streaming lifecycle extracted to useAskStream hook","relevance":"high","timestamp":"2026-10-01T01:09:02.460Z","kind":"observe"}
+{"slug":"obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens","title":"Ask workspace CSS normalized to semantic tokens","relevance":"high","timestamp":"2026-10-01T01:22:45.164Z","kind":"observe"}

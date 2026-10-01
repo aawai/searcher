@@ -30,12 +30,14 @@ import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
-import { AppsWorkspace } from "../features/workspace/AppsWorkspace.tsx";
+import {
+    AppsWorkspace,
+    type AppsWorkspaceProps,
+} from "../features/workspace/AppsWorkspace.tsx";
 import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
 import {
     initialWorkspaceState,
     isAppsWorkspaceView,
-    parentWorkspaceRoute,
     type WorkspaceKind,
     workspaceReducer,
     type WorkspaceState,
@@ -58,6 +60,10 @@ export interface ExtendedWebApp extends WebAppItem {
     groupId?: string | null;
 }
 
+const AppsWorkspaceView = AppsWorkspace as React.ComponentType<
+    AppsWorkspaceProps & { onBack?: () => void }
+>;
+
 export function SearchHome() {
     const { user, appearance } = useAppState();
     const navigate = useNavigate();
@@ -79,18 +85,39 @@ export function SearchHome() {
         workspaceReducer,
         initialWorkspaceState,
     );
+    const [appsArranging, setAppsArranging] = useState(false);
     const dirtyForm = useRef(false);
-    const [pendingRoute, setPendingRoute] = useState<WorkspaceState | null>(
-        null,
-    );
+    const [pendingAction, setPendingAction] = useState<
+        | { type: "navigate"; route: WorkspaceState }
+        | { type: "back" }
+        | { type: "close" }
+        | null
+    >(null);
     const [notesLoading, setNotesLoading] = useState(true);
     const [notesError, setNotesError] = useState("");
     function navigateWorkspace(route: WorkspaceState) {
         if (dirtyForm.current) {
-            setPendingRoute(route);
+            setPendingAction({ type: "navigate", route });
             return;
         }
+        setAppsArranging(false);
         dispatchWorkspace({ type: "navigate", route });
+    }
+    function backWorkspace() {
+        if (dirtyForm.current) {
+            setPendingAction({ type: "back" });
+            return;
+        }
+        setAppsArranging(false);
+        dispatchWorkspace({ type: "back" });
+    }
+    function closeWorkspace() {
+        if (dirtyForm.current) {
+            setPendingAction({ type: "close" });
+            return;
+        }
+        setAppsArranging(false);
+        dispatchWorkspace({ type: "close" });
     }
     function openWorkspace(kind: WorkspaceKind) {
         navigateWorkspace({
@@ -100,7 +127,8 @@ export function SearchHome() {
     useEffect(() => {
         dirtyForm.current = false;
         dispatchWorkspace({ type: "reset" });
-        setPendingRoute(null);
+        setPendingAction(null);
+        setAppsArranging(false);
         setIsManagingApps(false);
         setNotes([]);
         setNotesError("");
@@ -591,6 +619,8 @@ export function SearchHome() {
         ? "编辑应用"
         : route.view === "apps/groups"
         ? "文件夹管理"
+        : route.view === "apps/all"
+        ? "全部网站"
         : route.view === "apps/group"
         ? (route.id === "ungrouped"
             ? "未分组"
@@ -623,10 +653,10 @@ export function SearchHome() {
                     state={route}
                     title={title}
                     dock={layoutStyle === "widgets"}
+                    appsArranging={appsArranging}
                     navigate={navigateWorkspace}
-                    onBack={() =>
-                        navigateWorkspace(parentWorkspaceRoute(route))}
-                    onClose={() => navigateWorkspace({ view: "closed" })}
+                    onBack={backWorkspace}
+                    onClose={closeWorkspace}
                     onCreate={() =>
                         appsView
                             ? navigateWorkspace({ view: "apps/create" })
@@ -634,20 +664,25 @@ export function SearchHome() {
                 >
                     {appsView
                         ? (
-                            <AppsWorkspace
+                            <AppsWorkspaceView
                                 state={route}
                                 navigate={navigateWorkspace}
+                                onBack={backWorkspace}
                                 apps={apps}
                                 groups={groups}
                                 setApps={setApps}
                                 setGroups={setGroups}
+                                isArranging={appsArranging}
+                                onArrangeChange={setAppsArranging}
                                 query={workspace.queries.apps}
-                                onQueryChange={(value) =>
+                                onQueryChange={(value) => {
+                                    setAppsArranging(false);
                                     dispatchWorkspace({
                                         type: "query",
                                         workspace: "apps",
                                         value,
-                                    })}
+                                    });
+                                }}
                                 appearance={appearance}
                                 status={appsStatus}
                                 error={appsError}
@@ -706,9 +741,9 @@ export function SearchHome() {
                 </div>
             )}
             <AlertDialog
-                open={pendingRoute !== null}
+                open={Boolean(pendingAction)}
                 onOpenChange={(open) => {
-                    if (!open) setPendingRoute(null);
+                    if (!open) setPendingAction(null);
                 }}
             >
                 <AlertDialogContent>
@@ -724,13 +759,11 @@ export function SearchHome() {
                         <AlertDialogCancel>继续编辑</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
-                                if (!pendingRoute) return;
+                                if (!pendingAction) return;
+                                const action = pendingAction;
                                 dirtyForm.current = false;
-                                dispatchWorkspace({
-                                    type: "navigate",
-                                    route: pendingRoute,
-                                });
-                                setPendingRoute(null);
+                                setPendingAction(null);
+                                dispatchWorkspace(action);
                             }}
                         >
                             放弃修改
