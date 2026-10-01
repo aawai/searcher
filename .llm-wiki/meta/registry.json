@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-01T06:00:00.635Z",
+  "last_updated": "2026-10-01T07:53:53.078Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -962,6 +962,29 @@
       "relevance": "high",
       "observed_at": "2026-10-01T01:09:02.440Z",
       "source_context": "Issue 38 AskPage decomposition",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr": {
+      "type": "source",
+      "title": "Observation: Bento ratio token, intrinsic height and empty expansion contract implementation (#44)",
+      "tags": [
+        "[\"ui\",\"bento\",\"tokens\",\"layout\",\"e2e\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr",
+      "relevance": "high",
+      "observed_at": "2026-10-01T07:46:23.685Z",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an": {
+      "type": "source",
+      "title": "Observation: Notes workspace Issue #44 contract matrix regression tests and visual evidence",
+      "status": "observation",
+      "slug": "obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an",
+      "relevance": "high",
+      "observed_at": "2026-10-01T07:53:53.030Z",
       "created": "2026-10-01",
       "updated": "2026-10-01"
     },

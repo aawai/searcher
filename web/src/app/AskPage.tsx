@@ -466,14 +466,6 @@ export function AskPage() {
 
     return (
         <PageShell archetype="workbench" className="page ask-page">
-            <PageHeader
-                items={[
-                    { label: "首页", to: routes.home },
-                    { label: "AI 问答" },
-                ]}
-                title="AI 问答"
-            />
-
             <div className="ask-workspace-layout">
                 <ConversationSidebar
                     history={history}

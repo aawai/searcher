@@ -287,3 +287,9 @@
 ## [2026-10-01T06:00:00.592Z] observe
 - slug: "obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-", title: "NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard", relevance: "high"
 
+## [2026-10-01T07:46:23.692Z] observe
+- slug: "obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr", title: "Bento ratio token, intrinsic height and empty expansion contract implementation (#44)", relevance: "high"
+
+## [2026-10-01T07:53:53.034Z] observe
+- slug: "obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an", title: "Notes workspace Issue #44 contract matrix regression tests and visual evidence", relevance: "high"
+

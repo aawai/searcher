@@ -105,21 +105,23 @@ export function ConversationHeader({
                 </Button>
 
                 <div className="ask-header__title-row">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        className="ask-header__title h-auto p-0 font-semibold"
-                        onClick={() => conversation && setRenameOpen(true)}
-                        title={conversation ? "点击重命名对话" : "新对话"}
-                    >
-                        <span>{title}</span>
-                        {conversation && (
-                            <Pencil
-                                size={12}
-                                className="ask-header__title-edit-icon"
-                            />
-                        )}
-                    </Button>
+                    <h1 className="ask-header__heading">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="ask-header__title h-auto p-0 font-semibold"
+                            onClick={() => conversation && setRenameOpen(true)}
+                            title={conversation ? "点击重命名对话" : "新对话"}
+                        >
+                            <span>{title}</span>
+                            {conversation && (
+                                <Pencil
+                                    size={12}
+                                    className="ask-header__title-edit-icon"
+                                />
+                            )}
+                        </Button>
+                    </h1>
 
                     {isTemporary && (
                         <span

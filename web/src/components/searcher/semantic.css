@@ -31,10 +31,11 @@
 .app-shell:has(> .ask-page) > .connection-banner {
     flex-shrink: 0;
 }
-.page-shell.ask-page {
+.page-shell.ask-page[data-archetype="workbench"] {
     flex: 1;
     min-height: 0;
     height: auto;
+    margin-block: var(--space-4);
 }
 .page-header {
     display: flex;

@@ -2463,11 +2463,6 @@ a {
     gap: var(--space-2);
 }
 @media (max-width:900px) {
-    .ask-page {
-        width: calc(100% - 24px);
-        margin: 16px auto;
-        padding: 0;
-    }
     .ask-guest {
         margin: 16px auto;
     }
