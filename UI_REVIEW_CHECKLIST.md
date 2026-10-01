@@ -175,3 +175,23 @@
 - [x] 本次修改范围 lint/format 单独验证；全仓 lint 的 13 项问题及 format 的
       settings.css 问题均位于相对 HEAD 未修改文件，保留既有债务、不扩大本次
       scope。
+
+## Issue #41 Apps Folder IA 与上下文导航（2026-10-01）
+
+- [x] 复用 Workspace archetype、既有 folder/launcher semantic classes 和
+      Button；不新增视觉 Token，不修改 Notes/Bento 或后端 schema。
+- [x] Root 中每个 App 最多直接展示一次，仅常用网站使用
+      pinnedSortOrder；文件夹、未分组与全部网站保留导航实体。
+- [x] apps/all 显示 Folder tiles + ungrouped apps；Folder 点击进入 Workspace
+      route，不再显示 Launcher internal FolderView。
+- [x] Root/All → group/ungrouped → Back 返回进入上下文；create/edit
+      保留上下文，group management 保持独立 nested view。
+- [x] name/URL 返回 App，group name 返回 Folder，未分组返回导航结果；清空 query
+      恢复 Root，Apps/Notes query 独立保存。
+- [x] 390×844 / 768×1024 / 1440×900，light/dark：Root 与 All 实页截图通过；14
+      个大小混合文件夹、空文件夹、长名称及 12
+      个成员的文件夹正常浏览，无页面/面板横向溢出；大小切换后三种宽度无横向溢出。
+- [x] 空未分组、Folder 编辑返回、删除 group 保留成员已验证；浏览器无 page
+      errors。
+- [x] 205 项源码测试、生产 Workspace 8 个回归步骤、build/typecheck、修改范围
+      lint/format 通过；check:ui 为 0 新违规、0 drift。
