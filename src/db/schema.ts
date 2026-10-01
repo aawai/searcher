@@ -94,6 +94,7 @@ export const preferences = sqliteTable("preferences", {
     }).notNull().default("default"),
     showAppLabels: integer("show_app_labels", { mode: "boolean" })
         .notNull().default(true),
+    aiGenerationDefaults: text("ai_generation_defaults"),
 }, (t) => [
     check(
         "preferences_engine_check",

@@ -18,6 +18,9 @@ export const aiProviders = sqliteTable("ai_providers", {
     name: text("name").notNull(),
     baseUrl: text("base_url").notNull(),
     encryptedApiKey: text("encrypted_api_key").notNull(),
+    discoveryMode: text("discovery_mode", {
+        enum: ["auto", "openai-compatible", "cliproxyapi"],
+    }).notNull().default("auto"),
     enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
@@ -27,6 +30,10 @@ export const aiProviders = sqliteTable("ai_providers", {
     check(
         "ai_providers_scope_check",
         sql`${t.scope} in ('system', 'user')`,
+    ),
+    check(
+        "ai_providers_discovery_mode_check",
+        sql`${t.discoveryMode} in ('auto', 'openai-compatible', 'cliproxyapi')`,
     ),
 ]);
 
@@ -66,6 +73,8 @@ export const aiConversations = sqliteTable("ai_conversations", {
     title: text("title").notNull(),
     historyEnabled: integer("history_enabled", { mode: "boolean" }).notNull()
         .default(true),
+    activeLeafMessageId: text("active_leaf_message_id"),
+    systemInstruction: text("system_instruction"),
     deletedAt: integer("deleted_at"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
@@ -93,6 +102,7 @@ export const aiMessages = sqliteTable("ai_messages", {
     variantGroupId: text("variant_group_id"),
     inputTokens: integer("input_tokens"),
     outputTokens: integer("output_tokens"),
+    partsJson: text("parts_json"),
     createdAt: integer("created_at").notNull(),
 }, (t) => [
     index("ai_messages_conversation_idx").on(t.conversationId),
@@ -105,4 +115,22 @@ export const aiMessages = sqliteTable("ai_messages", {
         "ai_messages_status_check",
         sql`${t.status} in ('streaming', 'complete', 'interrupted', 'failed')`,
     ),
+]);
+
+export const aiBlobs = sqliteTable("ai_blobs", {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    conversationId: text("conversation_id").references(
+        () => aiConversations.id,
+        { onDelete: "cascade" },
+    ),
+    mimeType: text("mime_type").notNull(),
+    data: text("data").notNull(),
+    size: integer("size").notNull(),
+    createdAt: integer("created_at").notNull(),
+}, (t) => [
+    index("ai_blobs_user_idx").on(t.userId),
+    index("ai_blobs_conversation_idx").on(t.conversationId),
 ]);

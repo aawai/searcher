@@ -1,10 +1,10 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import {
-    fetchOpenAIModels,
     normalizeBaseUrl,
     OpenAIClientError,
     streamOpenAIChat,
 } from "./client.ts";
+import { discoverProviderModels } from "./provider-adapter.ts";
 
 const request = {
     model: "custom-model",
@@ -120,12 +120,12 @@ Deno.test("AI Client: models and chat never retry provider HTTP failures", async
             );
         };
         const error = await assertRejects(() =>
-            fetchOpenAIModels(
+            discoverProviderModels(
                 "https://compatible.example/custom/v1/",
                 "test-key",
-                fetchFn,
-            ), OpenAIClientError);
-        assertEquals(error.statusCode, status);
+                { fetchFn },
+            ), Error);
+        assertEquals(error.message.includes(`HTTP ${status}`), true);
         assertEquals(urls, ["https://compatible.example/custom/v1/models"]);
         urls.length = 0;
         const events = await Array.fromAsync(streamOpenAIChat(
@@ -150,11 +150,11 @@ Deno.test("AI Client: invalid models responses remain Searcher errors", async ()
                 }),
             );
         await assertRejects(() =>
-            fetchOpenAIModels(
+            discoverProviderModels(
                 "https://compatible.example/v1",
                 "test-key",
-                fetchFn,
-            ), OpenAIClientError);
+                { fetchFn },
+            ), Error);
     }
 });
 

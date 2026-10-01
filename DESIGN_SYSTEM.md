@@ -149,6 +149,43 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
     Switcher，防止未保存数据丢失（dirty protection）；未保存修改被导航拦截时触发
     `AlertDialog` 模态确认。
 
+### Ask Conversation Workspace（AI 问答工作区）
+
+`/ask` 使用 Workbench 原型。Searcher 保留认证、Provider、模型能力、SSE 和 SQLite
+持久化；assistant-ui 的 external-store runtime 与 branchable repository 负责
+Thread、Message、Composer、编辑、重新生成和分支导航。
+
+- Conversation Header
+  只放标题、历史入口、会话内搜索和会话菜单；模型、推理强度、高级参数及只读 Tools
+  都位于 Composer，避免重复模型入口。
+- 空会话的欢迎内容与 Composer 作为一个居中单元；有消息后 Thread 使用纵向
+  flex，消息 Viewport 独立滚动，Composer Dock
+  在正常流中占据自身高度。不得使用固定 bottom padding 猜测 Composer 高度或让
+  Dock 遮挡最后一条消息的操作。 Thread 受 visualViewport
+  可见高度约束；空会话内容过高时局部滚动，极短视口允许 Thread
+  滚动以保留发送操作可达性。该边界不压缩字号或触控目标。
+- 正文与 Composer 最大宽度 760px；代码线程容器最大宽度
+  900px。代码块和表格局部横向滚动，不撑开页面。Assistant
+  没有外层卡片，用户消息使用轻量 `--surface-soft` 气泡；Composer 与气泡采用
+  `--radius`，不继承可切换为胶囊形状的搜索框圆角。
+  代码块与表格横滚容器可聚焦，支持原生方向键滚动；表格的键盘入口位于外层
+  region，保留内部原生 table 语义。
+- Composer 消费现有 surface、border、shadow、spacing、font 和 ring
+  Token；常规控件复用 shadcn primitives。模型能力控制可见的 reasoning levels 和
+  sampling 参数，不显示虚假附件或工具能力。
+- 900px 以下历史使用 Sheet，宽屏使用侧栏；触屏核心操作目标至少
+  44px。跳到最新按钮锚定于 Dock 上方，不盖住输入框。
+- Enter 发送、Shift+Enter 换行，保留 IME 合成保护；textarea
+  自动增长到最大高度后内部滚动。复制反馈只在真正复制成功后显示，代码复制被拒绝时提供可见提示。减少动态偏好关闭工作区
+  transition 和流式光标动画。
+- 临时会话标识属于 Header；切换会话、卸载或 pagehide 时以 keepalive DELETE
+  清理，服务端 30 分钟 TTL
+  兜底。临时数据在清理前仍暂存数据库，不承诺从未写入；图片 Blob 受 owner
+  鉴权并使用 no-store，清理会话通过 FK cascade 删除附件。
+- 未发送文本草稿仅在内存中按会话隔离，刷新不恢复；会话的 System Instruction 与
+  active leaf 持久化。删除保留 5
+  秒撤销，编辑和重新生成不能混入非当前分支的上下文。
+
 ## Semantic components
 
 PageHeader 保留 items，并拥有唯一 title、description、actions、optional

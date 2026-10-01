@@ -8,6 +8,8 @@ import { AiService } from "./service.ts";
 import { registerAiRoutes } from "./ai.route.ts";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import type { UserDto } from "@shared/contracts.ts";
+import { eq } from "drizzle-orm";
+import { aiBlobs } from "../../db/ai-schema.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -44,6 +46,7 @@ function createInMemoryStore(): DatabaseStore {
             name TEXT NOT NULL,
             base_url TEXT NOT NULL,
             encrypted_api_key TEXT NOT NULL,
+            discovery_mode TEXT NOT NULL DEFAULT 'auto',
             enabled INTEGER NOT NULL DEFAULT 1,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
@@ -69,6 +72,8 @@ function createInMemoryStore(): DatabaseStore {
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             title TEXT NOT NULL,
             history_enabled INTEGER NOT NULL DEFAULT 1,
+            active_leaf_message_id TEXT,
+            system_instruction TEXT,
             deleted_at INTEGER,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
@@ -85,6 +90,16 @@ function createInMemoryStore(): DatabaseStore {
             variant_group_id TEXT,
             input_tokens INTEGER,
             output_tokens INTEGER,
+            parts_json TEXT,
+            created_at INTEGER NOT NULL
+        );`,
+        `CREATE TABLE ai_blobs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            conversation_id TEXT REFERENCES ai_conversations(id) ON DELETE CASCADE,
+            mime_type TEXT NOT NULL,
+            data TEXT NOT NULL,
+            size INTEGER NOT NULL,
             created_at INTEGER NOT NULL
         );`,
     ]);
@@ -339,7 +354,7 @@ Deno.test("AI Route: HTTP POST /api/ai/chat/stream returns SSE stream without le
         .map((e) => e.data as string)
         .join("");
     assertEquals(tokens, "Streaming response!");
-    assertEquals(events[3].data, null);
+    assertEquals((events[3].data as { status: string }).status, "complete");
 
     // 确保绝对不包含明文 key
     assertEquals(text.includes("sk-user-secret-99999"), false);
@@ -747,7 +762,7 @@ Deno.test("AI Route: HTTP POST /api/ai/conversations/:id/restore restores delete
     assertEquals(list3.data[0].id, convId);
 });
 
-Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes temporary conversation and messages", async () => {
+Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes temporary conversation, messages and blobs (Cache-Control: no-store)", async () => {
     const normalUser: UserDto = {
         id: "user-1",
         username: "testuser",
@@ -759,7 +774,7 @@ Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes tem
         const urlStr = String(input);
         if (urlStr.endsWith("/models")) {
             return Promise.resolve(
-                Response.json({ data: [{ id: "model-temp" }] }),
+                Response.json({ data: [{ id: "model-vision-temp" }] }),
             );
         }
         if (urlStr.endsWith("/chat/completions")) {
@@ -793,7 +808,7 @@ Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes tem
         return Promise.resolve(new Response("Not Found", { status: 404 }));
     };
 
-    const { app, service } = setupTestApp(normalUser, mockFetch);
+    const { app, service, store } = setupTestApp(normalUser, mockFetch);
     const provider = await service.createProvider("user-1", {
         name: "User AI",
         baseUrl: "https://api.ai.com/v1",
@@ -801,14 +816,25 @@ Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes tem
         scope: "user",
     }, false);
 
+    const blobId = "blob-temp-1";
+    const validPngBase64 =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
     const chatRes = await app.request("/api/ai/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             providerId: provider.id,
-            modelId: "model-temp",
-            message: "Temporary chat",
+            modelId: "model-vision-temp",
+            message: "Temporary chat with image",
             historyEnabled: false,
+            attachments: [{
+                id: blobId,
+                name: "pixel.png",
+                type: "image",
+                mimeType: "image/png",
+                data: validPngBase64,
+            }],
         }),
     });
     assertEquals(chatRes.status, 200);
@@ -819,6 +845,40 @@ Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes tem
     // Can get conversation details while active
     const getRes = await app.request(`/api/ai/conversations/${convId}`);
     assertEquals(getRes.status, 200);
+    // Get the stored blob generated by processAndStoreAttachments
+    const [storedBlob] = await store.run(async (db) => {
+        return await db
+            .select()
+            .from(aiBlobs)
+            .where(eq(aiBlobs.conversationId, convId))
+            .all();
+    });
+    assertEquals(Boolean(storedBlob), true);
+    const realBlobId = storedBlob.id;
+
+    // Verify blob retrieval and Cache-Control: no-store
+    const blobRes = await app.request(`/api/ai/blobs/${realBlobId}`);
+    assertEquals(blobRes.status, 200);
+    assertEquals(blobRes.headers.get("content-type"), "image/png");
+    assertEquals(blobRes.headers.get("cache-control"), "no-store");
+
+    // Other user gets 403
+    const otherUser: UserDto = {
+        id: "user-2",
+        username: "testuser2",
+        displayName: "Test User 2",
+        role: "user",
+    };
+    const { app: otherApp } = setupTestApp(otherUser, mockFetch, store);
+    const otherBlobRes = await otherApp.request(`/api/ai/blobs/${realBlobId}`);
+    assertEquals(otherBlobRes.status, 403);
+
+    // Unauthenticated gets 401
+    const { app: unauthApp } = setupTestApp(null, mockFetch, store);
+    const unauthBlobRes = await unauthApp.request(
+        `/api/ai/blobs/${realBlobId}`,
+    );
+    assertEquals(unauthBlobRes.status, 401);
 
     // Purge temporary conversation
     const purgeRes = await app.request(
@@ -829,11 +889,25 @@ Deno.test("AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes tem
     );
     assertEquals(purgeRes.status, 200);
 
-    // Subsequent get returns 404
+    // Subsequent conversation get returns 404
     const getResAfter = await app.request(
         `/api/ai/conversations/${convId}`,
     );
     assertEquals(getResAfter.status, 404);
+
+    // Fresh HTTP GET for blob returns 404
+    const blobResAfter = await app.request(`/api/ai/blobs/${realBlobId}`);
+    assertEquals(blobResAfter.status, 404);
+
+    // Database check: verify blob was truly purged from ai_blobs table (not just 404 hidden)
+    const dbBlobs = await store.run(async (db) => {
+        return await db
+            .select()
+            .from(aiBlobs)
+            .where(eq(aiBlobs.id, realBlobId))
+            .all();
+    });
+    assertEquals(dbBlobs.length, 0);
 });
 
 Deno.test("AI Logo candidates use the requested visible model and return three validated images", async () => {

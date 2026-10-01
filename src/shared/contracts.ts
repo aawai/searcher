@@ -128,6 +128,42 @@ export interface AdminUserDto extends UserDto {
     createdAt: number;
 }
 export type SearchTarget = "same" | "new";
+
+export type ReasoningEffort =
+    | "none"
+    | "auto"
+    | "minimal"
+    | "low"
+    | "medium"
+    | "high"
+    | "xhigh"
+    | "max";
+
+export const CANONICAL_REASONING_EFFORTS = [
+    "none",
+    "auto",
+    "minimal",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+] as const;
+
+export interface UserGenerationConfig {
+    temperature?: number;
+    topP?: number;
+    maxTokens?: number;
+    reasoningEffort?: ReasoningEffort;
+}
+
+export interface AiGenerationDefaultsDto {
+    /** Global fallback generation defaults */
+    default?: UserGenerationConfig;
+    /** Per-model generation defaults keyed by modelId (e.g. "gpt-4o", "o1", or model DB ID) */
+    models?: Record<string, UserGenerationConfig>;
+}
+
 export interface PreferencesDto {
     defaultEngine: EngineId;
     theme: ThemeId;
@@ -145,6 +181,7 @@ export interface PreferencesDto {
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
+    aiGenerationDefaults?: AiGenerationDefaultsDto;
 }
 export type NoteColor = "paper" | "amber" | "rose" | "sage" | "sky";
 export interface Envelope<T> {

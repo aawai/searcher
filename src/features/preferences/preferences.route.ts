@@ -7,7 +7,10 @@ import { PreferencesService } from "./service.ts";
 import { WallpaperService } from "../wallpaper/service.ts";
 import { parseCookie } from "../auth/middleware.ts";
 import { SESSION_COOKIE_NAME } from "../auth/service.ts";
-import { ACCENT_IDS } from "../../shared/contracts.ts";
+import {
+    ACCENT_IDS,
+    CANONICAL_REASONING_EFFORTS,
+} from "../../shared/contracts.ts";
 const Engine = v.optional(
     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
 );
@@ -60,6 +63,52 @@ const Mask = v.optional(
     v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(0.8)),
 );
 
+const GenerationConfig = v.object({
+    temperature: v.optional(
+        v.nullable(
+            v.pipe(
+                v.number("temperature 必须为数值"),
+                v.finite("temperature 必须为有限数值"),
+                v.minValue(0, "temperature 最小为 0"),
+                v.maxValue(2, "temperature 最大为 2"),
+            ),
+        ),
+    ),
+    topP: v.optional(
+        v.nullable(
+            v.pipe(
+                v.number("topP 必须为数值"),
+                v.finite("topP 必须为有限数值"),
+                v.minValue(0, "topP 最小为 0"),
+                v.maxValue(1, "topP 最大为 1"),
+            ),
+        ),
+    ),
+    maxTokens: v.optional(
+        v.nullable(
+            v.pipe(
+                v.number("maxTokens 必须为整数"),
+                v.integer("maxTokens 必须为整数"),
+                v.minValue(1, "maxTokens 最小为 1"),
+            ),
+        ),
+    ),
+    reasoningEffort: v.optional(
+        v.nullable(v.picklist(CANONICAL_REASONING_EFFORTS, "推理强度无效")),
+    ),
+});
+
+const AiGenerationDefaults = v.optional(
+    v.nullable(
+        v.object({
+            default: v.optional(v.nullable(GenerationConfig)),
+            models: v.optional(
+                v.nullable(v.record(v.string(), v.nullable(GenerationConfig))),
+            ),
+        }),
+    ),
+);
+
 export function registerPreferencesRoutes(
     routes: Routes<AppEnv>,
     deps: AppDeps,
@@ -98,6 +147,7 @@ export function registerPreferencesRoutes(
             wallpaperBlur: json(Blur),
             wallpaperGrayscale: json(Grayscale),
             wallpaperMask: json(Mask),
+            aiGenerationDefaults: json(AiGenerationDefaults),
         }),
         async (c, data) => {
             if (
