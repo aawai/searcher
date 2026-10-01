@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
     ArrowDown,
     ArrowUp,
@@ -22,6 +22,8 @@ import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 export interface AppsRootViewProps {
     apps: ExtendedWebApp[];
     groups: WebAppGroup[];
+    isArranging: boolean;
+    onArrangeChange: (arranging: boolean) => void;
     query: string;
     onQueryChange: (query: string) => void;
     onNavigateToGroup: (groupId: string) => void;
@@ -45,6 +47,8 @@ export interface AppsRootViewProps {
 export function AppsRootView({
     apps: sourceApps,
     groups,
+    isArranging,
+    onArrangeChange,
     query,
     onQueryChange,
     onNavigateToGroup,
@@ -57,7 +61,6 @@ export function AppsRootView({
     onReorder,
     onNavigateAll,
 }: AppsRootViewProps) {
-    const [isArranging, setIsArranging] = useState(false);
     const apps = useMemo(
         () =>
             sourceApps.slice().sort((a, b) =>
@@ -327,7 +330,7 @@ export function AppsRootView({
                                 variant={isArranging ? "default" : "outline"}
                                 size="sm"
                                 className="gap-1.5 text-xs"
-                                onClick={() => setIsArranging((prev) => !prev)}
+                                onClick={() => onArrangeChange(!isArranging)}
                                 aria-label={isArranging
                                     ? "完成排序整理"
                                     : "整理网站排序与布局"}

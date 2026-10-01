@@ -10,7 +10,17 @@ import {
 import "./workspace.css";
 
 export function WorkspaceShell(
-    { state, title, dock, navigate, onBack, onClose, onCreate, children }: {
+    {
+        state,
+        title,
+        dock,
+        navigate,
+        onBack,
+        onClose,
+        onCreate,
+        appsArranging,
+        children,
+    }: {
         state: WorkspaceState;
         title: string;
         dock: boolean;
@@ -18,6 +28,7 @@ export function WorkspaceShell(
         onBack: () => void;
         onClose: () => void;
         onCreate: () => void;
+        appsArranging: boolean;
         children: ReactNode;
     },
 ) {
@@ -57,9 +68,12 @@ export function WorkspaceShell(
             onClose={onClose}
             footer={
                 <footer className="workspace-footer">
-                    {root && (
+                    {root && !(workspace === "apps" && appsArranging) && (
                         <Button
                             className="workspace-primary"
+                            variant={workspace === "apps"
+                                ? "default"
+                                : "outline"}
                             onClick={onCreate}
                         >
                             {workspace === "apps" ? "添加应用" : "新建便签"}

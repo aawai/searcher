@@ -21,6 +21,8 @@ export interface AppsWorkspaceProps {
     groups: WebAppGroup[];
     setApps: React.Dispatch<React.SetStateAction<ExtendedWebApp[]>>;
     setGroups: React.Dispatch<React.SetStateAction<WebAppGroup[]>>;
+    isArranging: boolean;
+    onArrangeChange: (arranging: boolean) => void;
     query: string;
     onQueryChange: (query: string) => void;
     appearance: Appearance;
@@ -50,6 +52,8 @@ export function AppsWorkspace({
     groups,
     setApps,
     setGroups,
+    isArranging,
+    onArrangeChange,
     query,
     onQueryChange,
     appearance,
@@ -179,6 +183,8 @@ export function AppsWorkspace({
     if (state.view === "apps/root") {
         viewContent = (
             <AppsRootView
+                isArranging={isArranging}
+                onArrangeChange={onArrangeChange}
                 apps={apps}
                 groups={groups}
                 query={query}

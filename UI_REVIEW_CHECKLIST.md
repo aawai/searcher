@@ -195,3 +195,28 @@
       errors。
 - [x] 205 项源码测试、生产 Workspace 8 个回归步骤、build/typecheck、修改范围
       lint/format 通过；check:ui 为 0 新违规、0 drift。
+
+## Issue #42 Workspace Apps 几何与单一主操作（2026-10-01）
+
+- [x] 基于已合入的 #41 IA；仅作用于 Workspace presentation，不改 Home/Zen
+      launcher 样式、后端或 route。
+- [x] 复用固定宽度 tracks 和既有空间 Token；通过 grid alignment 居中，不用左右
+      padding 模拟居中。
+- [x] 1/2/3/4 tile：常用、搜索、All、未分组及普通 group 共 144
+      次浏览器几何检查通过，左右剩余空间差 <=8px；375px mobile 和 400px desktop
+      Workspace 均通过。
+- [x] 40 Apps（含 80 字符名称）、12 个长名称 small/large folder 混排，在
+      375/390/768/1440、light/dark 下无横向 overflow；行列 gap 均为 4px，large
+      folder 保持 140×140 的 2×2 tracks；1–4 tile 检查同时断言内部图标未越过
+      tile 边界。
+- [x] 方形几何补充修正后重新检查上述六种实页：图标 68×68、四 tile 左右余量差均为
+      0px、grid 无横向 overflow；生产 Workspace 9 步回归重新通过。
+- [x] Root 正常仅“添加应用”为 primary，整理仅“完成整理”为
+      primary，完成或搜索后恢复添加；nested 不增加 footer primary。
+- [x] Quick Apps 三种 icon size × 两种 label preference、pinned ordering
+      与仅打开/在工作区中管理的菜单契约通过；打开 Workspace 不改变 Quick Apps 或
+      Zen grid 的对齐和宽度。
+- [x] 390×844 / 768×1024 / 1440×900，light/dark 六种实际页面截图已检查；375px
+      长文件夹名整理列表实页无 overflow、无竞争 primary，浏览器无 page errors。
+- [x] 205 项源码测试、生产 Workspace 9 个回归步骤、build/typecheck、修改范围
+      lint 通过；check:ui 为 0 新违规、0 drift。
