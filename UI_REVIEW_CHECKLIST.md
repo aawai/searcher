@@ -331,3 +331,31 @@
       12 步（54 秒）、build、App.tsx typecheck 和 check:ui 通过；UI Guard 扫描
       88 文件、758 存量违规，0 新违规 / 增量 / stale allowance。CHANGELOG
       合并保留两项功能记录。
+
+## Issue #49 Ask 页面层级、空间边界与请求体策略（2026-10-01）
+
+- [x] Workbench 复用 PageShell、既有 Button / Sheet / Dialog 与 semantic token；
+      登录态只保留 Conversation Header H1，Guest 与其他页面 PageHeader 不变，
+      删除无状态语义的空态 badge；未增加 raw spacing / color / shadow。
+- [x] AppShell / Ask / Workspace 使用 flex 可用高度，Topbar 与 connection banner
+      不收缩，上下留白均为 --space-4；shell 使用 --surface-solid、
+      --border-subtle、--radius-card，main 无 card shadow。Composer 保留自身
+      focus 与 elevation。移动历史 Sheet
+      修复中间容器最小高度，历史列表独立滚动。
+- [x] 实页六尺寸：390×844、640×900、768×1024、1024×768、1440×900、 1920×1080 ×
+      light/dark。36 个空/短/长会话场景、24 个 banner 存在场景、 12
+      个图片会话场景通过；页面无横向溢出或二次 viewport scroll，长消息与长历史
+      内部滚动，滚动 Thread 不移动 Composer。十二张长会话截图已审阅。
+- [x] Header 重命名后 H1 与 Sidebar 同步；移动 Sheet Escape 关闭并回焦历史入口；
+      connection banner 重试成功后移除且 Workspace 保留。
+- [x] 开发账号的只读来源 SQLite 快照上使用现有 gemini-3.1-flash-lite： PNG
+      1,179,936 / 2,094,561 bytes，JSON 请求 1,573,645 / 2,793,141 bytes，
+      均返回 HTTP 200、真实模型回复 BODY LIMIT 49；原开发数据库未写入。
+- [x] 14 项请求体契约回归与 307 项完整测试通过，production build、 src/main.ts /
+      web/src/main.tsx typecheck、修改源码 lint/format 通过。 check:ui 88
+      文件、757 存量违规、0 新违规 / 增量 / stale；baseline 仅收缩 1。
+- [x] React Doctor 全仓 66/100；本次不扩展到既有诊断项。诊断下载写入的 lock
+      变更已撤销。实模型页面无捕获到的 pageerror / failed request。
+- [x] 不修改 assistant-ui runtime、Conversation / Branch / Message contract、
+      reasoning 语义、附件业务上限或其他 PageHeader；build 仍有既有大 bundle
+      警告。

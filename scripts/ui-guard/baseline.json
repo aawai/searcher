@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-30T17:37:55.268Z",
-  "totalViolations": 758,
+  "generatedAt": "2026-10-01T07:25:46.412Z",
+  "totalViolations": 757,
   "allowances": {
     "web/src/app/AccountPage.tsx": [
       {
@@ -2194,7 +2194,7 @@
         "property": "margin",
         "snippet": "margin: 16px auto",
         "fingerprint": "raw-spacing-literal:margin:margin: 16px auto",
-        "count": 4
+        "count": 3
       },
       {
         "rule": "raw-spacing-literal",
