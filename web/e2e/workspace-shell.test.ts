@@ -379,6 +379,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                                 : '.zen-edge-trigger button[data-workspace="apps"]',
                         );
                         await trigger.waitFor();
+                        await page.locator(".hero").waitFor();
                         const hero = await page.locator(".hero").boundingBox();
                         await trigger.focus();
                         await page.keyboard.press("Enter");

@@ -407,3 +407,27 @@
 - [x] 不修改 assistant-ui runtime、Conversation / Branch / Message contract、
       reasoning 语义、附件业务上限或其他 PageHeader；build 仍有既有大 bundle
       警告。
+
+## Issue #52 UI Guard 零基线（2026-10-01）
+
+- [x] 初始实测 86 文件 / 757 条违规 / 12 个 baseline-bearing 文件。分批收缩 为
+      0，未使用 initialize、未修改 scanner 或 exceptions；最终 NEW / INCREASED /
+      STALE 均为 0。
+- [x] raw spacing、typography、radius、shadow 与 TSX presentation 按角色迁移。
+      Home/Launcher 专用几何保留；真正 runtime geometry 仍由原 owner 持有。
+- [x] 六宽度 390/640/768/960/1280/1440 × light/dark × 八页面共 96 场景：
+      页面无横向溢出，搜索引擎控件始终位于搜索框内。390/768/1440 的浅深色
+      截图已审阅；覆盖账户、模式 preview、AI Settings、Ask 与实际 Home。
+- [x] 本地隔离数据库：账户资料保存显示成功状态，页面无捕获到的 pageerror /
+      failed request；未修改原开发账号或数据库。
+- [x] UI Guard 31 项、非 e2e 测试 339 项通过；生产
+      Workspace/Launcher/Notes/Bento 5 项测试共 57 steps 通过。等待异步 Home
+      hero 可见后再读取 geometry， 不在 loading placeholder 上断言。
+- [x] production build、web/src/main.tsx typecheck 与修改 TSX scoped lint 通过。
+- [x] Design System 同步迁移对照与保留边界，CHANGELOG 记录零 allowance 门禁。
+- [ ] React Doctor 并非全绿：全仓扫描包含其他 worktree，53/100、41 项诊断；
+      仅作为待核实线索，本次不修改无关业务行为或扩展修复范围。
+- [x] Advisor 指出的 connection banner 间距回归已修复：390/768/1440 × light/dark
+      的真实错误横幅 computed gap 均为 12px、padding 均为 8px 16px，
+      无页面横向溢出；恢复网络后点击重试，横幅移除。最终 build 与 UI Guard 31
+      项复查通过。compact button padding 仍为 6px 12px，不扩大到语义命名重构。

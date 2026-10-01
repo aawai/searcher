@@ -27,6 +27,7 @@ import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { authPath, routes } from "./routes.ts";
+import "./account.css";
 
 interface SessionDevice {
     id: string;
@@ -149,7 +150,7 @@ export function AccountPage() {
                 "/api/account",
                 json("PATCH", {
                     displayName: displayName.trim(),
-                    email: email.trim() || "",
+                    email: email.trim() || undefined,
                 }),
             );
             login(res.user);
@@ -296,44 +297,17 @@ export function AccountPage() {
             {user.mustChangePassword && (
                 <div
                     role="alert"
-                    style={{
-                        padding: "18px 22px",
-                        marginBottom: "28px",
-                        background:
-                            "color-mix(in srgb, var(--danger) 12%, var(--surface))",
-                        border: "2px solid var(--danger)",
-                        borderRadius: "var(--radius)",
-                        display: "flex",
-                        gap: "16px",
-                        alignItems: "flex-start",
-                    }}
+                    className="account-reset-banner"
                 >
                     <AlertTriangle
-                        size={26}
-                        style={{
-                            color: "var(--danger)",
-                            flexShrink: 0,
-                            marginTop: "2px",
-                        }}
+                        size={24}
+                        className="account-reset-banner-icon"
                     />
-                    <div>
-                        <h2
-                            style={{
-                                margin: "0 0 6px",
-                                fontSize: "17px",
-                                color: "var(--danger)",
-                                fontWeight: 700,
-                            }}
-                        >
+                    <div className="account-reset-banner-body">
+                        <h2 className="account-reset-banner-title">
                             必须重置密码
                         </h2>
-                        <p
-                            style={{
-                                margin: 0,
-                                fontSize: "14px",
-                                lineHeight: "1.6",
-                            }}
-                        >
+                        <p className="account-reset-banner-text">
                             管理员已重置了您的账户密码。为了账户安全，您必须在此设置新密码后方可正常使用。
                             修改密码后，所有设备将立即注销，您需要使用新密码重新登录。
                         </p>
@@ -341,101 +315,45 @@ export function AccountPage() {
                 </div>
             )}
 
-            <div style={{ display: "grid", gap: "24px" }}>
+            <div className="account-grid">
                 {/* 1. Profile Card */}
-                <Card className="p-4 md:p-6 bg-[var(--surface-solid)] border-[var(--border)] shadow-none">
-                    <CardHeader className="p-0 pb-5">
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "16px",
-                                marginBottom: "20px",
-                            }}
-                        >
+                <Card className="account-card">
+                    <CardHeader className="account-card-header">
+                        <div className="account-profile-header">
                             <div
-                                style={{
-                                    width: "56px",
-                                    height: "56px",
-                                    borderRadius: "16px",
-                                    background: "var(--accent)",
-                                    color: "var(--accent-foreground)",
-                                    display: "grid",
-                                    placeItems: "center",
-                                    fontSize: "24px",
-                                    fontWeight: 700,
-                                    flexShrink: 0,
-                                }}
+                                className="account-profile-avatar"
+                                aria-hidden="true"
                             >
                                 {(user.displayName || user.username).slice(0, 1)
                                     .toUpperCase()}
                             </div>
-                            <div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "10px",
-                                    }}
-                                >
-                                    <h2
-                                        style={{
-                                            margin: 0,
-                                            fontSize: "20px",
-                                            fontWeight: 700,
-                                        }}
-                                    >
+                            <div className="account-profile-info">
+                                <div className="account-profile-name-row">
+                                    <h2 className="account-profile-name">
                                         {user.displayName}
                                     </h2>
                                     <span
-                                        style={{
-                                            fontSize: "12px",
-                                            fontWeight: 600,
-                                            padding: "2px 8px",
-                                            borderRadius: "12px",
-                                            background: user.role === "admin"
-                                                ? "var(--accent)"
-                                                : "var(--surface-soft)",
-                                            color: user.role === "admin"
-                                                ? "var(--accent-foreground)"
-                                                : "var(--muted)",
-                                            border: "1px solid var(--border)",
-                                        }}
+                                        className="account-role-badge"
+                                        data-role={user.role}
                                     >
                                         {user.role === "admin"
                                             ? "系统管理员"
                                             : "标准用户"}
                                     </span>
                                 </div>
-                                <p
-                                    className="muted"
-                                    style={{
-                                        margin: "4px 0 0",
-                                        fontSize: "14px",
-                                    }}
-                                >
+                                <p className="account-profile-username muted">
                                     @{user.username}
                                 </p>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="account-card-content">
                         <form onSubmit={handleSaveProfile}>
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "repeat(auto-fit, minmax(240px, 1fr))",
-                                    gap: "16px",
-                                }}
-                            >
-                                <label className="field" style={{ margin: 0 }}>
+                            <div className="account-form-grid">
+                                <label className="field account-field">
                                     <span>
                                         用户名{" "}
-                                        <span
-                                            className="muted"
-                                            style={{ fontWeight: "normal" }}
-                                        >
+                                        <span className="muted account-field-hint">
                                             (不可修改)
                                         </span>
                                     </span>
@@ -443,14 +361,10 @@ export function AccountPage() {
                                         type="text"
                                         value={user.username}
                                         disabled
-                                        style={{
-                                            cursor: "not-allowed",
-                                            color: "var(--muted)",
-                                            background: "var(--surface-solid)",
-                                        }}
+                                        className="account-input-disabled"
                                     />
                                 </label>
-                                <label className="field" style={{ margin: 0 }}>
+                                <label className="field account-field">
                                     <span>显示名称</span>
                                     <Input
                                         type="text"
@@ -463,17 +377,10 @@ export function AccountPage() {
                                     />
                                 </label>
                             </div>
-
-                            <label
-                                className="field"
-                                style={{ marginTop: "16px" }}
-                            >
+                            <label className="field account-field account-field--full">
                                 <span>
                                     邮箱地址{" "}
-                                    <span
-                                        className="muted"
-                                        style={{ fontWeight: "normal" }}
-                                    >
+                                    <span className="muted account-field-hint">
                                         (可选，用于找回与识别)
                                     </span>
                                 </span>
@@ -484,43 +391,26 @@ export function AccountPage() {
                                     placeholder="name@example.com"
                                 />
                             </label>
-
                             {profileSuccess && (
                                 <p
                                     role="status"
-                                    style={{
-                                        color: "var(--success)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                        margin: "14px 0 0",
-                                        fontSize: "14px",
-                                    }}
+                                    className="account-message account-message--form"
+                                    data-tone="success"
                                 >
                                     <CheckCircle2 size={16} />
-                                    {profileSuccess}
+                                    <span>{profileSuccess}</span>
                                 </p>
                             )}
                             {profileError && (
                                 <p
                                     role="alert"
-                                    className="error"
-                                    style={{
-                                        margin: "14px 0 0",
-                                        fontSize: "14px",
-                                    }}
+                                    className="error account-message account-message--form"
+                                    data-tone="error"
                                 >
                                     {profileError}
                                 </p>
                             )}
-
-                            <div
-                                style={{
-                                    marginTop: "20px",
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                }}
-                            >
+                            <div className="account-form-actions">
                                 <Button
                                     variant="default"
                                     type="submit"
@@ -537,38 +427,25 @@ export function AccountPage() {
 
                 {/* 2. Password Security Card */}
                 <Card
-                    className={`p-4 md:p-6 bg-[var(--surface-solid)] shadow-none ${
-                        user.mustChangePassword
-                            ? "border-2 border-[var(--accent)]"
-                            : "border border-[var(--border)]"
-                    }`}
+                    className="account-card"
+                    data-urgent={user.mustChangePassword ? "" : undefined}
                 >
-                    <CardHeader className="p-0 pb-4">
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                                marginBottom: "4px",
-                            }}
-                        >
-                            <Key size={20} style={{ color: "var(--accent)" }} />
-                            <CardTitle className="m-0 text-[19px] font-bold">
+                    <CardHeader className="account-card-header">
+                        <div className="account-card-title-row">
+                            <Key size={20} className="account-card-icon" />
+                            <CardTitle className="account-card-title">
                                 {user.mustChangePassword
                                     ? "重置密码 (必须修改)"
                                     : "修改密码"}
                             </CardTitle>
                         </div>
-                        <p className="muted m-0 text-sm">
+                        <p className="account-card-desc muted">
                             修改密码需要提供当前密码。修改成功后，将在所有已登录设备（包括当前设备）退出登录。
                         </p>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="account-card-content">
                         <form onSubmit={handleChangePassword}>
-                            <label
-                                className="field"
-                                style={{ margin: "0 0 16px" }}
-                            >
+                            <label className="field account-field--spaced">
                                 <span>当前密码</span>
                                 <Input
                                     type="password"
@@ -580,15 +457,8 @@ export function AccountPage() {
                                     placeholder="输入当前使用的密码"
                                 />
                             </label>
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "repeat(auto-fit, minmax(240px, 1fr))",
-                                    gap: "16px",
-                                }}
-                            >
-                                <label className="field" style={{ margin: 0 }}>
+                            <div className="account-form-grid">
+                                <label className="field account-field">
                                     <span>新密码 (至少 12 个字符)</span>
                                     <Input
                                         type="password"
@@ -602,7 +472,7 @@ export function AccountPage() {
                                         placeholder="输入新密码 (12–128 位)"
                                     />
                                 </label>
-                                <label className="field" style={{ margin: 0 }}>
+                                <label className="field account-field">
                                     <span>确认新密码</span>
                                     <Input
                                         type="password"
@@ -621,39 +491,24 @@ export function AccountPage() {
                             {passwordSuccess && (
                                 <p
                                     role="status"
-                                    style={{
-                                        color: "var(--success)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                        margin: "14px 0 0",
-                                        fontSize: "14px",
-                                    }}
+                                    className="account-message account-message--form"
+                                    data-tone="success"
                                 >
                                     <CheckCircle2 size={16} />
-                                    {passwordSuccess}
+                                    <span>{passwordSuccess}</span>
                                 </p>
                             )}
                             {passwordError && (
                                 <p
                                     role="alert"
-                                    className="error"
-                                    style={{
-                                        margin: "14px 0 0",
-                                        fontSize: "14px",
-                                    }}
+                                    className="error account-message account-message--form"
+                                    data-tone="error"
                                 >
                                     {passwordError}
                                 </p>
                             )}
 
-                            <div
-                                style={{
-                                    marginTop: "20px",
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                }}
-                            >
+                            <div className="account-form-actions">
                                 <Button
                                     variant="default"
                                     type="submit"
@@ -673,63 +528,32 @@ export function AccountPage() {
                 </Card>
 
                 {/* 3. Devices Management Card */}
-                <Card className="p-4 md:p-6 bg-[var(--surface-solid)] border-[var(--border)] shadow-none">
-                    <CardHeader className="p-0 pb-4">
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                flexWrap: "wrap",
-                                gap: "12px",
-                                marginBottom: "16px",
-                            }}
-                        >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "10px",
-                                }}
-                            >
+                <Card className="account-card">
+                    <CardHeader className="account-card-header">
+                        <div className="account-card-header-between">
+                            <div className="account-card-title-row">
                                 <Laptop
                                     size={20}
-                                    style={{ color: "var(--accent)" }}
+                                    className="account-card-icon"
                                 />
                                 <div>
-                                    <CardTitle className="m-0 text-[19px] font-bold">
+                                    <CardTitle className="account-card-title">
                                         设备会话管理
                                     </CardTitle>
-                                    <p
-                                        className="muted"
-                                        style={{
-                                            margin: "2px 0 0",
-                                            fontSize: "13px",
-                                        }}
-                                    >
+                                    <p className="account-devices-count muted">
                                         当前账号共在 {devices.length}{" "}
                                         个设备上保持登录
                                     </p>
                                 </div>
                             </div>
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                }}
-                            >
-                                <button
+                            <div className="account-devices-actions">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
                                     type="button"
                                     onClick={() => void loadDevices()}
                                     disabled={devicesLoading}
-                                    className="button button--subtle"
-                                    style={{
-                                        minHeight: "38px",
-                                        padding: "6px 12px",
-                                        fontSize: "13px",
-                                    }}
                                     title="刷新设备列表"
                                     aria-label="刷新设备列表"
                                 >
@@ -738,19 +562,15 @@ export function AccountPage() {
                                         className={devicesLoading ? "spin" : ""}
                                     />
                                     <span>刷新</span>
-                                </button>
+                                </Button>
                                 {hasOtherDevices && (
                                     <Button
                                         variant="destructive"
+                                        size="sm"
                                         type="button"
                                         onClick={() =>
                                             void handleRevokeOthers()}
                                         disabled={devicesLoading}
-                                        style={{
-                                            minHeight: "38px",
-                                            padding: "6px 12px",
-                                            fontSize: "13px",
-                                        }}
                                     >
                                         <LogOut size={15} />
                                         <span>退出其他所有设备</span>
@@ -759,28 +579,22 @@ export function AccountPage() {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="account-card-content">
                         {devicesActionMsg && (
                             <p
                                 role="status"
-                                style={{
-                                    color: "var(--success)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    margin: "0 0 16px",
-                                    fontSize: "14px",
-                                }}
+                                className="account-message account-message--section"
+                                data-tone="success"
                             >
                                 <CheckCircle2 size={16} />
-                                {devicesActionMsg}
+                                <span>{devicesActionMsg}</span>
                             </p>
                         )}
                         {devicesError && (
                             <p
                                 role="alert"
-                                className="error"
-                                style={{ margin: "0 0 16px", fontSize: "14px" }}
+                                className="error account-message account-message--section"
+                                data-tone="error"
                             >
                                 {devicesError}
                             </p>
@@ -788,30 +602,18 @@ export function AccountPage() {
 
                         {devicesLoading && devices.length === 0
                             ? (
-                                <p
-                                    className="muted"
-                                    style={{
-                                        padding: "24px 0",
-                                        textAlign: "center",
-                                    }}
-                                >
+                                <p className="account-empty-notice muted">
                                     正在加载登录设备…
                                 </p>
                             )
                             : devices.length === 0
                             ? (
-                                <p
-                                    className="muted"
-                                    style={{
-                                        padding: "24px 0",
-                                        textAlign: "center",
-                                    }}
-                                >
+                                <p className="account-empty-notice muted">
                                     暂无活跃设备会话记录
                                 </p>
                             )
                             : (
-                                <div style={{ display: "grid", gap: "12px" }}>
+                                <div className="account-device-list">
                                     {devices.map((device) => {
                                         const parsed = parseUserAgent(
                                             device.userAgent,
@@ -821,50 +623,15 @@ export function AccountPage() {
                                         return (
                                             <div
                                                 key={device.id}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent:
-                                                        "space-between",
-                                                    flexWrap: "wrap",
-                                                    gap: "12px",
-                                                    padding: "16px 18px",
-                                                    borderRadius: "12px",
-                                                    border: device.isCurrent
-                                                        ? "1px solid var(--accent-border)"
-                                                        : "1px solid var(--border)",
-                                                    background: device.isCurrent
-                                                        ? "var(--accent-soft)"
-                                                        : "var(--surface-solid)",
-                                                }}
+                                                className="account-device-item"
+                                                data-current={device.isCurrent
+                                                    ? "true"
+                                                    : undefined}
                                             >
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: "14px",
-                                                        minWidth: "220px",
-                                                    }}
-                                                >
+                                                <div className="account-device-main">
                                                     <div
-                                                        style={{
-                                                            width: "42px",
-                                                            height: "42px",
-                                                            borderRadius:
-                                                                "10px",
-                                                            background:
-                                                                "var(--surface-solid)",
-                                                            border:
-                                                                "1px solid var(--border)",
-                                                            display: "grid",
-                                                            placeItems:
-                                                                "center",
-                                                            color:
-                                                                device.isCurrent
-                                                                    ? "var(--accent)"
-                                                                    : "var(--muted)",
-                                                            flexShrink: 0,
-                                                        }}
+                                                        className="account-device-icon"
+                                                        aria-hidden="true"
                                                     >
                                                         {parsed.type ===
                                                                 "mobile"
@@ -893,62 +660,19 @@ export function AccountPage() {
                                                                 />
                                                             )}
                                                     </div>
-                                                    <div>
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                alignItems:
-                                                                    "center",
-                                                                gap: "8px",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                            }}
-                                                        >
-                                                            <span
-                                                                style={{
-                                                                    fontWeight:
-                                                                        650,
-                                                                    fontSize:
-                                                                        "15px",
-                                                                }}
-                                                            >
+                                                    <div className="account-device-info">
+                                                        <div className="account-device-name-row">
+                                                            <span className="account-device-name">
                                                                 {parsed.name}
                                                             </span>
                                                             {device.isCurrent &&
                                                                 (
-                                                                    <span
-                                                                        style={{
-                                                                            fontSize:
-                                                                                "11px",
-                                                                            fontWeight:
-                                                                                700,
-                                                                            padding:
-                                                                                "1px 7px",
-                                                                            borderRadius:
-                                                                                "999px",
-                                                                            background:
-                                                                                "var(--accent)",
-                                                                            color:
-                                                                                "var(--accent-foreground)",
-                                                                        }}
-                                                                    >
+                                                                    <span className="account-device-badge">
                                                                         当前设备
                                                                     </span>
                                                                 )}
                                                         </div>
-                                                        <div
-                                                            className="muted"
-                                                            style={{
-                                                                fontSize:
-                                                                    "12px",
-                                                                marginTop:
-                                                                    "3px",
-                                                                display: "flex",
-                                                                gap: "12px",
-                                                                flexWrap:
-                                                                    "wrap",
-                                                            }}
-                                                        >
+                                                        <div className="account-device-meta muted">
                                                             <span>
                                                                 IP:{" "}
                                                                 {device.ip ||
@@ -977,12 +701,13 @@ export function AccountPage() {
                                                     </div>
                                                 </div>
 
-                                                <div>
+                                                <div className="account-device-action">
                                                     <Button
                                                         variant={device
                                                                 .isCurrent
                                                             ? "outline"
                                                             : "destructive"}
+                                                        size="sm"
                                                         type="button"
                                                         disabled={isRevoking ||
                                                             devicesLoading}
@@ -990,11 +715,6 @@ export function AccountPage() {
                                                             void handleRevokeDevice(
                                                                 device,
                                                             )}
-                                                        style={{
-                                                            minHeight: "36px",
-                                                            padding: "6px 14px",
-                                                            fontSize: "13px",
-                                                        }}
                                                     >
                                                         {isRevoking
                                                             ? "处理中…"

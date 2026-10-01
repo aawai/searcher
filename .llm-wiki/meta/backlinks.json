@@ -506,8 +506,10 @@
   "sources/obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens": [],
   "sources/obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook": [],
   "sources/obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr": [],
+  "sources/obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52": [],
   "sources/obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an": [],
   "sources/obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-": [],
+  "sources/obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

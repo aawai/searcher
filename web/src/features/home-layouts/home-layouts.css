@@ -1,3 +1,43 @@
+:root {
+    /* Home layouts semantic tokens (Issue #52) */
+    --space-zen-trigger-gap: 6px;
+    --space-zen-trigger-padding: 6px var(--space-2);
+    --space-zen-trigger-padding-mobile: var(--space-1) 6px;
+    --space-zen-btn-gap: 5px;
+    --space-zen-btn-padding: 6px var(--space-3);
+    --space-managing-bar-px: 14px;
+    --space-managing-bar-padding: var(--space-2) var(--space-managing-bar-px);
+    --space-managing-bar-padding-mobile: 10px var(--space-3);
+    --space-managing-bar-mb-mobile: 14px;
+    --space-managing-text-gap: 7px;
+    --space-managing-btn-px: 10px;
+    --space-bento-margin-top: 28px;
+    --space-bento-margin-bottom: 80px;
+    --space-bento-margin-top-mobile: var(--space-5);
+    --space-bento-margin-bottom-mobile: 72px;
+    --space-bento-count-padding: 2px 6px;
+    --space-bento-actions-gap: 6px;
+    --space-bento-action-padding: 9px;
+    --space-bento-empty-py: 22px;
+    --font-bento-count: 11px;
+    --font-bento-empty: 12.5px;
+    --space-layout-mode-margin-top: 14px;
+    --space-layout-card-padding: 14px;
+    --radius-preview: 8px;
+    --radius-preview-pill: 10px;
+    --radius-preview-subtle: 4px;
+    --radius-preview-line: 1px;
+    --space-preview-padding: 10px;
+    --space-preview-gap: 6px;
+    --space-preview-zen-search-mt: 12px;
+    --space-preview-zen-search-px: 6px;
+    --space-preview-zen-gap: 6px;
+    --space-preview-widgets-gap: 5px;
+    --space-preview-card-p: 3px;
+    --space-pinned-area-mb: 48px;
+    --space-pinned-area-mb-mobile: 40px;
+}
+
 /* ==========================================================================
    Home Workspace Layout Styles: Zen, Widgets
    ========================================================================== */
@@ -24,16 +64,16 @@
     right: max(20px, env(safe-area-inset-right, 20px));
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
+    gap: var(--space-zen-trigger-gap);
+    padding: var(--space-zen-trigger-padding);
 }
 
 .zen-edge-btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 6px 12px;
-    font-size: 12px;
+    gap: var(--space-zen-btn-gap);
+    padding: var(--space-zen-btn-padding);
+    font-size: var(--font-metadata-size);
     font-weight: 500;
     color: var(--muted);
     background: transparent;
@@ -55,8 +95,8 @@
     gap: var(--space-3);
     width: 100%;
     max-width: 640px;
-    margin: 0 auto 16px;
-    padding: 8px 14px;
+    margin: 0 auto var(--space-4);
+    padding: var(--space-managing-bar-padding);
     background: var(--surface-l1);
     backdrop-filter: blur(var(--material-blur-content));
     -webkit-backdrop-filter: blur(var(--material-blur-content));
@@ -68,7 +108,7 @@
 .home-managing-text {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: var(--space-managing-text-gap);
     font-size: var(--font-caption-size);
     font-weight: 500;
     color: var(--foreground);
@@ -88,8 +128,8 @@
 
 .home-managing-btn {
     height: 28px;
-    padding: 0 10px;
-    font-size: 12px;
+    padding: 0 var(--space-managing-btn-px);
+    font-size: var(--font-metadata-size);
     border-radius: var(--control-radius);
 }
 /* --------------------------------------------------------------------------
@@ -106,8 +146,8 @@
     container: bento-wrapper / inline-size;
     width: 100%;
     max-width: var(--layout-bento-max, 960px);
-    margin: 28px auto 80px;
-    padding: 0 16px;
+    margin: var(--space-bento-margin-top) auto var(--space-bento-margin-bottom);
+    padding: 0 var(--space-4);
 }
 
 .widgets-bento-container {
@@ -189,14 +229,14 @@
 .widgets-bento-card {
     container: bento-card / inline-size;
     min-width: 0;
-    --bento-padding: var(--space-5);
-    --bento-inner-radius: max(var(--control-radius), calc(var(--radius) - var(--bento-padding)));
+    --space-bento-padding: var(--space-5);
+    --radius-bento-inner: max(var(--control-radius), calc(var(--radius) - var(--space-bento-padding)));
     background: var(--surface-l1);
     backdrop-filter: blur(var(--material-blur-content));
     -webkit-backdrop-filter: blur(var(--material-blur-content));
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius);
-    padding: var(--bento-padding);
+    padding: var(--space-bento-padding);
     box-shadow: var(--shadow-l1);
     display: flex;
     flex-direction: column;
@@ -231,10 +271,10 @@
 .widgets-bento-count {
     display: inline-flex;
     align-items: center;
-    font-size: 11px;
+    font-size: var(--font-bento-count);
     font-weight: 600;
     line-height: 1;
-    padding: 2px 6px;
+    padding: var(--space-bento-count-padding);
     border-radius: 999px;
     background: var(--surface-soft);
     color: var(--muted);
@@ -245,15 +285,15 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-bento-actions-gap);
     flex-shrink: 0;
     margin-left: auto;
 }
 
 .widgets-bento-action {
     height: 30px;
-    padding-inline: 9px;
-    font-size: 12px;
+    padding-inline: var(--space-bento-action-padding);
+    font-size: var(--font-metadata-size);
 }
 
 /* Launcher grid alignment inside widgets bento card */
@@ -274,7 +314,7 @@
 /* Compact intrinsic-height empty card when other side is expanded */
 .widgets-bento-card[data-compact="true"],
 .widgets-bento-card--compact {
-    --bento-padding: var(--space-3) var(--space-4);
+    --space-bento-padding: var(--space-3) var(--space-4);
     gap: var(--space-2);
 }
 
@@ -295,16 +335,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 22px 16px;
+    padding: var(--space-bento-empty-py) var(--space-4);
     text-align: center;
     gap: var(--space-3);
     background: color-mix(in srgb, var(--surface-solid) 35%, transparent);
     border: 1px dashed var(--border-subtle);
-    border-radius: var(--bento-inner-radius);
+    border-radius: var(--radius-bento-inner);
 }
 
 .widgets-bento-empty-text {
-    font-size: 12.5px;
+    font-size: var(--font-bento-empty);
     line-height: 1.5;
     color: var(--muted);
     max-width: 290px;
@@ -406,25 +446,26 @@
     .zen-edge-trigger {
         bottom: max(16px, env(safe-area-inset-bottom, 16px));
         right: max(16px, env(safe-area-inset-right, 16px));
-        padding: 4px 6px;
+        padding: var(--space-zen-trigger-padding-mobile);
     }
     .widgets-bento-wrapper {
-        margin: 20px auto 72px;
-        padding: 0 12px;
+        margin: var(--space-bento-margin-top-mobile) auto
+            var(--space-bento-margin-bottom-mobile);
+        padding: 0 var(--space-3);
     }
     .widgets-bento-container {
         gap: var(--space-4);
     }
     .widgets-bento-card {
-        --bento-padding: var(--space-4);
+        --space-bento-padding: var(--space-4);
         gap: var(--space-3);
     }
     .home-managing-bar {
         flex-direction: column;
         align-items: stretch;
         gap: var(--space-2);
-        padding: 10px 12px;
-        margin: 0 12px 14px;
+        padding: var(--space-managing-bar-padding-mobile);
+        margin: 0 var(--space-3) var(--space-managing-bar-mb-mobile);
     }
     .home-managing-actions {
         justify-content: flex-end;
@@ -439,14 +480,14 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--space-4);
     width: 100%;
-    margin-top: 14px;
+    margin-top: var(--space-layout-mode-margin-top);
 }
 
 .layout-mode-card {
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 14px;
+    padding: var(--space-layout-card-padding);
     background: var(--surface-soft);
     border: 2px solid transparent;
     border-radius: var(--radius);
@@ -459,7 +500,7 @@
     background: var(--surface);
     border-color: var(--accent-border);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-l2);
 }
 
 .layout-mode-card[data-active="true"] {
@@ -471,15 +512,15 @@
 .layout-mode-preview {
     height: 96px;
     background: var(--background);
-    border-radius: 8px;
+    border-radius: var(--radius-preview);
     border: 1px solid var(--border-subtle);
-    padding: 10px;
+    padding: var(--space-preview-padding);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: var(--space-preview-gap);
+    margin-bottom: var(--space-3);
     overflow: hidden;
     position: relative;
 }
@@ -488,14 +529,14 @@
     font-size: var(--font-body-size);
     font-weight: 600;
     color: var(--foreground);
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
 .layout-mode-desc {
-    font-size: 12px;
+    font-size: var(--font-metadata-size);
     line-height: 1.45;
     color: var(--muted);
 }
@@ -509,7 +550,7 @@
     gap: var(--space-4);
     width: 100%;
     max-width: var(--layout-home-content-max);
-    margin: 20px auto 0;
+    margin: var(--space-5) auto 0;
     justify-content: center;
 }
 
@@ -533,7 +574,7 @@
 .pinned-area {
     width: calc(100% - 2 * var(--space-4));
     max-width: var(--layout-home-content-max);
-    margin: var(--space-5) auto 48px;
+    margin: var(--space-5) auto var(--space-pinned-area-mb);
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -541,6 +582,106 @@
 
 @media (max-width: 700px) {
     .pinned-area {
-        margin: var(--space-section) auto 40px;
+        margin: var(--space-section) auto var(--space-pinned-area-mb-mobile);
     }
+}
+
+/* --------------------------------------------------------------------------
+   Preview static geometry classes for LayoutModeSelector
+   -------------------------------------------------------------------------- */
+.layout-preview-zen-search {
+    width: 85%;
+    height: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-preview-pill);
+    margin-top: var(--space-preview-zen-search-mt);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-preview-zen-search-px);
+}
+
+.layout-preview-zen-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--muted);
+}
+
+.layout-preview-zen-icons {
+    display: flex;
+    gap: var(--space-preview-zen-gap);
+    margin-top: var(--space-2);
+}
+
+.layout-preview-zen-icon {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--surface-soft);
+}
+
+.layout-preview-zen-pill {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 24px;
+    height: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-preview-subtle);
+}
+
+.layout-preview-widgets-search {
+    width: 80%;
+    height: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+}
+
+.layout-preview-widgets-bento {
+    display: flex;
+    gap: var(--space-preview-widgets-gap);
+    width: 90%;
+    margin-top: var(--space-1);
+}
+
+.layout-preview-widgets-card {
+    flex: 1;
+    height: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+    padding: var(--space-preview-card-p);
+}
+
+.layout-preview-widgets-line {
+    width: 14px;
+    height: 3px;
+    border-radius: var(--radius-preview-line);
+}
+
+.layout-preview-widgets-line--accent {
+    background: var(--accent);
+}
+
+.layout-preview-widgets-line--muted {
+    background: var(--muted);
+}
+
+.layout-preview-widgets-dock {
+    position: absolute;
+    bottom: 4px;
+    width: 36px;
+    height: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+}
+
+.layout-mode-check {
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
 }
