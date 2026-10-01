@@ -1765,6 +1765,7 @@ export function DesignLab() {
                 state={workspace}
                 title={workspace.view.startsWith("apps/") ? "应用" : "便签"}
                 dock={false}
+                appsArranging={false}
                 navigate={setWorkspace}
                 onBack={() => setWorkspace(parentWorkspaceRoute(workspace))}
                 onClose={() => setWorkspace({ view: "closed" })}

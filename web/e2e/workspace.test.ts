@@ -755,6 +755,19 @@ Deno.test("production workspace contracts", async (t) => {
                     buttons.map((button) => button.getAttribute("aria-label"))
                 );
             await arrange();
+            const primary = page.locator(".workspace-panel .button--primary");
+            assertEquals(await primary.allTextContents(), ["完成整理"]);
+            assertEquals(
+                await page.getByRole("button", {
+                    name: "添加应用",
+                    exact: true,
+                }).count(),
+                0,
+            );
+            await page.getByRole("button", { name: "完成排序整理" }).click();
+            assertEquals(await primary.allTextContents(), ["添加应用"]);
+            await page.getByRole("button", { name: "整理网站排序与布局" })
+                .click();
             await page.getByRole("button", {
                 name: "下移 Order Alpha",
                 exact: true,
@@ -779,31 +792,83 @@ Deno.test("production workspace contracts", async (t) => {
                 "下移 Order Alpha",
             ]);
             const widths: number[] = [];
+            const expectedPins = await page.evaluate(async () => {
+                const { data } = await (await fetch("/api/webapps")).json();
+                return data.filter((app: { isPinned: boolean }) => app.isPinned)
+                    .sort((
+                        a: { pinnedSortOrder?: number },
+                        b: { pinnedSortOrder?: number },
+                    ) => (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0))
+                    .map((app: { name: string }) => "打开 " + app.name);
+            });
             for (const size of ["compact", "default", "large"] as const) {
-                const showAppLabels = size !== "compact";
-                const status = await page.evaluate(async (preferences) => {
-                    return (await fetch("/api/preferences", {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(preferences),
-                    })).status;
-                }, { webAppIconSize: size, showAppLabels });
-                assertEquals(status, 200);
-                await visit("/");
-                const icon = page.locator(
-                    ".widgets-bento-card--apps .launcher-grid--" + size +
-                        " .webapp-icon",
-                ).first();
-                await icon.waitFor();
-                assertEquals(
-                    await icon.locator(".webapp-name").isVisible(),
-                    showAppLabels,
-                );
-                widths.push(
-                    await icon.locator(".webapp-glyph").evaluate((element) =>
-                        element.getBoundingClientRect().width
-                    ),
-                );
+                for (const showAppLabels of [false, true]) {
+                    const status = await page.evaluate(
+                        async (preferences) =>
+                            (await fetch("/api/preferences", {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(preferences),
+                            })).status,
+                        { webAppIconSize: size, showAppLabels },
+                    );
+                    assertEquals(status, 200);
+                    await visit("/");
+                    const quick = page.locator(
+                        ".widgets-bento-card--apps .launcher-grid",
+                    );
+                    const icons = quick.locator(".webapp-icon");
+                    await icons.first().waitFor();
+                    assertEquals(
+                        await icons.evaluateAll((els) =>
+                            els.map((el) => el.getAttribute("aria-label"))
+                        ),
+                        expectedPins,
+                    );
+                    assertEquals(
+                        await icons.first().locator(".webapp-name").isVisible(),
+                        showAppLabels,
+                    );
+                    if (showAppLabels) {
+                        widths.push(
+                            await icons.first().locator(".webapp-glyph")
+                                .evaluate((el) =>
+                                    el.getBoundingClientRect().width
+                                ),
+                        );
+                    }
+                    await icons.first().click({ button: "right" });
+                    assertEquals(
+                        await page.getByRole("menuitem").allTextContents(),
+                        ["打开", "在工作区中管理"],
+                    );
+                    await page.keyboard.press("Escape");
+                    const before = await quick.evaluate((el) => ({
+                        alignment: getComputedStyle(el).justifyContent,
+                        width: el.getBoundingClientRect().width,
+                    }));
+                    await page.locator(
+                        '.workspace-dock button[aria-label="应用工作区"]',
+                    ).click();
+                    assertEquals(
+                        await page.locator(".workspace-panel .button--primary")
+                            .allTextContents(),
+                        ["添加应用"],
+                    );
+                    assertEquals(
+                        await quick.evaluate((el) => ({
+                            alignment: getComputedStyle(el).justifyContent,
+                            width: el.getBoundingClientRect().width,
+                        })),
+                        before,
+                    );
+                    assertEquals(
+                        await page.locator(
+                            ".widgets-bento-card--apps .home-managing-bar, .widgets-bento-card--apps .launcher-drag-cue",
+                        ).count(),
+                        0,
+                    );
+                }
             }
             assertEquals(widths[0] < widths[1] && widths[1] < widths[2], true);
         },
@@ -836,7 +901,27 @@ Deno.test("production workspace contracts", async (t) => {
                 document.documentElement.dataset.style === "zen"
             );
             await visit("/");
-
+            const zenGrid = page.locator(
+                '.pinned-area .launcher-grid[data-presentation="default"]',
+            );
+            await zenGrid.waitFor();
+            const zenBefore = await zenGrid.evaluate((el) => ({
+                alignment: getComputedStyle(el).justifyContent,
+                width: el.getBoundingClientRect().width,
+            }));
+            await page.locator(
+                '.zen-edge-trigger button[data-workspace="apps"]',
+            ).click();
+            await page.locator(".apps-workspace .launcher-grid--workspace")
+                .waitFor();
+            assertEquals(
+                await zenGrid.evaluate((el) => ({
+                    alignment: getComputedStyle(el).justifyContent,
+                    width: el.getBoundingClientRect().width,
+                })),
+                zenBefore,
+            );
+            await page.keyboard.press("Escape");
             // Verify Zen layout: Dock is NOT present, Zen edge trigger IS present
             assertEquals(await page.locator(".workspace-dock").count(), 0);
             const zenEdge = page.locator(".zen-edge-trigger");
@@ -995,6 +1080,293 @@ Deno.test("production workspace contracts", async (t) => {
                 ),
                 "apps",
             );
+        },
+    );
+    await t.step(
+        "Workspace 1–4 tile clusters are centered in every Apps view",
+        async () => {
+            const isolated = await browser.newContext({ colorScheme: "light" });
+            try {
+                const geo = await isolated.newPage();
+                await visit("/register", geo);
+                await geo.locator("#auth-username").fill("geometry_42");
+                await geo.locator("#auth-display-name").fill("Geometry Tester");
+                await geo.locator("#auth-password").fill(password);
+                await geo.locator('form button[type="submit"]').click();
+                await geo.waitForURL(origin + "/");
+                const request = async (
+                    path: string,
+                    method: string,
+                    body?: object,
+                ) => await geo.evaluate(async ({ path, method, body }) => {
+                    const response = await fetch(path, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: body ? JSON.stringify(body) : undefined,
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    return await response.json();
+                }, { path, method, body });
+                await visit("/settings/appearance", geo);
+                await geo.getByText("空间轻桌面", { exact: true }).click();
+                await geo.waitForFunction(() =>
+                    document.documentElement.dataset.style === "widgets"
+                );
+                const inspect = async (count: number) => {
+                    const grid = geo.locator(".apps-workspace .launcher-grid");
+                    await grid.waitFor();
+                    await geo.waitForFunction(() => {
+                        const grid = document.querySelector(
+                            ".apps-workspace .launcher-grid",
+                        );
+                        return grid &&
+                            getComputedStyle(grid).gridTemplateColumns.split(
+                                    " ",
+                                ).length <= grid.children.length;
+                    });
+                    const metrics = await grid.evaluate((element) => {
+                        const bounds = element.getBoundingClientRect();
+                        const tiles = Array.from(element.children).map((tile) =>
+                            tile.getBoundingClientRect()
+                        );
+                        const left = Math.min(...tiles.map((tile) =>
+                            tile.left
+                        )) - bounds.left;
+                        const right = bounds.right -
+                            Math.max(...tiles.map((tile) => tile.right));
+                        return {
+                            iconsContained: Array.from(element.children).every(
+                                (tile) => {
+                                    const icon = tile.querySelector(
+                                        ".webapp-icon",
+                                    );
+                                    if (!icon) return false;
+                                    const cell = tile.getBoundingClientRect();
+                                    const box = icon.getBoundingClientRect();
+                                    return box.left >= cell.left - 1 &&
+                                        box.right <= cell.right + 1 &&
+                                        box.top >= cell.top - 1 &&
+                                        box.bottom <= cell.bottom + 1;
+                                },
+                            ),
+                            count: tiles.length,
+                            imbalance: Math.abs(left - right),
+                            widths: tiles.map((tile) => tile.width),
+                            heights: tiles.map((tile) => tile.height),
+                            overflow: element.scrollWidth - element.clientWidth,
+                        };
+                    });
+                    assertEquals(metrics.count, count);
+                    assertEquals(
+                        metrics.imbalance <= 8,
+                        true,
+                        JSON.stringify(metrics),
+                    );
+                    assertEquals(
+                        metrics.widths.every((width) =>
+                            Math.abs(width - 68) < 1
+                        ),
+                        true,
+                    );
+                    assertEquals(
+                        metrics.heights.every((height) =>
+                            Math.abs(height - 68) < 1
+                        ),
+                        true,
+                    );
+                    assertEquals(
+                        metrics.iconsContained,
+                        true,
+                        JSON.stringify(metrics),
+                    );
+                    assertEquals(metrics.overflow <= 1, true);
+                    assertEquals(
+                        await geo.locator(".workspace-panel").evaluate((el) =>
+                            el.scrollWidth <= el.clientWidth + 1
+                        ),
+                        true,
+                    );
+                };
+                for (let count = 1; count <= 4; count++) {
+                    await request("/api/webapps", "POST", {
+                        name: ("Geometry " + count +
+                            " long application name ".repeat(5)).slice(
+                                0,
+                                80,
+                            ),
+                        url: "https://geometry-" + count + ".example",
+                        isPinned: true,
+                        pinnedSortOrder: 5 - count,
+                    });
+                    for (const width of [375, 390, 768, 1440]) {
+                        for (const colorScheme of ["light", "dark"] as const) {
+                            await geo.setViewportSize({ width, height: 900 });
+                            await geo.emulateMedia({ colorScheme });
+                            await visit("/", geo);
+                            await geo.locator(
+                                '.workspace-dock button[aria-label="应用工作区"]',
+                            ).click();
+                            await inspect(count);
+                            const panel = geo.locator(".workspace-panel");
+                            if (width >= 768) {
+                                assertEquals(
+                                    await panel.evaluate((el) =>
+                                        Math.abs(
+                                            el.getBoundingClientRect().width -
+                                                400,
+                                        ) < 1
+                                    ),
+                                    true,
+                                );
+                            }
+                            const query = panel.locator(
+                                "input[data-workspace-search]",
+                            );
+                            await query.fill("Geometry");
+                            await inspect(count);
+                            await query.fill("");
+                            await panel.getByRole("button", {
+                                name: "全部网站",
+                                exact: false,
+                            }).click();
+                            await inspect(count);
+                            await panel.getByRole("button", {
+                                name: "未分组",
+                                exact: true,
+                            }).click();
+                            await inspect(count);
+                        }
+                    }
+                    const group = (await request("/api/webapp-groups", "POST", {
+                        name: "Geometry Folder",
+                    })).data;
+                    const apps = (await request("/api/webapps", "GET")).data;
+                    for (const app of apps) {
+                        await request("/api/webapps/" + app.id, "PATCH", {
+                            groupId: group.id,
+                        });
+                    }
+                    for (const width of [375, 390, 768, 1440]) {
+                        await geo.setViewportSize({ width, height: 900 });
+                        await visit("/", geo);
+                        await geo.locator(
+                            '.workspace-dock button[aria-label="应用工作区"]',
+                        ).click();
+                        await geo.getByRole("button", {
+                            name: "打开文件夹 Geometry Folder",
+                        }).click();
+                        await inspect(count);
+                        assertEquals(
+                            await geo.locator(
+                                ".workspace-panel .button--primary",
+                            ).count(),
+                            0,
+                        );
+                    }
+                    await request("/api/webapp-groups/" + group.id, "DELETE");
+                }
+                for (let index = 0; index < 12; index++) {
+                    const group = (await request("/api/webapp-groups", "POST", {
+                        name: ("Folder " + index +
+                            " long folder name ".repeat(4)).slice(
+                                0,
+                                40,
+                            ),
+                        folderSize: index % 2 ? "small" : "large",
+                    })).data;
+                    await request("/api/webapps", "POST", {
+                        name: "Grouped " + index,
+                        url: "https://grouped-" + index + ".example",
+                        groupId: group.id,
+                    });
+                }
+                for (let index = 0; index < 24; index++) {
+                    await request("/api/webapps", "POST", {
+                        name: ("Many " + index + " long name ".repeat(8)).slice(
+                            0,
+                            80,
+                        ),
+                        url: "https://many-" + index + ".example",
+                        isPinned: true,
+                    });
+                }
+                for (const width of [375, 390, 768, 1440]) {
+                    for (const colorScheme of ["light", "dark"] as const) {
+                        await geo.setViewportSize({ width, height: 900 });
+                        await geo.emulateMedia({ colorScheme });
+                        await visit("/", geo);
+                        await geo.locator(
+                            '.workspace-dock button[aria-label="应用工作区"]',
+                        ).click();
+                        const overflow = async () =>
+                            assertEquals(
+                                await geo.evaluate(() =>
+                                    Array.from(
+                                        document.querySelectorAll(
+                                            ".workspace-panel, .workspace-body, .apps-workspace, .launcher-grid",
+                                        ),
+                                    ).every((el) =>
+                                        el.scrollWidth <= el.clientWidth + 1
+                                    )
+                                ),
+                                true,
+                            );
+                        await overflow();
+                        await geo.getByRole("button", {
+                            name: "全部网站",
+                            exact: false,
+                        }).click();
+                        await geo.locator(
+                            ".apps-workspace .launcher-folder-item--large",
+                        ).first().waitFor();
+                        await overflow();
+                        const large = await geo.locator(
+                            ".apps-workspace .launcher-folder-item--large",
+                        ).first().locator("..").evaluate((el) => {
+                            const box = el.getBoundingClientRect();
+                            return { width: box.width, height: box.height };
+                        });
+                        assertEquals(Math.abs(large.width - 140) < 1, true);
+                        assertEquals(Math.abs(large.height - 140) < 1, true);
+                        assertEquals(
+                            await geo.locator(
+                                ".apps-workspace .launcher-folder-item--small",
+                            ).count(),
+                            6,
+                        );
+                        assertEquals(
+                            await geo.locator(
+                                ".apps-workspace .launcher-folder-item--large",
+                            ).count(),
+                            6,
+                        );
+                        await geo.getByRole("button", { name: "返回上一级" })
+                            .click();
+                        await geo.getByRole("button", {
+                            name: "整理网站排序与布局",
+                        }).click();
+                        await overflow();
+                        assertEquals(
+                            await geo.locator(
+                                ".workspace-panel .button--primary",
+                            ).allTextContents(),
+                            ["完成整理"],
+                        );
+                        await geo.locator("input[data-workspace-search]").fill(
+                            "Many",
+                        );
+                        assertEquals(
+                            await geo.locator(
+                                ".workspace-panel .button--primary",
+                            ).allTextContents(),
+                            ["添加应用"],
+                        );
+                        await overflow();
+                    }
+                }
+            } finally {
+                await isolated.close();
+            }
         },
     );
 });

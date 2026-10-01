@@ -85,6 +85,7 @@ export function SearchHome() {
         workspaceReducer,
         initialWorkspaceState,
     );
+    const [appsArranging, setAppsArranging] = useState(false);
     const dirtyForm = useRef(false);
     const [pendingAction, setPendingAction] = useState<
         | { type: "navigate"; route: WorkspaceState }
@@ -99,6 +100,7 @@ export function SearchHome() {
             setPendingAction({ type: "navigate", route });
             return;
         }
+        setAppsArranging(false);
         dispatchWorkspace({ type: "navigate", route });
     }
     function backWorkspace() {
@@ -106,6 +108,7 @@ export function SearchHome() {
             setPendingAction({ type: "back" });
             return;
         }
+        setAppsArranging(false);
         dispatchWorkspace({ type: "back" });
     }
     function closeWorkspace() {
@@ -113,6 +116,7 @@ export function SearchHome() {
             setPendingAction({ type: "close" });
             return;
         }
+        setAppsArranging(false);
         dispatchWorkspace({ type: "close" });
     }
     function openWorkspace(kind: WorkspaceKind) {
@@ -124,6 +128,7 @@ export function SearchHome() {
         dirtyForm.current = false;
         dispatchWorkspace({ type: "reset" });
         setPendingAction(null);
+        setAppsArranging(false);
         setIsManagingApps(false);
         setNotes([]);
         setNotesError("");
@@ -648,6 +653,7 @@ export function SearchHome() {
                     state={route}
                     title={title}
                     dock={layoutStyle === "widgets"}
+                    appsArranging={appsArranging}
                     navigate={navigateWorkspace}
                     onBack={backWorkspace}
                     onClose={closeWorkspace}
@@ -666,13 +672,17 @@ export function SearchHome() {
                                 groups={groups}
                                 setApps={setApps}
                                 setGroups={setGroups}
+                                isArranging={appsArranging}
+                                onArrangeChange={setAppsArranging}
                                 query={workspace.queries.apps}
-                                onQueryChange={(value) =>
+                                onQueryChange={(value) => {
+                                    setAppsArranging(false);
                                     dispatchWorkspace({
                                         type: "query",
                                         workspace: "apps",
                                         value,
-                                    })}
+                                    });
+                                }}
                                 appearance={appearance}
                                 status={appsStatus}
                                 error={appsError}
