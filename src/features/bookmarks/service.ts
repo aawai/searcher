@@ -404,36 +404,46 @@ export class BookmarksService {
         items: Array<
             { id: string; sortOrder?: number; pinnedSortOrder?: number }
         >,
+        groups: Array<{ id: string; sortOrder: number }> = [],
     ): Promise<void> {
-        return await this.store.run(async (db) => {
-            const currentTime = this.now();
-            for (const item of items) {
-                const updateFields: {
-                    sortOrder?: number;
-                    pinnedSortOrder?: number;
-                    updatedAt: number;
-                } = {
-                    updatedAt: currentTime,
-                };
-                if (item.sortOrder !== undefined) {
-                    updateFields.sortOrder = item.sortOrder;
-                }
-                if (item.pinnedSortOrder !== undefined) {
-                    updateFields.pinnedSortOrder = item.pinnedSortOrder;
-                }
-
-                await db
-                    .update(webapps)
-                    .set(updateFields)
-                    .where(
-                        and(
+        await this.store.run((db) =>
+            db.transaction(async (tx) => {
+                const currentTime = this.now();
+                for (const item of items) {
+                    const updateFields: {
+                        sortOrder?: number;
+                        pinnedSortOrder?: number;
+                        updatedAt: number;
+                    } = { updatedAt: currentTime };
+                    if (item.sortOrder !== undefined) {
+                        updateFields.sortOrder = item.sortOrder;
+                    }
+                    if (item.pinnedSortOrder !== undefined) {
+                        updateFields
+                            .pinnedSortOrder = item.pinnedSortOrder;
+                    }
+                    const updated = await tx.update(webapps).set(updateFields)
+                        .where(and(
                             eq(webapps.id, item.id),
                             eq(webapps.userId, userId),
-                        ),
-                    )
-                    .run();
-            }
-        });
+                            isNull(webapps.deletedAt),
+                        )).returning({ id: webapps.id }).all();
+                    if (updated.length === 0) throw new WebAppNotFoundError();
+                }
+                for (const group of groups) {
+                    const updated = await tx.update(webappGroups).set({
+                        sortOrder: group.sortOrder,
+                        updatedAt: currentTime,
+                    }).where(and(
+                        eq(webappGroups.id, group.id),
+                        eq(webappGroups.userId, userId),
+                    )).returning({ id: webappGroups.id }).all();
+                    if (updated.length === 0) {
+                        throw new WebAppGroupNotFoundError();
+                    }
+                }
+            })
+        );
     }
 
     // --- WebApp Groups ---

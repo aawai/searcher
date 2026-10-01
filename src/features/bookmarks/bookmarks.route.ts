@@ -215,11 +215,32 @@ export function registerBookmarksRoutes(
                     }),
                 ),
             ),
+            groups: json(
+                v.optional(
+                    v.array(
+                        v.object({
+                            id: IdParamSchema,
+                            sortOrder: IntegerSchema,
+                        }),
+                    ),
+                    [],
+                ),
+            ),
         }),
         async (c, data) => {
             const user = c.get("user");
-            await service.reorderWebApps(user.id, data.items);
-            return c.success(undefined, "重新排序成功");
+            try {
+                await service.reorderWebApps(user.id, data.items, data.groups);
+                return c.success(undefined, "重新排序成功");
+            } catch (error) {
+                if (
+                    error instanceof WebAppNotFoundError ||
+                    error instanceof WebAppGroupNotFoundError
+                ) {
+                    return c.fail(STATUS_CODE.NotFound, error.message);
+                }
+                throw error;
+            }
         },
     );
 

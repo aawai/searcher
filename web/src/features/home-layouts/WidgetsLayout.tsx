@@ -37,6 +37,22 @@ export function WidgetsLayout(props: HomeLayoutProps) {
         updateNote,
     } = props;
 
+    const hasApps = (appsStatus === "ready" || appsStatus === "offline")
+        ? pinned.length > 0
+        : true;
+    const hasNotes = fixedNotes.length > 0;
+
+    const bentoMode = hasApps && hasNotes
+        ? "both"
+        : hasApps
+        ? "apps-only"
+        : hasNotes
+        ? "notes-only"
+        : "empty";
+
+    const isAppsCompact = !hasApps && hasNotes;
+    const isNotesCompact = hasApps && !hasNotes;
+
     return (
         <>
             <section className="hero" aria-label="搜索">
@@ -73,12 +89,22 @@ export function WidgetsLayout(props: HomeLayoutProps) {
 
             {user && (
                 <div className="widgets-bento-wrapper">
-                    <div className="widgets-bento-container">
+                    <div
+                        className="widgets-bento-container"
+                        data-bento-mode={bentoMode}
+                    >
                         {/* Bento Card 1: 常用应用 (Apps Quick Launcher) */}
                         <div
-                            className="widgets-bento-card widgets-bento-card--apps"
+                            className={`widgets-bento-card widgets-bento-card--apps${
+                                isAppsCompact
+                                    ? " widgets-bento-card--compact"
+                                    : ""
+                            }`}
+                            data-bento-card="apps"
+                            data-empty={!hasApps ? "true" : undefined}
+                            data-compact={isAppsCompact ? "true" : undefined}
                             data-few-apps={pinned.length > 0 &&
-                                    pinned.length <= 3
+                                    pinned.length <= 4
                                 ? "true"
                                 : undefined}
                         >
@@ -153,7 +179,16 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                         </div>
 
                         {/* Bento Card 2: 随手便签 (Controlled Notes) */}
-                        <div className="widgets-bento-card widgets-bento-card--notes">
+                        <div
+                            className={`widgets-bento-card widgets-bento-card--notes${
+                                isNotesCompact
+                                    ? " widgets-bento-card--compact"
+                                    : ""
+                            }`}
+                            data-bento-card="notes"
+                            data-empty={!hasNotes ? "true" : undefined}
+                            data-compact={isNotesCompact ? "true" : undefined}
+                        >
                             <div className="widgets-bento-header">
                                 <div className="widgets-bento-header-left">
                                     <div className="widgets-bento-title">

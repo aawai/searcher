@@ -1,8 +1,10 @@
 import { assertEquals } from "@std/assert";
 import {
     type LauncherApp,
+    type LauncherGroup,
     launcherTiles,
     mergeVisibleOrder,
+    reorderRootTiles,
 } from "./launcherTiles.ts";
 import { computeEffectiveColumns } from "./WebAppLauncher.tsx";
 import { calculateDesktopLayout } from "./desktopLayout.ts";
@@ -64,5 +66,71 @@ Deno.test("a large folder leaves first-row space for following websites", () => 
         { id: "first", row: 0, col: 0 },
         { id: "folder", row: 0, col: 1 },
         { id: "next", row: 0, col: 3 },
+    ]);
+});
+
+Deno.test("empty folders participate in root mixed layout and explicit sortOrder", () => {
+    const app = (id: string, sortOrder: number): LauncherApp => ({
+        id,
+        name: id,
+        url: `https://${id}.example/`,
+        sortOrder,
+        isPinned: false,
+    });
+    const groups: LauncherGroup[] = [
+        { id: "empty-tools", name: "Tools", sortOrder: 0 },
+        { id: "empty-social", name: "Social", sortOrder: 2 },
+    ];
+    const apps: LauncherApp[] = [
+        app("app-github", 1),
+        app("app-linear", 3),
+    ];
+
+    const tiles = launcherTiles(apps, groups);
+    assertEquals(tiles.map((t) => t.id), [
+        "folder:empty-tools",
+        "app-github",
+        "folder:empty-social",
+        "app-linear",
+    ]);
+    assertEquals(tiles[0].type, "folder");
+    assertEquals(tiles[1].type, "app");
+    assertEquals(tiles[2].type, "folder");
+    assertEquals(tiles[3].type, "app");
+});
+
+Deno.test("reorderRootTiles normalizes sequential ranks across apps and folders", () => {
+    const app = (id: string, sortOrder: number): LauncherApp => ({
+        id,
+        name: id,
+        url: `https://${id}.example/`,
+        sortOrder,
+        isPinned: false,
+    });
+    const groups: LauncherGroup[] = [
+        { id: "folder-dev", name: "Dev", sortOrder: 0 },
+    ];
+    const apps: LauncherApp[] = [
+        app("app-1", 1),
+        app("app-2", 2),
+    ];
+    const tiles = launcherTiles(apps, groups);
+
+    const { reorderedTiles, appUpdates, groupUpdates } = reorderRootTiles(
+        tiles,
+        2,
+        0,
+    );
+    assertEquals(reorderedTiles.map((t) => t.id), [
+        "app-2",
+        "folder:folder-dev",
+        "app-1",
+    ]);
+    assertEquals(appUpdates, [
+        { id: "app-2", sortOrder: 0 },
+        { id: "app-1", sortOrder: 2 },
+    ]);
+    assertEquals(groupUpdates, [
+        { id: "folder-dev", sortOrder: 1 },
     ]);
 });
