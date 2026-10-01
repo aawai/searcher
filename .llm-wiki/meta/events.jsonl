@@ -92,3 +92,4 @@
 {"slug":"obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve","title":"Workspace contract regression tests and non-modal desktop verification","relevance":"high","timestamp":"2026-09-30T15:08:48.138Z","kind":"observe"}
 {"slug":"obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook","title":"AskPage streaming lifecycle extracted to useAskStream hook","relevance":"high","timestamp":"2026-10-01T01:09:02.460Z","kind":"observe"}
 {"slug":"obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens","title":"Ask workspace CSS normalized to semantic tokens","relevance":"high","timestamp":"2026-10-01T01:22:45.164Z","kind":"observe"}
+{"slug":"obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-","title":"NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard","relevance":"high","timestamp":"2026-10-01T06:00:00.592Z","kind":"observe"}

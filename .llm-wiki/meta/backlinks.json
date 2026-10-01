@@ -505,6 +505,7 @@
   "sources/obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve": [],
   "sources/obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens": [],
   "sources/obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook": [],
+  "sources/obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

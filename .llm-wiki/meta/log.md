@@ -284,3 +284,6 @@
 ## [2026-10-01T01:22:45.164Z] observe
 - slug: "obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens", title: "Ask workspace CSS normalized to semantic tokens", relevance: "high"
 
+## [2026-10-01T06:00:00.592Z] observe
+- slug: "obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-", title: "NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard", relevance: "high"
+

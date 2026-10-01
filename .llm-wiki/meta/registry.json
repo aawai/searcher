@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-01T01:22:45.195Z",
+  "last_updated": "2026-10-01T06:00:00.635Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -962,6 +962,25 @@
       "relevance": "high",
       "observed_at": "2026-10-01T01:09:02.440Z",
       "source_context": "Issue 38 AskPage decomposition",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-": {
+      "type": "source",
+      "title": "Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard",
+      "tags": [
+        "workspace",
+        "notes",
+        "issue-43",
+        "expand",
+        "deduplication",
+        "drag-handle"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-",
+      "relevance": "high",
+      "observed_at": "2026-10-01T06:00:00.588Z",
+      "source_context": "Issue #43 Notes Workspace Root inline expand and geometry fix",
       "created": "2026-10-01",
       "updated": "2026-10-01"
     },

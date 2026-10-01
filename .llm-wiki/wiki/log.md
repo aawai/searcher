@@ -2,6 +2,7 @@
 
 ## 2026-10-01
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-","title":"NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens","title":"Ask workspace CSS normalized to semantic tokens"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook","title":"AskPage streaming lifecycle extracted to useAskStream hook"}
 

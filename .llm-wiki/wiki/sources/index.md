@@ -65,4 +65,5 @@
 - [Observation: Workspace contract regression tests and non-modal desktop verification](obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve.md)
 - [Observation: Ask workspace CSS normalized to semantic tokens](obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens.md)
 - [Observation: AskPage streaming lifecycle extracted to useAskStream hook](obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook.md)
+- [Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard](obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)
