@@ -629,3 +629,107 @@ Deno.test({
         }
     },
 });
+
+Deno.test("WebApps mixed root reorder is atomic and owner isolated without changing pinned order", async () => {
+    const { store, app } = await setupTestApp();
+    try {
+        const token = await registerUser(app, "mixed_owner");
+        const foreignToken = await registerUser(app, "mixed_foreign");
+        const headers = {
+            origin: ORIGIN,
+            cookie: `${SESSION_COOKIE_NAME}=${token}`,
+            "content-type": "application/json",
+        };
+        const create = async <T>(
+            path: string,
+            body: object,
+            owner = token,
+        ): Promise<T> => {
+            const response = await app.request(path, {
+                method: "POST",
+                headers: {
+                    ...headers,
+                    cookie: `${SESSION_COOKIE_NAME}=${owner}`,
+                },
+                body: JSON.stringify(body),
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+            return (await response.json() as Envelope<T>).data!;
+        };
+        const webapp = await create<WebAppDto>("/api/webapps", {
+            name: "Loose",
+            url: "https://example.org/loose",
+            sortOrder: 9,
+            isPinned: true,
+            pinnedSortOrder: 4,
+        });
+        const folder = await create<WebAppGroupDto>("/api/webapp-groups", {
+            name: "Folder",
+            sortOrder: 8,
+        });
+        const foreignFolder = await create<WebAppGroupDto>(
+            "/api/webapp-groups",
+            { name: "Foreign", sortOrder: 7 },
+            foreignToken,
+        );
+        const reorder = await app.request("/api/webapps/reorder", {
+            method: "PUT",
+            headers,
+            body: JSON.stringify({
+                items: [{ id: webapp.id, sortOrder: 1 }],
+                groups: [{ id: folder.id, sortOrder: 0 }],
+            }),
+        });
+        assertEquals(reorder.status, STATUS_CODE.OK);
+        const apps = (await (await app.request("/api/webapps", { headers }))
+            .json() as Envelope<WebAppDto[]>).data!;
+        const groups =
+            (await (await app.request("/api/webapp-groups", { headers }))
+                .json() as Envelope<WebAppGroupDto[]>).data!;
+        assertEquals(apps.find((item) => item.id === webapp.id)?.sortOrder, 1);
+        assertEquals(
+            apps.find((item) => item.id === webapp.id)?.pinnedSortOrder,
+            4,
+        );
+        assertEquals(
+            groups.find((item) => item.id === folder.id)?.sortOrder,
+            0,
+        );
+        for (const groupId of [foreignFolder.id, "missing-folder"]) {
+            const denied = await app.request("/api/webapps/reorder", {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                    items: [{ id: webapp.id, sortOrder: 99 }],
+                    groups: [{ id: groupId, sortOrder: 100 }],
+                }),
+            });
+            assertEquals(denied.status, STATUS_CODE.NotFound);
+            const unchanged =
+                (await (await app.request("/api/webapps", { headers }))
+                    .json() as Envelope<WebAppDto[]>).data!;
+            assertEquals(
+                unchanged.find((item) => item.id === webapp.id)?.sortOrder,
+                1,
+            );
+        }
+        const folderOnly = await app.request("/api/webapps/reorder", {
+            method: "PUT",
+            headers,
+            body: JSON.stringify({
+                items: [],
+                groups: [{ id: folder.id, sortOrder: 3 }],
+            }),
+        });
+        assertEquals(folderOnly.status, STATUS_CODE.OK);
+        const changedGroups =
+            (await (await app.request("/api/webapp-groups", { headers }))
+                .json() as Envelope<WebAppGroupDto[]>).data!;
+        assertEquals(
+            changedGroups.find((item) => item.id === folder.id)?.sortOrder,
+            3,
+        );
+    } finally {
+        await store.close();
+    }
+});

@@ -112,6 +112,7 @@
     --home-title-size: clamp(28px, 3.2vw, 42px);
     --home-hero-inset: clamp(80px, 18dvh, 180px);
     --layout-bento-max: 960px;
+    --layout-bento-columns: 5fr 3fr;
     --layout-home-content-max: 720px;
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));

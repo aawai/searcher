@@ -8,9 +8,11 @@ import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { AppForm } from "../../components/searcher/AppForm.tsx";
 import { AppsRootView } from "./AppsRootView.tsx";
-import { AppsGroupView } from "./AppsGroupView.tsx";
-import { AppsAllView } from "./AppsAllView.tsx";
-import { AppsGroupsManageView } from "./AppsGroupsManageView.tsx";
+import type {
+    LauncherApp,
+    LauncherGroup,
+    LauncherTile,
+} from "../../components/searcher/launcherTiles.ts";
 import "./apps-workspace.css";
 
 export interface AppsWorkspaceProps {
@@ -42,6 +44,8 @@ export interface AppsWorkspaceProps {
     onDelete: (app: ExtendedWebApp) => Promise<void> | void;
     onReorder: (ids: string[]) => Promise<void> | void;
     onDirtyChange?: (isDirty: boolean) => void;
+    activeFolderId?: string | null;
+    onFolderChange?: (folderId: string | null) => void;
 }
 
 export function AppsWorkspace({
@@ -62,14 +66,16 @@ export function AppsWorkspace({
     onRetry,
     onOpen,
     onPin,
-    onMove,
+    onMove: _onMove,
     onDelete,
-    onReorder,
+    onReorder: _onReorder,
     onDirtyChange,
+    activeFolderId,
+    onFolderChange,
 }: AppsWorkspaceProps) {
     const [actionError, setActionError] = useState("");
 
-    // Group CRUD Operations (managed inside workspace component)
+    // Folder CRUD Operations with optimistic updates & rollback
     const handleCreateGroup = async (name: string) => {
         setActionError("");
         try {
@@ -83,12 +89,15 @@ export function AppsWorkspace({
             setGroups((prev) => [...prev, group]);
         } catch (err) {
             setActionError(errorMessage(err));
-            throw err;
         }
     };
 
-    const handleRenameGroup = async (group: WebAppGroup, name: string) => {
+    const handleRenameGroup = async (group: LauncherGroup, name: string) => {
         setActionError("");
+        const prevGroups = groups;
+        setGroups((prev) =>
+            prev.map((g) => (g.id === group.id ? { ...g, name } : g))
+        );
         try {
             const updated = await api<WebAppGroup>(
                 `/api/webapp-groups/${group.id}`,
@@ -100,16 +109,22 @@ export function AppsWorkspace({
                 ) => (g.id === group.id ? { ...g, name: updated.name } : g))
             );
         } catch (err) {
+            setGroups(prevGroups);
             setActionError(errorMessage(err));
-            throw err;
         }
     };
 
     const handleChangeGroupSize = async (
-        group: WebAppGroup,
+        group: LauncherGroup,
         folderSize: "small" | "large",
     ) => {
         setActionError("");
+        const prevGroups = groups;
+        setGroups((prev) =>
+            prev.map((
+                item,
+            ) => (item.id === group.id ? { ...item, folderSize } : item))
+        );
         try {
             const updated = await api<WebAppGroup>(
                 `/api/webapp-groups/${group.id}`,
@@ -119,47 +134,195 @@ export function AppsWorkspace({
                 prev.map((item) => (item.id === group.id ? updated : item))
             );
         } catch (err) {
+            setGroups(prevGroups);
             setActionError(errorMessage(err));
-            throw err;
         }
     };
 
-    const handleDeleteGroup = async (group: WebAppGroup) => {
+    const handleDeleteGroup = async (group: LauncherGroup) => {
         setActionError("");
+        const prevGroups = groups;
+        const prevApps = apps;
+        setGroups((prev) => prev.filter((g) => g.id !== group.id));
+        setApps((prev) =>
+            prev.map((app) =>
+                app.groupId === group.id ? { ...app, groupId: null } : app
+            )
+        );
+        if (activeFolderId === group.id) {
+            onFolderChange?.(null);
+        }
         try {
             await api(`/api/webapp-groups/${group.id}`, { method: "DELETE" });
-            setGroups((prev) => prev.filter((g) => g.id !== group.id));
-            setApps((prev) =>
-                prev.map((app) =>
-                    app.groupId === group.id ? { ...app, groupId: null } : app
-                )
-            );
-            if (state.view === "apps/group" && state.id === group.id) {
-                navigate({ view: "apps/root" });
-            }
         } catch (err) {
+            setGroups(prevGroups);
+            setApps(prevApps);
             setActionError(errorMessage(err));
-            throw err;
         }
     };
 
-    const handleReorderGroups = async (reordered: WebAppGroup[]) => {
-        const prevGroups = groups;
-        const total = reordered.length;
-        setGroups(
-            reordered.map((g, idx) => ({ ...g, sortOrder: total - idx })),
+    // Move app into folder (DnD)
+    const handleMoveAppToFolder = async (
+        app: LauncherApp,
+        targetGroupId: string,
+    ) => {
+        setActionError("");
+        const prevApps = apps;
+        const targetApps = apps.filter(
+            (a) => a.groupId === targetGroupId && a.id !== app.id,
+        );
+        const maxSortOrder = targetApps.reduce(
+            (max, a) => Math.max(max, a.sortOrder ?? 0),
+            -1,
+        );
+        const nextSortOrder = maxSortOrder + 1;
+
+        // Optimistic update
+        setApps((prev) =>
+            prev.map((a) =>
+                a.id === app.id
+                    ? { ...a, groupId: targetGroupId, sortOrder: nextSortOrder }
+                    : a
+            )
         );
         try {
-            await Promise.all(
-                reordered.map((group, idx) =>
-                    api(
-                        `/api/webapp-groups/${group.id}`,
-                        json("PATCH", { sortOrder: total - idx }),
-                    )
-                ),
+            await api(
+                `/api/webapps/${app.id}`,
+                json("PATCH", {
+                    groupId: targetGroupId,
+                    sortOrder: nextSortOrder,
+                }),
             );
         } catch (err) {
+            setApps(prevApps);
+            setActionError(errorMessage(err));
+        }
+    };
+
+    // Move app in/out of folder (Context Menu)
+    const handleMoveApp = async (
+        app: ExtendedWebApp,
+        groupId: string | null,
+    ) => {
+        setActionError("");
+        const prevApps = apps;
+        let nextSortOrder = 0;
+        if (groupId) {
+            const targetApps = apps.filter(
+                (a) => a.groupId === groupId && a.id !== app.id,
+            );
+            const maxOrder = targetApps.reduce(
+                (max, a) => Math.max(max, a.sortOrder ?? 0),
+                -1,
+            );
+            nextSortOrder = maxOrder + 1;
+        } else {
+            const maxAppOrder = apps.filter(
+                (a) => !a.groupId && a.id !== app.id,
+            ).reduce((max, a) => Math.max(max, a.sortOrder ?? 0), -1);
+            const maxGroupOrder = groups.reduce(
+                (max, g) => Math.max(max, g.sortOrder ?? 0),
+                -1,
+            );
+            nextSortOrder = Math.max(maxAppOrder, maxGroupOrder) + 1;
+        }
+
+        setApps((prev) =>
+            prev.map((a) =>
+                a.id === app.id
+                    ? { ...a, groupId, sortOrder: nextSortOrder }
+                    : a
+            )
+        );
+        try {
+            await api(
+                `/api/webapps/${app.id}`,
+                json("PATCH", { groupId, sortOrder: nextSortOrder }),
+            );
+        } catch (err) {
+            setApps(prevApps);
+            setActionError(errorMessage(err));
+        }
+    };
+
+    // Mixed root reorder
+    const handleReorderRoot = async (newTiles: LauncherTile[]) => {
+        setActionError("");
+        const prevApps = apps;
+        const prevGroups = groups;
+
+        const appUpdates: Array<{ id: string; sortOrder: number }> = [];
+        const groupUpdates: Array<{ id: string; sortOrder: number }> = [];
+
+        newTiles.forEach((tile, index) => {
+            if (tile.app) {
+                appUpdates.push({ id: tile.app.id, sortOrder: index });
+            } else if (tile.group) {
+                groupUpdates.push({ id: tile.group.id, sortOrder: index });
+            }
+        });
+
+        const appUpdateMap = new Map(
+            appUpdates.map((u) => [u.id, u.sortOrder]),
+        );
+        const groupUpdateMap = new Map(
+            groupUpdates.map((u) => [u.id, u.sortOrder]),
+        );
+
+        // Optimistic update
+        setApps((prev) =>
+            prev.map((a) =>
+                appUpdateMap.has(a.id)
+                    ? { ...a, sortOrder: appUpdateMap.get(a.id)! }
+                    : a
+            )
+        );
+        setGroups((prev) =>
+            prev.map((g) =>
+                groupUpdateMap.has(g.id)
+                    ? { ...g, sortOrder: groupUpdateMap.get(g.id)! }
+                    : g
+            )
+        );
+
+        try {
+            await api(
+                "/api/webapps/reorder",
+                json("PUT", { items: appUpdates, groups: groupUpdates }),
+            );
+        } catch (err) {
+            setApps(prevApps);
             setGroups(prevGroups);
+            setActionError(errorMessage(err));
+        }
+    };
+
+    // Folder-internal reorder
+    const handleReorderFolder = async (
+        _folderId: string,
+        reorderedAppIds: string[],
+    ) => {
+        setActionError("");
+        const prevApps = apps;
+
+        const updates = reorderedAppIds.map((id, index) => ({
+            id,
+            sortOrder: index,
+        }));
+        const updateMap = new Map(updates.map((u) => [u.id, u.sortOrder]));
+
+        setApps((prev) =>
+            prev.map((a) =>
+                updateMap.has(a.id)
+                    ? { ...a, sortOrder: updateMap.get(a.id)! }
+                    : a
+            )
+        );
+
+        try {
+            await api("/api/webapps/reorder", json("PUT", { items: updates }));
+        } catch (err) {
+            setApps(prevApps);
             setActionError(errorMessage(err));
         }
     };
@@ -189,93 +352,34 @@ export function AppsWorkspace({
                 groups={groups}
                 query={query}
                 onQueryChange={onQueryChange}
-                onNavigateToGroup={(groupId) =>
-                    navigate({ view: "apps/group", id: groupId })}
-                onNavigateAll={() => navigate({ view: "apps/all" })}
-                onNavigateToGroupsManage={() =>
-                    navigate({ view: "apps/groups" })}
+                activeFolderId={activeFolderId}
+                onFolderChange={onFolderChange}
                 onNavigateToEdit={(appId) =>
                     navigate({ view: "apps/edit", id: appId })}
+                onNavigateToAdd={(groupId) =>
+                    navigate({
+                        view: "apps/create",
+                        groupId: groupId || undefined,
+                    })}
                 onOpen={onOpen}
                 onPin={onPin}
-                onMove={onMove}
+                onMove={handleMoveApp}
                 onDelete={onDelete}
-                onReorder={onReorder}
-            />
-        );
-    } else if (state.view === "apps/all") {
-        viewContent = (
-            <AppsAllView
-                apps={apps}
-                groups={groups}
-                onNavigateToGroup={(id) => navigate({ view: "apps/group", id })}
-                onNavigateToEdit={(id) => navigate({ view: "apps/edit", id })}
-                onOpen={onOpen}
-                onPin={onPin}
-                onMove={onMove}
-                onDelete={onDelete}
-                onReorder={onReorder}
+                onReorder={(ids) => void handleReorderFolder("", ids)}
+                onReorderRoot={handleReorderRoot}
+                onReorderFolder={handleReorderFolder}
+                onMoveAppToFolder={handleMoveAppToFolder}
+                onCreateFolder={handleCreateGroup}
+                onRenameFolder={handleRenameGroup}
+                onDeleteFolder={handleDeleteGroup}
                 onFolderSizeChange={handleChangeGroupSize}
-                onAddApp={() => navigate({ view: "apps/create" })}
-            />
-        );
-    } else if (state.view === "apps/group") {
-        const currentGroup = groups.find((g) => g.id === state.id) ?? null;
-        if (!currentGroup && state.id !== "ungrouped") {
-            viewContent = (
-                <div className="apps-workspace-section">
-                    <div className="apps-workspace-empty">
-                        <p className="apps-workspace-empty-title">
-                            该文件夹已被删除或不存在
-                        </p>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate({ view: "apps/root" })}
-                        >
-                            返回全部网站
-                        </Button>
-                    </div>
-                </div>
-            );
-        } else {
-            viewContent = (
-                <AppsGroupView
-                    group={currentGroup}
-                    apps={apps}
-                    groups={groups}
-                    onAddApp={() =>
-                        navigate({
-                            view: "apps/create",
-                            groupId: currentGroup?.id,
-                        })}
-                    onOpen={onOpen}
-                    onEdit={(app) =>
-                        navigate({ view: "apps/edit", id: app.id })}
-                    onMove={onMove}
-                    onPin={onPin}
-                    onDelete={onDelete}
-                    onReorder={onReorder}
-                />
-            );
-        }
-    } else if (state.view === "apps/groups") {
-        viewContent = (
-            <AppsGroupsManageView
-                groups={groups}
-                onBack={onBack}
-                onCreateGroup={handleCreateGroup}
-                onRenameGroup={handleRenameGroup}
-                onSizeChange={handleChangeGroupSize}
-                onDeleteGroup={handleDeleteGroup}
-                onReorderGroups={handleReorderGroups}
             />
         );
     } else if (state.view === "apps/create") {
         viewContent = (
             <div className="apps-workspace-section">
                 <AppForm
-                    defaultGroupId={state.groupId || ""}
+                    defaultGroupId={state.groupId || activeFolderId || ""}
                     editingApp={null}
                     groups={groups}
                     appearance={appearance}

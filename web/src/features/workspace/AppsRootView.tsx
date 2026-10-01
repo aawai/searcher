@@ -1,23 +1,22 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-    ArrowDown,
-    ArrowUp,
     Check,
-    ChevronRight,
-    Edit2,
     Folder,
-    LayoutGrid,
-    Pin,
-    PinOff,
+    FolderPlus,
     Search,
     SlidersHorizontal,
-    Trash2,
     X,
 } from "lucide-react";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
+import type {
+    LauncherApp,
+    LauncherGroup,
+    LauncherTile,
+} from "../../components/searcher/launcherTiles.ts";
+import { FolderNameDialog } from "./FolderNameDialog.tsx";
 
 export interface AppsRootViewProps {
     apps: ExtendedWebApp[];
@@ -26,9 +25,10 @@ export interface AppsRootViewProps {
     onArrangeChange: (arranging: boolean) => void;
     query: string;
     onQueryChange: (query: string) => void;
-    onNavigateToGroup: (groupId: string) => void;
-    onNavigateToGroupsManage: () => void;
+    activeFolderId?: string | null;
+    onFolderChange?: (folderId: string | null) => void;
     onNavigateToEdit: (appId: string) => void;
+    onNavigateToAdd?: (groupId?: string | null) => void;
     onOpen: (app: {
         name: string;
         url: string;
@@ -41,47 +41,69 @@ export interface AppsRootViewProps {
     ) => Promise<void> | void;
     onDelete: (app: ExtendedWebApp) => Promise<void> | void;
     onReorder: (ids: string[]) => Promise<void> | void;
-    onNavigateAll: () => void;
+    onReorderRoot?: (newTiles: LauncherTile[]) => Promise<void> | void;
+    onReorderFolder?: (
+        folderId: string,
+        appIds: string[],
+    ) => Promise<void> | void;
+    onMoveAppToFolder?: (
+        app: LauncherApp,
+        groupId: string,
+    ) => Promise<void> | void;
+    onCreateFolder?: (name: string) => Promise<void>;
+    onRenameFolder?: (group: LauncherGroup, name: string) => Promise<void>;
+    onDeleteFolder?: (group: LauncherGroup) => Promise<void>;
+    onFolderSizeChange?: (
+        group: LauncherGroup,
+        size: "small" | "large",
+    ) => void;
 }
 
 export function AppsRootView({
-    apps: sourceApps,
+    apps,
     groups,
     isArranging,
     onArrangeChange,
     query,
     onQueryChange,
-    onNavigateToGroup,
-    onNavigateToGroupsManage,
+    activeFolderId,
+    onFolderChange,
     onNavigateToEdit,
+    onNavigateToAdd,
     onOpen,
     onPin,
     onMove,
     onDelete,
     onReorder,
-    onNavigateAll,
+    onReorderRoot,
+    onReorderFolder,
+    onMoveAppToFolder,
+    onCreateFolder,
+    onRenameFolder,
+    onDeleteFolder,
+    onFolderSizeChange,
 }: AppsRootViewProps) {
-    const apps = useMemo(
-        () =>
-            sourceApps.slice().sort((a, b) =>
-                (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
-            ),
-        [sourceApps],
-    );
-
-    // Normalized search query
+    const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const trimmedQuery = query.trim().toLowerCase();
 
-    // Matched apps: name or URL match only (no group membership expansion)
+    // Deduplicated matched apps across loose apps and in-folder apps
     const matchedApps = useMemo(() => {
         if (!trimmedQuery) return [];
-        return apps.filter((app) =>
-            app.name.toLowerCase().includes(trimmedQuery) ||
-            app.url.toLowerCase().includes(trimmedQuery)
-        );
+        const seen = new Set<string>();
+        const results: ExtendedWebApp[] = [];
+        for (const app of apps) {
+            if (seen.has(app.id)) continue;
+            const nameMatch = app.name.toLowerCase().includes(trimmedQuery);
+            const urlMatch = app.url.toLowerCase().includes(trimmedQuery);
+            if (nameMatch || urlMatch) {
+                seen.add(app.id);
+                results.push(app);
+            }
+        }
+        return results;
     }, [apps, trimmedQuery]);
 
-    // Matched groups: group name match only
+    // Matched groups
     const matchedGroups = useMemo(() => {
         if (!trimmedQuery) return [];
         return groups.filter((g) =>
@@ -89,44 +111,7 @@ export function AppsRootView({
         );
     }, [groups, trimmedQuery]);
 
-    // Matched ungrouped navigation entry
-    const isUngroupedMatch = useMemo(() => {
-        if (!trimmedQuery) return false;
-        return "未分组".includes(trimmedQuery) ||
-            "ungrouped".includes(trimmedQuery);
-    }, [trimmedQuery]);
-
-    const totalMatches = matchedApps.length + matchedGroups.length +
-        (isUngroupedMatch ? 1 : 0);
-
-    // Common pinned apps (ordered by pinnedSortOrder)
-    const pinnedApps = useMemo(() => {
-        return apps
-            .filter((app) => app.isPinned)
-            .sort((a, b) =>
-                (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0)
-            );
-    }, [apps]);
-
-    // Ungrouped apps count
-    const ungroupedApps = useMemo(() => {
-        return apps.filter((app) => !app.groupId);
-    }, [apps]);
-
-    // Non-drag reorder helper for arrange mode
-    const handleMoveApp = async (index: number, direction: -1 | 1) => {
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= apps.length) return;
-        const reordered = [...apps];
-        const [moved] = reordered.splice(index, 1);
-        reordered.splice(targetIndex, 0, moved);
-        const originalIds = apps.map((a) => a.id);
-        try {
-            await onReorder(reordered.map((a) => a.id));
-        } catch {
-            await onReorder(originalIds);
-        }
-    };
+    const totalMatches = matchedApps.length + matchedGroups.length;
 
     return (
         <div className="apps-workspace-section">
@@ -141,12 +126,15 @@ export function AppsRootView({
                     type="search"
                     data-workspace-search=""
                     className="apps-workspace-search-input"
-                    placeholder="搜索网站名称、网址或文件夹…"
+                    placeholder={isArranging
+                        ? "整理模式下暂停搜索"
+                        : "搜索网站名称、网址或文件夹…"}
                     value={query}
                     onChange={(e) => onQueryChange(e.target.value)}
+                    disabled={isArranging}
                     aria-label="搜索网站"
                 />
-                {query && (
+                {query && !isArranging && (
                     <Button
                         type="button"
                         variant="ghost"
@@ -160,8 +148,44 @@ export function AppsRootView({
                 )}
             </div>
 
-            {/* When searching */}
-            {trimmedQuery
+            {/* Secondary toolbar */}
+            <div className="apps-workspace-secondary-bar">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs text-[var(--muted)]"
+                    onClick={() => setIsCreateFolderOpen(true)}
+                    disabled={isArranging}
+                    aria-label="新建文件夹"
+                >
+                    <FolderPlus size={14} />
+                    <span>新建文件夹</span>
+                </Button>
+                <Button
+                    variant={isArranging ? "default" : "outline"}
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => {
+                        if (!isArranging) {
+                            onQueryChange("");
+                        }
+                        onArrangeChange(!isArranging);
+                    }}
+                    aria-label={isArranging
+                        ? "完成排序整理"
+                        : "整理网站排序与布局"}
+                >
+                    {isArranging
+                        ? <Check size={14} />
+                        : <SlidersHorizontal size={14} />}
+                    <span>
+                        {isArranging ? "完成整理" : "整理布局"}
+                    </span>
+                </Button>
+            </div>
+
+            {/* When searching and NOT arranging */}
+            {trimmedQuery && !isArranging
                 ? (
                     <div className="apps-workspace-section">
                         <div className="apps-workspace-section-header">
@@ -184,394 +208,16 @@ export function AppsRootView({
                                         variant="outline"
                                         size="sm"
                                         onClick={() => onQueryChange("")}
-                                        className="mt-1"
                                     >
-                                        清除搜索
+                                        清空搜索
                                     </Button>
                                 </div>
                             )
                             : (
-                                <>
-                                    {/* Matched folders & ungrouped entry */}
-                                    {(matchedGroups.length > 0 ||
-                                        isUngroupedMatch) && (
-                                        <div className="apps-workspace-section">
-                                            <div className="apps-workspace-section-header">
-                                                <h4 className="apps-workspace-section-title">
-                                                    文件夹
-                                                    <span className="apps-workspace-count-badge">
-                                                        {matchedGroups.length +
-                                                            (isUngroupedMatch
-                                                                ? 1
-                                                                : 0)}
-                                                    </span>
-                                                </h4>
-                                            </div>
-                                            <div className="apps-workspace-groups-grid">
-                                                {matchedGroups.map((group) => {
-                                                    const groupCount = apps
-                                                        .filter((a) =>
-                                                            a.groupId ===
-                                                                group.id
-                                                        ).length;
-                                                    return (
-                                                        <button
-                                                            key={group.id}
-                                                            type="button"
-                                                            className="apps-workspace-group-card"
-                                                            onClick={() =>
-                                                                onNavigateToGroup(
-                                                                    group.id,
-                                                                )}
-                                                            aria-label={`打开文件夹 ${group.name}，包含 ${groupCount} 个网站`}
-                                                        >
-                                                            <span className="apps-workspace-group-card-icon">
-                                                                <Folder
-                                                                    size={18}
-                                                                />
-                                                            </span>
-                                                            <div className="apps-workspace-group-card-info">
-                                                                <span className="apps-workspace-group-card-name">
-                                                                    {group.name}
-                                                                </span>
-                                                                <span className="apps-workspace-group-card-count">
-                                                                    {groupCount}
-                                                                    {" "}
-                                                                    个网站
-                                                                </span>
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                                {isUngroupedMatch && (
-                                                    <button
-                                                        key="ungrouped"
-                                                        type="button"
-                                                        className="apps-workspace-group-card"
-                                                        onClick={() =>
-                                                            onNavigateToGroup(
-                                                                "ungrouped",
-                                                            )}
-                                                        aria-label={`打开未分组，包含 ${ungroupedApps.length} 个网站`}
-                                                    >
-                                                        <span className="apps-workspace-group-card-icon">
-                                                            <Folder size={18} />
-                                                        </span>
-                                                        <div className="apps-workspace-group-card-info">
-                                                            <span className="apps-workspace-group-card-name">
-                                                                未分组
-                                                            </span>
-                                                            <span className="apps-workspace-group-card-count">
-                                                                {ungroupedApps
-                                                                    .length}
-                                                                {" "}
-                                                                个网站
-                                                            </span>
-                                                        </div>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Matched apps */}
-                                    {matchedApps.length > 0 && (
-                                        <div className="apps-workspace-section">
-                                            {(matchedGroups.length > 0 ||
-                                                isUngroupedMatch) && (
-                                                <div className="apps-workspace-section-header">
-                                                    <h4 className="apps-workspace-section-title">
-                                                        网站
-                                                        <span className="apps-workspace-count-badge">
-                                                            {matchedApps.length}
-                                                        </span>
-                                                    </h4>
-                                                </div>
-                                            )}
-                                            <WebAppLauncher
-                                                presentation="workspace"
-                                                apps={matchedApps}
-                                                groups={groups}
-                                                showFolders={false}
-                                                size="default"
-                                                showAppLabels
-                                                managing={false}
-                                                onOpen={onOpen}
-                                                onEdit={(app) =>
-                                                    onNavigateToEdit(app.id)}
-                                                onMove={onMove}
-                                                onPin={onPin}
-                                                onDelete={onDelete}
-                                                onReorder={onReorder}
-                                                onAdd={() => {}}
-                                            />
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                    </div>
-                )
-                : (
-                    /* When NOT searching: standard view */
-                    <>
-                        {/* Secondary toolbar: Manage groups & Arrange mode */}
-                        <div className="apps-workspace-secondary-bar">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1.5 text-xs text-[var(--muted)]"
-                                onClick={onNavigateToGroupsManage}
-                                aria-label="管理网站文件夹"
-                            >
-                                <Folder size={14} />
-                                <span>管理文件夹</span>
-                            </Button>
-                            <Button
-                                variant={isArranging ? "default" : "outline"}
-                                size="sm"
-                                className="gap-1.5 text-xs"
-                                onClick={() => onArrangeChange(!isArranging)}
-                                aria-label={isArranging
-                                    ? "完成排序整理"
-                                    : "整理网站排序与布局"}
-                            >
-                                {isArranging
-                                    ? <Check size={14} />
-                                    : <SlidersHorizontal size={14} />}
-                                <span>
-                                    {isArranging ? "完成整理" : "整理布局"}
-                                </span>
-                            </Button>
-                        </div>
-
-                        {/* Arrange Mode: full app arrange mode + non-drag capabilities */}
-                        {isArranging
-                            ? (
-                                <div className="apps-workspace-section">
-                                    <div className="apps-workspace-section-header">
-                                        <h3 className="apps-workspace-section-title">
-                                            网站排序与归组整理
-                                            <span className="apps-workspace-count-badge">
-                                                {apps.length}
-                                            </span>
-                                        </h3>
-                                    </div>
-                                    <div className="apps-workspace-arrange-list">
-                                        {apps.map((app, index) => (
-                                            <div
-                                                key={app.id}
-                                                className="apps-workspace-arrange-item"
-                                            >
-                                                <div className="apps-workspace-arrange-item-info">
-                                                    <span className="apps-workspace-arrange-item-glyph">
-                                                        {app.iconUrl ||
-                                                                app.iconAssetId
-                                                            ? (
-                                                                <img
-                                                                    src={app
-                                                                        .iconUrl ||
-                                                                        `/api/webapp-icons/${app.iconAssetId}`}
-                                                                    alt=""
-                                                                />
-                                                            )
-                                                            : (
-                                                                app.name.slice(
-                                                                    0,
-                                                                    1,
-                                                                ).toUpperCase() ||
-                                                                "W"
-                                                            )}
-                                                    </span>
-                                                    <div className="apps-workspace-arrange-item-text">
-                                                        <span className="apps-workspace-arrange-item-name">
-                                                            {app.name}
-                                                        </span>
-                                                        <span className="apps-workspace-arrange-item-meta">
-                                                            {app.groupId
-                                                                ? (
-                                                                    groups.find(
-                                                                        (g) =>
-                                                                            g.id ===
-                                                                                app.groupId,
-                                                                    )?.name ||
-                                                                    "文件夹"
-                                                                )
-                                                                : (
-                                                                    "未分组"
-                                                                )}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="apps-workspace-arrange-item-actions">
-                                                    {/* Folder selection dropdown */}
-                                                    <select
-                                                        className="text-xs bg-transparent border border-[var(--border)] rounded px-1.5 py-1 text-[var(--foreground)]"
-                                                        value={app.groupId ||
-                                                            ""}
-                                                        onChange={(e) =>
-                                                            void onMove(
-                                                                app,
-                                                                e.target
-                                                                    .value ||
-                                                                    null,
-                                                            )}
-                                                        aria-label={`修改 ${app.name} 所属文件夹`}
-                                                    >
-                                                        <option value="">
-                                                            未分组
-                                                        </option>
-                                                        {groups.map((g) => (
-                                                            <option
-                                                                key={g.id}
-                                                                value={g.id}
-                                                            >
-                                                                {g.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-
-                                                    {/* Pin toggle */}
-                                                    <button
-                                                        type="button"
-                                                        className={`apps-workspace-icon-btn ${
-                                                            app.isPinned
-                                                                ? "is-active"
-                                                                : ""
-                                                        }`}
-                                                        onClick={() =>
-                                                            void onPin(app)}
-                                                        title={app.isPinned
-                                                            ? "取消固定"
-                                                            : "固定到首页"}
-                                                        aria-label={app.isPinned
-                                                            ? `取消固定 ${app.name}`
-                                                            : `固定 ${app.name} 到首页`}
-                                                    >
-                                                        {app.isPinned
-                                                            ? <Pin size={14} />
-                                                            : (
-                                                                <PinOff
-                                                                    size={14}
-                                                                />
-                                                            )}
-                                                    </button>
-
-                                                    {/* Move up / Move down (non-drag capability) */}
-                                                    <button
-                                                        type="button"
-                                                        className="apps-workspace-icon-btn"
-                                                        disabled={index === 0}
-                                                        onClick={() =>
-                                                            handleMoveApp(
-                                                                index,
-                                                                -1,
-                                                            )}
-                                                        title="上移"
-                                                        aria-label={`上移 ${app.name}`}
-                                                    >
-                                                        <ArrowUp size={14} />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="apps-workspace-icon-btn"
-                                                        disabled={index ===
-                                                            apps.length - 1}
-                                                        onClick={() =>
-                                                            handleMoveApp(
-                                                                index,
-                                                                1,
-                                                            )}
-                                                        title="下移"
-                                                        aria-label={`下移 ${app.name}`}
-                                                    >
-                                                        <ArrowDown size={14} />
-                                                    </button>
-
-                                                    {/* Edit */}
-                                                    <button
-                                                        type="button"
-                                                        className="apps-workspace-icon-btn"
-                                                        onClick={() =>
-                                                            onNavigateToEdit(
-                                                                app.id,
-                                                            )}
-                                                        title="编辑"
-                                                        aria-label={`编辑 ${app.name}`}
-                                                    >
-                                                        <Edit2 size={14} />
-                                                    </button>
-
-                                                    {/* Delete */}
-                                                    <button
-                                                        type="button"
-                                                        className="apps-workspace-icon-btn is-destructive"
-                                                        onClick={() =>
-                                                            void onDelete(app)}
-                                                        title="删除"
-                                                        aria-label={`删除 ${app.name}`}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )
-                            : (
-                                <>
-                                    {/* 1. Common Pinned (常用网站) - directly displayed, ordered by pinnedSortOrder */}
-                                    <div className="apps-workspace-section">
-                                        <div className="apps-workspace-section-header">
-                                            <h3 className="apps-workspace-section-title">
-                                                常用网站
-                                                <span className="apps-workspace-count-badge">
-                                                    {pinnedApps.length}
-                                                </span>
-                                            </h3>
-                                        </div>
-                                        {pinnedApps.length === 0
-                                            ? (
-                                                <p className="apps-workspace-empty">
-                                                    暂无常用网站，可在网站菜单中固定到首页
-                                                </p>
-                                            )
-                                            : (
-                                                <WebAppLauncher
-                                                    presentation="workspace"
-                                                    apps={pinnedApps}
-                                                    groups={groups}
-                                                    showFolders={false}
-                                                    size="default"
-                                                    showAppLabels
-                                                    managing={false}
-                                                    onOpen={onOpen}
-                                                    onEdit={(app) =>
-                                                        onNavigateToEdit(
-                                                            app.id,
-                                                        )}
-                                                    onMove={onMove}
-                                                    onPin={onPin}
-                                                    onDelete={onDelete}
-                                                    onReorder={onReorder}
-                                                    onAdd={() => {}}
-                                                />
-                                            )}
-                                    </div>
-
-                                    {/* 2. Folders & Ungrouped Navigation (文件夹) */}
-                                    <div className="apps-workspace-section">
-                                        <div className="apps-workspace-section-header">
-                                            <h3 className="apps-workspace-section-title">
-                                                文件夹
-                                                <span className="apps-workspace-count-badge">
-                                                    {groups.length}
-                                                </span>
-                                            </h3>
-                                        </div>
+                                <div className="flex flex-col gap-3">
+                                    {matchedGroups.length > 0 && (
                                         <div className="apps-workspace-groups-grid">
-                                            {groups.map((group) => {
+                                            {matchedGroups.map((group) => {
                                                 const groupCount = apps.filter(
                                                     (a) =>
                                                         a.groupId === group.id,
@@ -581,10 +227,12 @@ export function AppsRootView({
                                                         key={group.id}
                                                         type="button"
                                                         className="apps-workspace-group-card"
-                                                        onClick={() =>
-                                                            onNavigateToGroup(
+                                                        onClick={() => {
+                                                            onFolderChange?.(
                                                                 group.id,
-                                                            )}
+                                                            );
+                                                            onQueryChange("");
+                                                        }}
                                                         aria-label={`打开文件夹 ${group.name}，包含 ${groupCount} 个网站`}
                                                     >
                                                         <span className="apps-workspace-group-card-icon">
@@ -603,68 +251,71 @@ export function AppsRootView({
                                                     </button>
                                                 );
                                             })}
-                                            <button
-                                                key="ungrouped"
-                                                type="button"
-                                                className="apps-workspace-group-card"
-                                                onClick={() =>
-                                                    onNavigateToGroup(
-                                                        "ungrouped",
-                                                    )}
-                                                aria-label={`打开未分组，包含 ${ungroupedApps.length} 个网站`}
-                                            >
-                                                <span className="apps-workspace-group-card-icon">
-                                                    <Folder size={18} />
-                                                </span>
-                                                <div className="apps-workspace-group-card-info">
-                                                    <span className="apps-workspace-group-card-name">
-                                                        未分组
-                                                    </span>
-                                                    <span className="apps-workspace-group-card-count">
-                                                        {ungroupedApps.length}
-                                                        {" "}
-                                                        个网站
-                                                    </span>
-                                                </div>
-                                            </button>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    {/* 3. All Apps Navigation Entry (全部网站) */}
-                                    <div className="apps-workspace-section">
-                                        <div className="apps-workspace-section-header">
-                                            <h3 className="apps-workspace-section-title">
-                                                全部网站
-                                                <span className="apps-workspace-count-badge">
-                                                    {apps.length}
-                                                </span>
-                                            </h3>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="apps-workspace-group-card"
-                                            onClick={onNavigateAll}
-                                            aria-label={`浏览全部网站，共 ${apps.length} 个网站`}
-                                        >
-                                            <span className="apps-workspace-group-card-icon">
-                                                <LayoutGrid size={18} />
-                                            </span>
-                                            <div className="apps-workspace-group-card-info">
-                                                <span className="apps-workspace-group-card-name">
-                                                    全部网站
-                                                </span>
-                                                <span className="apps-workspace-group-card-count">
-                                                    共 {apps.length} 个网站
-                                                </span>
-                                            </div>
-                                            <ChevronRight
-                                                size={16}
-                                                className="text-[var(--muted)]"
-                                            />
-                                        </button>
-                                    </div>
-                                </>
+                                    {matchedApps.length > 0 && (
+                                        <WebAppLauncher
+                                            presentation="workspace"
+                                            apps={matchedApps}
+                                            groups={groups}
+                                            showFolders={false}
+                                            size="default"
+                                            showAppLabels
+                                            managing={false}
+                                            onOpen={onOpen}
+                                            onEdit={(app) =>
+                                                onNavigateToEdit(app.id)}
+                                            onMove={onMove}
+                                            onPin={onPin}
+                                            onDelete={onDelete}
+                                            onReorder={() => {}}
+                                            onAdd={() => {}}
+                                        />
+                                    )}
+                                </div>
                             )}
+                    </div>
+                )
+                : (
+                    /* Standard view: Unified Launcher */
+                    <>
+                        <WebAppLauncher
+                            presentation="workspace"
+                            apps={apps}
+                            groups={groups}
+                            showFolders
+                            size="default"
+                            showAppLabels
+                            managing={isArranging}
+                            activeFolderId={activeFolderId}
+                            onFolderChange={onFolderChange}
+                            onOpen={onOpen}
+                            onEdit={(app) => onNavigateToEdit(app.id)}
+                            onMove={onMove}
+                            onPin={onPin}
+                            onDelete={onDelete}
+                            onReorder={onReorder}
+                            onReorderRoot={onReorderRoot}
+                            onReorderFolder={onReorderFolder}
+                            onMoveAppToFolder={onMoveAppToFolder}
+                            onCreateFolder={onCreateFolder}
+                            onRenameFolder={onRenameFolder}
+                            onDeleteFolder={onDeleteFolder}
+                            onFolderSizeChange={onFolderSizeChange}
+                            onAdd={() => onNavigateToAdd?.(activeFolderId)}
+                        />
+
+                        {onCreateFolder && (
+                            <FolderNameDialog
+                                open={isCreateFolderOpen}
+                                onOpenChange={setIsCreateFolderOpen}
+                                mode="create"
+                                onSubmit={async (name) => {
+                                    await onCreateFolder(name);
+                                }}
+                            />
+                        )}
                     </>
                 )}
         </div>

@@ -1,14 +1,10 @@
 export type WorkspaceState =
     | { view: "closed" }
     | { view: "apps/root" }
-    | { view: "apps/all" }
-    | { view: "apps/group"; id: string }
-    | { view: "apps/groups" }
     | { view: "apps/create"; groupId?: string }
     | { view: "apps/edit"; id: string }
     | { view: "notes/root" }
     | { view: "notes/edit"; id: string };
-
 export function isAppsWorkspaceView(state: WorkspaceState): boolean {
     return state.view.startsWith("apps/");
 }
@@ -39,9 +35,6 @@ export function areWorkspaceRoutesEqual(
     b: WorkspaceState,
 ): boolean {
     if (a.view !== b.view) return false;
-    if (a.view === "apps/group" && b.view === "apps/group") {
-        return a.id === b.id;
-    }
     if (a.view === "apps/create" && b.view === "apps/create") {
         return a.groupId === b.groupId;
     }
@@ -61,10 +54,6 @@ function getWorkspaceKind(route: WorkspaceState): WorkspaceKind | null {
 }
 
 export function parentWorkspaceRoute(route: WorkspaceState): WorkspaceState {
-    if (route.view === "apps/create" && route.groupId) {
-        return { view: "apps/group", id: route.groupId };
-    }
-    if (route.view === "apps/all") return { view: "apps/root" };
     if (isAppsWorkspaceView(route)) return { view: "apps/root" };
     if (isNotesWorkspaceView(route)) return { view: "notes/root" };
     return { view: "closed" };

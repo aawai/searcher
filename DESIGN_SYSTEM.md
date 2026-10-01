@@ -119,9 +119,9 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
     Bento 桌面卡片。
   - Widgets 模式采用 Bento 桌面网格，最大宽度 `--layout-bento-max: 960px`；在
     `@container bento-wrapper (min-width: 680px)` 与 `@media (min-width: 960px)`
-    下呈现 `5fr 3fr` 不对称列比（应用卡片 5fr，便签卡片
-    3fr）；卡片高度由内部内容决定，不强制等高；底部居中
-    Dock（`.workspace-dock`）作为工作区入口。
+    下通过正式 Token `--layout-bento-columns: 5fr 3fr`
+    呈现不对称列比（应用/便签）；卡片高度由内部内容决定，不强制等高。空态与少量应用展开通过同一
+    Token 约束列比与溢出边界；底部居中 Dock（`.workspace-dock`）作为工作区入口。
 - **首页职责收敛与 QuickLaunch 移除**：
   - 首页专注于“使用内容”，完全移除 QuickLaunch
     管理模式切换、管理条（`.home-managing-bar`）及卡片内竞争的启动管理按钮。所有应用新建、编辑、分组管理及便签编辑统一下沉至

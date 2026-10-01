@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Folder, GripVertical } from "lucide-react";
+import { ArrowLeft, Folder, FolderInput, GripVertical } from "lucide-react";
 import {
     closestCenter,
     DndContext,
@@ -38,6 +38,10 @@ import {
     launcherTiles,
 } from "./launcherTiles.ts";
 import { WebAppIcon } from "./WebAppIcon.tsx";
+import {
+    FolderDeleteDialog,
+    FolderNameDialog,
+} from "../../features/workspace/FolderNameDialog.tsx";
 
 interface Actions {
     onOpen: (app: LauncherApp) => void;
@@ -48,6 +52,12 @@ interface Actions {
     onToggleManaging?: () => void;
     onResetLayout?: () => void;
     onManage?: (app: LauncherApp) => void;
+    onRenameFolder?: (group: LauncherGroup) => void;
+    onDeleteFolder?: (group: LauncherGroup) => void;
+    onFolderSizeChange?: (
+        group: LauncherGroup,
+        size: "small" | "large",
+    ) => void;
     presentation?: "default" | "quick" | "workspace";
 }
 
@@ -208,6 +218,7 @@ function FolderView({
     dragAttributes,
     dragListeners,
     actions,
+    isFolderDropTarget = false,
 }: {
     tile: Extract<LauncherTile, { group: LauncherGroup }>;
     managing: boolean;
@@ -218,6 +229,7 @@ function FolderView({
     dragAttributes?: object;
     dragListeners?: object;
     actions?: Actions;
+    isFolderDropTarget?: boolean;
 }) {
     const large = tile.group.folderSize === "large";
     const preview = tile.apps.slice(0, large ? 9 : 4);
@@ -227,19 +239,35 @@ function FolderView({
             <ContextMenuTrigger
                 className={`launcher-folder-item launcher-folder-item--${
                     large ? "large" : "small"
-                }`}
-                onClick={() => onFolder(tile.group.id)}
-                {...dragListeners}
+                }${isFolderDropTarget ? " is-folder-drop-target" : ""}`}
+                onClick={() => {
+                    if (!managing) onFolder(tile.group.id);
+                }}
+                data-tile-id={tile.id}
+                data-folder-id={tile.group.id}
+                tabIndex={managing ? -1 : 0}
             >
                 <div className="launcher-folder-surface">
                     <button
                         type="button"
                         className="launcher-folder-background"
-                        aria-label={managing
+                        aria-label={isFolderDropTarget
+                            ? `${label}；松开以移入此文件夹`
+                            : managing
                             ? `${label}；拖动或按方向键排序`
                             : label}
                         {...dragAttributes}
+                        {...dragListeners}
                     />
+                    {isFolderDropTarget && (
+                        <div
+                            className="launcher-folder-drop-badge"
+                            aria-hidden="true"
+                        >
+                            <FolderInput size={13} />
+                            <span>移入文件夹</span>
+                        </div>
+                    )}
                     <span
                         className={`launcher-folder-preview ${
                             preview.length === 0
@@ -346,17 +374,35 @@ function FolderView({
                         )
                     )
                     : (
-                        onSizeChange && (
-                            <ContextMenuItem
-                                onClick={() =>
-                                    onSizeChange(
-                                        tile.group,
-                                        large ? "small" : "large",
-                                    )}
-                            >
-                                显示为{large ? "小" : "大"}文件夹
-                            </ContextMenuItem>
-                        )
+                        <>
+                            {onSizeChange && (
+                                <ContextMenuItem
+                                    onClick={() =>
+                                        onSizeChange(
+                                            tile.group,
+                                            large ? "small" : "large",
+                                        )}
+                                >
+                                    显示为{large ? "小" : "大"}文件夹
+                                </ContextMenuItem>
+                            )}
+                            {actions?.onRenameFolder && (
+                                <ContextMenuItem
+                                    onClick={() =>
+                                        actions.onRenameFolder?.(tile.group)}
+                                >
+                                    重命名
+                                </ContextMenuItem>
+                            )}
+                            {actions?.onDeleteFolder && (
+                                <ContextMenuItem
+                                    onClick={() =>
+                                        actions.onDeleteFolder?.(tile.group)}
+                                >
+                                    删除文件夹
+                                </ContextMenuItem>
+                            )}
+                        </>
                     )}
             </ContextMenuContent>
         </ContextMenu>
@@ -373,6 +419,7 @@ function SortableTile({
     onFolder,
     onSizeChange,
     onMoveByKey,
+    activeDragId,
 }: {
     tile: LauncherTile;
     placement: DesktopPlacement;
@@ -383,6 +430,7 @@ function SortableTile({
     onFolder: (id: string) => void;
     onSizeChange?: (group: LauncherGroup, size: "small" | "large") => void;
     onMoveByKey: (id: string, direction: number) => void;
+    activeDragId?: string | null;
 }) {
     const {
         attributes,
@@ -396,6 +444,10 @@ function SortableTile({
         id: tile.id,
         disabled: !managing,
     });
+    const isFolderDropTarget = Boolean(
+        tile.group && isOver && activeDragId &&
+            !activeDragId.startsWith("folder:"),
+    );
     const dragListeners = managing
         ? {
             ...listeners,
@@ -421,9 +473,13 @@ function SortableTile({
     return (
         <div
             ref={setNodeRef}
+            data-tile-id={tile.id}
+            data-folder-id={tile.group?.id}
             className={`launcher-tile${managing ? " is-managing" : ""}${
                 isDragging ? " is-dragging" : ""
-            }${isOver ? " is-over" : ""}`}
+            }${isOver ? " is-over" : ""}${
+                isFolderDropTarget ? " is-folder-drop-target" : ""
+            }`}
             style={{
                 gridColumn: `${placement.col + 1} / span ${placement.colSpan}`,
                 gridRow: `${placement.row + 1} / span ${placement.rowSpan}`,
@@ -457,6 +513,7 @@ function SortableTile({
                         dragAttributes={managing ? attributes : undefined}
                         dragListeners={dragListeners}
                         actions={actions}
+                        isFolderDropTarget={isFolderDropTarget}
                     />
                 )}
         </div>
@@ -519,30 +576,7 @@ export function computeEffectiveColumns({
     return columns;
 }
 
-export function WebAppLauncher({
-    apps,
-    groups,
-    showFolders,
-    size,
-    showAppLabels = true,
-    managing,
-    onOpen,
-    onEdit,
-    onMove,
-    onPin,
-    onDelete,
-    onReorder,
-    onFolderSizeChange,
-    onAdd,
-    onToggleManaging,
-    onResetLayout,
-    emptyMessage = "还没有常用网站",
-    emptyAction = true,
-    activeFolderId,
-    onFolderChange,
-    presentation = "default",
-    onManage,
-}: {
+export interface WebAppLauncherProps {
     apps: LauncherApp[];
     groups: LauncherGroup[];
     showFolders: boolean;
@@ -568,9 +602,57 @@ export function WebAppLauncher({
     onFolderChange?: (folderId: string | null) => void;
     presentation?: "default" | "quick" | "workspace";
     onManage?: (app: LauncherApp) => void;
-}) {
+    onCreateFolder?: (name: string) => Promise<void>;
+    onRenameFolder?: (group: LauncherGroup, name: string) => Promise<void>;
+    onDeleteFolder?: (group: LauncherGroup) => Promise<void>;
+    onMoveAppToFolder?: (
+        app: LauncherApp,
+        groupId: string,
+    ) => Promise<void> | void;
+    onReorderRoot?: (newTiles: LauncherTile[]) => Promise<void> | void;
+    onReorderFolder?: (
+        folderId: string,
+        appIds: string[],
+    ) => Promise<void> | void;
+}
+
+export function WebAppLauncher({
+    apps,
+    groups,
+    showFolders,
+    size,
+    showAppLabels = true,
+    managing,
+    onOpen,
+    onEdit,
+    onMove,
+    onPin,
+    onDelete,
+    onReorder,
+    onFolderSizeChange,
+    onAdd,
+    onToggleManaging,
+    onResetLayout,
+    emptyMessage = "还没有常用网站",
+    emptyAction = true,
+    activeFolderId,
+    onFolderChange,
+    presentation = "default",
+    onManage,
+    onCreateFolder,
+    onRenameFolder,
+    onDeleteFolder,
+    onMoveAppToFolder,
+    onReorderRoot,
+    onReorderFolder,
+}: WebAppLauncherProps) {
     const tiles = useMemo(
-        () => launcherTiles(apps, showFolders ? groups : []),
+        (): LauncherTile[] =>
+            showFolders ? launcherTiles(apps, groups) : apps.map((app) => ({
+                type: "app",
+                id: `app:${app.id}`,
+                app,
+            })),
         [apps, groups, showFolders],
     );
     const largeFolderCount = showFolders
@@ -612,6 +694,15 @@ export function WebAppLauncher({
     const active = tiles.find((tile) => tile.id === activeId);
     const lastActiveTriggerRef = useRef<HTMLElement | null>(null);
     const scrollPosRef = useRef<number>(0);
+    const folderInlineRef = useRef<HTMLDivElement | null>(null);
+    const prevFolderIdRef = useRef<string | null>(null);
+    const [createFolderOpen, setCreateFolderOpen] = useState(false);
+    const [folderToRename, setFolderToRename] = useState<LauncherGroup | null>(
+        null,
+    );
+    const [folderToDelete, setFolderToDelete] = useState<LauncherGroup | null>(
+        null,
+    );
 
     const setFolderId = (id: string | null) => {
         if (activeFolderId === undefined) setInternalFolderId(id);
@@ -619,10 +710,18 @@ export function WebAppLauncher({
     };
 
     const openFolder = (id: string) => {
-        lastActiveTriggerRef.current = document.activeElement as
-            | HTMLElement
-            | null;
-        if (gridRef.current && gridRef.current.parentElement) {
+        const trigger = document.activeElement;
+        if (
+            trigger && trigger !== document.body &&
+            trigger !== document.documentElement
+        ) {
+            lastActiveTriggerRef.current = trigger as HTMLElement;
+        } else {
+            lastActiveTriggerRef.current = document.querySelector<HTMLElement>(
+                `[data-folder-id="${id}"] .launcher-folder-background, [data-folder-id="${id}"] button, [data-folder-id="${id}"]`,
+            );
+        }
+        if (gridRef.current?.parentElement) {
             scrollPosRef.current = gridRef.current.parentElement.scrollTop;
         }
         setFolderId(id);
@@ -630,13 +729,45 @@ export function WebAppLauncher({
 
     const closeFolder = () => {
         setFolderId(null);
-        requestAnimationFrame(() => {
-            if (gridRef.current && gridRef.current.parentElement) {
-                gridRef.current.parentElement.scrollTop = scrollPosRef.current;
-            }
-            lastActiveTriggerRef.current?.focus();
-        });
     };
+
+    useEffect(() => {
+        const prev = prevFolderIdRef.current;
+        prevFolderIdRef.current = folderId;
+
+        if (prev && !folderId) {
+            const frame = requestAnimationFrame(() => {
+                if (gridRef.current?.parentElement) {
+                    gridRef.current.parentElement.scrollTop =
+                        scrollPosRef.current;
+                }
+                const button = document.querySelector<HTMLElement>(
+                    `[data-folder-id="${prev}"] .launcher-folder-background, [data-folder-id="${prev}"] button, [data-tile-id="folder:${prev}"] button`,
+                );
+                if (button) {
+                    button.focus();
+                } else {
+                    const tile = document.querySelector<HTMLElement>(
+                        `[data-folder-id="${prev}"], [data-tile-id="folder:${prev}"]`,
+                    );
+                    if (tile) {
+                        tile.tabIndex = -1;
+                        tile.focus();
+                    }
+                }
+            });
+            return () => cancelAnimationFrame(frame);
+        }
+    }, [folderId]);
+
+    useEffect(() => {
+        if (folderId && folderInlineRef.current) {
+            const backBtn = folderInlineRef.current.querySelector<HTMLElement>(
+                "button",
+            );
+            backBtn?.focus();
+        }
+    }, [folderId]);
 
     useEffect(() => {
         if (folderId && !groups.some((g) => g.id === folderId)) {
@@ -659,18 +790,39 @@ export function WebAppLauncher({
         onResetLayout,
         onManage,
         presentation,
+        onRenameFolder: (group) => setFolderToRename(group),
+        onDeleteFolder: (group) => setFolderToDelete(group),
+        onFolderSizeChange,
     };
     function reorderTiles(oldIndex: number, newIndex: number) {
         if (oldIndex < 0 || newIndex < 0 || newIndex >= tiles.length) return;
-        onReorder(
-            arrayMove(tiles, oldIndex, newIndex).flatMap((tile) =>
-                tile.app ? [tile.app.id] : tile.apps.map((app) => app.id)
-            ),
-        );
+        if (onReorderRoot) {
+            const reordered = arrayMove(tiles, oldIndex, newIndex);
+            void onReorderRoot(reordered);
+        } else {
+            onReorder(
+                arrayMove(tiles, oldIndex, newIndex).flatMap((tile) =>
+                    tile.app ? [tile.app.id] : tile.apps.map((app) => app.id)
+                ),
+            );
+        }
     }
     function reorder(event: DragEndEvent) {
         setActiveId(null);
         if (!event.over || event.active.id === event.over.id) return;
+        const activeTile = tiles.find((t) => t.id === event.active.id);
+        const overTile = tiles.find((t) => t.id === event.over?.id);
+
+        if (activeTile?.app && overTile?.group) {
+            // App -> Folder drop: move App into Folder!
+            if (onMoveAppToFolder) {
+                void onMoveAppToFolder(activeTile.app, overTile.group.id);
+            } else {
+                void onMove(activeTile.app, overTile.group.id);
+            }
+            return;
+        }
+
         reorderTiles(
             tiles.findIndex((tile) => tile.id === event.active.id),
             tiles.findIndex((tile) => tile.id === event.over?.id),
@@ -680,6 +832,7 @@ export function WebAppLauncher({
     if (folderId && folder && folder.group) {
         return (
             <div
+                ref={folderInlineRef}
                 className="launcher-folder-inline"
                 role="region"
                 aria-label={`文件夹：${folder.group.name}`}
@@ -691,9 +844,10 @@ export function WebAppLauncher({
                             size="sm"
                             onClick={closeFolder}
                             className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+                            aria-label="返回网站列表"
                         >
                             <ArrowLeft size={14} />
-                            <span>返回常用网站</span>
+                            <span>返回</span>
                         </Button>
                         <span
                             className="text-[var(--muted)]"
@@ -732,12 +886,19 @@ export function WebAppLauncher({
                                     app.id === event.over?.id
                                 );
                                 if (oldIndex < 0 || newIndex < 0) return;
-                                onReorder(
-                                    arrayMove(folderApps, oldIndex, newIndex)
-                                        .map((
-                                            app,
-                                        ) => app.id),
+                                const reordered = arrayMove(
+                                    folderApps,
+                                    oldIndex,
+                                    newIndex,
                                 );
+                                if (onReorderFolder && folderId) {
+                                    void onReorderFolder(
+                                        folderId,
+                                        reordered.map((a) => a.id),
+                                    );
+                                } else {
+                                    onReorder(reordered.map((app) => app.id));
+                                }
                             }}
                         >
                             <SortableContext
@@ -764,7 +925,7 @@ export function WebAppLauncher({
         );
     }
 
-    if (apps.length === 0) {
+    if (tiles.length === 0) {
         return (
             <div className="launcher-empty">
                 {emptyMessage}{" "}
@@ -788,45 +949,104 @@ export function WebAppLauncher({
                 items={tiles.map((tile) => tile.id)}
                 strategy={() => null}
             >
-                <div
-                    ref={gridRef}
-                    className={`pinned-apps launcher-grid launcher-grid--${size}${
-                        showFolders ? "" : " launcher-grid--home"
-                    }${showAppLabels ? "" : " launcher-grid--icons-only"}${
-                        presentation === "workspace"
-                            ? " launcher-grid--workspace"
-                            : ""
-                    }${
-                        presentation === "quick"
-                            ? " launcher-grid--quick"
-                            : ""
-                    }`}
-                    data-presentation={presentation}
-                    style={{
-                        "--launcher-columns": effectiveColumns,
-                    } as React.CSSProperties}
-                >
-                    {tiles.map((tile, index) => (
-                        <SortableTile
-                            key={tile.id}
-                            tile={tile}
-                            placement={layout[index]}
-                            groups={groups}
-                            managing={managing}
-                            actions={actions}
-                            showAppLabels={showAppLabels}
-                            onFolder={openFolder}
-                            onSizeChange={onFolderSizeChange}
-                            onMoveByKey={(id, direction) =>
-                                reorderTiles(
-                                    tiles.findIndex((item) => item.id === id),
-                                    tiles.findIndex((item) => item.id === id) +
-                                        direction,
-                                )}
-                        />
-                    ))}
-                </div>
+                <ContextMenu>
+                    <ContextMenuTrigger className="launcher-surface-wrap">
+                        <div
+                            ref={gridRef}
+                            tabIndex={onCreateFolder ? 0 : undefined}
+                            aria-label="网站启动器"
+                            className={`pinned-apps launcher-grid launcher-grid--${size}${
+                                showFolders ? "" : " launcher-grid--home"
+                            }${
+                                showAppLabels
+                                    ? ""
+                                    : " launcher-grid--icons-only"
+                            }${
+                                presentation === "workspace"
+                                    ? " launcher-grid--workspace"
+                                    : ""
+                            }${
+                                presentation === "quick"
+                                    ? " launcher-grid--quick"
+                                    : ""
+                            }`}
+                            data-presentation={presentation}
+                            style={{
+                                "--launcher-columns": effectiveColumns,
+                            } as React.CSSProperties}
+                        >
+                            {tiles.map((tile, index) => (
+                                <SortableTile
+                                    key={tile.id}
+                                    tile={tile}
+                                    placement={layout[index]}
+                                    groups={groups}
+                                    managing={managing}
+                                    actions={actions}
+                                    showAppLabels={showAppLabels}
+                                    onFolder={openFolder}
+                                    onSizeChange={onFolderSizeChange}
+                                    activeDragId={activeId}
+                                    onMoveByKey={(id, direction) =>
+                                        reorderTiles(
+                                            tiles.findIndex((item) =>
+                                                item.id === id
+                                            ),
+                                            tiles.findIndex((item) =>
+                                                item.id === id
+                                            ) +
+                                                direction,
+                                        )}
+                                />
+                            ))}
+                        </div>
+                    </ContextMenuTrigger>
+                    {onCreateFolder && (
+                        <ContextMenuContent aria-label="启动器空白区域操作">
+                            <ContextMenuItem
+                                onClick={() => setCreateFolderOpen(true)}
+                            >
+                                新建文件夹
+                            </ContextMenuItem>
+                        </ContextMenuContent>
+                    )}
+                </ContextMenu>
             </SortableContext>
+            {onCreateFolder && (
+                <FolderNameDialog
+                    open={createFolderOpen}
+                    onOpenChange={setCreateFolderOpen}
+                    mode="create"
+                    onSubmit={async (name) => {
+                        await onCreateFolder(name);
+                    }}
+                />
+            )}
+            {onRenameFolder && (
+                <FolderNameDialog
+                    open={Boolean(folderToRename)}
+                    onOpenChange={(open) => !open && setFolderToRename(null)}
+                    mode="rename"
+                    initialName={folderToRename?.name || ""}
+                    onSubmit={async (name) => {
+                        if (folderToRename) {
+                            await onRenameFolder(folderToRename, name);
+                            setFolderToRename(null);
+                        }
+                    }}
+                />
+            )}
+            {onDeleteFolder && (
+                <FolderDeleteDialog
+                    group={folderToDelete}
+                    open={Boolean(folderToDelete)}
+                    onOpenChange={(open) => !open && setFolderToDelete(null)}
+                    onConfirm={async (group) => {
+                        await onDeleteFolder(group);
+                        setFolderToDelete(null);
+                    }}
+                />
+            )}
             {createPortal(
                 <DragOverlay style={{ zIndex: 60 }}>
                     {active && managing

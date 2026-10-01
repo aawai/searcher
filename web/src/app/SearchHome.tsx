@@ -117,6 +117,7 @@ export function SearchHome() {
             return;
         }
         setAppsArranging(false);
+        setActiveFolderId(null);
         dispatchWorkspace({ type: "close" });
     }
     function openWorkspace(kind: WorkspaceKind) {
@@ -129,6 +130,7 @@ export function SearchHome() {
         dispatchWorkspace({ type: "reset" });
         setPendingAction(null);
         setAppsArranging(false);
+        setActiveFolderId(null);
         setIsManagingApps(false);
         setNotes([]);
         setNotesError("");
@@ -144,6 +146,7 @@ export function SearchHome() {
     const [undoApp, setUndoApp] = useState<
         { app: ExtendedWebApp; timer: ReturnType<typeof setTimeout> } | null
     >(null);
+    const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
     useEffect(() => setEngine(appearance.engine), [appearance.engine]);
     useEffect(() => {
         void getLocal<Reachability>("reachability").then((value) => {
@@ -617,14 +620,6 @@ export function SearchHome() {
         ? "添加应用"
         : route.view === "apps/edit"
         ? "编辑应用"
-        : route.view === "apps/groups"
-        ? "文件夹管理"
-        : route.view === "apps/all"
-        ? "全部网站"
-        : route.view === "apps/group"
-        ? (route.id === "ungrouped"
-            ? "未分组"
-            : groups.find((group) => group.id === route.id)?.name ?? "文件夹")
         : route.view === "notes/edit"
         ? "编辑便签"
         : appsView
@@ -659,7 +654,10 @@ export function SearchHome() {
                     onClose={closeWorkspace}
                     onCreate={() =>
                         appsView
-                            ? navigateWorkspace({ view: "apps/create" })
+                            ? navigateWorkspace({
+                                view: "apps/create",
+                                groupId: activeFolderId ?? undefined,
+                            })
                             : void createNote()}
                 >
                     {appsView
@@ -668,6 +666,8 @@ export function SearchHome() {
                                 state={route}
                                 navigate={navigateWorkspace}
                                 onBack={backWorkspace}
+                                activeFolderId={activeFolderId}
+                                onFolderChange={setActiveFolderId}
                                 apps={apps}
                                 groups={groups}
                                 setApps={setApps}

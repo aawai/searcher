@@ -332,6 +332,54 @@
       88 文件、758 存量违规，0 新违规 / 增量 / stale allowance。CHANGELOG
       合并保留两项功能记录。
 
+## Issue #44 Bento 与 Workspace 最终回归（含 #47，2026-10-01）
+
+- [x] Search Canvas / Workspace 复用现有语义表面、Button、Context Menu 与
+      AlertDialog，不新增基础控件。宽布局统一消费正式 Bento 列比 Token，无第二份
+      raw 列比；两侧内容、Apps-only、Notes-only、两侧空态和 intrinsic height
+      通过实际卡片几何断言。
+- [x] Unified Launcher 取代旧 Apps IA 和路由：root
+      混排、空文件夹、搜索去重、原地文件夹浏览、返回焦点/滚动位置、改名/大小/删除、单一
+      primary
+      均通过。App→Folder、Folder→App/Folder、App→App、文件夹内部排序分别验证；真实
+      pointer、KeyboardSensor 和 touch 归组均覆盖。
+- [x] Root 混排以单次 owner-scoped 事务更新 App 与 Folder；foreign/missing
+      Folder 返回 404 并回滚 App 更新。失败保留草稿或回滚乐观 UI，刷新与 API
+      回读一致；首页 pinnedSortOrder 不被 root 排序覆盖。API regression test
+      修复前因 Folder rank 未更新失败，修复后通过。
+- [x] Apps loading/error/retry、stale
+      cache、空态、搜索无结果、添加/编辑失败、删除/撤销；Notes
+      空态、去重、控制隔离、原地展开、零写请求、saving/unsynced/error、conflict、version-history
+      error、stale cache retry 均通过。错误内容不会挤出
+      Header/Footer；Apps/Notes query 相互隔离。
+- [x] Shell / Bento 实页覆盖
+      375/390/768/1024/1440/1920、light/dark、Widgets/Zen；长文案、多项、独立
+      Body 滚动、焦点归还、桌面非模态、移动 Sheet focus trap/swipe、Escape
+      优先级、reduced motion 和 Home/Zen 布局与偏好隔离均通过。
+- [x] 独立临时生产实例 Browser 实页及截图：390×844 / 768×1024 / 1440×900 ×
+      light/dark。校准 system theme 和 reduced-motion
+      后检查实际外观；页面/面板无横向 overflow，Header/Footer 在视口内。桌面无
+      backdrop，移动为模态 Sheet；截图为临时验收产物，不作为永久静态文件测试。
+- [x] 1440px dark Apps Workspace：axe 的 button-name / aria-hidden-focus /
+      aria-valid-attr-value / label 四项规则 0 violations，浏览器无 JavaScript
+      runtime error；此项不是全量 accessibility audit。
+- [x] 修正脚本假通过：移除手工 DOM theme 回显和 Token/source wiring 断言，theme
+      system 使用媒体偏好与实际 dataset 等待。排序断言比较确切 ID
+      顺序、rank、groupId、回滚与刷新状态；KeyboardSensor
+      等待激活帧及实际落点后再释放，不用固定 sleep 代替状态验证。
+- [x] 294 项源码测试、五套生产实页回归通过；最终有效回归共 57 步（Workspace
+      8、Shell 5、Launcher 13、Notes 11、Bento 20）。App/src/main/所有 E2E
+      typecheck、修改范围 lint/format、production build 通过。check:ui 扫描 86
+      文件、758 存量违规，新增/增加计数/stale allowance 均为 0，未增加
+      baseline；构建保留 >500 kB chunk 提示。
+- [x] README、Design System、CHANGELOG 与本 checklist
+      同步最终行为；临时诊断与生成截图已清理。不改变数据库 schema、Note API、Ask
+      或 Design Lab。
+- [x] 发布前整合 main 的 #49 Ask 变更，保留双方独立验收记录；整合后 308
+      项源码测试与五套生产实页回归（57 步）全部通过，App/src/main
+      typecheck、build 和 checklist format 通过。check:ui 86 文件、757
+      存量违规，新增/增加计数/stale allowance 均为 0。
+
 ## Issue #49 Ask 页面层级、空间边界与请求体策略（2026-10-01）
 
 - [x] Workbench 复用 PageShell、既有 Button / Sheet / Dialog 与 semantic token；
