@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-09-30T05:52:28.368Z",
+  "last_updated": "2026-10-01T01:22:45.195Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -898,6 +898,72 @@
       "source_context": "Issue #19: 加固设置页与 Widgets 的中间宽度响应式布局",
       "created": "2026-09-30",
       "updated": "2026-09-30"
+    },
+    "sources/obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis": {
+      "type": "source",
+      "title": "Observation: Widgets spatial desktop Bento and ControlledNotes deterministic layout implementation",
+      "tags": [
+        "ui",
+        "widgets",
+        "bento",
+        "controlled-notes",
+        "responsive",
+        "layout"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis",
+      "relevance": "high",
+      "observed_at": "2026-09-30T14:20:38.986Z",
+      "source_context": "Issue #36 Phase 5/6/7 Widgets spatial desktop refactoring",
+      "created": "2026-09-30",
+      "updated": "2026-09-30"
+    },
+    "sources/obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve": {
+      "type": "source",
+      "title": "Observation: Workspace contract regression tests and non-modal desktop verification",
+      "tags": [
+        "workspace",
+        "e2e",
+        "playwright",
+        "regression",
+        "issue-36",
+        "desktop-non-modal",
+        "mobile-sheet"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve",
+      "relevance": "high",
+      "observed_at": "2026-09-30T15:08:48.135Z",
+      "source_context": "Issue #36 Workspace shell e2e contract regression test suite",
+      "created": "2026-09-30",
+      "updated": "2026-09-30"
+    },
+    "sources/obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens": {
+      "type": "source",
+      "title": "Observation: Ask workspace CSS normalized to semantic tokens",
+      "status": "observation",
+      "slug": "obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens",
+      "relevance": "high",
+      "observed_at": "2026-10-01T01:22:45.160Z",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook": {
+      "type": "source",
+      "title": "Observation: AskPage streaming lifecycle extracted to useAskStream hook",
+      "tags": [
+        "ask",
+        "streaming",
+        "refactor",
+        "issue-38"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook",
+      "relevance": "high",
+      "observed_at": "2026-10-01T01:09:02.440Z",
+      "source_context": "Issue 38 AskPage decomposition",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

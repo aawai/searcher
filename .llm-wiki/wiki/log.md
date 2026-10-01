@@ -1,7 +1,14 @@
 # Wiki Update Log
 
+## 2026-10-01
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens","title":"Ask workspace CSS normalized to semantic tokens"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook","title":"AskPage streaming lifecycle extracted to useAskStream hook"}
+
 ## 2026-09-30
 
+- **observe**: {"relevance":"high","slug":"obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve","title":"Workspace contract regression tests and non-modal desktop verification"}
+- **observe**: {"relevance":"high","slug":"obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis","title":"Widgets spatial desktop Bento and ControlledNotes deterministic layout implementation"}
 - **observe**: {"relevance":"high","slug":"obs-2026-09-30-widgets","title":"设置页与 Widgets 中间视口采用容器查询重排"}
 
 ## 2026-09-28
