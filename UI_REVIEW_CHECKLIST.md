@@ -176,6 +176,53 @@
       settings.css 问题均位于相对 HEAD 未修改文件，保留既有债务、不扩大本次
       scope。
 
+## Issue #38 Ask 会话工作区验收（2026-10-01）
+
+- [x] Workbench；primary interaction 为 Composer。Searcher 保留
+      Provider、API、SSE、SQLite 与 owner 隔离；assistant-ui external-store
+      runtime 与 repository 负责对话交互，不迁移到 assistant-cloud。
+- [x] 常规操作复用 shadcn Button/Popover/Dialog/Sheet；Header 只放会话操作。正文
+      760px、代码 900px 的边界由 Ask feature stylesheet 持有，沿用 Design System
+      Token。
+- [x] 五个 CSS 视口 390×844 / 640×900 / 768×1024 / 1024×768 / 1440×900 的
+      light/dark 空会话和长会话实页通过：页面横向溢出为 0，Composer
+      发送可见，普通视口 Thread 无额外滚动。空会话 reasoning
+      supported/unsupported 共 20 场景的已有证据保留。
+- [x] 最终表格回归逐项读取
+      innerHeight、visualViewport.height、documentElement.clientHeight，三者均与目标高度相同；截图
+      DPR=1.25，物理尺寸不作为 CSS 视口尺寸。390/768/1440
+      浅深色截图已保存于验收工具输出。
+- [x] 额外 390×500 light/dark 短屏边界：空会话可局部滚动，长会话 Thread
+      额外滚动范围
+      92px，滚动后发送操作可见。此证据是浏览器缩短视口，不声称已验收实体手机软键盘。
+- [x] 修复实页发现的代码/表格键盘横滚：代码 scrollLeft=40、表格外层 region
+      scrollLeft=35，均通过真实 ArrowRight 输入并保持焦点。390×844 长 Markdown
+      页面 axe WCAG A/AA 为 0 confirmed violations、1 incomplete；page errors 为
+      0。
+- [x] 历史 Sheet 与会话菜单 Escape 后回焦已验证；reduced-motion
+      下复查布局。此前错误态五视口×两主题实页证据保留，不重复未变化的检查。
+- [x] Gemini 真实 Provider 的
+      streaming、停止、重新生成、编辑分支、图片/文本附件、只读 Tools
+      与导出已验收；临时会话与 Blob 清理已核对数据库级联及 no-store。SearXNG 的
+      HTTP 协议、tool/source 流与 502
+      失败处理使用受控本地服务，未把它描述成公网搜索验收。
+- [x] deno task test：286 passed / 0
+      failed；包含旧数据库升级与分支恢复回归。最终 AskPage typecheck、Ask 27
+      文件 lint、28 文件 format 检查通过；后续键盘入口修改已单独
+      typecheck/lint/format/build 和实页复查。
+- [x] 最终 build 与 check:ui 通过：87 文件，758 个既有 baseline
+      匹配，新增/增加/stale 均为 0；未扩大 allowlist。构建仍报告大于 500 kB 的
+      chunk 警告。
+- [x] README、CHANGELOG 与 Design System 已同步。未修改首页 Zen/Widgets
+      或壁纸，相关组合不作为本次 Ask 验收范围。
+- [x] Advisor 复核：移除 Thread 与 Header 52px 耦合的冗余 height，保留
+      flex:1/min-height:0；五视口×两主题空会话与长会话复查通过，普通 Thread
+      滚动范围为 0，390×500 为 92px。
+- [x] visualViewport 独立变化实测：Chromium pageScaleFactor=1.25 时
+      innerHeight=844、visualViewport.height=675.2，约束后的 Thread
+      bottom=675.1875；临时去掉约束后 bottom=820。证明 CSS-only
+      不能处理该缩放边界；仍不声称已验收实体手机软键盘。
+
 ## Issue #41 Apps Folder IA 与上下文导航（2026-10-01）
 
 - [x] 复用 Workspace archetype、既有 folder/launcher semantic classes 和

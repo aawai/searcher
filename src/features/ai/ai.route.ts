@@ -1,14 +1,36 @@
 import { STATUS_CODE } from "@std/http";
+import { eq } from "drizzle-orm";
 import { json, param, validator } from "@internal/validator/hono.ts";
 import type { Routes } from "@internal/hono/routes.ts";
 import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
+import { aiBlobs } from "../../db/ai-schema.ts";
 import { AiService, AiServiceError } from "./service.ts";
 import { OpenAIClientError } from "./client.ts";
+import {
+    AttachmentValidationError,
+    validateAttachments,
+} from "./attachments.ts";
+import { getAiCapabilities } from "./tools.ts";
+import {
+    getTransportSupportedLevels,
+    isStrictReasoningModel,
+    parseModelMetadata,
+    resolveEffectiveCapability,
+    resolveReasoningTransport,
+} from "./model-capabilities.ts";
+import {
+    buildProviderGenerationParams,
+    ReasoningValidationError,
+    resolveEffectiveReasoningEffort,
+    validateReasoningEffort,
+} from "./reasoning.ts";
 import { IMAGE_PROTOCOLS, LOGO_STYLES } from "./types.ts";
 import type {
     ChatStreamRequest,
     CreateProviderInput,
+    DiscoveryMode,
+    ReasoningOverride,
     UpdateModelInput,
     UpdateProviderInput,
 } from "./types.ts";
@@ -35,12 +57,16 @@ const ApiKeySchema = v.pipe(
 
 const ScopeSchema = v.optional(v.picklist(["system", "user"]));
 const BooleanSchema = v.optional(v.boolean());
+const DiscoveryModeSchema = v.optional(
+    v.picklist(["auto", "openai-compatible", "cliproxyapi"]),
+);
 
 const CreateProviderSchema = v.object({
     name: ProviderNameSchema,
     baseUrl: BaseUrlSchema,
     apiKey: ApiKeySchema,
     scope: ScopeSchema,
+    discoveryMode: DiscoveryModeSchema,
     enabled: BooleanSchema,
 });
 
@@ -48,6 +74,7 @@ const UpdateProviderSchema = v.object({
     name: v.optional(ProviderNameSchema),
     baseUrl: v.optional(BaseUrlSchema),
     apiKey: v.optional(ApiKeySchema),
+    discoveryMode: DiscoveryModeSchema,
     enabled: BooleanSchema,
 });
 
@@ -58,6 +85,8 @@ const UpdateModelSchema = v.object({
     enabled: BooleanSchema,
     visibleToUsers: BooleanSchema,
     isDefault: BooleanSchema,
+    reasoningOverride: v.optional(v.nullable(v.unknown())),
+    metadataJson: v.optional(v.nullable(v.string())),
 });
 
 const IdParamSchema = v.pipe(
@@ -75,17 +104,43 @@ const RenameConversationSchema = v.object({
     ),
 });
 
+const AttachmentInputSchema = v.object({
+    id: v.string(),
+    name: v.string(),
+    type: v.picklist(["image", "text"]),
+    mimeType: v.string(),
+    data: v.string(),
+    size: v.optional(v.number()),
+});
+
+const ToolsConfigSchema = v.object({
+    notes: v.optional(v.boolean()),
+    apps: v.optional(v.boolean()),
+    webSearch: v.optional(v.boolean()),
+});
+
 const ChatStreamSchema = v.object({
     conversationId: v.optional(v.string()),
     providerId: v.optional(v.string()),
     modelId: v.optional(v.string()),
-    message: v.pipe(
-        v.string("消息必须为字符串"),
-        v.trim(),
-        v.minLength(1, "消息不能为空"),
-    ),
+    message: v.optional(v.pipe(v.string(), v.trim()), ""),
+    parentMessageId: v.optional(v.string()),
+    editMessageId: v.optional(v.string()),
     regenerateMessageId: v.optional(v.string()),
     historyEnabled: v.optional(v.boolean()),
+    systemInstruction: v.optional(v.string()),
+    attachments: v.optional(v.array(AttachmentInputSchema)),
+    tools: v.optional(ToolsConfigSchema),
+    reasoningEffort: v.optional(v.picklist([
+        "none",
+        "auto",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+    ])),
     temperature: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(2))),
     topP: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(1))),
     maxTokens: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))),
@@ -128,12 +183,20 @@ export function registerAiRoutes(
             baseUrl: json(CreateProviderSchema.entries.baseUrl),
             apiKey: json(CreateProviderSchema.entries.apiKey),
             scope: json(CreateProviderSchema.entries.scope),
+            discoveryMode: json(CreateProviderSchema.entries.discoveryMode),
             enabled: json(CreateProviderSchema.entries.enabled),
         }),
         async (c, data) => {
             const user = c.get("user");
             const isAdmin = user.role === "admin";
-            const body: CreateProviderInput = data;
+            const body: CreateProviderInput = {
+                name: data.name,
+                baseUrl: data.baseUrl,
+                apiKey: data.apiKey,
+                scope: data.scope,
+                discoveryMode: data.discoveryMode as DiscoveryMode | undefined,
+                enabled: data.enabled,
+            };
 
             try {
                 const provider = await service.createProvider(
@@ -163,6 +226,7 @@ export function registerAiRoutes(
             name: json(UpdateProviderSchema.entries.name),
             baseUrl: json(UpdateProviderSchema.entries.baseUrl),
             apiKey: json(UpdateProviderSchema.entries.apiKey),
+            discoveryMode: json(UpdateProviderSchema.entries.discoveryMode),
             enabled: json(UpdateProviderSchema.entries.enabled),
         }),
         async (c, data) => {
@@ -173,6 +237,7 @@ export function registerAiRoutes(
                 name: data.name,
                 baseUrl: data.baseUrl,
                 apiKey: data.apiKey,
+                discoveryMode: data.discoveryMode as DiscoveryMode | undefined,
                 enabled: data.enabled,
             };
 
@@ -271,6 +336,10 @@ export function registerAiRoutes(
             enabled: json(UpdateModelSchema.entries.enabled),
             visibleToUsers: json(UpdateModelSchema.entries.visibleToUsers),
             isDefault: json(UpdateModelSchema.entries.isDefault),
+            reasoningOverride: json(
+                UpdateModelSchema.entries.reasoningOverride,
+            ),
+            metadataJson: json(UpdateModelSchema.entries.metadataJson),
         }),
         async (c, data) => {
             const user = c.get("user");
@@ -281,6 +350,11 @@ export function registerAiRoutes(
                 enabled: data.enabled,
                 visibleToUsers: data.visibleToUsers,
                 isDefault: data.isDefault,
+                reasoningOverride: data.reasoningOverride as
+                    | ReasoningOverride
+                    | null
+                    | undefined,
+                metadataJson: data.metadataJson,
             };
             try {
                 const updated = await service.updateModel(
@@ -339,23 +413,31 @@ export function registerAiRoutes(
     );
 
     // 10. PATCH /api/ai/conversations/:id - 重命名对话
+    // 10. PATCH /api/ai/conversations/:id - 更新对话设置（标题/分支/历史开关/系统指令）
     routes.patch(
         "/api/ai/conversations/:id",
         validator({
             id: param(IdParamSchema),
-            title: json(RenameConversationSchema.entries.title),
+            title: json(v.optional(RenameConversationSchema.entries.title)),
+            historyEnabled: json(v.optional(v.boolean())),
+            activeLeafMessageId: json(v.optional(v.nullable(v.string()))),
+            systemInstruction: json(v.optional(v.nullable(v.string()))),
         }),
         async (c, data) => {
             const user = c.get("user");
             const conversationId = data.id;
-            const title = data.title;
             try {
-                const updated = await service.renameConversation(
+                const updated = await service.updateConversation(
                     user.id,
                     conversationId,
-                    title,
+                    {
+                        title: data.title,
+                        historyEnabled: data.historyEnabled,
+                        activeLeafMessageId: data.activeLeafMessageId,
+                        systemInstruction: data.systemInstruction,
+                    },
                 );
-                return c.success(updated, "对话重命名成功");
+                return c.success(updated, "对话设置更新成功");
             } catch (err: unknown) {
                 if (err instanceof AiServiceError) {
                     return c.fail(
@@ -422,6 +504,117 @@ export function registerAiRoutes(
         },
     );
 
+    // 11.6. GET /api/ai/conversations/:id/search - 会话内消息搜索
+    routes.get(
+        "/api/ai/conversations/:id/search",
+        validator({
+            id: param(IdParamSchema),
+        }),
+        async (c, data) => {
+            const user = c.get("user");
+            const q = c.req.query("query") ?? "";
+            try {
+                const results = await service.searchConversationMessages(
+                    user.id,
+                    data.id,
+                    q,
+                );
+                return c.success(results);
+            } catch (err: unknown) {
+                if (err instanceof AiServiceError) {
+                    return c.fail(
+                        err.statusCode as 400 | 403 | 404,
+                        err.message,
+                    );
+                }
+                const msg = err instanceof Error ? err.message : String(err);
+                return c.fail(STATUS_CODE.BadRequest, msg);
+            }
+        },
+    );
+
+    // 11.7. GET /api/ai/conversations/:id/export - 会话导出 (Markdown / JSON)
+    routes.get(
+        "/api/ai/conversations/:id/export",
+        validator({
+            id: param(IdParamSchema),
+        }),
+        async (c, data) => {
+            const user = c.get("user");
+            const format = c.req.query("format") === "json"
+                ? "json"
+                : "markdown";
+            try {
+                const exp = await service.exportConversation(
+                    user.id,
+                    data.id,
+                    format,
+                );
+                return new Response(exp.content, {
+                    headers: {
+                        "Content-Type": exp.mimeType,
+                        "Content-Disposition":
+                            `attachment; filename="${exp.filename}"`,
+                    },
+                });
+            } catch (err: unknown) {
+                if (err instanceof AiServiceError) {
+                    return c.fail(
+                        err.statusCode as 400 | 403 | 404,
+                        err.message,
+                    );
+                }
+                const msg = err instanceof Error ? err.message : String(err);
+                return c.fail(STATUS_CODE.BadRequest, msg);
+            }
+        },
+    );
+
+    // 11.8. GET /api/ai/capabilities - 获取 AI 运行时能力与工具配置
+    routes.get("/api/ai/capabilities", (c) => {
+        return c.success(getAiCapabilities());
+    });
+
+    // 11.9. GET /api/ai/blobs/:id - 获取持久化附件
+    routes.get(
+        "/api/ai/blobs/:id",
+        validator({ id: param(IdParamSchema) }),
+        async (c, data) => {
+            const user = c.get("user");
+            const blobId = data.id;
+            const blob = await deps.store.run(async (db) => {
+                const [row] = await db
+                    .select()
+                    .from(aiBlobs)
+                    .where(eq(aiBlobs.id, blobId))
+                    .limit(1)
+                    .all();
+                return row;
+            });
+            if (!blob) {
+                return c.fail(404, "附件不存在");
+            }
+            if (blob.userId !== user.id && user.role !== "admin") {
+                return c.fail(403, "无权访问此附件");
+            }
+            const commaIndex = blob.data.indexOf(",");
+            const base64Str = commaIndex >= 0
+                ? blob.data.slice(commaIndex + 1)
+                : blob.data;
+            const bin = atob(base64Str);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) {
+                bytes[i] = bin.charCodeAt(i);
+            }
+            return new Response(bytes, {
+                headers: {
+                    "Content-Type": blob.mimeType,
+                    "Cache-Control": "no-store",
+                },
+            });
+        },
+    );
+
     // 11.6. DELETE /api/ai/conversations/:id/temporary - 彻底销毁 history-off 临时会话及消息（新建/关闭时触发）
     routes.delete(
         "/api/ai/conversations/:id/temporary",
@@ -458,10 +651,16 @@ export function registerAiRoutes(
             providerId: json(ChatStreamSchema.entries.providerId),
             modelId: json(ChatStreamSchema.entries.modelId),
             message: json(ChatStreamSchema.entries.message),
+            parentMessageId: json(ChatStreamSchema.entries.parentMessageId),
+            editMessageId: json(ChatStreamSchema.entries.editMessageId),
             regenerateMessageId: json(
                 ChatStreamSchema.entries.regenerateMessageId,
             ),
             historyEnabled: json(ChatStreamSchema.entries.historyEnabled),
+            systemInstruction: json(ChatStreamSchema.entries.systemInstruction),
+            attachments: json(ChatStreamSchema.entries.attachments),
+            tools: json(ChatStreamSchema.entries.tools),
+            reasoningEffort: json(ChatStreamSchema.entries.reasoningEffort),
             temperature: json(ChatStreamSchema.entries.temperature),
             topP: json(ChatStreamSchema.entries.topP),
             maxTokens: json(ChatStreamSchema.entries.maxTokens),
@@ -470,12 +669,71 @@ export function registerAiRoutes(
             const user = c.get("user");
             const body: ChatStreamRequest = data;
 
-            // 检查是否有可用模型或指定模型是否有效
+            // 检查是否有可用模型并校验推理与附件参数 (零数据库副作用拒绝非法请求)
             try {
-                await service.resolveTargetModel(
+                const { model } = await service.resolveTargetModel(
                     user.id,
                     body.providerId,
                     body.modelId,
+                );
+                if (body.attachments && body.attachments.length > 0) {
+                    validateAttachments(body.attachments);
+                    const hasImages = body.attachments.some(
+                        (a) =>
+                            a.type === "image" ||
+                            a.mimeType.toLowerCase().startsWith("image/"),
+                    );
+                    if (hasImages && !model.supportsVision) {
+                        return c.fail(
+                            STATUS_CODE.BadRequest,
+                            "当前模型不支持图片多模态分析",
+                        );
+                    }
+                }
+                const capability = resolveEffectiveCapability(
+                    model.metadataJson,
+                    model.modelId,
+                );
+                const transport = resolveReasoningTransport(model.metadataJson);
+                const metadata = parseModelMetadata(model.metadataJson);
+                const isReasoningStrict = isStrictReasoningModel(
+                    model.modelId,
+                    metadata,
+                );
+
+                validateReasoningEffort(
+                    body.reasoningEffort,
+                    capability,
+                    model.modelId,
+                );
+                const supportedLevels = getTransportSupportedLevels(
+                    transport,
+                    capability,
+                );
+                if (
+                    body.reasoningEffort !== undefined &&
+                    !supportedLevels.includes(body.reasoningEffort)
+                ) {
+                    throw new ReasoningValidationError(
+                        `传输适配器 "${transport.type}" 无法映射指定的推理强度 "${body.reasoningEffort}"`,
+                    );
+                }
+                const effectiveEffort = resolveEffectiveReasoningEffort({
+                    explicitEffort: body.reasoningEffort,
+                    capability,
+                    transport,
+                    modelId: model.modelId,
+                });
+                buildProviderGenerationParams(
+                    {
+                        reasoningEffort: effectiveEffort,
+                        temperature: body.temperature,
+                        topP: body.topP,
+                        maxTokens: body.maxTokens,
+                    },
+                    capability,
+                    transport,
+                    { isReasoningStrict },
                 );
             } catch (err: unknown) {
                 if (err instanceof AiServiceError) {
@@ -483,6 +741,12 @@ export function registerAiRoutes(
                         err.statusCode as 400 | 403 | 404,
                         err.message,
                     );
+                }
+                if (
+                    err instanceof ReasoningValidationError ||
+                    err instanceof AttachmentValidationError
+                ) {
+                    return c.fail(STATUS_CODE.BadRequest, err.message);
                 }
                 const msg = err instanceof Error ? err.message : String(err);
                 return c.fail(STATUS_CODE.BadRequest, msg);

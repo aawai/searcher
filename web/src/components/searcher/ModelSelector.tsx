@@ -26,21 +26,30 @@ export function ModelSelector(
     return (
         <DropdownMenu>
             <DropdownMenuTrigger
-                className="model-pill model-trigger"
+                className="model-pill model-trigger flex items-center gap-1.5"
                 aria-label="选择 AI 模型"
                 title={current?.label ?? "选择模型"}
             >
-                {current?.label ?? "选择模型"}
-                <ChevronDown size={13} />
+                <span className="truncate max-w-[140px]">
+                    {current?.label ?? "选择模型"}
+                </span>
+                <ChevronDown size={13} className="shrink-0" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent sideOffset={9} aria-label="可用模型">
+            <DropdownMenuContent
+                sideOffset={9}
+                className="max-h-[360px] overflow-y-auto max-w-xs p-1"
+                aria-label="可用模型"
+            >
                 {models.map((model) => (
                     <DropdownMenuItem
                         key={model.id}
                         onClick={() => onChange(model.id)}
+                        className="flex items-center justify-between gap-2"
                     >
-                        {model.label}
-                        <span className="muted">{model.provider}</span>
+                        <span className="truncate flex-1">{model.label}</span>
+                        <span className="muted text-xs shrink-0">
+                            {model.provider}
+                        </span>
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>

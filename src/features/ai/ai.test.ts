@@ -10,11 +10,8 @@ import {
     aiProviders,
 } from "../../db/ai-schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
-import {
-    fetchOpenAIModels,
-    normalizeBaseUrl,
-    OpenAIClientError,
-} from "./client.ts";
+import { normalizeBaseUrl, OpenAIClientError } from "./client.ts";
+import { discoverProviderModels } from "./provider-adapter.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -48,6 +45,7 @@ function createInMemoryStore(): DatabaseStore {
             name TEXT NOT NULL,
             base_url TEXT NOT NULL,
             encrypted_api_key TEXT NOT NULL,
+            discovery_mode TEXT NOT NULL DEFAULT 'auto',
             enabled INTEGER NOT NULL DEFAULT 1,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
@@ -73,6 +71,8 @@ function createInMemoryStore(): DatabaseStore {
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             title TEXT NOT NULL,
             history_enabled INTEGER NOT NULL DEFAULT 1,
+            active_leaf_message_id TEXT,
+            system_instruction TEXT,
             deleted_at INTEGER,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
@@ -89,6 +89,16 @@ function createInMemoryStore(): DatabaseStore {
             variant_group_id TEXT,
             input_tokens INTEGER,
             output_tokens INTEGER,
+            parts_json TEXT,
+            created_at INTEGER NOT NULL
+        );`,
+        `CREATE TABLE ai_blobs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            conversation_id TEXT REFERENCES ai_conversations(id) ON DELETE CASCADE,
+            mime_type TEXT NOT NULL,
+            data TEXT NOT NULL,
+            size INTEGER NOT NULL,
             created_at INTEGER NOT NULL
         );`,
     ]);
@@ -218,7 +228,7 @@ Deno.test("AI Crypto: encryptApiKey & decryptApiKey works with mask", async () =
     assertEquals(masked.includes("..."), true);
 });
 
-Deno.test("AI Client: fetchOpenAIModels discovers models correctly", async () => {
+Deno.test("AI ProviderAdapter: discoverProviderModels discovers models correctly", async () => {
     const mockFetch: typeof fetch = (_input, _init) => {
         return Promise.resolve(
             new Response(
@@ -237,10 +247,10 @@ Deno.test("AI Client: fetchOpenAIModels discovers models correctly", async () =>
         );
     };
 
-    const models = await fetchOpenAIModels(
+    const models = await discoverProviderModels(
         "https://api.openai.com/v1",
         "sk-mock",
-        mockFetch,
+        { fetchFn: mockFetch },
     );
     assertEquals(models.length, 2);
     assertEquals(models[0].id, "gpt-4o");

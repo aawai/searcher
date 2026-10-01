@@ -2,11 +2,37 @@ import { eq } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
 import {
+    type AiGenerationDefaultsDto,
     type LegacyStylePreset,
     normalizeStylePreset,
     type PreferencesDto,
     type StylePreset,
+    type UserGenerationConfig,
 } from "@shared/contracts.ts";
+
+export type UpdateAiGenerationDefaultsInput = {
+    default?:
+        | Partial<
+            {
+                [K in keyof UserGenerationConfig]:
+                    | UserGenerationConfig[K]
+                    | null;
+            }
+        >
+        | null;
+    models?:
+        | Record<
+            string,
+            Partial<
+                {
+                    [K in keyof UserGenerationConfig]:
+                        | UserGenerationConfig[K]
+                        | null;
+                }
+            > | null
+        >
+        | null;
+} | null;
 import type { SystemSettingsStore } from "../system/settings-store.ts";
 const defaults: PreferencesDto = {
     defaultEngine: "bing",
@@ -24,8 +50,67 @@ const defaults: PreferencesDto = {
     webAppHomeLimit: 12,
     webAppIconSize: "default",
     showAppLabels: true,
+    aiGenerationDefaults: {
+        models: {},
+    },
 };
 
+function cleanConfig(
+    raw?: unknown,
+): UserGenerationConfig | undefined {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+    const r = raw as Record<string, unknown>;
+    const result: UserGenerationConfig = {};
+    if (typeof r.temperature === "number" && Number.isFinite(r.temperature)) {
+        result.temperature = r.temperature;
+    }
+    if (typeof r.topP === "number" && Number.isFinite(r.topP)) {
+        result.topP = r.topP;
+    }
+    if (typeof r.maxTokens === "number" && Number.isFinite(r.maxTokens)) {
+        result.maxTokens = Math.floor(r.maxTokens);
+    }
+    if (typeof r.reasoningEffort === "string") {
+        result.reasoningEffort = r
+            .reasoningEffort as UserGenerationConfig["reasoningEffort"];
+    }
+    return Object.keys(result).length > 0 ? result : undefined;
+}
+
+function parseAiGenerationDefaults(
+    raw?: string | null,
+): AiGenerationDefaultsDto {
+    if (!raw) return { models: {} };
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            const p = parsed as Record<string, unknown>;
+            const modelsRecord: Record<string, UserGenerationConfig> = {};
+            if (
+                p.models && typeof p.models === "object" &&
+                !Array.isArray(p.models)
+            ) {
+                for (
+                    const [k, v] of Object.entries(
+                        p.models as Record<string, unknown>,
+                    )
+                ) {
+                    const cleaned = cleanConfig(v);
+                    if (cleaned) {
+                        modelsRecord[k] = cleaned;
+                    }
+                }
+            }
+            return {
+                default: cleanConfig(p.default),
+                models: modelsRecord,
+            };
+        }
+    } catch {
+        // Fall back to empty defaults
+    }
+    return { models: {} };
+}
 function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     return {
         defaultEngine: row.defaultEngine,
@@ -45,6 +130,9 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
             : Number(row.webAppHomeLimit) as 8 | 12 | 16,
         webAppIconSize: row.webAppIconSize,
         showAppLabels: row.showAppLabels ?? true,
+        aiGenerationDefaults: parseAiGenerationDefaults(
+            row.aiGenerationDefaults,
+        ),
     };
 }
 
@@ -76,25 +164,83 @@ export class PreferencesService {
 
     async update(
         userId: string,
-        updates: Partial<Omit<PreferencesDto, "style">> & {
-            style?: StylePreset | LegacyStylePreset;
-        },
+        updates:
+            & Partial<Omit<PreferencesDto, "style" | "aiGenerationDefaults">>
+            & {
+                style?: StylePreset | LegacyStylePreset;
+                aiGenerationDefaults?: UpdateAiGenerationDefaultsInput;
+            },
     ): Promise<PreferencesDto> {
-        const { webAppHomeLimit, style, ...rest } = updates;
-        const values = {
-            ...rest,
-            ...(style === undefined
-                ? {}
-                : { style: normalizeStylePreset(style) }),
-            ...(webAppHomeLimit === undefined ? {} : {
-                webAppHomeLimit: String(webAppHomeLimit) as
-                    | "8"
-                    | "12"
-                    | "16"
-                    | "all",
-            }),
-        };
+        const { webAppHomeLimit, style, aiGenerationDefaults, ...rest } =
+            updates;
         return await this.store.run(async (db) => {
+            let serializedAiDefaults: string | undefined = undefined;
+            if (aiGenerationDefaults === null) {
+                serializedAiDefaults = JSON.stringify({ models: {} });
+            } else if (aiGenerationDefaults !== undefined) {
+                const [existingRow] = await db.select().from(preferences)
+                    .where(eq(preferences.userId, userId)).limit(1).all();
+                const current = parseAiGenerationDefaults(
+                    existingRow?.aiGenerationDefaults,
+                );
+                let mergedDefault = current.default;
+                if (aiGenerationDefaults.default === null) {
+                    mergedDefault = undefined;
+                } else if (aiGenerationDefaults.default !== undefined) {
+                    mergedDefault = cleanConfig({
+                        ...current.default,
+                        ...aiGenerationDefaults.default,
+                    });
+                }
+
+                const mergedModels: Record<string, UserGenerationConfig> = {
+                    ...current.models,
+                };
+                if (aiGenerationDefaults.models) {
+                    for (
+                        const [mId, mConf] of Object.entries(
+                            aiGenerationDefaults.models,
+                        )
+                    ) {
+                        if (mConf === null) {
+                            delete mergedModels[mId];
+                        } else if (mConf !== undefined) {
+                            const cleaned = cleanConfig({
+                                ...mergedModels[mId],
+                                ...mConf,
+                            });
+                            if (cleaned) {
+                                mergedModels[mId] = cleaned;
+                            } else {
+                                delete mergedModels[mId];
+                            }
+                        }
+                    }
+                }
+
+                const merged: AiGenerationDefaultsDto = {
+                    ...(mergedDefault ? { default: mergedDefault } : {}),
+                    models: mergedModels,
+                };
+                serializedAiDefaults = JSON.stringify(merged);
+            }
+
+            const values = {
+                ...rest,
+                ...(serializedAiDefaults !== undefined
+                    ? { aiGenerationDefaults: serializedAiDefaults }
+                    : {}),
+                ...(style === undefined
+                    ? {}
+                    : { style: normalizeStylePreset(style) }),
+                ...(webAppHomeLimit === undefined ? {} : {
+                    webAppHomeLimit: String(webAppHomeLimit) as
+                        | "8"
+                        | "12"
+                        | "16"
+                        | "all",
+                }),
+            };
             await db.insert(preferences).values({ userId, ...values })
                 .onConflictDoUpdate({
                     target: preferences.userId,

@@ -70,23 +70,73 @@ deno task check:ui --update
 
 门禁按文件、rule 和具体值计数；已有文件中新加的 raw spacing/font/shadow/radius、arbitrary Tailwind 或 inline presentation 同样失败。runtime geometry 与 domain-specific value 例外只限明确的 owner 和表达式，见 `scripts/ui-guard/exceptions.ts`。`--update` 不接受新增或数量增加的违规；CI 运行检查和门禁回归测试。390/768/1440、light/dark 与真实页面交互证据按 checklist 人工验收。
 
-## AI Provider transport
+## AI 问答工作区 (Ask Workspace)
 
-Provider 仍使用 OpenAI-compatible Chat Completions API，支持自定义 Base URL；
-模型通过该地址下的 `/models` 自动发现，聊天请求发送到 `/chat/completions`。
-后端 `src/features/ai/client.ts` 使用固定版本的 OpenAI 官方 npm SDK；SDK 类型不进入
-`AiService`、共享 DTO 或前端的 `meta/token/done/error` SSE 协议。
+AI 问答工作区（`/ask`）提供多模型对话、多分支推理和个人上下文集成的完整工作台体验：
 
-模型发现和聊天均禁用自动 retry，不自动切换 Provider 或模型。Base URL
-继续由 Searcher 校验，并拒绝 HTTP 重定向。为接近原 transport 无请求超时的行为，
-SDK 等待响应头的 timeout 显式设为运行时 timer 安全上限（约 24.8 天），
-不使用 SDK 默认的 10 分钟；该 timer 不限制流式正文读取。
+### 交互架构与数据契约
+- **前端原语与 Runtime 适配**：前端基于 `@assistant-ui/react` 提供的标准会话交互原语（Thread、Message、Composer、BranchPicker、附件渲染与平滑滚屏），并通过定制的 `SearcherAssistantRuntimeProvider`（基于 `useExternalStoreRuntime` 与 `ExportedMessageRepository.fromBranchableArray`）建立双向驱动。
+- **后端完全掌控与数据驻留**：全部会话数据、分支树持久化、SQLite 数据库表（`ai_conversations`、`ai_messages`、`ai_blobs`、`ai_providers`、`ai_models`）、AES-256-GCM 加密密钥（`ENCRYPTION_KEY`）、模型注册表、能力裁决与鉴权均完全由 Searcher 本地服务掌控。不依赖任何第三方前端云或外部托管会话服务，所有凭证与私有会话均保留在本地。
 
-Abort 会取消上游请求，已输出的内容保留并标记为 `interrupted`。Provider HTTP
-错误、SSE error 消息或损坏的 SSE JSON 转换为 Searcher 错误事件；
-已输出的内容保留并标记为 `failed`，不会误报为完成。
-`AiServiceDeps.fetchFn` 继续支持注入 custom fetch，便于独立验证 Provider contract。
+### 模型能力发现与手动覆写优先级
+- **裁决优先级**：模型能力（特别是推理/思考能力 `supportsReasoning`）严格遵循以下优先级判定：
+  `手动覆写 (manual) > Provider 发现 (provider) > 内置预设 (preset) > 模型名推断 (inferred) > 未知 (unknown)`。
+- **刷新与覆写保护**：在管理员后台刷新 Provider 模型列表（`/api/ai/providers/:id/refresh-models`）仅更新 `metadataJson` 中的 `discovered` 元数据，绝不覆盖管理员显式设置的手动覆写（`overrides.reasoning`）。
+- **恢复自动发现**：清除手动覆写后，系统立即平滑回退至自动发现或预设能力，且完整保留已发现的原始元数据。未识别出推理元数据且无预设的模型标记为 `unknown`，绝不擅自推断为 `unsupported`。
 
+### 推理传输格式与严格推理模型
+- **规范化推理级别**：支持统一的 8 级推理强度标量：`none`、`auto`、`minimal`、`low`、`medium`、`high`、`xhigh`、`max`。
+- **传输适配器（Reasoning Transport）**：
+  - `openai_reasoning_effort`：直接向上游传递标准 `{ reasoning_effort: effort }` 字段。
+  - `boolean`：按配置的布尔参数（如 `thinking: boolean`）传递（`effort !== "none"` 为 `true`，`"none"` 为 `false`）。
+  - `custom`：依据映射表（`valueMap`）将规范级别转换为服务商专有参数名与取值。
+  - `unsupported`：对于配置为不支持推理的模型，若请求显式传入推理强度，后端将抛出 `ReasoningValidationError`（HTTP 400）拒绝请求，严禁隐式静默丢弃。
+- **严格推理模型**：对于 OpenAI o1 / o3 等严格推理模型，显式传入 `temperature` 或 `top_p` 采样参数将被直接拒绝（HTTP 400）；在继承用户或全局默认配置时，系统会自动剔除采样参数以确保兼容。
+
+### 生成偏好继承与优先级
+- **参数解析层级**：单次请求的生成参数（`reasoningEffort`、`temperature`、`topP`、`maxTokens`）遵循以下继承顺序：
+  1. 本次 Composer 显式指定（或局部工具栏选定）
+  2. 用户针对该模型保存的专属偏好（`aiGenerationDefaults.models[modelId]`）
+  3. 用户的全局默认偏好（`aiGenerationDefaults.default`）
+  4. 模型的默认级别（`capability.defaultLevel` 或 `ai_models.default_reasoning_effort`）
+  5. `undefined`
+- **切换模型自适应**：在 UI 切换模型时，若目标模型支持当前已选推理级别则予以保留；否则按上述顺序回退至目标模型有效支持的默认值或置空，防止向不支持的模型发送无效级别。
+
+### 分支历史、消息编辑与重新生成
+- **会话树状存储**：每条消息记录明确的 `id`、`conversationId`、`parentMessageId` 与 `variantGroupId`。
+- **上下文精准溯源**：会话上下文构建严格从活跃叶子节点（`activeLeafMessageId`）沿 `parentMessageId` 指针向根部回溯，杜绝基于 `createdAt` 时间戳扁平混排导致的跨分支串话。
+- **消息编辑（Fork Branch）**：编辑并重发历史用户提问时，基于原有父节点生成全新分支，保留历史对话轨迹；前端可通过 assistant-ui 分支选择器（`< 1/2 >`）自由回溯和切换分支。
+- **重新生成（Variant）**：基于同一父节点重新触发回复生成，作为相同 `variantGroupId` 下的答案变体展示。
+
+### 真实 Token 计量
+- **真实数据持久化**：消息维度的 `inputTokens` 与 `outputTokens` 仅在 Provider 返回的 SSE 流式分块（`usage`）中实际包含统计数据时提取并持久化入库。
+- **不估算不伪造**：若 Provider 未返回 Token 统计，字段严格保持为 `null`；系统与前端绝不进行任何本地词表估算、倍率猜测或伪造显示。
+
+### 临时会话与草稿管理
+- **临时对话（History-off）**：新建对话或当前会话可切换为临时模式；临时对话不进入历史侧边栏。
+- **即时销毁**：切换至其他对话或卸载页面时，前端通过带 `keepalive: true` 的 `DELETE /api/ai/conversations/:id/temporary` 触发即时清理，彻底删除临时会话、消息及关联附件。
+- **服务端短 TTL 清理**：服务端提供 30 分钟 TTL 兜底机制（`purgeExpiredTemporaryConversations`），自动清理因异常闪退或断网未正常触发前端销毁的过期临时数据。
+- **会话级独立草稿（Ephemeral Drafts）**：Composer 输入框草稿按会话 ID 隔离保存在前端内存中；跨会话切换时自动暂存与恢复未发送内容，且不向服务端持久化任何脏数据。
+
+### 附件系统与认证 Blob
+- **容量与数量限制**：单条消息最多支持 4 个附件（`MAX_ATTACHMENTS = 4`）。
+- **图片附件**：单张上限 5 MiB，支持 PNG、JPEG、WebP。服务端验证 base64 数据大小及文件头与声明 MIME 是否一致；文件头检查不等同于完整图片解码。图片存于 SQLite `ai_blobs`，通过 owner 鉴权的 `/api/ai/blobs/:id` 读取，并以 base64 发送给视觉模型。Blob 响应采用 `Cache-Control: no-store`，删除会话后重新请求返回 404，不从浏览器磁盘缓存重放。
+- **文本附件**：界面支持 TXT、Markdown、CSV、JSON，单文件上限 1 MiB；API 同时接受 `text/*`，内容均作为纯文本传给模型，不按 HTML 执行或渲染。
+
+### 工具调用与联网搜索
+- **只读 Opt-in 工具**：提供便签检索（`lookup_notes`）与应用快捷方式检索（`lookup_apps`），均为严格只读（Read-only）工具，且必须由用户在会话配置中显式勾选启用（`tools: { notes: boolean, apps: boolean }`），未启用的工具调用会被后端主动拦截。
+- **SearxNG 联网搜索**：`web_search` 使用 `SEARXNG_URL` 指定的实例，实例须启用 JSON 输出（`search.formats: [..., json]`）。未设置或 URL 无效时禁用联网搜索；配置后的连接失败、超时或 HTTP 错误在工具结果中明确呈现，不伪造搜索结果。返回的 Sources 独立于 Assistant 正文展示。
+
+## AI Provider 架构与传输契约
+
+Provider 使用 OpenAI-compatible Chat Completions API，支持自定义 Base URL；模型通过该地址下的 `/models` 自动发现，聊天请求发送到 `/chat/completions`。后端 `src/features/ai/client.ts` 使用固定版本的 OpenAI 官方 npm SDK；SDK 类型不进入 `AiService`、共享 DTO 或前端的 `meta/token/done/error` SSE 协议。
+
+### 超时边界与重试策略
+- **禁用 SDK 自动重试**：模型发现和聊天流式请求均显式设置 `maxRetries: 0`，禁用 SDK 内置的静默重试，避免非预期的多次重复扣费与上游堆积。
+- **模型发现超时**：标准 `/v1/models` 端点请求硬超时限制为 15 秒（`DEFAULT_MODELS_TIMEOUT_MS = 15000`）；扩展探针（如 CLIProxyAPIHome `/user/models`）硬超时限制为 5 秒（`DEFAULT_EXTENDED_TIMEOUT_MS = 5000`）。所有发现请求均严格禁止跟随 HTTP 重定向（`redirect: "error"`），防止 API Key 随重定向泄露。
+- **流式生成无人工超时**：流式聊天请求连接超时设为运行时 timer 安全上限（约 24.8 天），不设人工截止时间，允许大模型长时间深度思考与生成长篇内容，仅受自然生成结束或用户主动 Abort 控制。
+- **中断与错误状态保全**：用户点击停止（Abort）会主动取消上游请求，已流式输出的内容予以保留并标记为 `interrupted`。上游 HTTP 错误、SSE error 消息或损坏的 SSE JSON 会被转换为 Searcher 错误事件，已输出内容标记为 `failed`，绝不误标为完成。
+`AiServiceDeps.fetchFn` 支持注入 custom fetch，便于独立验证 Provider contract。
 ## 部署与管理
 
 ```sh
@@ -99,7 +149,7 @@ deno task admin:create -- <username>
 由部署环境终止。`PORT` 默认 `34567`，`DATABASE_PATH` 默认
 `./data/searcher.sqlite`。AI Provider 的 Key 使用 `ENCRYPTION_KEY`
 加密，部署时设置稳定、足够长的密钥并单独保管；丢失密钥后无法解密既有 Provider
-Key。管理员密码只在真实终端交互输入；重置使用
+Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实例地址（如 `http://localhost:8080`），供 Ask 联网搜索调用；未设置时联网搜索自动禁用。管理员密码只在真实终端交互输入；重置使用
 `deno task admin:reset -- <username>`。
 
 同一服务先处理 `/api` 与 `/api/*`，再处理 `/assets` 与 `/assets/*`；其余 GET/HEAD 返回 SPA shell。Settings/Admin 子页面可直访、刷新和分享；未知普通页面由 React 显示统一 404（shell HTTP 状态为 200），未知 API 返回 JSON 404，缺失 assets 返回静态 404，非 GET/HEAD 不回退 HTML。反向代理应将页面请求交给 Searcher，不自行维护前端 URL 白名单。

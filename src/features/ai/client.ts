@@ -1,10 +1,23 @@
 import OpenAI from "openai";
-import type { DiscoveredModel } from "./types.ts";
 
 // Searcher 的文本聊天边界；SDK 类型仅存在于 adapter 内部。
+export type OpenAIChatMessageContent =
+    | string
+    | Array<
+        | { type: "text"; text: string }
+        | { type: "image_url"; image_url: { url: string; detail?: string } }
+    >;
+
 export interface OpenAIChatMessage {
-    role: "system" | "user" | "assistant";
-    content: string;
+    role: "system" | "user" | "assistant" | "tool";
+    content: OpenAIChatMessageContent;
+    name?: string;
+    tool_call_id?: string;
+    tool_calls?: Array<{
+        id: string;
+        type: "function";
+        function: { name: string; arguments: string };
+    }>;
 }
 
 export interface OpenAIChatCompletionRequest {
@@ -14,6 +27,10 @@ export interface OpenAIChatCompletionRequest {
     temperature?: number;
     top_p?: number;
     max_tokens?: number;
+    reasoning_effort?: string;
+    tools?: unknown[];
+    stream_options?: { include_usage?: boolean };
+    [key: string]: unknown;
 }
 
 export class OpenAIClientError extends Error {
@@ -71,65 +88,64 @@ function createClient(
     });
 }
 
-export async function fetchOpenAIModels(
-    baseUrl: string,
-    apiKey: string,
-    fetchFn: typeof fetch = fetch,
-): Promise<DiscoveredModel[]> {
-    const client = createClient(baseUrl, apiKey, fetchFn);
-    let page;
-    try {
-        // 只读取 /models 的首个响应，不触发 SDK 自动分页。
-        page = await client.models.list();
-    } catch (error: unknown) {
-        if (error instanceof OpenAI.APIError && error.status !== undefined) {
-            throw new OpenAIClientError(
-                `获取模型列表失败: HTTP ${error.status} ${error.message}`,
-                error.status,
-                error.error === undefined
-                    ? error.message
-                    : JSON.stringify(error.error),
-            );
-        }
-        if (error instanceof SyntaxError) {
-            throw new OpenAIClientError("模型列表返回结果不是合法的 JSON");
-        }
-        throw new OpenAIClientError(
-            `网络连接失败无法访问 /models: ${
-                error instanceof Error ? error.message : String(error)
-            }`,
-        );
-    }
-
-    if (!Array.isArray(page.data) || page.data.length === 0) {
-        throw new OpenAIClientError(
-            "未从 /models 发现可用模型列表（data 为空或不是数组）",
-        );
-    }
-
-    return page.data
-        .filter((item) =>
-            typeof item?.id === "string" && item.id.trim().length > 0
-        )
-        .map((item) => {
-            const modelId = item.id.trim();
-            return {
-                id: modelId,
-                displayName: modelId,
-                supportsText: true,
-                supportsVision: /vision|vl|-v\b|4o|gemini/i.test(modelId),
-                supportsTools: true,
-                supportsStreaming: true,
-            };
-        });
-}
-
 export interface StreamEvent {
-    type: "token" | "done" | "error";
+    type: "token" | "tool_calls" | "done" | "error";
     token?: string;
     error?: string;
     inputTokens?: number;
     outputTokens?: number;
+    toolCalls?: Array<{
+        id: string;
+        name: string;
+        arguments: string;
+    }>;
+}
+
+interface ExtractedChunkUsage {
+    promptTokens?: number;
+    completionTokens?: number;
+}
+
+function extractChunkUsage(chunk: unknown): ExtractedChunkUsage | undefined {
+    if (!chunk || typeof chunk !== "object" || !("usage" in chunk)) {
+        return undefined;
+    }
+    const u = chunk.usage;
+    if (!u || typeof u !== "object") return undefined;
+    const prompt = "prompt_tokens" in u && typeof u.prompt_tokens === "number"
+        ? u.prompt_tokens
+        : undefined;
+    const completion =
+        "completion_tokens" in u && typeof u.completion_tokens === "number"
+            ? u.completion_tokens
+            : undefined;
+    return { promptTokens: prompt, completionTokens: completion };
+}
+
+interface ExtractedToolCallDelta {
+    index?: number;
+    id?: string;
+    function?: { name?: string; arguments?: string };
+}
+
+function extractChunkToolCalls(
+    chunk: unknown,
+): ExtractedToolCallDelta[] | undefined {
+    if (!chunk || typeof chunk !== "object" || !("choices" in chunk)) {
+        return undefined;
+    }
+    const choices = chunk.choices;
+    if (!Array.isArray(choices) || choices.length === 0) return undefined;
+    const choice0 = choices[0];
+    if (!choice0 || typeof choice0 !== "object" || !("delta" in choice0)) {
+        return undefined;
+    }
+    const delta = choice0.delta;
+    if (!delta || typeof delta !== "object" || !("tool_calls" in delta)) {
+        return undefined;
+    }
+    const tc = delta.tool_calls;
+    return Array.isArray(tc) ? (tc as ExtractedToolCallDelta[]) : undefined;
 }
 
 export async function* streamOpenAIChat(
@@ -141,9 +157,20 @@ export async function* streamOpenAIChat(
 ): AsyncGenerator<StreamEvent, void, unknown> {
     const client = createClient(baseUrl, apiKey, fetchFn);
     let streaming = false;
+    let inputTokens: number | undefined;
+    let outputTokens: number | undefined;
+    const accumulatedToolCalls = new Map<
+        number,
+        { id: string; name: string; arguments: string }
+    >();
+
     try {
         const stream = await client.chat.completions.create(
-            { ...request, stream: true },
+            {
+                ...request,
+                stream: true,
+                stream_options: { include_usage: true },
+            } as unknown as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
             { signal, headers: { Accept: "text/event-stream" } },
         );
         streaming = true;
@@ -152,15 +179,70 @@ export async function* streamOpenAIChat(
                 yield { type: "error", error: "请求已中断" };
                 return;
             }
+
+            // Capture usage if provider returned it in chunk
+            const chunkUsage = extractChunkUsage(chunk);
+            if (chunkUsage) {
+                if (chunkUsage.promptTokens !== undefined) {
+                    inputTokens = chunkUsage.promptTokens;
+                }
+                if (chunkUsage.completionTokens !== undefined) {
+                    outputTokens = chunkUsage.completionTokens;
+                }
+            }
+
+            // Handle delta text content
             const content = chunk?.choices?.[0]?.delta?.content;
             if (typeof content === "string" && content.length > 0) {
                 yield { type: "token", token: content };
             }
+
+            // Handle delta tool calls
+            const rawToolCalls = extractChunkToolCalls(chunk);
+            if (rawToolCalls) {
+                for (const tc of rawToolCalls) {
+                    const idx = typeof tc.index === "number" ? tc.index : 0;
+                    const existing = accumulatedToolCalls.get(idx) ?? {
+                        id: "",
+                        name: "",
+                        arguments: "",
+                    };
+                    if (tc.id) existing.id += tc.id;
+                    if (tc.function?.name) existing.name += tc.function.name;
+                    if (tc.function?.arguments) {
+                        existing.arguments += tc.function.arguments;
+                    }
+                    accumulatedToolCalls.set(idx, existing);
+                }
+            }
         }
-        // SDK 将流读取时的 Abort 当作正常迭代结束，不能误报 complete。
-        yield signal?.aborted
-            ? { type: "error", error: "请求已中断" }
-            : { type: "done" };
+
+        if (signal?.aborted) {
+            yield { type: "error", error: "请求已中断" };
+            return;
+        }
+
+        // If tool calls were accumulated, yield tool_calls event
+        if (accumulatedToolCalls.size > 0) {
+            const calls = Array.from(accumulatedToolCalls.values()).filter(
+                (c) => c.name.length > 0,
+            );
+            if (calls.length > 0) {
+                yield {
+                    type: "tool_calls",
+                    toolCalls: calls,
+                    inputTokens,
+                    outputTokens,
+                };
+                return;
+            }
+        }
+
+        // Standard done event with usage
+        const doneEvent: StreamEvent = { type: "done" };
+        if (inputTokens !== undefined) doneEvent.inputTokens = inputTokens;
+        if (outputTokens !== undefined) doneEvent.outputTokens = outputTokens;
+        yield doneEvent;
     } catch (error: unknown) {
         if (signal?.aborted) {
             yield { type: "error", error: "请求已中断" };
