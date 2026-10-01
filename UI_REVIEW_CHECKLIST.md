@@ -327,3 +327,7 @@
       项提示位于其他既有文件，本次不扩大范围。诊断命令自动写入的临时依赖已移除。
 - [x] 本次无 Design Lab / API / 权限 / conversation model
       变更；不新增基础控件，不重做 Home/Zen 或 guest 页面。
+- [x] PR 分支整合最新 main（#38 Ask 工作区）后：293 项源码测试、生产 Workspace
+      12 步（54 秒）、build、App.tsx typecheck 和 check:ui 通过；UI Guard 扫描
+      88 文件、758 存量违规，0 新违规 / 增量 / stale allowance。CHANGELOG
+      合并保留两项功能记录。
