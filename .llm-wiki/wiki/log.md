@@ -2,6 +2,8 @@
 
 ## 2026-10-01
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components","title":"UI Guard Migration: Settings & Searcher Presentation Components"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52","title":"Home layouts & Launcher UI Guard migration (Issue #52)"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an","title":"Notes workspace Issue #44 contract matrix regression tests and visual evidence"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr","title":"Bento ratio token, intrinsic height and empty expansion contract implementation (#44)"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-","title":"NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard"}

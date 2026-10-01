@@ -100,11 +100,6 @@ function Floating(
                         {...listeners}
                         {...attributes}
                         aria-label={"拖动 " + (note.title || "便签")}
-                        style={{
-                            display: "inline-flex",
-                            cursor: "grab",
-                            padding: "2px",
-                        }}
                     >
                         ⋮⋮
                     </span>

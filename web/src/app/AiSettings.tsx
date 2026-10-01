@@ -31,6 +31,7 @@ import {
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authPath } from "./routes.ts";
+import "./settings.css";
 
 function getCapabilitySourceLabel(source: string | undefined): string {
     switch (source) {
@@ -289,26 +290,12 @@ export function AiSettings() {
     }
     return (
         <div className="ai-settings">
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "16px",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                }}
-            >
+            <div className="ai-settings-header">
                 <div>
-                    <h4
-                        style={{ margin: 0, fontSize: "15px", fontWeight: 600 }}
-                    >
+                    <h4>
                         已配置的 Provider
                     </h4>
-                    <p
-                        className="muted"
-                        style={{ margin: "4px 0 0", fontSize: "13px" }}
-                    >
+                    <p className="muted">
                         配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存
                     </p>
                 </div>
@@ -333,11 +320,7 @@ export function AiSettings() {
                     </DialogHeader>
                     <form
                         onSubmit={save}
-                        style={{
-                            display: "grid",
-                            gap: "16px",
-                            marginTop: "12px",
-                        }}
+                        className="ai-provider-form"
                     >
                         <label className="field">
                             名称
@@ -385,7 +368,7 @@ export function AiSettings() {
                         </label>
                         <div className="field">
                             <label htmlFor="ai-api-key">API Key</label>
-                            <div style={{ display: "flex", gap: "8px" }}>
+                            <div className="ai-api-key-row">
                                 <input
                                     id="ai-api-key"
                                     required={!editing}
@@ -396,7 +379,7 @@ export function AiSettings() {
                                     placeholder={editing
                                         ? "留空保持现有 Key"
                                         : "输入 API Key"}
-                                    style={{ flex: 1 }}
+                                    className="ai-api-key-input"
                                 />
                                 <Button
                                     type="button"
@@ -413,10 +396,7 @@ export function AiSettings() {
                                         : <Eye size={16} />}
                                 </Button>
                             </div>
-                            <p
-                                className="muted"
-                                style={{ margin: "4px 0 0", fontSize: "12px" }}
-                            >
+                            <p className="muted ai-api-key-help">
                                 Key
                                 仅存储在服务端，并经过安全密钥加密，不会向前端明文暴露。
                             </p>
@@ -441,20 +421,12 @@ export function AiSettings() {
                         {error && (
                             <p
                                 role="alert"
-                                className="error"
-                                style={{ margin: "4px 0 0" }}
+                                className="error ai-form-error"
                             >
                                 {error}
                             </p>
                         )}
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                gap: "8px",
-                                marginTop: "8px",
-                            }}
-                        >
+                        <div className="ai-form-actions">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -479,23 +451,11 @@ export function AiSettings() {
             </Dialog>
 
             {!providers.length && (
-                <div
-                    style={{
-                        padding: "32px 20px",
-                        textAlign: "center",
-                        border: "1px dashed var(--border)",
-                        borderRadius: "12px",
-                        background: "var(--surface)",
-                        marginTop: "12px",
-                    }}
-                >
-                    <p style={{ margin: "0 0 8px", fontWeight: 600 }}>
+                <div className="ai-empty-state">
+                    <p className="ai-empty-state-title">
                         尚未添加 AI Provider
                     </p>
-                    <p
-                        className="muted"
-                        style={{ margin: "0 0 16px", fontSize: "13px" }}
-                    >
+                    <p className="muted ai-empty-state-desc">
                         添加 Provider 并验证模型后，即可在主页直接切换使用 AI
                         问答。
                     </p>

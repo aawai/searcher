@@ -207,23 +207,8 @@ export function LogoCandidatePicker({
 
     if (loadingModels) {
         return (
-            <div
-                className="app-dialog-icon-subpanel"
-                style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: "100px",
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        color: "var(--muted)",
-                        fontSize: "13px",
-                    }}
-                >
+            <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--loading">
+                <div className="app-dialog-icon-subpanel__loading-indicator">
                     <Loader2 size={16} className="spin" />
                     <span>正在检查可用 AI 模型…</span>
                 </div>
@@ -247,13 +232,7 @@ export function LogoCandidatePicker({
                 </div>
                 <Link
                     to={routes.settings("ai")}
-                    className="button button--subtle"
-                    style={{
-                        flexShrink: 0,
-                        fontSize: "12px",
-                        padding: "6px 12px",
-                        textDecoration: "none",
-                    }}
+                    className="button button--subtle button--sm app-ai-unavailable-action"
                     onClick={onClose}
                 >
                     前往设置

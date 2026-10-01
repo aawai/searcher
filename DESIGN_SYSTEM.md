@@ -34,13 +34,12 @@ role，不把 muted 文字色当作 surface。
 每页最多一个 h1；section 使用 h2；component title 不抬高到 page
 层级。caption/muted 不承载唯一关键提示。code 使用 code role/monospace。
 
-上表是新建和已迁移 UI 的 canonical 命名，不提供第二套同义 role。既有
-Home、Launcher、通用 card 等消费者仍使用
-`--space-section`、`--space-card`、`--space-card-gap`；这些是未迁移的历史变量，不是新
-Token 的可互换 alias。尤其 `--space-card` 在 640px 以下为 16px，而
-`--space-card-padding` 保持 24px；`--space-card-gap` 为 12px，`--space-row-gap`
-为
-16px。不能仅按初始值相同全局替换，否则会改变本次未重设计的首页和卡片布局。新增消费者只使用上表；迁移历史消费者时验证对应响应式行为，所有引用移除后再删除旧变量。
+上表是常规页面与控件的 canonical 命名，不提供第二套同义 role。Home 保留
+`--space-section`、`--space-card`、`--space-card-gap` 的既有响应式几何语义，
+不是常规 Card Token 的可互换 alias：`--space-card` 在 640px 以下为 16px，
+`--space-card-padding` 保持 24px；`--space-card-gap` 为 12px， `--space-row-gap`
+为 16px。新增常规页面消费者只使用上表。Home 几何修改须 验证相应
+breakpoint，不能按初始值相同全局替换。
 
 ## Surface / elevation
 
@@ -250,11 +249,10 @@ baseline，不将迁移后的新增违规加入 baseline。CI 执行同一入口
 Contract 为准，业务
 API、安全与持久化约束仍以实现和契约为准。反馈与合理的本次范围冲突时，保留任务要求并说明未迁移边界，不借反馈扩展业务范围。
 
-本次完整视觉迁移对象是 Admin、Settings、Ask 和 Design
-Lab；Account、Auth、Trash、Home 接入 PageShell/PageHeader
-不表示其全部内部控件和历史样式已重写。Account 的旧 link-button 与表单 inline
-presentation、首页的旧 spacing 消费者属于存量，不作为新 UI 示例。baseline
-记录存量违规，不是批准新增的系统级例外。
+Admin、Settings、Ask、Design Lab、Account、Home 与 Launcher 的静态 presentation
+均使用 semantic class / Token；`scripts/ui-guard/baseline.json` 已收缩为零。 零
+baseline 不表示所有视觉或 accessibility 契约都已由 scanner 自动验证， 不批准新
+raw value，也不改变既有 runtime geometry exception 的适用边界。
 
 `scanDirectory` 遍历 `web/src` 下所有非测试 CSS/TSX，排除测试、fixtures
 与产物；baseline 只参与扫描后的比较，不跳过已登记文件。普通
@@ -272,3 +270,21 @@ Settings 壁纸输入目前提示“或 CSS 渐变”，但 preferences 的 Back
 持久化存在既有前后端契约不一致。Issue #33 明确不修改 backend、权限、安全与业务
 API contract，因此本次不扩展校验白名单，也不以 data URL
 或关闭同步提示绕过问题。真实图片壁纸验证不能作为 gradient 持久化通过的证据。
+
+## Issue #52 presentation 迁移对照
+
+| 原 presentation                                | 角色与归属                                 | 迁移后的消费者                                                                   | 验证边界                                                 |
+| ---------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 页面/卡片/行的 raw margin、padding、gap        | page / section / card / row / control      | global.css 的 canonical spacing；Home 保留响应式 card 几何                       | 390/640/768/960/1280/1440 与 light/dark；Bento 单列/双列 |
+| 13/14/16/19px 普通文字与标题                   | caption / body / component / section title | canonical typography；品牌、Markdown、搜索输入保留专用角色                       | 页面层级、错误/成功提示、表单与长内容                    |
+| raw radius / shadow                            | control / input / surface / overlay        | --radius-control、--radius-input、--shadow-*；note paper 使用 --radius-note-card | light/dark、hover/focus；paper 伪元素继承卡片圆角        |
+| Account 静态与条件 style                       | 账户资料/密码/设备状态                     | account.css、data-tone、data-urgent、data-current                                | 资料保存与成功提示；设备会话操作                         |
+| LayoutModeSelector preview inline style        | 模式预览而非生产几何                       | home-layouts.css 的 preview semantic classes                                     | Zen/Widgets preview、实际首页与 breakpoint               |
+| Launcher icon/font/mini-folder geometry        | launcher 专用视觉角色                      | launcher.css 的 --radius-launcher-_、--font-launcher-_、--space-launcher-*       | 图块大小、文件夹、网格列数、拖拽与展开                   |
+| AI/Engine/Logo/Ask/Notes/Settings presentation | feature 状态与内容                         | settings.css、searcher/semantic.css、ask-workspace.css                           | 设置、AI 表单、搜索、工作区导航与便签编辑                |
+
+Runtime geometry 仍留在 owner：FloatingNotes 坐标与 drag transform、Launcher
+placement/gridColumn、壁纸滤镜和 accent 数据不变。Launcher 通过随 runtime
+列数变化的 grid boundary 保持完整列宽，不使用 attr() 数值转列、动态
+style.setProperty 或新增 exception。CSS 由 main.tsx 导入，纯 TSX
+业务模块仍可直接由 Deno 测试。

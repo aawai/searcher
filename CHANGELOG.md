@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- UI Guard 的 757 条存量 allowance 已清零；`deno task check:ui` 现在要求全扫描
+  零违规，继续禁止重新增加 baseline。账户、设置、首页与 Launcher 的静态样式
+  统一使用 semantic class / Design Token，保留 Home 响应式几何与 runtime 布局。
+
 - 登录后的 AI 问答直接以 Conversation Workspace
   为页面主体，移除重复的页面标题、breadcrumb 与空态 badge；工作区使用 Shell
   剩余高度，保持连续 surface 和轻边界。移动端长历史列表独立滚动，Composer

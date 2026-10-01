@@ -293,3 +293,9 @@
 ## [2026-10-01T07:53:53.034Z] observe
 - slug: "obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an", title: "Notes workspace Issue #44 contract matrix regression tests and visual evidence", relevance: "high"
 
+## [2026-10-01T12:14:29.220Z] observe
+- slug: "obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52", title: "Home layouts & Launcher UI Guard migration (Issue #52)", relevance: "high"
+
+## [2026-10-01T12:23:38.466Z] observe
+- slug: "obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components", title: "UI Guard Migration: Settings & Searcher Presentation Components", relevance: "high"
+

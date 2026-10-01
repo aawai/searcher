@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-01T07:53:53.078Z",
+  "last_updated": "2026-10-01T12:23:38.482Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -978,6 +978,25 @@
       "created": "2026-10-01",
       "updated": "2026-10-01"
     },
+    "sources/obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52": {
+      "type": "source",
+      "title": "Observation: Home layouts & Launcher UI Guard migration (Issue #52)",
+      "tags": [
+        "ui-guard",
+        "design-system",
+        "home-layouts",
+        "launcher",
+        "bento",
+        "responsive"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52",
+      "relevance": "high",
+      "observed_at": "2026-10-01T12:14:29.216Z",
+      "source_context": "Issue #52 UI Guard stock debt migration",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
     "sources/obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an": {
       "type": "source",
       "title": "Observation: Notes workspace Issue #44 contract matrix regression tests and visual evidence",
@@ -1004,6 +1023,24 @@
       "relevance": "high",
       "observed_at": "2026-10-01T06:00:00.588Z",
       "source_context": "Issue #43 Notes Workspace Root inline expand and geometry fix",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components": {
+      "type": "source",
+      "title": "Observation: UI Guard Migration: Settings & Searcher Presentation Components",
+      "tags": [
+        "ui-guard",
+        "design-system",
+        "semantic-css",
+        "settings",
+        "searcher"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components",
+      "relevance": "high",
+      "observed_at": "2026-10-01T12:23:38.464Z",
+      "source_context": "Issue #52 UI Guard stock violations cleanup",
       "created": "2026-10-01",
       "updated": "2026-10-01"
     },

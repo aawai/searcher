@@ -1043,3 +1043,10 @@
         width: min(calc(100vw - var(--space-7)), 320px);
     }
 }
+
+.webapp-undo-toast__close {
+    color: var(--muted);
+}
+.webapp-undo-toast__close:hover {
+    color: var(--foreground);
+}

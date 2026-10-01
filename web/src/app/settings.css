@@ -1,8 +1,115 @@
-.settings-choice-select { width: calc(var(--control-height) * 4 + var(--space-5)); max-width: 100%; }
-.settings-swatch-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-control-gap); width: calc(var(--control-height) * 8); max-width: 100%; }
-.settings-swatch-option { display: flex; align-items: center; gap: var(--space-control-gap); padding: var(--space-inline-gap); min-height: var(--control-touch-target); border: 1px solid var(--border); border-radius: var(--control-radius); background: var(--surface-solid); font-size: var(--font-caption-size); }
-.settings-swatch-option:hover { background: var(--surface-soft); }
-.settings-swatch-option[data-checked] { border-color: var(--accent); background: var(--accent-soft); }
-.settings-swatch-color { width: var(--space-3); height: var(--space-3); border-radius: var(--control-radius); flex-shrink: 0; }
-.settings-swatch-selected { margin-left: auto; color: var(--accent); }
-@container settings-panel (max-width: 600px) { .settings-swatch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; } }
+.settings-choice-select {
+    width: calc(var(--control-height) * 4 + var(--space-5));
+    max-width: 100%;
+}
+.settings-swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-control-gap);
+    width: calc(var(--control-height) * 8);
+    max-width: 100%;
+}
+.settings-swatch-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+    padding: var(--space-inline-gap);
+    min-height: var(--control-touch-target);
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+    background: var(--surface-solid);
+    font-size: var(--font-caption-size);
+}
+.settings-swatch-option:hover {
+    background: var(--surface-soft);
+}
+.settings-swatch-option[data-checked] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+.settings-swatch-color {
+    width: var(--space-3);
+    height: var(--space-3);
+    border-radius: var(--control-radius);
+    flex-shrink: 0;
+}
+.settings-swatch-selected {
+    margin-left: auto;
+    color: var(--accent);
+}
+@container settings-panel (max-width: 600px) {
+    .settings-swatch-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+}
+.settings-action-card__badge[data-status="synced"] {
+    background: color-mix(in srgb, var(--success) 16%, var(--surface));
+    color: var(--success);
+}
+.settings-action-card__badge[data-status="guest"] {
+    background: var(--surface-soft);
+    color: var(--muted);
+}
+.ai-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-row-gap);
+    margin-bottom: var(--space-row-gap);
+}
+.ai-settings-header h4 {
+    margin: 0;
+    font-size: var(--font-section-title-size);
+    line-height: var(--font-section-title-line-height);
+    font-weight: var(--font-title-weight);
+}
+.ai-settings-header p {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+}
+.ai-provider-form {
+    display: grid;
+    gap: var(--space-row-gap);
+    margin-top: var(--space-row-block);
+}
+.ai-api-key-row {
+    display: flex;
+    gap: var(--space-control-gap);
+}
+.ai-api-key-input {
+    flex: 1;
+}
+.ai-api-key-help {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-caption-size);
+}
+.ai-form-error {
+    margin: var(--space-1) 0 0;
+}
+.ai-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-control-gap);
+    margin-top: var(--space-control-gap);
+}
+.ai-empty-state {
+    padding: var(--space-card-padding) var(--space-5);
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    margin-top: var(--space-row-block);
+}
+.ai-empty-state-title {
+    margin: 0 0 var(--space-control-gap);
+    font-weight: var(--font-label-weight);
+    font-size: var(--font-body-size);
+}
+.ai-empty-state-desc {
+    margin: 0 0 var(--space-row-gap);
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+}

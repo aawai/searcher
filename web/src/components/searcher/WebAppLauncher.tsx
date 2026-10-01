@@ -191,7 +191,7 @@ function SortableFolderApp({ app, groups, managing, actions }: {
             ref={setNodeRef}
             style={{
                 transform: CSS.Transform.toString(transform),
-                transition,
+                transition: isDragging ? undefined : transition,
                 opacity: isDragging ? .5 : 1,
             }}
         >
@@ -486,7 +486,7 @@ function SortableTile({
                 transform: isDragging
                     ? undefined
                     : CSS.Transform.toString(transform),
-                transition,
+                transition: isDragging ? undefined : transition,
             }}
         >
             {tile.app
@@ -683,6 +683,7 @@ export function WebAppLauncher({
             })),
             effectiveColumns,
         ), [tiles, effectiveColumns]);
+    const columnLayout = { gridColumn: effectiveColumns };
     const [internalFolderId, setInternalFolderId] = useState<string | null>(
         null,
     );
@@ -971,9 +972,7 @@ export function WebAppLauncher({
                                     : ""
                             }`}
                             data-presentation={presentation}
-                            style={{
-                                "--launcher-columns": effectiveColumns,
-                            } as React.CSSProperties}
+                            data-columns={effectiveColumns}
                         >
                             {tiles.map((tile, index) => (
                                 <SortableTile
@@ -999,6 +998,11 @@ export function WebAppLauncher({
                                         )}
                                 />
                             ))}
+                            <div
+                                aria-hidden="true"
+                                className="launcher-grid-boundary"
+                                style={{ gridColumn: columnLayout.gridColumn }}
+                            />
                         </div>
                     </ContextMenuTrigger>
                     {onCreateFolder && (
@@ -1048,7 +1052,7 @@ export function WebAppLauncher({
                 />
             )}
             {createPortal(
-                <DragOverlay style={{ zIndex: 60 }}>
+                <DragOverlay className="launcher-drag-overlay">
                     {active && managing
                         ? (
                             <div

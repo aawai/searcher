@@ -579,22 +579,19 @@ export function AskPage() {
                         <RotateCcw size={15} />
                         <span>撤销</span>
                     </Button>
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="webapp-undo-toast__close"
                         onClick={() => {
                             clearTimeout(undoConversation.timer);
                             setUndoConversation(null);
                         }}
-                        style={{
-                            border: 0,
-                            background: "none",
-                            color: "inherit",
-                            cursor: "pointer",
-                        }}
                         aria-label="关闭"
                     >
                         <X size={16} />
-                    </button>
+                    </Button>
                 </div>
             )}
         </PageShell>

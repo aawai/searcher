@@ -1,3 +1,27 @@
+:root {
+    /* Launcher semantic geometry tokens (Issue #52) */
+    --radius-launcher-tile: 17px;
+    --radius-launcher-icon: 14px;
+    --radius-launcher-mini: 5px;
+    --radius-launcher-folder-glyph: 10px;
+    --radius-launcher-badge: 8px;
+    --shadow-launcher-glyph: 0 8px 23px -16px #192b45;
+    --font-launcher-glyph: 24px;
+    --font-launcher-sparse: 22px;
+    --font-launcher-medium: 20px;
+    --font-launcher-folder-glyph: 21px;
+    --font-launcher-micro: 9px;
+    --font-launcher-badge: 10px;
+    --font-app-ai-counter: 11px;
+    --font-app-ai-helper: 11.5px;
+    --space-launcher-empty-gap: 14px;
+    --space-app-ai-helper-gap: 2px;
+    --space-launcher-icon-gap: 2px;
+    --space-launcher-glyph-padding: 9px;
+    --space-launcher-mini-padding: 6px;
+    --space-launcher-badge-padding: 1px var(--space-1);
+}
+
 .pinned-apps {
     display: flex;
     justify-content: center;
@@ -15,7 +39,7 @@
     position: relative;
     width: 92px;
     min-height: 96px;
-    border-radius: 14px;
+    border-radius: var(--radius-launcher-icon);
     padding: var(--space-2);
 }
 .webapp-icon:hover {
@@ -28,18 +52,18 @@
     height: 56px;
     background: var(--surface);
     border: 1px solid var(--border);
-    box-shadow: 0 8px 23px -16px #192b45;
-    border-radius: 17px;
+    box-shadow: var(--shadow-launcher-glyph);
+    border-radius: var(--radius-launcher-tile);
     color: var(--accent);
     font-weight: 750;
-    font-size: 24px;
+    font-size: var(--font-launcher-glyph);
     overflow: hidden;
 }
 .webapp-glyph img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    padding: 9px;
+    padding: var(--space-launcher-glyph-padding);
 }
 .webapp-icon--compact .webapp-glyph {
     width: 48px;
@@ -78,17 +102,17 @@
     grid-template-rows: repeat(2,minmax(0,1fr));
 }
 .launcher-folder-preview--sparse .launcher-folder-mini {
-    font-size: 22px;
+    font-size: var(--font-launcher-sparse);
 }
 .launcher-folder-preview--medium .launcher-folder-mini {
-    font-size: 20px;
+    font-size: var(--font-launcher-medium);
 }
 @media (max-width:700px) {
     .launcher-folder-mini {
         max-width: 50px;
     }
     .launcher-folder-preview--sparse .launcher-folder-mini {
-        font-size: 20px;
+        font-size: var(--font-launcher-medium);
     }
 }
 .launcher-notice {
@@ -98,7 +122,7 @@
     gap: var(--space-2);
     color: var(--muted);
     font-size: var(--font-caption-size);
-    padding: 8px 0;
+    padding: var(--space-2) 0;
 }
 
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.
@@ -116,25 +140,38 @@
     --launcher-row-h: var(--launcher-col-w);
     --launcher-gap-x: 8px;
     --launcher-gap-y: var(--launcher-gap-x);
+    --space-launcher-gap-x: var(--launcher-gap-x);
+    --space-launcher-gap-y: var(--launcher-gap-y);
     --launcher-icon: 38px;
     --launcher-pad-t: 4px;
     --launcher-pad-b: 4px;
+    --space-launcher-pad-t: var(--launcher-pad-t);
+    --space-launcher-pad-b: var(--launcher-pad-b);
 }
 :where(.pinned-apps).launcher-grid,
 .launcher-grid {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(var(--launcher-columns),
-        var(--launcher-col-w));
+    grid-auto-columns: var(--launcher-col-w);
     grid-auto-rows: var(--launcher-row-h);
     justify-content: start;
-    gap: var(--launcher-gap-y) var(--launcher-gap-x);
+    gap: var(--space-launcher-gap-y) var(--space-launcher-gap-x);
+}
+.launcher-grid-boundary {
+    grid-row: 1;
+    width: 0;
+    height: 0;
+    pointer-events: none;
 }
 .pinned-area .launcher-grid--home {
     --launcher-gap-x: 6px;
+    --space-launcher-gap-x: var(--launcher-gap-x);
+    --space-launcher-gap-y: var(--launcher-gap-y);
     --launcher-icon: 42px;
     --launcher-pad-t: 0px;
     --launcher-pad-b: 0px;
+    --space-launcher-pad-t: var(--launcher-pad-t);
+    --space-launcher-pad-b: var(--launcher-pad-b);
     width: 100%;
     max-width: 100%;
     margin: 0;
@@ -180,7 +217,7 @@
 .launcher-tile.is-over {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-    border-radius: 17px;
+    border-radius: var(--radius-launcher-tile);
 }
 .launcher-surface-wrap {
     width: 100%;
@@ -228,8 +265,9 @@
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding: var(--launcher-pad-t) 4px var(--launcher-pad-b) 4px;
-    gap: 2px;
+    padding: var(--space-launcher-pad-t) var(--space-1)
+        var(--space-launcher-pad-b) var(--space-1);
+    gap: var(--space-launcher-icon-gap);
 }
 :is(.launcher-grid, .launcher-folder-contents) .webapp-glyph,
 .launcher-overlay .webapp-glyph {
@@ -245,7 +283,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     text-align: center;
-    font-size: 12px;
+    font-size: var(--font-metadata-size);
     line-height: 16px;
     color: var(--foreground);
 }
@@ -292,8 +330,8 @@
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding: var(--launcher-pad-t) 0 var(--launcher-pad-b) 0;
-    gap: 2px;
+    padding: var(--space-launcher-pad-t) 0 var(--space-launcher-pad-b) 0;
+    gap: var(--space-launcher-icon-gap);
 }
 .launcher-folder-surface {
     position: relative;
@@ -302,7 +340,7 @@
     width: 100%;
     aspect-ratio: 1;
     flex: none;
-    border-radius: 17px;
+    border-radius: var(--radius-launcher-tile);
     box-sizing: border-box;
     border: 1px solid var(--border);
     background: var(--surface-soft);
@@ -311,7 +349,7 @@
 .launcher-folder-item--small .launcher-folder-surface {
     width: var(--launcher-icon);
     height: var(--launcher-icon);
-    border-radius: 17px;
+    border-radius: var(--radius-launcher-tile);
 }
 .launcher-folder-item--large {
     position: relative;
@@ -334,7 +372,7 @@
         18px));
     left: 0;
     width: 100%;
-    padding: 0 4px;
+    padding: 0 var(--space-1);
     height: min(16px, calc(var(--launcher-row-h) - var(--launcher-pad-t) -
         var(--launcher-pad-b) - var(--launcher-icon) - 2px));
 }
@@ -362,27 +400,27 @@
 .launcher-folder-item--small .launcher-folder-preview {
     grid-template-columns: repeat(2, 14px);
     grid-template-rows: repeat(2, 14px);
-    gap: 4px;
+    gap: var(--space-1);
 }
 .launcher-grid--compact .launcher-folder-item--small .launcher-folder-preview {
     grid-template-columns: repeat(2, 12px);
     grid-template-rows: repeat(2, 12px);
 }
 .launcher-folder-item--small .launcher-folder-mini-glyph {
-    font-size: 9px;
+    font-size: var(--font-launcher-micro);
 }
 .launcher-folder-item--large .launcher-folder-preview {
     --launcher-mini-size: min(42px, calc((var(--launcher-surface-size) - 26px) / 3));
     grid-template-columns: repeat(3, var(--launcher-mini-size));
     grid-auto-rows: var(--launcher-mini-size);
-    gap: 4px;
-    padding: 8px;
+    gap: var(--space-1);
+    padding: var(--space-2);
 }
 .launcher-folder-item--large .launcher-folder-preview--sparse,
 .launcher-folder-item--large .launcher-folder-preview--medium {
     grid-template-columns: repeat(2, 40px);
     grid-template-rows: repeat(2, 40px);
-    gap: 8px;
+    gap: var(--space-2);
 }
 .launcher-folder-item--large .launcher-folder-preview--sparse {
     grid-template-rows: 40px;
@@ -425,29 +463,29 @@
     place-items: center;
     width: min(100%, 19px);
     aspect-ratio: 1;
-    border-radius: 5px;
+    border-radius: var(--radius-launcher-mini);
     background: var(--surface);
     border: 1px solid var(--border);
-    box-shadow: 0 8px 23px -16px #192b45;
-    font-size: 12px;
+    box-shadow: var(--shadow-launcher-glyph);
+    font-size: var(--font-metadata-size);
     font-weight: 700;
     overflow: hidden;
 }
 .launcher-folder-item--large .launcher-folder-mini-glyph {
     width: min(100%, 42px);
-    border-radius: 10px;
-    font-size: 21px;
+    border-radius: var(--radius-launcher-folder-glyph);
+    font-size: var(--font-launcher-folder-glyph);
 }
 .launcher-folder-item--large .launcher-folder-preview--single .launcher-folder-mini-glyph {
     width: min(100%, 56px);
-    border-radius: 17px;
-    font-size: 24px;
+    border-radius: var(--radius-launcher-tile);
+    font-size: var(--font-launcher-glyph);
 }
 .launcher-folder-item--large .launcher-folder-mini-glyph img {
-    padding: 6px;
+    padding: var(--space-launcher-mini-padding);
 }
 .launcher-folder-item--large .launcher-folder-preview--single .launcher-folder-mini-glyph img {
-    padding: 9px;
+    padding: var(--space-launcher-glyph-padding);
 }
 .launcher-folder-mini-glyph img {
     position: absolute;
@@ -461,10 +499,10 @@
     position: absolute;
     right: 3px;
     bottom: 3px;
-    padding: 1px 4px;
-    border-radius: 8px;
+    padding: var(--space-launcher-badge-padding);
+    border-radius: var(--radius-launcher-badge);
     background: var(--surface);
-    font-size: 10px;
+    font-size: var(--font-launcher-badge);
 }
 .launcher-folder-name {
     display: block;
@@ -474,7 +512,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     text-align: center;
-    font-size: 12px;
+    font-size: var(--font-metadata-size);
     line-height: 16px;
     color: var(--foreground);
 }
@@ -509,7 +547,7 @@
     grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
     grid-auto-rows: var(--launcher-row-h);
     justify-content: start;
-    gap: var(--launcher-gap-y) var(--launcher-gap-x);
+    gap: var(--space-launcher-gap-y) var(--space-launcher-gap-x);
     padding: var(--space-3) 0;
 }
 .launcher-folder-contents.launcher-grid--compact {
@@ -522,7 +560,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: var(--space-launcher-empty-gap);
     flex-wrap: wrap;
     color: var(--muted);
     padding: var(--space-5);
@@ -551,35 +589,35 @@
 }
 
 .app-ai-char-counter {
-    font-size: 11px;
+    font-size: var(--font-app-ai-counter);
     color: var(--muted);
 }
 
 .app-ai-field-helper {
-    margin-top: 2px;
-    font-size: 11.5px;
+    margin-top: var(--space-app-ai-helper-gap);
+    font-size: var(--font-app-ai-helper);
 }
 
 .app-ai-confirm-body {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    font-size: 13px;
+    gap: var(--space-2);
+    font-size: var(--font-caption-size);
     color: var(--foreground);
-    padding: 4px 0;
+    padding: var(--space-1) 0;
 }
 
 .app-ai-confirm-item {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: var(--space-2);
     word-break: break-word;
 }
 
 .app-ai-confirm-label {
     flex-shrink: 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-metadata-size);
     width: 68px;
 }
 
@@ -589,10 +627,10 @@
 }
 
 .app-ai-confirm-hint {
-    margin-top: 4px;
-    padding-top: 8px;
+    margin-top: var(--space-1);
+    padding-top: var(--space-2);
     border-top: 1px solid var(--border);
-    font-size: 12px;
+    font-size: var(--font-metadata-size);
     color: var(--muted);
     line-height: 1.4;
 }

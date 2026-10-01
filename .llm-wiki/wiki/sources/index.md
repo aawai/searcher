@@ -66,6 +66,8 @@
 - [Observation: Ask workspace CSS normalized to semantic tokens](obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens.md)
 - [Observation: AskPage streaming lifecycle extracted to useAskStream hook](obs-2026-10-01-askpage-streaming-lifecycle-extracted-to-useaskstream-hook.md)
 - [Observation: Bento ratio token, intrinsic height and empty expansion contract implementation (#44)](obs-2026-10-01-bento-ratio-token-intrinsic-height-and-empty-expansion-contr.md)
+- [Observation: Home layouts & Launcher UI Guard migration (Issue #52)](obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52.md)
 - [Observation: Notes workspace Issue #44 contract matrix regression tests and visual evidence](obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an.md)
 - [Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard](obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-.md)
+- [Observation: UI Guard Migration: Settings & Searcher Presentation Components](obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

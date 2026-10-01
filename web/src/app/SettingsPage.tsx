@@ -845,14 +845,9 @@ export function SettingsPage() {
                                         </div>
                                         <span
                                             className="settings-action-card__badge"
-                                            style={{
-                                                background: user
-                                                    ? "color-mix(in srgb, var(--success) 16%, var(--surface))"
-                                                    : "var(--surface-soft)",
-                                                color: user
-                                                    ? "var(--success)"
-                                                    : "var(--muted)",
-                                            }}
+                                            data-status={user
+                                                ? "synced"
+                                                : "guest"}
                                         >
                                             {user ? "已同步" : "未登录"}
                                         </span>
