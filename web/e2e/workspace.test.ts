@@ -512,6 +512,13 @@ Deno.test("production workspace contracts", async (t) => {
             );
             assertEquals(await createNoteBtn.textContent(), "新建便签");
 
+            // Empty state regression check before any note is created
+            const emptyNotice = panel.locator(".workspace-empty");
+            assertEquals(
+                await emptyNotice.textContent(),
+                "还没有便签，点击底部“新建便签”开始记录。",
+            );
+
             // Click "新建便签": note is created and editor opens immediately
             await createNoteBtn.click();
             await page.locator("#note-title-input").waitFor();
@@ -602,7 +609,48 @@ Deno.test("production workspace contracts", async (t) => {
                 "Persisted content after autosave",
             );
             assertEquals(updatedNote.title, "Local Draft Title");
-            const baseVersion = updatedNote.version;
+
+            // Autosave saving state regression: hold PATCH deferred to observe "保存中…" then release
+            let finishHold: () => void = () => {};
+            const saveHold = new Promise<void>((resolve) => {
+                finishHold = resolve;
+            });
+            await page.route(
+                `**/api/notes/${encodeURIComponent(createdNoteId)}`,
+                async (route) => {
+                    if (route.request().method() === "PATCH") {
+                        await saveHold;
+                    }
+                    await route.continue();
+                },
+            );
+            try {
+                await page.locator("#note-body-textarea-edit").fill(
+                    "Observed in flight saving text",
+                );
+                await page.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent
+                        ?.includes("保存中")
+                );
+                finishHold();
+                await page.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent
+                        ?.includes("已保存")
+                );
+            } finally {
+                finishHold();
+                await page.unroute(
+                    `**/api/notes/${encodeURIComponent(createdNoteId)}`,
+                ).catch(() => {});
+            }
+
+            // Refresh baseVersion after deferred save PATCH persisted
+            const heldSavedNote = await page.evaluate(async (id) => {
+                const res = await fetch(`/api/notes/${encodeURIComponent(id)}`);
+                const body = await res.json();
+                return body.data as { version: number };
+            }, createdNoteId);
+            const baseVersion = heldSavedNote.version;
 
             // Simulate concurrent edit on real server to trigger conflict
             const concurrentStatus = await page.evaluate(
@@ -709,8 +757,1081 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(restored.body, "Client conflicting edit");
             assertEquals(restored.version > postConflictNote.version, true);
 
+            // Version history fetch error state regression
+            try {
+                await page.route(
+                    "**/api/notes/*/versions",
+                    (route) =>
+                        route.fulfill({
+                            status: 500,
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                error: "Version history unavailable",
+                            }),
+                        }),
+                );
+                await versionsBtn.click();
+                const versionErrorAlert = page.locator(
+                    '.note-editor p[role="alert"].error',
+                );
+                await versionErrorAlert.waitFor();
+                assertEquals(
+                    (await versionErrorAlert.textContent() ?? "").length > 0,
+                    true,
+                );
+            } finally {
+                await page.unroute("**/api/notes/*/versions").catch(() => {});
+            }
+
+            // Editor save error state regression
+            try {
+                await page.route(
+                    `**/api/notes/${encodeURIComponent(createdNoteId)}`,
+                    (route) => {
+                        if (route.request().method() === "PATCH") {
+                            return route.fulfill({
+                                status: 500,
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    error: "Simulated save failure",
+                                }),
+                            });
+                        }
+                        return route.continue();
+                    },
+                );
+                await page.locator("#note-body-textarea-edit").fill(
+                    "Error triggering content",
+                );
+                await page.locator("#note-body-textarea-edit").blur();
+                await page.keyboard.press("Control+s");
+                await page.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent
+                        ?.includes(
+                            "保存失败",
+                        )
+                );
+                assertStringIncludes(
+                    await page.locator(".save-state").textContent() ?? "",
+                    "保存失败",
+                );
+            } finally {
+                await page.unroute(
+                    `**/api/notes/${encodeURIComponent(createdNoteId)}`,
+                ).catch(() => {});
+            }
+
+            // Test Back button navigation from editor to notes root
+            const backBtn = panel.locator(
+                '.workspace-header button[aria-label="返回上一级"]',
+            );
+            await backBtn.click();
+            await page.locator(".workspace-switcher").waitFor();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+            // Click note card to re-enter editor
+            await panel.locator(".workspace-notes-list .note-card").first()
+                .click();
+            await page.locator("#note-title-input").waitFor();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "编辑便签",
+            );
+
             // Close workspace
             await page.locator(
+                '.workspace-header button[aria-label="收起工作区"]',
+            ).click();
+            await panel.waitFor({ state: "detached" });
+        },
+    );
+
+    await t.step(
+        "Workspace Notes #43: root section deduplication, search deduplication, inline expand/collapse without route change, control isolation, and API write purity",
+        async () => {
+            const panel = page.locator("aside.workspace-panel");
+            if (!(await panel.isVisible())) {
+                await page.locator(
+                    '.workspace-dock button[aria-label="便签工作区"]',
+                ).click();
+                await panel.waitFor();
+            }
+
+            // Ensure we are at notes root
+            const backBtn = panel.locator(
+                '.workspace-header button[aria-label="返回上一级"]',
+            );
+            if (await backBtn.isVisible()) {
+                await backBtn.click();
+                await page.locator(".workspace-switcher").waitFor();
+            }
+
+            // Seed clean 3 test notes: Alpha (pinned), Beta (home-fixed), Gamma (regular)
+            const seedResult = await page.evaluate(async (primaryId) => {
+                const res = await fetch("/api/notes");
+                const current = (await res.json()).data as Array<
+                    { id: string; version: number }
+                >;
+                let alphaId = primaryId;
+                const primaryNote = current.find((n) => n.id === primaryId);
+                if (primaryNote) {
+                    await fetch(`/api/notes/${encodeURIComponent(primaryId)}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: "Note Alpha Pinned",
+                            body:
+                                "Alpha pinned body content for inline expand testing",
+                            isPinned: true,
+                            isHomeFixed: false,
+                            version: primaryNote.version,
+                        }),
+                    });
+                } else {
+                    const createRes = await fetch("/api/notes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: "Note Alpha Pinned",
+                            body:
+                                "Alpha pinned body content for inline expand testing",
+                            isPinned: true,
+                            isHomeFixed: false,
+                        }),
+                    });
+                    const createPayload = await createRes.json() as {
+                        data: { id: string };
+                    };
+                    alphaId = createPayload.data.id;
+                }
+                // Delete any remaining notes
+                for (const n of current) {
+                    if (n.id !== alphaId) {
+                        await fetch(`/api/notes/${encodeURIComponent(n.id)}`, {
+                            method: "DELETE",
+                        });
+                    }
+                }
+
+                // Create Beta (home-fixed only)
+                const betaRes = await fetch("/api/notes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: "Note Beta HomeFixed",
+                        body: "Beta home-fixed body content",
+                        isPinned: false,
+                        isHomeFixed: true,
+                    }),
+                });
+                const betaPayload = await betaRes.json() as {
+                    data: { id: string };
+                };
+                const betaId = betaPayload.data.id;
+                // Create Gamma (regular only)
+                const gammaRes = await fetch("/api/notes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: "Note Gamma Regular",
+                        body:
+                            "Gamma regular body content with markdown # Title and long code block: `long_token_sequence_without_spaces_1234567890`",
+                        isPinned: false,
+                        isHomeFixed: false,
+                    }),
+                });
+                const gammaPayload = await gammaRes.json() as {
+                    data: { id: string };
+                };
+                const gammaId = gammaPayload.data.id;
+                return { alphaId, betaId, gammaId };
+            }, createdNoteId);
+            createdNoteId = seedResult.alphaId;
+
+            // Reload page to populate notes in React state
+            await page.reload();
+            await page.locator(
+                '.workspace-dock button[aria-label="便签工作区"]',
+            ).click();
+            await panel.waitFor();
+
+            // Clear search input if populated
+            const searchInput = panel.locator("input[data-workspace-search]");
+            await searchInput.fill("");
+            // Wait for 3 cards to be rendered
+            await page.waitForFunction(() =>
+                document.querySelectorAll(".workspace-notes-list .note-card")
+                    .length === 3
+            );
+
+            // 1. Verify Root section deduplication when query is empty:
+            // "置顶与首页固定" contains Alpha (isPinned) and Beta (isHomeFixed)
+            const fixedHeading = panel.locator("h3#notes-fixed-heading");
+            await fixedHeading.waitFor();
+            assertEquals(await fixedHeading.textContent(), "置顶与首页固定");
+            const fixedSection = panel.locator(
+                'section[aria-labelledby="notes-fixed-heading"]',
+            );
+            assertEquals(await fixedSection.locator(".note-card").count(), 2);
+            assertStringIncludes(
+                await fixedSection.textContent() ?? "",
+                "Note Alpha Pinned",
+            );
+            assertStringIncludes(
+                await fixedSection.textContent() ?? "",
+                "Note Beta HomeFixed",
+            );
+
+            // "其他便签" contains Gamma only; Alpha and Beta must be strictly excluded
+            const otherHeading = panel.locator("h3#notes-other-heading");
+            await otherHeading.waitFor();
+            assertEquals(await otherHeading.textContent(), "其他便签");
+            const otherSection = panel.locator(
+                'section[aria-labelledby="notes-other-heading"]',
+            );
+            assertEquals(await otherSection.locator(".note-card").count(), 1);
+            assertStringIncludes(
+                await otherSection.textContent() ?? "",
+                "Note Gamma Regular",
+            );
+            assertEquals(
+                (await otherSection.textContent() ?? "").includes(
+                    "Note Alpha Pinned",
+                ),
+                false,
+            );
+            assertEquals(
+                (await otherSection.textContent() ?? "").includes(
+                    "Note Beta HomeFixed",
+                ),
+                false,
+            );
+
+            // Total note cards in Workspace root: exactly 3 (0 duplicates)
+            assertEquals(
+                await panel.locator(".workspace-notes-list .note-card").count(),
+                3,
+            );
+
+            // 2. Verify Search section deduplication:
+            // Searching matches whole collection once, hides fixed section, renders only "全部便签"
+            await searchInput.fill("Note");
+            await page.waitForFunction(() =>
+                !document.querySelector("h3#notes-fixed-heading")
+            );
+            const searchHeading = panel.locator("h3#notes-all-heading");
+            await searchHeading.waitFor();
+            assertEquals(await searchHeading.textContent(), "全部便签");
+            assertEquals(
+                await panel.locator("h3#notes-fixed-heading").count(),
+                0,
+            );
+            assertEquals(
+                await panel.locator(".workspace-notes-list .note-card").count(),
+                3,
+            );
+
+            // Realistic pointer click on search card disabled grip span must not open editor
+            const searchGrip = panel.locator(".workspace-notes-list .note-card")
+                .first().locator(".note-drag");
+            await searchGrip.click();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+            assertEquals(await page.locator("#note-title-input").count(), 0);
+
+            // Search no results empty state regression
+            await searchInput.fill("nonexistent_search_query_xyz");
+            const searchEmpty = panel.locator(".workspace-empty");
+            await searchEmpty.waitFor();
+            assertEquals(
+                await searchEmpty.textContent(),
+                "没有匹配的便签，清空搜索可查看全部。",
+            );
+            assertEquals(
+                await panel.locator(".workspace-notes-list .note-card").count(),
+                0,
+            );
+
+            // Clear search restores mutually exclusive sections
+            await searchInput.fill("");
+            await fixedHeading.waitFor();
+            assertEquals(await fixedSection.locator(".note-card").count(), 2);
+            assertEquals(await otherSection.locator(".note-card").count(), 1);
+            assertEquals(
+                await panel.locator(".workspace-notes-list .note-card").count(),
+                3,
+            );
+
+            // 3. Inline expand/collapse, body visibility, route preservation, and API write purity:
+            const alphaCard = panel.locator(".note-card", {
+                hasText: "Note Alpha Pinned",
+            });
+            const alphaExpandBtn = alphaCard.locator(
+                'button.note-action-btn[aria-label="展开"]',
+            );
+            await alphaExpandBtn.waitFor();
+
+            // All cards are initially compact with no body preview
+            assertEquals(
+                await alphaCard.evaluate((el) =>
+                    el.classList.contains("note-card--compact")
+                ),
+                true,
+            );
+            assertEquals(
+                await alphaCard.locator(".note-preview.markdown").count(),
+                0,
+            );
+
+            // Record full initial persisted note snapshot on server
+            const initialAlpha = await page.evaluate(async (id) => {
+                const res = await fetch(`/api/notes/${encodeURIComponent(id)}`);
+                return (await res.json()).data as Record<string, unknown>;
+            }, createdNoteId);
+
+            // Spy on all network write requests to /api/notes
+            let apiWriteCalls = 0;
+            const apiWriteSpy = (
+                request: { method: () => string; url: () => string },
+            ) => {
+                const method = request.method();
+                if (
+                    (method === "PATCH" || method === "PUT" ||
+                        method === "POST") &&
+                    request.url().includes("/api/notes")
+                ) {
+                    apiWriteCalls++;
+                }
+            };
+            page.on("request", apiWriteSpy);
+
+            // Hover card so actions become interactive (pointer-events), then click expand
+            await alphaCard.hover();
+            await alphaExpandBtn.click();
+            await page.waitForFunction(() => {
+                const card = document.querySelector(
+                    ".workspace-notes-list .note-card",
+                );
+                return card && !card.classList.contains("note-card--compact");
+            });
+            const alphaPreview = alphaCard.locator(".note-preview.markdown");
+            await alphaPreview.waitFor();
+            assertStringIncludes(
+                await alphaPreview.textContent() ?? "",
+                "Alpha pinned body content",
+            );
+
+            // Button toggled to "折叠"
+            const alphaCollapseBtn = alphaCard.locator(
+                'button.note-action-btn[aria-label="折叠"]',
+            );
+            await alphaCollapseBtn.waitFor();
+
+            // Route did NOT navigate to editor
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+            assertEquals(await page.locator("#note-title-input").count(), 0);
+
+            // ZERO API writes fired during expansion
+            assertEquals(apiWriteCalls, 0);
+            // Server note is completely unchanged across all fields
+            const postExpandAlpha = await page.evaluate(async (id) => {
+                const res = await fetch(`/api/notes/${encodeURIComponent(id)}`);
+                return (await res.json()).data as Record<string, unknown>;
+            }, createdNoteId);
+            assertEquals(postExpandAlpha, initialAlpha);
+
+            // Hover card and click collapse button
+            await alphaCard.hover();
+            await alphaCollapseBtn.click();
+            await page.waitForFunction(() => {
+                const card = document.querySelector(
+                    ".workspace-notes-list .note-card",
+                );
+                return card && card.classList.contains("note-card--compact");
+            });
+            assertEquals(
+                await alphaCard.locator(".note-preview.markdown").count(),
+                0,
+            );
+            await alphaCard.locator('button.note-action-btn[aria-label="展开"]')
+                .waitFor();
+
+            // 4. Control isolation: drag handle and more actions do NOT trigger onOpen
+            const gammaCard = panel.locator(".note-card", {
+                hasText: "Note Gamma Regular",
+            });
+            // Realistic pointer click on fixed note grip span
+            const fixedGrip = alphaCard.locator(".note-drag");
+            await fixedGrip.click();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+            assertEquals(await page.locator("#note-title-input").count(), 0);
+
+            const gammaDragHandle = gammaCard.locator(
+                'button[aria-label^="排序 "]',
+            );
+            assertEquals(await gammaDragHandle.isVisible(), true);
+            await gammaDragHandle.click();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+            assertEquals(
+                await page.locator("#note-title-input").count(),
+                0,
+            );
+
+            const gammaMoreBtn = gammaCard.locator(
+                'button[aria-label="更多操作"]',
+            );
+            await gammaCard.hover();
+            await gammaMoreBtn.click();
+            const dropdown = page.locator(".note-dropdown-content");
+            await dropdown.waitFor();
+            // Dropdown opened, but route remains at root
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+            assertEquals(await page.locator("#note-title-input").count(), 0);
+            await page.keyboard.press("Escape");
+            await dropdown.waitFor({ state: "detached" });
+
+            // 5. Card body navigation enters editor:
+            const gammaTitle = gammaCard.locator(".note-title");
+            await gammaTitle.click();
+            await page.locator("#note-title-input").waitFor();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "编辑便签",
+            );
+
+            // Back button returns to notes root:
+            await panel.locator(
+                '.workspace-header button[aria-label="返回上一级"]',
+            ).click();
+            await page.locator(".workspace-switcher").waitFor();
+            assertEquals(
+                await panel.locator(".workspace-title").textContent(),
+                "便签",
+            );
+
+            assertEquals(apiWriteCalls, 0);
+            page.off("request", apiWriteSpy);
+
+            // Real mobile touch context (hasTouch: true, isMobile: true) testing direct tap without hover
+            const mobileContext = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                hasTouch: true,
+                isMobile: true,
+                storageState: await context.storageState(),
+            });
+            const mobilePage = await mobileContext.newPage();
+            try {
+                await mobilePage.goto(origin + "/");
+                await mobilePage.locator("main").waitFor();
+                const mobileDockBtn = mobilePage.locator(
+                    '.workspace-dock button[aria-label="便签工作区"]',
+                );
+                await mobileDockBtn.tap();
+                const mobilePanel = mobilePage.locator(
+                    ".workspace-panel--mobile",
+                );
+                await mobilePanel.waitFor({ state: "visible" });
+
+                const mCard = mobilePanel.locator(".note-card", {
+                    hasText: "Note Alpha Pinned",
+                });
+                await mCard.waitFor({ state: "visible" });
+
+                // Direct tap expand without hover
+                const mExpandBtn = mCard.locator(
+                    'button.note-action-btn[aria-label="展开"]',
+                );
+                await mExpandBtn.tap();
+                const mPreview = mCard.locator(".note-preview.markdown");
+                await mPreview.waitFor({ state: "visible" });
+
+                // Direct tap collapse without hover
+                const mCollapseBtn = mCard.locator(
+                    'button.note-action-btn[aria-label="折叠"]',
+                );
+                await mCollapseBtn.tap();
+                await mPreview.waitFor({ state: "detached" });
+
+                // Direct tap more actions without hover
+                const mMoreBtn = mCard.locator('button[aria-label="更多操作"]');
+                await mMoreBtn.tap();
+                const mDropdown = mobilePage.locator(".note-dropdown-content");
+                await mDropdown.waitFor({ state: "visible" });
+                await mobilePage.keyboard.press("Escape");
+                await mDropdown.waitFor({ state: "detached" });
+
+                // Direct tap card body enters editor
+                const mTitle = mCard.locator(".note-title");
+                await mTitle.tap();
+                await mobilePage.locator("#note-title-input").waitFor({
+                    state: "visible",
+                });
+                assertEquals(
+                    await mobilePanel.locator(".workspace-title").textContent(),
+                    "编辑便签",
+                );
+            } finally {
+                await mobileContext.close();
+            }
+            // 6. Search invisible safe:
+            const gammaExpandBtn = gammaCard.locator(
+                'button.note-action-btn[aria-label="展开"]',
+            );
+            await gammaCard.hover();
+            await gammaExpandBtn.click();
+            await gammaCard.locator(".note-preview.markdown").waitFor();
+            // Search query hiding Gamma is safe (no crash/error)
+            await searchInput.fill("Alpha");
+            await page.waitForFunction(() =>
+                document.querySelectorAll(".workspace-notes-list .note-card")
+                    .length === 1
+            );
+            // Clear restores Gamma safely
+            await searchInput.fill("");
+            await page.waitForFunction(() =>
+                document.querySelectorAll(".workspace-notes-list .note-card")
+                    .length === 3
+            );
+
+            // 7. Delete expanded safe:
+            const betaCard = panel.locator(".note-card", {
+                hasText: "Note Beta HomeFixed",
+            });
+            const betaExpandBtn = betaCard.locator(
+                'button.note-action-btn[aria-label="展开"]',
+            );
+            await betaCard.hover();
+            await betaExpandBtn.click();
+            await betaCard.locator(".note-preview.markdown").waitFor();
+            // Delete Beta while expanded
+            await betaCard.hover();
+            await betaCard.locator('button[aria-label="更多操作"]').click();
+            await page.locator(".note-dropdown-item--delete").click();
+            // Beta is deleted, remaining cards are 2, no error
+            await page.waitForFunction(() =>
+                document.querySelectorAll(".workspace-notes-list .note-card")
+                    .length === 2
+            );
+            assertEquals(
+                await panel.locator(".note-card", {
+                    hasText: "Note Beta HomeFixed",
+                }).count(),
+                0,
+            );
+        },
+    );
+
+    await t.step(
+        "Workspace Notes #43: geometry card fills list <=2px, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation",
+        async () => {
+            const panel = page.locator(".workspace-panel");
+
+            // Ensure created note is home-fixed so ControlledNotes board renders on Home
+            await page.evaluate(async (id) => {
+                const res = await fetch(`/api/notes/${encodeURIComponent(id)}`);
+                const noteData = (await res.json()).data as {
+                    version: number;
+                };
+                await fetch(`/api/notes/${encodeURIComponent(id)}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        isHomeFixed: true,
+                        version: noteData.version,
+                    }),
+                });
+            }, createdNoteId);
+
+            // Record Home ControlledNotes board state before opening workspace
+            await visit("/");
+            const homeBoard = page.locator(".controlled-notes-board");
+            await homeBoard.waitFor({ state: "visible" });
+            const homeSlotCountBefore = await homeBoard.locator(
+                ".controlled-note-slot",
+            ).count();
+            const homeSlotsCompactBefore = await homeBoard.locator(
+                ".controlled-note-slot .note-card--compact",
+            ).count();
+            const homeBoxBefore = await homeBoard.boundingBox();
+            assertEquals(homeSlotCountBefore > 0, true);
+
+            // Seed additional notes including a very long title and body with code block
+            await page.evaluate(async () => {
+                const longTitle = "LongTitle_" + "A".repeat(100) +
+                    "_WordWithoutSpaces12345678901234567890";
+                const longBody = "Long content paragraph. " +
+                    "Word_".repeat(30) +
+                    "\n\n```ts\nconst x = 'very_long_unbroken_code_string_1234567890_abcdefghijklmnopqrstuvwxyz';\n```";
+                await fetch("/api/notes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: longTitle,
+                        body: longBody,
+                        isPinned: false,
+                        isHomeFixed: false,
+                    }),
+                });
+                for (let i = 1; i <= 6; i++) {
+                    await fetch("/api/notes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: `Batch Note ${i}`,
+                            body: `Batch note content body ${i}`,
+                            isPinned: false,
+                            isHomeFixed: false,
+                        }),
+                    });
+                }
+            });
+
+            // Reload page to populate notes in React state
+            await page.reload();
+            await page.locator(
+                '.workspace-dock button[aria-label="便签工作区"]',
+            ).click();
+            await panel.waitFor({ state: "visible" });
+            await page.waitForFunction(() =>
+                document.querySelectorAll(".workspace-notes-list .note-card")
+                    .length >= 8
+            );
+            // Viewport matrix: 390 (mobile), 768 (tablet), 1440 (desktop) across light and dark
+            const viewports = [
+                { width: 1440, height: 900 },
+                { width: 768, height: 1024 },
+                { width: 390, height: 844 },
+            ];
+            const schemes: Array<"light" | "dark"> = ["light", "dark"];
+
+            for (const vp of viewports) {
+                for (const scheme of schemes) {
+                    await page.setViewportSize(vp);
+                    await page.emulateMedia({ colorScheme: scheme });
+
+                    const currentPanel = page.locator(".workspace-panel");
+                    if (!(await currentPanel.isVisible())) {
+                        const dockNotesBtn = page.locator(
+                            '.workspace-dock button[aria-label="便签工作区"]',
+                        );
+                        await dockNotesBtn.waitFor({ state: "visible" });
+                        await dockNotesBtn.click();
+                        await currentPanel.waitFor({ state: "visible" });
+                    }
+
+                    const listEl = currentPanel.locator(".workspace-notes-list")
+                        .first();
+                    await listEl.waitFor();
+                    const listWidth = await listEl.evaluate((el) =>
+                        el.getBoundingClientRect().width
+                    );
+
+                    const cards = currentPanel.locator(
+                        ".workspace-notes-list .note-card",
+                    );
+                    const cardCount = await cards.count();
+                    assertEquals(cardCount > 0, true);
+
+                    // 1. Check compact card width fills list width <= 2px (unconditional)
+                    const firstCard = cards.first();
+                    const firstExpandBtn = firstCard.locator(
+                        'button.note-action-btn[aria-label="展开"]',
+                    );
+                    assertEquals(await firstExpandBtn.isVisible(), true);
+                    for (let i = 0; i < Math.min(cardCount, 3); i++) {
+                        const card = cards.nth(i);
+                        const cardWidth = await card.evaluate((el) =>
+                            el.getBoundingClientRect().width
+                        );
+                        const diff = Math.abs(cardWidth - listWidth);
+                        assertEquals(
+                            diff <= 2,
+                            true,
+                            `Viewport ${vp.width} ${scheme}: card ${i} width ${cardWidth} vs list width ${listWidth} diff ${diff}`,
+                        );
+                    }
+
+                    // 2. Unconditionally expand first card, verify width <= 2px, collapse back
+                    await firstCard.hover();
+                    await firstExpandBtn.click();
+                    await page.waitForFunction(() => {
+                        const c = document.querySelector(
+                            ".workspace-notes-list .note-card",
+                        );
+                        return c && !c.classList.contains("note-card--compact");
+                    });
+                    const expandedWidth = await firstCard.evaluate((el) =>
+                        el.getBoundingClientRect().width
+                    );
+                    const expDiff = Math.abs(expandedWidth - listWidth);
+                    assertEquals(
+                        expDiff <= 2,
+                        true,
+                        `Viewport ${vp.width} ${scheme} expanded card: width ${expandedWidth} vs list width ${listWidth} diff ${expDiff}`,
+                    );
+                    await firstCard.hover();
+                    await firstCard.locator(
+                        'button.note-action-btn[aria-label="折叠"]',
+                    ).click();
+
+                    // 3. Unconditionally expand seeded long code note, assert preview, and measure overflow while expanded!
+                    const longCard = currentPanel.locator(".note-card", {
+                        hasText: "LongTitle_",
+                    });
+                    await longCard.waitFor({ state: "visible" });
+                    const longExpandBtn = longCard.locator(
+                        'button.note-action-btn[aria-label="展开"]',
+                    );
+                    assertEquals(await longExpandBtn.isVisible(), true);
+                    await longCard.hover();
+                    await longExpandBtn.click();
+                    const longPreview = longCard.locator(
+                        ".note-preview.markdown",
+                    );
+                    await longPreview.waitFor({ state: "visible" });
+
+                    // Check horizontal overflow on all containers WHILE long code card remains expanded!
+                    const overflow = await currentPanel.evaluate((aside) => {
+                        const list = aside.querySelector(
+                            ".workspace-notes-list",
+                        );
+                        const root = aside.querySelector(".notes-workspace");
+                        const expCard = aside.querySelector(
+                            ".note-card:not(.note-card--compact)",
+                        );
+                        return {
+                            asideOverflow:
+                                aside.scrollWidth > aside.clientWidth + 1,
+                            rootOverflow: root
+                                ? root.scrollWidth > root.clientWidth + 1
+                                : false,
+                            listOverflow: list
+                                ? list.scrollWidth > list.clientWidth + 1
+                                : false,
+                            cardOverflow: expCard
+                                ? expCard.scrollWidth > expCard.clientWidth + 1
+                                : false,
+                        };
+                    });
+                    assertEquals(
+                        overflow.asideOverflow,
+                        false,
+                        `Viewport ${vp.width} ${scheme}: aside horizontal overflow`,
+                    );
+                    assertEquals(
+                        overflow.rootOverflow,
+                        false,
+                        `Viewport ${vp.width} ${scheme}: root horizontal overflow`,
+                    );
+                    assertEquals(
+                        overflow.listOverflow,
+                        false,
+                        `Viewport ${vp.width} ${scheme}: list horizontal overflow`,
+                    );
+                    assertEquals(
+                        overflow.cardOverflow,
+                        false,
+                        `Viewport ${vp.width} ${scheme}: card horizontal overflow`,
+                    );
+
+                    // Collapse long card back
+                    await longCard.hover();
+                    await longCard.locator(
+                        'button.note-action-btn[aria-label="折叠"]',
+                    ).click();
+
+                    // On mobile sheet (< 768px), dismiss sheet before switching viewport
+                    if (vp.width < 768) {
+                        const closeBtn = currentPanel.locator(
+                            '.workspace-header button[aria-label="收起工作区"]',
+                        );
+                        if (await closeBtn.isVisible()) {
+                            await closeBtn.click();
+                            await currentPanel.waitFor({ state: "detached" });
+                        }
+                    }
+                }
+            }
+
+            // Restore desktop viewport and light mode
+            await page.setViewportSize({ width: 1280, height: 800 });
+            await page.emulateMedia({ colorScheme: "light" });
+
+            // Ensure workspace is closed
+            const finalPanel = page.locator(".workspace-panel");
+            if (await finalPanel.isVisible()) {
+                const closeBtn = finalPanel.locator(
+                    '.workspace-header button[aria-label="收起工作区"]',
+                );
+                if (await closeBtn.isVisible()) {
+                    await closeBtn.click();
+                    await finalPanel.waitFor({ state: "detached" });
+                }
+            }
+
+            // Verify ControlledNotes on Home (widgets style) before/after isolation
+            await homeBoard.waitFor({ state: "visible" });
+            const homeSlotCountAfter = await homeBoard.locator(
+                ".controlled-note-slot",
+            ).count();
+            const homeSlotsCompactAfter = await homeBoard.locator(
+                ".controlled-note-slot .note-card--compact",
+            ).count();
+            const homeBoxAfter = await homeBoard.boundingBox();
+            assertEquals(homeSlotCountAfter, homeSlotCountBefore);
+            assertEquals(homeSlotsCompactAfter, homeSlotsCompactBefore);
+            assertEquals(homeBoxAfter?.width, homeBoxBefore?.width);
+            assertEquals(homeBoxAfter?.height, homeBoxBefore?.height);
+
+            // Verify Zen layout FloatingNotes state & geometry isolation before/after
+            await visit("/settings/appearance");
+            await page.getByText("极简呼吸", { exact: true }).click();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "zen"
+            );
+            await visit("/");
+
+            const floatingNote = page.locator(".pinned-area .note-position")
+                .first();
+            await floatingNote.waitFor({ state: "visible" });
+            const floatingBoxBefore = await floatingNote.boundingBox();
+            const floatingCompactBefore = await floatingNote.locator(
+                ".note-card--compact",
+            ).count();
+
+            // Open workspace from Zen edge trigger
+            const zenNotesBtn = page.locator(
+                '.zen-edge-trigger button[data-workspace="notes"]',
+            );
+            await zenNotesBtn.click();
+            const zenPanel = page.locator(".workspace-panel");
+            await zenPanel.waitFor({ state: "visible" });
+
+            // Expand a note inside workspace in Zen mode
+            const zenCard = zenPanel.locator(".workspace-notes-list .note-card")
+                .first();
+            await zenCard.hover();
+            await zenCard.locator('button.note-action-btn[aria-label="展开"]')
+                .click();
+            await zenCard.locator(".note-preview.markdown").waitFor({
+                state: "visible",
+            });
+
+            // Collapse it back
+            await zenCard.hover();
+            await zenCard.locator('button.note-action-btn[aria-label="折叠"]')
+                .click();
+
+            // Close workspace
+            await page.keyboard.press("Escape");
+            await zenPanel.waitFor({ state: "detached" });
+
+            // Verify Zen floating note position and mode are completely isolated and unchanged
+            const floatingBoxAfter = await floatingNote.boundingBox();
+            const floatingCompactAfter = await floatingNote.locator(
+                ".note-card--compact",
+            ).count();
+            assertEquals(floatingBoxAfter?.x, floatingBoxBefore?.x);
+            assertEquals(floatingBoxAfter?.y, floatingBoxBefore?.y);
+            assertEquals(floatingBoxAfter?.width, floatingBoxBefore?.width);
+            assertEquals(floatingBoxAfter?.height, floatingBoxBefore?.height);
+            assertEquals(floatingCompactAfter, floatingCompactBefore);
+
+            // Restore widgets layout
+            await visit("/settings/appearance");
+            await page.getByText("空间轻桌面", { exact: true }).click();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.style === "widgets"
+            );
+            await visit("/");
+
+            // Clean up extra notes, preserving only createdNoteId
+            await page.evaluate(async (keepId) => {
+                const res = await fetch("/api/notes");
+                const all = (await res.json()).data as Array<{ id: string }>;
+                for (const n of all) {
+                    if (n.id !== keepId) {
+                        await fetch(`/api/notes/${encodeURIComponent(n.id)}`, {
+                            method: "DELETE",
+                        });
+                    }
+                }
+            }, createdNoteId);
+        },
+    );
+
+    await t.step(
+        "Workspace Notes #43: stale API fail cache browse and retry",
+        async () => {
+            const panel = page.locator(".workspace-panel");
+
+            // Open Notes workspace to ensure client has loaded and cached notes
+            const dockNotesBtn = page.locator(
+                '.workspace-dock button[aria-label="便签工作区"]',
+            );
+            await dockNotesBtn.waitFor({ state: "visible" });
+            await dockNotesBtn.click();
+            await panel.waitFor({ state: "visible" });
+            await page.waitForFunction(() =>
+                document.querySelectorAll(".workspace-notes-list .note-card")
+                    .length >= 1
+            );
+
+            // Observe actual IndexedDB cache readiness for notes:* key in searcher-client / state
+            await page.waitForFunction((expectedId) => {
+                return new Promise<boolean>((resolve) => {
+                    const req = indexedDB.open("searcher-client", 1);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains("state")) {
+                            db.close();
+                            return resolve(false);
+                        }
+                        const tx = db.transaction("state", "readonly");
+                        const objStore = tx.objectStore("state");
+                        const getAllKeys = objStore.getAllKeys();
+                        getAllKeys.onsuccess = () => {
+                            const keys = getAllKeys.result as string[];
+                            const notesKey = keys.find((k) =>
+                                typeof k === "string" && k.startsWith("notes:")
+                            );
+                            if (!notesKey) {
+                                db.close();
+                                return resolve(false);
+                            }
+                            const getVal = objStore.get(notesKey);
+                            getVal.onsuccess = () => {
+                                const val = getVal.result as
+                                    | Array<{ id: string }>
+                                    | undefined;
+                                const hasExpected = Array.isArray(val) &&
+                                    val.some((n) => n.id === expectedId);
+                                db.close();
+                                resolve(hasExpected);
+                            };
+                            getVal.onerror = () => {
+                                db.close();
+                                resolve(false);
+                            };
+                        };
+                        getAllKeys.onerror = () => {
+                            db.close();
+                            resolve(false);
+                        };
+                    };
+                    req.onerror = () => resolve(false);
+                });
+            }, createdNoteId);
+
+            let retryNoteId = "";
+            try {
+                // Intercept /api/notes to simulate server outage
+                await page.route("**/api/notes", (route) => {
+                    if (route.request().method() === "GET") {
+                        return route.fulfill({
+                            status: 500,
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                error: "Notes service temporarily unavailable",
+                            }),
+                        });
+                    }
+                    return route.continue();
+                });
+
+                // Reload page to trigger stale cache fallback
+                await page.reload();
+
+                // Open Notes workspace
+                await dockNotesBtn.waitFor({ state: "visible" });
+                await dockNotesBtn.click();
+                await panel.waitFor({ state: "visible" });
+
+                // Error alert is displayed with retry button
+                const alertEl = panel.locator('div[role="alert"]');
+                await alertEl.waitFor({ state: "visible" });
+                const retryBtn = alertEl.locator("button");
+                await retryBtn.waitFor({ state: "visible" });
+                assertEquals(await retryBtn.textContent(), "重试");
+
+                // Stale notes are still rendered and browsable!
+                const staleCards = panel.locator(
+                    ".workspace-notes-list .note-card",
+                );
+                await staleCards.first().waitFor({ state: "visible" });
+                assertEquals(await staleCards.count() >= 1, true);
+
+                // Create a distinct new note on the server while GET is failing 500 (POST passes)
+                retryNoteId = await page.evaluate(async () => {
+                    const res = await fetch("/api/notes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: "Refreshed Retry Success Note",
+                            body:
+                                "Content proving cache refresh upon successful retry",
+                            isPinned: false,
+                            isHomeFixed: false,
+                        }),
+                    });
+                    const payload = await res.json() as {
+                        data: { id: string };
+                    };
+                    return payload.data.id;
+                });
+
+                // Arm waitForResponse for GET /api/notes returning 200 before clicking retry
+                const retryResponsePromise = page.waitForResponse(
+                    (res) =>
+                        res.url().includes("/api/notes") &&
+                        res.request().method() === "GET" &&
+                        res.status() === 200,
+                );
+
+                // Unroute mock so retry succeeds
+                await page.unroute("**/api/notes");
+
+                // Click retry button
+                await retryBtn.click();
+
+                // Await real 200 response from server
+                await retryResponsePromise;
+
+                // Alert is dismissed and fresh note content is rendered, proving cache refresh
+                await alertEl.waitFor({ state: "detached" });
+                const refreshedNoteCard = panel.locator(".note-card", {
+                    hasText: "Refreshed Retry Success Note",
+                });
+                await refreshedNoteCard.waitFor({ state: "visible" });
+            } finally {
+                await page.unroute("**/api/notes").catch(() => {});
+                if (retryNoteId) {
+                    await page.evaluate(async (id) => {
+                        await fetch(`/api/notes/${encodeURIComponent(id)}`, {
+                            method: "DELETE",
+                        });
+                    }, retryNoteId).catch(() => {});
+                }
+            }
+
+            // Close workspace
+            await panel.locator(
                 '.workspace-header button[aria-label="收起工作区"]',
             ).click();
             await panel.waitFor({ state: "detached" });

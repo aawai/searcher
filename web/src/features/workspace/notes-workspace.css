@@ -1,15 +1,58 @@
 .notes-workspace {
     display: grid;
     gap: var(--space-section-gap);
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 .notes-workspace h3 {
     margin: 0 0 var(--space-3);
     font-size: var(--font-component-title-size);
     font-weight: var(--font-title-weight);
 }
-.workspace-notes-list {
+.notes-workspace section {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+.notes-workspace .workspace-notes-list {
     display: grid;
     gap: var(--space-3);
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.notes-workspace .workspace-notes-list > * {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+.notes-workspace .workspace-notes-list .note-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.notes-workspace .note-preview {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+.notes-workspace .note-preview pre {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+}
+.notes-workspace .note-drag {
+    cursor: default;
+}
+@media (hover: none) {
+    .notes-workspace .note-card-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .notes-workspace .note-head {
+        padding-inline-end: calc(var(--control-compact-height) * 2 +
+            var(--space-2));
+    }
 }
 .workspace-empty {
     color: var(--muted);

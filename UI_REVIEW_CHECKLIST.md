@@ -267,3 +267,67 @@
       长文件夹名整理列表实页无 overflow、无竞争 primary，浏览器无 page errors。
 - [x] 205 项源码测试、生产 Workspace 9 个回归步骤、build/typecheck、修改范围
       lint 通过；check:ui 为 0 新违规、0 drift。
+
+## Issue #43 Notes Root 原地浏览与几何（2026-10-01）
+
+- [x] 复用 Workspace / Workbench 与 NoteCard 既有展开、操作菜单和 Button；未新增
+      surface、视觉 Token 或全局 `.note-card` override，保留纸张、折角和阴影。
+- [x] 修复前实页：3 条便签渲染 5 张卡片，card 250px / list
+      366px，无展开入口；修复后固定和其他分组共 3 张，card / list 均 366px。
+- [x] 独立临时数据库生产实页 390×844 / 768×1024 / 1440×900 × light/dark
+      六张截图：compact 与 expanded 卡片均填满列表，宽差
+      0px；长标题省略，无页面或面板横向
+      overflow，纸张视觉保持。媒体偏好、实际主题与 reduced-motion 已校准；移动
+      Sheet / desktop aside 均覆盖。
+- [x] 实际点击展开、折叠、菜单均留在 Notes
+      Root；搜索命中一次，清空恢复互斥分组；卡片主体进 editor、Back 回 Root。API
+      回读三个 Note 的 version 均为 1、layout 均为 null，Home 展开正文仍保留。
+- [x] UI smoke 脚本修正：浏览器 helper 的空字符串 fill 未提交 React
+      query，改用真实键盘清空后复查；hover 后点击既有 action controls，不用
+      force 绕过 pointer-events。
+- [x] 审查发现禁用 grip 的 pointer-events 使点击穿透到卡片，实页复现进入
+      editor；改为不参与 Tab 的 inert Button（aria-disabled）后，固定与搜索卡片
+      `.note-drag` 的真实指针点击均留在 Root。
+- [x] 补查触屏发现 action controls 原本仅 hover 可达；新增 `.notes-workspace` 内
+      `(hover: none)` 常显操作和标题避让，不改 Home/Zen。390×844 真触屏模拟校准
+      `maxTouchPoints=1`、coarse、hover:none；无 hover 的 tap 展开/折叠/菜单保持
+      Root，菜单实际可见，tap 主体进入 editor。light/dark 截图与展开宽差
+      0px、无横向 overflow 通过。
+- [x] 浏览器 helper 每轮动作会恢复 viewport，真触屏验证改在单次 run
+      内配置、reload 和 tap；只把校准媒体条件下的结果计为触屏证据。
+- [x] 浏览器 console error 为 0；一次页面 reload 中 SSE `/api/notes/events`
+      产生预期 `ERR_ABORTED`，无 JavaScript runtime error。
+- [x] build、App.tsx typecheck、源文件 lint/format 与 205
+      项源码测试通过；check:ui 扫描 71 文件，759 存量违规，0 新违规 / 增量 /
+      stale allowance，未增加 baseline。
+- [x] 最终生产 Workspace 回归：1 项集成测试 / 12 步全部通过（71
+      秒）。覆盖去重、搜索空状态、原地展开与控制隔离、真实 touch tap、零 Note
+      写请求与完整 DTO
+      不变、删除展开项、六种几何组合及展开长代码无面板溢出、Home/Zen
+      模式和坐标隔离、缓存错误浏览与 retry 200 后新增服务端便签出现。
+- [x] Editor empty / unsynced / saving / save-error、local
+      draft、autosave、conflict、version-history error / restore、new note /
+      Back / Close 均由真实服务回归覆盖；修改后的测试 lint/format 通过。
+- [x] 验收脚本缺陷已修复并复查：遗漏 request observer、可跳过的
+      Home/展开几何断言、错误 IndexedDB 名称、retry 仅清错不等新数据；deferred
+      save 导致旧 version 的冲突 fixture 返回 409，改为保存后回读 version 后全套
+      12 步通过。先前弱断言结果不作为这些 contract 的证据。
+- [x] Advisor 采纳项复验：inert grip 移除 aria-hidden，提供“不可排序”名称，保留
+      aria-disabled / tabIndex=-1 和点击隔离。真实 Tab 从搜索进入“展开”（跳过
+      inert grip），Enter 原地展开，点击 grip 不进入 editor；axe 的
+      aria-hidden-focus / button-name 两项规则均无违规（非全量 accessibility
+      audit）。
+- [x] Deferred PATCH 的 finally 无条件释放 saveHold 后移除 route；CHANGELOG
+      明确记录触屏操作常显。修正后的最终源码 205 项测试、生产 Workspace 12
+      步（58 秒）、App.tsx typecheck、修改范围 lint/format、build 与 check:ui
+      通过；UI baseline 保持 0 新 drift。
+- [x] PR 提交前移除可排序 Gamma grip 的条件断言，必需控件缺失即失败；修改范围
+      lint/format 与生产 Workspace 12 步重新通过（55 秒）。
+- [x] React Doctor 未报告 NotesWorkspace 问题；全仓 65/100 的 28
+      项提示位于其他既有文件，本次不扩大范围。诊断命令自动写入的临时依赖已移除。
+- [x] 本次无 Design Lab / API / 权限 / conversation model
+      变更；不新增基础控件，不重做 Home/Zen 或 guest 页面。
+- [x] PR 分支整合最新 main（#38 Ask 工作区）后：293 项源码测试、生产 Workspace
+      12 步（54 秒）、build、App.tsx typecheck 和 check:ui 通过；UI Guard 扫描
+      88 文件、758 存量违规，0 新违规 / 增量 / stale allowance。CHANGELOG
+      合并保留两项功能记录。
