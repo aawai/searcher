@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import { GripVertical } from "lucide-react";
 import {
     closestCenter,
@@ -32,14 +33,26 @@ type NoteActions = Pick<
     HomeLayoutProps,
     "editNote" | "updateNote" | "updateNoteLayout" | "deleteNote"
 >;
-function WorkspaceNote({ note, actions, sortable = false, disabled = false }: {
+function WorkspaceNote({
+    note,
+    actions,
+    sortable = false,
+    disabled = false,
+    expanded = false,
+    onToggleExpand,
+    onDelete,
+}: {
     note: NoteItem;
     actions: NoteActions;
     sortable?: boolean;
     disabled?: boolean;
+    expanded?: boolean;
+    onToggleExpand?: () => void;
+    onDelete?: () => void;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition } =
         useSortable({ id: note.id, disabled: !sortable || disabled });
+    const isInteractive = sortable && !disabled;
     return (
         <div
             ref={sortable ? setNodeRef : undefined}
@@ -49,23 +62,28 @@ function WorkspaceNote({ note, actions, sortable = false, disabled = false }: {
         >
             <NoteCard
                 note={note}
-                mode="compact"
+                mode={expanded ? "full" : "compact"}
+                onToggleMode={onToggleExpand}
                 onOpen={() => actions.editNote(note)}
-                dragHandle={sortable
-                    ? (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled={disabled}
-                            aria-label={"排序 " +
-                                getNoteDisplayTitle(note.title, note.body)}
-                            {...attributes}
-                            {...listeners}
-                        >
-                            <GripVertical size={14} />
-                        </Button>
-                    )
-                    : undefined}
+                dragHandle={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={(isInteractive ? "排序 " : "不可排序 ") +
+                            getNoteDisplayTitle(note.title, note.body)}
+                        aria-disabled={!isInteractive ? "true" : undefined}
+                        tabIndex={isInteractive ? 0 : -1}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }}
+                        {...(isInteractive ? attributes : {})}
+                        {...(isInteractive ? listeners : {})}
+                    >
+                        <GripVertical size={14} />
+                    </Button>
+                }
                 onTogglePin={() =>
                     void actions.updateNote(note, { isPinned: !note.isPinned })}
                 onToggleHomeFixed={() =>
@@ -74,7 +92,10 @@ function WorkspaceNote({ note, actions, sortable = false, disabled = false }: {
                     })}
                 onChangeColor={(color) =>
                     void actions.updateNote(note, { color })}
-                onDelete={() => void actions.deleteNote(note)}
+                onDelete={() => {
+                    onDelete?.();
+                    void actions.deleteNote(note);
+                }}
             />
         </div>
     );
@@ -106,25 +127,85 @@ export function NotesWorkspace(
         onRetry: () => void;
     },
 ) {
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
+        new Set()
+    );
+
+    useEffect(() => {
+        setExpandedIds((prev) => {
+            if (prev.size === 0) return prev;
+            const currentIds = new Set(notes.map((n) => n.id));
+            let changed = false;
+            const next = new Set<string>();
+            for (const id of prev) {
+                if (currentIds.has(id)) {
+                    next.add(id);
+                } else {
+                    changed = true;
+                }
+            }
+            return changed ? next : prev;
+        });
+    }, [notes]);
+
+    const toggleExpand = useCallback((id: string) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    }, []);
+
+    const handleDelete = useCallback((id: string) => {
+        setExpandedIds((prev) => {
+            if (!prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    }, []);
+
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         }),
     );
-    const ordered = notes.filter((note) =>
-        ((note.title ?? "") + "\n" + note.body).toLowerCase().includes(
-            query.toLowerCase(),
-        )
-    )
-        .sort((a, b) =>
-            Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) ||
-            (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.id.localeCompare(b.id)
-        );
-    const fixed = ordered.filter((note) => note.isPinned || note.isHomeFixed);
+
+    const isSearching = Boolean(query.trim());
+    const queryTrimmed = query.trim().toLowerCase();
+
+    const sortFn = (a: NoteItem, b: NoteItem) =>
+        Number(Boolean(b.isPinned)) - Number(Boolean(a.isPinned)) ||
+        (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+        a.id.localeCompare(b.id);
+
+    const fixedNotes = notes
+        .filter((note) => note.isPinned || note.isHomeFixed)
+        .sort(sortFn);
+
+    const otherNotes = notes
+        .filter((note) => !note.isPinned && !note.isHomeFixed)
+        .sort(sortFn);
+
+    const searchNotes = isSearching
+        ? notes
+            .filter((note) =>
+                ((note.title ?? "") + "\n" + note.body).toLowerCase().includes(
+                    queryTrimmed,
+                )
+            )
+            .sort(sortFn)
+        : [];
+
     const editing = state.view === "notes/edit"
         ? notes.find((note) => note.id === state.id)
         : undefined;
+
     if (state.view === "notes/edit") {
         return editing
             ? (
@@ -136,18 +217,20 @@ export function NotesWorkspace(
             )
             : <p role="status">便签已被删除，请返回便签列表。</p>;
     }
+
     function reorder(event: DragEndEvent) {
-        if (!event.over || event.active.id === event.over.id || query.trim()) {
+        if (!event.over || event.active.id === event.over.id || isSearching) {
             return;
         }
-        const from = ordered.findIndex((note) => note.id === event.active.id);
-        const to = ordered.findIndex((note) => note.id === event.over?.id);
-        if (
-            from < 0 || to < 0 ||
-            Boolean(ordered[from].isPinned) !== Boolean(ordered[to].isPinned)
-        ) return;
-        void onReorder(arrayMove(ordered, from, to));
+        const from = otherNotes.findIndex((note) =>
+            note.id === event.active.id
+        );
+        const to = otherNotes.findIndex((note) => note.id === event.over?.id);
+        if (from < 0 || to < 0) return;
+        const reorderedOther = arrayMove(otherNotes, from, to);
+        void onReorder([...fixedNotes, ...reorderedOther]);
     }
+
     return (
         <div className="notes-workspace">
             <Input
@@ -164,52 +247,113 @@ export function NotesWorkspace(
                     <Button variant="outline" onClick={onRetry}>重试</Button>
                 </div>
             )}
-            {fixed.length > 0 && (
-                <section aria-labelledby="notes-fixed-heading">
-                    <h3 id="notes-fixed-heading">置顶与首页固定</h3>
-                    <div className="workspace-notes-list">
-                        {fixed.map((note) => (
-                            <WorkspaceNote
-                                key={note.id}
-                                note={note}
-                                actions={actions}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-            <section aria-labelledby="notes-all-heading">
-                <h3 id="notes-all-heading">全部便签</h3>
-                {!ordered.length && !loading && (
-                    <p className="workspace-empty" role="status">
-                        {query
-                            ? "没有匹配的便签，清空搜索可查看全部。"
-                            : "还没有便签，点击底部“新建便签”开始记录。"}
-                    </p>
+            {!isSearching
+                ? (
+                    <>
+                        {fixedNotes.length > 0 && (
+                            <section aria-labelledby="notes-fixed-heading">
+                                <h3 id="notes-fixed-heading">置顶与首页固定</h3>
+                                <div className="workspace-notes-list">
+                                    {fixedNotes.map((note) => (
+                                        <WorkspaceNote
+                                            key={note.id}
+                                            note={note}
+                                            actions={actions}
+                                            expanded={expandedIds.has(note.id)}
+                                            onToggleExpand={() =>
+                                                toggleExpand(note.id)}
+                                            onDelete={() =>
+                                                handleDelete(note.id)}
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                        <section
+                            aria-labelledby={fixedNotes.length > 0
+                                ? "notes-other-heading"
+                                : "notes-all-heading"}
+                        >
+                            <h3
+                                id={fixedNotes.length > 0
+                                    ? "notes-other-heading"
+                                    : "notes-all-heading"}
+                            >
+                                {fixedNotes.length > 0
+                                    ? "其他便签"
+                                    : "全部便签"}
+                            </h3>
+                            {notes.length === 0 && !loading && (
+                                <p className="workspace-empty" role="status">
+                                    还没有便签，点击底部“新建便签”开始记录。
+                                </p>
+                            )}
+                            {notes.length > 0 && otherNotes.length === 0 && (
+                                <p className="workspace-empty" role="status">
+                                    暂无其他便签
+                                </p>
+                            )}
+                            {otherNotes.length > 0 && (
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={reorder}
+                                >
+                                    <SortableContext
+                                        items={otherNotes.map((note) =>
+                                            note.id
+                                        )}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="workspace-notes-list">
+                                            {otherNotes.map((note) => (
+                                                <WorkspaceNote
+                                                    key={note.id}
+                                                    note={note}
+                                                    actions={actions}
+                                                    sortable
+                                                    expanded={expandedIds.has(
+                                                        note.id,
+                                                    )}
+                                                    onToggleExpand={() =>
+                                                        toggleExpand(note.id)}
+                                                    onDelete={() =>
+                                                        handleDelete(note.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+                        </section>
+                    </>
+                )
+                : (
+                    <section aria-labelledby="notes-all-heading">
+                        <h3 id="notes-all-heading">全部便签</h3>
+                        {!searchNotes.length && !loading && (
+                            <p className="workspace-empty" role="status">
+                                没有匹配的便签，清空搜索可查看全部。
+                            </p>
+                        )}
+                        {searchNotes.length > 0 && (
+                            <div className="workspace-notes-list">
+                                {searchNotes.map((note) => (
+                                    <WorkspaceNote
+                                        key={note.id}
+                                        note={note}
+                                        actions={actions}
+                                        sortable={false}
+                                        expanded={expandedIds.has(note.id)}
+                                        onToggleExpand={() =>
+                                            toggleExpand(note.id)}
+                                        onDelete={() => handleDelete(note.id)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
                 )}
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={reorder}
-                >
-                    <SortableContext
-                        items={ordered.map((note) => note.id)}
-                        strategy={verticalListSortingStrategy}
-                    >
-                        <div className="workspace-notes-list">
-                            {ordered.map((note) => (
-                                <WorkspaceNote
-                                    key={note.id}
-                                    note={note}
-                                    actions={actions}
-                                    sortable
-                                    disabled={Boolean(query.trim())}
-                                />
-                            ))}
-                        </div>
-                    </SortableContext>
-                </DndContext>
-            </section>
         </div>
     );
 }
