@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Folder, FolderPlus, SlidersHorizontal } from "lucide-react";
+import { Folder } from "lucide-react";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
@@ -10,6 +10,12 @@ import type {
     LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
 import { FolderNameDialog } from "./FolderNameDialog.tsx";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuTrigger,
+} from "../../components/ui/context-menu.tsx";
 
 export interface AppsRootViewProps {
     apps: ExtendedWebApp[];
@@ -106,6 +112,13 @@ export function AppsRootView({
 
     const totalMatches = matchedApps.length + matchedGroups.length;
 
+    const toggleArrange = () => {
+        if (!isArranging) {
+            onQueryChange("");
+        }
+        onArrangeChange(!isArranging);
+    };
+
     return (
         <div className="workspace-root">
             <div className="workspace-root-controls">
@@ -118,48 +131,14 @@ export function AppsRootView({
                     disabled={isArranging}
                     ariaLabel="搜索网站"
                 />
-
-                {/* Secondary toolbar */}
-                <div className="apps-workspace-secondary-bar">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5 text-xs text-[var(--muted)]"
-                        onClick={() => setIsCreateFolderOpen(true)}
-                        disabled={isArranging}
-                        aria-label="新建文件夹"
-                    >
-                        <FolderPlus size={14} />
-                        <span>新建文件夹</span>
-                    </Button>
-                    <Button
-                        variant={isArranging ? "default" : "outline"}
-                        size="sm"
-                        className="gap-1.5 text-xs"
-                        onClick={() => {
-                            if (!isArranging) {
-                                onQueryChange("");
-                            }
-                            onArrangeChange(!isArranging);
-                        }}
-                        aria-label={isArranging
-                            ? "完成排序整理"
-                            : "整理网站排序与布局"}
-                    >
-                        {isArranging
-                            ? <Check size={14} />
-                            : <SlidersHorizontal size={14} />}
-                        <span>
-                            {isArranging ? "完成整理" : "整理布局"}
-                        </span>
-                    </Button>
-                </div>
             </div>
 
             {/* When searching and NOT arranging */}
             {trimmedQuery && !isArranging
                 ? (
-                    <div className="apps-workspace-section">
+                    <ContextMenu>
+                        <ContextMenuTrigger className="apps-workspace-context-surface">
+                            <div className="apps-workspace-section">
                         <div className="apps-workspace-section-header">
                             <h3 className="apps-workspace-section-title">
                                 搜索结果
@@ -247,7 +226,21 @@ export function AppsRootView({
                                     )}
                                 </div>
                             )}
-                    </div>
+                            </div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent aria-label="应用工作区空白区域操作">
+                            {onCreateFolder && (
+                                <ContextMenuItem
+                                    onClick={() => setIsCreateFolderOpen(true)}
+                                >
+                                    新建文件夹
+                                </ContextMenuItem>
+                            )}
+                            <ContextMenuItem onClick={toggleArrange}>
+                                整理布局
+                            </ContextMenuItem>
+                        </ContextMenuContent>
+                    </ContextMenu>
                 )
                 : (
                     /* Standard view: Unified Launcher */
@@ -275,6 +268,7 @@ export function AppsRootView({
                             onRenameFolder={onRenameFolder}
                             onDeleteFolder={onDeleteFolder}
                             onFolderSizeChange={onFolderSizeChange}
+                            onToggleManaging={toggleArrange}
                             onAdd={() => onNavigateToAdd?.(activeFolderId)}
                         />
 
