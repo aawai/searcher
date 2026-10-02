@@ -26,6 +26,8 @@ Zen 布局下，登录后首页搜索框下方显示固定网站：PC 从搜索�
 
 底部 Dock（Widgets）与边缘入口（Zen）打开同一 Workspace：桌面使用 400px 非模态右侧栏，移动端使用模态底部 Sheet。Header 和底部 Switcher 固定，内容区独立滚动；根视图可切换应用/便签，嵌套表单或便签编辑器隐藏 Switcher，Back 返回上一级，Close 收起整个工作区。应用表单关闭或返回时保护未保存修改；便签使用本地草稿、自动保存、冲突处理和版本历史。Widgets 首页只展示至多 5 张主页固定便签，采用稳定轻微叠放，窄屏和窄容器回退为单列；不会覆盖 Zen FloatingNotes 的桌面坐标。
 
+首页「随手便签」有两张及以上固定便签时，可拖动把手调整顺序；键盘聚焦把手后按 Space 拿起，方向键移动，Space 放下，Escape 取消。排序立即显示并通过现有 `sortOrder` 同步，刷新或重新登录后保持；仅重排当前可见的固定便签，不改变普通便签与未展示固定便签的相对顺序，也不改变置顶、内容或 Zen 坐标。不能排序的便签展示不提供可操作拖拽把手。
+
 便签工作区根视图默认紧凑显示，点击展开/折叠按钮可原地浏览正文，点击卡片主体进入编辑器。展开状态只在当前工作区生命周期内有效，不参与自动保存，不改变便签版本或首页/Zen 的展开与位置。无搜索词时，“置顶与首页固定”与“其他便签”互斥；搜索覆盖全部便签，每条只展示一次。
 
 ### AI 应用图标
@@ -64,7 +66,7 @@ deno task test:routing
 
 `test:routing` 先构建生产前端，再启动隔离的真实 Hono 服务、内存数据库与临时资源目录，验证直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航；不连接开发实例或使用真实账户。
 
-`deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes 与 Bento 五套实页回归，使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及响应式/主题布局；不会使用真实账户或开发数据库。
+`deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序与 Bento 六套实页回归，使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及响应式/主题布局；不会使用真实账户或开发数据库。
 ## UI Contract 与门禁
 
 UI 变更遵循 [Design Principles](DESIGN_PRINCIPLES.md)、[Design System](DESIGN_SYSTEM.md) 和 [UI Review Checklist](UI_REVIEW_CHECKLIST.md)。复用 `PageShell`、`PageHeader` 和 Searcher semantic components；`/design-lab` 覆盖正式组件、交互状态和响应式预览，但不能替代真实业务页面验收。既有 UI 计划和 Spec Pack 是历史设计资料；当前 UI 规则、存量迁移边界及 advisor 裁决见 Design System，实际验收和未覆盖项见 Checklist。baseline 通过不表示历史样式债务、focus 语义或所有业务流程已清零。

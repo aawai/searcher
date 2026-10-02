@@ -528,3 +528,30 @@
       allowances 均为 0。 Notes 保存生命周期测试在输入前等待 nested Back
       autofocus 完成，保留所有原有
       保存/失败/重试断言；未改保存实现或使用请求拦截门控。
+
+## Issue #62 首页固定便签排序验收（2026-10-02）
+
+- [x] 复用 search PageShell、L1 Bento、NoteCard 与 shadcn Button；无新
+      surface、视觉 token 或 baseline allowance。外层 slot 保留 deterministic
+      rotation/54px step，内层只接收 runtime drag translate；窄屏单列回退不变。
+- [x] 独立临时数据库实站验证 Pointer、CDP touch（390px）与
+      KeyboardSensor；排序立即改变 DOM，并写入现有 sortOrder。普通便签分别保持原
+      slot 1/3；不新增 API、schema 或首页排序字段。
+- [x] 键盘 Space 拿起、ArrowUp 移动、Space 放下；保存期间保留同一
+      activator，禁止重复排序，保存结束焦点仍在排序把手。把手点击与排序不进入编辑器。
+- [x] 375/390/768/1024/1440 × light/dark 实页无水平 overflow；另核对固定
+      768×1024 light/dark，DPR 1.25。390 单列 margin=0/transform=none；桌面前三
+      slot margin=0/54/108px、未聚焦 slot 保留
+      ±1.2deg。已审阅移动及桌面、平板浅深色截图。
+- [x] Home axe WCAG A/AA：0 confirmed violations、2
+      incomplete；不宣称人工项全部通过。
+- [x] production build 与 App.tsx typecheck 通过；UI Guard 88 files、0
+      violations、0 new/increased/stale。全仓 lint 发现 15
+      项未改路径既有问题；全仓 format 仅 scripts/ui-guard/baseline.json
+      既有格式不符，不扩大本次修改范围。
+- [x] 最终契约：deno task test 320 passed；deno task test:workspace 6 suites /
+      65 steps passed。新增 #62 E2E 覆盖
+      Pointer、Keyboard、刷新/重新登录、隐藏第 6 条、metadata
+      不变及固定/移出首页；最后补充真实 Workspace keyboard 重排并验证 API
+      顺序，focused 7 steps 全通过。新增测试与修改文件 scoped lint/format
+      通过；README/Unreleased 已同步。

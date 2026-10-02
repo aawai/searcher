@@ -1,7 +1,6 @@
 import {
     Bookmark,
     ExternalLink,
-    GripVertical,
     Maximize2,
     Minimize2,
     MoreHorizontal,
@@ -122,14 +121,9 @@ export function NoteCard(
         >
             <header className="note-head">
                 <div className="note-head-left">
-                    <span className="note-drag">
-                        {dragHandle ?? (
-                            <GripVertical
-                                size={15}
-                                aria-hidden="true"
-                            />
-                        )}
-                    </span>
+                    {dragHandle && (
+                        <span className="note-drag">{dragHandle}</span>
+                    )}
                     <strong className="note-title" title={displayTitle}>
                         {displayTitle}
                     </strong>
