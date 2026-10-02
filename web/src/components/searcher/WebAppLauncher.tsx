@@ -595,6 +595,7 @@ export interface WebAppLauncherProps {
     ) => void;
     onAdd: () => void;
     onToggleManaging?: () => void;
+    onSurfaceToggleManaging?: () => void;
     onResetLayout?: () => void;
     emptyMessage?: string;
     emptyAction?: boolean;
@@ -632,6 +633,7 @@ export function WebAppLauncher({
     onFolderSizeChange,
     onAdd,
     onToggleManaging,
+    onSurfaceToggleManaging,
     onResetLayout,
     emptyMessage = "还没有常用网站",
     emptyAction = true,
@@ -707,7 +709,7 @@ export function WebAppLauncher({
 
     const renderSurfaceWithContextMenu = (content: ReactNode) => (
         <>
-            {onCreateFolder || onToggleManaging
+            {onCreateFolder || onSurfaceToggleManaging
                 ? (
                     <ContextMenu>
                         <ContextMenuTrigger className="launcher-surface-wrap">
@@ -722,8 +724,10 @@ export function WebAppLauncher({
                                     新建文件夹
                                 </ContextMenuItem>
                             )}
-                            {onToggleManaging && (
-                                <ContextMenuItem onClick={onToggleManaging}>
+                            {onSurfaceToggleManaging && (
+                                <ContextMenuItem
+                                    onClick={onSurfaceToggleManaging}
+                                >
                                     {managing ? "完成整理" : "整理布局"}
                                 </ContextMenuItem>
                             )}
