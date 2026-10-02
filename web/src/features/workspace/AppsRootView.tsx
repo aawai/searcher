@@ -284,49 +284,6 @@ export function AppsRootView({
                 )}
 
             {onCreateFolder && (
-                                <ContextMenuItem
-                                    onClick={() => setIsCreateFolderOpen(true)}
-                                >
-                                    新建文件夹
-                                </ContextMenuItem>
-                            )}
-                            <ContextMenuItem onClick={toggleArrange}>
-                                整理布局
-                            </ContextMenuItem>
-                        </ContextMenuContent>
-                    </ContextMenu>
-                )
-                : (
-                    /* Standard view: Unified Launcher */
-                    <WebAppLauncher
-                        presentation="workspace"
-                        apps={apps}
-                        groups={groups}
-                        showFolders
-                        size="default"
-                        showAppLabels
-                        managing={isArranging}
-                        activeFolderId={activeFolderId}
-                        onFolderChange={onFolderChange}
-                        onOpen={onOpen}
-                        onEdit={(app) => onNavigateToEdit(app.id)}
-                        onMove={onMove}
-                        onPin={onPin}
-                        onDelete={onDelete}
-                        onReorder={onReorder}
-                        onReorderRoot={onReorderRoot}
-                        onReorderFolder={onReorderFolder}
-                        onMoveAppToFolder={onMoveAppToFolder}
-                        onCreateFolder={onCreateFolder}
-                        onRenameFolder={onRenameFolder}
-                        onDeleteFolder={onDeleteFolder}
-                        onFolderSizeChange={onFolderSizeChange}
-                        onSurfaceToggleManaging={toggleArrange}
-                        onAdd={() => onNavigateToAdd?.(activeFolderId)}
-                    />
-                )}
-
-            {onCreateFolder && (
                 <FolderNameDialog
                     open={isCreateFolderOpen}
                     onOpenChange={setIsCreateFolderOpen}
