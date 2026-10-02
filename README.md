@@ -168,7 +168,7 @@ Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实�
 
 ### Docker / Unraid
 
-仓库提供基于 Deno 2.9.7 的多阶段 Docker 镜像。镜像内置
+仓库提供基于 Deno 2.9.7 的多阶段 Docker 镜像；前端 build stage 使用标准 Deno 镜像，`runtime-deps` 与最终 runtime 使用 `denoland/deno:alpine-2.9.7`。镜像内置
 `NODE_ENV=production`、`PORT=34567` 与
 `DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
 并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。最终 runtime 镜像不包含项目级 `node_modules`；Docker 专用的 `deno.runtime.jsonc` 只保留后端运行依赖映射。构建从仓库主 `deno.lock` 派生精简 runtime lock，并按 `src/main.ts` 与管理员 CLI 的实际 module graph 安装到 Deno 全局 cache，以 `--cached-only` 离线启动。Vite、React、Playwright、Tailwind 等前端/构建依赖不会进入 runtime dependency layer。
