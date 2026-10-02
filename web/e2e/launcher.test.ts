@@ -98,6 +98,127 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         );
     }
 
+    // Helper to calculate blank coordinate strictly below last grid row above footer
+    async function getSurfaceBlankCoordinate(targetPage: Page = page) {
+        return await targetPage.evaluate(() => {
+            const panelEl = document.querySelector(
+                "aside.workspace-panel, .workspace-panel",
+            );
+            if (!panelEl) throw new Error("Workspace panel not found");
+            const footerEl = panelEl.querySelector(".workspace-footer");
+            const footerTop = footerEl
+                ? footerEl.getBoundingClientRect().top
+                : globalThis.innerHeight;
+
+            const contentElements = Array.from(
+                panelEl.querySelectorAll<HTMLElement>(
+                    ".launcher-tile, .launcher-folder-item, .launcher-app, .apps-workspace-group-card, .apps-workspace-empty, .launcher-empty, .launcher-folder-inline-header, .apps-workspace-section-header",
+                ),
+            ).filter((el) => {
+                const r = el.getBoundingClientRect();
+                return r.width > 0 && r.height > 0;
+            });
+
+            let contentBottom: number;
+            if (contentElements.length > 0) {
+                contentBottom = Math.max(
+                    ...contentElements.map((el) =>
+                        el.getBoundingClientRect().bottom
+                    ),
+                );
+            } else {
+                const controls = panelEl.querySelector<HTMLElement>(
+                    ".workspace-root-controls",
+                );
+                contentBottom = controls
+                    ? controls.getBoundingClientRect().bottom
+                    : panelEl.getBoundingClientRect().top + 50;
+            }
+
+            const panelRect = panelEl.getBoundingClientRect();
+            const x = Math.round(panelRect.left + panelRect.width / 2);
+            const gap = footerTop - contentBottom;
+            const y = Math.round(
+                gap > 20
+                    ? contentBottom + gap / 2
+                    : (gap > 5
+                        ? contentBottom + gap * 0.7
+                        : contentBottom + 20),
+            );
+
+            return { x, y, contentBottom, footerTop };
+        });
+    }
+
+    async function rightClickBlankSurface(targetPage: Page = page) {
+        const { x, y } = await getSurfaceBlankCoordinate(targetPage);
+        await targetPage.mouse.click(x, y, { button: "right" });
+    }
+
+    async function openSurfaceMenu(targetPage: Page = page) {
+        await rightClickBlankSurface(targetPage);
+        const menu = targetPage.locator('[data-slot="context-menu-content"]');
+        await menu.waitFor({ timeout: 5000 });
+        return menu;
+    }
+
+    async function enterArrangingViaSurface(targetPage: Page = page) {
+        const menu = await openSurfaceMenu(targetPage);
+        const item = menu.locator('[data-slot="context-menu-item"]', {
+            hasText: "整理布局",
+        });
+        await item.click();
+        await menu.waitFor({ state: "detached" });
+    }
+
+    async function exitArrangingViaSurface(targetPage: Page = page) {
+        const menu = await openSurfaceMenu(targetPage);
+        const item = menu.locator('[data-slot="context-menu-item"]', {
+            hasText: "完成整理",
+        });
+        await item.click();
+        await menu.waitFor({ state: "detached" });
+    }
+
+    await t.step(
+        "0. Empty Launcher Root: blank surface menu available when zero apps or folders",
+        async () => {
+            await page.setViewportSize({ width: 1280, height: 800 });
+            const dock = page.locator(".workspace-dock");
+            await dock.waitFor();
+            await page.locator(
+                '.workspace-dock button[aria-label="应用工作区"]',
+            ).click();
+
+            const panel = page.locator("aside.workspace-panel");
+            await panel.waitFor();
+            await panel.locator(".launcher-empty, .apps-workspace-empty")
+                .waitFor();
+            assertEquals(
+                await panel.locator(".launcher-empty, .apps-workspace-empty")
+                    .first().isVisible(),
+                true,
+            );
+
+            // Blank surface menu is accessible in empty root state
+            const emptyMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await emptyMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                1,
+            );
+            assertEquals(
+                await emptyMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                1,
+            );
+            await page.keyboard.press("Escape");
+            await emptyMenu.waitFor({ state: "detached" });
+        },
+    );
+
     // Seed test data: 2 groups, 3 apps (1 in group, 2 loose, 1 pinned)
     const { data: group1 } = await apiRequest("/api/webapp-groups", "POST", {
         name: "Dev Tools",
@@ -179,16 +300,36 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             assertEquals(await addAppBtn.isVisible(), true);
             assertEquals(await addAppBtn.textContent(), "添加应用");
 
-            // Secondary bar contains outline "新建文件夹" and outline "整理布局"
-            const newFolderBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="新建文件夹"]',
+            // Top secondary toolbar buttons are removed per Issue #61
+            assertEquals(
+                await panel.locator(
+                    '.apps-workspace-secondary-bar button[aria-label="新建文件夹"]',
+                ).count(),
+                0,
             );
-            const arrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
+            assertEquals(
+                await panel.locator(
+                    '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
+                ).count(),
+                0,
             );
-            assertEquals(await newFolderBtn.isVisible(), true);
-            assertEquals(await arrangeBtn.isVisible(), true);
 
+            // Workspace blank surface menu is accessible below sparse grid rows above footer
+            const surfaceMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await surfaceMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                1,
+            );
+            assertEquals(
+                await surfaceMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                1,
+            );
+            await page.keyboard.press("Escape");
+            await surfaceMenu.waitFor({ state: "detached" });
             // Tiles on root: loose apps (GitHub, Linear) and folders (Dev Tools, Empty Folder)
             // Grouped app (GitLab) is inside Dev Tools, NOT duplicated on root!
             const rootAppNames = await panel.locator(
@@ -248,6 +389,22 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 "GitLab",
             );
 
+            // Blank surface menu is accessible inside inline folder view below apps
+            const folderSurfaceMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await folderSurfaceMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                1,
+            );
+            assertEquals(
+                await folderSurfaceMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                1,
+            );
+            await page.keyboard.press("Escape");
+            await folderSurfaceMenu.waitFor({ state: "detached" });
             // Click Back -> returns to Launcher root, restores focus to Dev Tools folder tile
             await backBtn.click();
             await inlineView.waitFor({ state: "detached" });
@@ -279,14 +436,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         async () => {
             const panel = page.locator("aside.workspace-panel");
 
-            // Right click on empty launcher surface to open context menu
-            const surface = panel.locator(".launcher-surface-wrap");
-            await surface.click({ button: "right", position: { x: 5, y: 5 } });
-
-            const contextMenu = page.locator(
-                '[data-slot="context-menu-content"]',
-            );
-            await contextMenu.waitFor();
+            // Right click on empty launcher surface below last grid row to open context menu
+            const contextMenu = await openSurfaceMenu(page);
             const newFolderItem = contextMenu.locator(
                 '[data-slot="context-menu-item"]',
                 {
@@ -322,11 +473,11 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             )
                 .waitFor();
 
-            // Also test visible trigger button in secondary toolbar
-            const toolbarBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="新建文件夹"]',
-            );
-            await toolbarBtn.click();
+            // Create second folder "Productivity" also via surface context menu below last grid row
+            const secondMenu = await openSurfaceMenu(page);
+            await secondMenu.locator(
+                '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+            ).click();
             await dialog.waitFor();
             await input.fill("Productivity");
             await submitBtn.click();
@@ -335,6 +486,31 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 '.launcher-folder-name:has-text("Productivity")',
             )
                 .waitFor();
+
+            // Verify arranging menu behavior: "完成整理" is shown and "新建文件夹" is disabled
+            await enterArrangingViaSurface(page);
+            const arrangingMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await arrangingMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("完成整理")',
+                ).count(),
+                1,
+            );
+            const disabledCreateFolder = arrangingMenu.locator(
+                '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+            );
+            if (await disabledCreateFolder.count() > 0) {
+                const disabled =
+                    await disabledCreateFolder.getAttribute("aria-disabled") ===
+                        "true" ||
+                    await disabledCreateFolder.getAttribute("data-disabled") !==
+                        null ||
+                    await disabledCreateFolder.isDisabled();
+                assertEquals(disabled, true);
+            }
+            await page.keyboard.press("Escape");
+            await arrangingMenu.waitFor({ state: "detached" });
+            await exitArrangingViaSurface(page);
         },
     );
 
@@ -352,6 +528,26 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 '[data-slot="context-menu-content"]',
             );
             await contextMenu.waitFor();
+
+            // Folder context menu isolation: does NOT contain workspace-level actions
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                0,
+            );
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("完成整理")',
+                ).count(),
+                0,
+            );
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                0,
+            );
 
             // 4a. Resize to large
             const resizeItem = contextMenu.locator(
@@ -464,26 +660,57 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 textContents.filter((t) => t === "GitLab").length;
             assertEquals(gitLabCount, 1);
 
+            // Blank surface menu is accessible below search results above footer
+            const searchMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await searchMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                1,
+            );
+            assertEquals(
+                await searchMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                1,
+            );
+            await page.keyboard.press("Escape");
+            await searchMenu.waitFor({ state: "detached" });
+
             // Clear search
             await panel.locator('button[aria-label="清除搜索"]').click();
             assertEquals(await searchInput.inputValue(), "");
 
-            // Arrange mode disables search input and unbinds query
-            await searchInput.fill("test");
-            const arrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
+            // Search with no results state
+            await searchInput.fill("nonexistentqueryxyz");
+            await panel.locator(".apps-workspace-empty").waitFor();
+
+            // Blank surface menu is accessible in search no-results state
+            const noResultsMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await noResultsMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                1,
             );
-            await arrangeBtn.click();
+            assertEquals(
+                await noResultsMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                1,
+            );
+            await page.keyboard.press("Escape");
+            await noResultsMenu.waitFor({ state: "detached" });
+
+            // Type query and enter arrange mode via surface menu: clears query and unbinds search
+            await searchInput.fill("test");
+            await enterArrangingViaSurface(page);
 
             // In arrange mode: query was cleared and input is disabled
             assertEquals(await searchInput.inputValue(), "");
             assertEquals(await searchInput.isDisabled(), true);
 
-            // Single primary contract: "完成整理" is primary variant, "添加应用" is hidden
-            const finishArrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            );
-            assertEquals(await finishArrangeBtn.isVisible(), true);
+            // In arrange mode: "添加应用" is hidden
             assertEquals(
                 await panel.locator(
                     ".workspace-footer button.workspace-primary",
@@ -491,8 +718,31 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 0,
             );
 
-            // Exit arrange mode: search is re-enabled
-            await finishArrangeBtn.click();
+            // In arrange mode: surface menu shows "完成整理" and disabled "新建文件夹"
+            const arrangeModeMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await arrangeModeMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("完成整理")',
+                ).count(),
+                1,
+            );
+            const disabledNewFolder = arrangeModeMenu.locator(
+                '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+            );
+            if (await disabledNewFolder.count() > 0) {
+                const disabled =
+                    await disabledNewFolder.getAttribute("aria-disabled") ===
+                        "true" ||
+                    await disabledNewFolder.getAttribute("data-disabled") !==
+                        null ||
+                    await disabledNewFolder.isDisabled();
+                assertEquals(disabled, true);
+            }
+            await page.keyboard.press("Escape");
+            await arrangeModeMenu.waitFor({ state: "detached" });
+
+            // Exit arrange mode via surface menu: search is re-enabled
+            await exitArrangingViaSurface(page);
             assertEquals(await searchInput.isDisabled(), false);
         },
     );
@@ -512,6 +762,26 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 '[data-slot="context-menu-content"]',
             );
             await contextMenu.waitFor();
+
+            // App context menu isolation: does NOT contain workspace-level actions
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                0,
+            );
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("完成整理")',
+                ).count(),
+                0,
+            );
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                0,
+            );
             const moveToDevTools = contextMenu.locator(
                 '[data-slot="context-menu-item"]',
                 {
@@ -578,11 +848,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         async () => {
             const panel = page.locator("aside.workspace-panel");
 
-            // Enter arrange mode
-            const arrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            );
-            await arrangeBtn.click();
+            // Enter arrange mode via surface menu
+            await enterArrangingViaSurface(page);
 
             const linearTile = panel.locator(
                 '.launcher-tile:has(.webapp-name:has-text("Linear"))',
@@ -666,10 +933,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await errorBanner.locator("button").click();
             await errorBanner.waitFor({ state: "detached" });
 
-            // Exit arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            // Exit arrange mode via surface menu
+            await exitArrangingViaSurface(page);
 
             // Verify server state on reload: Linear is still loose, not in Dev Tools
             await page.reload();
@@ -697,10 +962,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         async () => {
             const panel = page.locator("aside.workspace-panel");
 
-            // Enter arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            ).click();
+            // Enter arrange mode via surface menu
+            await enterArrangingViaSurface(page);
 
             const linearTile = panel.locator(
                 '.launcher-tile:has(.webapp-name:has-text("Linear"))',
@@ -748,10 +1011,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 return !names.includes("Linear");
             });
 
-            // Exit arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            // Exit arrange mode via surface menu
+            await exitArrangingViaSurface(page);
 
             // Verify server state on reload: Linear now has groupId === group1.id
             await page.reload();
@@ -799,10 +1060,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             );
             await inlineView.waitFor();
 
-            // Enter arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            ).click();
+            // Enter arrange mode via surface menu
+            await enterArrangingViaSurface(page);
 
             // Apps inside folder: Linear and GitLab
             const linearInFolder = inlineView.locator(
@@ -832,12 +1091,15 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 gitLabBox!.x + gitLabBox!.width / 2 - 5,
                 gitLabBox!.y + gitLabBox!.height / 2,
             );
+            const saved = page.waitForResponse((response) =>
+                new URL(response.url()).pathname === "/api/webapps/reorder" &&
+                response.request().method() === "PUT"
+            );
             await page.mouse.up();
+            assertEquals((await saved).status(), 200);
 
-            // Exit arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            // Exit arrange mode via surface menu
+            await exitArrangingViaSurface(page);
 
             // Return to root
             await inlineView.locator('button[aria-label="返回网站列表"]')
@@ -897,10 +1159,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 .click();
             await panel.waitFor();
 
-            // Enter arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            ).click();
+            // Enter arrange mode via surface menu
+            await enterArrangingViaSurface(page);
             const readRoot = () =>
                 panel.locator(".launcher-grid > .launcher-tile").evaluateAll((
                     elements,
@@ -930,9 +1190,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             );
             await page.keyboard.press("Space");
             assertEquals((await persisted).status(), 200);
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            // Exit arrange mode via surface menu
+            await exitArrangingViaSurface(page);
             assertEquals(await readRoot(), expected);
             await page.reload();
             await dock.waitFor();
@@ -1024,7 +1283,43 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             });
             assertEquals(added.status, 200);
             const loose = added.data as { id: string };
+
+            // Add extra loose apps to establish a multi-row root layout
+            for (let i = 1; i <= 3; i++) {
+                await apiRequest("/api/webapps", "POST", {
+                    name: `Multi App ${i}`,
+                    url: `https://example.org/multi-${i}`,
+                    sortOrder: 1000 + i,
+                });
+            }
+            await page.reload();
+            await page.locator(
+                '.workspace-dock button[aria-label="应用工作区"]',
+            ).click();
             const panel = page.locator("aside.workspace-panel");
+            await panel.waitFor();
+
+            // Multi-row root: blank surface coordinate is below the lowest tile row and above footer
+            const multiRowPoint = await getSurfaceBlankCoordinate(page);
+            assertEquals(multiRowPoint.y > multiRowPoint.contentBottom, true);
+            assertEquals(multiRowPoint.y < multiRowPoint.footerTop, true);
+
+            // Workspace surface menu functions below multirow grid
+            const multiRowMenu = await openSurfaceMenu(page);
+            assertEquals(
+                await multiRowMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                ).count(),
+                1,
+            );
+            assertEquals(
+                await multiRowMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
+                ).count(),
+                1,
+            );
+            await page.keyboard.press("Escape");
+            await multiRowMenu.waitFor({ state: "detached" });
             const readRoot = () =>
                 panel.locator(".launcher-grid > .launcher-tile").evaluateAll((
                     elements,
@@ -1037,9 +1332,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     '.workspace-dock button[aria-label="应用工作区"]',
                 ).click();
                 await panel.waitFor();
-                await panel.locator(
-                    '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-                ).click();
+                await enterArrangingViaSurface(page);
                 const before = await readRoot();
                 const expected = [...before];
                 const from = before.indexOf(sourceId);
@@ -1118,9 +1411,70 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     '.workspace-dock button[aria-label="应用工作区"]',
                 ).click();
                 const panel = touchPage.locator(".workspace-panel");
-                await panel.locator(
-                    '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
+                await panel.waitFor();
+                const cdp = await touchContext.newCDPSession(touchPage);
+                const blankPoint = await getSurfaceBlankCoordinate(touchPage);
+                assertEquals(blankPoint.y > blankPoint.contentBottom, true);
+                assertEquals(blankPoint.y < blankPoint.footerTop, true);
+
+                // 13a. Real touch scrolling below grid does NOT trigger context menu
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ x: blankPoint.x, y: blankPoint.y, id: 1 }],
+                });
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchMove",
+                    touchPoints: [{
+                        x: blankPoint.x,
+                        y: blankPoint.y - 30,
+                        id: 1,
+                    }],
+                });
+                await touchPage.waitForTimeout(600);
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                assertEquals(
+                    await touchPage.locator(
+                        '[data-slot="context-menu-content"]',
+                    ).count(),
+                    0,
+                );
+
+                // 13b. Real touch CDP longpress below grid triggers workspace surface context menu
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ x: blankPoint.x, y: blankPoint.y, id: 2 }],
+                });
+                await touchPage.waitForTimeout(600);
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+
+                const touchMenu = touchPage.locator(
+                    '[data-slot="context-menu-content"]',
+                );
+                await touchMenu.waitFor();
+                assertEquals(
+                    await touchMenu.locator(
+                        '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+                    ).count(),
+                    1,
+                );
+                assertEquals(
+                    await touchMenu.locator(
+                        '[data-slot="context-menu-item"]:has-text("整理布局")',
+                    ).count(),
+                    1,
+                );
+
+                // Enter arrange mode directly from touch surface menu
+                await touchMenu.locator(
+                    '[data-slot="context-menu-item"]:has-text("整理布局")',
                 ).click();
+                await touchMenu.waitFor({ state: "detached" });
                 const folder =
                     ((await apiRequest("/api/webapp-groups")).data as Array<
                         { id: string; name: string }
@@ -1133,7 +1487,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 ).first();
                 const a = (await source.boundingBox())!;
                 const b = (await target.boundingBox())!;
-                const cdp = await touchContext.newCDPSession(touchPage);
                 const point = (x: number, y: number) => [{ x, y, id: 1 }];
                 await cdp.send("Input.dispatchTouchEvent", {
                     type: "touchStart",
@@ -1177,6 +1530,106 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                         ?.pinnedSortOrder,
                     0,
                 );
+                await exitArrangingViaSurface(touchPage);
+                for (
+                    const selector of [
+                        ".launcher-app",
+                        ".launcher-folder-item--small, .launcher-folder-item--large",
+                    ]
+                ) {
+                    const tile = panel.locator(selector).first();
+                    const bounds = (await tile.boundingBox())!;
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchStart",
+                        touchPoints: [{
+                            x: bounds.x + bounds.width / 2,
+                            y: bounds.y + bounds.height / 2,
+                            id: 4,
+                        }],
+                    });
+                    await touchMenu.waitFor();
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchEnd",
+                        touchPoints: [],
+                    });
+                    assertEquals(
+                        await touchMenu.getByRole("menuitem", {
+                            name: /^(新建文件夹|整理布局|完成整理)$/,
+                        }).count(),
+                        0,
+                    );
+                    assertEquals(touchPage.url(), origin + "/");
+                    assertEquals(
+                        await panel.locator(".launcher-grid").isVisible(),
+                        true,
+                    );
+                    await touchPage.reload();
+                    await touchPage.locator(
+                        '.workspace-dock button[aria-label="应用工作区"]',
+                    ).click();
+                    await panel.locator(".launcher-grid").waitFor();
+                }
+                // A short viewport creates real overflow; a swipe on the blank
+                // surface must move the body, not merely avoid opening a menu.
+                await touchPage.setViewportSize({ width: 390, height: 400 });
+                const body = panel.locator(".workspace-body");
+                await body.evaluate((el) => {
+                    el.scrollTop = el.scrollHeight;
+                });
+                const scrollBefore = await body.evaluate((el) => el.scrollTop);
+                assertEquals(scrollBefore > 0, true);
+                const swipe = await panel.evaluate((el) => {
+                    const bodyRect = el.querySelector(".workspace-body")!
+                        .getBoundingClientRect();
+                    const surfaceRect = el.querySelector(
+                        ".launcher-surface-wrap",
+                    )!
+                        .getBoundingClientRect();
+                    const y = bodyRect.top + bodyRect.height / 3;
+                    for (
+                        let x = surfaceRect.left + 1;
+                        x < surfaceRect.right;
+                        x += 2
+                    ) {
+                        const hit = document.elementFromPoint(x, y);
+                        if (
+                            hit?.closest(".launcher-surface-wrap") &&
+                            !hit.closest(
+                                ".launcher-tile, .launcher-app, .launcher-folder-item",
+                            )
+                        ) {
+                            return { x, y };
+                        }
+                    }
+                    throw new Error(
+                        "No visible blank Surface for scroll gesture",
+                    );
+                });
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ ...swipe, id: 3 }],
+                });
+                for (let offset = 20; offset <= 100; offset += 20) {
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchMove",
+                        touchPoints: [{
+                            x: swipe.x,
+                            y: swipe.y + offset,
+                            id: 3,
+                        }],
+                    });
+                }
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                await touchPage.waitForFunction((before) => {
+                    const body = document.querySelector(
+                        ".workspace-panel .workspace-body",
+                    );
+                    return body !== null && body.scrollTop < before;
+                }, scrollBefore);
+                assertEquals(await touchMenu.count(), 0);
             } finally {
                 await touchContext.close();
             }

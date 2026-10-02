@@ -824,35 +824,101 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await panel.locator(".apps-workspace .workspace-root").waitFor();
             await search().fill("");
 
-            // 3. Arrange mode: search disabled, single primary ('完成整理' only), footer create not primary
-            const arrangeBtn = panel.getByRole("button", {
-                name: "整理网站排序与布局",
-                exact: true,
-            });
-            await arrangeBtn.click();
+            // 3. Arrange mode: search disabled, footer create not primary
+            const rightClickBlankSurface = async () => {
+                const res = await page.evaluate(() => {
+                    const panelEl = document.querySelector(
+                        "aside.workspace-panel, .workspace-panel",
+                    ) as HTMLElement;
+                    const bodyEl = panelEl.querySelector(
+                        ".workspace-body",
+                    ) as HTMLElement;
+                    if (bodyEl) {
+                        bodyEl.scrollTop = bodyEl.scrollHeight;
+                    }
+                    const surface = panelEl.querySelector(
+                        ".launcher-surface-wrap",
+                    ) as HTMLElement;
+                    const surfaceRect = surface.getBoundingClientRect();
+                    const tiles = Array.from(
+                        panelEl.querySelectorAll<HTMLElement>(".launcher-tile"),
+                    );
+                    const tileRects = tiles.map((t) =>
+                        t.getBoundingClientRect()
+                    );
+                    let foundPoint:
+                        | { x: number; y: number; el: string }
+                        | null = null;
+                    for (
+                        let py = surfaceRect.top + 10;
+                        py < surfaceRect.bottom - 5;
+                        py += 15
+                    ) {
+                        for (
+                            let px = surfaceRect.left + 10;
+                            px < surfaceRect.right - 10;
+                            px += 20
+                        ) {
+                            const inTile = tileRects.some((tr) =>
+                                px >= tr.left && px <= tr.right &&
+                                py >= tr.top && py <= tr.bottom
+                            );
+                            if (!inTile) {
+                                const el = document.elementFromPoint(px, py);
+                                if (
+                                    el &&
+                                    (el === surface || surface.contains(el)) &&
+                                    !el.closest(".launcher-tile")
+                                ) {
+                                    foundPoint = {
+                                        x: px,
+                                        y: py,
+                                        el: `${el.tagName}.${el.className}`,
+                                    };
+                                    break;
+                                }
+                            }
+                        }
+                        if (foundPoint) break;
+                    }
+                    return { foundPoint, surfaceRect };
+                });
+                if (!res.foundPoint) {
+                    throw new Error("Blank point not found on surface");
+                }
+                await page.mouse.click(res.foundPoint.x, res.foundPoint.y, {
+                    button: "right",
+                });
+            };
+
+            await rightClickBlankSurface();
+            const contextMenu = page.locator(
+                '[data-slot="context-menu-content"]',
+            );
+            await contextMenu.waitFor();
+            const arrangeItem = contextMenu.locator(
+                '[data-slot="context-menu-item"]',
+                {
+                    hasText: "整理布局",
+                },
+            );
+            await arrangeItem.click();
             assertEquals(await search().isDisabled(), true);
             assertEquals(
                 await panel.locator(".workspace-footer .button--primary")
                     .count(),
                 0,
             );
-            const doneArrangeBtn = panel.getByRole("button", {
-                name: "完成排序整理",
-                exact: true,
-            });
-            await doneArrangeBtn.waitFor({ state: "visible" });
-            assertEquals(
-                await doneArrangeBtn.evaluate((el) =>
-                    el.classList.contains("button--primary")
-                ),
-                true,
-            );
-            assertEquals(
-                await panel.locator("button.button--primary").count(),
-                1,
-            );
 
-            await doneArrangeBtn.click();
+            await rightClickBlankSurface();
+            await contextMenu.waitFor();
+            const doneArrangeItem = contextMenu.locator(
+                '[data-slot="context-menu-item"]',
+                {
+                    hasText: "完成整理",
+                },
+            );
+            await doneArrangeItem.click();
             assertEquals(await search().isDisabled(), false);
             assertEquals(
                 await panel.locator(".workspace-footer .button--primary")

@@ -5,11 +5,20 @@ function ContextMenu(props: ContextMenuPrimitive.Root.Props) {
     return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
 }
 
-function ContextMenuTrigger(props: ContextMenuPrimitive.Trigger.Props) {
+function ContextMenuTrigger(
+    { onTouchEnd, ...props }: ContextMenuPrimitive.Trigger.Props,
+) {
     return (
         <ContextMenuPrimitive.Trigger
             data-slot="context-menu-trigger"
             {...props}
+            onTouchEnd={(event) => {
+                // Releasing a long press must not activate the underlying tile.
+                if (event.currentTarget.hasAttribute("data-popup-open")) {
+                    event.preventDefault();
+                }
+                onTouchEnd?.(event);
+            }}
         />
     );
 }
