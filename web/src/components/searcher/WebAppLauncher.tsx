@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, Folder, FolderInput, GripVertical } from "lucide-react";
 import {
@@ -705,6 +705,35 @@ export function WebAppLauncher({
         null,
     );
 
+    const renderSurfaceWithContextMenu = (content: ReactNode) => (
+        <>
+            {onCreateFolder || onToggleManaging
+                ? (
+                    <ContextMenu>
+                        <ContextMenuTrigger className="launcher-surface-wrap">
+                            {content}
+                        </ContextMenuTrigger>
+                        <ContextMenuContent aria-label="启动器空白区域操作">
+                            {onCreateFolder && (
+                                <ContextMenuItem
+                                    disabled={managing}
+                                    onClick={() => setCreateFolderOpen(true)}
+                                >
+                                    新建文件夹
+                                </ContextMenuItem>
+                            )}
+                            {onToggleManaging && (
+                                <ContextMenuItem onClick={onToggleManaging}>
+                                    {managing ? "完成整理" : "整理布局"}
+                                </ContextMenuItem>
+                            )}
+                        </ContextMenuContent>
+                    </ContextMenu>
+                )
+                : content}
+        </>
+    );
+
     const setFolderId = (id: string | null) => {
         if (activeFolderId === undefined) setInternalFolderId(id);
         onFolderChange?.(id);
@@ -831,7 +860,7 @@ export function WebAppLauncher({
     }
     const folderApps = folder?.apps ?? [];
     if (folderId && folder && folder.group) {
-        return (
+        return renderSurfaceWithContextMenu(
             <div
                 ref={folderInlineRef}
                 className="launcher-folder-inline"
@@ -922,16 +951,16 @@ export function WebAppLauncher({
                             </SortableContext>
                         </DndContext>
                     )}
-            </div>
+            </div>,
         );
     }
 
     if (tiles.length === 0) {
-        return (
+        return renderSurfaceWithContextMenu(
             <div className="launcher-empty">
                 {emptyMessage}{" "}
                 {emptyAction && <Button onClick={onAdd}>添加网站</Button>}
-            </div>
+            </div>,
         );
     }
 
@@ -950,9 +979,8 @@ export function WebAppLauncher({
                 items={tiles.map((tile) => tile.id)}
                 strategy={() => null}
             >
-                <ContextMenu>
-                    <ContextMenuTrigger className="launcher-surface-wrap">
-                        <div
+                {renderSurfaceWithContextMenu(
+                    <div
                             ref={gridRef}
                             tabIndex={onCreateFolder ? 0 : undefined}
                             aria-label="网站启动器"
@@ -1003,18 +1031,8 @@ export function WebAppLauncher({
                                 className="launcher-grid-boundary"
                                 style={{ gridColumn: columnLayout.gridColumn }}
                             />
-                        </div>
-                    </ContextMenuTrigger>
-                    {onCreateFolder && (
-                        <ContextMenuContent aria-label="启动器空白区域操作">
-                            <ContextMenuItem
-                                onClick={() => setCreateFolderOpen(true)}
-                            >
-                                新建文件夹
-                            </ContextMenuItem>
-                        </ContextMenuContent>
-                    )}
-                </ContextMenu>
+                    </div>,
+                )}
             </SortableContext>
             {onCreateFolder && (
                 <FolderNameDialog
