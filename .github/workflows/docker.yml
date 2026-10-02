@@ -80,14 +80,6 @@ jobs:
 
                   docker run --rm --entrypoint sh "$SMOKE_IMAGE" -c 'test ! -e /app/node_modules'
 
-                  printf 'SmokeAdminPassword123!\nSmokeAdminPassword123!\n' | \
-                      docker run --rm -i \
-                          -e DATABASE_PATH=/tmp/searcher-admin-smoke.sqlite \
-                          --entrypoint deno \
-                          "$SMOKE_IMAGE" \
-                          run -A --cached-only --node-modules-dir=none \
-                          src/commands/admin.ts create smoke_admin
-
                   docker run -d \
                       --name searcher-smoke \
                       -p 127.0.0.1:34567:34567 \
@@ -97,7 +89,7 @@ jobs:
 
                   cleanup() {
                       docker logs searcher-smoke || true
-                      docker rm -f searcher-smoke >/dev/null 2>&1 || true
+                      docker rm -fv searcher-smoke >/dev/null 2>&1 || true
                   }
                   trap cleanup EXIT
 
@@ -114,6 +106,11 @@ jobs:
                       echo "Searcher did not become ready within 30 seconds" >&2
                       exit 1
                   fi
+
+                  printf 'SmokeAdminPassword123!\nSmokeAdminPassword123!\n' | \
+                      docker exec -i searcher-smoke \
+                          deno run -A --cached-only --node-modules-dir=none \
+                          src/commands/admin.ts create smoke_admin
 
                   docker exec searcher-smoke sh -c 'test ! -e /app/node_modules'
                   docker image inspect "$SMOKE_IMAGE" --format 'Runtime image size: {{.Size}} bytes'
