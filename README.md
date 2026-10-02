@@ -173,8 +173,7 @@ Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实�
 `DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
 并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。
 
-本仓库保持 Private；GitHub Actions 在 PR 中验证 `linux/amd64` 与
-`linux/arm64` 构建，在 `main`、`v*` tag 或手动触发时发布到
+本仓库保持 Private；GitHub Actions 在 PR 中验证 `linux/amd64` 构建，在 `main`、`v*` tag 或手动触发时发布到
 `ghcr.io/aawai/searcher`。GHCR 首次创建 package 时默认是 Private；首次成功发布后，
 在 GitHub 的 `searcher` package 设置中将 **Change visibility** 改为 **Public**。
 GitHub 不允许 Public package 再改回 Private，因此该操作只需执行一次，并应在确认镜像
