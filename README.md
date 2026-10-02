@@ -171,7 +171,7 @@ Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实�
 仓库提供基于 Deno 2.9.7 的多阶段 Docker 镜像。镜像内置
 `NODE_ENV=production`、`PORT=34567` 与
 `DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
-并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。最终 runtime 镜像不包含项目级 `node_modules`；Docker 专用的 `deno.runtime.jsonc` 只保留后端运行依赖映射，按 `src/main.ts` 与管理员 CLI 的实际 module graph 安装到 Deno 全局 cache，并以 `--cached-only` 离线启动。Vite、React、Playwright、Tailwind 等前端/构建依赖不会进入 runtime dependency layer。
+并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。最终 runtime 镜像不包含项目级 `node_modules`；Docker 专用的 `deno.runtime.jsonc` 只保留后端运行依赖映射。构建从仓库主 `deno.lock` 派生精简 runtime lock，并按 `src/main.ts` 与管理员 CLI 的实际 module graph 安装到 Deno 全局 cache，以 `--cached-only` 离线启动。Vite、React、Playwright、Tailwind 等前端/构建依赖不会进入 runtime dependency layer。
 
 本仓库保持 Private；GitHub Actions 在 PR 中验证 `linux/amd64` 构建，在 `main`、`v*` tag 或手动触发时发布到
 `ghcr.io/aawai/searcher`。GHCR 首次创建 package 时默认是 Private；首次成功发布后，
