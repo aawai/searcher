@@ -25,7 +25,7 @@ import {
 } from "../../components/searcher/NoteCard.tsx";
 import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { Input } from "../../components/ui/input.tsx";
+import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import type { WorkspaceState } from "./workspace-state.ts";
 import "./notes-workspace.css";
 
@@ -232,13 +232,12 @@ export function NotesWorkspace(
     }
 
     return (
-        <div className="notes-workspace">
-            <Input
-                data-workspace-search
-                aria-label="搜索便签"
+        <div className="workspace-root notes-workspace">
+            <WorkspaceSearch
+                ariaLabel="搜索便签"
                 placeholder="搜索标题或内容"
                 value={query}
-                onChange={(event) => onQueryChange(event.target.value)}
+                onChange={onQueryChange}
             />
             {loading && <p role="status">正在加载便签…</p>}
             {error && (

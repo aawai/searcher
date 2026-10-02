@@ -659,6 +659,11 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await page.locator("#note-title-input").waitFor({
                 state: "visible",
             });
+            // Wait for Workspace nested autofocus before typing can trigger onBlur saves.
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("aria-label") ===
+                    "返回上一级"
+            );
 
             // Initial status is "已保存"
             const saveState = page.locator(".save-state");

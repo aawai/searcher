@@ -77,6 +77,29 @@ AlertDialog）具有严格不同的交互与视觉语义：
   backdrop 与
   focus-trap），严禁将普通工作区浏览和常规表单伪装成模态弹窗，也严禁将破坏性操作静默退化为非模态。
 
+#### Workspace Root layout contract
+
+Apps 与 Notes 是同一 Shell 内的两个工作区，共享 Root
+chrome，不统一内容列表的表现形式：
+
+- `.workspace-body` 是 page-level inline inset 的唯一 owner，使用 `--space-4`；
+  Root 的 Search、status、empty state 与 content boundary 对齐，不再添加
+  Apps-only padding。 Nested AppForm / NoteEditor 同样使用 Body
+  inset，不叠加外层 form padding。
+- `.workspace-root` 使用 `--space-section-gap`；Search 与 Apps local toolbar
+  的控制组 使用 `--space-control-gap`。Toolbar actions 紧凑分组，不通过
+  `space-between` 拉开。 Launcher tile gap、NoteCard list gap 和 section heading
+  间距仍由各 feature 拥有。
+- `WorkspaceSearch` 复用 Input / Button；两侧使用 `--control-input-height`、
+  `--radius-input`，提供相同 Search icon、clear action 和可辨识的 focus-visible
+  ring。 Root autofocus 保留，不叠加全局 outline，不因 focus 改变布局。Apps
+  整理时禁用搜索， 进入整理时清空 query；Notes 标题/正文搜索与独立 query
+  状态不变。
+- Footer Root create slot 统一使用 default primary Button（“添加应用” /
+  “新建便签”）， width、height、radius 和 typography 相同；切换 Apps / Notes
+  不移动 Footer 或 Switcher。 Apps 整理时隐藏 create action，仅“完成整理”为
+  primary；nested editor/form 不渲染 Root create action。
+
 ### Wallpaper canvas
 
 首页 canvas 固定在 app-shell 的隔离层级中，自身裁切并建立 stacking context。

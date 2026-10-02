@@ -71,9 +71,7 @@ export function WorkspaceShell(
                     {root && !(workspace === "apps" && appsArranging) && (
                         <Button
                             className="workspace-primary"
-                            variant={workspace === "apps"
-                                ? "default"
-                                : "outline"}
+                            variant="default"
                             onClick={onCreate}
                         >
                             {workspace === "apps" ? "添加应用" : "新建便签"}
