@@ -11,7 +11,7 @@ COPY web ./web
 RUN deno task build
 
 
-FROM denoland/deno:2.9.7 AS runtime-deps
+FROM denoland/deno:alpine-2.9.7 AS runtime-deps
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ RUN deno install \
     --entrypoint src/main.ts src/commands/admin.ts
 
 
-FROM denoland/deno:2.9.7 AS runtime
+FROM denoland/deno:alpine-2.9.7 AS runtime
 
 WORKDIR /app
 
