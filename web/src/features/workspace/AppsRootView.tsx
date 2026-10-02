@@ -139,16 +139,16 @@ export function AppsRootView({
                     <ContextMenu>
                         <ContextMenuTrigger className="apps-workspace-context-surface">
                             <div className="apps-workspace-section">
-                        <div className="apps-workspace-section-header">
-                            <h3 className="apps-workspace-section-title">
+                                <div className="apps-workspace-section-header">
+                                    <h3 className="apps-workspace-section-title">
                                 搜索结果
-                                <span className="apps-workspace-count-badge">
-                                    {totalMatches}
-                                </span>
-                            </h3>
-                        </div>
+                                        <span className="apps-workspace-count-badge">
+                                            {totalMatches}
+                                        </span>
+                                    </h3>
+                                </div>
 
-                        {totalMatches === 0
+                                {totalMatches === 0
                             ? (
                                 <div className="apps-workspace-empty">
                                     <p className="apps-workspace-empty-title">
@@ -225,7 +225,7 @@ export function AppsRootView({
                                         />
                                     )}
                                 </div>
-                            )}
+                                )}
                             </div>
                         </ContextMenuTrigger>
                         <ContextMenuContent aria-label="应用工作区空白区域操作">
@@ -245,31 +245,31 @@ export function AppsRootView({
                 : (
                     /* Standard view: Unified Launcher */
                     <WebAppLauncher
-                            presentation="workspace"
-                            apps={apps}
-                            groups={groups}
-                            showFolders
-                            size="default"
-                            showAppLabels
-                            managing={isArranging}
-                            activeFolderId={activeFolderId}
-                            onFolderChange={onFolderChange}
-                            onOpen={onOpen}
-                            onEdit={(app) => onNavigateToEdit(app.id)}
-                            onMove={onMove}
-                            onPin={onPin}
-                            onDelete={onDelete}
-                            onReorder={onReorder}
-                            onReorderRoot={onReorderRoot}
-                            onReorderFolder={onReorderFolder}
-                            onMoveAppToFolder={onMoveAppToFolder}
-                            onCreateFolder={onCreateFolder}
-                            onRenameFolder={onRenameFolder}
-                            onDeleteFolder={onDeleteFolder}
-                            onFolderSizeChange={onFolderSizeChange}
-                            onSurfaceToggleManaging={toggleArrange}
-                            onAdd={() => onNavigateToAdd?.(activeFolderId)}
-                        />
+                        presentation="workspace"
+                        apps={apps}
+                        groups={groups}
+                        showFolders
+                        size="default"
+                        showAppLabels
+                        managing={isArranging}
+                        activeFolderId={activeFolderId}
+                        onFolderChange={onFolderChange}
+                        onOpen={onOpen}
+                        onEdit={(app) => onNavigateToEdit(app.id)}
+                        onMove={onMove}
+                        onPin={onPin}
+                        onDelete={onDelete}
+                        onReorder={onReorder}
+                        onReorderRoot={onReorderRoot}
+                        onReorderFolder={onReorderFolder}
+                        onMoveAppToFolder={onMoveAppToFolder}
+                        onCreateFolder={onCreateFolder}
+                        onRenameFolder={onRenameFolder}
+                        onDeleteFolder={onDeleteFolder}
+                        onFolderSizeChange={onFolderSizeChange}
+                        onSurfaceToggleManaging={toggleArrange}
+                        onAdd={() => onNavigateToAdd?.(activeFolderId)}
+                    />
                 )}
 
             {onCreateFolder && (
