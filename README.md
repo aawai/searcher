@@ -171,7 +171,7 @@ Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实�
 仓库提供基于 Deno 2.9.7 的多阶段 Docker 镜像。镜像内置
 `NODE_ENV=production`、`PORT=34567` 与
 `DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
-并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。
+并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。最终 runtime 镜像不包含项目级 `node_modules`；后端运行依赖按 `src/main.ts` 与管理员 CLI 的实际 module graph 安装到 Deno 全局 cache，并以 `--cached-only --node-modules-dir=none` 离线启动。
 
 本仓库保持 Private；GitHub Actions 在 PR 中验证 `linux/amd64` 构建，在 `main`、`v*` tag 或手动触发时发布到
 `ghcr.io/aawai/searcher`。GHCR 首次创建 package 时默认是 Private；首次成功发布后，
@@ -208,7 +208,7 @@ HTTPS，可由 Unraid 上的 Nginx Proxy Manager、SWAG 或其他反向代理终
 创建管理员时可在 Unraid 终端执行：
 
 ```sh
-docker exec -it searcher deno task admin:create -- <username>
+docker exec -it searcher deno run -A --cached-only --node-modules-dir=none src/commands/admin.ts create <username>
 ```
 
 同一服务先处理 `/api` 与 `/api/*`，再处理 `/assets` 与 `/assets/*`；其余 GET/HEAD 返回 SPA shell。Settings/Admin 子页面可直访、刷新和分享；未知普通页面由 React 显示统一 404（shell HTTP 状态为 200），未知 API 返回 JSON 404，缺失 assets 返回静态 404，非 GET/HEAD 不回退 HTML。反向代理应将页面请求交给 Searcher，不自行维护前端 URL 白名单。
