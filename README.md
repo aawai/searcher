@@ -166,6 +166,52 @@ deno task admin:create -- <username>
 Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实例地址（如 `http://localhost:8080`），供 Ask 联网搜索调用；未设置时联网搜索自动禁用。管理员密码只在真实终端交互输入；重置使用
 `deno task admin:reset -- <username>`。
 
+### Docker / Unraid
+
+仓库提供基于 Deno 2.9.7 的多阶段 Docker 镜像。镜像内置
+`NODE_ENV=production`、`PORT=34567` 与
+`DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
+并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。
+
+本仓库保持 Private；GitHub Actions 在 PR 中验证 `linux/amd64` 与
+`linux/arm64` 构建，在 `main`、`v*` tag 或手动触发时发布到
+`ghcr.io/aawai/searcher`。GHCR 首次创建 package 时默认是 Private；首次成功发布后，
+在 GitHub 的 `searcher` package 设置中将 **Change visibility** 改为 **Public**。
+GitHub 不允许 Public package 再改回 Private，因此该操作只需执行一次，并应在确认镜像
+可以公开分发后进行。Public GHCR 镜像支持匿名 pull，Unraid 不需要 GitHub PAT。
+
+Unraid 推荐配置：
+
+```text
+Repository:      ghcr.io/aawai/searcher:latest
+Network Type:    bridge
+
+Port:
+  Host Port:      34567（可改为任意未占用端口）
+  Container Port: 34567
+
+Path:
+  Host Path:      /mnt/user/appdata/searcher
+  Container Path: /app/data
+
+Variables:
+  APP_ORIGIN=https://search.example.com
+  ENCRYPTION_KEY=<固定随机密钥>
+  SEARXNG_URL=<可选>
+```
+
+`APP_ORIGIN` 必须与浏览器实际访问的 origin 完全一致。非 loopback 地址必须使用
+HTTPS，可由 Unraid 上的 Nginx Proxy Manager、SWAG 或其他反向代理终止 TLS。
+`ENCRYPTION_KEY` 不应在容器重建或升级时变化；否则已经保存的 AI Provider Key
+无法解密。若 Searcher 与 SearXNG 位于同一自定义 Docker network，可将
+`SEARXNG_URL` 配置为类似 `http://searxng:8080` 的容器内地址。
+
+创建管理员时可在 Unraid 终端执行：
+
+```sh
+docker exec -it searcher deno task admin:create -- <username>
+```
+
 同一服务先处理 `/api` 与 `/api/*`，再处理 `/assets` 与 `/assets/*`；其余 GET/HEAD 返回 SPA shell。Settings/Admin 子页面可直访、刷新和分享；未知普通页面由 React 显示统一 404（shell HTTP 状态为 200），未知 API 返回 JSON 404，缺失 assets 返回静态 404，非 GET/HEAD 不回退 HTML。反向代理应将页面请求交给 Searcher，不自行维护前端 URL 白名单。
 
 前端路径统一由 `web/src/app/routes.ts` 维护。`/settings/search` replace 到 `/settings`，未知 Settings/Admin 子路径显示 404。登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。Settings/Admin 内部 Tab replace 当前 history entry，外部进入具体 Tab 保留正常 entry；二级页面 breadcrumb 提供稳定的上层与首页目标。
