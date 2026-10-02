@@ -98,6 +98,23 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         );
     }
 
+    async function selectBlankAreaAction(action: string) {
+        const panel = page.locator("aside.workspace-panel");
+        const surface = panel.locator(
+            ".apps-workspace-context-surface, .launcher-surface-wrap",
+        ).first();
+        await surface.click({ button: "right", position: { x: 5, y: 5 } });
+
+        const contextMenu = page.locator(
+            '[data-slot="context-menu-content"]',
+        );
+        await contextMenu.waitFor();
+        await contextMenu.locator(
+            '[data-slot="context-menu-item"]',
+            { hasText: action },
+        ).click();
+    }
+
     // Seed test data: 2 groups, 3 apps (1 in group, 2 loose, 1 pinned)
     const { data: group1 } = await apiRequest("/api/webapp-groups", "POST", {
         name: "Dev Tools",
@@ -179,15 +196,21 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             assertEquals(await addAppBtn.isVisible(), true);
             assertEquals(await addAppBtn.textContent(), "添加应用");
 
-            // Secondary bar contains outline "新建文件夹" and outline "整理布局"
-            const newFolderBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="新建文件夹"]',
+            // Root no longer exposes persistent secondary action buttons.
+            assertEquals(
+                await panel.locator(".apps-workspace-secondary-bar").count(),
+                0,
             );
-            const arrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
+            assertEquals(
+                await panel.getByRole("button", { name: "新建文件夹" }).count(),
+                0,
             );
-            assertEquals(await newFolderBtn.isVisible(), true);
-            assertEquals(await arrangeBtn.isVisible(), true);
+            assertEquals(
+                await panel.getByRole("button", {
+                    name: "整理网站排序与布局",
+                }).count(),
+                0,
+            );
 
             // Tiles on root: loose apps (GitHub, Linear) and folders (Dev Tools, Empty Folder)
             // Grouped app (GitLab) is inside Dev Tools, NOT duplicated on root!
@@ -322,11 +345,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             )
                 .waitFor();
 
-            // Also test visible trigger button in secondary toolbar
-            const toolbarBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="新建文件夹"]',
-            );
-            await toolbarBtn.click();
+            // The blank-area context menu is the only folder creation entry.
+            await selectBlankAreaAction("新建文件夹");
             await dialog.waitFor();
             await input.fill("Productivity");
             await submitBtn.click();
@@ -468,22 +488,15 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await panel.locator('button[aria-label="清除搜索"]').click();
             assertEquals(await searchInput.inputValue(), "");
 
-            // Arrange mode disables search input and unbinds query
+            // Arrange mode is entered from blank space and clears the active query.
             await searchInput.fill("test");
-            const arrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            );
-            await arrangeBtn.click();
+            await selectBlankAreaAction("整理布局");
 
             // In arrange mode: query was cleared and input is disabled
             assertEquals(await searchInput.inputValue(), "");
             assertEquals(await searchInput.isDisabled(), true);
 
-            // Single primary contract: "完成整理" is primary variant, "添加应用" is hidden
-            const finishArrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            );
-            assertEquals(await finishArrangeBtn.isVisible(), true);
+            // Arrange mode hides the footer primary action.
             assertEquals(
                 await panel.locator(
                     ".workspace-footer button.workspace-primary",
@@ -491,8 +504,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 0,
             );
 
-            // Exit arrange mode: search is re-enabled
-            await finishArrangeBtn.click();
+            // Exit arrange mode from the same blank-area menu.
+            await selectBlankAreaAction("完成整理");
             assertEquals(await searchInput.isDisabled(), false);
         },
     );
@@ -578,11 +591,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         async () => {
             const panel = page.locator("aside.workspace-panel");
 
-            // Enter arrange mode
-            const arrangeBtn = panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            );
-            await arrangeBtn.click();
+            // Enter arrange mode from the blank-area context menu.
+            await selectBlankAreaAction("整理布局");
 
             const linearTile = panel.locator(
                 '.launcher-tile:has(.webapp-name:has-text("Linear"))',
@@ -667,9 +677,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await errorBanner.waitFor({ state: "detached" });
 
             // Exit arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            await selectBlankAreaAction("完成整理");
 
             // Verify server state on reload: Linear is still loose, not in Dev Tools
             await page.reload();
@@ -698,9 +706,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             const panel = page.locator("aside.workspace-panel");
 
             // Enter arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            ).click();
+            await selectBlankAreaAction("整理布局");
 
             const linearTile = panel.locator(
                 '.launcher-tile:has(.webapp-name:has-text("Linear"))',
@@ -749,9 +755,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             });
 
             // Exit arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            await selectBlankAreaAction("完成整理");
 
             // Verify server state on reload: Linear now has groupId === group1.id
             await page.reload();
@@ -800,9 +804,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await inlineView.waitFor();
 
             // Enter arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            ).click();
+            await selectBlankAreaAction("整理布局");
 
             // Apps inside folder: Linear and GitLab
             const linearInFolder = inlineView.locator(
@@ -835,9 +837,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await page.mouse.up();
 
             // Exit arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            await selectBlankAreaAction("完成整理");
 
             // Return to root
             await inlineView.locator('button[aria-label="返回网站列表"]')
@@ -898,9 +898,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await panel.waitFor();
 
             // Enter arrange mode
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-            ).click();
+            await selectBlankAreaAction("整理布局");
             const readRoot = () =>
                 panel.locator(".launcher-grid > .launcher-tile").evaluateAll((
                     elements,
@@ -930,9 +928,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             );
             await page.keyboard.press("Space");
             assertEquals((await persisted).status(), 200);
-            await panel.locator(
-                '.apps-workspace-secondary-bar button[aria-label="完成排序整理"]',
-            ).click();
+            await selectBlankAreaAction("完成整理");
             assertEquals(await readRoot(), expected);
             await page.reload();
             await dock.waitFor();
@@ -1037,9 +1033,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     '.workspace-dock button[aria-label="应用工作区"]',
                 ).click();
                 await panel.waitFor();
-                await panel.locator(
-                    '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-                ).click();
+                await selectBlankAreaAction("整理布局");
                 const before = await readRoot();
                 const expected = [...before];
                 const from = before.indexOf(sourceId);
@@ -1103,7 +1097,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     );
 
     await t.step(
-        "13. Real touch drag moves App into Folder without changing Home pin order",
+        "13. Mobile long-press menu and real touch drag preserve Home pin order",
         async () => {
             const touchContext = await browser.newContext({
                 viewport: { width: 390, height: 844 },
@@ -1118,8 +1112,27 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     '.workspace-dock button[aria-label="应用工作区"]',
                 ).click();
                 const panel = touchPage.locator(".workspace-panel");
-                await panel.locator(
-                    '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
+                const surface = panel.locator(".launcher-surface-wrap").first();
+                const surfaceBox = (await surface.boundingBox())!;
+                const cdp = await touchContext.newCDPSession(touchPage);
+                const point = (x: number, y: number) => [{ x, y, id: 1 }];
+
+                // A real touch long-press on launcher blank space opens the menu.
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: point(surfaceBox.x + 5, surfaceBox.y + 5),
+                });
+                const touchMenu = touchPage.locator(
+                    '[data-slot="context-menu-content"]',
+                );
+                await touchMenu.waitFor({ timeout: 2000 });
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                await touchMenu.locator(
+                    '[data-slot="context-menu-item"]',
+                    { hasText: "整理布局" },
                 ).click();
                 const folder =
                     ((await apiRequest("/api/webapp-groups")).data as Array<
@@ -1133,8 +1146,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 ).first();
                 const a = (await source.boundingBox())!;
                 const b = (await target.boundingBox())!;
-                const cdp = await touchContext.newCDPSession(touchPage);
-                const point = (x: number, y: number) => [{ x, y, id: 1 }];
                 await cdp.send("Input.dispatchTouchEvent", {
                     type: "touchStart",
                     touchPoints: point(a.x + a.width / 2, a.y + a.height / 2),
