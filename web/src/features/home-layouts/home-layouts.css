@@ -401,7 +401,8 @@
     z-index: 5;
 }
 .controlled-note-slot:hover,
-.controlled-note-slot:focus-within {
+.controlled-note-slot:focus-within,
+.controlled-note-slot[data-dragging] {
     z-index: 6;
     transform: none;
 }
@@ -409,8 +410,8 @@
     width: 100%;
     box-sizing: border-box;
 }
-.controlled-note-slot .note-drag {
-    display: none;
+.controlled-note-handle {
+    touch-action: none;
 }
 @media (prefers-reduced-motion: reduce) {
     .controlled-note-slot {

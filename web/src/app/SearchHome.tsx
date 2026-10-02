@@ -12,6 +12,7 @@ import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
 import { mergeVisibleOrder } from "../components/searcher/launcherTiles.ts";
+import { mergeNoteOrder } from "../features/home-layouts/noteOrder.ts";
 import type { NoteItem } from "../components/searcher/NoteCard.tsx";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import type { WebAppItem } from "../components/searcher/WebAppIcon.tsx";
@@ -552,6 +553,7 @@ export function SearchHome() {
     }
 
     async function reorderNotes(ordered: NoteItem[]) {
+        ordered = mergeNoteOrder(notes, ordered);
         const snapshot = notes;
         const orders = new Map(ordered.map((note, index) => [note.id, index]));
         setNotes((items) =>
@@ -596,6 +598,7 @@ export function SearchHome() {
         onReloadApps: () => setReloadApps((count) => count + 1),
         notes,
         fixedNotes,
+        reorderNotes,
         isManagingApps,
         setIsManagingApps,
         openApp,
