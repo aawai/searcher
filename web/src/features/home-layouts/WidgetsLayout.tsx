@@ -24,6 +24,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
         appsError,
         onReloadApps,
         fixedNotes,
+        reorderNotes,
         openApp,
         openAddModal,
         openEditModal,
@@ -226,6 +227,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                 ? (
                                     <ControlledNotes
                                         notes={fixedNotes}
+                                        onReorder={reorderNotes}
                                         onOpen={editNote}
                                         onTogglePin={(n) =>
                                             void updateNote(n, {

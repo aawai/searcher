@@ -29,6 +29,7 @@ export interface HomeLayoutProps {
     onReloadApps: () => void;
     notes: NoteItem[];
     fixedNotes: NoteItem[];
+    reorderNotes: (notes: NoteItem[]) => Promise<void>;
     isManagingApps: boolean;
     setIsManagingApps: React.Dispatch<React.SetStateAction<boolean>>;
     openApp: (
