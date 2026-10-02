@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- 应用与便签工作区统一内容边界、搜索框、Root
+  间距和底部创建主操作；切换时搜索与底栏位置保持一致。
+  两侧搜索均提供图标和清除操作，应用本地工具栏紧凑分组，嵌套表单不再叠加内容
+  padding。
+
 - UI Guard 的 757 条存量 allowance 已清零；`deno task check:ui` 现在要求全扫描
   零违规，继续禁止重新增加 baseline。账户、设置、首页与 Launcher 的静态样式
   统一使用 semantic class / Design Token，保留 Home 响应式几何与 runtime 布局。

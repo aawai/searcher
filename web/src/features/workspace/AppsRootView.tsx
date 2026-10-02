@@ -1,16 +1,9 @@
 import { useMemo, useState } from "react";
-import {
-    Check,
-    Folder,
-    FolderPlus,
-    Search,
-    SlidersHorizontal,
-    X,
-} from "lucide-react";
+import { Check, Folder, FolderPlus, SlidersHorizontal } from "lucide-react";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { Input } from "../../components/ui/input.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
+import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import type {
     LauncherApp,
     LauncherGroup,
@@ -114,74 +107,53 @@ export function AppsRootView({
     const totalMatches = matchedApps.length + matchedGroups.length;
 
     return (
-        <div className="apps-workspace-section">
-            {/* Search input */}
-            <div className="apps-workspace-search-wrap">
-                <Search
-                    size={16}
-                    className="apps-workspace-search-icon"
-                    aria-hidden="true"
-                />
-                <Input
-                    type="search"
-                    data-workspace-search=""
-                    className="apps-workspace-search-input"
+        <div className="workspace-root">
+            <div className="workspace-root-controls">
+                <WorkspaceSearch
+                    value={query}
+                    onChange={onQueryChange}
                     placeholder={isArranging
                         ? "整理模式下暂停搜索"
                         : "搜索网站名称、网址或文件夹…"}
-                    value={query}
-                    onChange={(e) => onQueryChange(e.target.value)}
                     disabled={isArranging}
-                    aria-label="搜索网站"
+                    ariaLabel="搜索网站"
                 />
-                {query && !isArranging && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="apps-workspace-search-clear"
-                        onClick={() => onQueryChange("")}
-                        aria-label="清除搜索"
-                    >
-                        <X size={14} />
-                    </Button>
-                )}
-            </div>
 
-            {/* Secondary toolbar */}
-            <div className="apps-workspace-secondary-bar">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs text-[var(--muted)]"
-                    onClick={() => setIsCreateFolderOpen(true)}
-                    disabled={isArranging}
-                    aria-label="新建文件夹"
-                >
-                    <FolderPlus size={14} />
-                    <span>新建文件夹</span>
-                </Button>
-                <Button
-                    variant={isArranging ? "default" : "outline"}
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={() => {
-                        if (!isArranging) {
-                            onQueryChange("");
-                        }
-                        onArrangeChange(!isArranging);
-                    }}
-                    aria-label={isArranging
-                        ? "完成排序整理"
-                        : "整理网站排序与布局"}
-                >
-                    {isArranging
-                        ? <Check size={14} />
-                        : <SlidersHorizontal size={14} />}
-                    <span>
-                        {isArranging ? "完成整理" : "整理布局"}
-                    </span>
-                </Button>
+                {/* Secondary toolbar */}
+                <div className="apps-workspace-secondary-bar">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-xs text-[var(--muted)]"
+                        onClick={() => setIsCreateFolderOpen(true)}
+                        disabled={isArranging}
+                        aria-label="新建文件夹"
+                    >
+                        <FolderPlus size={14} />
+                        <span>新建文件夹</span>
+                    </Button>
+                    <Button
+                        variant={isArranging ? "default" : "outline"}
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={() => {
+                            if (!isArranging) {
+                                onQueryChange("");
+                            }
+                            onArrangeChange(!isArranging);
+                        }}
+                        aria-label={isArranging
+                            ? "完成排序整理"
+                            : "整理网站排序与布局"}
+                    >
+                        {isArranging
+                            ? <Check size={14} />
+                            : <SlidersHorizontal size={14} />}
+                        <span>
+                            {isArranging ? "完成整理" : "整理布局"}
+                        </span>
+                    </Button>
+                </div>
             </div>
 
             {/* When searching and NOT arranging */}

@@ -576,7 +576,476 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
         },
     );
+
+    await t.step(
+        "issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability",
+        async () => {
+            await request("/api/preferences", "PATCH", {
+                style: "widgets",
+                theme: "system",
+            });
+
+            for (const theme of ["light", "dark"] as const) {
+                await page.emulateMedia({ colorScheme: theme });
+                for (const width of [375, 390, 768, 1024, 1440]) {
+                    await page.setViewportSize({ width, height: 900 });
+                    await page.goto(origin + "/");
+                    await page.waitForFunction(
+                        (expected) =>
+                            document.documentElement.dataset.theme === expected,
+                        theme,
+                    );
+                    await openApps();
+                    await search().waitFor();
+                    await page.waitForFunction(() =>
+                        document.activeElement?.matches(
+                            "input[data-workspace-search]",
+                        )
+                    );
+                    await panel.locator(".apps-workspace-banner--loading")
+                        .waitFor({ state: "detached" });
+                    await search().fill("");
+
+                    const appsSearch = await measureBox(search());
+                    const appsInset = await measureBodyInset(panel);
+                    const appsFooter = await measureBox(
+                        panel.locator(".workspace-footer"),
+                    );
+                    const appsSwitcher = await measureBox(
+                        panel.locator(".workspace-switcher"),
+                    );
+                    const appsPanel = await measureBox(panel);
+                    const appsBtn = await measureButtonProperties(
+                        panel.locator(
+                            ".workspace-footer button.button--primary",
+                        ),
+                    );
+
+                    // WorkspaceBody sole page-level inline inset: search and content align with body padding
+                    assertNear(appsInset.searchLeftDiff, 0, 2);
+                    assertNear(appsInset.searchRightDiff, 0, 2);
+                    assertNear(appsInset.contentLeftDiff, 0, 2);
+                    assertNear(appsInset.contentRightDiff, 0, 2);
+
+                    // Switch Apps -> Notes
+                    await panel.getByRole("button", {
+                        name: "便签工作区",
+                        exact: true,
+                    }).click();
+                    await panel.locator(".notes-workspace").waitFor();
+                    await search().waitFor();
+                    await page.waitForFunction(() =>
+                        document.activeElement?.matches(
+                            "input[data-workspace-search]",
+                        )
+                    );
+                    await panel.locator('p[role="status"]', {
+                        hasText: "正在加载",
+                    }).waitFor({ state: "detached" });
+                    await search().fill("");
+
+                    const notesSearch = await measureBox(search());
+                    const notesInset = await measureBodyInset(panel);
+                    const notesFooter = await measureBox(
+                        panel.locator(".workspace-footer"),
+                    );
+                    const notesSwitcher = await measureBox(
+                        panel.locator(".workspace-switcher"),
+                    );
+                    const notesPanel = await measureBox(panel);
+                    const notesBtn = await measureButtonProperties(
+                        panel.locator(
+                            ".workspace-footer button.button--primary",
+                        ),
+                    );
+
+                    assertNear(notesInset.searchLeftDiff, 0, 2);
+                    assertNear(notesInset.searchRightDiff, 0, 2);
+                    assertNear(notesInset.contentLeftDiff, 0, 2);
+                    assertNear(notesInset.contentRightDiff, 0, 2);
+
+                    // Search geometry: x, right, width <= 2px and height <= 1px
+                    assertNear(appsSearch.x, notesSearch.x, 2);
+                    assertNear(appsSearch.right, notesSearch.right, 2);
+                    assertNear(appsSearch.width, notesSearch.width, 2);
+                    assertNear(appsSearch.height, notesSearch.height, 1);
+
+                    // Panel, Footer, Switcher stability
+                    assertBoxesNear(appsPanel, notesPanel, 1);
+                    assertBoxesNear(appsFooter, notesFooter, 1);
+                    assertBoxesNear(appsSwitcher, notesSwitcher, 1);
+
+                    // Footer create action visual hierarchy identical
+                    assertEquals(appsBtn.isPrimary, true);
+                    assertEquals(notesBtn.isPrimary, true);
+                    assertNear(appsBtn.width, notesBtn.width, 1);
+                    assertNear(appsBtn.height, notesBtn.height, 1);
+                    assertEquals(appsBtn.borderRadius, notesBtn.borderRadius);
+                    assertEquals(
+                        appsBtn.backgroundColor,
+                        notesBtn.backgroundColor,
+                    );
+                    assertEquals(appsBtn.color, notesBtn.color);
+
+                    // Switch Notes -> Apps
+                    await panel.getByRole("button", {
+                        name: "应用工作区",
+                        exact: true,
+                    }).click();
+                    await panel.locator(".apps-workspace .workspace-root")
+                        .waitFor();
+                    await search().waitFor();
+                    await page.waitForFunction(() =>
+                        document.activeElement?.matches(
+                            "input[data-workspace-search]",
+                        )
+                    );
+                    await assertChromeInViewport(page);
+                }
+            }
+
+            // Desktop viewport for interaction, focus/blur, arrange hierarchy, and chrome stability
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.goto(origin + "/");
+            await openApps();
+            await search().waitFor();
+            await page.waitForFunction(() =>
+                document.activeElement?.matches("input[data-workspace-search]")
+            );
+
+            // 1. Focus visibility and blur without shift
+            // Search starts autofocused: blur first to establish neutral baseline
+            await search().blur();
+            await search().evaluate(async (el) => {
+                await Promise.all(el.getAnimations().map((a) => a.finished));
+            });
+            const panelBaseline = await measureBox(panel);
+            const bodyBaseline = await measureBox(
+                panel.locator(".workspace-body"),
+            );
+            const searchBaseline = await measureBox(search());
+            const blurStyle = await search().evaluate((el) => {
+                const s = getComputedStyle(el);
+                return { boxShadow: s.boxShadow, outline: s.outline };
+            });
+
+            // Focus search input
+            await search().focus();
+            await search().evaluate(async (el) => {
+                await Promise.all(el.getAnimations().map((a) => a.finished));
+            });
+            const focusStyle = await search().evaluate((el) => {
+                const s = getComputedStyle(el);
+                return {
+                    boxShadow: s.boxShadow,
+                    outline: s.outline,
+                    focusVisible: el.matches(":focus-visible"),
+                };
+            });
+            assert(
+                focusStyle.boxShadow !== blurStyle.boxShadow ||
+                    focusStyle.outline !== blurStyle.outline,
+                "Focus must visibly alter box-shadow or outline",
+            );
+            assertEquals(focusStyle.focusVisible, true);
+
+            const panelFocused = await measureBox(panel);
+            const bodyFocused = await measureBox(
+                panel.locator(".workspace-body"),
+            );
+            const searchFocused = await measureBox(search());
+            assertEquals(panelFocused, panelBaseline);
+            assertEquals(bodyFocused, bodyBaseline);
+            assertEquals(searchFocused, searchBaseline);
+
+            await search().blur();
+            await search().evaluate(async (el) => {
+                await Promise.all(el.getAnimations().map((a) => a.finished));
+            });
+            const panelAfterBlur = await measureBox(panel);
+            const bodyAfterBlur = await measureBox(
+                panel.locator(".workspace-body"),
+            );
+            const searchAfterBlur = await measureBox(search());
+            assertEquals(panelAfterBlur, panelBaseline);
+            assertEquals(bodyAfterBlur, bodyBaseline);
+            assertEquals(searchAfterBlur, searchBaseline);
+
+            // 2. Clear action & independent search queries
+            await search().fill("AlphaAppsQuery");
+            const clearBtn = panel.locator(".workspace-search-clear");
+            await clearBtn.waitFor({ state: "visible" });
+            await clearBtn.focus();
+            await page.keyboard.press("Enter");
+            assertEquals(await search().inputValue(), "");
+            assertEquals(await clearBtn.count(), 0);
+
+            await page.waitForFunction(() =>
+                document.activeElement?.matches("input[data-workspace-search]")
+            );
+            await page.keyboard.type("AppsQueryPersisted");
+            await panel.getByRole("button", {
+                name: "便签工作区",
+                exact: true,
+            }).click();
+            await panel.locator(".notes-workspace").waitFor();
+            await search().waitFor();
+            assertEquals(await search().inputValue(), "");
+            await search().fill("NotesQueryToClear");
+            await clearBtn.focus();
+            await page.keyboard.press("Enter");
+            assertEquals(await search().inputValue(), "");
+            await page.waitForFunction(() =>
+                document.activeElement?.matches("input[data-workspace-search]")
+            );
+            await page.keyboard.type("NotesQueryPersisted");
+
+            await panel.getByRole("button", {
+                name: "应用工作区",
+                exact: true,
+            }).click();
+            await panel.locator(".apps-workspace .workspace-root").waitFor();
+            await search().waitFor();
+            assertEquals(await search().inputValue(), "AppsQueryPersisted");
+
+            await panel.getByRole("button", {
+                name: "便签工作区",
+                exact: true,
+            }).click();
+            await panel.locator(".notes-workspace").waitFor();
+            await search().waitFor();
+            assertEquals(await search().inputValue(), "NotesQueryPersisted");
+
+            await search().fill("");
+            await panel.getByRole("button", {
+                name: "应用工作区",
+                exact: true,
+            }).click();
+            await panel.locator(".apps-workspace .workspace-root").waitFor();
+            await search().fill("");
+
+            // 3. Arrange mode: search disabled, single primary ('完成整理' only), footer create not primary
+            const arrangeBtn = panel.getByRole("button", {
+                name: "整理网站排序与布局",
+                exact: true,
+            });
+            await arrangeBtn.click();
+            assertEquals(await search().isDisabled(), true);
+            assertEquals(
+                await panel.locator(".workspace-footer .button--primary")
+                    .count(),
+                0,
+            );
+            const doneArrangeBtn = panel.getByRole("button", {
+                name: "完成排序整理",
+                exact: true,
+            });
+            await doneArrangeBtn.waitFor({ state: "visible" });
+            assertEquals(
+                await doneArrangeBtn.evaluate((el) =>
+                    el.classList.contains("button--primary")
+                ),
+                true,
+            );
+            assertEquals(
+                await panel.locator("button.button--primary").count(),
+                1,
+            );
+
+            await doneArrangeBtn.click();
+            assertEquals(await search().isDisabled(), false);
+            assertEquals(
+                await panel.locator(".workspace-footer .button--primary")
+                    .count(),
+                1,
+            );
+
+            // 4. Nested views: no Root create action, .app-dialog-body inset matches workspace-body
+            await panel.locator(".workspace-footer .button--primary").click();
+            await panel.locator(".app-dialog-form").waitFor();
+            assertEquals(
+                await panel.locator(".workspace-footer .button--primary")
+                    .count(),
+                0,
+            );
+            const appDialogBodyDiff = await panel.evaluate((panelEl) => {
+                const body = panelEl.querySelector(
+                    ".workspace-body",
+                ) as HTMLElement;
+                const dialogBody = panelEl.querySelector(
+                    ".app-dialog-body",
+                ) as HTMLElement;
+                const bodyRect = body.getBoundingClientRect();
+                const dialogRect = dialogBody.getBoundingClientRect();
+                const bodyStyle = getComputedStyle(body);
+                const padLeft = parseFloat(bodyStyle.paddingLeft);
+                const padRight = parseFloat(bodyStyle.paddingRight);
+                return {
+                    leftDiff: Math.round(
+                        (dialogRect.left - bodyRect.left) - padLeft,
+                    ),
+                    rightDiff: Math.round(
+                        (bodyRect.right - dialogRect.right) - padRight,
+                    ),
+                };
+            });
+            assertNear(appDialogBodyDiff.leftDiff, 0, 2);
+            assertNear(appDialogBodyDiff.rightDiff, 0, 2);
+
+            await panel.getByRole("button", { name: "返回上一级", exact: true })
+                .click();
+            await search().waitFor();
+            assertEquals(
+                await panel.locator(".workspace-footer .button--primary")
+                    .count(),
+                1,
+            );
+
+            // 5. Long names / titles do not distort chrome
+            const longApp = await request<{ id: string }>(
+                "/api/webapps",
+                "POST",
+                {
+                    name: "A".repeat(80),
+                    url: "https://example.com/" + "u".repeat(120),
+                },
+            );
+            const longNote = await request<{ id: string }>(
+                "/api/notes",
+                "POST",
+                {
+                    title: "T".repeat(200),
+                    body: "B".repeat(500),
+                },
+            );
+            await page.goto(origin + "/");
+            await openApps();
+            await search().waitFor();
+            await panel.getByRole("button", {
+                name: "打开 " + "A".repeat(80),
+                exact: true,
+            })
+                .waitFor({ state: "attached" });
+            await assertChromeInViewport(page);
+            await panel.getByRole("button", { name: "便签工作区", exact: true })
+                .click();
+            await panel.locator(".notes-workspace").waitFor();
+            await panel.locator(".note-card").filter({
+                hasText: "T".repeat(200),
+            })
+                .waitFor({ state: "attached" });
+            await assertChromeInViewport(page);
+
+            await request(`/api/webapps/${longApp.id}`, "DELETE");
+            await request(`/api/notes/${longNote.id}`, "DELETE");
+            await close();
+        },
+    );
 });
+
+interface ElementBox {
+    x: number;
+    y: number;
+    right: number;
+    width: number;
+    height: number;
+}
+
+async function measureBox(locator: {
+    evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
+}): Promise<ElementBox> {
+    return await locator.evaluate((el: HTMLElement) => {
+        const r = el.getBoundingClientRect();
+        return {
+            x: Math.round(r.x),
+            y: Math.round(r.y),
+            right: Math.round(r.right),
+            width: Math.round(r.width),
+            height: Math.round(r.height),
+        };
+    });
+}
+
+function assertNear(actual: number, expected: number, tolerance: number) {
+    assert(
+        Math.abs(actual - expected) <= tolerance,
+        `Expected ${actual} to be within ${tolerance} of ${expected}`,
+    );
+}
+
+function assertBoxesNear(a: ElementBox, b: ElementBox, tolerance = 1) {
+    assertNear(a.x, b.x, tolerance);
+    assertNear(a.y, b.y, tolerance);
+    assertNear(a.width, b.width, tolerance);
+    assertNear(a.height, b.height, tolerance);
+}
+
+interface ButtonProperties {
+    width: number;
+    height: number;
+    borderRadius: string;
+    backgroundColor: string;
+    color: string;
+    isPrimary: boolean;
+}
+
+async function measureButtonProperties(locator: {
+    evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
+}): Promise<ButtonProperties> {
+    return await locator.evaluate((el: HTMLElement) => {
+        const r = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return {
+            width: Math.round(r.width),
+            height: Math.round(r.height),
+            borderRadius: style.borderRadius,
+            backgroundColor: style.backgroundColor,
+            color: style.color,
+            isPrimary: el.classList.contains("button--primary"),
+        };
+    });
+}
+
+interface InsetMetrics {
+    searchLeftDiff: number;
+    searchRightDiff: number;
+    contentLeftDiff: number;
+    contentRightDiff: number;
+}
+
+async function measureBodyInset(panelLocator: {
+    evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
+}): Promise<InsetMetrics> {
+    return await panelLocator.evaluate((panelEl: HTMLElement) => {
+        const body = panelEl.querySelector(".workspace-body") as HTMLElement;
+        const contentRoot = body.firstElementChild as HTMLElement;
+        const searchWrap = contentRoot.querySelector(
+            ".workspace-search-wrap",
+        ) as HTMLElement;
+        const bodyRect = body.getBoundingClientRect();
+        const contentRect = contentRoot.getBoundingClientRect();
+        const searchRect = searchWrap.getBoundingClientRect();
+        const bodyStyle = getComputedStyle(body);
+        const padLeft = parseFloat(bodyStyle.paddingLeft);
+        const padRight = parseFloat(bodyStyle.paddingRight);
+        return {
+            searchLeftDiff: Math.round(
+                (searchRect.left - bodyRect.left) - padLeft,
+            ),
+            searchRightDiff: Math.round(
+                (bodyRect.right - searchRect.right) - padRight,
+            ),
+            contentLeftDiff: Math.round(
+                (contentRoot ? (contentRect.left - bodyRect.left) : 0) -
+                    padLeft,
+            ),
+            contentRightDiff: Math.round(
+                (contentRoot ? (bodyRect.right - contentRect.right) : 0) -
+                    padRight,
+            ),
+        };
+    });
+}
 
 async function chromeBounds(page: Page) {
     return await page.locator(".workspace-panel").evaluate((el) => {

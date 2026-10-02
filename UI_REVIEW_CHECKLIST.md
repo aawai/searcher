@@ -492,3 +492,39 @@
 - [x] Advisor 复核匿名主题转换：匿名 dark → 登录账号改 light → 登出恢复 dark →
       匿名改 light → 刷新仍为 light。每一步核对 DOM dataset.theme 和 IndexedDB
       appearance:anonymous，均一致；console errors 为 0。
+
+## Issue #57 Workspace Root Layout Contract（2026-10-02）
+
+- [x] 复用 Workspace archetype、Input / Button 与现有 Design Token；未新增 raw
+      value-token、baseline allowance 或 Apps/Notes-only 页面 padding。Body
+      统一拥有 `--space-4` inset；Root 使用 `--space-section-gap`，Apps control
+      group / toolbar 使用 `--space-control-gap`。Launcher 与 NoteCard
+      内部几何和展示语义保持独立。
+- [x] Apps/Notes 共用 WorkspaceSearch：40px height、相同 radius/icon/clear/focus
+      ring； 保留 Root autofocus，去除叠加的全局 outline。两侧 Footer create
+      使用同一 primary Button；整理模式仅“完成整理”为 primary，nested AppForm
+      不出现 Root create，不重复叠加 Body/form inset。
+- [x] 改动前 production bundle 实测 Apps Search 334×36px、Notes 366×40px；
+      新增跨工作区回归在旧 bundle 上因 x 差 16px
+      失败。完成切换后，独立临时生产实例 375/390/768/1024/1440 × light/dark ×
+      Apps/Notes 共 20 个实页场景：Search、 Footer、create 与 Switcher
+      几何差均为 0px，页面/Body 无横向 overflow。 实际 dataset.theme、CSS
+      viewport 与加载完成状态已校准，保留 reduced-motion。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark 的 12 张最终面板截图已审阅，
+      Apps toolbar 紧凑分组，Notes fixed/other 与长标题卡片保持 full-width。
+      截图为临时验收产物，不新增永久 CSS/source 快照断言。
+- [x] 实页复现 clear 按钮卸载后焦点落到 BODY；修复后 390/1440 两宽度 × 两工作区
+      的键盘 Enter 清除均回焦 Search，下一次键盘输入成功，浏览器 runtime errors
+      为 0。 regression 同时保护独立 query、arrange disabled Search、nested
+      inset 和 focus/blur 无布局变化。Focus 断言等待实际 CSS transition
+      完成，不依赖固定 sleep。
+- [x] 不修改 Home/Zen layout、Workspace route/state model、CRUD/schema、NoteCard
+      纸张语义或 Launcher folder/DnD contract；Design System 与 Unreleased
+      同步更新。
+- [x] 最终验证：`deno task test` 315 项通过；`deno task test:workspace` 5 个
+      suite / 58 个 step 全部通过，包含 #47 Launcher 与 #43 full-width /
+      inline-expand。 production build、`deno check web/src/App.tsx`、改动 TSX /
+      E2E lint 与 formatting 通过；UI Guard 扫描 88 个文件，violations /
+      allowances 均为 0。 Notes 保存生命周期测试在输入前等待 nested Back
+      autofocus 完成，保留所有原有
+      保存/失败/重试断言；未改保存实现或使用请求拦截门控。

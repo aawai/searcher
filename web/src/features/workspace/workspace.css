@@ -39,6 +39,70 @@
     overscroll-behavior: contain;
     padding: var(--space-4);
 }
+.workspace-root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-section-gap);
+    width: 100%;
+    min-width: 0;
+}
+.workspace-root-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-control-gap);
+    width: 100%;
+    min-width: 0;
+}
+/* Nested AppForm in Workspace: single-owner root content inset */
+.workspace-body .app-dialog-body {
+    padding: 0;
+}
+
+/* Workspace Search */
+.workspace-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.workspace-search-icon {
+    position: absolute;
+    left: var(--space-3);
+    color: var(--muted);
+    pointer-events: none;
+    z-index: 1;
+}
+.workspace-search-input {
+    width: 100%;
+    height: var(--control-input-height);
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+    border-radius: var(--radius-input);
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    box-sizing: border-box;
+}
+/* Input supplies the focus ring; do not stack the global outline on it. */
+.workspace-search-input:focus-visible {
+    outline: none;
+}
+.workspace-search-input::-webkit-search-cancel-button {
+    appearance: none;
+}
+.workspace-search-clear {
+    position: absolute;
+    right: var(--space-1);
+    width: calc(var(--control-input-height) - 2 * var(--space-1));
+    height: calc(var(--control-input-height) - 2 * var(--space-1));
+    min-height: 0;
+    padding: 0;
+    color: var(--muted);
+}
+.workspace-search-clear:hover {
+    color: var(--foreground);
+}
 .workspace-footer {
     flex: 0 0 auto;
     padding: var(--space-3) var(--space-4);
