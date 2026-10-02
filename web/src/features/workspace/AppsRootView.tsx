@@ -244,8 +244,7 @@ export function AppsRootView({
                 )
                 : (
                     /* Standard view: Unified Launcher */
-                    <>
-                        <WebAppLauncher
+                    <WebAppLauncher
                             presentation="workspace"
                             apps={apps}
                             groups={groups}
@@ -271,19 +270,18 @@ export function AppsRootView({
                             onToggleManaging={toggleArrange}
                             onAdd={() => onNavigateToAdd?.(activeFolderId)}
                         />
-
-                        {onCreateFolder && (
-                            <FolderNameDialog
-                                open={isCreateFolderOpen}
-                                onOpenChange={setIsCreateFolderOpen}
-                                mode="create"
-                                onSubmit={async (name) => {
-                                    await onCreateFolder(name);
-                                }}
-                            />
-                        )}
-                    </>
                 )}
+
+            {onCreateFolder && (
+                <FolderNameDialog
+                    open={isCreateFolderOpen}
+                    onOpenChange={setIsCreateFolderOpen}
+                    mode="create"
+                    onSubmit={async (name) => {
+                        await onCreateFolder(name);
+                    }}
+                />
+            )}
         </div>
     );
 }
