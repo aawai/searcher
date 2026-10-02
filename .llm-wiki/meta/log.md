@@ -299,3 +299,6 @@
 ## [2026-10-01T12:23:38.466Z] observe
 - slug: "obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components", title: "UI Guard Migration: Settings & Searcher Presentation Components", relevance: "high"
 
+## [2026-10-01T14:11:16.585Z] observe
+- slug: "obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa", title: "Preferences API and schema migration for Issue #55 ambient wallpaper fields", relevance: "high"
+

@@ -97,3 +97,4 @@
 {"slug":"obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an","title":"Notes workspace Issue #44 contract matrix regression tests and visual evidence","relevance":"high","timestamp":"2026-10-01T07:53:53.034Z","kind":"observe"}
 {"slug":"obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52","title":"Home layouts & Launcher UI Guard migration (Issue #52)","relevance":"high","timestamp":"2026-10-01T12:14:29.220Z","kind":"observe"}
 {"slug":"obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components","title":"UI Guard Migration: Settings & Searcher Presentation Components","relevance":"high","timestamp":"2026-10-01T12:23:38.466Z","kind":"observe"}
+{"slug":"obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa","title":"Preferences API and schema migration for Issue #55 ambient wallpaper fields","relevance":"high","timestamp":"2026-10-01T14:11:16.585Z","kind":"observe"}

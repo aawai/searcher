@@ -2,6 +2,7 @@
 
 ## 2026-10-01
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa","title":"Preferences API and schema migration for Issue #55 ambient wallpaper fields"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components","title":"UI Guard Migration: Settings & Searcher Presentation Components"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52","title":"Home layouts & Launcher UI Guard migration (Issue #52)"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an","title":"Notes workspace Issue #44 contract matrix regression tests and visual evidence"}

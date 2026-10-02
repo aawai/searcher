@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-01T12:23:38.482Z",
+  "last_updated": "2026-10-01T14:11:16.602Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1023,6 +1023,23 @@
       "relevance": "high",
       "observed_at": "2026-10-01T06:00:00.588Z",
       "source_context": "Issue #43 Notes Workspace Root inline expand and geometry fix",
+      "created": "2026-10-01",
+      "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa": {
+      "type": "source",
+      "title": "Observation: Preferences API and schema migration for Issue #55 ambient wallpaper fields",
+      "tags": [
+        "preferences",
+        "db",
+        "migration",
+        "ambient-wallpaper"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa",
+      "relevance": "high",
+      "observed_at": "2026-10-01T14:11:16.581Z",
+      "source_context": "Issue #55 backend implementation",
       "created": "2026-10-01",
       "updated": "2026-10-01"
     },

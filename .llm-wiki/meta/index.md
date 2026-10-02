@@ -58,6 +58,7 @@
 - [[sources/obs-2026-10-01-home-layouts-launcher-ui-guard-migration-issue-52]] — Observation: Home layouts & Launcher UI Guard migration (Issue #52) *(created: 2026-10-01)*
 - [[sources/obs-2026-10-01-notes-workspace-issue-44-contract-matrix-regression-tests-an]] — Observation: Notes workspace Issue #44 contract matrix regression tests and visual evidence *(created: 2026-10-01)*
 - [[sources/obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-]] — Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard *(created: 2026-10-01)*
+- [[sources/obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa]] — Observation: Preferences API and schema migration for Issue #55 ambient wallpaper fields *(created: 2026-10-01)*
 - [[sources/obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components]] — Observation: UI Guard Migration: Settings & Searcher Presentation Components *(created: 2026-10-01)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
@@ -111,4 +112,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-01T12:23:38.482Z* | *Total pages: 96*
+*Last updated: 2026-10-01T14:11:16.602Z* | *Total pages: 97*
