@@ -15,14 +15,14 @@ FROM denoland/deno:2.9.7 AS runtime-deps
 
 WORKDIR /app
 
-COPY deno.jsonc deno.lock ./
+COPY deno.runtime.jsonc ./deno.jsonc
+COPY deno.lock ./
 COPY src ./src
 
 RUN deno install \
     --frozen \
     --prod \
     --skip-types \
-    --node-modules-dir=none \
     --entrypoint src/main.ts src/commands/admin.ts
 
 
@@ -45,4 +45,4 @@ RUN mkdir -p /app/data
 VOLUME ["/app/data"]
 EXPOSE 34567
 
-CMD ["run", "-A", "--cached-only", "--node-modules-dir=none", "src/main.ts"]
+CMD ["run", "-A", "--cached-only", "src/main.ts"]
