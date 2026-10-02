@@ -16,11 +16,12 @@ FROM denoland/deno:2.9.7 AS runtime-deps
 WORKDIR /app
 
 COPY deno.runtime.jsonc ./deno.jsonc
-COPY deno.lock ./
+COPY deno.lock ./deno.runtime.lock
 COPY src ./src
 
 RUN deno install \
-    --frozen \
+    --lock=deno.runtime.lock \
+    --frozen=false \
     --prod \
     --skip-types \
     --entrypoint src/main.ts src/commands/admin.ts
@@ -35,7 +36,8 @@ ENV NODE_ENV=production \
     DATABASE_PATH=/app/data/searcher.sqlite
 
 COPY --from=runtime-deps /deno-dir /deno-dir
-COPY --from=runtime-deps /app/deno.jsonc /app/deno.lock ./
+COPY --from=runtime-deps /app/deno.jsonc ./deno.jsonc
+COPY --from=runtime-deps /app/deno.runtime.lock ./deno.lock
 COPY src ./src
 COPY drizzle ./drizzle
 COPY --from=build /app/web/dist ./web/dist
