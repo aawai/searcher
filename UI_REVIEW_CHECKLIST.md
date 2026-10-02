@@ -555,3 +555,38 @@
       不变及固定/移出首页；最后补充真实 Workspace keyboard 重排并验证 API
       顺序，focused 7 steps 全通过。新增测试与修改文件 scoped lint/format
       通过；README/Unreleased 已同步。
+
+## Issue #61 Apps 空白操作面验收（2026-10-02）
+
+- [x] 保留 Workspace archetype 与 solid surface；复用 shadcn/Base UI
+      ContextMenu、FolderNameDialog、Input/Button，无新增基础控件或视觉数值。
+- [x] Apps Root 与 Surface 通过 flex 占满剩余高度，Grid 不增加
+      padding、高度或轨道；新建文件夹、整理/完成整理统一由空白菜单提供。
+- [x] 390×844、768×1024、1440×900 × light/dark
+      实页截图及下方空白右键均通过，无横向溢出；68px 方格、大文件夹
+      140px（2×2）保持不变。
+- [x] 生产 Launcher E2E 14 个步骤通过：空
+      Root、少量/多行应用、搜索结果/无结果、文件夹内联、整理菜单禁用新建、应用/文件夹菜单隔离。菜单命中点位于实际内容下方、Footer
+      上方。
+- [x] 390px CDP 原生 touch
+      长按空白、应用与文件夹；释放不激活图块。短视口制造真实
+      overflow，空白面滑动实际改变
+      Body.scrollTop，未弹出菜单。Pointer/Keyboard/touch
+      DnD、归组、文件夹内排序、持久化与失败回滚均通过。
+- [x] Surface 保留 Tab 与 Shift+F10 入口；实页 axe 确认违规为 0，page errors 为
+      0。
+- [x] 315 项单元/模块测试、生产 build、typecheck、UI Guard（88 files / 0
+      violations）通过；其他 workspace/navigation/bento E2E 通过。
+- [x] 本次 TS/TSX lint 与修改文件 format 检查通过；全仓 lint 存量错误及
+      scripts/ui-guard/baseline.json 存量缩进不在本次范围，未修改。
+- [x] 验收脚本修正：菜单关闭坐标不可复用布局变化前的位置；触屏菜单场景独立刷新，避免点击菜单覆盖区域。长按释放回归修复前发生导航、修复后保持
+      Root。
+- 不适用：guest 无 Apps Workspace；未改变壁纸、标题偏好、Design Lab、API
+  或路由契约，相关展示不追加矩阵。
+
+- [x] 同步最新 main（28d2eda，#64）后，320 项单元测试、build/typecheck、UI Guard
+      和 #62 七个 E2E 步骤通过。全套 Workspace 验收有 Launcher steps 7–10
+      失败：step 7 错误 Banner 关闭超时，后续步骤级联失败。在独立、未修改的 main
+      worktree /tmp/searcher-issue62-main-baseline 运行同一
+      task，复现相同四项失败（栈路径确认来自该基线）；不是 #62 独有回归。未修改
+      Launcher 实现或其既有测试，不将最终全套结果宣称为全绿。

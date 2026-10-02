@@ -602,7 +602,6 @@ export interface WebAppLauncherProps {
     onFolderChange?: (folderId: string | null) => void;
     presentation?: "default" | "quick" | "workspace";
     onManage?: (app: LauncherApp) => void;
-    onCreateFolder?: (name: string) => Promise<void>;
     onRenameFolder?: (group: LauncherGroup, name: string) => Promise<void>;
     onDeleteFolder?: (group: LauncherGroup) => Promise<void>;
     onMoveAppToFolder?: (
@@ -639,7 +638,6 @@ export function WebAppLauncher({
     onFolderChange,
     presentation = "default",
     onManage,
-    onCreateFolder,
     onRenameFolder,
     onDeleteFolder,
     onMoveAppToFolder,
@@ -697,7 +695,6 @@ export function WebAppLauncher({
     const scrollPosRef = useRef<number>(0);
     const folderInlineRef = useRef<HTMLDivElement | null>(null);
     const prevFolderIdRef = useRef<string | null>(null);
-    const [createFolderOpen, setCreateFolderOpen] = useState(false);
     const [folderToRename, setFolderToRename] = useState<LauncherGroup | null>(
         null,
     );
@@ -950,82 +947,50 @@ export function WebAppLauncher({
                 items={tiles.map((tile) => tile.id)}
                 strategy={() => null}
             >
-                <ContextMenu>
-                    <ContextMenuTrigger className="launcher-surface-wrap">
-                        <div
-                            ref={gridRef}
-                            tabIndex={onCreateFolder ? 0 : undefined}
-                            aria-label="网站启动器"
-                            className={`pinned-apps launcher-grid launcher-grid--${size}${
-                                showFolders ? "" : " launcher-grid--home"
-                            }${
-                                showAppLabels
-                                    ? ""
-                                    : " launcher-grid--icons-only"
-                            }${
-                                presentation === "workspace"
-                                    ? " launcher-grid--workspace"
-                                    : ""
-                            }${
-                                presentation === "quick"
-                                    ? " launcher-grid--quick"
-                                    : ""
-                            }`}
-                            data-presentation={presentation}
-                            data-columns={effectiveColumns}
-                        >
-                            {tiles.map((tile, index) => (
-                                <SortableTile
-                                    key={tile.id}
-                                    tile={tile}
-                                    placement={layout[index]}
-                                    groups={groups}
-                                    managing={managing}
-                                    actions={actions}
-                                    showAppLabels={showAppLabels}
-                                    onFolder={openFolder}
-                                    onSizeChange={onFolderSizeChange}
-                                    activeDragId={activeId}
-                                    onMoveByKey={(id, direction) =>
-                                        reorderTiles(
-                                            tiles.findIndex((item) =>
-                                                item.id === id
-                                            ),
-                                            tiles.findIndex((item) =>
-                                                item.id === id
-                                            ) +
-                                                direction,
-                                        )}
-                                />
-                            ))}
-                            <div
-                                aria-hidden="true"
-                                className="launcher-grid-boundary"
-                                style={{ gridColumn: columnLayout.gridColumn }}
-                            />
-                        </div>
-                    </ContextMenuTrigger>
-                    {onCreateFolder && (
-                        <ContextMenuContent aria-label="启动器空白区域操作">
-                            <ContextMenuItem
-                                onClick={() => setCreateFolderOpen(true)}
-                            >
-                                新建文件夹
-                            </ContextMenuItem>
-                        </ContextMenuContent>
-                    )}
-                </ContextMenu>
+                <div
+                    ref={gridRef}
+                    aria-label="网站启动器"
+                    className={`pinned-apps launcher-grid launcher-grid--${size}${
+                        showFolders ? "" : " launcher-grid--home"
+                    }${showAppLabels ? "" : " launcher-grid--icons-only"}${
+                        presentation === "workspace"
+                            ? " launcher-grid--workspace"
+                            : ""
+                    }${
+                        presentation === "quick"
+                            ? " launcher-grid--quick"
+                            : ""
+                    }`}
+                    data-presentation={presentation}
+                    data-columns={effectiveColumns}
+                >
+                    {tiles.map((tile, index) => (
+                        <SortableTile
+                            key={tile.id}
+                            tile={tile}
+                            placement={layout[index]}
+                            groups={groups}
+                            managing={managing}
+                            actions={actions}
+                            showAppLabels={showAppLabels}
+                            onFolder={openFolder}
+                            onSizeChange={onFolderSizeChange}
+                            activeDragId={activeId}
+                            onMoveByKey={(id, direction) =>
+                                reorderTiles(
+                                    tiles.findIndex((item) => item.id === id),
+                                    tiles.findIndex((item) => item.id === id) +
+                                        direction,
+                                )}
+                        />
+                    ))}
+                    <div
+                        aria-hidden="true"
+                        className="launcher-grid-boundary"
+                        style={{ gridColumn: columnLayout.gridColumn }}
+                    />
+                </div>
             </SortableContext>
-            {onCreateFolder && (
-                <FolderNameDialog
-                    open={createFolderOpen}
-                    onOpenChange={setCreateFolderOpen}
-                    mode="create"
-                    onSubmit={async (name) => {
-                        await onCreateFolder(name);
-                    }}
-                />
-            )}
             {onRenameFolder && (
                 <FolderNameDialog
                     open={Boolean(folderToRename)}

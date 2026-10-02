@@ -50,11 +50,15 @@
     flex-shrink: 0;
 }
 
-/* Secondary toolbar at root */
-.apps-workspace-secondary-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-control-gap);
+/* Fill the body without adding tracks or padding to the square-cell grid. */
+.apps-workspace-root {
+    flex: 1 0 auto;
+}
+.apps-workspace-root > .workspace-root-controls {
+    flex: 0 0 auto;
+}
+.apps-workspace-root > .launcher-surface-wrap {
+    flex: 1 0 auto;
 }
 
 /* Section container */
