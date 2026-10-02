@@ -23,6 +23,7 @@ on:
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}
+    SMOKE_IMAGE: ghcr.io/${{ github.repository }}:ci
 
 jobs:
     build:
@@ -53,6 +54,7 @@ jobs:
               with:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                   tags: |
+                      type=raw,value=ci,enable=${{ github.event_name == 'pull_request' }}
                       type=raw,value=latest,enable={{is_default_branch}}
                       type=sha,prefix=sha-
                       type=ref,event=tag
@@ -64,7 +66,54 @@ jobs:
                   file: ./Dockerfile
                   platforms: linux/amd64
                   push: ${{ github.event_name != 'pull_request' }}
+                  load: ${{ github.event_name == 'pull_request' }}
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
+
+            - name: Smoke test runtime image
+              if: github.event_name == 'pull_request'
+              shell: bash
+              run: |
+                  set -euo pipefail
+
+                  docker run --rm --entrypoint sh "$SMOKE_IMAGE" -c 'test ! -e /app/node_modules'
+
+                  printf 'SmokeAdminPassword123!\nSmokeAdminPassword123!\n' | \
+                      docker run --rm -i \
+                          -e DATABASE_PATH=/tmp/searcher-admin-smoke.sqlite \
+                          --entrypoint deno \
+                          "$SMOKE_IMAGE" \
+                          run -A --cached-only --node-modules-dir=none \
+                          src/commands/admin.ts create smoke_admin
+
+                  docker run -d \
+                      --name searcher-smoke \
+                      -p 127.0.0.1:34567:34567 \
+                      -e APP_ORIGIN=http://localhost:34567 \
+                      -e ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+                      "$SMOKE_IMAGE"
+
+                  cleanup() {
+                      docker logs searcher-smoke || true
+                      docker rm -f searcher-smoke >/dev/null 2>&1 || true
+                  }
+                  trap cleanup EXIT
+
+                  ready=false
+                  for _ in $(seq 1 30); do
+                      if curl --fail --silent --show-error http://127.0.0.1:34567/ >/dev/null; then
+                          ready=true
+                          break
+                      fi
+                      sleep 1
+                  done
+
+                  if [ "$ready" != "true" ]; then
+                      echo "Searcher did not become ready within 30 seconds" >&2
+                      exit 1
+                  fi
+
+                  docker exec searcher-smoke sh -c 'test ! -e /app/node_modules'
+                  docker image inspect "$SMOKE_IMAGE" --format 'Runtime image size: {{.Size}} bytes'
