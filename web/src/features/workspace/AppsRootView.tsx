@@ -283,7 +283,7 @@ export function AppsRootView({
                     />
                 )}
 
-            {onCreateFolder && (
+            {trimmedQuery && !isArranging && onCreateFolder && (
                 <FolderNameDialog
                     open={isCreateFolderOpen}
                     onOpenChange={setIsCreateFolderOpen}
