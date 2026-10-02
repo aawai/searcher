@@ -995,10 +995,10 @@ export function WebAppLauncher({
             >
                 {renderSurfaceWithContextMenu(
                     <div
-                            ref={gridRef}
-                            tabIndex={onCreateFolder ? 0 : undefined}
-                            aria-label="网站启动器"
-                            className={`pinned-apps launcher-grid launcher-grid--${size}${
+                        ref={gridRef}
+                        tabIndex={onCreateFolder ? 0 : undefined}
+                        aria-label="网站启动器"
+                        className={`pinned-apps launcher-grid launcher-grid--${size}${
                                 showFolders ? "" : " launcher-grid--home"
                             }${
                                 showAppLabels
@@ -1013,10 +1013,10 @@ export function WebAppLauncher({
                                     ? " launcher-grid--quick"
                                     : ""
                             }`}
-                            data-presentation={presentation}
-                            data-columns={effectiveColumns}
-                        >
-                            {tiles.map((tile, index) => (
+                        data-presentation={presentation}
+                        data-columns={effectiveColumns}
+                    >
+                        {tiles.map((tile, index) => (
                                 <SortableTile
                                     key={tile.id}
                                     tile={tile}
@@ -1039,12 +1039,12 @@ export function WebAppLauncher({
                                                 direction,
                                         )}
                                 />
-                            ))}
-                            <div
-                                aria-hidden="true"
-                                className="launcher-grid-boundary"
-                                style={{ gridColumn: columnLayout.gridColumn }}
-                            />
+                        ))}
+                        <div
+                            aria-hidden="true"
+                            className="launcher-grid-boundary"
+                            style={{ gridColumn: columnLayout.gridColumn }}
+                        />
                     </div>,
                 )}
             </SortableContext>
