@@ -8,7 +8,18 @@
 - web/src/design-system/tokens.css：值、主题、accent、shape 与 taxonomy。
 - components/ui/：shadcn primitives，基础交互、ARIA、几何。
 - components/searcher/PageShell.tsx、PageHeader.tsx、semantic.tsx、semantic.css：页面与组合结构。
-- feature stylesheet：领域布局，不另建常规几何值。
+- feature stylesheet：场景布局，不写普通控件几何。
+- Settings 使用 utility archetype：页面 `h1 设置`、当前 tab `h2`、分组 `h3`。
+  `SettingsSection` 组合通用 `Section` / `SectionHeader`，description 与 actions
+  是 header 字段；标题与描述的间距由 header 内部 `gap` 控制，均无自身 margin。
+  `settings-panel` / `settings-content` 用 `--space-section-gap` 控制 tab
+  内容起点和分组间距， section 内 header 到内容使用
+  `--space-row-gap`，不通过子元素 margin 修补。 行式配置使用
+  `SettingsCard + SettingsRow`，操作/状态使用 `SettingsActionCard`； Provider
+  保留复杂业务布局，但外层复用 `SettingsCard`、操作复用 `ActionGroup + Button`。
+  Settings 的 navigation、panel、action/status card、壁纸控件与 Provider/model
+  样式归 `web/src/app/settings.css`；通用 primitives 归 `semantic.css`，不与 Ask
+  selector 共享规则。
 
 正式 shadcn 色彩 role 由 `@theme inline` 映射到 Searcher Token：primary →
 accent，secondary → surface-soft，muted-foreground → muted，destructive →

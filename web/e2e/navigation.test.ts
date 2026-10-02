@@ -66,11 +66,42 @@ Deno.test("production navigation contracts", async (t) => {
                     ["/settings/data", "数据与同步"],
                 ]
             ) {
+                const sections: Record<string, string[]> = {
+                    "/settings": ["搜索引擎与打开方式"],
+                    "/settings/appearance": [
+                        "主题与配色",
+                        "主页与快捷入口",
+                        "壁纸与背景效果",
+                    ],
+                    "/settings/ai": ["AI 问答工作区", "已配置的 Provider"],
+                    "/settings/data": ["同步", "数据管理"],
+                };
                 await visit(path);
                 await page.getByRole("heading", {
                     name: heading,
                     exact: true,
                 }).first().waitFor({ state: "visible" });
+                assertEquals(
+                    await page.getByRole("heading", { level: 1 })
+                        .allTextContents(),
+                    ["设置"],
+                );
+                assertEquals(
+                    await page.getByRole("heading", { level: 2 })
+                        .allTextContents(),
+                    [heading],
+                );
+                assertEquals(
+                    await page.getByRole("heading", { level: 3 })
+                        .allTextContents(),
+                    sections[path],
+                );
+                assertEquals(
+                    await page.getByRole("navigation", { name: "设置分类" })
+                        .getByRole("button", { name: heading, exact: true })
+                        .getAttribute("aria-current"),
+                    "page",
+                );
                 assertEquals((await page.reload())?.status(), 200);
                 await page.getByRole("heading", {
                     name: heading,
