@@ -731,6 +731,16 @@ export function WebAppLauncher({
                     </ContextMenu>
                 )
                 : content}
+            {onCreateFolder && (
+                <FolderNameDialog
+                    open={createFolderOpen}
+                    onOpenChange={setCreateFolderOpen}
+                    mode="create"
+                    onSubmit={async (name) => {
+                        await onCreateFolder(name);
+                    }}
+                />
+            )}
         </>
     );
 
@@ -1034,16 +1044,6 @@ export function WebAppLauncher({
                     </div>,
                 )}
             </SortableContext>
-            {onCreateFolder && (
-                <FolderNameDialog
-                    open={createFolderOpen}
-                    onOpenChange={setCreateFolderOpen}
-                    mode="create"
-                    onSubmit={async (name) => {
-                        await onCreateFolder(name);
-                    }}
-                />
-            )}
             {onRenameFolder && (
                 <FolderNameDialog
                     open={Boolean(folderToRename)}
