@@ -12,3 +12,6 @@ coverage
 .llm-wiki
 .omp
 Searcher-v1-Final-React-shadcn-Spec-Pack
+**/*.test.ts
+**/*.test.tsx
+**/*.bench.ts

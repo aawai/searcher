@@ -2,10 +2,13 @@
 
 ## [Unreleased]
 
-- 新增 Docker / Unraid 部署：提供 Deno 2.9.7 多阶段镜像与 GHCR 发布工作流，
-  PR 验证 `linux/amd64`，`main` 与版本 tag 发布
-  `ghcr.io/aawai/searcher`；持久数据统一使用 `/app/data`，并记录 Private 源码仓库
-  搭配 Public GHCR package 的一次性可见性设置。Runtime 使用 `denoland/deno:alpine-2.9.7`、独立的最小 Deno import map，并从主 lock 派生精简 runtime lock，按服务与管理员 CLI entrypoint 精确缓存生产依赖，不携带项目级 `node_modules` 或 Vite、React、Playwright、Tailwind 等前端/构建依赖；PR CI 会启动镜像、执行管理员 CLI 并验证离线运行。
+- 新增 Docker / Unraid 部署：提供 Deno 2.9.7 Alpine 多阶段镜像与 GHCR
+  发布工作流， PR、`main`、版本 tag 和手动运行均验证 `linux/amd64` 镜像，非 PR
+  运行仅在 smoke test 成功后发布同一产物。 镜像默认以非 root 的 `1000:1000`
+  运行，持久数据统一使用 `/app/data`；文档提供 Unraid
+  挂载目录权限迁移、管理员创建与密码重置命令，并明确 Public GHCR
+  镜像可匿名提取后端源码。 运行依赖从主 lock 提取并冻结安装，不携带项目级
+  `node_modules`、测试文件或前端/构建依赖，支持缓存内离线启动。
 - UI Guard 的 757 条存量 allowance 已清零；`deno task check:ui` 现在要求全扫描
   零违规，继续禁止重新增加 baseline。账户、设置、首页与 Launcher 的静态样式
   统一使用 semantic class / Design Token，保留 Home 响应式几何与 runtime 布局。
