@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+data
+node_modules
+web/dist
+web/.vite
+coverage
+*.tmp
+.DS_Store
+.llm-wiki
+.omp
+Searcher-v1-Final-React-shadcn-Spec-Pack
+**/*.test.ts
+**/*.test.tsx
+**/*.bench.ts
