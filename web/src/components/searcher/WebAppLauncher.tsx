@@ -999,46 +999,45 @@ export function WebAppLauncher({
                         tabIndex={onCreateFolder ? 0 : undefined}
                         aria-label="网站启动器"
                         className={`pinned-apps launcher-grid launcher-grid--${size}${
-                                showFolders ? "" : " launcher-grid--home"
-                            }${
-                                showAppLabels
-                                    ? ""
-                                    : " launcher-grid--icons-only"
-                            }${
-                                presentation === "workspace"
-                                    ? " launcher-grid--workspace"
-                                    : ""
-                            }${
-                                presentation === "quick"
-                                    ? " launcher-grid--quick"
-                                    : ""
-                            }`}
+                            showFolders ? "" : " launcher-grid--home"
+                        }${
+                            showAppLabels
+                                ? ""
+                                : " launcher-grid--icons-only"
+                        }${
+                            presentation === "workspace"
+                                ? " launcher-grid--workspace"
+                                : ""
+                        }${
+                            presentation === "quick"
+                                ? " launcher-grid--quick"
+                                : ""
+                        }`}
                         data-presentation={presentation}
                         data-columns={effectiveColumns}
                     >
                         {tiles.map((tile, index) => (
-                                <SortableTile
-                                    key={tile.id}
-                                    tile={tile}
-                                    placement={layout[index]}
-                                    groups={groups}
-                                    managing={managing}
-                                    actions={actions}
-                                    showAppLabels={showAppLabels}
-                                    onFolder={openFolder}
-                                    onSizeChange={onFolderSizeChange}
-                                    activeDragId={activeId}
-                                    onMoveByKey={(id, direction) =>
-                                        reorderTiles(
-                                            tiles.findIndex((item) =>
-                                                item.id === id
-                                            ),
-                                            tiles.findIndex((item) =>
-                                                item.id === id
-                                            ) +
-                                                direction,
-                                        )}
-                                />
+                            <SortableTile
+                                key={tile.id}
+                                tile={tile}
+                                placement={layout[index]}
+                                groups={groups}
+                                managing={managing}
+                                actions={actions}
+                                showAppLabels={showAppLabels}
+                                onFolder={openFolder}
+                                onSizeChange={onFolderSizeChange}
+                                activeDragId={activeId}
+                                onMoveByKey={(id, direction) =>
+                                    reorderTiles(
+                                        tiles.findIndex((item) =>
+                                            item.id === id
+                                        ),
+                                        tiles.findIndex((item) =>
+                                            item.id === id
+                                        ) + direction,
+                                    )}
+                            />
                         ))}
                         <div
                             aria-hidden="true"
