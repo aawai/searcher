@@ -298,7 +298,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     );
 
     await t.step(
-        "3. Blank space context menu & Keyboard / Touch folder creation",
+        "3. Blank-space context menu owns folder creation and arrange entry",
         async () => {
             const panel = page.locator("aside.workspace-panel");
 
@@ -315,6 +315,13 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 {
                     hasText: "新建文件夹",
                 },
+            );
+            assertEquals(
+                await contextMenu.locator(
+                    '[data-slot="context-menu-item"]',
+                    { hasText: "整理布局" },
+                ).isVisible(),
+                true,
             );
             await newFolderItem.click();
 
