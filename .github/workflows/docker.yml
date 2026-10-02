@@ -8,6 +8,7 @@ on:
             - Dockerfile
             - .dockerignore
             - deno.jsonc
+            - deno.runtime.jsonc
             - deno.lock
             - "src/**"
             - "web/**"
