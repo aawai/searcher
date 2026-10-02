@@ -86,10 +86,14 @@ chrome，不统一内容列表的表现形式：
   Root 的 Search、status、empty state 与 content boundary 对齐，不再添加
   Apps-only padding。 Nested AppForm / NoteEditor 同样使用 Body
   inset，不叠加外层 form padding。
-- `.workspace-root` 使用 `--space-section-gap`；Search 与 Apps local toolbar
-  的控制组 使用 `--space-control-gap`。Toolbar actions 紧凑分组，不通过
-  `space-between` 拉开。 Launcher tile gap、NoteCard list gap 和 section heading
+- `.workspace-root` 使用 `--space-section-gap`；Search 控制组使用
+  `--space-control-gap`。Launcher tile gap、NoteCard list gap 和 section heading
   间距仍由各 feature 拥有。
+- Apps Root 弹性占满 Body 剩余高度，搜索区域保持内容高度；
+  `.launcher-surface-wrap` 占满其余内容面，Grid 仍按原有 square-cell
+  几何位于顶部。 搜索、空状态和文件夹内联共用 Surface
+  空白菜单，新建文件夹与整理操作不再常驻顶部。 Surface 保留触屏滚动，整理时仅
+  draggable tile 使用 `touch-action: none`。
 - `WorkspaceSearch` 复用 Input / Button；两侧使用 `--control-input-height`、
   `--radius-input`，提供相同 Search icon、clear action 和可辨识的 focus-visible
   ring。 Root autofocus 保留，不叠加全局 outline，不因 focus 改变布局。Apps
