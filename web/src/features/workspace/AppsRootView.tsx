@@ -267,7 +267,7 @@ export function AppsRootView({
                             onRenameFolder={onRenameFolder}
                             onDeleteFolder={onDeleteFolder}
                             onFolderSizeChange={onFolderSizeChange}
-                            onToggleManaging={toggleArrange}
+                            onSurfaceToggleManaging={toggleArrange}
                             onAdd={() => onNavigateToAdd?.(activeFolderId)}
                         />
                 )}
