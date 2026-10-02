@@ -166,6 +166,71 @@ deno task admin:create -- <username>
 Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实例地址（如 `http://localhost:8080`），供 Ask 联网搜索调用；未设置时联网搜索自动禁用。管理员密码只在真实终端交互输入；重置使用
 `deno task admin:reset -- <username>`。
 
+### Docker / Unraid
+
+仓库提供基于 Deno 2.9.7 的多阶段 Docker 镜像；前端 build stage 使用标准 Deno 镜像，`runtime-deps` 与最终 runtime 使用 `denoland/deno:alpine-2.9.7`。镜像内置
+`NODE_ENV=production`、`PORT=34567` 与
+`DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
+并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。最终 runtime 镜像不包含项目级 `node_modules` 或测试文件；Docker 专用的 `deno.runtime.jsonc` 只保留后端运行依赖映射。`scripts/runtime-lock.ts` 校验这些映射与主配置一致，从主 `deno.lock` 提取运行映射及两个入口 module graph 的依赖闭包，保留已锁定的版本与 integrity，再使用 `--frozen` 安装到 Deno 全局 cache。运行时以 `--cached-only` 离线启动，Vite、React、Playwright、Tailwind、shadcn CLI 等前端/构建依赖不会进入 runtime dependency layer。
+
+本仓库保持 Private；GitHub Actions 在 PR、`main`、`v*` tag 和手动触发时均构建并 smoke-test `linux/amd64` 镜像，只有非 PR 事件会在验证成功后发布同一镜像到
+`ghcr.io/aawai/searcher`；同一 ref 的新运行会取消旧运行，防止旧构建覆盖 `latest`。GHCR 首次创建 package 时默认是 Private；首次成功发布后，
+在 GitHub 的 `searcher` package 设置中将 **Change visibility** 改为 **Public**。
+GitHub 不允许 Public package 再改回 Private，因此该操作只需执行一次，并应在确认镜像
+可以公开分发后进行。Public GHCR 镜像支持匿名 pull，Unraid 不需要 GitHub PAT。
+
+**公开源码边界：镜像包含运行所需的后端源码与前端构建产物。将 package 设为 Public 后，任何人均可匿名提取这些文件；Private 仓库不意味着镜像中的源码保密。**
+
+Unraid 推荐配置：
+
+```text
+Repository:      ghcr.io/aawai/searcher:latest
+Network Type:    bridge
+
+Port:
+  Host Port:      34567（可改为任意未占用端口）
+  Container Port: 34567
+
+Path:
+  Host Path:      /mnt/user/appdata/searcher
+  Container Path: /app/data
+
+Variables:
+  APP_ORIGIN=https://search.example.com
+  ENCRYPTION_KEY=<固定随机密钥>
+  SEARXNG_URL=<可选>
+```
+
+`APP_ORIGIN` 必须与浏览器实际访问的 origin 完全一致。非 loopback 地址必须使用
+HTTPS，可由 Unraid 上的 Nginx Proxy Manager、SWAG 或其他反向代理终止 TLS。
+`ENCRYPTION_KEY` 不应在容器重建或升级时变化；否则已经保存的 AI Provider Key
+无法解密。若 Searcher 与 SearXNG 位于同一自定义 Docker network，可将
+`SEARXNG_URL` 配置为类似 `http://searxng:8080` 的容器内地址。
+
+镜像默认以 `deno` 用户（UID/GID `1000:1000`）运行，不在启动时自动修改挂载目录权限。Docker 新建 named volume 会继承镜像内 `/app/data` 的属主；Unraid bind mount 则使用宿主目录的权限。首次部署或从旧 root 镜像升级前，先停止容器、备份数据，再仅对 Searcher 的数据目录执行：
+
+```sh
+mkdir -p /mnt/user/appdata/searcher
+chown -R 1000:1000 /mnt/user/appdata/searcher
+chmod -R u+rwX /mnt/user/appdata/searcher
+```
+
+也可在 Unraid Extra Parameters 中指定 `--user=<UID>:<GID>` 使用宿主机的非 root 用户（例如 `--user=99:100`），并将上述属主调整为相同 UID/GID。`docker exec` 会沿用该运行用户。镜像不支持通过 `PUID` / `PGID` 环境变量更改用户；不要用 `chmod 777` 或恢复 root 运行绕过目录权限问题。
+
+创建管理员时可在 Unraid 终端执行：
+
+```sh
+docker exec -it searcher deno run -A --cached-only src/commands/admin.ts create <username>
+```
+
+重置已有管理员密码：
+
+```sh
+docker exec -it searcher deno run -A --cached-only src/commands/admin.ts reset <username>
+```
+
+以上命令均交互式输入并确认密码；不要将密码写入命令行。容器的 runtime 配置不包含开发 tasks，因此容器内直接调用 CLI 入口，而不是 `deno task admin:create` / `deno task admin:reset`。
+
 同一服务先处理 `/api` 与 `/api/*`，再处理 `/assets` 与 `/assets/*`；其余 GET/HEAD 返回 SPA shell。Settings/Admin 子页面可直访、刷新和分享；未知普通页面由 React 显示统一 404（shell HTTP 状态为 200），未知 API 返回 JSON 404，缺失 assets 返回静态 404，非 GET/HEAD 不回退 HTML。反向代理应将页面请求交给 Searcher，不自行维护前端 URL 白名单。
 
 前端路径统一由 `web/src/app/routes.ts` 维护。`/settings/search` replace 到 `/settings`，未知 Settings/Admin 子路径显示 404。登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。Settings/Admin 内部 Tab replace 当前 history entry，外部进入具体 Tab 保留正常 entry；二级页面 breadcrumb 提供稳定的上层与首页目标。

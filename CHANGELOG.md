@@ -2,11 +2,17 @@
 
 ## [Unreleased]
 
+- 新增 Docker / Unraid 部署：提供 Deno 2.9.7 Alpine 多阶段镜像与 GHCR
+  发布工作流， PR、`main`、版本 tag 和手动运行均验证 `linux/amd64` 镜像，非 PR
+  运行仅在 smoke test 成功后发布同一产物。 镜像默认以非 root 的 `1000:1000`
+  运行，持久数据统一使用 `/app/data`；文档提供 Unraid
+  挂载目录权限迁移、管理员创建与密码重置命令，并明确 Public GHCR
+  镜像可匿名提取后端源码。 运行依赖从主 lock 提取并冻结安装，不携带项目级
+  `node_modules`、测试文件或前端/构建依赖，支持缓存内离线启动。
 - 应用与便签工作区统一内容边界、搜索框、Root
   间距和底部创建主操作；切换时搜索与底栏位置保持一致。
   两侧搜索均提供图标和清除操作，应用本地工具栏紧凑分组，嵌套表单不再叠加内容
   padding。
-
 - UI Guard 的 757 条存量 allowance 已清零；`deno task check:ui` 现在要求全扫描
   零违规，继续禁止重新增加 baseline。账户、设置、首页与 Launcher 的静态样式
   统一使用 semantic class / Design Token，保留 Home 响应式几何与 runtime 布局。
