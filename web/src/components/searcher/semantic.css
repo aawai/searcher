@@ -60,9 +60,19 @@
     font-weight: var(--font-title-weight);
     overflow-wrap: anywhere;
 }
-.page-description,
-.section-header p {
+.page-description {
     margin: var(--space-inline-gap) 0 0;
+    color: var(--muted);
+    font-size: var(--font-body-size);
+}
+.section-header > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-inline-gap);
+    min-width: 0;
+}
+.section-header p {
+    margin: 0;
     color: var(--muted);
     font-size: var(--font-body-size);
 }
@@ -83,6 +93,7 @@
     margin-top: var(--space-section-gap);
 }
 .section-header h2,
+.section-header h3,
 .empty-state h2 {
     margin: 0;
     font-size: var(--font-section-title-size);

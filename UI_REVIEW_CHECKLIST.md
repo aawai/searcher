@@ -528,3 +528,38 @@
       allowances 均为 0。 Notes 保存生命周期测试在输入前等待 nested Back
       autofocus 完成，保留所有原有
       保存/失败/重试断言；未改保存实现或使用请求拦截门控。
+
+## Issue #63 Settings 结构与 CSS ownership（2026-10-02）
+
+- [x] 复用 utility archetype、Section/SectionHeader、SettingsCard/SettingsRow 和
+      Button/ActionGroup；SettingsSection 输出 h3，页面为 h1、当前 tab 为 h2。
+      description/actions 使用 header 字段；操作/状态卡片使用
+      SettingsActionCard， AI 成功/失败提示使用 StatusBanner，不改业务
+      API、同步机制或视觉主题。
+- [x] 四个 Settings 路由 × 390×844 / 768×1024 / 1440×900 × light/dark 共 24
+      个实页场景已采集截图并验证：tab 标题到首个分组 24px，header 到内容
+      16px，均对应现有 gap token；section、heading、description margin 为 0，
+      active nav 正确，页面无横向溢出。主题验证等待有限 animation/transition
+      完成；dark 的 h2/h3 均为 rgb(235,238,242)，不使用主题切换中间帧作为证据。
+- [x] 599/600/601、958/959/960 viewport 实页无 overflow；631/632/633 viewport
+      对应 599/600/601px Settings 容器，row 在 <=600 时 column、601 时 row。 959
+      时 nav 为两列 grid，960 时恢复侧栏；640/960/1280 Provider 追加检查 无
+      overflow，卡片 padding 24px、ActionGroup gap 8px。
+- [x] 已验证匿名登录提示、登录后的 Provider 空态、已配置 Provider/model row；
+      添加/编辑弹窗、API Key 可见性切换、Escape 关闭、推理配置提交并刷新保留，
+      模型禁用后从可用列表移除；默认搜索引擎修改后刷新保留。AI 工作区、回收站、
+      Design Lab 三个 action link 均进入正确页面，登录状态显示已同步。
+      Provider/model 使用独立临时数据库的渲染夹具，不使用真实账号或远程模型；
+      刷新本地无模型列表的地址明确返回错误，StatusBanner 成功/失败均 margin 0、
+      padding 12px 24px。未验收真实 Provider 连接或模型生成，本次不改这些行为。
+- [x] 390 dark 四个 Settings 路由 axe WCAG A/AA confirmed violations 均为 0，
+      每页 1 项 incomplete；浏览器 uncaught errors 为 0。
+- [x] Settings 专属 CSS 归 settings.css，Provider 不再与 Ask selector 共享规则；
+      废弃 settings-section/subgroup/section-head、ai-settings-header、
+      provider-head h4、button--outline 均无残留。未新增 token 或 baseline
+      allowance。
+- [x] deno task test：315 passed；生产 navigation E2E：1 suite / 9 steps
+      passed， 新增四个路由可访问标题层级与 active nav 断言。build、App/E2E
+      typecheck、 改动 TSX/E2E lint 与 format 通过；UI Guard 扫描 89
+      文件，violations、 new/increased/stale、allowances 均为 0。Design System
+      与 Unreleased 同步更新。

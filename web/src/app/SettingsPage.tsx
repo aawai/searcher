@@ -1,10 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import {
-    Section,
-    SettingsCard,
-    SettingsRow,
-} from "../components/searcher/semantic.tsx";
+import { SettingsCard, SettingsRow } from "../components/searcher/semantic.tsx";
+import { SettingsActionCard, SettingsSection } from "./SettingsPrimitives.tsx";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { routes, type SettingsTab, settingsTab } from "./routes.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
@@ -39,7 +36,6 @@ import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Slider } from "../components/ui/slider.tsx";
-import { Separator } from "../components/ui/separator.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
     NativeSelect,
@@ -294,8 +290,8 @@ export function SettingsPage() {
                     <section className="settings-panel">
                         <h2>{tabs[tab].label}</h2>
                         {tab === "search" && (
-                            <div className="settings-section">
-                                <Section title="搜索引擎与打开方式">
+                            <div className="settings-content">
+                                <SettingsSection title="搜索引擎与打开方式">
                                     <SettingsCard>
                                         <Choices
                                             title="默认搜索引擎"
@@ -344,12 +340,12 @@ export function SettingsPage() {
                                                 )}
                                         />
                                     </SettingsCard>
-                                </Section>
+                                </SettingsSection>
                             </div>
                         )}
                         {tab === "appearance" && (
-                            <div className="settings-section">
-                                <Section title="主题与配色">
+                            <div className="settings-content">
+                                <SettingsSection title="主题与配色">
                                     <SettingsCard>
                                         <Choices
                                             title="主题模式"
@@ -390,9 +386,9 @@ export function SettingsPage() {
                                             />
                                         </div>
                                     </SettingsCard>
-                                </Section>
+                                </SettingsSection>
 
-                                <Section title="主页与快捷入口">
+                                <SettingsSection title="主页与快捷入口">
                                     <SettingsCard>
                                         <Choices
                                             title="控件形状"
@@ -513,9 +509,9 @@ export function SettingsPage() {
                                             </div>
                                         </div>
                                     </SettingsCard>
-                                </Section>
+                                </SettingsSection>
 
-                                <Section
+                                <SettingsSection
                                     title="壁纸与背景效果"
                                     actions={
                                         <Button
@@ -940,65 +936,44 @@ export function SettingsPage() {
                                             </div>
                                         </div>
                                     </SettingsCard>
-                                </Section>
+                                </SettingsSection>
                             </div>
                         )}
                         {tab === "ai" && (
-                            <div className="settings-section">
-                                <div className="settings-subgroup">
-                                    <div className="settings-section-head">
-                                        <p className="muted m-0">
-                                            智能 AI 问答工作区与偏好设置
-                                        </p>
-                                    </div>
-                                    <div className="settings-action-card">
-                                        <div className="settings-action-card__content">
-                                            <strong>
-                                                AI 问答工作区
-                                            </strong>
-                                            <p>
-                                                AI
-                                                拥有专属的独立对话空间，只在显式选择后响应，不接管普通搜索。
-                                            </p>
-                                        </div>
-                                        <Link
-                                            className="button button--outline settings-action-card__action"
-                                            to={routes.ask}
+                            <div className="settings-content">
+                                <SettingsSection
+                                    title="AI 问答工作区"
+                                    description="智能 AI 问答工作区与偏好设置"
+                                >
+                                    <SettingsActionCard
+                                        title="AI 问答工作区"
+                                        description="拥有专属的独立对话空间，只在显式选择后响应，不接管普通搜索。"
+                                    >
+                                        <Button
+                                            variant="outline"
+                                            render={<Link to={routes.ask} />}
                                         >
                                             打开 AI 问答
-                                        </Link>
-                                    </div>
-                                </div>
-
-                                <Separator orientation="horizontal" />
-
-                                <div className="settings-subgroup">
-                                    <AiSettings />
-                                </div>
+                                        </Button>
+                                    </SettingsActionCard>
+                                </SettingsSection>
+                                <AiSettings />
                             </div>
                         )}
                         {tab === "data" && (
-                            <div className="settings-section">
-                                <div className="settings-subgroup">
-                                    <div className="settings-section-head">
-                                        <h3>同步</h3>
-                                        <p>
-                                            登录后将偏好设置、网站书签与便签实时同步到您的账户
-                                        </p>
-                                    </div>
-                                    <div className="settings-action-card">
-                                        <div className="settings-action-card__content">
-                                            <strong>
-                                                {user
-                                                    ? "已登录账户"
-                                                    : "本地访客模式"}
-                                            </strong>
-                                            <p>
-                                                {user
-                                                    ? `已连接为 ${user.displayName}，数据已双向同步`
-                                                    : "访客偏好仅在当前页面有效，登录后个人内容由服务端同步。"}
-                                            </p>
-                                        </div>
+                            <div className="settings-content">
+                                <SettingsSection
+                                    title="同步"
+                                    description="登录后将偏好设置、网站书签与便签实时同步到您的账户"
+                                >
+                                    <SettingsActionCard
+                                        title={user
+                                            ? "云端账户"
+                                            : "本地访客模式"}
+                                        description={user
+                                            ? `已连接 ${user.displayName}，数据已双向同步。`
+                                            : "访客偏好仅在当前页面有效，登录后个人内容由服务端同步。"}
+                                    >
                                         <span
                                             className="settings-action-card__badge"
                                             data-status={user
@@ -1007,53 +982,41 @@ export function SettingsPage() {
                                         >
                                             {user ? "已同步" : "未登录"}
                                         </span>
-                                    </div>
-                                </div>
-
-                                <Separator orientation="horizontal" />
-
-                                <div className="settings-subgroup">
-                                    <div className="settings-section-head">
-                                        <h3>数据管理</h3>
-                                        <p>管理已删除的项目或实验性特性</p>
-                                    </div>
-                                    <div className="grid gap-3">
-                                        {user && (
-                                            <div className="settings-action-card">
-                                                <div className="settings-action-card__content">
-                                                    <strong>
-                                                        回收站
-                                                    </strong>
-                                                    <p>
-                                                        查看或彻底清理已删除的网站和便签
-                                                    </p>
-                                                </div>
-                                                <Link
-                                                    to={routes.trash}
-                                                    className="button button--subtle settings-action-card__action"
-                                                >
-                                                    打开回收站
-                                                </Link>
-                                            </div>
-                                        )}
-                                        <div className="settings-action-card">
-                                            <div className="settings-action-card__content">
-                                                <strong>
-                                                    Design Lab
-                                                </strong>
-                                                <p>
-                                                    管理与测试实验性的界面配置和组件预览
-                                                </p>
-                                            </div>
-                                            <Link
-                                                to={routes.designLab}
-                                                className="button button--subtle settings-action-card__action"
+                                    </SettingsActionCard>
+                                </SettingsSection>
+                                <SettingsSection
+                                    title="数据管理"
+                                    description="管理已删除的项目或实验性特性"
+                                >
+                                    {user && (
+                                        <SettingsActionCard
+                                            title="回收站"
+                                            description="查看或彻底清理已删除的网站和便签"
+                                        >
+                                            <Button
+                                                variant="outline"
+                                                render={
+                                                    <Link to={routes.trash} />
+                                                }
                                             >
-                                                打开 Design Lab
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
+                                                打开回收站
+                                            </Button>
+                                        </SettingsActionCard>
+                                    )}
+                                    <SettingsActionCard
+                                        title="Design Lab"
+                                        description="诊断与测试实验性的界面配置和组件预览"
+                                    >
+                                        <Button
+                                            variant="outline"
+                                            render={
+                                                <Link to={routes.designLab} />
+                                            }
+                                        >
+                                            打开 Design Lab
+                                        </Button>
+                                    </SettingsActionCard>
+                                </SettingsSection>
                             </div>
                         )}
                     </section>

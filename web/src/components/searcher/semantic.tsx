@@ -9,18 +9,21 @@ type SectionProps = ComponentProps<"section"> & {
     title?: string;
     description?: string;
     actions?: ReactNode;
+    headingLevel?: 2 | 3;
 };
 export function SectionHeader(
-    { title, description, actions }: {
+    { title, description, actions, headingLevel = 2 }: {
         title: string;
         description?: string;
         actions?: ReactNode;
+        headingLevel?: 2 | 3;
     },
 ) {
+    const Heading = headingLevel === 3 ? "h3" : "h2";
     return (
         <header className="section-header">
             <div>
-                <h2>{title}</h2>
+                <Heading>{title}</Heading>
                 {description && <p>{description}</p>}
             </div>
             {actions && <ActionGroup>{actions}</ActionGroup>}
@@ -28,8 +31,15 @@ export function SectionHeader(
     );
 }
 export function Section(
-    { title, description, actions, className, children, ...props }:
-        SectionProps,
+    {
+        title,
+        description,
+        actions,
+        headingLevel,
+        className,
+        children,
+        ...props
+    }: SectionProps,
 ) {
     return (
         <section className={cn("semantic-section", className)} {...props}>
@@ -38,6 +48,7 @@ export function Section(
                     title={title}
                     description={description}
                     actions={actions}
+                    headingLevel={headingLevel}
                 />
             )}
             {children}

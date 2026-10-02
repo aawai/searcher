@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- 统一搜索、外观、AI 问答、数据与同步四个设置页的标题层级、分组说明和卡片间距；
+  AI 入口使用标准按钮，Provider 操作按钮支持一致间距与窄屏换行。
 - 新增 Docker / Unraid 部署：提供 Deno 2.9.7 Alpine 多阶段镜像与 GHCR
   发布工作流， PR、`main`、版本 tag 和手动运行均验证 `linux/amd64` 镜像，非 PR
   运行仅在 smoke test 成功后发布同一产物。 镜像默认以非 root 的 `1000:1000`

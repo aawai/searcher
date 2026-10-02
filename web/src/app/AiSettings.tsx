@@ -32,6 +32,12 @@ import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authPath } from "./routes.ts";
 import "./settings.css";
+import {
+    ActionGroup,
+    SettingsCard,
+    StatusBanner,
+} from "../components/searcher/semantic.tsx";
+import { SettingsActionCard, SettingsSection } from "./SettingsPrimitives.tsx";
 
 function getCapabilitySourceLabel(source: string | undefined): string {
     switch (source) {
@@ -111,11 +117,22 @@ export function AiSettings() {
     }, [user?.id]);
     if (!user) {
         return (
-            <p>
-                <Link to={authPath("login", location)}>
-                    登录后配置 Provider
-                </Link>
-            </p>
+            <SettingsSection
+                title="已配置的 Provider"
+                description="配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存"
+            >
+                <SettingsActionCard
+                    title="登录后配置 Provider"
+                    description="登录后可管理账户的 AI Provider。"
+                >
+                    <Button
+                        variant="outline"
+                        render={<Link to={authPath("login", location)} />}
+                    >
+                        登录后配置 Provider
+                    </Button>
+                </SettingsActionCard>
+            </SettingsSection>
         );
     }
     function openAdd() {
@@ -289,22 +306,16 @@ export function AiSettings() {
         }
     }
     return (
-        <div className="ai-settings">
-            <div className="ai-settings-header">
-                <div>
-                    <h4>
-                        已配置的 Provider
-                    </h4>
-                    <p className="muted">
-                        配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存
-                    </p>
-                </div>
+        <SettingsSection
+            title="已配置的 Provider"
+            description="配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存"
+            actions={
                 <Button variant="default" onClick={openAdd}>
                     <Plus size={16} />
                     <span>添加 Provider</span>
                 </Button>
-            </div>
-
+            }
+        >
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent
                     aria-label={editing ? "编辑 Provider" : "添加 Provider"}
@@ -451,39 +462,35 @@ export function AiSettings() {
             </Dialog>
 
             {!providers.length && (
-                <div className="ai-empty-state">
-                    <p className="ai-empty-state-title">
-                        尚未添加 AI Provider
-                    </p>
-                    <p className="muted ai-empty-state-desc">
-                        添加 Provider 并验证模型后，即可在主页直接切换使用 AI
-                        问答。
-                    </p>
+                <SettingsActionCard
+                    title="尚未添加 AI Provider"
+                    description="添加 Provider 并验证模型后，即可在主页直接切换使用 AI 问答。"
+                >
                     <Button variant="outline" onClick={openAdd}>
                         <Plus size={16} />
                         <span>添加第一个 Provider</span>
                     </Button>
-                </div>
+                </SettingsActionCard>
             )}
             {providers.map((provider) => (
-                <section className="provider-card" key={provider.id}>
+                <SettingsCard className="provider-card" key={provider.id}>
                     <div className="provider-head">
                         <div>
-                            <h4>
+                            <strong>
                                 {provider.name}{" "}
                                 <small>
                                     {provider.scope === "system"
                                         ? "系统"
                                         : "个人"}
                                 </small>
-                            </h4>
+                            </strong>
                             <p className="muted">
                                 {provider.baseUrl} · Key {provider.apiKeyMasked}
                             </p>
                         </div>
                         {(provider.ownerUserId === user.id ||
                             user.role === "admin") && (
-                            <div className="form-actions">
+                            <ActionGroup>
                                 <Button
                                     type="button"
                                     disabled={working}
@@ -505,7 +512,7 @@ export function AiSettings() {
                                 >
                                     删除
                                 </Button>
-                            </div>
+                            </ActionGroup>
                         )}
                     </div>
                     <div className="provider-models">
@@ -595,7 +602,7 @@ export function AiSettings() {
                                     </div>
                                     {(provider.ownerUserId === user.id ||
                                         user.role === "admin") && (
-                                        <div className="form-actions">
+                                        <ActionGroup>
                                             <label>
                                                 <input
                                                     type="checkbox"
@@ -656,13 +663,13 @@ export function AiSettings() {
                                                 <Settings2 size={14} />
                                                 <span>配置推理</span>
                                             </Button>
-                                        </div>
+                                        </ActionGroup>
                                     )}
                                 </div>
                             );
                         })}
                     </div>
-                </section>
+                </SettingsCard>
             ))}
             <Dialog
                 open={!!configuringModel}
@@ -833,8 +840,8 @@ export function AiSettings() {
                     )}
                 </DialogContent>
             </Dialog>
-            {status && <p role="status">{status}</p>}
-            {error && <p role="alert" className="error">{error}</p>}
-        </div>
+            {status && <StatusBanner>{status}</StatusBanner>}
+            {error && <StatusBanner tone="error">{error}</StatusBanner>}
+        </SettingsSection>
     );
 }
