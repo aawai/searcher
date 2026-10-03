@@ -8,7 +8,6 @@ import {
     BreadcrumbSeparator,
 } from "../ui/breadcrumb.tsx";
 import { ActionGroup } from "./semantic.tsx";
-import "./semantic.css";
 
 export function PageHeader(
     { items, title, titleLevel = 1, description, actions, navigation }: {

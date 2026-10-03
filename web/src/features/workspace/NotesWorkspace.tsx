@@ -26,6 +26,11 @@ import {
 import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
+import {
+    EmptyState,
+    LoadingState,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import type { WorkspaceState } from "./workspace-state.ts";
 import "./notes-workspace.css";
 
@@ -209,13 +214,19 @@ export function NotesWorkspace(
     if (state.view === "notes/edit") {
         return editing
             ? (
-                <NoteEditor
-                    key={userId + ":" + editing.id}
-                    note={editing}
-                    onSaved={onSaved}
-                />
+                <div className="notes-workspace-editor">
+                    <NoteEditor
+                        key={userId + ":" + editing.id}
+                        note={editing}
+                        onSaved={onSaved}
+                    />
+                </div>
             )
-            : <p role="status">便签已被删除，请返回便签列表。</p>;
+            : (
+                <StatusBanner tone="info">
+                    便签已被删除，请返回便签列表。
+                </StatusBanner>
+            );
     }
 
     function reorder(event: DragEndEvent) {
@@ -239,12 +250,18 @@ export function NotesWorkspace(
                 value={query}
                 onChange={onQueryChange}
             />
-            {loading && <p role="status">正在加载便签…</p>}
+            {loading && (
+                <LoadingState density="compact">正在加载便签…</LoadingState>
+            )}
             {error && (
-                <div role="alert">
-                    {error}
-                    <Button variant="outline" onClick={onRetry}>重试</Button>
-                </div>
+                <StatusBanner tone="error">
+                    <div className="flex items-center justify-between gap-3 w-full">
+                        <span>{error}</span>
+                        <Button variant="outline" size="sm" onClick={onRetry}>
+                            重试
+                        </Button>
+                    </div>
+                </StatusBanner>
             )}
             {!isSearching
                 ? (
@@ -252,7 +269,7 @@ export function NotesWorkspace(
                         {fixedNotes.length > 0 && (
                             <section aria-labelledby="notes-fixed-heading">
                                 <h3 id="notes-fixed-heading">置顶与首页固定</h3>
-                                <div className="workspace-notes-list">
+                                <div className="notes-workspace-list">
                                     {fixedNotes.map((note) => (
                                         <WorkspaceNote
                                             key={note.id}
@@ -282,15 +299,21 @@ export function NotesWorkspace(
                                     ? "其他便签"
                                     : "全部便签"}
                             </h3>
-                            {notes.length === 0 && !loading && (
-                                <p className="workspace-empty" role="status">
-                                    还没有便签，点击底部“新建便签”开始记录。
-                                </p>
+                            {!loading && !error && notes.length === 0 && (
+                                <EmptyState
+                                    headingLevel={3}
+                                    density="compact"
+                                    title="还没有便签"
+                                    description="点击底部“新建便签”开始记录。"
+                                />
                             )}
-                            {notes.length > 0 && otherNotes.length === 0 && (
-                                <p className="workspace-empty" role="status">
-                                    暂无其他便签
-                                </p>
+                            {!loading && !error && notes.length > 0 &&
+                                otherNotes.length === 0 && (
+                                <EmptyState
+                                    headingLevel={3}
+                                    density="compact"
+                                    title="暂无其他便签"
+                                />
                             )}
                             {otherNotes.length > 0 && (
                                 <DndContext
@@ -304,7 +327,7 @@ export function NotesWorkspace(
                                         )}
                                         strategy={verticalListSortingStrategy}
                                     >
-                                        <div className="workspace-notes-list">
+                                        <div className="notes-workspace-list">
                                             {otherNotes.map((note) => (
                                                 <WorkspaceNote
                                                     key={note.id}
@@ -330,13 +353,25 @@ export function NotesWorkspace(
                 : (
                     <section aria-labelledby="notes-all-heading">
                         <h3 id="notes-all-heading">全部便签</h3>
-                        {!searchNotes.length && !loading && (
-                            <p className="workspace-empty" role="status">
-                                没有匹配的便签，清空搜索可查看全部。
-                            </p>
+                        {!loading && !error && !searchNotes.length && (
+                            <EmptyState
+                                headingLevel={3}
+                                density="compact"
+                                title="没有匹配的便签"
+                                description="清空搜索可查看全部。"
+                                action={
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => onQueryChange("")}
+                                    >
+                                        清空搜索
+                                    </Button>
+                                }
+                            />
                         )}
                         {searchNotes.length > 0 && (
-                            <div className="workspace-notes-list">
+                            <div className="notes-workspace-list">
                                 {searchNotes.map((note) => (
                                     <WorkspaceNote
                                         key={note.id}

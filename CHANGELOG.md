@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+- Zen / Widgets 外观仅作用于首页，不再改变设置、管理后台、账户、回收站、AI
+  问答及浮层的基础样式；theme、accent 与搜索框形状保持全局偏好。
+- 统一账户与回收站反馈、Workspace 加载与空态、首页与 AI
+  对话的撤销提示；设备退出、永久删除、Provider
+  删除与应用确认使用可取消、支持键盘和 pending 禁用的标准确认弹窗。
+- UI Guard 与 CI 新增不可通过 baseline 豁免的 ownership 检查：禁止 global
+  feature selectors、legacy 页面/反馈、未定义 CSS Token、原生 confirm 及跨 owner
+  prefix。
+
 - 壁纸支持每张图片独立焦点、Desktop/Mobile
   构图预览及键盘微调，首页与历史预览统一 cover 和背景效果。
 - 统一上传图片、HTTPS 与安全 CSS gradient

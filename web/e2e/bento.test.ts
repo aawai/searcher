@@ -187,7 +187,7 @@ Deno.test("production Bento contracts & empty expansion matrix (#44)", async (t)
     });
     await visit("/");
     await page.waitForFunction(() =>
-        document.documentElement.dataset.style === "widgets"
+        Boolean(document.querySelector("main .widgets-bento-container"))
     );
 
     // -------------------------------------------------------------------------
@@ -795,7 +795,8 @@ Deno.test("production Bento contracts & empty expansion matrix (#44)", async (t)
             });
             await visit("/");
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen"
+                Boolean(document.querySelector("main .search-frame")) &&
+                !document.querySelector("main .widgets-bento-container")
             );
 
             // In Zen mode, Widgets Bento is NOT rendered

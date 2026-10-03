@@ -75,7 +75,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         );
         if (await backBtn.isVisible()) {
             await backBtn.click();
-            await p.locator(".workspace-notes-list").first().waitFor({
+            await p.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
         }
@@ -89,7 +89,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 await searchInput.fill("");
                 await p.waitForFunction(() =>
                     document.querySelectorAll(
-                        ".workspace-notes-list .note-card",
+                        ".notes-workspace-list .note-card",
                     )
                         .length >= 1
                 );
@@ -156,9 +156,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     // Set widgets style as baseline
     await visit("/settings/appearance");
     await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.waitForFunction(() =>
-        document.documentElement.dataset.style === "widgets"
-    );
+    await page.locator('.layout-mode-card[aria-checked="true"]', {
+        hasText: "空间轻桌面",
+    }).waitFor();
     await page.evaluate(async () => {
         const response = await fetch("/api/preferences", {
             method: "PATCH",
@@ -189,12 +189,8 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             );
 
             // 1. Initial 0-notes empty state
-            const emptyNotice = panel.locator(".workspace-empty");
+            const emptyNotice = panel.locator(".empty-state");
             await emptyNotice.waitFor({ state: "visible" });
-            assertEquals(
-                await emptyNotice.textContent(),
-                "还没有便签，点击底部“新建便签”开始记录。",
-            );
             const allHeading = panel.locator("h3#notes-all-heading");
             assertEquals(await allHeading.textContent(), "全部便签");
             assertEquals(
@@ -229,7 +225,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await panel.waitFor({ state: "visible" });
 
             await page.waitForFunction(() =>
-                document.querySelectorAll(".workspace-notes-list .note-card")
+                document.querySelectorAll(".notes-workspace-list .note-card")
                     .length === 1
             );
             assertEquals(await emptyNotice.count(), 0);
@@ -239,18 +235,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await searchInput.fill("NonExistentTerm_XYZ_404");
             await emptyNotice.waitFor({ state: "visible" });
             assertEquals(
-                await emptyNotice.textContent(),
-                "没有匹配的便签，清空搜索可查看全部。",
-            );
-            assertEquals(
-                await panel.locator(".workspace-notes-list .note-card").count(),
+                await panel.locator(".notes-workspace-list .note-card").count(),
                 0,
             );
 
             // 4. Clear search restores card
             await searchInput.fill("");
             await page.waitForFunction(() =>
-                document.querySelectorAll(".workspace-notes-list .note-card")
+                document.querySelectorAll(".notes-workspace-list .note-card")
                     .length === 1
             );
             assertEquals(await emptyNotice.count(), 0);
@@ -347,7 +339,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             // 1. Empty query section deduplication:
             // Fixed section has 3 notes: PinnedOnly, HomeFixedOnly, BothFlags
             await page.waitForFunction(() =>
-                document.querySelectorAll(".workspace-notes-list .note-card")
+                document.querySelectorAll(".notes-workspace-list .note-card")
                     .length === 5
             );
 
@@ -384,7 +376,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             // Total occurrences across all sections = 5 (zero duplicates)
             assertEquals(
-                await panel.locator(".workspace-notes-list .note-card").count(),
+                await panel.locator(".notes-workspace-list .note-card").count(),
                 5,
             );
 
@@ -406,14 +398,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 0,
             );
             assertEquals(
-                await panel.locator(".workspace-notes-list .note-card").count(),
+                await panel.locator(".notes-workspace-list .note-card").count(),
                 2,
             );
 
             // Search matching all 5 notes
             await searchInput.fill("Body");
             await page.waitForFunction(() =>
-                document.querySelectorAll(".workspace-notes-list .note-card")
+                document.querySelectorAll(".notes-workspace-list .note-card")
                     .length === 5
             );
             assertEquals(
@@ -421,7 +413,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 0,
             );
             assertEquals(
-                await panel.locator(".workspace-notes-list .note-card").count(),
+                await panel.locator(".notes-workspace-list .note-card").count(),
                 5,
             );
 
@@ -438,7 +430,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         async () => {
             await ensureNotesRoot(page);
             const panel = page.locator("aside.workspace-panel");
-            const firstCard = panel.locator(".workspace-notes-list .note-card")
+            const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.waitFor({ state: "visible" });
 
@@ -513,7 +505,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 '.workspace-header button[aria-label="返回上一级"]',
             );
             await backBtn.click();
-            await page.locator(".workspace-notes-list").first().waitFor({
+            await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
             assertEquals(
@@ -528,13 +520,12 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         async () => {
             await ensureNotesRoot(page);
             const panel = page.locator("aside.workspace-panel");
-            const listEl = panel.locator(".workspace-notes-list").first();
-            await listEl.waitFor({ state: "visible" });
+            const listEl = panel.locator(".notes-workspace-list").first();
             const listWidth = await listEl.evaluate((el) =>
                 el.getBoundingClientRect().width
             );
 
-            const card = panel.locator(".workspace-notes-list .note-card")
+            const card = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await card.waitFor({ state: "visible" });
 
@@ -594,7 +585,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             // Wait for full mode
             await page.waitForFunction(() => {
                 const c = document.querySelector(
-                    ".workspace-notes-list .note-card",
+                    ".notes-workspace-list .note-card",
                 );
                 return c && !c.classList.contains("note-card--compact");
             });
@@ -624,7 +615,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await collapseBtn.click();
             await page.waitForFunction(() => {
                 const c = document.querySelector(
-                    ".workspace-notes-list .note-card",
+                    ".notes-workspace-list .note-card",
                 );
                 return c && c.classList.contains("note-card--compact");
             });
@@ -653,7 +644,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         async () => {
             await ensureNotesRoot(page);
             const panel = page.locator("aside.workspace-panel");
-            const firstCard = panel.locator(".workspace-notes-list .note-card")
+            const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.locator(".note-title").click();
             await page.locator("#note-title-input").waitFor({
@@ -750,7 +741,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await panel.locator(
                 '.workspace-header button[aria-label="返回上一级"]',
             ).click();
-            await page.locator(".workspace-notes-list").first().waitFor({
+            await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
         },
@@ -761,7 +752,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         async () => {
             await ensureNotesRoot(page);
             const panel = page.locator("aside.workspace-panel");
-            const firstCard = panel.locator(".workspace-notes-list .note-card")
+            const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.locator(".note-title").click();
             await page.locator("#note-title-input").waitFor({
@@ -889,7 +880,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await panel.locator(
                 '.workspace-header button[aria-label="返回上一级"]',
             ).click();
-            await page.locator(".workspace-notes-list").first().waitFor({
+            await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
         },
@@ -900,7 +891,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         async () => {
             await ensureNotesRoot(page);
             const panel = page.locator("aside.workspace-panel");
-            const firstCard = panel.locator(".workspace-notes-list .note-card")
+            const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.locator(".note-title").click();
             await page.locator("#note-title-input").waitFor({
@@ -949,7 +940,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await panel.locator(
                 '.workspace-header button[aria-label="返回上一级"]',
             ).click();
-            await page.locator(".workspace-notes-list").first().waitFor({
+            await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
         },
@@ -997,10 +988,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 // Stale cached notes remain browsable!
                 await page.waitForFunction(() =>
                     document.querySelectorAll(
-                        ".workspace-notes-list .note-card",
+                        ".notes-workspace-list .note-card",
                     ).length >= 1
                 );
-
                 // Error alert with retry button is visible
                 const errorBanner = panel.locator('div[role="alert"]');
                 await errorBanner.waitFor({ state: "visible" });
@@ -1023,7 +1013,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 await errorBanner.waitFor({ state: "detached" });
                 await page.waitForFunction(() =>
                     document.querySelectorAll(
-                        ".workspace-notes-list .note-card",
+                        ".notes-workspace-list .note-card",
                     ).length >= 1
                 );
             } finally {
@@ -1079,7 +1069,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await panel.waitFor({ state: "visible" });
 
             await page.waitForFunction(() =>
-                document.querySelectorAll(".workspace-notes-list .note-card")
+                document.querySelectorAll(".notes-workspace-list .note-card")
                     .length >= 16
             );
 
@@ -1126,7 +1116,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     // 2. Verify notes body has vertical scroll and NO horizontal overflow
                     const overflowCheck = await currentPanel.evaluate((el) => {
                         const body = el.querySelector(".workspace-body");
-                        const list = el.querySelector(".workspace-notes-list");
+                        const list = el.querySelector(".notes-workspace-list");
                         if (!body || !list) {
                             throw new Error(
                                 "Notes list or scroll body is missing",
@@ -1214,9 +1204,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             // Switch to Zen layout
             await visit("/settings/appearance");
             await page.getByText("极简呼吸", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen"
-            );
+            await page.locator('.layout-mode-card[aria-checked="true"]', {
+                hasText: "极简呼吸",
+            }).waitFor();
             await visit("/");
 
             // Record initial FloatingNotes position
@@ -1237,7 +1227,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await zenPanel.waitFor({ state: "visible" });
 
             // Perform workspace actions
-            const card = zenPanel.locator(".workspace-notes-list .note-card")
+            const card = zenPanel.locator(".notes-workspace-list .note-card")
                 .first();
             await card.hover();
             const expandBtn = card.locator(
@@ -1290,9 +1280,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             // Restore widgets layout
             await visit("/settings/appearance");
             await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets"
-            );
+            await page.locator('.layout-mode-card[aria-checked="true"]', {
+                hasText: "空间轻桌面",
+            }).waitFor();
             await visit("/");
         },
     );

@@ -1,20 +1,7 @@
 /* Searcher Account & Security System Styles */
 
 .account-reset-banner {
-    padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-section-gap);
-    background: color-mix(in srgb, var(--danger) 12%, var(--surface));
-    border: 2px solid var(--danger);
-    border-radius: var(--radius);
-    display: flex;
-    gap: var(--space-row-gap);
-    align-items: flex-start;
-}
-
-.account-reset-banner-icon {
-    color: var(--danger);
-    flex-shrink: 0;
-    margin-top: var(--space-1);
 }
 
 .account-reset-banner-body {
@@ -26,7 +13,6 @@
     margin: 0 0 var(--space-2);
     font-size: var(--font-component-title-size);
     line-height: var(--font-component-title-line-height);
-    color: var(--danger);
     font-weight: var(--font-title-weight);
 }
 
@@ -61,7 +47,7 @@
 
 .account-card-header {
     padding: 0;
-    padding-bottom: var(--space-row-gap);
+    margin-bottom: var(--space-card-padding);
 }
 
 .account-card-content {
@@ -72,21 +58,23 @@
 .account-profile-header {
     display: flex;
     align-items: center;
-    gap: var(--space-row-gap);
-    margin-bottom: var(--space-5);
+    gap: var(--space-card-padding);
 }
 
 .account-profile-avatar {
-    width: calc(var(--control-height) + var(--space-4));
-    height: calc(var(--control-height) + var(--space-4));
-    border-radius: var(--search-radius);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
     background: var(--accent);
     color: var(--accent-foreground);
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: var(--font-page-title-size);
+    line-height: 1;
     font-weight: var(--font-title-weight);
     flex-shrink: 0;
+    text-transform: uppercase;
 }
 
 .account-profile-info {
@@ -105,23 +93,6 @@
     font-size: var(--font-section-title-size);
     line-height: var(--font-section-title-line-height);
     font-weight: var(--font-title-weight);
-}
-
-.account-role-badge {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    font-weight: var(--font-label-weight);
-    padding: var(--space-1) var(--space-2);
-    border-radius: 999px;
-    background: var(--surface-soft);
-    color: var(--muted);
-    border: 1px solid var(--border);
-}
-
-.account-role-badge[data-role="admin"] {
-    background: var(--accent);
-    color: var(--accent-foreground);
-    border-color: var(--accent);
 }
 
 .account-profile-username {
@@ -154,42 +125,24 @@
 }
 
 .account-input-disabled:disabled {
-    cursor: not-allowed;
+    background: var(--surface-soft);
     color: var(--muted);
-    background: var(--surface-solid);
+    cursor: not-allowed;
 }
 
 .account-form-actions {
-    margin-top: var(--space-5);
+    margin-top: var(--space-section-gap);
     display: flex;
     justify-content: flex-end;
 }
 
-/* Messages */
-.account-message {
-    display: flex;
-    align-items: center;
-    gap: var(--space-control-gap);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-}
-
-.account-message--form {
+/* Status Banners */
+.account-status-banner {
     margin-top: var(--space-row-gap);
 }
 
-.account-message--section {
+.account-status-banner--section {
     margin: 0 0 var(--space-row-gap);
-}
-
-.account-message[data-tone="success"],
-.account-message--success {
-    color: var(--success);
-}
-
-.account-message[data-tone="error"],
-.account-message--error {
-    color: var(--danger);
 }
 
 /* Card Header Common Elements */
@@ -197,11 +150,11 @@
     display: flex;
     align-items: center;
     gap: var(--space-control-gap);
-    margin-bottom: var(--space-1);
 }
 
-.account-card-icon {
-    color: var(--accent);
+.account-card-icon,
+.account-heading-icon {
+    color: var(--muted);
     flex-shrink: 0;
 }
 
@@ -213,24 +166,23 @@
 }
 
 .account-card-desc {
-    margin: 0;
+    margin: var(--space-1) 0 0;
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
 }
 
 .account-card-header-between {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-row-gap);
     flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-bottom: var(--space-row-gap);
 }
 
 .account-devices-count {
     margin: var(--space-1) 0 0;
-    font-size: var(--font-caption-size);
-    line-height: var(--font-caption-line-height);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
 }
 
 .account-devices-actions {
@@ -242,56 +194,58 @@
 
 /* Device Management */
 .account-empty-notice {
-    padding: var(--space-section-gap) 0;
+    padding: var(--space-card-padding);
     text-align: center;
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
+    margin: 0;
 }
 
 .account-device-list {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-3);
 }
 
 .account-device-item {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border-radius: var(--radius);
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
     border: 1px solid var(--border);
-    background: var(--surface-solid);
+    border-radius: var(--radius);
+    background: var(--surface-soft);
+    gap: var(--space-row-gap);
+    flex-wrap: wrap;
 }
 
 @media (min-width: 640px) {
     .account-device-item {
-        padding: var(--space-4) var(--space-5);
+        flex-wrap: nowrap;
     }
 }
 
 .account-device-item[data-current="true"] {
-    border-color: var(--accent-border);
-    background: var(--accent-soft);
+    border-color: var(--accent);
+    background: var(--surface-solid);
 }
 
 .account-device-main {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    min-width: min(220px, 100%);
+    min-width: 0;
     flex: 1;
 }
 
 .account-device-icon {
-    width: var(--control-height);
-    height: var(--control-height);
-    border-radius: var(--control-radius);
-    background: var(--surface-solid);
-    border: 1px solid var(--border);
-    display: grid;
-    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--muted);
     flex-shrink: 0;
 }
@@ -302,30 +256,18 @@
 
 .account-device-info {
     min-width: 0;
-    flex: 1;
 }
 
 .account-device-name-row {
     display: flex;
     align-items: center;
-    gap: var(--space-control-gap);
-    flex-wrap: wrap;
+    gap: var(--space-2);
 }
 
 .account-device-name {
     font-weight: var(--font-title-weight);
     font-size: var(--font-component-title-size);
     line-height: var(--font-component-title-line-height);
-}
-
-.account-device-badge {
-    font-size: var(--font-metadata-size);
-    font-weight: var(--font-title-weight);
-    line-height: var(--font-metadata-line-height);
-    padding: var(--space-1) var(--space-2);
-    border-radius: 999px;
-    background: var(--accent);
-    color: var(--accent-foreground);
 }
 
 .account-device-meta {

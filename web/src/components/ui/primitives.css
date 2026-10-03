@@ -1,0 +1,493 @@
+/* ==========================================================================
+   Searcher UI Primitives - Base Styles Owner
+   web/src/components/ui/primitives.css
+   Single owner for switch, radio, slider, separator, card, button,
+   field, error, sheet, dialog, context-menu, and dropdown positioner.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Switch Primitive
+   -------------------------------------------------------------------------- */
+.switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--muted) 35%, var(--surface-soft));
+    transition: background .15s, border-color .15s;
+}
+
+.switch[data-checked] {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: var(--accent-glow);
+}
+
+.switch[data-disabled] {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.switch-thumb {
+    pointer-events: none;
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--surface);
+    box-shadow: var(--shadow-control-thumb);
+    transform: translateX(2px);
+    transition: transform .15s;
+}
+
+.switch[data-checked] .switch-thumb {
+    transform: translateX(20px);
+    background: var(--accent-foreground);
+}
+
+/* --------------------------------------------------------------------------
+   Radio Group Primitive
+   -------------------------------------------------------------------------- */
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-control-gap);
+}
+
+.radio-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+    min-height: 44px;
+    padding: var(--space-control-gap) var(--space-row-gap);
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+    background: var(--surface-soft);
+    color: var(--foreground);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+
+.radio-item:hover {
+    background: var(--surface);
+    border-color: var(--accent-border);
+}
+
+.radio-item[data-checked] {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent), var(--accent-glow);
+}
+
+.radio-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.radio-item[data-disabled] {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.radio-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    transition: border-color .15s;
+}
+
+.radio-item[data-checked] .radio-circle {
+    border-color: var(--accent);
+}
+
+.radio-indicator {
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Slider Primitive
+   -------------------------------------------------------------------------- */
+.slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    touch-action: none;
+    user-select: none;
+}
+
+.slider[data-disabled] {
+    opacity: .5;
+}
+
+.slider-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    touch-action: none;
+    user-select: none;
+}
+
+.slider-track {
+    position: relative;
+    flex-grow: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--border);
+    overflow: hidden;
+}
+
+.slider-range {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--accent);
+}
+
+.slider-thumb {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 2px solid var(--accent);
+    background: var(--surface);
+    box-shadow: 0 1px 4px #0004, var(--accent-glow);
+}
+
+.slider-thumb:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Separator Primitive
+   -------------------------------------------------------------------------- */
+.separator {
+    flex-shrink: 0;
+    background: var(--border);
+}
+
+.separator[data-orientation="horizontal"] {
+    height: 1px;
+    width: 100%;
+}
+
+.separator[data-orientation="vertical"] {
+    width: 1px;
+    align-self: stretch;
+}
+
+/* --------------------------------------------------------------------------
+   Card Primitive
+   -------------------------------------------------------------------------- */
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-card-gap);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-solid);
+    padding: var(--space-card);
+    box-shadow: none;
+    color: var(--foreground);
+}
+
+.card-header {
+    display: grid;
+    gap: var(--space-1);
+}
+
+.card-title {
+    font-size: var(--font-component-title-size);
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.card-description {
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.card-content {
+    display: grid;
+    gap: var(--space-card-gap);
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+    flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   Button Primitive
+   -------------------------------------------------------------------------- */
+.button {
+    min-height: var(--control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-control-gap);
+    border: 1px solid transparent;
+    border-radius: var(--control-radius);
+    padding: var(--space-2) var(--space-4);
+    background: none;
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    font-weight: 500;
+    line-height: 1.4;
+    transition: background .15s, color .15s, border-color .15s;
+}
+
+.button--sm {
+    min-height: var(--control-compact-height);
+    padding: calc(var(--space-control-gap) * .75) var(--space-3);
+    font-size: var(--font-caption-size);
+}
+
+.button--icon {
+    min-height: var(--control-compact-height);
+    width: var(--control-compact-height);
+    padding: 0;
+}
+
+@media (pointer: coarse) {
+    .button,
+    .button--sm,
+    .button--icon {
+        min-height: var(--control-touch-target);
+    }
+    .button--icon {
+        width: var(--control-touch-target);
+    }
+}
+
+.button--primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%,
+        #fff), var(--accent));
+    color: var(--accent-foreground);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), var(--accent-glow);
+    border: 1px solid color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.button--primary:hover {
+    background: var(--accent-hover);
+}
+
+.button--primary:active {
+    background: var(--accent-active);
+}
+
+.button--subtle {
+    border-color: var(--border);
+    background: var(--surface);
+}
+
+.button--subtle:hover {
+    background: var(--surface-soft);
+}
+
+.button--ghost {
+    background: transparent;
+    border-color: transparent;
+}
+
+.button--ghost:hover {
+    background: var(--surface-soft);
+}
+
+.button--link {
+    background: transparent;
+    border-color: transparent;
+    color: var(--accent);
+    padding: 0;
+    min-height: auto;
+}
+
+.button--link:hover {
+    text-decoration: underline;
+}
+
+.button--danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.button--danger:hover {
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Dropdown Menu Positioner Primitive
+   -------------------------------------------------------------------------- */
+[data-slot="dropdown-menu-positioner"] {
+    z-index: var(--elevation-menu) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Sheet Primitive
+   -------------------------------------------------------------------------- */
+.sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    z-index: var(--elevation-sheet-backdrop);
+}
+
+.sheet {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100%, var(--sheet-width));
+    height: min(70vh, 780px);
+    background: var(--surface-l3);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    box-shadow: var(--shadow-l3);
+    z-index: var(--elevation-sheet);
+    outline: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.sheet-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-section-gap)
+        clamp(var(--space-5),3vw,var(--space-page-inline));
+    border-bottom: 1px solid var(--border);
+    font-size: var(--font-section-title-size);
+    font-weight: 690;
+}
+
+/* --------------------------------------------------------------------------
+   Field Primitive (Form field layout and elements)
+   -------------------------------------------------------------------------- */
+.field {
+    display: grid;
+    gap: var(--space-control-gap);
+    margin: var(--space-row-gap) 0;
+    font-size: var(--font-body-size);
+    font-weight: 600;
+}
+
+.field input,
+.field select {
+    width: 100%;
+    min-height: var(--control-input-height);
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.field textarea {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-multiline);
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+    .field input,
+    .field select {
+        min-height: var(--control-touch-target);
+    }
+}
+
+.field textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* --------------------------------------------------------------------------
+   Error State Primitive
+   -------------------------------------------------------------------------- */
+.error {
+    color: var(--danger);
+}
+
+/* --------------------------------------------------------------------------
+   Dialog Primitive
+   -------------------------------------------------------------------------- */
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--elevation-modal-backdrop);
+    background: rgba(0, 0, 0, 0.45);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.dialog-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: var(--elevation-modal);
+    width: min(92vw, 520px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    padding: var(--space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-l3);
+    color: var(--foreground);
+    box-shadow: var(--shadow-l3);
+    outline: none;
+}
+
+.dialog-panel [data-slot="dialog-title"] {
+    display: block;
+    font-size: var(--font-component-title-size);
+    font-weight: 700;
+    margin: 0 0 var(--space-row-gap);
+}
+
+/* --------------------------------------------------------------------------
+   Context Menu Positioner Primitive
+   -------------------------------------------------------------------------- */
+.context-menu-positioner {
+    z-index: var(--elevation-popover);
+}

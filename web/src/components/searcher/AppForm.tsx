@@ -16,6 +16,16 @@ import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
 import { Switch } from "../ui/switch.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../ui/alert-dialog.tsx";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 
 export interface AppFormProps {
@@ -70,6 +80,23 @@ export function AppForm({
     const [isUploadingIcon, setIsUploadingIcon] = useState(false);
     const [isFetchingUrlIcon, setIsFetchingUrlIcon] = useState(false);
 
+    const [confirmDialog, setConfirmDialog] = useState<
+        | {
+            type: "duplicate";
+            parsedHref: string;
+        }
+        | {
+            type: "icon_update";
+            parsedHref: string;
+        }
+        | null
+    >(null);
+    const lastConfirmTypeRef = useRef<"duplicate" | "icon_update">("duplicate");
+    if (confirmDialog) {
+        lastConfirmTypeRef.current = confirmDialog.type;
+    }
+    const activeConfirmType = confirmDialog?.type ?? lastConfirmTypeRef.current;
+    const submitTriggerRef = useRef<HTMLElement | null>(null);
     const lastFetchedUrlRef = useRef("");
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
@@ -335,96 +362,183 @@ export function AppForm({
     }
 
     // Form save
+    async function executeSave(opts?: {
+        overrideIconAssetId?: string | null;
+        overrideIconSource?: "website" | "upload" | "url" | "ai" | "default";
+        overrideIconPreviewUrl?: string | null;
+    }) {
+        let normalizedUrl = appUrl.trim();
+        if (!/^https?:\/\//i.test(normalizedUrl)) {
+            normalizedUrl = "https://" + normalizedUrl;
+        }
+        const parsed = new URL(normalizedUrl);
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+            throw new Error("只支持 HTTP 或 HTTPS 地址");
+        }
+
+        const name = appName.trim() || parsed.hostname;
+        const groupId = appGroupId ? appGroupId : null;
+
+        const nextIconAssetId = opts && "overrideIconAssetId" in opts
+            ? opts.overrideIconAssetId
+            : appIconAssetId;
+        const nextIconSource = opts && "overrideIconSource" in opts
+            ? opts.overrideIconSource!
+            : appIconSource;
+        const nextIconPreviewUrl = opts && "overrideIconPreviewUrl" in opts
+            ? opts.overrideIconPreviewUrl
+            : iconPreviewUrl;
+
+        if (editingApp) {
+            const updated = await api<ExtendedWebApp>(
+                `/api/webapps/${editingApp.id}`,
+                json("PATCH", {
+                    name,
+                    url: parsed.href,
+                    groupId,
+                    iconAssetId: nextIconAssetId,
+                    iconSource: nextIconSource,
+                    openMode: appOpenMode,
+                    isPinned: appIsPinned,
+                }),
+            );
+            onSaved(
+                {
+                    ...editingApp,
+                    ...updated,
+                    iconUrl: nextIconPreviewUrl || updated.iconUrl,
+                },
+                true,
+            );
+        } else {
+            const created = await api<ExtendedWebApp>(
+                "/api/webapps",
+                json("POST", {
+                    name,
+                    url: parsed.href,
+                    groupId,
+                    iconAssetId: nextIconAssetId,
+                    iconSource: nextIconSource,
+                    openMode: appOpenMode,
+                    isPinned: appIsPinned,
+                    sortOrder: existingApps.length,
+                }),
+            );
+            onSaved(
+                {
+                    ...created,
+                    iconUrl: nextIconPreviewUrl || created.iconUrl,
+                },
+                false,
+            );
+        }
+        onDirtyChange?.(false);
+        onClose();
+    }
+
+    function handleCancelConfirm() {
+        if (isSubmitting) return;
+        setConfirmDialog(null);
+        requestAnimationFrame(() => {
+            submitTriggerRef.current?.focus();
+        });
+    }
+
+    async function handleConfirmDuplicate() {
+        if (
+            !confirmDialog || confirmDialog.type !== "duplicate" || isSubmitting
+        ) {
+            return;
+        }
+        setIsSubmitting(true);
+        setFormError("");
+        try {
+            await executeSave();
+            setConfirmDialog(null);
+        } catch (err) {
+            setFormError(`保存失败：${errorMessage(err)}`);
+            setConfirmDialog(null);
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    async function handleConfirmIconUpdate() {
+        if (
+            !confirmDialog || confirmDialog.type !== "icon_update" ||
+            isSubmitting
+        ) {
+            return;
+        }
+        setIsSubmitting(true);
+        setFormError("");
+        try {
+            const found = await api<{ id: string; url: string }>(
+                "/api/webapp-icons/fetch",
+                json("POST", { url: confirmDialog.parsedHref }),
+            );
+            await executeSave({
+                overrideIconAssetId: found.id,
+                overrideIconSource: "website",
+                overrideIconPreviewUrl: found.url,
+            });
+            setConfirmDialog(null);
+        } catch (err) {
+            setFormError(`保存失败：${errorMessage(err)}`);
+            setConfirmDialog(null);
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         setFormError("");
-        setIsSubmitting(true);
+
+        let normalizedUrl = appUrl.trim();
+        if (!/^https?:\/\//i.test(normalizedUrl)) {
+            normalizedUrl = "https://" + normalizedUrl;
+        }
+        let parsed: URL;
         try {
-            let normalizedUrl = appUrl.trim();
-            if (!/^https?:\/\//i.test(normalizedUrl)) {
-                normalizedUrl = "https://" + normalizedUrl;
-            }
-            const parsed = new URL(normalizedUrl);
+            parsed = new URL(normalizedUrl);
             if (!["http:", "https:"].includes(parsed.protocol)) {
                 throw new Error("只支持 HTTP 或 HTTPS 地址");
             }
+        } catch (err) {
+            setFormError(`保存失败：${errorMessage(err)}`);
+            return;
+        }
 
-            const name = appName.trim() || parsed.hostname;
-            const groupId = appGroupId ? appGroupId : null;
+        submitTriggerRef.current = (document.activeElement as HTMLElement) ??
+            null;
 
-            if (
-                !editingApp &&
-                existingApps.some((app) => app.url === parsed.href) &&
-                !globalThis.confirm("该网站已存在，仍要继续添加吗？")
-            ) {
-                setIsSubmitting(false);
-                return;
-            }
+        if (
+            !editingApp &&
+            existingApps.some((app) => app.url === parsed.href)
+        ) {
+            setConfirmDialog({
+                type: "duplicate",
+                parsedHref: parsed.href,
+            });
+            return;
+        }
 
-            let nextIconAssetId = appIconAssetId;
-            let nextIconSource = appIconSource;
-            let nextIconPreviewUrl = iconPreviewUrl;
+        if (
+            editingApp &&
+            editingApp.url !== parsed.href &&
+            editingApp.iconAssetId === appIconAssetId
+        ) {
+            setConfirmDialog({
+                type: "icon_update",
+                parsedHref: parsed.href,
+            });
+            return;
+        }
 
-            if (
-                editingApp &&
-                editingApp.url !== parsed.href &&
-                editingApp.iconAssetId === appIconAssetId &&
-                globalThis.confirm("网址已改变，是否重新获取网站图标？")
-            ) {
-                const found = await api<{ id: string; url: string }>(
-                    "/api/webapp-icons/fetch",
-                    json("POST", { url: parsed.href }),
-                );
-                nextIconAssetId = found.id;
-                nextIconSource = "website";
-                nextIconPreviewUrl = found.url;
-            }
-
-            if (editingApp) {
-                const updated = await api<ExtendedWebApp>(
-                    `/api/webapps/${editingApp.id}`,
-                    json("PATCH", {
-                        name,
-                        url: parsed.href,
-                        groupId,
-                        iconAssetId: nextIconAssetId,
-                        iconSource: nextIconSource,
-                        openMode: appOpenMode,
-                        isPinned: appIsPinned,
-                    }),
-                );
-                onSaved(
-                    {
-                        ...editingApp,
-                        ...updated,
-                        iconUrl: nextIconPreviewUrl || updated.iconUrl,
-                    },
-                    true,
-                );
-            } else {
-                const created = await api<ExtendedWebApp>(
-                    "/api/webapps",
-                    json("POST", {
-                        name,
-                        url: parsed.href,
-                        groupId,
-                        iconAssetId: nextIconAssetId,
-                        iconSource: nextIconSource,
-                        openMode: appOpenMode,
-                        isPinned: appIsPinned,
-                        sortOrder: existingApps.length,
-                    }),
-                );
-                onSaved(
-                    {
-                        ...created,
-                        iconUrl: nextIconPreviewUrl || created.iconUrl,
-                    },
-                    false,
-                );
-            }
-            onDirtyChange?.(false);
-            onClose();
+        setIsSubmitting(true);
+        try {
+            await executeSave();
         } catch (err) {
             setFormError(`保存失败：${errorMessage(err)}`);
         } finally {
@@ -492,7 +606,7 @@ export function AppForm({
                         {/* URL 状态反馈 */}
                         {urlFetchStatus === "loading" && (
                             <div className="app-dialog-url-status loading">
-                                <Loader2 size={13} className="spin" />
+                                <Loader2 size={13} className="animate-spin" />
                                 <span>{urlFetchMessage}</span>
                             </div>
                         )}
@@ -749,7 +863,7 @@ export function AppForm({
                                             ? (
                                                 <Loader2
                                                     size={12}
-                                                    className="spin"
+                                                    className="animate-spin"
                                                 />
                                             )
                                             : <RefreshCw size={12} />}
@@ -869,5 +983,79 @@ export function AppForm({
         </form>
     );
 
-    return <div className="app-panel-form-container">{formJsx}</div>;
+    return (
+        <div className="app-panel-form-container">
+            {formJsx}
+            <AlertDialog
+                open={confirmDialog !== null}
+                onOpenChange={(open) => {
+                    if (!open && !isSubmitting) {
+                        handleCancelConfirm();
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    {activeConfirmType === "duplicate"
+                        ? (
+                            <>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        该网站已存在，仍要继续添加吗？
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        启动器中已存在相同网址的应用。重复添加可用于设置不同的名称、图标或分组。
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel
+                                        disabled={isSubmitting}
+                                        onClick={handleCancelConfirm}
+                                    >
+                                        取消
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        variant="default"
+                                        disabled={isSubmitting}
+                                        onClick={handleConfirmDuplicate}
+                                    >
+                                        {isSubmitting
+                                            ? "正在添加…"
+                                            : "继续添加"}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </>
+                        )
+                        : (
+                            <>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        网址已改变，是否重新获取网站图标？
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        检测到网址已变更。确认后将自动重新获取新网址的网站图标并保存；取消将保留原表单且不保存。
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel
+                                        disabled={isSubmitting}
+                                        onClick={handleCancelConfirm}
+                                    >
+                                        取消
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        variant="default"
+                                        disabled={isSubmitting}
+                                        onClick={handleConfirmIconUpdate}
+                                    >
+                                        {isSubmitting
+                                            ? "正在更新…"
+                                            : "重新获取并保存"}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </>
+                        )}
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    );
 }

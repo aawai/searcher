@@ -456,10 +456,6 @@
     gap: var(--space-control-gap);
     margin-top: var(--space-control-gap);
 }
-.provider-card.settings-card.card {
-    padding: var(--space-card-padding);
-    gap: var(--space-row-gap);
-}
 .provider-head {
     display: flex;
     justify-content: space-between;

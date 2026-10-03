@@ -6,9 +6,10 @@ import {
 } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "../ui/card.tsx";
+import { Button } from "../ui/button.tsx";
+import { X } from "lucide-react";
 import { Table, TableCaption } from "../ui/table.tsx";
 import { cn } from "../../lib/utils.ts";
-import "./semantic.css";
 
 type SectionProps = ComponentProps<"section"> & {
     title?: string;
@@ -60,8 +61,18 @@ export function Section(
         </section>
     );
 }
-export function SettingsCard({ className, ...props }: ComponentProps<"div">) {
-    return <Card className={cn("settings-card", className)} {...props} />;
+export function SettingsCard(
+    { className, padded = false, ...props }: ComponentProps<"div"> & {
+        padded?: boolean;
+    },
+) {
+    return (
+        <Card
+            className={cn("settings-card", className)}
+            data-padded={padded || undefined}
+            {...props}
+        />
+    );
 }
 export function SettingsRow(
     { title, description, children, className, ...props }:
@@ -84,16 +95,25 @@ export function ActionGroup({ className, ...props }: ComponentProps<"div">) {
     return <div className={cn("action-group", className)} {...props} />;
 }
 export function EmptyState(
-    { title, description, action, headingLevel = 2 }: {
+    {
+        title,
+        description,
+        action,
+        headingLevel = 2,
+        density = "default",
+        className,
+    }: {
         title: string;
         description?: string;
         action?: ReactNode;
         headingLevel?: 2 | 3;
+        density?: "default" | "compact";
+        className?: string;
     },
 ) {
     const Heading = headingLevel === 3 ? "h3" : "h2";
     return (
-        <div className="empty-state">
+        <div className={cn("empty-state", className)} data-density={density}>
             <Heading>{title}</Heading>
             {description && <p>{description}</p>}
             {action && <ActionGroup>{action}</ActionGroup>}
@@ -101,25 +121,62 @@ export function EmptyState(
     );
 }
 export function StatusBanner(
-    { tone = "info", className, ...props }: ComponentProps<"div"> & {
-        tone?: "info" | "error" | "success";
-    },
+    { tone = "info", presentation = "inline", className, ...props }:
+        & ComponentProps<"div">
+        & {
+            tone?: "info" | "error" | "success" | "warning";
+            presentation?: "inline" | "floating";
+        },
 ) {
     return (
         <div
             role={tone === "error" ? "alert" : "status"}
             className={cn("status-banner", className)}
             data-tone={tone}
+            data-presentation={presentation}
             {...props}
         />
     );
 }
 export function LoadingState(
-    { children = "正在加载…" }: { children?: ReactNode },
+    { children = "正在加载…", density = "default", className }: {
+        children?: ReactNode;
+        density?: "default" | "compact";
+        className?: string;
+    },
 ) {
     return (
-        <div className="loading-state" role="status" aria-live="polite">
+        <div
+            className={cn("loading-state", className)}
+            data-density={density}
+            role="status"
+            aria-live="polite"
+        >
             {children}
+        </div>
+    );
+}
+export function UndoToast(
+    { message, onUndo, onClose, className, ...props }: ComponentProps<"div"> & {
+        message: ReactNode;
+        onUndo: () => void;
+        onClose?: () => void;
+    },
+) {
+    return (
+        <div {...props} className={cn("undo-toast", className)} role="status">
+            <span>{message}</span>
+            <Button variant="ghost" onClick={onUndo}>撤销</Button>
+            {onClose && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="关闭撤销提示"
+                    onClick={onClose}
+                >
+                    <X size={16} />
+                </Button>
+            )}
         </div>
     );
 }

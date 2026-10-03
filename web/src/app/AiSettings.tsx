@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Plus, RotateCcw, Settings2 } from "lucide-react";
 import type {
@@ -24,6 +24,16 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../components/ui/dialog.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
 import {
     NativeSelect,
     NativeSelectOption,
@@ -103,6 +113,16 @@ export function AiSettings() {
     const [working, setWorking] = useState(false);
     const [error, setError] = useState("");
     const [status, setStatus] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState<AiProviderDto | null>(
+        null,
+    );
+    const [isDeleting, setIsDeleting] = useState(false);
+    const deleteTriggerRef = useRef<HTMLElement | null>(null);
+    const lastDeleteTargetRef = useRef<AiProviderDto | null>(null);
+    if (deleteTarget) {
+        lastDeleteTargetRef.current = deleteTarget;
+    }
+    const activeDeleteTarget = deleteTarget ?? lastDeleteTargetRef.current;
     async function load() {
         const [p, m] = await Promise.all([
             api<AiProviderDto[]>("/api/ai/providers"),
@@ -294,15 +314,39 @@ export function AiSettings() {
             setWorking(false);
         }
     }
-    async function remove(id: string) {
-        if (!globalThis.confirm("删除 Provider 及其模型？")) return;
+    function openDelete(provider: AiProviderDto, e?: React.MouseEvent) {
+        deleteTriggerRef.current = (e?.currentTarget as HTMLElement) ??
+            (document.activeElement as HTMLElement) ??
+            null;
+        setDeleteTarget(provider);
+    }
+    function handleCloseDelete() {
+        if (isDeleting) return;
+        setDeleteTarget(null);
+        requestAnimationFrame(() => {
+            deleteTriggerRef.current?.focus();
+        });
+    }
+    async function handleConfirmDelete() {
+        if (!deleteTarget || isDeleting) return;
+        setIsDeleting(true);
+        setWorking(true);
+        setError("");
         try {
-            await api("/api/ai/providers/" + encodeURIComponent(id), {
-                method: "DELETE",
-            });
+            await api(
+                "/api/ai/providers/" + encodeURIComponent(deleteTarget.id),
+                {
+                    method: "DELETE",
+                },
+            );
+            setDeleteTarget(null);
             await load();
+            setStatus("Provider 已删除");
         } catch (e) {
             setError(errorMessage(e));
+        } finally {
+            setIsDeleting(false);
+            setWorking(false);
         }
     }
     return (
@@ -473,7 +517,7 @@ export function AiSettings() {
                 </SettingsActionCard>
             )}
             {providers.map((provider) => (
-                <SettingsCard className="provider-card" key={provider.id}>
+                <SettingsCard padded key={provider.id}>
                     <div className="provider-head">
                         <div>
                             <strong>
@@ -508,7 +552,8 @@ export function AiSettings() {
                                 <Button
                                     type="button"
                                     variant="destructive"
-                                    onClick={() => void remove(provider.id)}
+                                    disabled={working || isDeleting}
+                                    onClick={(e) => openDelete(provider, e)}
                                 >
                                     删除
                                 </Button>
@@ -840,6 +885,42 @@ export function AiSettings() {
                     )}
                 </DialogContent>
             </Dialog>
+            <AlertDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        handleCloseDelete();
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            删除 Provider 及其模型？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {activeDeleteTarget
+                                ? `确定要删除 Provider “${activeDeleteTarget.name}” 及其关联的模型吗？此操作无法撤销。`
+                                : "确定要删除该 Provider 及其关联的模型吗？此操作无法撤销。"}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            disabled={isDeleting}
+                            onClick={handleCloseDelete}
+                        >
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            disabled={isDeleting}
+                            onClick={handleConfirmDelete}
+                        >
+                            {isDeleting ? "正在删除..." : "删除"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             {status && <StatusBanner>{status}</StatusBanner>}
             {error && <StatusBanner tone="error">{error}</StatusBanner>}
         </SettingsSection>

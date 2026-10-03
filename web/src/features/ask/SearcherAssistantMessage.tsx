@@ -26,6 +26,7 @@ import rehypeSanitize from "rehype-sanitize";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiMessageDto, SourceCitation } from "./types.ts";
 import { MessageDetailsDialog } from "./MessageDetailsDialog.tsx";
+import "../../components/searcher/markdown.css";
 
 function CodeBlock({
     className,

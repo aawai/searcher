@@ -1,0 +1,85 @@
+/* Searcher Trash Page Styles */
+
+.trash-list-section {
+    margin-top: var(--space-row-gap);
+}
+
+.trash-item-info {
+    max-width: 380px;
+}
+
+.trash-item-name {
+    font-weight: var(--font-title-weight);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.trash-item-sub {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: calc(var(--space-1) / 2);
+}
+
+.trash-item-date {
+    font-size: var(--font-caption-size);
+    white-space: nowrap;
+}
+
+.trash-item-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-control-gap);
+    white-space: nowrap;
+}
+
+/* Mobile Stacked Cards */
+.trash-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-row-gap);
+}
+
+.trash-mobile-card {
+    padding: var(--space-card-padding);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-control-gap);
+}
+
+.trash-mobile-card-title {
+    font-weight: var(--font-title-weight);
+    font-size: var(--font-body-size);
+    color: var(--foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.trash-mobile-card-sub {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.trash-mobile-card-date {
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+}
+
+.trash-mobile-card-actions {
+    display: flex;
+    gap: var(--space-control-gap);
+    padding-top: var(--space-control-gap);
+    border-top: 1px solid var(--border);
+}

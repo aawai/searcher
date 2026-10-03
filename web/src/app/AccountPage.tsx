@@ -1,11 +1,9 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { EmptyState } from "../components/searcher/semantic.tsx";
+import { EmptyState, StatusBanner } from "../components/searcher/semantic.tsx";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-    AlertTriangle,
     ArrowRight,
-    CheckCircle2,
     Globe,
     Key,
     Laptop,
@@ -15,6 +13,7 @@ import {
     Smartphone,
 } from "lucide-react";
 import type { UserDto } from "@shared/contracts.ts";
+import { Badge } from "../components/ui/badge.tsx";
 import { Button } from "../components/ui/button.tsx";
 import {
     Card,
@@ -23,6 +22,16 @@ import {
     CardTitle,
 } from "../components/ui/card.tsx";
 import { Input } from "../components/ui/input.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
@@ -77,7 +86,6 @@ function formatTime(timestamp: number | null | undefined): string {
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false,
     });
 }
 
@@ -107,6 +115,13 @@ export function AccountPage() {
     const [devicesError, setDevicesError] = useState("");
     const [devicesActionMsg, setDevicesActionMsg] = useState("");
     const [revokingId, setRevokingId] = useState<string | null>(null);
+
+    // Logout confirmation state
+    const [logoutCurrentOpen, setLogoutCurrentOpen] = useState(false);
+    const [logoutCurrentPending, setLogoutCurrentPending] = useState(false);
+
+    const [revokeOthersOpen, setRevokeOthersOpen] = useState(false);
+    const [revokeOthersPending, setRevokeOthersPending] = useState(false);
 
     // Sync profile state when user updates
     useEffect(() => {
@@ -206,10 +221,7 @@ export function AccountPage() {
     // Revoke single device
     const handleRevokeDevice = async (device: SessionDevice) => {
         if (device.isCurrent) {
-            if (confirm("确定要退出当前设备吗？")) {
-                await logout();
-                navigate(routes.login);
-            }
+            setLogoutCurrentOpen(true);
             return;
         }
 
@@ -227,26 +239,44 @@ export function AccountPage() {
         }
     };
 
-    // Revoke all other devices
-    const handleRevokeOthers = async () => {
-        if (!confirm("确定要退出除当前设备外的所有其他设备吗？")) return;
+    // Confirm logout of current device
+    const handleConfirmLogoutCurrent = async () => {
+        setLogoutCurrentPending(true);
+        try {
+            await logout();
+            setLogoutCurrentOpen(false);
+            navigate(routes.login);
+        } catch (err) {
+            setDevicesError(errorMessage(err));
+            setLogoutCurrentOpen(false);
+        } finally {
+            setLogoutCurrentPending(false);
+        }
+    };
+
+    // Confirm revoking all other devices
+    const handleConfirmRevokeOthers = async () => {
+        setRevokeOthersPending(true);
         setDevicesLoading(true);
         setDevicesError("");
         setDevicesActionMsg("");
         try {
             await api("/api/auth/devices/revoke-others", { method: "POST" });
             setDevicesActionMsg("已退出所有其他设备");
+            setRevokeOthersOpen(false);
             await loadDevices();
         } catch (err) {
             setDevicesError(errorMessage(err));
+            setRevokeOthersOpen(false);
         } finally {
+            setRevokeOthersPending(false);
             setDevicesLoading(false);
         }
     };
 
     if (!user) {
         return (
-            <PageShell archetype="utility" className="page account-page">
+            <PageShell archetype="utility" className="account-page">
                 <PageHeader
                     title="账户与安全"
                     items={[{ label: "首页", to: routes.home }, {
@@ -272,7 +302,7 @@ export function AccountPage() {
     const hasOtherDevices = devices.some((d) => !d.isCurrent);
 
     return (
-        <PageShell archetype="utility" className="page account-page">
+        <PageShell archetype="utility" className="account-page">
             <PageHeader
                 title="账户与安全"
                 description="管理您的个人资料、密码凭据与已登录设备"
@@ -295,14 +325,7 @@ export function AccountPage() {
 
             {/* Forced Password Reset Banner */}
             {user.mustChangePassword && (
-                <div
-                    role="alert"
-                    className="account-reset-banner"
-                >
-                    <AlertTriangle
-                        size={24}
-                        className="account-reset-banner-icon"
-                    />
+                <StatusBanner tone="warning" className="account-reset-banner">
                     <div className="account-reset-banner-body">
                         <h2 className="account-reset-banner-title">
                             必须重置密码
@@ -312,7 +335,7 @@ export function AccountPage() {
                             修改密码后，所有设备将立即注销，您需要使用新密码重新登录。
                         </p>
                     </div>
-                </div>
+                </StatusBanner>
             )}
 
             <div className="account-grid">
@@ -332,14 +355,15 @@ export function AccountPage() {
                                     <h2 className="account-profile-name">
                                         {user.displayName}
                                     </h2>
-                                    <span
-                                        className="account-role-badge"
-                                        data-role={user.role}
+                                    <Badge
+                                        variant={user.role === "admin"
+                                            ? "default"
+                                            : "secondary"}
                                     >
                                         {user.role === "admin"
                                             ? "系统管理员"
                                             : "标准用户"}
-                                    </span>
+                                    </Badge>
                                 </div>
                                 <p className="account-profile-username muted">
                                     @{user.username}
@@ -392,23 +416,20 @@ export function AccountPage() {
                                 />
                             </label>
                             {profileSuccess && (
-                                <p
-                                    role="status"
-                                    className="account-message account-message--form"
-                                    data-tone="success"
+                                <StatusBanner
+                                    tone="success"
+                                    className="account-status-banner"
                                 >
-                                    <CheckCircle2 size={16} />
-                                    <span>{profileSuccess}</span>
-                                </p>
+                                    {profileSuccess}
+                                </StatusBanner>
                             )}
                             {profileError && (
-                                <p
-                                    role="alert"
-                                    className="error account-message account-message--form"
-                                    data-tone="error"
+                                <StatusBanner
+                                    tone="error"
+                                    className="account-status-banner"
                                 >
                                     {profileError}
-                                </p>
+                                </StatusBanner>
                             )}
                             <div className="account-form-actions">
                                 <Button
@@ -469,7 +490,7 @@ export function AccountPage() {
                                         value={newPassword}
                                         onChange={(e) =>
                                             setNewPassword(e.target.value)}
-                                        placeholder="输入新密码 (12–128 位)"
+                                        placeholder="输入新密码 (12-128 位)"
                                     />
                                 </label>
                                 <label className="field account-field">
@@ -487,27 +508,22 @@ export function AccountPage() {
                                     />
                                 </label>
                             </div>
-
                             {passwordSuccess && (
-                                <p
-                                    role="status"
-                                    className="account-message account-message--form"
-                                    data-tone="success"
+                                <StatusBanner
+                                    tone="success"
+                                    className="account-status-banner"
                                 >
-                                    <CheckCircle2 size={16} />
-                                    <span>{passwordSuccess}</span>
-                                </p>
+                                    {passwordSuccess}
+                                </StatusBanner>
                             )}
                             {passwordError && (
-                                <p
-                                    role="alert"
-                                    className="error account-message account-message--form"
-                                    data-tone="error"
+                                <StatusBanner
+                                    tone="error"
+                                    className="account-status-banner"
                                 >
                                     {passwordError}
-                                </p>
+                                </StatusBanner>
                             )}
-
                             <div className="account-form-actions">
                                 <Button
                                     variant="default"
@@ -536,17 +552,13 @@ export function AccountPage() {
                                     size={20}
                                     className="account-card-icon"
                                 />
-                                <div>
-                                    <CardTitle className="account-card-title">
-                                        设备会话管理
-                                    </CardTitle>
-                                    <p className="account-devices-count muted">
-                                        当前账号共在 {devices.length}{" "}
-                                        个设备上保持登录
-                                    </p>
-                                </div>
+                                <CardTitle className="account-card-title">
+                                    设备会话管理
+                                </CardTitle>
                             </div>
-
+                            <p className="account-devices-count muted">
+                                当前账号共在 {devices.length} 个设备上保持登录
+                            </p>
                             <div className="account-devices-actions">
                                 <Button
                                     variant="outline"
@@ -559,7 +571,9 @@ export function AccountPage() {
                                 >
                                     <RefreshCw
                                         size={15}
-                                        className={devicesLoading ? "spin" : ""}
+                                        className={devicesLoading
+                                            ? "animate-spin"
+                                            : ""}
                                     />
                                     <span>刷新</span>
                                 </Button>
@@ -569,8 +583,10 @@ export function AccountPage() {
                                         size="sm"
                                         type="button"
                                         onClick={() =>
-                                            void handleRevokeOthers()}
-                                        disabled={devicesLoading}
+                                            setRevokeOthersOpen(true)}
+                                        disabled={devicesLoading ||
+                                            revokeOthersPending ||
+                                            logoutCurrentPending}
                                     >
                                         <LogOut size={15} />
                                         <span>退出其他所有设备</span>
@@ -581,23 +597,20 @@ export function AccountPage() {
                     </CardHeader>
                     <CardContent className="account-card-content">
                         {devicesActionMsg && (
-                            <p
-                                role="status"
-                                className="account-message account-message--section"
-                                data-tone="success"
+                            <StatusBanner
+                                tone="success"
+                                className="account-status-banner--section"
                             >
-                                <CheckCircle2 size={16} />
-                                <span>{devicesActionMsg}</span>
-                            </p>
+                                {devicesActionMsg}
+                            </StatusBanner>
                         )}
                         {devicesError && (
-                            <p
-                                role="alert"
-                                className="error account-message account-message--section"
-                                data-tone="error"
+                            <StatusBanner
+                                tone="error"
+                                className="account-status-banner--section"
                             >
                                 {devicesError}
-                            </p>
+                            </StatusBanner>
                         )}
 
                         {devicesLoading && devices.length === 0
@@ -609,7 +622,7 @@ export function AccountPage() {
                             : devices.length === 0
                             ? (
                                 <p className="account-empty-notice muted">
-                                    暂无活跃设备会话记录
+                                    暂无活跃设备记录
                                 </p>
                             )
                             : (
@@ -665,12 +678,12 @@ export function AccountPage() {
                                                             <span className="account-device-name">
                                                                 {parsed.name}
                                                             </span>
-                                                            {device.isCurrent &&
-                                                                (
-                                                                    <span className="account-device-badge">
-                                                                        当前设备
-                                                                    </span>
-                                                                )}
+                                                            {device
+                                                                .isCurrent && (
+                                                                <Badge variant="default">
+                                                                    当前设备
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                         <div className="account-device-meta muted">
                                                             <span>
@@ -700,7 +713,6 @@ export function AccountPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-
                                                 <div className="account-device-action">
                                                     <Button
                                                         variant={device
@@ -710,7 +722,9 @@ export function AccountPage() {
                                                         size="sm"
                                                         type="button"
                                                         disabled={isRevoking ||
-                                                            devicesLoading}
+                                                            devicesLoading ||
+                                                            logoutCurrentPending ||
+                                                            revokeOthersPending}
                                                         onClick={() =>
                                                             void handleRevokeDevice(
                                                                 device,
@@ -731,6 +745,69 @@ export function AccountPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Confirm Logout Current Device Dialog */}
+            <AlertDialog
+                open={logoutCurrentOpen}
+                onOpenChange={(open) => {
+                    if (!open && !logoutCurrentPending) {
+                        setLogoutCurrentOpen(false);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>退出当前设备</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            确定要退出当前设备吗？退出后您需要重新登录以继续使用
+                            Searcher。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={logoutCurrentPending}>
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            disabled={logoutCurrentPending}
+                            onClick={handleConfirmLogoutCurrent}
+                        >
+                            {logoutCurrentPending ? "退出中…" : "确认退出"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Confirm Revoke Other Devices Dialog */}
+            <AlertDialog
+                open={revokeOthersOpen}
+                onOpenChange={(open) => {
+                    if (!open && !revokeOthersPending) {
+                        setRevokeOthersOpen(false);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>退出其他所有设备</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            确定要退出除当前设备外的所有其他设备吗？其他设备上的会话将立即失效，需要重新登录。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={revokeOthersPending}>
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            disabled={revokeOthersPending}
+                            onClick={handleConfirmRevokeOthers}
+                        >
+                            {revokeOthersPending ? "处理中…" : "确认退出"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </PageShell>
     );
 }

@@ -1,3 +1,4 @@
+import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
@@ -631,7 +632,7 @@ export function SearchHome() {
     return (
         <PageShell archetype="search" className={"home home-" + layoutStyle}>
             {error && (
-                <div role="alert" className="home-error-toast">
+                <StatusBanner tone="error" presentation="floating">
                     <span>{error}</span>
                     <Button
                         variant="ghost"
@@ -641,7 +642,7 @@ export function SearchHome() {
                     >
                         <X size={16} />
                     </Button>
-                </div>
+                </StatusBanner>
             )}
             {layoutStyle === "widgets"
                 ? <WidgetsLayout {...layoutProps} />
@@ -728,20 +729,11 @@ export function SearchHome() {
                 </WorkspaceShell>
             )}
             {(undoApp || noteUndo) && (
-                <div className="webapp-undo-toast" role="status">
-                    <span>
-                        {undoApp ? "应用已移至回收站" : "便签已移至回收站"}
-                    </span>
-                    <Button
-                        variant="ghost"
-                        onClick={() =>
-                            undoApp
-                                ? void undoDeleteApp()
-                                : void undoDeleteNote()}
-                    >
-                        撤销
-                    </Button>
-                </div>
+                <UndoToast
+                    message={undoApp ? "应用已移至回收站" : "便签已移至回收站"}
+                    onUndo={() =>
+                        undoApp ? void undoDeleteApp() : void undoDeleteNote()}
+                />
             )}
             <AlertDialog
                 open={Boolean(pendingAction)}

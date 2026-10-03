@@ -235,23 +235,47 @@ Deno.test("production navigation contracts", async (t) => {
         async () => {
             await visit("/settings/appearance");
             await page.getByRole("tab", { name: "浅色", exact: true }).click();
-            await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets" &&
-                document.documentElement.dataset.theme === "light"
-            );
+            await page.getByRole("radio", { name: /空间轻桌面/ }).click();
+            await page.waitForFunction(() => {
+                const radio = document.querySelector(
+                    'button[role="radio"][aria-checked="true"]',
+                );
+                return radio?.textContent?.includes("空间轻桌面") &&
+                    document.documentElement.dataset.theme === "light";
+            });
+
             await page.getByRole("link", { name: "Searcher 首页" }).click();
             await page.waitForURL(origin + "/");
+            await page.locator("main.home-widgets").waitFor({
+                state: "visible",
+            });
+            await page.getByRole("heading", { name: "Searcher." }).waitFor({
+                state: "visible",
+            });
             assertEquals(
                 await page.evaluate(() =>
-                    document.documentElement.dataset.style
+                    getComputedStyle(document.querySelector("main")!)
+                        .getPropertyValue("--radius").trim()
                 ),
-                "widgets",
+                "22px",
             );
+
             await page.reload();
+            await page.locator("main.home-widgets").waitFor({
+                state: "visible",
+            });
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "light"
+            );
+            await page.getByRole("heading", { name: "Searcher." }).waitFor({
+                state: "visible",
+            });
+            assertEquals(
+                await page.evaluate(() =>
+                    getComputedStyle(document.querySelector("main")!)
+                        .getPropertyValue("--radius").trim()
+                ),
+                "22px",
             );
         },
     );
@@ -306,9 +330,13 @@ Deno.test("production navigation contracts", async (t) => {
         async () => {
             await visit("/settings/appearance");
             await page.locator(".user-avatar-badge").waitFor();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen"
-            );
+            await page.waitForFunction(() => {
+                const radio = document.querySelector(
+                    'button[role="radio"][aria-checked="true"]',
+                );
+                return radio?.textContent?.includes("极简呼吸");
+            });
+
             await Promise.all([
                 page.waitForResponse((r) =>
                     r.url().endsWith("/api/preferences") &&
@@ -321,7 +349,7 @@ Deno.test("production navigation contracts", async (t) => {
                     r.url().endsWith("/api/preferences") &&
                     r.request().method() === "PATCH" && r.ok()
                 ),
-                page.getByText("空间轻桌面", { exact: true }).click(),
+                page.getByRole("radio", { name: /空间轻桌面/ }).click(),
             ]);
             await page.getByRole("switch", {
                 name: "显示 Searcher 标题",
@@ -357,9 +385,15 @@ Deno.test("production navigation contracts", async (t) => {
             });
             await page.reload();
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "dark"
             );
+            await page.waitForFunction(() => {
+                const radio = document.querySelector(
+                    'button[role="radio"][aria-checked="true"]',
+                );
+                return radio?.textContent?.includes("空间轻桌面");
+            });
+
             assertEquals(
                 await page.getByRole("switch", {
                     name: "显示 Searcher 标题",
@@ -378,8 +412,17 @@ Deno.test("production navigation contracts", async (t) => {
                 await signIn(remote);
                 await remote.waitForURL(origin + "/");
                 await remote.waitForFunction(() =>
-                    document.documentElement.dataset.style === "widgets" &&
                     document.documentElement.dataset.theme === "dark"
+                );
+                await remote.locator("main.home-widgets").waitFor({
+                    state: "visible",
+                });
+                assertEquals(
+                    await remote.evaluate(() =>
+                        getComputedStyle(document.querySelector("main")!)
+                            .getPropertyValue("--radius").trim()
+                    ),
+                    "22px",
                 );
             } finally {
                 await otherDevice.close();
@@ -391,9 +434,15 @@ Deno.test("production navigation contracts", async (t) => {
             await page.getByRole("link", { name: "登录", exact: true })
                 .waitFor();
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "light"
             );
+            await page.waitForFunction(() => {
+                const radio = document.querySelector(
+                    'button[role="radio"][aria-checked="true"]',
+                );
+                return radio?.textContent?.includes("空间轻桌面");
+            });
+
             await visit("/register");
             await page.locator("#auth-username").fill(username + "_other");
             await page.locator("#auth-display-name").fill("Other account");
@@ -423,9 +472,10 @@ Deno.test("production navigation contracts", async (t) => {
             await visit("/login");
             await signIn();
             await page.waitForURL(origin + "/");
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets"
-            );
+            await page.locator("main.home-widgets").waitFor({
+                state: "visible",
+            });
+
             await context.clearCookies();
             await page.getByRole("link", { name: "设置", exact: true }).click();
             await page.getByRole("navigation", { name: "设置分类" })
@@ -433,9 +483,16 @@ Deno.test("production navigation contracts", async (t) => {
             await page.getByRole("link", { name: "登录", exact: true })
                 .waitFor();
             await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets" &&
                 document.documentElement.dataset.theme === "light"
             );
+
+            await visit("/");
+            await page.locator("main.home-widgets").waitFor({
+                state: "visible",
+            });
+            await page.getByRole("heading", { name: "Searcher." }).waitFor({
+                state: "visible",
+            });
         },
     );
     await t.step(

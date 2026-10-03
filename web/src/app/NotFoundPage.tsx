@@ -17,7 +17,7 @@ export function NotFoundPage(
             ? { label: "管理后台", to: routes.admin() }
             : undefined);
     return (
-        <PageShell archetype="utility" className="page">
+        <PageShell archetype="utility">
             <PageHeader
                 items={[
                     { label: "首页", to: routes.home },
