@@ -6,8 +6,10 @@ import { PageShell } from "../components/searcher/PageShell.tsx";
 import {
     ActionGroup,
     EmptyState,
+    LoadingState,
     LocalNavigation,
     ManagementTable,
+    SectionHeader,
     StatusBanner,
     WorkspaceToolbar,
 } from "../components/searcher/semantic.tsx";
@@ -25,6 +27,7 @@ import {
     ChevronRight,
     Clock,
     KeyRound,
+    MoreHorizontal,
     RefreshCw,
     Search,
     Trash2,
@@ -44,6 +47,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../components/ui/dialog.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import { Badge } from "../components/ui/badge.tsx";
@@ -137,11 +146,17 @@ export function AdminPage() {
     const [userSearch, setUserSearch] = useState("");
     const [submittedSearch, setSubmittedSearch] = useState("");
     const [usersLoading, setUsersLoading] = useState(false);
+    const [usersInitialized, setUsersInitialized] = useState(false);
     const [userError, setUserError] = useState("");
     const [userSuccess, setUserSuccess] = useState("");
 
     // Create user modal state
-    const modalTriggerRef = useRef<HTMLButtonElement>(null);
+    const modalTriggerRef = useRef<HTMLButtonElement | HTMLElement | null>(
+        null,
+    );
+    const actionTriggerRefs = useRef<Record<string, HTMLButtonElement | null>>(
+        {},
+    );
     const createTriggerRef = useRef<HTMLButtonElement>(null);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [newUsername, setNewUsername] = useState("");
@@ -175,6 +190,7 @@ export function AdminPage() {
     const [auditTotal, setAuditTotal] = useState(0);
     const [auditPage, setAuditPage] = useState(1);
     const [auditLoading, setAuditLoading] = useState(false);
+    const [auditInitialized, setAuditInitialized] = useState(false);
     const [auditError, setAuditError] = useState("");
     const [auditActionFilter, setAuditActionFilter] = useState("");
 
@@ -198,6 +214,7 @@ export function AdminPage() {
             setUserError(errorMessage(err));
         } finally {
             setUsersLoading(false);
+            setUsersInitialized(true);
         }
     };
 
@@ -225,6 +242,7 @@ export function AdminPage() {
             setAuditError(errorMessage(err));
         } finally {
             setAuditLoading(false);
+            setAuditInitialized(true);
         }
     };
 
@@ -244,6 +262,13 @@ export function AdminPage() {
         auditActionFilter,
     ]);
 
+    // Localize Users feedback to Users tab only
+    useEffect(() => {
+        if (activeTab !== "users") {
+            setUserError("");
+            setUserSuccess("");
+        }
+    }, [activeTab]);
     // Handle user search submit
     const handleSearchSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -373,6 +398,7 @@ export function AdminPage() {
             setUserSuccess(
                 `已删除用户 @${deleteModalUser.username}，其会话已立即终止。`,
             );
+            modalTriggerRef.current = createTriggerRef.current;
             setDeleteModalUser(null);
             setDeleteConfirmText("");
             await loadUsers();
@@ -404,6 +430,7 @@ export function AdminPage() {
                     ]}
                 />
                 <EmptyState
+                    headingLevel={3}
                     title="无权访问"
                     description="管理后台仅限具有管理员角色的账户访问。若您是管理员，请使用正确的管理员账户登录。"
                     action={currentUser
@@ -452,6 +479,7 @@ export function AdminPage() {
                 }
                 navigation={
                     <LocalNavigation
+                        compact
                         label="管理后台主导航"
                         items={[
                             { label: "系统概览", to: routes.admin("overview") },
@@ -476,23 +504,6 @@ export function AdminPage() {
                 }
             />
 
-            {userError && (
-                <StatusBanner tone="error">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle size={16} className="shrink-0" />
-                        <span>{userError}</span>
-                    </div>
-                </StatusBanner>
-            )}
-
-            {userSuccess && (
-                <StatusBanner tone="success">
-                    <div className="flex items-center gap-2">
-                        <span>{userSuccess}</span>
-                    </div>
-                </StatusBanner>
-            )}
-
             {/* ===================== Tab 0: Overview ===================== */}
             {activeTab === "overview" && (
                 <AdminOverview onNavigateTab={(t) => setActiveTab(t)} />
@@ -501,6 +512,27 @@ export function AdminPage() {
             {/* ===================== Tab 1: Users ===================== */}
             {activeTab === "users" && (
                 <div className="semantic-section">
+                    <SectionHeader
+                        title="用户管理"
+                        description="管理账户状态、凭据与用户生命周期"
+                    />
+
+                    {userError && (
+                        <StatusBanner tone="error">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={16} className="shrink-0" />
+                                <span>{userError}</span>
+                            </div>
+                        </StatusBanner>
+                    )}
+
+                    {userSuccess && (
+                        <StatusBanner tone="success">
+                            <div className="flex items-center gap-2">
+                                <span>{userSuccess}</span>
+                            </div>
+                        </StatusBanner>
+                    )}
                     {/* Toolbar */}
                     <WorkspaceToolbar className="admin-toolbar">
                         <form
@@ -573,33 +605,52 @@ export function AdminPage() {
                     </WorkspaceToolbar>
 
                     {/* Table */}
-                    {usersLoading && users.length === 0
-                        ? (
-                            <div className="text-muted text-center py-12">
-                                正在载入用户数据…
-                            </div>
-                        )
+                    {(!usersInitialized || usersLoading) && users.length === 0
+                        ? <LoadingState>正在载入用户数据…</LoadingState>
                         : users.length === 0
                         ? (
-                            <EmptyState
-                                title="未找到符合条件的用户"
-                                description={submittedSearch
-                                    ? `未找到与「${submittedSearch}」匹配的用户`
-                                    : "暂无用户数据"}
-                                action={submittedSearch
-                                    ? (
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                setUserSearch("");
-                                                setSubmittedSearch("");
-                                            }}
-                                        >
-                                            清空搜索重试
-                                        </Button>
-                                    )
-                                    : undefined}
-                            />
+                            userError
+                                ? (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        title="用户列表加载失败"
+                                        description="无法获取用户列表，请检查网络连接或稍后重试。"
+                                        action={
+                                            <Button
+                                                variant="outline"
+                                                onClick={() =>
+                                                    void loadUsers(
+                                                        userPage,
+                                                        submittedSearch,
+                                                    )}
+                                            >
+                                                重试
+                                            </Button>
+                                        }
+                                    />
+                                )
+                                : (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        title="未找到符合条件的用户"
+                                        description={submittedSearch
+                                            ? `未找到与「${submittedSearch}」匹配的用户`
+                                            : "暂无用户数据"}
+                                        action={submittedSearch
+                                            ? (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setUserSearch("");
+                                                        setSubmittedSearch("");
+                                                    }}
+                                                >
+                                                    清空搜索重试
+                                                </Button>
+                                            )
+                                            : undefined}
+                                    />
+                                )
                         )
                         : (
                             <>
@@ -697,7 +748,7 @@ export function AdminPage() {
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <ActionGroup className="justify-end">
+                                                        <ActionGroup className="admin-user-inline-actions justify-end">
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
@@ -731,6 +782,10 @@ export function AdminPage() {
                                                                         void handleToggleDisable(
                                                                             u,
                                                                         )}
+                                                                    title={u
+                                                                            .disabled
+                                                                        ? "启用该用户"
+                                                                        : "禁用该用户"}
                                                                 >
                                                                     {u.disabled
                                                                         ? (
@@ -771,6 +826,7 @@ export function AdminPage() {
                                                                             "",
                                                                         );
                                                                     }}
+                                                                    title="删除用户"
                                                                 >
                                                                     <Trash2
                                                                         size={14}
@@ -781,6 +837,131 @@ export function AdminPage() {
                                                                 </Button>
                                                             )}
                                                         </ActionGroup>
+
+                                                        <div className="admin-user-menu-actions">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    render={
+                                                                        <Button
+                                                                            ref={(
+                                                                                el:
+                                                                                    | HTMLButtonElement
+                                                                                    | null,
+                                                                            ) => {
+                                                                                if (el) {
+                                                                                    actionTriggerRefs
+                                                                                        .current[
+                                                                                            u.id
+                                                                                        ] = el;
+                                                                                } else {
+                                                                                    delete actionTriggerRefs
+                                                                                        .current[
+                                                                                            u.id
+                                                                                        ];
+                                                                                }
+                                                                            }}
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            aria-label={`用户 @${u.username} 的更多操作`}
+                                                                            title="更多操作"
+                                                                        />
+                                                                    }
+                                                                >
+                                                                    <MoreHorizontal
+                                                                        size={14}
+                                                                    />
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    sideOffset={4}
+                                                                >
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            modalTriggerRef
+                                                                                .current =
+                                                                                    actionTriggerRefs
+                                                                                        .current[
+                                                                                            u.id
+                                                                                        ] ??
+                                                                                        null;
+                                                                            setResetModalUser(
+                                                                                u,
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <KeyRound
+                                                                            size={14}
+                                                                            className="mr-2"
+                                                                        />
+                                                                        <span>
+                                                                            重置密码
+                                                                        </span>
+                                                                    </DropdownMenuItem>
+                                                                    {!isSelf &&
+                                                                        !isAdmin &&
+                                                                        (
+                                                                            <DropdownMenuItem
+                                                                                disabled={isToggling}
+                                                                                onClick={() =>
+                                                                                    void handleToggleDisable(
+                                                                                        u,
+                                                                                    )}
+                                                                            >
+                                                                                {u.disabled
+                                                                                    ? (
+                                                                                        <UserCheck
+                                                                                            size={14}
+                                                                                            className="mr-2"
+                                                                                        />
+                                                                                    )
+                                                                                    : (
+                                                                                        <UserX
+                                                                                            size={14}
+                                                                                            className="mr-2"
+                                                                                        />
+                                                                                    )}
+                                                                                <span>
+                                                                                    {u.disabled
+                                                                                        ? "启用用户"
+                                                                                        : "禁用用户"}
+                                                                                </span>
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                    {!isSelf &&
+                                                                        (
+                                                                            <DropdownMenuItem
+                                                                                className="text-destructive focus:text-destructive"
+                                                                                onClick={() => {
+                                                                                    modalTriggerRef
+                                                                                        .current =
+                                                                                            actionTriggerRefs
+                                                                                                .current[
+                                                                                                    u.id
+                                                                                                ] ??
+                                                                                                null;
+                                                                                    setDeleteModalUser(
+                                                                                        u,
+                                                                                    );
+                                                                                    setDeleteConfirmText(
+                                                                                        "",
+                                                                                    );
+                                                                                    setDeleteError(
+                                                                                        "",
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                <Trash2
+                                                                                    size={14}
+                                                                                    className="mr-2"
+                                                                                />
+                                                                                <span>
+                                                                                    删除用户
+                                                                                </span>
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
                                                     </TableCell>
                                                 </TableRow>
                                             );
@@ -827,6 +1008,19 @@ export function AdminPage() {
             {/* ===================== Tab 2: Audit Logs ===================== */}
             {activeTab === "audit" && (
                 <div className="semantic-section">
+                    <SectionHeader
+                        title="审计日志"
+                        description="查看管理员操作记录与关键安全事件"
+                    />
+
+                    {auditError && (
+                        <StatusBanner tone="error">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={16} className="shrink-0" />
+                                <span>{auditError}</span>
+                            </div>
+                        </StatusBanner>
+                    )}
                     <WorkspaceToolbar className="admin-toolbar">
                         <div className="admin-filter-group">
                             <span className="admin-filter-label">
@@ -835,6 +1029,7 @@ export function AdminPage() {
                             <div className="admin-select-wrapper">
                                 <NativeSelect
                                     size="sm"
+                                    aria-label="审计操作筛选"
                                     value={auditActionFilter}
                                     onChange={(e) => {
                                         setAuditActionFilter(e.target.value);
@@ -896,29 +1091,40 @@ export function AdminPage() {
                         </ActionGroup>
                     </WorkspaceToolbar>
 
-                    {auditError && (
-                        <StatusBanner tone="error">
-                            <div className="flex items-center gap-2">
-                                <AlertCircle size={16} className="shrink-0" />
-                                <span>{auditError}</span>
-                            </div>
-                        </StatusBanner>
-                    )}
-
-                    {auditLoading && auditLogs.length === 0
-                        ? (
-                            <div className="text-muted text-center py-12">
-                                正在载入审计日志…
-                            </div>
-                        )
+                    {(!auditInitialized || auditLoading) &&
+                            auditLogs.length === 0
+                        ? <LoadingState>正在载入审计日志…</LoadingState>
                         : auditLogs.length === 0
                         ? (
-                            <EmptyState
-                                title="暂无符合条件的审计记录"
-                                description={auditActionFilter
-                                    ? "未找到该操作类型的审计日志"
-                                    : "系统中尚无审计事件记录"}
-                            />
+                            auditError
+                                ? (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        title="审计日志加载失败"
+                                        description="无法获取审计日志记录，请检查网络连接或稍后重试。"
+                                        action={
+                                            <Button
+                                                variant="outline"
+                                                onClick={() =>
+                                                    void loadAuditLogs(
+                                                        auditPage,
+                                                        auditActionFilter,
+                                                    )}
+                                            >
+                                                重试
+                                            </Button>
+                                        }
+                                    />
+                                )
+                                : (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        title="暂无符合条件的审计记录"
+                                        description={auditActionFilter
+                                            ? "未找到该操作类型的审计日志"
+                                            : "系统中尚无审计事件记录"}
+                                    />
+                                )
                         )
                         : (
                             <>
@@ -985,7 +1191,7 @@ export function AdminPage() {
                                                     <TableCell className="text-sm">
                                                         {log.metadata
                                                             ? (
-                                                                <div className="flex flex-wrap gap-1.5">
+                                                                <div className="admin-audit-metadata flex flex-wrap gap-1.5">
                                                                     {Object
                                                                         .entries(
                                                                             log.metadata,
@@ -1310,7 +1516,7 @@ export function AdminPage() {
             >
                 <DialogContent
                     className="max-w-md"
-                    finalFocus={createTriggerRef}
+                    finalFocus={modalTriggerRef}
                 >
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-destructive">

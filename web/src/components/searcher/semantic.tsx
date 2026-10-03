@@ -79,15 +79,17 @@ export function ActionGroup({ className, ...props }: ComponentProps<"div">) {
     return <div className={cn("action-group", className)} {...props} />;
 }
 export function EmptyState(
-    { title, description, action }: {
+    { title, description, action, headingLevel = 2 }: {
         title: string;
         description?: string;
         action?: ReactNode;
+        headingLevel?: 2 | 3;
     },
 ) {
+    const Heading = headingLevel === 3 ? "h3" : "h2";
     return (
         <div className="empty-state">
-            <h2>{title}</h2>
+            <Heading>{title}</Heading>
             {description && <p>{description}</p>}
             {action && <ActionGroup>{action}</ActionGroup>}
         </div>
@@ -107,17 +109,35 @@ export function StatusBanner(
         />
     );
 }
+export function LoadingState(
+    { children = "正在加载…" }: { children?: ReactNode },
+) {
+    return (
+        <div className="loading-state" role="status" aria-live="polite">
+            {children}
+        </div>
+    );
+}
+
 export function WorkspaceToolbar(
     { className, ...props }: ComponentProps<"div">,
 ) {
     return <div className={cn("workspace-toolbar", className)} {...props} />;
 }
 export function LocalNavigation(
-    { items, label }: { items: { label: string; to: string }[]; label: string },
+    { items, label, compact = false }: {
+        items: { label: string; to: string }[];
+        label: string;
+        compact?: boolean;
+    },
 ) {
     const location = useLocation();
     return (
-        <nav className="local-navigation" aria-label={label}>
+        <nav
+            className="local-navigation"
+            data-compact={compact || undefined}
+            aria-label={label}
+        >
             {items.map((item) => (
                 <Link
                     key={item.to}

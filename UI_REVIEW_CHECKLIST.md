@@ -673,3 +673,31 @@
       步连锁失败；未改基线与修复分支的独立 Launcher 执行均为 14
       步通过。保留该间歇失败记录，不宣称批量套件全绿。
 - [ ] 真机软键盘：未验证；Chromium 响应式模拟已确认打开时无输入控件焦点。
+
+## Issue #72 管理后台统一（2026-10-03）
+
+- [x] management archetype；五个 tab 共用 SectionHeader，h1 → h2 → h3 → h4
+      无跳级；MetricCard 保留指标语义，说明/流程/配置复用
+      SettingsCard，操作复用标准 Button。
+- [x] Users 成功消息切换 Overview 后不可见；Users/Audit 加载失败显示错误和重试，
+      不伪装成搜索/筛选空态；Settings 使用 initialized 状态区分首次加载。
+- [x] 390/600/768/960/1440px × light/dark × 五个 tab 共 50 个实页场景，
+      内容标题起点一致、active navigation 正确、页面无横向溢出；390/768/1440
+      另有实页截图。canonical 备份卡片 padding 调整后复查六种实页。
+- [x] 窄屏导航单行滚动，Users 使用 shadcn DropdownMenu；键盘打开重置密码，
+      创建/重置/删除后焦点归还有效触发点；恢复弹窗 Escape 后焦点归还恢复按钮。
+- [x] 隔离真实数据库：创建、搜索/清除、刷新、重置密码、禁用/启用、删除用户；
+      Users 两页及 Audit 三页前后翻页、Audit 动作筛选、Settings 保存后刷新保持。
+- [x] 真实 JSON 导出/导入、ZIP 导出/验证/恢复成功（恢复 HTTP 200）；
+      文件按钮支持键盘选择，选中文件名可见，同文件重选清除过期验证结果。
+      未改后端恢复/权限/密钥逻辑，失败自动回滚依赖既有后端契约测试。
+- [x] API 503 注入覆盖四个读取页面；长无分隔 metadata 注入验证 Badge 换行
+      与表格滚动边界，600px 页面 scrollWidth 保持 600px。
+- [x] 五个 tab × light/dark 的 axe WCAG A/AA 审计均 0 confirmed violations；
+      部分页面仍有 1 项 incomplete（自动审计不能代替人工检查）。
+      审计等待字体与有限动画结束，避免主题色过渡期的对比度误报。
+- [x] 320 项单元测试、生产 build、前后端入口 typecheck、受影响 TS lint/format
+      通过；UI Guard 90 files / 0 violations / 0 allowances；既有导航 E2E 10
+      步通过。
+- 不适用：guest 无管理权限；本次不改变 Home/Zen/Widgets、壁纸、API 或路由契约，
+  不扩展为无关页面验收。

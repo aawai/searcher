@@ -23,6 +23,14 @@
   Settings 的 navigation、panel、action/status card、壁纸控件与 Provider/model
   样式归 `web/src/app/settings.css`；通用 primitives 归 `semantic.css`，不与 Ask
   selector 共享规则。
+- Admin 使用 management archetype：页面 h1、当前 tab h2、分组 h3、步骤 h4； 各
+  tab 从 SectionHeader 起始。LoadingState 负责加载反馈，EmptyState 可用
+  headingLevel=3 表示 tab 内空态，StatusBanner 的操作反馈限定在所属 tab。
+  MetricCard 仅负责数字指标；说明、流程和配置外壳复用 SettingsCard， 配置内容用
+  SettingsRow，备份内容用 canonical card padding 与 row/control gap。
+  后台专属布局归 admin.css，不重复 card surface/border/radius。 LocalNavigation
+  compact 在窄屏保持单行滚动；用户次要操作复用 shadcn DropdownMenu。 FilePicker
+  以标准 Button 触发隐藏 input，文件名与按钮通过 aria-describedby 关联。
 
 正式 shadcn 色彩 role 由 `@theme inline` 映射到 Searcher Token：primary →
 accent，secondary → surface-soft，muted-foreground → muted，destructive →

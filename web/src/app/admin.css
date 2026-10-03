@@ -60,82 +60,8 @@
     margin-top: var(--space-1);
 }
 
-.admin-metric-card-link {
-    background: transparent;
-    border: 0;
-    color: var(--accent);
-    font-size: var(--font-caption-size);
-    line-height: var(--font-caption-line-height);
-    cursor: pointer;
-    text-align: left;
-    padding: 0;
-    font-weight: var(--font-label-weight);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.admin-metric-card-link:hover {
-    text-decoration: underline;
-}
-
-.admin-spec-card-container {
-    background: var(--surface-l1);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    padding: var(--space-card-padding);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.admin-spec-card-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--accent);
-}
-
-.admin-spec-card-header h3 {
-    margin: 0;
-    font-size: var(--font-component-title-size);
-    line-height: var(--font-component-title-line-height);
-    font-weight: var(--font-title-weight);
-    color: var(--foreground);
-}
-
-.admin-spec-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--space-4);
-}
-
-.admin-spec-card {
-    padding: var(--space-4);
-    border-radius: var(--control-radius);
-    background: var(--background);
-    border: 1px solid var(--border-subtle);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.admin-spec-card-title {
-    font-weight: var(--font-title-weight);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--foreground);
-}
-
-.admin-spec-card-desc {
-    color: var(--muted);
-    margin: 0;
-    font-size: var(--font-caption-size);
-    line-height: var(--font-caption-line-height);
+.admin-metric-card [data-slot="button"] {
+    align-self: flex-start;
 }
 
 .admin-toolbar {
@@ -268,44 +194,12 @@
     margin-top: var(--space-4);
 }
 
-.admin-step-block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-card-padding);
-    background: var(--surface-l1);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-}
-
 .admin-step-title {
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     font-weight: var(--font-title-weight);
     margin: 0;
     color: var(--foreground);
-}
-
-.admin-file-input-group {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.admin-file-input {
-    font-size: var(--font-body-size);
-    color: var(--foreground);
-}
-
-.admin-validated-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border-radius: var(--control-radius);
-    background: var(--surface-soft);
-    border: 1px solid var(--border-subtle);
 }
 
 .admin-validated-header {
@@ -324,25 +218,6 @@
     font-size: var(--font-caption-size);
     line-height: var(--font-caption-line-height);
     color: var(--muted);
-}
-
-.admin-pipeline-card {
-    padding: var(--space-4);
-    border-radius: var(--control-radius);
-    background: var(--background);
-    border: 1px solid var(--border-subtle);
-    font-size: var(--font-caption-size);
-    line-height: var(--font-caption-line-height);
-    color: var(--muted);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.admin-pipeline-title {
-    font-weight: var(--font-title-weight);
-    color: var(--foreground);
-    margin-bottom: var(--space-1);
 }
 
 .admin-modal-form {
@@ -380,4 +255,46 @@
     font-size: var(--font-caption-size);
     line-height: var(--font-caption-line-height);
     color: var(--muted);
+}
+
+.admin-backup-content {
+    padding: var(--space-card-padding);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-row-gap);
+}
+.admin-backup-content--actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-control-gap);
+}
+.admin-validated-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-row-gap);
+}
+.admin-audit-metadata [data-slot="badge"] {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.admin-user-menu-actions {
+    display: none;
+}
+.admin-audit-metadata {
+    max-width: var(--layout-form-max);
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+    .admin-user-inline-actions {
+        display: none;
+    }
+    .admin-user-menu-actions {
+        display: flex;
+    }
+    .admin-search-form {
+        max-width: 100%;
+    }
 }
