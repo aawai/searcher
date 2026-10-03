@@ -133,7 +133,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
                 await retry.click();
                 await recovered;
-                await panel.locator(".launcher-empty").waitFor();
+                await panel.locator(".empty-state, .launcher-empty").first()
+                    .waitFor();
                 assertEquals(await panel.locator(".webapp-icon").count(), 0);
                 await close();
             } finally {
@@ -610,7 +611,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         document.activeElement?.getAttribute("aria-label") ===
                             "收起工作区"
                     );
-                    await panel.locator(".apps-workspace-banner--loading")
+                    await panel.getByRole("status").filter({
+                        hasText: "正在加载",
+                    })
                         .waitFor({ state: "detached" });
                     await search().fill("");
 

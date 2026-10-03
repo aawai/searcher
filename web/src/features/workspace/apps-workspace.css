@@ -16,42 +16,13 @@
     flex: 1 0 auto;
 }
 
-/* Section container */
-.apps-workspace-section {
+/* AppForm container in workspace */
+.apps-workspace-form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    width: 100%;
+    min-width: 0;
 }
-
-.apps-workspace-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0;
-}
-
-.apps-workspace-section-title {
-    font-size: var(--font-metadata-size);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.apps-workspace-count-badge {
-    font-size: var(--font-metadata-size);
-    font-weight: 500;
-    background: color-mix(in srgb, var(--surface) 80%, transparent);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0 var(--space-2);
-    color: var(--muted);
-}
-
 /* Groups grid & cards */
 .apps-workspace-groups-grid {
     display: grid;
@@ -109,11 +80,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.apps-workspace-group-card-count {
-    font-size: var(--font-metadata-size);
-    color: var(--muted);
 }
 
 /* Motion preferences */

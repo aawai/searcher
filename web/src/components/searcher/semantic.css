@@ -192,6 +192,7 @@
     border-color: var(--warning-border);
 }
 .empty-state[data-density="compact"],
+.status-banner[data-density="compact"],
 .loading-state[data-density="compact"] {
     padding: var(--space-row-gap);
 }

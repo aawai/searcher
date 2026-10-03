@@ -191,7 +191,11 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             // 1. Initial 0-notes empty state
             const emptyNotice = panel.locator(".empty-state");
             await emptyNotice.waitFor({ state: "visible" });
-            const allHeading = panel.locator("h3#notes-all-heading");
+            const allHeading = panel.getByRole("heading", {
+                name: "全部便签",
+                level: 3,
+            });
+            await allHeading.waitFor({ state: "visible" });
             assertEquals(await allHeading.textContent(), "全部便签");
             assertEquals(
                 await panel.locator(
@@ -343,13 +347,16 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     .length === 5
             );
 
-            const fixedHeading = panel.locator("h3#notes-fixed-heading");
+            const fixedHeading = panel.getByRole("heading", {
+                name: "置顶与首页固定",
+                level: 3,
+            });
             await fixedHeading.waitFor({ state: "visible" });
             assertEquals(await fixedHeading.textContent(), "置顶与首页固定");
 
-            const fixedSection = panel.locator(
-                'section[aria-labelledby="notes-fixed-heading"]',
-            );
+            const fixedSection = panel.getByRole("region", {
+                name: "置顶与首页固定",
+            });
             assertEquals(await fixedSection.locator(".note-card").count(), 3);
             const fixedText = await fixedSection.textContent() ?? "";
             assertStringIncludes(fixedText, "Note Fixed PinnedOnly");
@@ -357,18 +364,20 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             assertStringIncludes(fixedText, "Note Fixed BothFlags");
 
             // Other section has 2 notes: RegularOne, RegularTwo
-            const otherHeading = panel.locator("h3#notes-other-heading");
+            const otherHeading = panel.getByRole("heading", {
+                name: "其他便签",
+                level: 3,
+            });
             await otherHeading.waitFor({ state: "visible" });
             assertEquals(await otherHeading.textContent(), "其他便签");
 
-            const otherSection = panel.locator(
-                'section[aria-labelledby="notes-other-heading"]',
-            );
+            const otherSection = panel.getByRole("region", {
+                name: "其他便签",
+            });
             assertEquals(await otherSection.locator(".note-card").count(), 2);
             const otherText = await otherSection.textContent() ?? "";
             assertStringIncludes(otherText, "Note Other RegularOne");
             assertStringIncludes(otherText, "Note Other RegularTwo");
-
             // Mutual exclusivity: Fixed items MUST NOT appear in otherSection
             assertEquals(otherText.includes("Note Fixed PinnedOnly"), false);
             assertEquals(otherText.includes("Note Fixed HomeFixedOnly"), false);
@@ -381,20 +390,29 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             );
 
             // 2. Search query deduplication:
-            // Search evaluates across whole collection and renders only "全部便签", no duplicate groups
+            // Search evaluates across whole collection and renders "搜索结果", no duplicate groups
             await searchInput.fill("Regular");
-            await page.waitForFunction(() =>
-                !document.querySelector("h3#notes-fixed-heading")
-            );
-            const allSearchHeading = panel.locator("h3#notes-all-heading");
-            await allSearchHeading.waitFor({ state: "visible" });
-            assertEquals(await allSearchHeading.textContent(), "全部便签");
+            await page.waitForFunction(() => {
+                const headings = Array.from(
+                    document.querySelectorAll(".workspace-section-title"),
+                );
+                return !headings.some((h) =>
+                    h.textContent?.includes("置顶与首页固定")
+                );
+            });
+            const searchHeading = panel.getByRole("heading", {
+                name: "搜索结果",
+                level: 3,
+            });
+            await searchHeading.waitFor({ state: "visible" });
+            assertEquals(await searchHeading.textContent(), "搜索结果");
             assertEquals(
-                await panel.locator("h3#notes-fixed-heading").count(),
+                await panel.getByRole("region", { name: "置顶与首页固定" })
+                    .count(),
                 0,
             );
             assertEquals(
-                await panel.locator("h3#notes-other-heading").count(),
+                await panel.getByRole("region", { name: "其他便签" }).count(),
                 0,
             );
             assertEquals(
@@ -409,14 +427,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     .length === 5
             );
             assertEquals(
-                await panel.locator("h3#notes-fixed-heading").count(),
+                await panel.getByRole("region", { name: "置顶与首页固定" })
+                    .count(),
                 0,
             );
             assertEquals(
                 await panel.locator(".notes-workspace-list .note-card").count(),
                 5,
             );
-
             // Clearing query restores mutual exclusivity
             await searchInput.fill("");
             await fixedHeading.waitFor({ state: "visible" });

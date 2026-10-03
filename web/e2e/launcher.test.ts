@@ -124,7 +124,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             const contentElements = Array.from(
                 panelEl.querySelectorAll<HTMLElement>(
-                    ".launcher-tile, .launcher-folder-item, .launcher-app, .apps-workspace-group-card, .apps-workspace-empty, .empty-state, .launcher-empty, .launcher-folder-inline-header, .apps-workspace-section-header",
+                    ".launcher-tile, .launcher-folder-item, .launcher-app, .apps-workspace-group-card, .empty-state, .launcher-empty, .launcher-folder-inline-header, .workspace-section-header",
                 ),
             ).filter((el) => {
                 const r = el.getBoundingClientRect();
@@ -204,15 +204,10 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             const panel = page.locator("aside.workspace-panel");
             await panel.waitFor();
-            await panel.locator(
-                ".launcher-empty, .apps-workspace-empty, .empty-state",
-            )
-                .waitFor();
+            await panel.locator(".launcher-empty, .empty-state").waitFor();
             assertEquals(
-                await panel.locator(
-                    ".launcher-empty, .apps-workspace-empty, .empty-state",
-                )
-                    .first().isVisible(),
+                await panel.locator(".launcher-empty, .empty-state").first()
+                    .isVisible(),
                 true,
             );
 
@@ -660,13 +655,16 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await searchInput.fill("git");
 
             // Matched count badge is shown
-            const countBadge = panel.locator(".apps-workspace-count-badge");
+            const searchSection = panel.getByRole("region", {
+                name: "搜索结果",
+            });
+            await searchSection.waitFor();
+            const countBadge = searchSection.locator('[data-slot="badge"]');
             await countBadge.waitFor();
+            assertEquals(await countBadge.isVisible(), true);
 
             // GitLab (inside Dev Tools folder) directly appears in search results for fast access
-            const appResults = panel.locator(
-                ".apps-workspace-section .webapp-name",
-            );
+            const appResults = searchSection.locator(".webapp-name");
             const textContents = await appResults.allTextContents();
             assertEquals(textContents.includes("GitHub"), true);
             assertEquals(textContents.includes("GitLab"), true);
@@ -699,8 +697,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             // Search with no results state
             await searchInput.fill("nonexistentqueryxyz");
-            await panel.locator(".apps-workspace-empty, .empty-state")
-                .waitFor();
+            await panel.locator(".empty-state").waitFor();
 
             // Blank surface menu is accessible in search no-results state
             const noResultsMenu = await openSurfaceMenu(page);

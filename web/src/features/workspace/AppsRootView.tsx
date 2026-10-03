@@ -17,6 +17,8 @@ import type {
 } from "../../components/searcher/launcherTiles.ts";
 import { FolderNameDialog } from "./FolderNameDialog.tsx";
 import { EmptyState } from "../../components/searcher/semantic.tsx";
+import { Badge } from "../../components/ui/badge.tsx";
+import { WorkspaceSection } from "./WorkspaceSection.tsx";
 
 export interface AppsRootViewProps {
     apps: ExtendedWebApp[];
@@ -113,6 +115,19 @@ export function AppsRootView({
 
     const totalMatches = matchedApps.length + matchedGroups.length;
 
+    const activeFolder = useMemo(() => {
+        if (!activeFolderId) return null;
+        return groups.find((g) => g.id === activeFolderId) ?? null;
+    }, [groups, activeFolderId]);
+
+    const standardSectionTitle = activeFolder ? activeFolder.name : "全部应用";
+    const standardSectionCount = useMemo(() => {
+        if (activeFolder) {
+            return apps.filter((a) => a.groupId === activeFolder.id).length;
+        }
+        return apps.length;
+    }, [activeFolder, apps]);
+
     return (
         <div className="workspace-root apps-workspace-root">
             <div className="workspace-root-controls">
@@ -136,16 +151,10 @@ export function AppsRootView({
                     {/* When searching and NOT arranging */}
                     {trimmedQuery && !isArranging
                         ? (
-                            <div className="apps-workspace-section">
-                                <div className="apps-workspace-section-header">
-                                    <h3 className="apps-workspace-section-title">
-                                        搜索结果
-                                        <span className="apps-workspace-count-badge">
-                                            {totalMatches}
-                                        </span>
-                                    </h3>
-                                </div>
-
+                            <WorkspaceSection
+                                title="搜索结果"
+                                count={totalMatches}
+                            >
                                 {totalMatches === 0
                                     ? (
                                         <EmptyState
@@ -205,12 +214,12 @@ export function AppsRootView({
                                                                             {group
                                                                                 .name}
                                                                         </span>
-                                                                        <span className="apps-workspace-group-card-count">
-                                                                            {groupCount}
-                                                                            {" "}
-                                                                            个网站
-                                                                        </span>
                                                                     </div>
+                                                                    <Badge variant="secondary">
+                                                                        {groupCount}
+                                                                        {" "}
+                                                                        个网站
+                                                                    </Badge>
                                                                 </button>
                                                             );
                                                         },
@@ -241,34 +250,40 @@ export function AppsRootView({
                                             )}
                                         </div>
                                     )}
-                            </div>
+                            </WorkspaceSection>
                         )
                         : (
                             /* Standard view: Unified Launcher */
-                            <WebAppLauncher
-                                presentation="workspace"
-                                apps={apps}
-                                groups={groups}
-                                showFolders
-                                size="default"
-                                showAppLabels
-                                managing={isArranging}
-                                activeFolderId={activeFolderId}
-                                onFolderChange={onFolderChange}
-                                onOpen={onOpen}
-                                onEdit={(app) => onNavigateToEdit(app.id)}
-                                onMove={onMove}
-                                onPin={onPin}
-                                onDelete={onDelete}
-                                onReorder={onReorder}
-                                onReorderRoot={onReorderRoot}
-                                onReorderFolder={onReorderFolder}
-                                onMoveAppToFolder={onMoveAppToFolder}
-                                onRenameFolder={onRenameFolder}
-                                onDeleteFolder={onDeleteFolder}
-                                onFolderSizeChange={onFolderSizeChange}
-                                onAdd={() => onNavigateToAdd?.(activeFolderId)}
-                            />
+                            <WorkspaceSection
+                                title={standardSectionTitle}
+                                count={standardSectionCount}
+                            >
+                                <WebAppLauncher
+                                    presentation="workspace"
+                                    apps={apps}
+                                    groups={groups}
+                                    showFolders
+                                    size="default"
+                                    showAppLabels
+                                    managing={isArranging}
+                                    activeFolderId={activeFolderId}
+                                    onFolderChange={onFolderChange}
+                                    onOpen={onOpen}
+                                    onEdit={(app) => onNavigateToEdit(app.id)}
+                                    onMove={onMove}
+                                    onPin={onPin}
+                                    onDelete={onDelete}
+                                    onReorder={onReorder}
+                                    onReorderRoot={onReorderRoot}
+                                    onReorderFolder={onReorderFolder}
+                                    onMoveAppToFolder={onMoveAppToFolder}
+                                    onRenameFolder={onRenameFolder}
+                                    onDeleteFolder={onDeleteFolder}
+                                    onFolderSizeChange={onFolderSizeChange}
+                                    onAdd={() =>
+                                        onNavigateToAdd?.(activeFolderId)}
+                                />
+                            </WorkspaceSection>
                         )}
                 </ContextMenuTrigger>
                 <ContextMenuContent aria-label="启动器空白区域操作">

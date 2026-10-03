@@ -106,6 +106,26 @@ export const FORBIDDEN_LEGACY_UI_CLASSES: readonly string[] = [
     "ask-guest",
     "ask-page",
     "ask-empty",
+    // Legacy Workspace / Apps section & count clones (Issue #80 P1/P2)
+    "apps-workspace-section",
+    "apps-workspace-section-header",
+    "apps-workspace-section-title",
+    "apps-workspace-count-badge",
+    "apps-workspace-section-count-badge",
+    // Legacy Workspace / Apps banner clones & variants (Issue #80 P1/P6)
+    "apps-workspace-banner",
+    "apps-workspace-banner--offline",
+    "apps-workspace-banner-offline",
+    "apps-workspace-banner--error",
+    "apps-workspace-banner-error",
+    "apps-workspace-banner--loading",
+    "apps-workspace-banner-loading",
+    "apps-workspace-banner-actions",
+    "apps-workspace-banner--actions",
+    // Legacy Workspace empty state clones (Issue #80 P1/P2/P6)
+    "apps-workspace-empty",
+    "apps-workspace-empty-title",
+    "workspace-empty",
 ] as const;
 
 /**
@@ -513,7 +533,10 @@ export function checkRuleD_NativeConfirm(
  * - trash-status-msg
  * - home-error-toast
  * - spin
- * - legacy Ask root classes (ask-layout, ask-history, ask-main, ask-model, ask-messages, ask-message, ask-composer, ask-guest, ask-page, ask-empty)
+ * - legacy Ask root classes (ask-layout, ask-history, etc.)
+ * - legacy Workspace / Apps section & count clones (apps-workspace-section, apps-workspace-count-badge, etc.)
+ * - legacy Workspace / Apps banner clones (apps-workspace-banner, --offline, --error, --loading, -actions, etc.)
+ * - legacy Workspace empty clones (apps-workspace-empty, workspace-empty, etc.)
  */
 export function checkRuleE_ForbiddenLegacyUiClass(
     file: string,

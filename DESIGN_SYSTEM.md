@@ -29,6 +29,29 @@ primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlis
 均无法表达；至少两个 consumer 需要同一语义，或属于明确的系统级语义；并定义
 owner、state、token、a11y 和 responsive contract。否则保持 feature composition。
 
+### Workspace semantic layer
+
+- Apps / Notes subsection 使用 `features/workspace/WorkspaceSection.tsx`：语义
+  `section`、自动关联 `h3`、canonical `Badge` count、`ActionGroup`
+  actions；panel 标题保持 `h2`。
+- 标题使用 component-title size / line-height 与
+  title-weight；header、count、action 和内容间距只由 `workspace.css` 的
+  `.workspace-section-*` 控制，不沿用 uppercase / letter-spacing grammar。
+- 状态显式组合 shared
+  primitives：`LoadingState density="compact"`、`EmptyState density="compact" headingLevel={3}`、`StatusBanner density="compact"`。离线缓存为
+  warning，可恢复错误为 error + retry Button；destructive confirmation 使用
+  `AlertDialog`。
+- `StatusBanner` 的 `density="default" | "compact"` 只控制 canonical
+  padding，不改变 tone、live region 或业务状态优先级。
+- Apps / Notes CSS 只拥有 domain layout：folder / launcher embedding、note list
+  / DnD / editor adaptation。旧 Apps section/count/banner/empty 与
+  `.workspace-empty` 禁止重新引入，由 ownership guard 阻止。
+- 新 UI 先复用 `components/ui`；跨页面语义进入 shared semantic；Workspace
+  信息架构进入 Workspace layer；Apps / Notes domain presentation 留在对应
+  feature owner。
+
+### Page compositions
+
 - Auth 使用 utility PageShell 管页面留白与 margin；内部 auth-surface
   的最大宽度、 padding、surface、border、radius、shadow、表单与 footer 间距仅由
   web/src/app/auth.css 管理。PageHeader 与 Input/Button 保持通用语义和几何。

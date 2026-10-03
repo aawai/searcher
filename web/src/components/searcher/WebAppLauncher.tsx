@@ -21,6 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "../ui/button.tsx";
+import { EmptyState } from "./semantic.tsx";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -864,9 +865,11 @@ export function WebAppLauncher({
 
                 {folderApps.length === 0
                     ? (
-                        <div className="launcher-empty text-center py-12 text-[var(--muted)] text-sm">
-                            文件夹暂无网站
-                        </div>
+                        <EmptyState
+                            title="文件夹暂无网站"
+                            headingLevel={3}
+                            density="compact"
+                        />
                     )
                     : (
                         <DndContext
@@ -924,11 +927,20 @@ export function WebAppLauncher({
     }
 
     if (tiles.length === 0) {
+        if (presentation !== "workspace") {
+            return (
+                <div className="launcher-empty">
+                    {emptyMessage}{" "}
+                    {emptyAction && <Button onClick={onAdd}>添加网站</Button>}
+                </div>
+            );
+        }
         return (
-            <div className="launcher-empty">
-                {emptyMessage}{" "}
-                {emptyAction && <Button onClick={onAdd}>添加网站</Button>}
-            </div>
+            <EmptyState
+                title={emptyMessage}
+                headingLevel={3}
+                density="compact"
+            />
         );
     }
 

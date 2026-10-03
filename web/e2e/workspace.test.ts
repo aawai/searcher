@@ -305,6 +305,8 @@ Deno.test("production workspace contracts", async (t) => {
                 '.workspace-dock button[aria-label="应用工作区"]',
             ).click();
             await panel.waitFor();
+            await panel.getByRole("status").filter({ hasText: "正在加载" })
+                .waitFor({ state: "detached" });
             await page.locator(".workspace-footer button.workspace-primary")
                 .click();
             await page.locator("#app-url-input").waitFor();
@@ -313,8 +315,14 @@ Deno.test("production workspace contracts", async (t) => {
                 "https://news.ycombinator.com",
             );
             await page.locator("#app-name-input").fill("Hacker News");
-            await page.locator('.app-dialog-footer button[type="submit"]')
+            const saved = page.waitForResponse((response) =>
+                response.url() === origin + "/api/webapps" &&
+                response.request().method() === "POST"
+            );
+            await page.locator(".app-dialog-footer button[type=submit]")
                 .click();
+            const savedResponse = await saved;
+            assertEquals(savedResponse.ok(), true, await savedResponse.text());
 
             // A saved loose app is immediately browsable at Unified Launcher root.
             await page.locator(".apps-workspace").getByRole("button", {

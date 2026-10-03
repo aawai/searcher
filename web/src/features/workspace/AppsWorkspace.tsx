@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 import {
+    ActionGroup,
     LoadingState,
     StatusBanner,
 } from "../../components/searcher/semantic.tsx";
@@ -380,7 +381,7 @@ export function AppsWorkspace({
         );
     } else if (state.view === "apps/create") {
         viewContent = (
-            <div className="apps-workspace-section">
+            <div className="apps-workspace-form">
                 <AppForm
                     defaultGroupId={state.groupId || activeFolderId || ""}
                     editingApp={null}
@@ -396,7 +397,7 @@ export function AppsWorkspace({
     } else if (state.view === "apps/edit") {
         const editingApp = apps.find((a) => a.id === state.id) || null;
         viewContent = (
-            <div className="apps-workspace-section">
+            <div className="apps-workspace-form">
                 <AppForm
                     defaultGroupId={editingApp?.groupId || ""}
                     editingApp={editingApp}
@@ -419,38 +420,52 @@ export function AppsWorkspace({
             )}
 
             {status === "error" && (
-                <StatusBanner tone="error">
+                <StatusBanner tone="error" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">
                         <span>网站加载失败：{error}</span>
-                        <Button variant="outline" size="sm" onClick={onRetry}>
-                            重试
-                        </Button>
+                        <ActionGroup>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onRetry}
+                            >
+                                重试
+                            </Button>
+                        </ActionGroup>
                     </div>
                 </StatusBanner>
             )}
 
             {status === "offline" && (
-                <StatusBanner tone="warning">
+                <StatusBanner tone="warning" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">
                         <span>当前离线，显示此账户上次保存的网站列表。</span>
-                        <Button variant="outline" size="sm" onClick={onRetry}>
-                            重试
-                        </Button>
+                        <ActionGroup>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onRetry}
+                            >
+                                重试
+                            </Button>
+                        </ActionGroup>
                     </div>
                 </StatusBanner>
             )}
 
             {actionError && (
-                <StatusBanner tone="error">
+                <StatusBanner tone="error" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">
                         <span>操作失败：{actionError}</span>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setActionError("")}
-                        >
-                            关闭
-                        </Button>
+                        <ActionGroup>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setActionError("")}
+                            >
+                                关闭
+                            </Button>
+                        </ActionGroup>
                     </div>
                 </StatusBanner>
             )}

@@ -1,13 +1,3 @@
-.notes-workspace h3 {
-    margin: 0 0 var(--space-3);
-    font-size: var(--font-component-title-size);
-    font-weight: var(--font-title-weight);
-}
-.notes-workspace section {
-    min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
-}
 .notes-workspace .notes-workspace-list {
     display: grid;
     gap: var(--space-3);

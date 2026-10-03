@@ -121,11 +121,18 @@ export function EmptyState(
     );
 }
 export function StatusBanner(
-    { tone = "info", presentation = "inline", className, ...props }:
+    {
+        tone = "info",
+        presentation = "inline",
+        density = "default",
+        className,
+        ...props
+    }:
         & ComponentProps<"div">
         & {
             tone?: "info" | "error" | "success" | "warning";
             presentation?: "inline" | "floating";
+            density?: "default" | "compact";
         },
 ) {
     return (
@@ -134,6 +141,7 @@ export function StatusBanner(
             className={cn("status-banner", className)}
             data-tone={tone}
             data-presentation={presentation}
+            data-density={density}
             {...props}
         />
     );
