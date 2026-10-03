@@ -62,6 +62,7 @@
 - [[sources/obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components]] — Observation: UI Guard Migration: Settings & Searcher Presentation Components *(created: 2026-10-01)*
 - [[sources/obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m]] — Observation: Issue #63 Settings primitives unified and PR #66 merged into main *(created: 2026-10-02)*
 - [[sources/obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main]] — Observation: PR #58 Docker deployment hardening merged into main *(created: 2026-10-02)*
+- [[sources/obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive]] — Observation: AdminPage Users and Audit section unification and responsive actions *(created: 2026-10-03)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -114,4 +115,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-02T12:42:03.539Z* | *Total pages: 99*
+*Last updated: 2026-10-03T01:58:47.155Z* | *Total pages: 100*

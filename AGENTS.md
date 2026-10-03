@@ -7,7 +7,7 @@
 * **Correctness first.** 优先满足 `Specification`、`Invariants` 和 external / public contract；其次遵循 Architecture 和 type model。
 * **Determine the complete required scope.** 不要把“用户明确提到的内容”自动等同于完整需求。结合 specification、现有行为、领域模型和 contracts，识别使功能正确且自洽所必需的关联行为。必要部分应一并纳入设计；
 * **Fix root causes.** 不使用 stopgap、Hack、workaround 或 special case 堆叠。不要为了减小 diff 或缩短实现时间而降低设计质量。
-* **Reuse before adding.** 优先复用仓库现有实现、依赖以及 Deno / 标准库；仅在现有能力确实不足时新增 abstraction 或 dependency。
+* **Reuse before adding.** 优先复用仓库已有实现和依赖；新增能力时，优先采用标准库或成熟社区方案，避免重复造轮子。仅在现有方案不满足项目约束时，才新增自定义 abstraction 或 dependency。
 * **Design completely, deliver incrementally.** 先确定完整的正确设计，再将大改动拆成可独立验证和回滚的 micro-increments。Increment 是交付边界，不是削减必要 scope 的理由。
 * **Escalate only real conflicts.** 若 Specification、Invariants、Architecture、type model 或 contracts 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通、可逆的工程决策自行判断。
 * UI Contract：[DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)、[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)、[UI_REVIEW_CHECKLIST.md](UI_REVIEW_CHECKLIST.md)。UI 变更先消费已有 Page Archetype、Token、semantic component，再组合 shadcn primitives。

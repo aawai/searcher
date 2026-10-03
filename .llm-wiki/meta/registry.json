@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-02T12:42:03.539Z",
+  "last_updated": "2026-10-03T01:58:47.155Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1087,6 +1087,23 @@
       "observed_at": "2026-10-02T07:43:26.919Z",
       "created": "2026-10-02",
       "updated": "2026-10-02"
+    },
+    "sources/obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive": {
+      "type": "source",
+      "title": "Observation: AdminPage Users and Audit section unification and responsive actions",
+      "tags": [
+        "admin",
+        "responsive",
+        "a11y",
+        "focus-management"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive",
+      "relevance": "high",
+      "observed_at": "2026-10-03T01:58:47.119Z",
+      "source_context": "Issue #72 admin refactoring slice: AdminPage.tsx Users and Audit tabs",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

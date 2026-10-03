@@ -513,6 +513,7 @@
   "sources/obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components": [],
   "sources/obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m": [],
   "sources/obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main": [],
+  "sources/obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",
