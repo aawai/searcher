@@ -12,7 +12,7 @@
         "admin:reset": "deno run -A src/commands/admin.ts reset",
         "test": "deno test -A src web/src",
         "test:routing": "deno task build && NODE_ENV=test deno test -A web/e2e/navigation.test.ts",
-        "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/notes-workspace.test.ts web/e2e/note-editor.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts",
+        "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/notes-workspace.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts",
         "check:ui": "deno run -A scripts/check-ui.ts"
     },
     "imports": {
@@ -44,9 +44,6 @@
         "remark-gfm": "npm:remark-gfm@4.0.1",
         "rehype-sanitize": "npm:rehype-sanitize@6.0.0",
         "@deno/vite-plugin": "npm:@deno/vite-plugin@2.0.3",
-        "@milkdown/crepe": "npm:@milkdown/crepe@7.22.2",
-        "@milkdown/kit": "npm:@milkdown/kit@7.22.2",
-        "@codemirror/view": "npm:@codemirror/view@6.43.13",
         "drizzle-kit": "npm:drizzle-kit@0.31.4",
         "@types/node": "npm:@types/node@26.6.2",
         "@types/react": "npm:@types/react@19.3.0",

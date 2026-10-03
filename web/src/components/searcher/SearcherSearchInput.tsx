@@ -142,11 +142,6 @@ export function SearcherSearchInput(
     useEffect(() => {
         const focus = (event: KeyboardEvent) => {
             if (
-                event.defaultPrevented ||
-                (event.target instanceof HTMLElement &&
-                    event.target.isContentEditable)
-            ) return;
-            if (
                 (event.key === "/" &&
                     !(event.target instanceof HTMLInputElement ||
                         event.target instanceof HTMLTextAreaElement)) ||
