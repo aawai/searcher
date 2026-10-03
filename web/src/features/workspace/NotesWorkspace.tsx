@@ -26,6 +26,7 @@ import {
 import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
+import { WorkspaceSection } from "./WorkspaceSection.tsx";
 import {
     EmptyState,
     LoadingState,
@@ -223,7 +224,7 @@ export function NotesWorkspace(
                 </div>
             )
             : (
-                <StatusBanner tone="info">
+                <StatusBanner tone="info" density="compact">
                     便签已被删除，请返回便签列表。
                 </StatusBanner>
             );
@@ -254,7 +255,7 @@ export function NotesWorkspace(
                 <LoadingState density="compact">正在加载便签…</LoadingState>
             )}
             {error && (
-                <StatusBanner tone="error">
+                <StatusBanner tone="error" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">
                         <span>{error}</span>
                         <Button variant="outline" size="sm" onClick={onRetry}>
@@ -267,8 +268,10 @@ export function NotesWorkspace(
                 ? (
                     <>
                         {fixedNotes.length > 0 && (
-                            <section aria-labelledby="notes-fixed-heading">
-                                <h3 id="notes-fixed-heading">置顶与首页固定</h3>
+                            <WorkspaceSection
+                                title="置顶与首页固定"
+                                count={fixedNotes.length}
+                            >
                                 <div className="notes-workspace-list">
                                     {fixedNotes.map((note) => (
                                         <WorkspaceNote
@@ -283,22 +286,16 @@ export function NotesWorkspace(
                                         />
                                     ))}
                                 </div>
-                            </section>
+                            </WorkspaceSection>
                         )}
-                        <section
-                            aria-labelledby={fixedNotes.length > 0
-                                ? "notes-other-heading"
-                                : "notes-all-heading"}
+                        <WorkspaceSection
+                            title={fixedNotes.length > 0
+                                ? "其他便签"
+                                : "全部便签"}
+                            count={fixedNotes.length > 0
+                                ? otherNotes.length
+                                : notes.length}
                         >
-                            <h3
-                                id={fixedNotes.length > 0
-                                    ? "notes-other-heading"
-                                    : "notes-all-heading"}
-                            >
-                                {fixedNotes.length > 0
-                                    ? "其他便签"
-                                    : "全部便签"}
-                            </h3>
                             {!loading && !error && notes.length === 0 && (
                                 <EmptyState
                                     headingLevel={3}
@@ -347,12 +344,14 @@ export function NotesWorkspace(
                                     </SortableContext>
                                 </DndContext>
                             )}
-                        </section>
+                        </WorkspaceSection>
                     </>
                 )
                 : (
-                    <section aria-labelledby="notes-all-heading">
-                        <h3 id="notes-all-heading">全部便签</h3>
+                    <WorkspaceSection
+                        title="搜索结果"
+                        count={searchNotes.length}
+                    >
                         {!loading && !error && !searchNotes.length && (
                             <EmptyState
                                 headingLevel={3}
@@ -386,7 +385,7 @@ export function NotesWorkspace(
                                 ))}
                             </div>
                         )}
-                    </section>
+                    </WorkspaceSection>
                 )}
         </div>
     );

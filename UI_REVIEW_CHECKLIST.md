@@ -47,6 +47,26 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #80 Workspace semantic 验收（2026-10-03）
+
+- [x] WorkspaceSection 为 Apps / Notes 唯一 subsection grammar：panel h2 →
+      subsection h3，component-title typography、统一 header/content
+      gap、canonical Badge count。
+- [x] compact LoadingState / EmptyState / StatusBanner；离线 warning、错误
+      alert + retry，保留标准 AlertDialog 和底栏唯一 primary。
+- [x] CSS owner 保持 workspace/apps/notes/launcher/home 隔离；旧 Apps
+      section/count/banner/empty 与 workspace-empty 加入 forbidden guard。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 12
+      组合实页检查：无横向溢出；截图 `/tmp/workspace-matrix-screenshots/01_*` 至
+      `14_*`。
+- [x] Apps root/folder/nested、Notes
+      root/editor、长标题/正文、加载、错误重试、离线缓存、空态；移动 Sheet
+      与桌面 aside 行为保持。
+- [x] 真实 Workspace suite 覆盖切换、primary、Back/Close dirty
+      protection、Escape/focus trap/return、DnD、autosave/conflict/version。
+- [x] focused feedback 6 steps、ownership 37 tests、单元合同 348
+      tests；typecheck、lint、build、check:ui 通过，visual baseline=0。
+
 ## Issue #75 壁纸构图与设置页验收（2026-10-03）
 
 - [x] Utility archetype：SettingsPage 外观页；primary interaction

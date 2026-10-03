@@ -777,9 +777,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             });
 
             // In "其他便签" section, regular notes have interactive sorting handles
-            const otherSection = panel.locator(
-                'section[aria-labelledby="notes-other-heading"]',
-            );
+            const otherSection = panel.getByRole("region", {
+                name: "其他便签",
+            });
             const r1Card = otherSection.locator(".note-card", {
                 hasText: "Searchable UniqueAlpha",
             });
@@ -836,9 +836,14 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             await page.waitForTimeout(150);
             await page.keyboard.press("Space");
             await page.waitForFunction(() => {
-                const titles = Array.from(document.querySelectorAll(
-                    'section[aria-labelledby="notes-other-heading"] .note-title',
-                )).map((node) => node.textContent);
+                const section = Array.from(
+                    document.querySelectorAll("section.workspace-section"),
+                ).find((s) =>
+                    s.querySelector("h3")?.textContent?.includes("其他便签")
+                );
+                const titles = Array.from(
+                    section?.querySelectorAll(".note-title") ?? [],
+                ).map((node) => node.textContent);
                 return titles.join("|") ===
                     "Searchable UniqueBeta|Searchable UniqueAlpha";
             });

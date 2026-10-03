@@ -618,3 +618,392 @@ Deno.test("shared feedback cannot be redefined by a feature stylesheet", () => {
         ".undo-toast",
     ]);
 });
+
+Deno.test("Issue 80 P6 Negative Fixture: apps defining workspace (.workspace-foo) is denied by Rule F", () => {
+    const violations = checkRuleF_CssPrefixOwnership(
+        "web/src/features/workspace/apps-workspace.css",
+        ".workspace-foo { display: block; } .workspace-panel { padding: 8px; }",
+    );
+    assertEquals(violations.length, 2);
+    assertEquals(violations.map((v) => v.snippet), [
+        ".workspace-foo",
+        ".workspace-panel",
+    ]);
+    for (const v of violations) {
+        assertEquals(v.rule, "css-prefix-ownership");
+    }
+});
+
+Deno.test("Issue 80 P6 Negative Fixture: notes defining apps (.apps-workspace-foo) is denied by Rule F", () => {
+    const violations = checkRuleF_CssPrefixOwnership(
+        "web/src/features/workspace/notes-workspace.css",
+        ".apps-workspace-foo { display: block; } .apps-workspace-grid { margin: 0; }",
+    );
+    assertEquals(violations.length, 2);
+    assertEquals(violations.map((v) => v.snippet), [
+        ".apps-workspace-foo",
+        ".apps-workspace-grid",
+    ]);
+    for (const v of violations) {
+        assertEquals(v.rule, "css-prefix-ownership");
+    }
+});
+
+Deno.test("Issue 80 P6 Negative Fixture: global.css defining workspace (.workspace-foo) is denied by Rule A", () => {
+    const violations = checkRuleA_GlobalFeaturePrefix(
+        "web/src/styles/global.css",
+        ".workspace-foo { color: red; } .apps-workspace-bar { padding: 0; } .notes-workspace-baz { margin: 0; }",
+    );
+    assertEquals(violations.length, 3);
+    assertEquals(violations.map((v) => v.snippet), [
+        ".workspace-foo",
+        ".apps-workspace-bar",
+        ".notes-workspace-baz",
+    ]);
+    for (const v of violations) {
+        assertEquals(v.rule, "feature-selector-in-global");
+    }
+});
+
+Deno.test("Issue 80 P6 Negative Fixture: legacy apps workspace banner error and variants are denied by Rule E", () => {
+    const cssCode = `
+.apps-workspace-banner { display: flex; }
+.apps-workspace-banner--error { color: red; }
+.apps-workspace-banner--offline { color: orange; }
+.apps-workspace-banner--loading { color: gray; }
+.apps-workspace-banner-loading { color: gray; }
+.apps-workspace-banner-actions { display: flex; }
+.apps-workspace-banner--actions { display: flex; }
+`;
+    const cssViolations = checkRuleE_ForbiddenLegacyUiClass(
+        "web/src/features/workspace/apps-workspace.css",
+        cssCode,
+    );
+    assertEquals(cssViolations.length, 7);
+    for (const v of cssViolations) {
+        assertEquals(v.rule, "forbidden-legacy-ui-class");
+    }
+
+    const tsxCode = `
+export function LegacyBannerSample() {
+    return (
+        <div className="apps-workspace-banner apps-workspace-banner--error">
+            <div className="apps-workspace-banner-actions">
+                <button>Retry</button>
+            </div>
+        </div>
+    );
+}
+`;
+    const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
+        "web/src/features/workspace/AppsWorkspace.tsx",
+        tsxCode,
+    );
+    assertEquals(tsxViolations.length, 3);
+    assertEquals(tsxViolations.map((v) => v.snippet), [
+        "apps-workspace-banner",
+        "apps-workspace-banner--error",
+        "apps-workspace-banner-actions",
+    ]);
+});
+
+Deno.test("Issue 80 P6 Negative Fixture: workspace-empty and apps-workspace-empty are denied by Rule E", () => {
+    const tsxCode = `
+export function NotesLegacyEmpty() {
+    return (
+        <div>
+            <p className="workspace-empty" role="status">暂无便签</p>
+            <div className="apps-workspace-empty">
+                <div className="apps-workspace-empty-title">暂无应用</div>
+            </div>
+        </div>
+    );
+}
+`;
+    const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
+        "web/src/features/workspace/NotesWorkspace.tsx",
+        tsxCode,
+    );
+    assertEquals(tsxViolations.length, 3);
+    assertEquals(tsxViolations.map((v) => v.snippet), [
+        "workspace-empty",
+        "apps-workspace-empty",
+        "apps-workspace-empty-title",
+    ]);
+
+    const cssCode = `
+.workspace-empty { text-align: center; }
+.apps-workspace-empty { display: flex; }
+.apps-workspace-empty-title { font-weight: bold; }
+`;
+    const cssViolations = checkRuleE_ForbiddenLegacyUiClass(
+        "web/src/features/workspace/apps-workspace.css",
+        cssCode,
+    );
+    assertEquals(cssViolations.length, 3);
+    for (const v of cssViolations) {
+        assertEquals(v.rule, "forbidden-legacy-ui-class");
+    }
+});
+
+Deno.test("Issue 80 P6 Negative Fixture: legacy section and count clones are denied by Rule E", () => {
+    const tsxCode = `
+export function LegacySectionSample() {
+    return (
+        <div className="apps-workspace-section">
+            <div className="apps-workspace-section-header">
+                <h3 className="apps-workspace-section-title">
+                    Title
+                    <span className="apps-workspace-count-badge">12</span>
+                    <span className="apps-workspace-section-count-badge">34</span>
+                </h3>
+            </div>
+        </div>
+    );
+}
+`;
+    const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
+        "web/src/features/workspace/AppsRootView.tsx",
+        tsxCode,
+    );
+    assertEquals(tsxViolations.length, 5);
+    assertEquals(tsxViolations.map((v) => v.snippet), [
+        "apps-workspace-section",
+        "apps-workspace-section-header",
+        "apps-workspace-section-title",
+        "apps-workspace-count-badge",
+        "apps-workspace-section-count-badge",
+    ]);
+
+    const cssCode = `
+.apps-workspace-section { display: flex; }
+.apps-workspace-section-header { justify-content: space-between; }
+.apps-workspace-section-title { font-size: 14px; }
+.apps-workspace-count-badge { border-radius: 999px; }
+.apps-workspace-section-count-badge { border-radius: 999px; }
+`;
+    const cssViolations = checkRuleE_ForbiddenLegacyUiClass(
+        "web/src/features/workspace/apps-workspace.css",
+        cssCode,
+    );
+    assertEquals(cssViolations.length, 5);
+    for (const v of cssViolations) {
+        assertEquals(v.rule, "forbidden-legacy-ui-class");
+    }
+});
+
+Deno.test("Issue 80 P6 Positive Fixture: authorized workspace CSS prefixes pass Rule F", () => {
+    const workspaceCss = `
+.workspace-panel { display: flex; }
+.workspace-section { display: flex; flex-direction: column; }
+.workspace-header { align-items: center; }
+.workspace-root { flex: 1 0 auto; }
+.workspace-root-controls { display: flex; }
+.workspace-search-wrap { position: relative; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/features/workspace/workspace.css",
+            workspaceCss,
+        ).length,
+        0,
+    );
+
+    const appsCss = `
+.apps-workspace-root { flex: 1 0 auto; }
+.apps-workspace-groups-grid { display: grid; }
+.apps-workspace-group-card { display: flex; }
+.apps-workspace-group-card-name { font-weight: 600; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/features/workspace/apps-workspace.css",
+            appsCss,
+        ).length,
+        0,
+    );
+
+    const notesCss = `
+.notes-workspace-list { display: grid; }
+.notes-workspace-editor { height: 100%; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/features/workspace/notes-workspace.css",
+            notesCss,
+        ).length,
+        0,
+    );
+});
+
+Deno.test("Issue 80 P6 Positive Fixture: shared feedback in workspace views passes ownership rules", () => {
+    const tsxCode = `
+export function CanonicalFeedbackSample() {
+    return (
+        <div className="workspace-panel">
+            <StatusBanner tone="error" density="compact">加载失败</StatusBanner>
+            <StatusBanner tone="warning" density="compact">当前离线</StatusBanner>
+            <EmptyState density="compact" title="暂无便签" />
+            <LoadingState density="compact" label="正在加载..." />
+        </div>
+    );
+}
+`;
+    assertEquals(
+        checkRuleE_ForbiddenLegacyUiClass(
+            "web/src/features/workspace/NotesWorkspace.tsx",
+            tsxCode,
+        ).length,
+        0,
+    );
+
+    const semanticCss = `
+.status-banner { display: flex; }
+.empty-state { text-align: center; }
+.loading-state { display: flex; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/components/searcher/semantic.css",
+            semanticCss,
+        ).length,
+        0,
+    );
+});
+
+Deno.test("Issue 80 P6 Positive Fixture: domain-specific launcher and notes layout pass prefix ownership", () => {
+    const launcherCss = `
+.launcher-grid { display: grid; }
+.launcher-tile { width: 68px; height: 68px; }
+.launcher-folder-item { border-radius: var(--radius); }
+.webapp-tile { position: relative; }
+.webapp-icon { width: 32px; height: 32px; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/components/searcher/launcher.css",
+            launcherCss,
+        ).length,
+        0,
+    );
+
+    const notesCss = `
+.notes-workspace .notes-workspace-list { display: grid; }
+.notes-workspace .note-preview { overflow-wrap: break-word; }
+.notes-workspace .note-drag { cursor: default; }
+.notes-workspace-editor .note-editor { min-height: 100%; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/features/workspace/notes-workspace.css",
+            notesCss,
+        ).length,
+        0,
+    );
+
+    const appsCss = `
+.apps-workspace-groups-grid { display: grid; }
+.apps-workspace-group-card-icon { display: grid; place-items: center; }
+.apps-workspace-group-card-info { display: flex; }
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/features/workspace/apps-workspace.css",
+            appsCss,
+        ).length,
+        0,
+    );
+});
+
+Deno.test("Issue 80 P6 Integration: scanOwnership detects workspace negative fixtures and passes clean workspace", async () => {
+    const dirtyDir = await Deno.makeTempDir({ prefix: "ownership-ws-dirty-" });
+    try {
+        await Deno.mkdir(`${dirtyDir}/styles`, { recursive: true });
+        await Deno.mkdir(`${dirtyDir}/features/workspace`, { recursive: true });
+        await Deno.mkdir(`${dirtyDir}/design-system`, { recursive: true });
+
+        await Deno.writeTextFile(
+            `${dirtyDir}/design-system/tokens.css`,
+            `:root { --accent: #333; }`,
+        );
+
+        // 1. global.css defining .workspace-foo (Rule A)
+        await Deno.writeTextFile(
+            `${dirtyDir}/styles/global.css`,
+            `.workspace-foo { display: block; }`,
+        );
+
+        // 2. apps-workspace.css defining .workspace-foo (Rule F) & .apps-workspace-banner--error (Rule E)
+        await Deno.writeTextFile(
+            `${dirtyDir}/features/workspace/apps-workspace.css`,
+            `.workspace-foo { display: block; }\n.apps-workspace-banner--error { color: red; }`,
+        );
+
+        // 3. notes-workspace.css defining .apps-workspace-foo (Rule F)
+        await Deno.writeTextFile(
+            `${dirtyDir}/features/workspace/notes-workspace.css`,
+            `.apps-workspace-foo { display: block; }`,
+        );
+
+        // 4. NotesWorkspace.tsx using workspace-empty (Rule E)
+        await Deno.writeTextFile(
+            `${dirtyDir}/features/workspace/NotesWorkspace.tsx`,
+            `export function NotesWorkspace() { return <p className="workspace-empty">Empty</p>; }`,
+        );
+
+        const result = await scanOwnership(dirtyDir, dirtyDir);
+        assertEquals(result.passed, false);
+        assertEquals(result.byRule["feature-selector-in-global"].length, 1);
+        assertEquals(result.byRule["css-prefix-ownership"].length >= 2, true);
+        assertEquals(
+            result.byRule["forbidden-legacy-ui-class"].length >= 2,
+            true,
+        );
+    } finally {
+        await Deno.remove(dirtyDir, { recursive: true });
+    }
+
+    const cleanDir = await Deno.makeTempDir({ prefix: "ownership-ws-clean-" });
+    try {
+        await Deno.mkdir(`${cleanDir}/web/src/features/workspace`, {
+            recursive: true,
+        });
+        await Deno.mkdir(`${cleanDir}/web/src/design-system`, {
+            recursive: true,
+        });
+        await Deno.mkdir(`${cleanDir}/web/src/components/searcher`, {
+            recursive: true,
+        });
+
+        await Deno.writeTextFile(
+            `${cleanDir}/web/src/design-system/tokens.css`,
+            `:root { --space-2: 8px; }`,
+        );
+
+        await Deno.writeTextFile(
+            `${cleanDir}/web/src/features/workspace/workspace.css`,
+            `.workspace-panel { display: flex; }\n.workspace-section { display: flex; }`,
+        );
+
+        await Deno.writeTextFile(
+            `${cleanDir}/web/src/features/workspace/apps-workspace.css`,
+            `.apps-workspace-root { flex: 1; }\n.apps-workspace-groups-grid { display: grid; }`,
+        );
+
+        await Deno.writeTextFile(
+            `${cleanDir}/web/src/features/workspace/notes-workspace.css`,
+            `.notes-workspace-list { display: grid; }`,
+        );
+
+        await Deno.writeTextFile(
+            `${cleanDir}/web/src/components/searcher/launcher.css`,
+            `.launcher-grid { display: grid; }`,
+        );
+
+        const cleanResult = await scanOwnership(cleanDir, cleanDir);
+        assertEquals(cleanResult.passed, true);
+        assertEquals(cleanResult.violations.length, 0);
+    } finally {
+        await Deno.remove(cleanDir, { recursive: true });
+    }
+});
