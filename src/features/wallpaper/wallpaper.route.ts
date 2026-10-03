@@ -1,8 +1,9 @@
 import type { Routes } from "@internal/hono/routes.ts";
 import { failResponse } from "@internal/hono/middleware/response.ts";
+import { json, validator } from "@internal/validator/hono.ts";
+import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { ManifestCorruptionError, WallpaperService } from "./service.ts";
-
 export function registerWallpaperRoutes(
     routes: Routes<AppEnv>,
     deps: AppDeps,
@@ -41,10 +42,36 @@ export function registerWallpaperRoutes(
         if (bytes.length > 5 * 1024 * 1024) {
             return failResponse(c, 413, "壁纸文件大小不能超过 5 MiB");
         }
+        let focalX: number | undefined = undefined;
+        let focalY: number | undefined = undefined;
+        const rawFocalX = formData.get("focalX");
+        if (rawFocalX !== null && typeof rawFocalX === "string") {
+            const num = Number(rawFocalX);
+            if (!Number.isFinite(num) || num < 0 || num > 1) {
+                return failResponse(c, 400, "focalX 必须在 0 到 1 之间");
+            }
+            focalX = num;
+        }
+        const rawFocalY = formData.get("focalY");
+        if (rawFocalY !== null && typeof rawFocalY === "string") {
+            const num = Number(rawFocalY);
+            if (!Number.isFinite(num) || num < 0 || num > 1) {
+                return failResponse(c, 400, "focalY 必须在 0 到 1 之间");
+            }
+            focalY = num;
+        }
 
         try {
-            const result = await service.saveWallpaper(user.id, bytes);
-            return c.success({ url: result.url });
+            const result = await service.saveWallpaper(user.id, bytes, {
+                focalX,
+                focalY,
+            });
+            return c.success({
+                url: result.url,
+                id: result.id,
+                focalX: result.record.focalX,
+                focalY: result.record.focalY,
+            });
         } catch (error) {
             if (error instanceof ManifestCorruptionError) {
                 return failResponse(c, 500, "壁纸存储元数据损坏，无法写入");
@@ -55,7 +82,14 @@ export function registerWallpaperRoutes(
             if (message.includes("5 MiB")) {
                 return failResponse(c, 413, message);
             }
-            return failResponse(c, 400, message);
+            if (
+                message.includes("格式") ||
+                message.includes("图片") ||
+                message.includes("focal")
+            ) {
+                return failResponse(c, 400, message);
+            }
+            return failResponse(c, 500, "保存壁纸失败");
         }
     });
 
@@ -67,7 +101,10 @@ export function registerWallpaperRoutes(
             const records = await service.listUserWallpapers(user.id);
             c.header("Cache-Control", "no-store");
             return c.success(records.map((record) => ({
+                id: record.id,
                 url: "/api/wallpaper/" + record.id,
+                focalX: record.focalX,
+                focalY: record.focalY,
             })));
         } catch (error) {
             if (error instanceof ManifestCorruptionError) {
@@ -95,10 +132,24 @@ export function registerWallpaperRoutes(
             if (!result) {
                 return failResponse(c, 404, "壁纸不存在或无权访问");
             }
+            const etag =
+                `"${result.record.id}-${result.record.size}-${result.record.createdAt}"`;
+            c.header("ETag", etag);
+            c.header("Cache-Control", "private, no-cache");
+            c.header("X-Content-Type-Options", "nosniff");
+
+            const ifNoneMatch = c.req.header("if-none-match");
+            if (
+                ifNoneMatch &&
+                (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`)
+            ) {
+                return new Response(null, {
+                    status: 304,
+                    headers: c.res.headers,
+                });
+            }
 
             c.header("Content-Type", result.record.contentType);
-            c.header("Cache-Control", "no-store");
-            c.header("X-Content-Type-Options", "nosniff");
             c.header("Content-Length", String(result.bytes.length));
 
             return new Response(result.bytes as unknown as BodyInit, {
@@ -138,4 +189,68 @@ export function registerWallpaperRoutes(
             return failResponse(c, 500, "删除壁纸失败");
         }
     });
+
+    // 4. PROTECTED PATCH /api/wallpaper/:id (update focal composition)
+    routes.patch(
+        "/api/wallpaper/:id",
+        validator({
+            focalX: json(
+                v.optional(
+                    v.pipe(
+                        v.number("focalX 必须为数值"),
+                        v.finite("focalX 必须为有限数值"),
+                        v.minValue(0, "focalX 最小为 0"),
+                        v.maxValue(1, "focalX 最大为 1"),
+                    ),
+                ),
+            ),
+            focalY: json(
+                v.optional(
+                    v.pipe(
+                        v.number("focalY 必须为数值"),
+                        v.finite("focalY 必须为有限数值"),
+                        v.minValue(0, "focalY 最小为 0"),
+                        v.maxValue(1, "focalY 最大为 1"),
+                    ),
+                ),
+            ),
+        }),
+        async (c, data) => {
+            const user = c.get("user");
+            if (!user) {
+                return failResponse(c, 401, "请先登录");
+            }
+
+            const id = c.req.param("id");
+            if (!id) {
+                return failResponse(c, 404, "壁纸不存在");
+            }
+
+            if (data.focalX === undefined && data.focalY === undefined) {
+                return failResponse(c, 400, "至少提供 focalX 或 focalY");
+            }
+
+            try {
+                const updated = await service.updateWallpaperComposition(
+                    id,
+                    user.id,
+                    data,
+                );
+                if (!updated) {
+                    return failResponse(c, 404, "壁纸不存在或无权访问");
+                }
+                return c.success({
+                    id: updated.id,
+                    url: `/api/wallpaper/${updated.id}`,
+                    focalX: updated.focalX,
+                    focalY: updated.focalY,
+                });
+            } catch (error) {
+                if (error instanceof ManifestCorruptionError) {
+                    return failResponse(c, 500, "壁纸存储元数据损坏，无法更新");
+                }
+                return failResponse(c, 500, "更新壁纸构图失败");
+            }
+        },
+    );
 }

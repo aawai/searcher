@@ -9,7 +9,7 @@ import { WallpaperService } from "../wallpaper/service.ts";
 import { WebAppIconService } from "../webapp-icons/service.ts";
 import { SystemService } from "./service.ts";
 import { SystemSettingsStore } from "./settings-store.ts";
-import * as fflate from "npm:fflate@0.8.2";
+import * as fflate from "fflate";
 import type { Envelope } from "@shared/contracts.ts";
 import type {
     BackupManifest,
@@ -19,6 +19,20 @@ import type {
 } from "./types.ts";
 
 const ORIGIN = "http://localhost:8000";
+const PNG_BYTES = new Uint8Array([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    0x00,
+    0x00,
+    0x00,
+    0x0d,
+]);
 
 async function setupSystemTest() {
     Deno.env.set("DATABASE_PATH", ":memory:");
@@ -76,8 +90,10 @@ async function setupSystemTest() {
         store,
         auth,
         app,
+        adminId,
         adminToken: adminSession.token,
         normalToken: normalSession.token,
+        wallpaper,
         wallpaperDir,
         iconDir,
     };
@@ -171,9 +187,9 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         );
         assertEquals(importRes.status, STATUS_CODE.OK);
 
-        await Deno.writeTextFile(
-            `${ctx.wallpaperDir}/original.bin`,
-            "original-wallpaper",
+        const originalWallpaper = await ctx.wallpaper.saveWallpaper(
+            ctx.adminId,
+            PNG_BYTES,
         );
         await Deno.writeTextFile(
             `${ctx.iconDir}/original.png`,
@@ -186,9 +202,22 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         assertEquals(backupRes.status, STATUS_CODE.OK);
         const backupBytes = new Uint8Array(await backupRes.arrayBuffer());
         assertNotEquals(backupBytes.length, 0);
-        await Deno.writeTextFile(
-            `${ctx.wallpaperDir}/original.bin`,
-            "mutated-wallpaper",
+        await Deno.writeFile(
+            `${ctx.wallpaperDir}/${originalWallpaper.id}.bin`,
+            new Uint8Array([
+                0x89,
+                0x50,
+                0x4e,
+                0x47,
+                0x0d,
+                0x0a,
+                0x1a,
+                0x0a,
+                0x00,
+                0x00,
+                0x00,
+                0x0e,
+            ]),
         );
         await Deno.writeTextFile(`${ctx.iconDir}/original.png`, "mutated-icon");
         await Deno.writeTextFile(`${ctx.wallpaperDir}/stale.bin`, "stale");
@@ -267,8 +296,10 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         >;
         assertEquals(restoreBody.data?.snapshotCreated, true);
         assertEquals(
-            await Deno.readTextFile(`${ctx.wallpaperDir}/original.bin`),
-            "original-wallpaper",
+            await Deno.readFile(
+                `${ctx.wallpaperDir}/${originalWallpaper.id}.bin`,
+            ),
+            PNG_BYTES,
         );
         assertEquals(
             await Deno.readTextFile(`${ctx.iconDir}/original.png`),

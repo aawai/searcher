@@ -9,7 +9,7 @@ import type { SystemSettingsDto } from "./types.ts";
 import { users } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 
-const SystemSettingsPatchSchema = v.object({
+const _SystemSettingsPatchSchema = v.object({
     auditRetentionDays: v.optional(
         v.pipe(
             v.number("审计保留天数必须为数字"),

@@ -319,7 +319,8 @@ a {
     position: relative;
     isolation: isolate;
 }
-.wallpaper {
+.wallpaper,
+.wallpaper-surface {
     position: fixed;
     inset: 0;
     z-index: -1;
@@ -330,23 +331,33 @@ a {
         linear-gradient(155deg, color-mix(in srgb, var(--accent) 3%, #f4f4f5),
         #fafafa 52%, color-mix(in srgb, var(--accent) 4%, #e4e4e7));
 }
-[data-theme="dark"] .wallpaper {
+[data-theme="dark"] .wallpaper,
+[data-theme="dark"] .wallpaper-surface {
     background:
         linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%, #18181b),
         #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b));
 }
-.wallpaper__image {
+.wallpaper-surface--embedded {
     position: absolute;
-    /* Three blur radii keep the clipped viewport inside the opaque image. */
-    inset: calc(-3 * var(--wallpaper-blur,0px));
+    z-index: 0;
+    pointer-events: auto;
+}
+.wallpaper__image,
+.wallpaper-surface__image {
+    position: absolute;
+    /* Three blur radii keep the clipped viewport inside the opaque image. When blur=0, inset is 0px. */
+    inset: calc(-3 * var(--wallpaper-blur, 0px));
     z-index: 0;
     pointer-events: none;
-    background: var(--wallpaper-image,none) center/cover no-repeat;
-    filter: blur(var(--wallpaper-blur,0px))
-        grayscale(var(--wallpaper-grayscale,0));
-    transform: scale(1.06);
+    background-image: var(--wallpaper-image, none);
+    background-position: var(--wallpaper-position, center);
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: blur(var(--wallpaper-blur, 0px))
+        grayscale(var(--wallpaper-grayscale, 0));
 }
-.wallpaper::after {
+.wallpaper::after,
+.wallpaper-surface::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -355,7 +366,8 @@ a {
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask, .36);
 }
-.wallpaper::before {
+.wallpaper::before,
+.wallpaper-surface::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -364,7 +376,8 @@ a {
     background: var(--wallpaper-glow);
     transform-origin: var(--wallpaper-glow-origin);
 }
-.wallpaper__ripple {
+.wallpaper__ripple,
+.wallpaper-surface__ripple {
     position: absolute;
     inset: 0;
     z-index: 3;
@@ -379,11 +392,16 @@ a {
     display: none;
 }
 .wallpaper[data-ambient-motion="breathe"]::before,
-.wallpaper[data-ambient-motion="breathe_ripple"]::before {
+.wallpaper[data-ambient-motion="breathe_ripple"]::before,
+.wallpaper-surface[data-ambient-motion="breathe"]::before,
+.wallpaper-surface[data-ambient-motion="breathe_ripple"]::before {
     animation: wallpaper-glow-breathe var(--wallpaper-glow-duration, 8s)
         ease-in-out infinite;
 }
-.wallpaper[data-ambient-motion="breathe_ripple"] .wallpaper__ripple {
+.wallpaper[data-ambient-motion="breathe_ripple"] .wallpaper__ripple,
+.wallpaper-surface[data-ambient-motion="breathe_ripple"] .wallpaper-surface__ripple,
+.wallpaper-surface[data-ambient-motion="breathe_ripple"] .wallpaper__ripple,
+.wallpaper[data-ambient-motion="breathe_ripple"] .wallpaper-surface__ripple {
     display: block;
     animation: wallpaper-ripple-drift var(--wallpaper-glow-duration, 8s)
         ease-out 1.5s infinite;
@@ -1843,10 +1861,12 @@ a {
         transition-duration: .01ms!important;
         scroll-behavior: auto!important;
     }
-    .wallpaper[data-ambient-motion]::before {
+    .wallpaper[data-ambient-motion]::before,
+    .wallpaper-surface[data-ambient-motion]::before {
         animation: none;
     }
-    .wallpaper[data-ambient-motion] .wallpaper__ripple {
+    .wallpaper[data-ambient-motion] .wallpaper__ripple,
+    .wallpaper-surface[data-ambient-motion] .wallpaper-surface__ripple {
         animation: none;
         display: none;
     }

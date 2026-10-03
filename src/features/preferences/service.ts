@@ -10,9 +10,11 @@ import {
     DEFAULT_WALLPAPER_MASK,
     type LegacyStylePreset,
     normalizeStylePreset,
+    normalizeWallpaperCompositions,
     type PreferencesDto,
     type StylePreset,
     type UserGenerationConfig,
+    type WallpaperComposition,
 } from "@shared/contracts.ts";
 
 export type UpdateAiGenerationDefaultsInput = {
@@ -61,6 +63,7 @@ const defaults: PreferencesDto = {
     aiGenerationDefaults: {
         models: {},
     },
+    wallpaperCompositions: {},
 };
 
 function cleanConfig(
@@ -119,7 +122,23 @@ function parseAiGenerationDefaults(
     }
     return { models: {} };
 }
+function parseWallpaperCompositions(
+    raw?: string | null,
+): Record<string, WallpaperComposition> {
+    if (!raw) return {};
+    try {
+        const parsed = JSON.parse(raw);
+        return normalizeWallpaperCompositions(parsed);
+    } catch {
+        return {};
+    }
+}
+
 function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
+    const compositions = parseWallpaperCompositions(row.wallpaperCompositions);
+    if (row.backgroundImage && !compositions[row.backgroundImage]) {
+        compositions[row.backgroundImage] = { focalX: 0.5, focalY: 0.5 };
+    }
     return {
         defaultEngine: row.defaultEngine,
         theme: row.theme,
@@ -137,6 +156,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
             DEFAULT_AMBIENT_MOTION_MODE,
         ambientMotionStrength: row.ambientMotionStrength ??
             DEFAULT_AMBIENT_MOTION_STRENGTH,
+        wallpaperCompositions: compositions,
         searchTarget: row.searchTarget,
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
         webAppHomeLimit: row.webAppHomeLimit === "all"
@@ -179,15 +199,28 @@ export class PreferencesService {
     async update(
         userId: string,
         updates:
-            & Partial<Omit<PreferencesDto, "style" | "aiGenerationDefaults">>
+            & Partial<
+                Omit<
+                    PreferencesDto,
+                    "style" | "aiGenerationDefaults" | "wallpaperCompositions"
+                >
+            >
             & {
                 style?: StylePreset | LegacyStylePreset;
                 aiGenerationDefaults?: UpdateAiGenerationDefaultsInput;
+                wallpaperCompositions?:
+                    | Record<string, WallpaperComposition>
+                    | null;
             },
     ): Promise<PreferencesDto> {
         const canonicalDefaults = await this.getDefaults();
-        const { webAppHomeLimit, style, aiGenerationDefaults, ...rest } =
-            updates;
+        const {
+            webAppHomeLimit,
+            style,
+            aiGenerationDefaults,
+            wallpaperCompositions,
+            ...rest
+        } = updates;
         return await this.store.run(async (db) => {
             let serializedAiDefaults: string | undefined = undefined;
             if (aiGenerationDefaults === null) {
@@ -239,6 +272,23 @@ export class PreferencesService {
                 };
                 serializedAiDefaults = JSON.stringify(merged);
             }
+            let serializedWallpaperCompositions: string | undefined = undefined;
+            if (wallpaperCompositions === null) {
+                serializedWallpaperCompositions = JSON.stringify({});
+            } else if (wallpaperCompositions !== undefined) {
+                const [existingRow] = await db.select().from(preferences)
+                    .where(eq(preferences.userId, userId)).limit(1).all();
+                const current = parseWallpaperCompositions(
+                    existingRow?.wallpaperCompositions,
+                );
+                const normalized = normalizeWallpaperCompositions(
+                    wallpaperCompositions,
+                );
+                serializedWallpaperCompositions = JSON.stringify({
+                    ...current,
+                    ...normalized,
+                });
+            }
 
             const patchValues: Record<string, unknown> = {};
             for (const [key, val] of Object.entries(rest)) {
@@ -248,6 +298,10 @@ export class PreferencesService {
             }
             if (serializedAiDefaults !== undefined) {
                 patchValues.aiGenerationDefaults = serializedAiDefaults;
+            }
+            if (serializedWallpaperCompositions !== undefined) {
+                patchValues.wallpaperCompositions =
+                    serializedWallpaperCompositions;
             }
             if (style !== undefined) {
                 patchValues.style = normalizeStylePreset(style);
@@ -289,6 +343,9 @@ export class PreferencesService {
                 showAppLabels: canonicalDefaults.showAppLabels,
                 aiGenerationDefaults: JSON.stringify(
                     canonicalDefaults.aiGenerationDefaults ?? { models: {} },
+                ),
+                wallpaperCompositions: JSON.stringify(
+                    canonicalDefaults.wallpaperCompositions ?? {},
                 ),
             };
 

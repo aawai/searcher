@@ -5170,6 +5170,7 @@
       "npm:clsx@2.1.1",
       "npm:drizzle-kit@0.31.4",
       "npm:drizzle-orm@0.45.2",
+      "npm:fflate@0.8.2",
       "npm:lucide-react@0.468.0",
       "npm:openai@7.23.0",
       "npm:pino-pretty@13.1.3",

@@ -84,3 +84,42 @@ Deno.test("Appearance: invalid ambient cache values fall back while valid bounda
         assertEquals(valid.ambientMotionMode, "off");
     }
 });
+Deno.test("Appearance: switching cached wallpapers restores their own composition", () => {
+    const first = "https://example.com/left.png";
+    const second = "https://example.com/right.png";
+    const result = normalizeAppearance({
+        wallpaper: second,
+        wallpaperCompositions: {
+            [first]: { focalX: 0.2, focalY: 0.3 },
+            [second]: { focalX: 0.8, focalY: 0.7 },
+        },
+    });
+    assertEquals(result.wallpaperCompositions[first], {
+        focalX: 0.2,
+        focalY: 0.3,
+    });
+    assertEquals(result.wallpaperCompositions[second], {
+        focalX: 0.8,
+        focalY: 0.7,
+    });
+    assertEquals(
+        normalizeAppearance({ wallpaper: first }).wallpaperCompositions,
+        {},
+    );
+});
+Deno.test("Appearance: guest image cache keeps only the current local asset and rejects oversized images", () => {
+    const current = "data:image/png;base64,aGVsbG8=";
+    const previous = "data:image/png;base64,b2xk";
+    const result = normalizeAppearance({
+        wallpaper: current,
+        wallpaperCompositions: {
+            [current]: { focalX: 0.2, focalY: 0.3 },
+            [previous]: { focalX: 0.8, focalY: 0.7 },
+        },
+    });
+    assertEquals(result.wallpaper, current);
+    assertEquals(result.wallpaperCompositions[previous], undefined);
+    const oversized = "data:image/png;base64," +
+        "A".repeat(4 * Math.ceil(5 * 1024 * 1024 / 3) + 4);
+    assertEquals(normalizeAppearance({ wallpaper: oversized }).wallpaper, "");
+});

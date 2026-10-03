@@ -13,6 +13,7 @@
         "test": "deno test -A src web/src",
         "test:routing": "deno task build && NODE_ENV=test deno test -A web/e2e/navigation.test.ts",
         "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/notes-workspace.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts",
+        "test:wallpaper": "deno task build && NODE_ENV=test deno test -A web/e2e/wallpaper.test.ts",
         "check:ui": "deno run -A scripts/check-ui.ts"
     },
     "imports": {
@@ -49,6 +50,7 @@
         "@types/react": "npm:@types/react@19.3.0",
         "@types/react-dom": "npm:@types/react-dom@19.3.0",
         "drizzle-orm": "npm:drizzle-orm@0.45.2",
+        "fflate": "npm:fflate@0.8.2",
         "hono": "jsr:@hono/hono@4.13.7",
         "lucide-react": "npm:lucide-react@0.468.0",
         "openai": "npm:openai@7.23.0",

@@ -1,0 +1,29 @@
+name: Wallpaper contracts
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+permissions:
+    contents: read
+
+jobs:
+    wallpaper:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.9.7
+            - name: Install dependencies
+              run: deno install
+            - name: Unit and API contracts
+              run: deno task test
+            - name: UI guard
+              run: deno task check:ui
+            - name: Install Chromium
+              run: deno run -A npm:playwright@1.56.1 install --with-deps chromium
+            - name: Production wallpaper user journeys
+              run: deno task test:wallpaper

@@ -22,6 +22,11 @@ import {
     type UserDto,
 } from "@shared/contracts.ts";
 import type { EngineId } from "@shared/engines.ts";
+import {
+    normalizeWallpaperCompositions,
+    parseWallpaperSource,
+    type WallpaperComposition,
+} from "@shared/wallpaper.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import {
     deleteLocal,
@@ -40,6 +45,7 @@ export type Appearance = {
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
+    wallpaperCompositions: Record<string, WallpaperComposition>;
     blur: number;
     grayscale: number;
     mask: number;
@@ -61,6 +67,7 @@ const initial: Appearance = {
     engine: "bing",
     target: "current",
     wallpaper: "",
+    wallpaperCompositions: {},
     blur: 0,
     grayscale: 0,
     mask: DEFAULT_WALLPAPER_MASK,
@@ -94,7 +101,33 @@ export function normalizeAppearance(raw: unknown): Appearance {
     if (saved.target === "current" || saved.target === "new_tab") {
         result.target = saved.target;
     }
-    if (typeof saved.wallpaper === "string") result.wallpaper = saved.wallpaper;
+    const source = typeof saved.wallpaper === "string" ? saved.wallpaper : "";
+    if (source.startsWith("data:")) {
+        const comma = source.indexOf(",");
+        const encodedLength = source.length - comma - 1;
+        const padding = source.endsWith("==")
+            ? 2
+            : source.endsWith("=")
+            ? 1
+            : 0;
+        if (
+            /^data:image\/(png|jpeg|webp|avif);base64,/.test(source) &&
+            encodedLength % 4 === 0 &&
+            encodedLength / 4 * 3 - padding <= 5 * 1024 * 1024
+        ) {
+            result.wallpaper = source;
+        }
+    } else {
+        result.wallpaper = parseWallpaperSource(source)?.value ?? "";
+    }
+    result.wallpaperCompositions = normalizeWallpaperCompositions(
+        saved.wallpaperCompositions,
+    );
+    for (const key of Object.keys(result.wallpaperCompositions)) {
+        if (key.startsWith("data:") && key !== result.wallpaper) {
+            delete result.wallpaperCompositions[key];
+        }
+    }
     if (typeof saved.showTitle === "boolean") {
         result.showTitle = saved.showTitle;
     }
@@ -137,7 +170,11 @@ type State = {
     connectionError: boolean;
     retryConnection: () => Promise<void>;
     appearance: Appearance;
-    setAppearance: (next: Partial<Appearance>) => void;
+    setAppearance: (
+        next: Partial<Appearance>,
+        options?: { sync?: boolean },
+    ) => Promise<void>;
+    settleAppearanceSync: () => Promise<void>;
     login: (user: UserDto) => void;
     /** 登出：有未同步草稿时返回 false 并由调用方弹确认（V-003）。 */
     logout: (options?: { force?: boolean }) => Promise<boolean>;
@@ -158,6 +195,13 @@ export function AppState({ children }: { children: ReactNode }) {
     const [syncFailed, setSyncFailed] = useState(false);
     const [connectionError, setConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
+    const sync = useRef({
+        owner: null as string | null,
+        tail: Promise.resolve(),
+        pending: {} as Record<string, unknown>,
+        reconciled: {} as Record<string, unknown>,
+    });
+    const appearanceRevision = useRef(0);
     userRef.current = user;
     useEffect(() => {
         // 旧缓存未关联用户，不能作为匿名或账号偏好继续使用。
@@ -205,15 +249,26 @@ export function AppState({ children }: { children: ReactNode }) {
         setAppearanceOwner(null);
         setValue(initial);
         const active = () => alive && (userRef.current?.id ?? null) === userId;
+        const revision = appearanceRevision.current;
+        sync.current = {
+            owner: userId,
+            tail: Promise.resolve(),
+            pending: {},
+            reconciled: {},
+        };
+        setSyncFailed(false);
         async function loadAppearance() {
             const saved = await getLocal<unknown>(key)
                 .catch(() => undefined);
             if (!active()) return;
-            setValue(normalizeAppearance(saved));
+            if (appearanceRevision.current === revision) {
+                setValue(normalizeAppearance(saved));
+            }
             setAppearanceOwner(key);
             if (!userId) return;
             const prefs = await api<PreferencesDto>("/api/preferences");
             if (!active()) return;
+            if (appearanceRevision.current !== revision) return;
             setSyncFailed(false);
             setValue((prev) =>
                 normalizeAppearance({
@@ -228,6 +283,7 @@ export function AppState({ children }: { children: ReactNode }) {
                         ? "new_tab"
                         : "current",
                     wallpaper: prefs.backgroundImage ?? "",
+                    wallpaperCompositions: prefs.wallpaperCompositions,
                     blur: prefs.wallpaperBlur,
                     grayscale: prefs.wallpaperGrayscale,
                     mask: prefs.wallpaperMask,
@@ -297,7 +353,11 @@ export function AppState({ children }: { children: ReactNode }) {
         appearance.searchOpacity,
     ]);
 
-    const setAppearance = (next: Partial<Appearance>) => {
+    const setAppearance = (
+        next: Partial<Appearance>,
+        options?: { sync?: boolean },
+    ): Promise<void> => {
+        appearanceRevision.current++;
         setValue((current) => normalizeAppearance({ ...current, ...next }));
         if (user) {
             const updates: Record<string, unknown> = {};
@@ -331,6 +391,9 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.wallpaper !== undefined) {
                 updates.backgroundImage = next.wallpaper || null;
             }
+            if (next.wallpaperCompositions !== undefined) {
+                updates.wallpaperCompositions = next.wallpaperCompositions;
+            }
             if (next.webAppHomeLimit !== undefined) {
                 updates.webAppHomeLimit = next.webAppHomeLimit;
             }
@@ -340,16 +403,58 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.showAppLabels !== undefined) {
                 updates.showAppLabels = next.showAppLabels;
             }
-            if (Object.keys(updates).length) {
-                void api("/api/preferences", json("PATCH", updates)).catch(
-                    (err) => {
-                        if (!(err instanceof ApiError && err.code === 401)) {
-                            setSyncFailed(true);
-                        }
-                    },
-                );
+            if (Object.keys(updates).length === 0) return Promise.resolve();
+            const owner = user.id;
+            const queue = sync.current;
+            if (queue.owner !== owner) return Promise.resolve();
+            if (options?.sync === false) {
+                Object.assign(queue.reconciled, updates);
+                for (const key of Object.keys(updates)) {
+                    delete queue.pending[key];
+                }
+                if (Object.keys(queue.pending).length === 0) {
+                    setSyncFailed(false);
+                }
+                return Promise.resolve();
             }
+            for (const key of Object.keys(updates)) {
+                delete queue.reconciled[key];
+            }
+            Object.assign(queue.pending, updates);
+            const result = queue.tail.then(async () => {
+                if (sync.current !== queue || userRef.current?.id !== owner) {
+                    return;
+                }
+                const patch = queue.pending;
+                queue.pending = {};
+                if (Object.keys(patch).length === 0) return;
+                try {
+                    await api("/api/preferences", json("PATCH", patch));
+                    if (
+                        sync.current === queue && userRef.current?.id === owner
+                    ) {
+                        setSyncFailed(false);
+                    }
+                } catch (error) {
+                    if (
+                        sync.current === queue && userRef.current?.id === owner
+                    ) {
+                        queue.pending = { ...patch, ...queue.pending };
+                        for (const key of Object.keys(queue.reconciled)) {
+                            delete queue.pending[key];
+                        }
+                        if (
+                            !(error instanceof ApiError && error.code === 401)
+                        ) setSyncFailed(true);
+                    }
+                    throw error;
+                }
+            });
+            // Existing controls intentionally fire-and-forget; callers may still await the original promise.
+            queue.tail = result.catch(() => {});
+            return result;
         }
+        return Promise.resolve();
     };
 
     const logout = async (options?: { force?: boolean }) => {
@@ -378,6 +483,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 retryConnection: checkAuth,
                 appearance,
                 setAppearance,
+                settleAppearanceSync: () => sync.current.tail,
                 login: setUser,
                 logout,
             }}

@@ -1,0 +1,2 @@
+ALTER TABLE `preferences` ADD `wallpaper_compositions` text;--> statement-breakpoint
+UPDATE `preferences` SET `wallpaper_compositions` = json_object(`background_image`, json_object('focalX', 0.5, 'focalY', 0.5)) WHERE `background_image` IS NOT NULL;

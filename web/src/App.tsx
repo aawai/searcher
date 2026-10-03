@@ -24,6 +24,11 @@ import {
     DEFAULT_WALLPAPER_GLOW_STRENGTH,
     DEFAULT_WALLPAPER_MASK,
 } from "@shared/contracts.ts";
+import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
+import {
+    type WallpaperComposition,
+    wallpaperComposition,
+} from "@shared/wallpaper.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
 import { DesignLab } from "./design-lab/DesignLab.tsx";
 import { AuthPage } from "./app/AuthPage.tsx";
@@ -93,6 +98,14 @@ function Layout() {
         DEFAULT_AMBIENT_MOTION_MODE;
     const motionStrength = appearance.ambientMotionStrength ??
         DEFAULT_AMBIENT_MOTION_STRENGTH;
+    const wallpaperCompositions = "wallpaperCompositions" in appearance &&
+            typeof appearance.wallpaperCompositions === "object" &&
+            appearance.wallpaperCompositions !== null
+        ? appearance.wallpaperCompositions as Record<
+            string,
+            WallpaperComposition
+        >
+        : undefined;
 
     const S = motionMode === "off" ? 0 : motionStrength;
     const glowRestOpacity = 1 - 0.18 * S;
@@ -137,14 +150,20 @@ function Layout() {
             } as React.CSSProperties}
         >
             {isHomePage && (
-                <div
-                    className="wallpaper"
-                    data-ambient-motion={motionMode}
-                    aria-hidden="true"
-                >
-                    <div className="wallpaper__image" />
-                    <div className="wallpaper__ripple" />
-                </div>
+                <WallpaperSurface
+                    source={appearance.wallpaper}
+                    composition={wallpaperComposition(
+                        appearance.wallpaper,
+                        wallpaperCompositions,
+                    )}
+                    blur={appearance.blur}
+                    grayscale={appearance.grayscale}
+                    mask={appearance.mask ?? DEFAULT_WALLPAPER_MASK}
+                    glowStrength={glowStrength}
+                    ambientMotionMode={motionMode}
+                    ambientMotionStrength={motionStrength}
+                    testId="home-wallpaper-surface"
+                />
             )}
             <header className="topbar">
                 <Link

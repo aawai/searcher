@@ -1,6 +1,6 @@
 import { backup, DatabaseSync } from "node:sqlite";
 import { dirname, join } from "@std/path";
-import * as fflate from "npm:fflate@0.8.2";
+import * as fflate from "fflate";
 import type { DatabaseStore } from "../../db/database.ts";
 import { aiModels, aiProviders } from "../../db/ai-schema.ts";
 import { auditLogs, notes, users, webapps } from "../../db/schema.ts";
@@ -15,6 +15,7 @@ import type {
     SystemSettingsDto,
 } from "./types.ts";
 import { SystemSettingsStore } from "./settings-store.ts";
+import { validateBackupConsistency } from "./backup-validator.ts";
 
 const ConfigExportImportSchema = v.object({
     version: v.literal("1.0.0", "不兼容的配置文件版本"),
@@ -384,6 +385,14 @@ export class SystemService {
             try {
                 for await (const entry of Deno.readDir(dir)) {
                     if (!entry.isFile) continue;
+                    if (kind === "wallpapers") {
+                        if (
+                            entry.name !== "manifest.json" &&
+                            !/^[0-9a-fA-F-]+\.bin$/.test(entry.name)
+                        ) {
+                            continue;
+                        }
+                    }
                     zipFiles[`assets/${kind}/${entry.name}`] = [
                         await Deno.readFile(join(dir, entry.name)),
                         { level: 6 },
@@ -435,8 +444,12 @@ export class SystemService {
     }
 
     async createFullBackupZip(): Promise<Uint8Array> {
+        const runArchive = () =>
+            this.#store.exclusiveNative((native) => this.#archive(native));
         return await this.#withLock(() =>
-            this.#store.exclusiveNative((native) => this.#archive(native))
+            this.#wallpaperService
+                ? this.#wallpaperService.withLock(runArchive)
+                : runArchive()
         );
     }
 
@@ -553,6 +566,7 @@ export class SystemService {
             const backupHash = testDb.prepare(
                 "SELECT hash FROM __drizzle_migrations ORDER BY id DESC LIMIT 1",
             ).all()[0]?.hash;
+            // deno-lint-ignore require-await
             const currentHash = await this.#store.exclusiveNative(async (
                 native,
             ) => native.prepare(
@@ -561,6 +575,7 @@ export class SystemService {
             if (!backupHash || backupHash !== currentHash) {
                 throw new Error("备份数据库迁移版本与当前服务不兼容");
             }
+            validateBackupConsistency({ files, manifest, db: testDb });
         } finally {
             testDb.close();
         }
@@ -589,7 +604,7 @@ export class SystemService {
         snapshotPath: string;
     }> {
         const { files, manifest, settings } = await this.#unpack(zipBytes);
-        return await this.#withLock(() =>
+        const runRestore = () =>
             this.#store.exclusiveNative(async (native, replace) => {
                 const currentBytes = await this.#snapshotNative(native);
                 const previousSettings = await this.#settingsStore.get();
@@ -613,7 +628,10 @@ export class SystemService {
                 try {
                     for (
                         const [kind, dir] of [
-                            ["wallpapers", this.#wallpaperService?.storageDir],
+                            [
+                                "wallpapers",
+                                this.#wallpaperService?.storageDir,
+                            ],
                             ["icons", this.#iconService?.storageDir],
                         ] as const
                     ) {
@@ -706,7 +724,11 @@ export class SystemService {
                     }
                 }
                 return { manifest, snapshotCreated: true, snapshotPath };
-            })
+            });
+        return await this.#withLock(() =>
+            this.#wallpaperService
+                ? this.#wallpaperService.withLock(runRestore)
+                : runRestore()
         );
     }
 }

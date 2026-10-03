@@ -40,9 +40,14 @@ export function createApp(
         "",
     );
     const settingsStore = deps.settings ?? new SystemSettingsStore();
+    const wallpaperService = deps.wallpaper ??
+        new WallpaperService(undefined, undefined, undefined, deps.store);
+    if (!wallpaperService.store && deps.store) {
+        wallpaperService.setStore(deps.store);
+    }
     const sharedDeps: AppDeps = {
         ...deps,
-        wallpaper: deps.wallpaper ?? new WallpaperService(),
+        wallpaper: wallpaperService,
         icons: deps.icons ?? new WebAppIconService(),
         settings: settingsStore,
     };

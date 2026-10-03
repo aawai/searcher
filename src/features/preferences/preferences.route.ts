@@ -12,6 +12,10 @@ import {
     AMBIENT_MOTION_MODES,
     CANONICAL_REASONING_EFFORTS,
 } from "../../shared/contracts.ts";
+import {
+    parseWallpaperSource,
+    type WallpaperComposition,
+} from "../../shared/wallpaper.ts";
 const Engine = v.optional(
     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
 );
@@ -42,18 +46,37 @@ const BackgroundImage = v.optional(v.nullable(v.pipe(
     v.string(),
     v.maxLength(2048),
     v.check((value) => {
-        if (
-            /^\/api\/wallpaper\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
-                .test(value)
-        ) return true;
-        try {
-            const url = new URL(value);
-            return url.protocol === "https:" && !url.username && !url.password;
-        } catch {
-            return false;
-        }
-    }, "壁纸必须是 HTTPS 地址或本人上传的壁纸"),
+        return parseWallpaperSource(value) !== null;
+    }, "壁纸必须是 HTTPS 地址、本人上传的壁纸或合法的 CSS 渐变"),
 )));
+const WallpaperCompositions = v.optional(
+    v.nullable(
+        v.record(
+            v.pipe(
+                v.string(),
+                v.maxLength(2048),
+                v.check(
+                    (val) => parseWallpaperSource(val) !== null,
+                    "壁纸构图 source 格式非法",
+                ),
+            ),
+            v.object({
+                focalX: v.pipe(
+                    v.number("focalX 必须为数值"),
+                    v.finite("focalX 必须为有限数值"),
+                    v.minValue(0, "focalX 最小为 0"),
+                    v.maxValue(1, "focalX 最大为 1"),
+                ),
+                focalY: v.pipe(
+                    v.number("focalY 必须为数值"),
+                    v.finite("focalY 必须为有限数值"),
+                    v.minValue(0, "focalY 最小为 0"),
+                    v.maxValue(1, "focalY 最大为 1"),
+                ),
+            }),
+        ),
+    ),
+);
 const Blur = v.optional(
     v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(24)),
 );
@@ -159,23 +182,106 @@ export function registerPreferencesRoutes(
             ambientMotionMode: json(MotionMode),
             ambientMotionStrength: json(MotionStrength),
             aiGenerationDefaults: json(AiGenerationDefaults),
+            wallpaperCompositions: json(WallpaperCompositions),
         }),
         async (c, data) => {
             if (
                 Object.values(data).every((value) => value === undefined)
             ) return c.fail(STATUS_CODE.BadRequest, "至少修改一项偏好");
             const user = c.get("user");
-            if (data.backgroundImage?.startsWith("/api/wallpaper/")) {
-                const id = data.backgroundImage.slice("/api/wallpaper/".length);
-                if (!await wallpaper.getWallpaper(id, user.id)) {
-                    return c.fail(
-                        STATUS_CODE.NotFound,
-                        "壁纸不存在或无权访问",
+            return await wallpaper.withLock(async () => {
+                if (
+                    data.backgroundImage !== undefined &&
+                    data.backgroundImage !== null
+                ) {
+                    const source = parseWallpaperSource(data.backgroundImage);
+                    if (!source) {
+                        return c.fail(
+                            STATUS_CODE.BadRequest,
+                            "壁纸地址格式非法",
+                        );
+                    }
+                    if (source.type === "uploaded") {
+                        const id = source.value.slice("/api/wallpaper/".length);
+                        if (!await wallpaper.getWallpaper(id, user.id)) {
+                            return c.fail(
+                                STATUS_CODE.NotFound,
+                                "壁纸不存在或无权访问",
+                            );
+                        }
+                    }
+                    data.backgroundImage = source.value;
+                }
+
+                const uploadedFocalsToSync: Array<{
+                    id: string;
+                    focalX: number;
+                    focalY: number;
+                }> = [];
+
+                if (
+                    data.wallpaperCompositions !== undefined &&
+                    data.wallpaperCompositions !== null
+                ) {
+                    const canonicalCompositions: Record<
+                        string,
+                        WallpaperComposition
+                    > = {};
+                    // Pass 1: Validate ALL keys and check ownership before any mutation
+                    for (
+                        const [key, comp] of Object.entries(
+                            data.wallpaperCompositions,
+                        )
+                    ) {
+                        const source = parseWallpaperSource(key);
+                        if (!source) {
+                            return c.fail(
+                                STATUS_CODE.BadRequest,
+                                "壁纸构图 source 格式非法",
+                            );
+                        }
+                        if (source.type === "uploaded") {
+                            const id = source.value.slice(
+                                "/api/wallpaper/".length,
+                            );
+                            if (!await wallpaper.getWallpaper(id, user.id)) {
+                                return c.fail(
+                                    STATUS_CODE.NotFound,
+                                    "壁纸不存在或无权访问",
+                                );
+                            }
+                            if (comp) {
+                                uploadedFocalsToSync.push({
+                                    id,
+                                    focalX: comp.focalX,
+                                    focalY: comp.focalY,
+                                });
+                            }
+                        }
+                        if (comp) {
+                            canonicalCompositions[source.value] = {
+                                focalX: comp.focalX,
+                                focalY: comp.focalY,
+                            };
+                        }
+                    }
+                    data.wallpaperCompositions = canonicalCompositions;
+                }
+
+                // Pass 2: Atomic DB update and manifest synchronization
+                const updated = await service.update(user.id, data);
+                for (const item of uploadedFocalsToSync) {
+                    await wallpaper.updateWallpaperComposition(
+                        item.id,
+                        user.id,
+                        {
+                            focalX: item.focalX,
+                            focalY: item.focalY,
+                        },
                     );
                 }
-            }
-            const updated = await service.update(user.id, data);
-            return c.success(updated);
+                return c.success(updated);
+            });
         },
     );
 }
