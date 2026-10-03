@@ -1,4 +1,9 @@
-import type { ComponentProps, ReactNode } from "react";
+import {
+    type ComponentProps,
+    type ReactNode,
+    useLayoutEffect,
+    useRef,
+} from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "../ui/card.tsx";
 import { Table, TableCaption } from "../ui/table.tsx";
@@ -132,8 +137,32 @@ export function LocalNavigation(
     },
 ) {
     const location = useLocation();
+    const navigationRef = useRef<HTMLElement>(null);
+    useLayoutEffect(() => {
+        const navigation = navigationRef.current;
+        if (!compact || !navigation) return;
+        const active = navigation.querySelector<HTMLElement>(
+            "[aria-current=page]",
+        );
+        if (!active) return;
+        const revealActive = () => {
+            const bounds = navigation.getBoundingClientRect();
+            const item = active.getBoundingClientRect();
+            if (item.left < bounds.left) {
+                navigation.scrollLeft += item.left - bounds.left;
+            } else if (item.right > bounds.right) {
+                navigation.scrollLeft += item.right - bounds.right;
+            }
+        };
+        revealActive();
+        const observer = new ResizeObserver(revealActive);
+        observer.observe(navigation);
+        for (const link of navigation.children) observer.observe(link);
+        return () => observer.disconnect();
+    }, [compact, location.pathname]);
     return (
         <nav
+            ref={navigationRef}
             className="local-navigation"
             data-compact={compact || undefined}
             aria-label={label}

@@ -29,8 +29,11 @@
   MetricCard 仅负责数字指标；说明、流程和配置外壳复用 SettingsCard， 配置内容用
   SettingsRow，备份内容用 canonical card padding 与 row/control gap。
   后台专属布局归 admin.css，不重复 card surface/border/radius。 LocalNavigation
-  compact 在窄屏保持单行滚动；用户次要操作复用 shadcn DropdownMenu。 FilePicker
-  以标准 Button 触发隐藏 input，文件名与按钮通过 aria-describedby 关联。
+  compact 在窄屏保持单行滚动；直访、切换与导航/链接尺寸变化时，仅在 active
+  被裁切时调整导航自身 scrollLeft，不滚动页面。布局提交时揭示 active，
+  字体加载与宽度变化通过 ResizeObserver 校正，纯高度变化不复位手动滚动。
+  用户次要操作复用 shadcn DropdownMenu。 FilePicker 以标准 Button 触发隐藏
+  input，文件名与按钮通过 aria-describedby 关联。
 
 正式 shadcn 色彩 role 由 `@theme inline` 映射到 Searcher Token：primary →
 accent，secondary → surface-soft，muted-foreground → muted，destructive →

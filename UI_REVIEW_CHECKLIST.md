@@ -699,5 +699,10 @@
 - [x] 320 项单元测试、生产 build、前后端入口 typecheck、受影响 TS lint/format
       通过；UI Guard 90 files / 0 violations / 0 allowances；既有导航 E2E 10
       步通过。
+- [x] 最终集成发现 390px 直访 Backup 时 active 在视口外，修复后追加 390/768/1440
+      × light/dark × 五个 tab 共 30 个深链接几何断言，均完整可见； desktop→390px
+      缩屏自动露出 active，手动滚动后仅高度变化保留 scrollLeft。
+      字体加载导致前方链接变宽时也校正 active；最终代码重跑 320 项测试与 导航
+      E2E 10 步均通过，build/typecheck/lint/UI Guard 通过。
 - 不适用：guest 无管理权限；本次不改变 Home/Zen/Widgets、壁纸、API 或路由契约，
   不扩展为无关页面验收。
