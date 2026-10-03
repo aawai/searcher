@@ -385,6 +385,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await trigger.focus();
                         await page.keyboard.press("Enter");
                         await search().waitFor();
+                        assertEquals(
+                            await panel.getAttribute("data-presentation"),
+                            width < 768
+                                ? "sheet"
+                                : style === "zen"
+                                ? "panel"
+                                : "window",
+                        );
                         await page.waitForFunction(() =>
                             document.activeElement?.getAttribute(
                                 "aria-label",
@@ -1012,6 +1020,63 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
             await request(`/api/webapps/${longApp.id}`, "DELETE");
             await request(`/api/notes/${longNote.id}`, "DELETE");
+            await close();
+        },
+    );
+    await t.step(
+        "presentation changes preserve Core queries and nested Back; logout clears transient state",
+        async () => {
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await openApps();
+            await search().fill("State Alpha");
+            await panel.getByRole("button", { name: "便签工作区", exact: true })
+                .click();
+            await search().fill("private notes query");
+            for (const width of [390, 768, 1024, 1440]) {
+                await page.setViewportSize({ width, height: 900 });
+                await page.waitForFunction(
+                    (expected) =>
+                        document.querySelector(".workspace-panel")
+                            ?.getAttribute("data-presentation") === expected,
+                    width < 768 ? "sheet" : "window",
+                );
+                assertEquals(
+                    await search().inputValue(),
+                    "private notes query",
+                );
+                await assertChromeInViewport(page);
+            }
+            await panel.getByRole("button", { name: "应用工作区", exact: true })
+                .click();
+            assertEquals(await search().inputValue(), "State Alpha");
+            await panel.getByRole("button", { name: "添加应用", exact: true })
+                .click();
+            await page.setViewportSize({ width: 390, height: 900 });
+            await panel.getByRole("button", { name: "返回上一级", exact: true })
+                .click();
+            assertEquals(await search().inputValue(), "State Alpha");
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.getByRole("button", {
+                name: "用户菜单：Shell contract",
+                exact: true,
+            }).click();
+            await page.getByRole("menuitem", { name: "退出登录", exact: true })
+                .click();
+            await panel.waitFor({ state: "detached" });
+            assertEquals(await page.locator("[data-workspace]").count(), 0);
+            await page.goto(origin + "/login");
+            await page.locator("#auth-username").fill("shell44");
+            await page.locator("#auth-password").fill(
+                "shell-contract-password",
+            );
+            await page.locator('form button[type="submit"]').click();
+            await page.waitForURL(origin + "/");
+            assertEquals(await panel.count(), 0);
+            await openApps();
+            assertEquals(await search().inputValue(), "");
+            await panel.getByRole("button", { name: "便签工作区", exact: true })
+                .click();
+            assertEquals(await search().inputValue(), "");
             await close();
         },
     );

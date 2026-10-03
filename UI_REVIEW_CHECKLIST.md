@@ -840,3 +840,39 @@
       使用独立便签并在结束时删除，避免 SSE 污染后续用例。早期完整 suite
       曾出现无关 Launcher 菜单关闭与 AppForm tile
       等待的偶发超时；未修改相应产品逻辑。
+
+## Issue #86 Shared Workspace Core / Presenter 验收（2026-10-03）
+
+- [x] Host `WorkspaceShell` 集中选择 panel/window/sheet；唯一 `WorkspaceSurface`
+      承载 header/back/close、footer、accessible title 与 Body scroll boundary。
+      Apps/Notes JSX、Core、CRUD API、note_layouts 与 CSS token/geometry
+      未修改。
+- [x] window 只建立正式 presentation，仍为原非模态 aside；不实现 Desktop Window
+      Manager、drag/resize、Dock 或 multi-window，不新增视觉层级/raw value。
+- [x] Root 不 autofocus Search、nested Back focus、overlay Escape 优先、Sheet
+      focus trap/swipe、close focus restore、独立 query 与既有 section/state
+      契约由 focused E2E 和完整 Workspace suite 覆盖。新增断言修复前收到 null
+      而非 sheet， 修复后通过；跨 390/768/1024/1440 resize 保留
+      query，logout/relogin 清空 query。
+- [x] 真实隔离服务：390/768/1024/1440 × light/dark × Zen/Widgets × Apps/Notes 共
+      32 组结构/overflow 检查与截图；无页面/Body 横向溢出，chrome 在 viewport
+      内，Root Search 未获初始焦点。另覆盖 390×844、768×1024 双主题固定高度。
+      截图：`/tmp/omp-sshots-1597e1bb03df32a1.webp`（390 light）、
+      `/tmp/omp-sshots-1597e1bbf45f32a4.webp`（768 dark）、
+      `/tmp/omp-sshots-1597e13ed21f329f.webp`（1440 dark）。
+- [x] 校准：browser viewport 模拟未稳定触发已挂载 Host 的 matchMedia change，
+      静态截图矩阵改为模拟后 reload，再等待 dataset.theme、presentation 和 focus
+      提交；整组重新验证。动态 resize 保留状态由真实 Playwright E2E 单独验证。
+- [x] Workspace Sheet 局部 axe：27 passes、0 violations、1 manual-review item；
+      实页矩阵 browser errors 为空。wallpaper/title preference
+      未新增行为，不扩展验收。
+- [x] `deno task test`：382 passed；Core focused：6 passed；
+      `deno task test:workspace`：7 passed / 76 steps；build、frontend
+      typecheck、 变更文件 lint/format 与 `check:ui` 通过：119 ownership / 101
+      visual files， 0 violations / allowances。全仓 lint 有 10
+      个未改文件既存问题，未扩大修复范围。
+- [x] Design System 同步 Core/Presenter 与 mounting contract；内部结构重构
+      不改变最终视觉或用户行为，因此不新增 CHANGELOG 条目。
+- [x] Design Lab 的“打开 Workspace”实页在 768px 挂载 panel，title、Search、
+      close、primary footer 与 Apps/Notes navigation
+      正常；与真实业务页证据分开。

@@ -1762,7 +1762,7 @@ export function DesignLab() {
             <WorkspaceShell
                 state={workspace}
                 title={workspace.view.startsWith("apps/") ? "应用" : "便签"}
-                dock={false}
+                style="zen"
                 appsArranging={false}
                 navigate={setWorkspace}
                 onBack={() => setWorkspace(parentWorkspaceRoute(workspace))}
