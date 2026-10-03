@@ -1263,6 +1263,16 @@ Deno.test("production workspace contracts", async (t) => {
             const backdrop = page.locator('[data-slot="sheet-backdrop"]');
             await backdrop.waitFor();
             assertEquals(await backdrop.isVisible(), true);
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("aria-label") ===
+                    "收起工作区"
+            );
+            assertEquals(
+                await sheet.locator("input[data-workspace-search]").evaluate((
+                    element,
+                ) => element === document.activeElement),
+                false,
+            );
 
             // Escape closes sheet and restores focus to opener
             await page.keyboard.press("Escape");
