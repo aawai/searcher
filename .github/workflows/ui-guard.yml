@@ -1,4 +1,4 @@
-name: UI Guard & Visual Contract
+name: UI Guard & Ownership Contract
 
 on:
     push:
@@ -12,7 +12,7 @@ on:
 
 jobs:
     check-ui:
-        name: UI Visual Presentation & Static Guard
+        name: UI Ownership & Visual Presentation Guard
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -23,7 +23,7 @@ jobs:
               with:
                   deno-version: v2.9.7
 
-            - name: Verify UI guard against baseline (deno task check:ui)
+            - name: Verify visual baseline and absolute ownership rules (deno task check:ui)
               run: deno task check:ui
 
             - name: Run UI guard regression test suite

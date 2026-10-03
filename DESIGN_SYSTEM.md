@@ -5,10 +5,30 @@
 
 ## Ownership
 
-- web/src/design-system/tokens.css：值、主题、accent、shape 与 taxonomy。
-- components/ui/：shadcn primitives，基础交互、ARIA、几何。
-- components/searcher/PageShell.tsx、PageHeader.tsx、semantic.tsx、semantic.css：页面与组合结构。
-- feature stylesheet：场景布局，不写普通控件几何。
+同一种视觉或交互行为只有一个 owner；feature 组合共享
+primitives，不另造基础反馈或重新定义普通控件的 surface / radius / shadow。
+
+| 视觉或交互职责                                                                                                    | 唯一 owner                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 值、theme、accent、shape、surface / elevation taxonomy                                                            | `web/src/design-system/tokens.css`                                                              |
+| Button / Input / Badge / Dialog / AlertDialog / Tabs / Card / Table / Menu                                        | `components/ui/`，共享基础 CSS 为 `primitives.css`                                              |
+| PageShell / PageHeader / Section / Status / Loading / Empty / Undo / ManagementTable                              | `components/searcher/semantic.tsx` 与 `semantic.css`（PageShell / PageHeader 使用现有独立入口） |
+| Settings / Admin / Account / Trash 场景布局                                                                       | `app/settings.css` / `admin.css` / `account.css` / `trash.css`                                  |
+| Ask 消息、Composer 与侧栏布局                                                                                     | `features/ask/ask-workspace.css`                                                                |
+| Workspace Shell / Apps / Notes 布局                                                                               | `features/workspace/workspace.css` / `apps-workspace.css` / `notes-workspace.css`               |
+| Launcher 与 WebApp tile geometry                                                                                  | `components/searcher/launcher.css`                                                              |
+| 搜索控件 / 应用表单与图标选择 / 便签与 Markdown                                                                   | `components/searcher/search.css` / `apps.css` / `notes.css` 与 `markdown.css`                   |
+| Home Zen / Widgets / Bento                                                                                        | `features/home-layouts/home-layouts.css`                                                        |
+| reset、html/body、AppShell、Topbar / account entry、connection banner、全局 typography / accessibility 与壁纸画布 | `styles/global.css`                                                                             |
+
+Feature class 只表达场景布局与 domain presentation；不同密度由 canonical
+primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlist。Domain CSS
+从浏览器 entry 导入，组件可由 Deno 直接测试。
+
+新增 primitive 前必须确认现有 shadcn / semantic component 及其正式 variant
+均无法表达；至少两个 consumer 需要同一语义，或属于明确的系统级语义；并定义
+owner、state、token、a11y 和 responsive contract。否则保持 feature composition。
+
 - Auth 使用 utility PageShell 管页面留白与 margin；内部 auth-surface
   的最大宽度、 padding、surface、border、radius、shadow、表单与 footer 间距仅由
   web/src/app/auth.css 管理。PageHeader 与 Input/Button 保持通用语义和几何。
@@ -184,6 +204,13 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
 
 ### Search Canvas 与空间轻桌面布局
 
+- **Home style scope**：`main.home` 上的 `home-zen` / `home-widgets` 与
+  `data-home-style` 表达布局。Zen / Widgets 的 radius、surface、shadow overrides
+  仅在 Home subtree 生效，不在 `document.documentElement` 设置
+  `data-style`。Settings 中的 Home layout preference
+  只控制首页数据与行为；theme、accent、search shape 仍是全局偏好。Settings /
+  Admin / Account / Trash / Ask、Workspace 和 portal overlays 不随 Home layout
+  改变视觉基础。
 - **Zen 与 Widgets 模式**：
   - Zen
     模式遵循极简克制，保留右下角轻量边缘入口（`.zen-edge-trigger`），不强制引入
@@ -280,6 +307,30 @@ shadcn 提供。 WorkspaceShell / WorkspacePanel
 WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 ContentSheet
 与居中 Dialog。
 
+共享反馈接口：
+
+- `StatusBanner`：tone 为 info / success / warning / error；warning 使用
+  `--warning`、`--warning-soft`、`--warning-border`，不允许 feature 自写
+  amber/red surface。默认 inline；跨页面顶层消息可用
+  `presentation="floating"`，surface、focus、位置由 semantic owner 控制。error
+  使用 role=alert，其余使用 role=status。
+- `LoadingState`：默认或 compact density，role=status 与
+  aria-live=polite。Consumer 显式维护 loading 与
+  initialized，不用“无数据”推断首次加载完成。
+- `EmptyState`：通过 headingLevel 与 density 表达页面或 Workspace 空态；compact
+  不建立第二套 card surface。
+- `UndoToast`：message、onUndo、可选 onClose；timeout 与恢复业务由 consumer
+  持有，浮层位置、surface 与按钮几何只有 semantic owner。Home 应用 / 便签和 Ask
+  对话共用。
+- `SettingsCard padded`：需要内边距的复杂 Provider 内容使用正式 padded
+  prop，不以 feature selector 重写 SettingsCard。
+- 不可逆操作统一使用 AlertDialog；取消和 Escape 不执行保存或删除，pending
+  禁用确认/取消，关闭恢复到触发控件。图标重取失败不保存网址或覆盖原图标。
+
+PageShell 的 Utility / Management / Workbench / Search archetype 唯一拥有页面
+width、max-width、margin 与 page spacing；不得叠加 legacy .page，或以 feature
+root 的居中 margin + layout max-width 再建一套页面 geometry。
+
 ## Interactive / responsive contract
 
 - default/hover/focus-visible/active/selected-current/disabled/loading/error
@@ -306,7 +357,24 @@ deno task check:ui 检查业务 CSS/TSX 新增 raw
 shadow/font-size/radius/spacing、inline visual style 与 arbitrary
 Tailwind。baseline 精确到内容和次数，不按文件放行。runtime exception 见
 scripts/ui-guard/exceptions.ts。删除旧违规同时缩减
-baseline，不将迁移后的新增违规加入 baseline。CI 执行同一入口。
+baseline，不将迁移后的新增违规加入 baseline。
+
+`scripts/ui-guard/ownership.ts` 的六条规则在 visual baseline
+检查前执行，不能通过 baseline、update 或 initialize 豁免：
+
+| 规则                         | 拒绝的漂移                                                                                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A feature-selector-in-global | global.css 定义 feature selector；显式 whitelist 必须附全局语义理由，当前为空                                                                                                   |
+| B legacy-page-layout         | PageShell 携带 .page、legacy .page geometry、feature root 模拟页面 geometry                                                                                                     |
+| C undefined-css-token        | CSS var 无法追溯到 tokens.css、同文件 local 定义或显式 runtime registry；有 fallback 也不豁免                                                                                   |
+| D native-destructive-confirm | TS / TSX 的 native confirm、window / globalThis.confirm 及 computed 访问                                                                                                        |
+| E forbidden-legacy-ui-class  | legacy Home / Trash / Ask feedback、独立 spin 等已废止 class                                                                                                                    |
+| F css-prefix-ownership       | feature prefix 出现在非 owner 文件；PageShell / feedback / ManagementTable / settings-card / settings-row* / workspace-toolbar 使用精确 canonical class 表，只允许 semantic.css |
+
+Runtime registry 只登记 WallpaperSurface 实际注入的
+image、blur、grayscale、mask、position，并附原因，不接受前缀通配。CI 的
+`.github/workflows/ui-guard.yml` 执行 `deno task check:ui` 与
+`deno test -A scripts/ui-guard/`，ownership 违规直接失败；baseline 保持 0。
 
 /design-lab 是正式组件 smoke surface，不是新 UI
 语言来源，不能替代真实业务页面验证。

@@ -1,3 +1,13 @@
+.ask-guest__content {
+    max-width: 400px;
+    margin: auto;
+    padding: var(--space-card-padding);
+}
+
+.ask-guest__content p {
+    margin: var(--space-control-gap) 0 var(--space-section-gap);
+    color: var(--muted);
+}
 /* ==========================================================================
    Ask Workspace Stylesheet (Semantic Tokens Only)
    ========================================================================== */
@@ -11,7 +21,7 @@
     overflow: hidden;
     background: var(--surface-solid);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-card);
+    border-radius: var(--radius);
     color: var(--foreground);
 }
 
@@ -30,6 +40,47 @@
     .ask-sidebar {
         display: none;
     }
+
+    .sheet.ask-history-sheet {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: none;
+        width: min(340px, 90vw);
+        height: 100dvh;
+        border-radius: 0 var(--radius) var(--radius) 0;
+        background: var(--surface-solid);
+    }
+
+    .ask-history-sheet .sheet-head {
+        padding: var(--space-row-gap);
+    }
+
+    .ask-history-sheet__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 0;
+        background: none;
+        color: var(--foreground);
+        cursor: pointer;
+    }
+
+    .ask-history-sheet__preference {
+        display: flex;
+        align-items: center;
+        gap: var(--space-control-gap);
+        padding: var(--space-3) var(--space-row-gap) 0;
+        font-size: var(--font-caption-size);
+    }
+
+    .ask-history-sheet__list {
+        overflow: auto;
+        min-height: 0;
+        padding: var(--space-row-gap);
+    }
 }
 
 .ask-history-sheet__inner {
@@ -41,7 +92,6 @@
 .ask-history-sheet .sheet-head {
     flex-shrink: 0;
 }
-
 .ask-sidebar__content {
     display: flex;
     flex-direction: column;
@@ -1042,11 +1092,4 @@
     .ask-generation-settings__popover {
         width: min(calc(100vw - var(--space-7)), 320px);
     }
-}
-
-.webapp-undo-toast__close {
-    color: var(--muted);
-}
-.webapp-undo-toast__close:hover {
-    color: var(--foreground);
 }

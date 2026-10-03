@@ -11,53 +11,8 @@
     gap: var(--space-section-gap);
 }
 
-/* Status alerts & banners */
-.apps-workspace-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius);
-    font-size: var(--font-caption-size);
-    line-height: 1.4;
-}
-
-.apps-workspace-banner--offline {
-    background: color-mix(in srgb, var(--surface) 90%, #d97706);
-    border: 1px solid color-mix(in srgb, var(--border) 60%, #d97706);
-    color: var(--foreground);
-}
-
-.apps-workspace-banner--error {
-    background: color-mix(in srgb, var(--surface) 90%, #ef4444);
-    border: 1px solid color-mix(in srgb, var(--border) 60%, #ef4444);
-    color: var(--foreground);
-}
-
-.apps-workspace-banner--loading {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    justify-content: center;
-    gap: var(--space-2);
-}
-
-.apps-workspace-banner-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-shrink: 0;
-}
-
 /* Fill the body without adding tracks or padding to the square-cell grid. */
 .apps-workspace-root {
-    flex: 1 0 auto;
-}
-.apps-workspace-root > .workspace-root-controls {
-    flex: 0 0 auto;
-}
-.apps-workspace-root > .launcher-surface-wrap {
     flex: 1 0 auto;
 }
 
@@ -159,36 +114,6 @@
 .apps-workspace-group-card-count {
     font-size: var(--font-metadata-size);
     color: var(--muted);
-}
-
-/* Empty states */
-.apps-workspace-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-6) var(--space-4);
-    text-align: center;
-    gap: var(--space-2);
-    color: var(--muted);
-    font-size: var(--font-caption-size);
-}
-
-.apps-workspace-empty-title {
-    font-size: var(--font-body-size);
-    font-weight: 600;
-    color: var(--foreground);
-}
-
-/* Workspace keeps square tracks and gaps while centering the tile cluster. */
-.apps-workspace .launcher-grid--workspace {
-    --launcher-col-w: 68px;
-    --launcher-gap-x: var(--space-1);
-    --launcher-gap-y: var(--launcher-gap-x);
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    justify-content: center;
 }
 
 /* Motion preferences */

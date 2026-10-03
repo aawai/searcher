@@ -1,3 +1,59 @@
+.home {
+    width: 100%;
+    min-height: calc(100vh - 64px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.hero {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    /* An explicit first row keeps search anchored without a placeholder title. */
+    grid-template-rows: calc(var(--font-home-title-size) * 1.1 +
+        var(--space-section)) auto;
+    justify-items: center;
+    padding: var(--space-home-hero-inset) var(--space-4) 0;
+}
+.hero > .search-form-wrap {
+    grid-row: 2;
+}
+.hero > .hero-caption {
+    grid-row: 3;
+}
+.hero-title {
+    grid-row: 1;
+    align-self: start;
+    font-size: var(--font-home-title-size);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0;
+    font-weight: 700;
+}
+.hero-title span {
+    color: var(--accent);
+}
+.hero-caption {
+    margin: var(--space-row-gap) 0 0;
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+}
+.home-zen {
+    --radius: 16px;
+    --shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] .home-zen {
+    --shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+}
+.home-widgets {
+    --radius: 22px;
+    --surface: color-mix(in srgb, var(--background) 65%, transparent);
+    --surface-soft: color-mix(in srgb, var(--background) 78%, transparent);
+    --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.35);
+}
+[data-theme="dark"] .home-widgets {
+    --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.7);
+}
 :root {
     /* Home layouts semantic tokens (Issue #52) */
     --space-zen-trigger-gap: 6px;
@@ -296,19 +352,11 @@
     font-size: var(--font-metadata-size);
 }
 
-/* Launcher grid alignment inside widgets bento card */
-.widgets-bento-card .pinned-apps.launcher-grid {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    justify-content: start;
+.widgets-bento-card {
+    --launcher-justify: start;
 }
-
-/* Balance apps when 1 to 4 items */
-.widgets-bento-card[data-few-apps="true"] .pinned-apps.launcher-grid,
-.widgets-bento-card--few-apps .pinned-apps.launcher-grid,
-.widgets-bento-card .pinned-apps.launcher-grid:has(> .launcher-tile:last-child:nth-child(-n+4)) {
-    justify-content: center;
+.widgets-bento-card[data-few-apps="true"] {
+    --launcher-justify: center;
 }
 
 /* Compact intrinsic-height empty card when other side is expanded */

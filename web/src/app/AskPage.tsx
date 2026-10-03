@@ -1,17 +1,21 @@
+import type {
+    AiGenerationDefaultsDto,
+    PreferencesDto,
+} from "@shared/contracts.ts";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { RotateCcw, X } from "lucide-react";
-import { PageShell } from "../components/searcher/PageShell.tsx";
-import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import { Button } from "../components/ui/button.tsx";
-import { api, json } from "../lib/api.ts";
-import { errorMessage, useAppState } from "./state.tsx";
-import { authPath, routes } from "./routes.ts";
+import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
 import type {
     AiConversationDto,
     AiModelDto,
     AiProviderDto,
 } from "../../../src/features/ai/types.ts";
+import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
+import "../features/ask/ask-workspace.css";
+import { ConversationSidebar } from "../features/ask/ConversationSidebar.tsx";
+import { ConversationWorkspace } from "../features/ask/ConversationWorkspace.tsx";
 import type {
     AiCapabilitiesDto,
     ConversationFullData,
@@ -19,14 +23,9 @@ import type {
     ToolsConfig,
 } from "../features/ask/types.ts";
 import { useAskStream } from "../features/ask/useAskStream.ts";
-import { ConversationSidebar } from "../features/ask/ConversationSidebar.tsx";
-import { ConversationWorkspace } from "../features/ask/ConversationWorkspace.tsx";
-import type {
-    AiGenerationDefaultsDto,
-    PreferencesDto,
-} from "@shared/contracts.ts";
-import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
-import "../features/ask/ask-workspace.css";
+import { api, json } from "../lib/api.ts";
+import { authPath, routes } from "./routes.ts";
+import { errorMessage, useAppState } from "./state.tsx";
 
 export function AskPage() {
     const { user } = useAppState();
@@ -436,7 +435,7 @@ export function AskPage() {
 
     if (!user) {
         return (
-            <PageShell archetype="workbench" className="page ask-guest">
+            <PageShell archetype="workbench">
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
@@ -465,7 +464,7 @@ export function AskPage() {
     }));
 
     return (
-        <PageShell archetype="workbench" className="page ask-page">
+        <PageShell archetype="workbench">
             <div className="ask-workspace-layout">
                 <ConversationSidebar
                     history={history}
@@ -560,39 +559,20 @@ export function AskPage() {
             </div>
 
             {error && (
-                <div
-                    role="alert"
-                    className="error p-3 m-3 rounded bg-destructive/10 text-destructive text-sm"
-                >
+                <StatusBanner tone="error" className="m-3">
                     {error}
-                </div>
+                </StatusBanner>
             )}
 
             {undoConversation && (
-                <div className="webapp-undo-toast" role="status">
-                    <span>已删除对话 “{undoConversation.title}”</span>
-                    <Button
-                        variant="default"
-                        onClick={() =>
-                            void undoDelete()}
-                    >
-                        <RotateCcw size={15} />
-                        <span>撤销</span>
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="webapp-undo-toast__close"
-                        onClick={() => {
-                            clearTimeout(undoConversation.timer);
-                            setUndoConversation(null);
-                        }}
-                        aria-label="关闭"
-                    >
-                        <X size={16} />
-                    </Button>
-                </div>
+                <UndoToast
+                    message={`已删除对话 “${undoConversation.title}”`}
+                    onUndo={() => void undoDelete()}
+                    onClose={() => {
+                        clearTimeout(undoConversation.timer);
+                        setUndoConversation(null);
+                    }}
+                />
             )}
         </PageShell>
     );

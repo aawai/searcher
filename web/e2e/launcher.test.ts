@@ -61,15 +61,27 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
     // Configure widgets style and system theme
     await visit("/settings/appearance");
-    await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.waitForFunction(() =>
-        document.documentElement.dataset.style === "widgets"
+    await page.getByRole("radio", { name: /空间轻桌面/ }).click();
+    await page.waitForFunction(() => {
+        const radio = document.querySelector(
+            'button[role="radio"][aria-checked="true"]',
+        );
+        return radio?.textContent?.includes("空间轻桌面");
+    });
+    assertEquals(
+        await page.evaluate(() => document.documentElement.dataset.style),
+        undefined,
     );
     await page.getByText("跟随系统", { exact: true }).click();
     await page.waitForFunction(() =>
         document.documentElement.dataset.theme !== undefined
     );
     await visit("/");
+    await page.locator("main.home-widgets").waitFor({ state: "visible" });
+    assertEquals(
+        await page.evaluate(() => document.documentElement.dataset.style),
+        undefined,
+    );
 
     // Helper for authenticated API calls
     async function apiRequest(
@@ -112,7 +124,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             const contentElements = Array.from(
                 panelEl.querySelectorAll<HTMLElement>(
-                    ".launcher-tile, .launcher-folder-item, .launcher-app, .apps-workspace-group-card, .apps-workspace-empty, .launcher-empty, .launcher-folder-inline-header, .apps-workspace-section-header",
+                    ".launcher-tile, .launcher-folder-item, .launcher-app, .apps-workspace-group-card, .apps-workspace-empty, .empty-state, .launcher-empty, .launcher-folder-inline-header, .apps-workspace-section-header",
                 ),
             ).filter((el) => {
                 const r = el.getBoundingClientRect();
@@ -192,10 +204,14 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             const panel = page.locator("aside.workspace-panel");
             await panel.waitFor();
-            await panel.locator(".launcher-empty, .apps-workspace-empty")
+            await panel.locator(
+                ".launcher-empty, .apps-workspace-empty, .empty-state",
+            )
                 .waitFor();
             assertEquals(
-                await panel.locator(".launcher-empty, .apps-workspace-empty")
+                await panel.locator(
+                    ".launcher-empty, .apps-workspace-empty, .empty-state",
+                )
                     .first().isVisible(),
                 true,
             );
@@ -683,7 +699,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             // Search with no results state
             await searchInput.fill("nonexistentqueryxyz");
-            await panel.locator(".apps-workspace-empty").waitFor();
+            await panel.locator(".apps-workspace-empty, .empty-state")
+                .waitFor();
 
             // Blank surface menu is accessible in search no-results state
             const noResultsMenu = await openSurfaceMenu(page);
@@ -909,9 +926,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await page.mouse.up();
 
             // Move failed -> error banner shown
-            const errorBanner = panel.locator(
-                '.apps-workspace-banner--error[role="alert"]',
-            );
+            const errorBanner = panel.getByRole("alert");
             await errorBanner.waitFor();
             assertStringIncludes(
                 await errorBanner.textContent() ?? "",

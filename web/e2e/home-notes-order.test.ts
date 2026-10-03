@@ -165,9 +165,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
     // Set widgets style as baseline
     await visit("/settings/appearance");
     await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.waitForFunction(() =>
-        document.documentElement.dataset.style === "widgets"
-    );
+    await page.locator('.layout-mode-card[aria-checked="true"]', {
+        hasText: "空间轻桌面",
+    }).waitFor();
     await page.evaluate(async () => {
         const response = await fetch("/api/preferences", {
             method: "PATCH",
@@ -684,12 +684,12 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             await panel.waitFor({ state: "visible" });
             await page.waitForFunction(() => {
                 return document.querySelectorAll(
-                    ".workspace-notes-list .note-card",
+                    ".notes-workspace-list .note-card",
                 ).length >= 2;
             });
 
             // Fix note1: find note card by title text
-            const item1 = panel.locator(".workspace-notes-list .note-card", {
+            const item1 = panel.locator(".notes-workspace-list .note-card", {
                 hasText: "Toggle Note 1",
             });
             await item1.waitFor({ state: "visible" });
@@ -702,7 +702,7 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             await page.waitForTimeout(200);
 
             // Fix note2: find note card by title text
-            const item2 = panel.locator(".workspace-notes-list .note-card", {
+            const item2 = panel.locator(".notes-workspace-list .note-card", {
                 hasText: "Toggle Note 2",
             });
             await item2.waitFor({ state: "visible" });
@@ -772,7 +772,7 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
 
             await page.waitForFunction(() => {
                 return document.querySelectorAll(
-                    ".workspace-notes-list .note-card",
+                    ".notes-workspace-list .note-card",
                 ).length >= 2;
             });
 
@@ -798,13 +798,13 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             // Handles in search view are disabled and labeled "不可排序 "
             await page.waitForFunction(() => {
                 const cards = document.querySelectorAll(
-                    ".workspace-notes-list .note-card",
+                    ".notes-workspace-list .note-card",
                 );
                 return cards.length >= 2;
             });
 
             const searchHandles = panel.locator(
-                '.workspace-notes-list button[aria-label^="不可排序 "]',
+                '.notes-workspace-list button[aria-label^="不可排序 "]',
             );
             await searchHandles.first().waitFor({ state: "visible" });
             assertEquals(

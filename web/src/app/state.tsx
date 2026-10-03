@@ -339,7 +339,6 @@ export function AppState({ children }: { children: ReactNode }) {
     }, [appearance.theme]);
 
     useEffect(() => {
-        document.documentElement.dataset.style = appearance.style;
         document.documentElement.dataset.accent = appearance.accent;
         document.documentElement.dataset.shape = appearance.shape;
         document.documentElement.style.setProperty(
@@ -347,7 +346,6 @@ export function AppState({ children }: { children: ReactNode }) {
             String(appearance.searchOpacity ?? 1),
         );
     }, [
-        appearance.style,
         appearance.accent,
         appearance.shape,
         appearance.searchOpacity,

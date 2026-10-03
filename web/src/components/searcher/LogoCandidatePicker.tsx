@@ -209,7 +209,7 @@ export function LogoCandidatePicker({
         return (
             <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--loading">
                 <div className="app-dialog-icon-subpanel__loading-indicator">
-                    <Loader2 size={16} className="spin" />
+                    <Loader2 size={16} className="animate-spin" />
                     <span>正在检查可用 AI 模型…</span>
                 </div>
             </div>
@@ -339,7 +339,7 @@ export function LogoCandidatePicker({
                     {busy
                         ? (
                             <>
-                                <Loader2 size={13} className="spin" />
+                                <Loader2 size={13} className="animate-spin" />
                                 <span>处理中…</span>
                             </>
                         )

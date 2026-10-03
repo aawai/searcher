@@ -3,6 +3,7 @@
 import { parseArgs } from "@std/cli/parse-args";
 import { resolve } from "@std/path/resolve";
 import { scanDirectory } from "./ui-guard/scanner.ts";
+import { formatOwnershipReport, scanOwnership } from "./ui-guard/ownership.ts";
 import {
     buildBaseline,
     compareWithBaseline,
@@ -52,6 +53,17 @@ export async function runCheck(args: string[]): Promise<number> {
     );
     const targetPath = resolve(flags.target ?? "web/src");
     const baseDir = resolve(flags["base-dir"] ?? cwd);
+
+    const ownership = await scanOwnership(targetPath, baseDir);
+    if (!ownership.passed) {
+        console.error(
+            flags.json
+                ? JSON.stringify({ ownership, passed: false })
+                : formatOwnershipReport(ownership),
+        );
+        return 1;
+    }
+    if (!flags.json) console.log(formatOwnershipReport(ownership));
 
     // 1. Scan target directory
     const { violations, totalFiles } = await scanDirectory(targetPath, baseDir);

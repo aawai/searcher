@@ -26,7 +26,11 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { SettingsCard, SettingsRow } from "../components/searcher/semantic.tsx";
+import {
+    SettingsCard,
+    SettingsRow,
+    StatusBanner,
+} from "../components/searcher/semantic.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -553,7 +557,7 @@ export function SettingsPage() {
 
     return (
         <>
-            <PageShell archetype="utility" className="page">
+            <PageShell archetype="utility">
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
@@ -1588,13 +1592,13 @@ export function SettingsPage() {
 
             {/* Toast feedback */}
             {toastMessage && (
-                <div
-                    className="webapp-undo-toast"
-                    role="status"
+                <StatusBanner
+                    tone="success"
+                    presentation="floating"
                     data-testid="wallpaper-toast"
                 >
-                    <span>{toastMessage}</span>
-                </div>
+                    {toastMessage}
+                </StatusBanner>
             )}
         </>
     );

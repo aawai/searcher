@@ -16,6 +16,7 @@ import type {
     LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
 import { FolderNameDialog } from "./FolderNameDialog.tsx";
+import { EmptyState } from "../../components/searcher/semantic.tsx";
 
 export interface AppsRootViewProps {
     apps: ExtendedWebApp[];
@@ -147,20 +148,22 @@ export function AppsRootView({
 
                                 {totalMatches === 0
                                     ? (
-                                        <div className="apps-workspace-empty">
-                                            <p className="apps-workspace-empty-title">
-                                                未找到匹配的网站或文件夹
-                                            </p>
-                                            <p>尝试搜索其他名称或网址关键词</p>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() =>
-                                                    onQueryChange("")}
-                                            >
-                                                清空搜索
-                                            </Button>
-                                        </div>
+                                        <EmptyState
+                                            headingLevel={3}
+                                            density="compact"
+                                            title="未找到匹配的网站或文件夹"
+                                            description="尝试搜索其他名称或网址关键词"
+                                            action={
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        onQueryChange("")}
+                                                >
+                                                    清空搜索
+                                                </Button>
+                                            }
+                                        />
                                     )
                                     : (
                                         <div className="flex flex-col gap-3">

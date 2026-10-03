@@ -194,7 +194,6 @@ export function DesignLab() {
         const root = document.documentElement;
         const previous: Record<string, string | undefined> = {
             theme: root.dataset.theme,
-            style: root.dataset.style,
             accent: root.dataset.accent,
             shape: root.dataset.shape,
         };
@@ -217,7 +216,6 @@ export function DesignLab() {
                 ? "dark"
                 : "light")
             : appearance.theme;
-        root.dataset.style = appearance.style;
         root.dataset.accent = appearance.accent;
         root.dataset.shape = appearance.shape;
     }, [

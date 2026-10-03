@@ -1,5 +1,8 @@
 import { type ReactNode, useState } from "react";
-import { Loader2 } from "lucide-react";
+import {
+    LoadingState,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import type { WorkspaceState } from "./workspace-state.ts";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import type { Appearance } from "../../app/state.tsx";
@@ -412,53 +415,44 @@ export function AppsWorkspace({
         <div className="apps-workspace">
             {/* Status alerts */}
             {status === "loading" && (
-                <div
-                    className="apps-workspace-banner apps-workspace-banner--loading"
-                    role="status"
-                >
-                    <Loader2 className="animate-spin" size={16} />
-                    <span>正在加载网站…</span>
-                </div>
+                <LoadingState density="compact">正在加载网站…</LoadingState>
             )}
 
             {status === "error" && (
-                <div
-                    className="apps-workspace-banner apps-workspace-banner--error"
-                    role="alert"
-                >
-                    <span>网站加载失败：{error}</span>
-                    <Button variant="outline" size="sm" onClick={onRetry}>
-                        重试
-                    </Button>
-                </div>
+                <StatusBanner tone="error">
+                    <div className="flex items-center justify-between gap-3 w-full">
+                        <span>网站加载失败：{error}</span>
+                        <Button variant="outline" size="sm" onClick={onRetry}>
+                            重试
+                        </Button>
+                    </div>
+                </StatusBanner>
             )}
 
             {status === "offline" && (
-                <div
-                    className="apps-workspace-banner apps-workspace-banner--offline"
-                    role="status"
-                >
-                    <span>当前离线，显示此账户上次保存的网站列表。</span>
-                    <Button variant="outline" size="sm" onClick={onRetry}>
-                        重试
-                    </Button>
-                </div>
+                <StatusBanner tone="warning">
+                    <div className="flex items-center justify-between gap-3 w-full">
+                        <span>当前离线，显示此账户上次保存的网站列表。</span>
+                        <Button variant="outline" size="sm" onClick={onRetry}>
+                            重试
+                        </Button>
+                    </div>
+                </StatusBanner>
             )}
 
             {actionError && (
-                <div
-                    className="apps-workspace-banner apps-workspace-banner--error"
-                    role="alert"
-                >
-                    <span>操作失败：{actionError}</span>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setActionError("")}
-                    >
-                        关闭
-                    </Button>
-                </div>
+                <StatusBanner tone="error">
+                    <div className="flex items-center justify-between gap-3 w-full">
+                        <span>操作失败：{actionError}</span>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setActionError("")}
+                        >
+                            关闭
+                        </Button>
+                    </div>
+                </StatusBanner>
             )}
 
             {viewContent}

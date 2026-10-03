@@ -10,6 +10,10 @@
 - [ ] 新 surface level：****；background/border/shadow/blur token：****。
 - [ ] 复用 semantic component：____；无另造基础控件或 box-on-box。
 - [ ] 每区域最多一个 primary；同目的地无重复同级入口。
+- [ ] 此改动每个新增 visual behavior 都有唯一 owner；新增 feature class 只负责
+      layout / domain presentation。
+- [ ] 没有重新实现 Button / Dialog / Toast / Status / Empty / Table；新语义已在
+      Design System 同步 owner 与 contract。
 - [ ] 唯一 page title；component title 不抢层级；关键提示不依赖 caption/muted。
 - [ ] 未新增 raw spacing/font/shadow/radius/inline style，或正式 owner
       与系统语义：____。
@@ -35,6 +39,8 @@
 - [ ] 组合覆盖与重跑策略遵循
       [仓库指南](AGENTS.md#验证范围与重复执行)，不替代既有验证阶梯及测试、typecheck、lint、format
       和 UI 门禁；full suite 按风险和仓库要求执行。
+- [ ] check:ui 的 A–F ownership rules 全部通过，无 baseline allowance 或 prefix
+      通配放宽。
 - [ ] deno task check:ui；baseline 只删除迁移旧项，不增加 allowlist 债务。
 - [ ] deno task build 与 affected focused tests；路由变更用 deno task
       test:routing。
@@ -738,3 +744,37 @@
       E2E 10 步均通过，build/typecheck/lint/UI Guard 通过。
 - 不适用：guest 无管理权限；本次不改变 Home/Zen/Widgets、壁纸、API 或路由契约，
   不扩展为无关页面验收。
+
+## Issue #79 UI/CSS 单一 owner（2026-10-03）
+
+- [x] Token / shadcn / semantic / feature / global ownership matrix 与新
+      primitive 判定条件已同步；domain CSS 从浏览器 entry 导入，基础
+      primitives.css 有实际入口。
+- [x] Home Zen/Widgets 只修改 Home scope；Settings/Admin/Account/Trash/Ask 的
+      computed surface、radius、shadow 与卡片几何保持不变；theme、accent、search
+      shape 保持全局。
+- [x] PageShell 管页面 geometry；Account/Trash/Home/Ask/Workspace 复用
+      StatusBanner、LoadingState、EmptyState、UndoToast，warning token 与
+      compact density 有正式 contract；前端无 native confirm。
+- [x] 确认弹窗覆盖 Cancel/Escape 不写入、Confirm 单次 mutation、pending
+      禁用与焦点恢复；应用/便签/AI 对话删除撤销、首次 loading/error/empty、缓存
+      warning 均经真实 API 与临时数据库验证。
+- [x] 390/768/1440 × light/dark 的六个页面 geometry
+      实页矩阵通过；Settings、Account、Admin 有六张实际截图；移动端 Account
+      退出弹窗有截图，Escape 关闭后焦点回到“退出此设备”，无 logout 请求。
+- [x] 最终集成发现 Launcher 空白 Surface 丢失 flex grow；在 launcher.css 唯一
+      owner 恢复 flex 后重建并复查 Home/Bento、Workspace、菜单和 DnD。桌面
+      Surface 实测 top=214、bottom=750，Footer top=766；内容下方 y=600
+      右键菜单显示“新建文件夹 / 整理布局”，有实际截图。
+- [x] 9 个相关 E2E 文件共 87 步通过，包括导航、Launcher、Workspace Shell、便签
+      autosave/冲突/排序、Home Bento、ownership 与
+      feedback；壁纸构图/生命周期/同步 7 步在 primitives.css
+      入口修复后通过。删除内部 class/dataset 快照断言，保留用户可观察
+      contract；surface 测量等待加载完成。
+- [x] 348 项单元测试、58 项 Guard 测试、production build、入口 typecheck、34
+      个受影响 TS/TSX lint、54 个受影响文件 format 检查通过；ownership 扫描 115
+      文件、visual 扫描 98 文件，均 0 violations，baseline/allowances 仍为 0。
+- 运行时记录：E2E 输出 Deno.serve 关于 request.signal 在成功响应后 abort 的
+  legacy-behavior 提示；本次不改变服务端 lifecycle，无新增处理或 suppress。
+- 不适用：未修改业务 API/数据模型或 AI conversation runtime；AI
+  对话删除撤销无需真实模型，未执行额外模型推理。

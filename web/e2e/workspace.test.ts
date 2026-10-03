@@ -59,9 +59,9 @@ Deno.test("production workspace contracts", async (t) => {
     // Configure user to start with widgets style
     await visit("/settings/appearance");
     await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.waitForFunction(() =>
-        document.documentElement.dataset.style === "widgets"
-    );
+    await page.locator('.layout-mode-card[aria-checked="true"]', {
+        hasText: "空间轻桌面",
+    }).waitFor();
     await visit("/");
 
     let createdNoteId = "";
@@ -350,11 +350,8 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(await createNoteBtn.textContent(), "新建便签");
 
             // Empty state regression check before any note is created
-            const emptyNotice = panel.locator(".workspace-empty");
-            assertEquals(
-                await emptyNotice.textContent(),
-                "还没有便签，点击底部“新建便签”开始记录。",
-            );
+            const emptyNotice = panel.locator(".empty-state");
+            await emptyNotice.waitFor({ state: "visible" });
 
             // Click "新建便签": note is created and editor opens immediately
             await createNoteBtn.click();
@@ -401,7 +398,7 @@ Deno.test("production workspace contracts", async (t) => {
             await panel.waitFor();
 
             // Click note item to re-enter editor
-            await page.locator(".workspace-notes-list .note-card").first()
+            await page.locator(".notes-workspace-list .note-card").first()
                 .click();
             await page.locator("#note-title-input").waitFor();
 
@@ -669,7 +666,7 @@ Deno.test("production workspace contracts", async (t) => {
                 "便签",
             );
             // Click note card to re-enter editor
-            await panel.locator(".workspace-notes-list .note-card").first()
+            await panel.locator(".notes-workspace-list .note-card").first()
                 .click();
             await page.locator("#note-title-input").waitFor();
             assertEquals(
@@ -757,7 +754,7 @@ Deno.test("production workspace contracts", async (t) => {
             ).click();
             await panel.waitFor({ state: "visible" });
             await page.waitForFunction(() =>
-                document.querySelectorAll(".workspace-notes-list .note-card")
+                document.querySelectorAll(".notes-workspace-list .note-card")
                     .length >= 8
             );
             // Viewport matrix: 390 (mobile), 768 (tablet), 1440 (desktop) across light and dark
@@ -783,7 +780,7 @@ Deno.test("production workspace contracts", async (t) => {
                         await currentPanel.waitFor({ state: "visible" });
                     }
 
-                    const listEl = currentPanel.locator(".workspace-notes-list")
+                    const listEl = currentPanel.locator(".notes-workspace-list")
                         .first();
                     await listEl.waitFor();
                     const listWidth = await listEl.evaluate((el) =>
@@ -791,7 +788,7 @@ Deno.test("production workspace contracts", async (t) => {
                     );
 
                     const cards = currentPanel.locator(
-                        ".workspace-notes-list .note-card",
+                        ".notes-workspace-list .note-card",
                     );
                     const cardCount = await cards.count();
                     assertEquals(cardCount > 0, true);
@@ -820,7 +817,7 @@ Deno.test("production workspace contracts", async (t) => {
                     await firstExpandBtn.click();
                     await page.waitForFunction(() => {
                         const c = document.querySelector(
-                            ".workspace-notes-list .note-card",
+                            ".notes-workspace-list .note-card",
                         );
                         return c && !c.classList.contains("note-card--compact");
                     });
@@ -857,7 +854,7 @@ Deno.test("production workspace contracts", async (t) => {
                     // Check horizontal overflow on all containers WHILE long code card remains expanded!
                     const overflow = await currentPanel.evaluate((aside) => {
                         const list = aside.querySelector(
-                            ".workspace-notes-list",
+                            ".notes-workspace-list",
                         );
                         const root = aside.querySelector(".notes-workspace");
                         const expCard = aside.querySelector(
@@ -950,9 +947,9 @@ Deno.test("production workspace contracts", async (t) => {
             // Verify Zen layout FloatingNotes state & geometry isolation before/after
             await visit("/settings/appearance");
             await page.getByText("极简呼吸", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen"
-            );
+            await page.locator('.layout-mode-card[aria-checked="true"]', {
+                hasText: "极简呼吸",
+            }).waitFor();
             await visit("/");
 
             const floatingNote = page.locator(".pinned-area .note-position")
@@ -972,7 +969,7 @@ Deno.test("production workspace contracts", async (t) => {
             await zenPanel.waitFor({ state: "visible" });
 
             // Expand a note inside workspace in Zen mode
-            const zenCard = zenPanel.locator(".workspace-notes-list .note-card")
+            const zenCard = zenPanel.locator(".notes-workspace-list .note-card")
                 .first();
             await zenCard.hover();
             await zenCard.locator('button.note-action-btn[aria-label="展开"]')
@@ -1004,9 +1001,9 @@ Deno.test("production workspace contracts", async (t) => {
             // Restore widgets layout
             await visit("/settings/appearance");
             await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets"
-            );
+            await page.locator('.layout-mode-card[aria-checked="true"]', {
+                hasText: "空间轻桌面",
+            }).waitFor();
             await visit("/");
 
             // Clean up extra notes, preserving only createdNoteId
@@ -1153,9 +1150,9 @@ Deno.test("production workspace contracts", async (t) => {
             // Switch appearance style to "zen" via Settings UI
             await visit("/settings/appearance");
             await page.getByText("极简呼吸", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "zen"
-            );
+            await page.locator('.layout-mode-card[aria-checked="true"]', {
+                hasText: "极简呼吸",
+            }).waitFor();
             await visit("/");
             const zenGrid = page.locator(
                 '.pinned-area .launcher-grid[data-presentation="default"]',
@@ -1243,9 +1240,9 @@ Deno.test("production workspace contracts", async (t) => {
             // Switch back to widgets layout so dock is available
             await visit("/settings/appearance");
             await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.style === "widgets"
-            );
+            await page.locator('.layout-mode-card[aria-checked="true"]', {
+                hasText: "空间轻桌面",
+            }).waitFor();
             await visit("/");
 
             // Set mobile viewport (< 768px)

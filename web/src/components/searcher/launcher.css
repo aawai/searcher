@@ -1,4 +1,5 @@
 :root {
+    --launcher-justify: center;
     /* Launcher semantic geometry tokens (Issue #52) */
     --radius-launcher-tile: 17px;
     --radius-launcher-icon: 14px;
@@ -220,6 +221,7 @@
     border-radius: var(--radius-launcher-tile);
 }
 .launcher-surface-wrap {
+    flex: 1 0 auto;
     width: 100%;
     outline: none;
 }
@@ -633,4 +635,60 @@
     font-size: var(--font-metadata-size);
     color: var(--muted);
     line-height: 1.4;
+}
+
+/* Launcher drag overlay elevation & column attributes */
+.launcher-drag-overlay {
+    z-index: var(--elevation-drag);
+}
+.launcher-grid[data-columns="1"] {
+    --launcher-columns: 1;
+}
+.launcher-grid[data-columns="2"] {
+    --launcher-columns: 2;
+}
+.launcher-grid[data-columns="3"] {
+    --launcher-columns: 3;
+}
+.launcher-grid[data-columns="4"] {
+    --launcher-columns: 4;
+}
+.launcher-grid[data-columns="5"] {
+    --launcher-columns: 5;
+}
+.launcher-grid[data-columns="6"] {
+    --launcher-columns: 6;
+}
+.launcher-grid[data-columns="7"] {
+    --launcher-columns: 7;
+}
+.launcher-grid[data-columns="8"] {
+    --launcher-columns: 8;
+}
+.launcher-grid[data-columns="9"] {
+    --launcher-columns: 9;
+}
+.launcher-grid[data-columns="10"] {
+    --launcher-columns: 10;
+}
+.launcher-grid[data-columns="11"] {
+    --launcher-columns: 11;
+}
+.launcher-grid[data-columns="12"] {
+    --launcher-columns: 12;
+}
+
+.launcher-grid--quick {
+    justify-content: var(--launcher-justify, center);
+}
+
+/* Workspace keeps square tracks and gaps while centering the tile cluster. */
+.launcher-grid--workspace {
+    --launcher-col-w: 68px;
+    --launcher-gap-x: var(--space-1);
+    --launcher-gap-y: var(--launcher-gap-x);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
 }
