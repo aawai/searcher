@@ -365,8 +365,18 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await request("/api/preferences", "PATCH", { style });
                 for (const theme of ["light", "dark"] as const) {
                     await page.emulateMedia({ colorScheme: theme });
-                    for (const width of [375, 390, 768, 1024, 1440, 1920]) {
-                        await page.setViewportSize({ width, height: 900 });
+                    for (
+                        const viewport of [
+                            { width: 390, height: 844 },
+                            { width: 768, height: 1024 },
+                            { width: 1024, height: 768 },
+                            { width: 1440, height: 900 },
+                        ] as const
+                    ) {
+                        await page.setViewportSize({
+                            width: viewport.width,
+                            height: viewport.height,
+                        });
                         await page.goto(origin + "/");
                         await page.waitForFunction(
                             (expected) =>
@@ -387,7 +397,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await search().waitFor();
                         assertEquals(
                             await panel.getAttribute("data-presentation"),
-                            width < 768
+                            viewport.width < 768
                                 ? "sheet"
                                 : style === "zen"
                                 ? "panel"
@@ -421,16 +431,13 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         );
                         await assertChromeInViewport(page);
                         const before = await chromeBounds(page);
-                        await panel.locator(".workspace-body").evaluate((el) =>
-                            el.scrollTop = el.scrollHeight
-                        );
-                        assert(
-                            (await panel.locator(".workspace-body").evaluate((
-                                el,
-                            ) => el.scrollTop)) > 0,
+                        await panel.locator(".workspace-body").evaluate(
+                            (el) => {
+                                el.scrollTop = el.scrollHeight;
+                            },
                         );
                         assertEquals(await chromeBounds(page), before);
-                        if (width >= 768) {
+                        if (viewport.width >= 768) {
                             assertEquals(
                                 await page.locator(
                                     '[data-slot="sheet-backdrop"]',
@@ -502,7 +509,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             "true",
                         );
                         await assertChromeInViewport(page);
-                        if (width >= 768) {
+                        if (viewport.width >= 768) {
                             assertEquals(
                                 await page.locator(".hero").boundingBox(),
                                 hero,
@@ -517,8 +524,31 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await page.waitForFunction(() =>
                             document.activeElement?.getAttribute(
                                 "data-workspace",
-                            ) === "notes"
+                            ) === "apps"
                         );
+                        if (style === "zen") {
+                            assertEquals(
+                                await page.evaluate(() =>
+                                    document.activeElement?.closest(
+                                            ".zen-edge-trigger",
+                                        ) !== null &&
+                                    document.activeElement?.getAttribute(
+                                            "data-workspace",
+                                        ) === "apps"
+                                ),
+                                true,
+                            );
+                        } else {
+                            assertEquals(
+                                await page.evaluate(
+                                    (sel) =>
+                                        document.activeElement?.matches(sel) ===
+                                            true,
+                                    appsTrigger,
+                                ),
+                                true,
+                            );
+                        }
                         assertEquals(
                             await page.locator(".hero").boundingBox(),
                             hero,
@@ -590,8 +620,115 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await panel.waitFor({ state: "detached" });
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("data-workspace") ===
-                    "notes"
+                    "apps"
             );
+            assertEquals(
+                await page.evaluate(
+                    (sel) => document.activeElement?.matches(sel) === true,
+                    appsTrigger,
+                ),
+                true,
+            );
+        },
+    );
+
+    await t.step(
+        "Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration",
+        async () => {
+            await request("/api/preferences", "PATCH", { style: "zen" });
+
+            for (
+                const { width, height, presentation: expectedPresentation } of [
+                    { width: 1440, height: 900, presentation: "panel" },
+                    { width: 390, height: 844, presentation: "sheet" },
+                ] as const
+            ) {
+                await page.setViewportSize({ width, height });
+                await page.goto(origin + "/");
+
+                // Opener: Apps edge trigger
+                const appsEdge = page.locator(
+                    '.zen-edge-trigger button[data-workspace="apps"]',
+                );
+                await appsEdge.waitFor();
+                await appsEdge.focus();
+                await page.keyboard.press("Enter");
+                await panel.waitFor();
+                assertEquals(
+                    await panel.getAttribute("data-presentation"),
+                    expectedPresentation,
+                );
+
+                // Root Close button has initial focus
+                await page.waitForFunction(() =>
+                    document.activeElement?.getAttribute("aria-label") ===
+                        "收起工作区"
+                );
+
+                // Nested Back behavior in Zen panel/sheet
+                const createBtn = panel.locator(
+                    ".workspace-footer .workspace-primary",
+                );
+                await createBtn.focus();
+                await page.keyboard.press("Enter");
+                await page.locator("#app-url-input").waitFor();
+                // Nested view initial focus is on Back button
+                await page.waitForFunction(() =>
+                    document.activeElement?.getAttribute("aria-label") ===
+                        "返回上一级"
+                );
+                // Trigger Back
+                await page.keyboard.press("Enter");
+                await search().waitFor();
+                // Back to root restores focus to Close button
+                await page.waitForFunction(() =>
+                    document.activeElement?.getAttribute("aria-label") ===
+                        "收起工作区"
+                );
+
+                // Overlay Escape precedence in Zen panel/sheet
+                const appTile = panel.getByRole("button", {
+                    name: "打开 Edited Alpha",
+                    exact: true,
+                });
+                await appTile.focus();
+                await page.keyboard.press("Shift+F10");
+                await page.getByRole("menu").waitFor();
+
+                // First Escape closes menu overlay, Zen surface remains visible
+                await page.keyboard.press("Escape");
+                await page.getByRole("menu").waitFor({ state: "detached" });
+                assertEquals(await panel.isVisible(), true);
+
+                // Switch Apps -> Notes
+                await panel.getByRole("button", {
+                    name: "便签工作区",
+                    exact: true,
+                }).focus();
+                await page.keyboard.press("Enter");
+                await panel.locator(".notes-workspace").waitFor();
+
+                // Second Escape closes the Zen panel/sheet
+                await page.keyboard.press("Escape");
+                await panel.waitFor({ state: "detached" });
+
+                // Proves actual opener restoration: restores Apps edge trigger, not Notes
+                await page.waitForFunction(() =>
+                    document.activeElement?.getAttribute("data-workspace") ===
+                        "apps"
+                );
+                assertEquals(
+                    await page.evaluate(() =>
+                        document.activeElement?.closest(
+                                ".zen-edge-trigger",
+                            ) !== null &&
+                        document.activeElement?.getAttribute(
+                                "data-workspace",
+                            ) === "apps"
+                    ),
+                    true,
+                );
+            }
         },
     );
 

@@ -164,7 +164,13 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - Apps / Notes Root
   打开或切换时，初始焦点落在“收起工作区”，不自动聚焦搜索输入；搜索仅由用户点击或
   Tab 导航获得焦点。嵌套页初始焦点仍落在“返回上一级”。移动端保留 Sheet focus
-  trap，关闭后焦点归还对应 opener。
+  trap，关闭后焦点归还对应 opener。首次挂载及进入嵌套页等待 chrome refs 就绪；
+  返回 Root 时在 layout effect 中同步转移焦点，避免 Sheet 对已移除的 Back
+  控件执行 popup focus restore。
+- `WorkspaceShell` 在 closed→open 时保存实际 opener，Apps/Notes 内部切换不覆盖；
+  Close/Escape 后使用 `preventScroll` 归还焦点。原元素已卸载时才回退到打开时
+  的工作区入口。Zen 仅保留 edge trigger 与 FloatingNotes（`note_layouts`），
+  不引入 Widgets Dock、window geometry 或 Snap/Overview。
 
 #### Shared Workspace Core 与 Presenter Contract
 
