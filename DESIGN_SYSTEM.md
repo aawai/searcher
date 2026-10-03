@@ -55,6 +55,7 @@ role，不把 muted 文字色当作 surface。
 | workspace geometry / layout              | --workspace-width / --workspace-inset / --workspace-top-inset / --workspace-mobile-height     |
 | workspace surface / shadow / elevation   | --surface-workspace / --shadow-workspace / --elevation-workspace                              |
 | notes board step / tilt / bento max      | --notes-board-step / --notes-board-tilt / --layout-bento-max                                  |
+| note editor writing / loading geometry   | --note-editor-min-block-size (260px)                                                          |
 
 每页最多一个 h1；section 使用 h2；component title 不抬高到 page
 层级。caption/muted 不承载唯一关键提示。code 使用 code role/monospace。
@@ -181,6 +182,16 @@ PageShell archetype 是稳定布局语义，不按页面新增分支。NoteEdito
 面板的主体内容视图（`NotesWorkspace`），具有 scoped
 局部草稿与自动保存机制，不在工作区内部再造 main。direct entry 有
 breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
+
+Milkdown / Crepe 便签正文使用现有 Workbench 边界：继承 note color surface，
+正文与 loading skeleton 共用 `--note-editor-min-block-size`，不新增居中
+overlay。 排版、代码、焦点与浮层继承 Searcher Token；表格与代码块仅局部横滚。
+标题、颜色、保存与版本状态由 NoteEditor 管理；Crepe adapter
+仅管理编辑与生命周期。 正文以 Markdown string 持久化，最终 NoteCard 仍使用
+ReactMarkdown 与 sanitizer。 选区工具栏、slash 菜单、链接和表格控件属于 editor
+composite；内部焦点转移 不触发 blur/manual snapshot，Escape
+先关闭编辑器浮层，再退出 Workspace。 编辑器只在 nested edit 视图 lazy load；Home
+/ notes root 不加载重型编辑器。
 
 ### Search Canvas 与空间轻桌面布局
 

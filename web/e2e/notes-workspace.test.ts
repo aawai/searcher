@@ -671,7 +671,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             assertStringIncludes(await saveState.textContent() ?? "", "已保存");
 
             // 1. Type in body -> transitions to "未同步至云端"
-            const bodyInput = page.locator("#note-body-textarea-edit");
+            const bodyInput = page.locator(
+                ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
+            );
             await bodyInput.fill(
                 "Fresh edited body for autosave lifecycle test",
             );
@@ -796,7 +798,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             });
 
             // 2. Local editor tries to save its changes (with old version -> 409 Conflict)
-            const bodyInput = page.locator("#note-body-textarea-edit");
+            const bodyInput = page.locator(
+                ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
+            );
             await bodyInput.fill("Local conflicting edit body");
             await bodyInput.blur();
 
@@ -831,7 +835,10 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await conflictDialog.waitFor({ state: "detached" });
 
             // Draft is replaced by cloud version and saved
-            assertEquals(await bodyInput.inputValue(), serverUpdatedBody);
+            assertEquals(
+                (await bodyInput.innerText()).trim(),
+                serverUpdatedBody.trim(),
+            );
             await page.waitForFunction(() =>
                 document.querySelector(".save-state")?.textContent?.includes(
                     "已保存",
@@ -883,7 +890,10 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 const r = await fetch(`/api/notes/${encodeURIComponent(id)}`);
                 return (await r.json()).data as { body: string };
             }, currentNote.id);
-            assertEquals(noteV3.body, "Local override content will prevail");
+            assertEquals(
+                noteV3.body.trim(),
+                "Local override content will prevail",
+            );
 
             // Return to root
             await panel.locator(

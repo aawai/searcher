@@ -6,7 +6,10 @@ import { api, ApiError, json } from "../../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
 import { Button } from "../ui/button.tsx";
 import { Textarea } from "../ui/textarea.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import {
+    NoteMilkdownEditor,
+    type NoteMilkdownEditorHandle,
+} from "./NoteMilkdownEditor.tsx";
 import { COLOR_NAMES, NOTE_COLORS, type NoteItem } from "./NoteCard.tsx";
 
 type Draft = { body: string; title: string };
@@ -57,7 +60,6 @@ export function NoteEditor(
     });
     const [color, setColor] = useState<string>(note.color || "paper");
     const [status, setStatus] = useState<Status>("saved");
-    const [view, setView] = useState<"edit" | "preview" | "split">("edit");
     const [versions, setVersions] = useState<Version[] | null>(null);
     const [versionError, setVersionError] = useState("");
     const [conflict, setConflict] = useState<NoteItem | null>(null);
@@ -65,25 +67,33 @@ export function NoteEditor(
     const [copiedDraft, setCopiedDraft] = useState(false);
     const latestNoteRef = useRef(note);
     const draftRef = useRef(draft);
+    const editorRef = useRef<NoteMilkdownEditorHandle>(null);
+    const editRevision = useRef(0);
     // Accepted conflict/save versions must not regress to a stale parent prop.
     if (note.version > latestNoteRef.current.version) {
         latestNoteRef.current = note;
     }
-    draftRef.current = draft;
     const mutationQueue = useRef<Promise<void>>(Promise.resolve());
 
     const key = "note:draft:" + note.id;
 
     useEffect(() => {
+        let active = true;
+        const revision = editRevision.current;
         void getLocal<StoredDraft>(key).then((stored) => {
+            if (!active || editRevision.current !== revision) return;
             if (stored && stored.version >= note.version) {
-                setDraft({ body: stored.body, title: stored.title });
+                replaceDraft({ body: stored.body, title: stored.title });
                 setStatus("unsynced");
+                scheduleSave(draftRef.current);
             } else {
-                setDraft({ body: note.body, title: note.title ?? "" });
+                replaceDraft({ body: note.body, title: note.title ?? "" });
                 setStatus("saved");
             }
         });
+        return () => {
+            active = false;
+        };
     }, [note.id]);
     useEffect(() => {
         setColor(note.color || "paper");
@@ -117,7 +127,21 @@ export function NoteEditor(
         clearTimeout(timer.current);
     }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    function replaceDraft(next: Draft) {
+        draftRef.current = next;
+        setDraft(next);
+        editorRef.current?.replaceMarkdown(next.body);
+    }
+    function scheduleSave(next: Draft) {
+        clearTimeout(timer.current);
+        timer.current = globalThis.setTimeout(
+            () => void save(next, "autosave"),
+            1500,
+        );
+    }
     function change(next: Draft) {
+        editRevision.current++;
+        draftRef.current = next;
         setDraft(next);
         setStatus("unsynced");
         void setLocal(key, {
@@ -125,23 +149,29 @@ export function NoteEditor(
             version: latestNoteRef.current.version,
             updatedAt: Date.now(),
         });
-        clearTimeout(timer.current);
-        timer.current = globalThis.setTimeout(
-            () => void save(next, "autosave"),
-            1500,
-        );
+        scheduleSave(next);
     }
 
     function save(
         next?: Draft,
         origin: "autosave" | "manual" | "conflict_resolution" = "autosave",
     ) {
+        const data = next ?? {
+            ...draftRef.current,
+            body: editorRef.current?.getMarkdown() ?? draftRef.current.body,
+        };
         clearTimeout(timer.current);
         timer.current = undefined;
-        const data = next ?? draftRef.current;
+        draftRef.current = data;
+        setDraft(data);
         setStatus("saving");
         mutationQueue.current = mutationQueue.current.then(async () => {
             try {
+                await setLocal(key, {
+                    ...draftRef.current,
+                    version: latestNoteRef.current.version,
+                    updatedAt: Date.now(),
+                });
                 const updated = await api<NoteItem>(
                     "/api/notes/" +
                         encodeURIComponent(latestNoteRef.current.id),
@@ -153,7 +183,19 @@ export function NoteEditor(
                     }),
                 );
                 latestNoteRef.current = updated;
-                await deleteLocal(key);
+                // A slow save must not delete a newer in-flight local draft.
+                if (
+                    draftRef.current.body === data.body &&
+                    draftRef.current.title === data.title
+                ) {
+                    await deleteLocal(key);
+                } else {
+                    await setLocal(key, {
+                        ...draftRef.current,
+                        version: updated.version,
+                        updatedAt: Date.now(),
+                    });
+                }
                 onSaved(updated);
                 if (
                     draftRef.current.body === data.body &&
@@ -200,6 +242,12 @@ export function NoteEditor(
                     (draftRef.current.title || "") !== (updated.title || "");
                 if (isDraftDirty) {
                     setStatus("unsynced");
+                    await setLocal(key, {
+                        ...draftRef.current,
+                        version: updated.version,
+                        updatedAt: Date.now(),
+                    });
+                    scheduleSave(draftRef.current);
                 } else {
                     setStatus("saved");
                 }
@@ -221,9 +269,10 @@ export function NoteEditor(
     }
 
     async function copyDraftToClipboard() {
-        const text = draft.title
-            ? `# ${draft.title}\n\n${draft.body}`
-            : draft.body;
+        const body = editorRef.current?.getMarkdown() ?? draftRef.current.body;
+        const text = draftRef.current.title
+            ? `# ${draftRef.current.title}\n\n${body}`
+            : body;
         await navigator.clipboard.writeText(text);
         setCopiedDraft(true);
         setTimeout(() => setCopiedDraft(false), 2000);
@@ -231,7 +280,10 @@ export function NoteEditor(
 
     function useCloud() {
         if (!conflict) return;
-        setDraft({ body: conflict.body, title: conflict.title ?? "" });
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        latestNoteRef.current = conflict;
+        replaceDraft({ body: conflict.body, title: conflict.title ?? "" });
         if (conflict.color) {
             setColor(conflict.color);
         }
@@ -247,8 +299,8 @@ export function NoteEditor(
         if (conflict.color) {
             setColor(conflict.color);
         }
-        const next = { ...draft, body };
-        setDraft(next);
+        const next = { ...draftRef.current, body };
+        replaceDraft(next);
         void save(next, "conflict_resolution");
     }
 
@@ -266,6 +318,9 @@ export function NoteEditor(
 
     async function restore(old: Version) {
         setVersionError("");
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        await mutationQueue.current;
         try {
             const restored = await api<NoteItem>(
                 "/api/notes/" + encodeURIComponent(note.id) + "/versions/" +
@@ -274,7 +329,9 @@ export function NoteEditor(
             );
             await deleteLocal(key);
             onSaved(restored);
-            setDraft({ body: restored.body, title: restored.title ?? "" });
+            latestNoteRef.current = restored;
+            replaceDraft({ body: restored.body, title: restored.title ?? "" });
+            setConflict(null);
             setStatus("saved");
             setVersions(null);
         } catch {
@@ -282,7 +339,18 @@ export function NoteEditor(
         }
     }
     return (
-        <section className={"note-editor note-" + (color || "paper")}>
+        <section
+            className={"note-editor note-" + (color || "paper")}
+            onKeyDownCapture={(event) => {
+                if (
+                    (event.metaKey || event.ctrlKey) &&
+                    event.key.toLowerCase() === "s"
+                ) {
+                    event.preventDefault();
+                    void save(undefined, "manual");
+                }
+            }}
+        >
             <div className="note-title-wrap px-1 pt-1 pb-1">
                 <input
                     id="note-title-input"
@@ -292,137 +360,61 @@ export function NoteEditor(
                     aria-label="便签标题"
                     value={draft.title}
                     onChange={(event) =>
-                        change({ ...draft, title: event.target.value })}
-                    onBlur={() => void save(undefined, "manual")}
+                        change({
+                            ...draftRef.current,
+                            title: event.target.value,
+                        })}
+                    onBlur={() => {
+                        if (status !== "saved" && !conflict) {
+                            void save(
+                                undefined,
+                                "manual",
+                            );
+                        }
+                    }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter") {
                             event.preventDefault();
-                            const targetId = view === "split"
-                                ? "note-body-textarea-split"
-                                : "note-body-textarea-edit";
-                            document.getElementById(targetId)?.focus();
+                            editorRef.current?.focus();
                         }
                     }}
                 />
             </div>
-            <Tabs
-                value={view}
-                onValueChange={(id) =>
-                    setView(id as "edit" | "preview" | "split")}
-                className="flex-1 flex flex-col min-h-0"
-            >
-                <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
-                    <TabsList>
-                        <TabsTrigger value="edit">编辑</TabsTrigger>
-                        <TabsTrigger value="preview">预览</TabsTrigger>
-                        <TabsTrigger value="split">分栏</TabsTrigger>
-                    </TabsList>
-                    <div className="flex items-center gap-3">
-                        <p
-                            className={"save-state save-" + status +
-                                " text-xs m-0"}
-                            role="status"
-                        >
-                            {({
-                                saved: "已保存",
-                                saving: "保存中…",
-                                unsynced: "未同步至云端",
-                                error: "保存失败，草稿仍在此设备",
-                            })[status]}
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => void showVersions()}
-                        >
-                            版本历史
-                        </Button>
-                    </div>
-                </div>
-
-                <TabsContent
-                    value="edit"
-                    className="flex-1 flex flex-col mt-3 min-h-[300px]"
+            <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
+                <p
+                    className={"save-state save-" + status + " text-xs m-0"}
+                    role="status"
                 >
-                    <div
-                        className="field flex-1 flex flex-col"
-                        style={{ margin: 0 }}
-                    >
-                        <label
-                            className="sr-only"
-                            htmlFor="note-body-textarea-edit"
-                        >
-                            Markdown 内容
-                        </label>
-                        <Textarea
-                            id="note-body-textarea-edit"
-                            placeholder="输入 Markdown 内容…"
-                            value={draft.body}
-                            onChange={(event) =>
-                                change({ ...draft, body: event.target.value })}
-                            onBlur={() => void save(undefined, "manual")}
-                            onKeyDown={(event) => {
-                                if (
-                                    (event.metaKey || event.ctrlKey) &&
-                                    event.key.toLowerCase() === "s"
-                                ) {
-                                    event.preventDefault();
-                                    void save(undefined, "manual");
-                                }
-                            }}
-                            className="flex-1 w-full h-full min-h-[260px] resize-none font-mono text-sm"
-                        />
-                    </div>
-                </TabsContent>
-
-                <TabsContent
-                    value="preview"
-                    className="flex-1 mt-3 min-h-[300px] overflow-y-auto"
+                    {({
+                        saved: "已保存",
+                        saving: "保存中…",
+                        unsynced: "未同步至云端",
+                        error: "保存失败，草稿仍在此设备",
+                    })[status]}
+                </p>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void showVersions()}
                 >
-                    <div className="preview-pane h-full">
-                        {markdown(draft.body)}
-                    </div>
-                </TabsContent>
-
-                <TabsContent
-                    value="split"
-                    className="flex-1 editor-view--split mt-3 min-h-[300px]"
-                >
-                    <div
-                        className="field flex-1 flex flex-col"
-                        style={{ margin: 0 }}
-                    >
-                        <label
-                            className="sr-only"
-                            htmlFor="note-body-textarea-split"
-                        >
-                            Markdown 内容
-                        </label>
-                        <Textarea
-                            id="note-body-textarea-split"
-                            placeholder="输入 Markdown 内容…"
-                            value={draft.body}
-                            onChange={(event) =>
-                                change({ ...draft, body: event.target.value })}
-                            onBlur={() => void save(undefined, "manual")}
-                            onKeyDown={(event) => {
-                                if (
-                                    (event.metaKey || event.ctrlKey) &&
-                                    event.key.toLowerCase() === "s"
-                                ) {
-                                    event.preventDefault();
-                                    void save(undefined, "manual");
-                                }
-                            }}
-                            className="flex-1 w-full h-full min-h-[260px] resize-none font-mono text-sm"
-                        />
-                    </div>
-                    <div className="preview-pane flex-1 overflow-y-auto">
-                        {markdown(draft.body)}
-                    </div>
-                </TabsContent>
-            </Tabs>
+                    版本历史
+                </Button>
+            </div>
+            <NoteMilkdownEditor
+                ref={editorRef}
+                initialMarkdown={draftRef.current.body}
+                onMarkdownChange={(body) =>
+                    change({ ...draftRef.current, body })}
+                onEditorBlur={() => {
+                    if (status !== "saved" && !conflict) {
+                        void save(
+                            undefined,
+                            "manual",
+                        );
+                    }
+                }}
+            />
             <div className="note-editor-footer">
                 <div
                     className="note-color-dots"
@@ -486,7 +478,7 @@ export function NoteEditor(
                         </div>
                     </div>
                     <label className="field">
-                        合并内容<textarea
+                        合并内容<Textarea
                             value={merge}
                             onChange={(event) => setMerge(event.target.value)}
                         />
@@ -504,7 +496,11 @@ export function NoteEditor(
                         </button>
                         <button
                             type="button"
-                            onClick={() => resolve(draft.body)}
+                            onClick={() =>
+                                resolve(
+                                    editorRef.current?.getMarkdown() ??
+                                        draftRef.current.body,
+                                )}
                         >
                             覆盖云端
                         </button>
