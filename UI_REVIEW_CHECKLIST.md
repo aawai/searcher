@@ -636,3 +636,22 @@
       显示均核对按钮文案并捕获截图；点击后打开“应用”工作区。
 - [x] check:ui、目标组件 typecheck、lint、format
       通过；纯文案变更不新增静态文案测试。
+
+## Issue #70 Workspace 初始焦点（2026-10-03）
+
+- [x] 复用 WorkspacePanel、Button 与 Sheet；不新增
+      Token、视觉样式或基础控件。Root
+      初始焦点为“收起工作区”，嵌套页仍为“返回上一级”。
+- [x] 更新 E2E focus contract：新断言在旧构建失败，修复后 Shell 六步通过；覆盖
+      Widgets/Zen、light/dark、移动 Sheet trap 与关闭后的 opener 恢复。
+- [x] 独立临时数据库实站：Apps/Notes × 390/768/1440 × light/dark 共 12
+      场景完成并截图。初始焦点非输入，Tab 可进入搜索，Close/Escape 均恢复对应
+      Dock opener；390px 验证正向与反向 Tab trap。
+- [x] 浏览器捕获的 runtime error 为 0。校准时以状态轮询等待 focus trap
+      提交，不把焦点守卫的瞬态当作最终焦点。
+- [x] 全量单元测试 320 项通过；build、App.tsx typecheck、目标 lint/format 与
+      check:ui 通过（89 文件、0 violations）。
+- [x] Workspace 批量 E2E 中 5 个文件通过，Launcher 拖拽失败恢复步骤超时并导致 3
+      步连锁失败；未改基线与修复分支的独立 Launcher 执行均为 14
+      步通过。保留该间歇失败记录，不宣称批量套件全绿。
+- [ ] 真机软键盘：未验证；Chromium 响应式模拟已确认打开时无输入控件焦点。
