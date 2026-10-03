@@ -11,6 +11,7 @@
         "@std/path": "jsr:@std/path@1.1.6",
         "@valibot/valibot": "jsr:@valibot/valibot@1.4.2",
         "drizzle-orm": "npm:drizzle-orm@0.45.2",
+        "fflate": "npm:fflate@0.8.2",
         "hono": "jsr:@hono/hono@4.13.7",
         "openai": "npm:openai@7.23.0",
         "pino": "npm:pino@10.3.1",
