@@ -19,6 +19,7 @@ export function WorkspacePanel(
     );
     const body = useRef<HTMLDivElement>(null);
     const back = useRef<HTMLButtonElement>(null);
+    const close = useRef<HTMLButtonElement>(null);
     const touchY = useRef<number | null>(null);
     useEffect(() => {
         const media = globalThis.matchMedia("(max-width: 767px)");
@@ -29,9 +30,11 @@ export function WorkspacePanel(
     useEffect(() => {
         const frame = requestAnimationFrame(() => {
             if (nested) back.current?.focus();
-            else {body.current?.querySelector<HTMLInputElement>(
+            else if (!mobile) {
+                body.current?.querySelector<HTMLInputElement>(
                     "[data-workspace-search]",
-                )?.focus();}
+                )?.focus();
+            }
         });
         return () => cancelAnimationFrame(frame);
     }, [routeKey, mobile, nested]);
@@ -88,6 +91,7 @@ export function WorkspacePanel(
                     )
                     : <h2 className="workspace-title">{title}</h2>}
                 <Button
+                    ref={close}
                     variant="ghost"
                     size="icon"
                     aria-label="收起工作区"
@@ -111,12 +115,7 @@ export function WorkspacePanel(
                 <SheetContent
                     className="workspace-panel workspace-panel--mobile"
                     aria-describedby={undefined}
-                    initialFocus={() =>
-                        nested
-                            ? back.current
-                            : body.current?.querySelector<HTMLInputElement>(
-                                "[data-workspace-search]",
-                            ) ?? null}
+                    initialFocus={() => nested ? back.current : close.current}
                     finalFocus={false}
                 >
                     {content}
