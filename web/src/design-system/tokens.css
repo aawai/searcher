@@ -6,6 +6,15 @@
     --surface: #FFFFFF;
     --surface-soft: #F0F2F5;
     --surface-solid: #FFFFFF;
+    /* Nonmodal windows: solid content and one shared elevation. */
+    --window-surface: var(--surface-solid);
+    --window-border: var(--border);
+    --shadow-window: var(--shadow-l3);
+    --radius-window: var(--radius);
+    --space-window-gap: 16px;
+    --window-elevation: 30;
+    --window-resize-hit: 12px;
+    --window-chrome-height: 44px;
     /* Material levels: canvas, content, primary search, temporary overlay. */
     --surface-l0: var(--background);
     --wallpaper-glow-strength: 14%;
