@@ -43,9 +43,23 @@
     margin: var(--space-1) 0;
     padding-left: var(--space-markdown-list-indent);
 }
-
 .markdown li {
     margin: calc(var(--space-1) / 2) 0;
+}
+
+.markdown ul.contains-task-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.markdown li.task-list-item {
+    list-style: none;
+}
+
+.markdown .task-list-item input[type="checkbox"] {
+    margin: 0 var(--space-2) 0 0;
+    vertical-align: middle;
+    pointer-events: none;
 }
 
 .markdown blockquote {
@@ -53,6 +67,19 @@
     padding-left: var(--space-control-gap);
     border-left: 3px solid var(--border);
     color: var(--muted);
+    overflow-wrap: break-word;
+}
+
+.markdown blockquote p {
+    margin: var(--space-control-gap) 0;
+}
+
+.markdown blockquote p:first-child {
+    margin-top: 0;
+}
+
+.markdown blockquote p:last-child {
+    margin-bottom: 0;
 }
 
 .markdown a {
@@ -69,20 +96,58 @@
     background: var(--surface-soft);
     padding: var(--space-row-gap);
     border-radius: var(--radius);
+    font-family: var(--font-code-family);
+    font-size: var(--font-code-size);
+    line-height: var(--font-code-line-height);
 }
 
 .markdown code {
+    font-family: var(--font-code-family);
+    font-size: var(--font-inline-code-size);
+    background: var(--surface-soft);
+    padding: calc(var(--space-1) / 2) var(--space-1);
+    border-radius: var(--radius-inline-code);
     overflow-wrap: anywhere;
+}
+
+.markdown pre code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    line-height: inherit;
 }
 
 .markdown table {
     display: block;
     overflow-x: auto;
     border-collapse: collapse;
+    max-width: 100%;
+    min-width: 100%;
 }
 
 .markdown td,
 .markdown th {
     border: 1px solid var(--border);
     padding: var(--space-control-gap) var(--space-3);
+    vertical-align: top;
+    text-align: left;
+    overflow-wrap: break-word;
+}
+
+.markdown th {
+    background: var(--surface-soft);
+    font-weight: 600;
+}
+
+.markdown hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: var(--space-3) 0;
+}
+
+.markdown img {
+    max-width: 100%;
+    height: auto;
+    display: block;
 }

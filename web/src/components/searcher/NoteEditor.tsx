@@ -1,7 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeSanitize from "rehype-sanitize";
+import {
+    type KeyboardEvent,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
+import { NoteMarkdown } from "./NoteMarkdown.tsx";
+import { NoteMarkdownToolbar } from "./NoteMarkdownToolbar.tsx";
+import {
+    applyMarkdownCommand,
+    type MarkdownCommand,
+    type TextEditResult,
+} from "./note-markdown-edit.ts";
 import { api, ApiError, json } from "../../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
 import { Button } from "../ui/button.tsx";
@@ -26,23 +36,7 @@ type Version = {
 };
 const markdown = (text: string) => (
     <div className="markdown">
-        <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeSanitize]}
-            components={{
-                a: ({ href, children }) => (
-                    <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        {children}
-                    </a>
-                ),
-            }}
-        >
-            {text}
-        </ReactMarkdown>
+        <NoteMarkdown body={text} />
     </div>
 );
 export function NoteEditor(
@@ -65,14 +59,29 @@ export function NoteEditor(
     const [copiedDraft, setCopiedDraft] = useState(false);
     const latestNoteRef = useRef(note);
     const draftRef = useRef(draft);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const composingRef = useRef(false);
+    const pendingSelection = useRef<TextEditResult | null>(null);
     // Accepted conflict/save versions must not regress to a stale parent prop.
     if (note.version > latestNoteRef.current.version) {
         latestNoteRef.current = note;
     }
     draftRef.current = draft;
     const mutationQueue = useRef<Promise<void>>(Promise.resolve());
+    // Preview may follow the composite blur in the same event; enqueue that draft only once.
+    const submittedDraftRef = useRef<Draft | undefined>(undefined);
 
     const key = "note:draft:" + note.id;
+
+    useLayoutEffect(() => {
+        const result = pendingSelection.current;
+        const textarea = textareaRef.current;
+        pendingSelection.current = null;
+        if (!result || !textarea) return;
+        // Restore after the controlled value commits, before another key event or paint.
+        textarea.focus({ preventScroll: true });
+        textarea.setSelectionRange(result.selectionStart, result.selectionEnd);
+    }, [draft]);
 
     useEffect(() => {
         void getLocal<StoredDraft>(key).then((stored) => {
@@ -118,6 +127,7 @@ export function NoteEditor(
     }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function change(next: Draft) {
+        draftRef.current = next;
         setDraft(next);
         setStatus("unsynced");
         void setLocal(key, {
@@ -132,6 +142,80 @@ export function NoteEditor(
         );
     }
 
+    function command(command: MarkdownCommand) {
+        const textarea = textareaRef.current;
+        if (!textarea || composingRef.current) return;
+        const result = applyMarkdownCommand(
+            draftRef.current.body,
+            textarea.selectionStart,
+            textarea.selectionEnd,
+            command,
+        );
+        pendingSelection.current = result;
+        change({ ...draftRef.current, body: result.value });
+    }
+
+    function bodyKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+        if (
+            composingRef.current || event.nativeEvent.isComposing ||
+            event.keyCode === 229
+        ) return;
+        if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
+        const key = event.key.toLowerCase();
+        if (key === "s" && !event.shiftKey) {
+            event.preventDefault();
+            void save(undefined, "manual");
+            return;
+        }
+        const format: MarkdownCommand | undefined = event.shiftKey
+            ? (key === "x" ? "strike" : undefined)
+            : key === "b"
+            ? "bold"
+            : key === "i"
+            ? "italic"
+            : key === "k"
+            ? "link"
+            : undefined;
+        if (!format) return;
+        event.preventDefault();
+        command(format);
+    }
+
+    function bodyEditor(id: string) {
+        return (
+            <div
+                className="note-body-composite"
+                onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                        void save(undefined, "manual");
+                    }
+                }}
+            >
+                <NoteMarkdownToolbar onCommand={command} />
+                <label className="sr-only" htmlFor={id}>Markdown 内容</label>
+                <Textarea
+                    ref={textareaRef}
+                    id={id}
+                    placeholder="输入 Markdown 内容…"
+                    value={draft.body}
+                    onChange={(event) =>
+                        change({
+                            ...draftRef.current,
+                            body: event.target.value,
+                        })}
+                    onCompositionStart={() => {
+                        composingRef.current = true;
+                    }}
+                    onCompositionEnd={() => {
+                        composingRef.current = false;
+                    }}
+                    onKeyDown={bodyKeyDown}
+                    className="note-body-textarea"
+                />
+            </div>
+        );
+    }
+
     function save(
         next?: Draft,
         origin: "autosave" | "manual" | "conflict_resolution" = "autosave",
@@ -139,6 +223,7 @@ export function NoteEditor(
         clearTimeout(timer.current);
         timer.current = undefined;
         const data = next ?? draftRef.current;
+        submittedDraftRef.current = data;
         setStatus("saving");
         mutationQueue.current = mutationQueue.current.then(async () => {
             try {
@@ -163,6 +248,9 @@ export function NoteEditor(
                 }
                 setConflict(null);
             } catch (error) {
+                if (submittedDraftRef.current === data) {
+                    submittedDraftRef.current = undefined;
+                }
                 if (error instanceof ApiError && error.code === 409) {
                     const serverNote = error.data as NoteItem | undefined;
                     if (serverNote) {
@@ -307,8 +395,14 @@ export function NoteEditor(
             </div>
             <Tabs
                 value={view}
-                onValueChange={(id) =>
-                    setView(id as "edit" | "preview" | "split")}
+                onValueChange={(id) => {
+                    const next = id as "edit" | "preview" | "split";
+                    if (
+                        next === "preview" &&
+                        submittedDraftRef.current !== draftRef.current
+                    ) void save(undefined, "manual");
+                    setView(next);
+                }}
                 className="flex-1 flex flex-col min-h-0"
             >
                 <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
@@ -345,35 +439,7 @@ export function NoteEditor(
                     value="edit"
                     className="flex-1 flex flex-col mt-3 min-h-[300px]"
                 >
-                    <div
-                        className="field flex-1 flex flex-col"
-                        style={{ margin: 0 }}
-                    >
-                        <label
-                            className="sr-only"
-                            htmlFor="note-body-textarea-edit"
-                        >
-                            Markdown 内容
-                        </label>
-                        <Textarea
-                            id="note-body-textarea-edit"
-                            placeholder="输入 Markdown 内容…"
-                            value={draft.body}
-                            onChange={(event) =>
-                                change({ ...draft, body: event.target.value })}
-                            onBlur={() => void save(undefined, "manual")}
-                            onKeyDown={(event) => {
-                                if (
-                                    (event.metaKey || event.ctrlKey) &&
-                                    event.key.toLowerCase() === "s"
-                                ) {
-                                    event.preventDefault();
-                                    void save(undefined, "manual");
-                                }
-                            }}
-                            className="flex-1 w-full h-full min-h-[260px] resize-none font-mono text-sm"
-                        />
-                    </div>
+                    {bodyEditor("note-body-textarea-edit")}
                 </TabsContent>
 
                 <TabsContent
@@ -389,35 +455,7 @@ export function NoteEditor(
                     value="split"
                     className="flex-1 editor-view--split mt-3 min-h-[300px]"
                 >
-                    <div
-                        className="field flex-1 flex flex-col"
-                        style={{ margin: 0 }}
-                    >
-                        <label
-                            className="sr-only"
-                            htmlFor="note-body-textarea-split"
-                        >
-                            Markdown 内容
-                        </label>
-                        <Textarea
-                            id="note-body-textarea-split"
-                            placeholder="输入 Markdown 内容…"
-                            value={draft.body}
-                            onChange={(event) =>
-                                change({ ...draft, body: event.target.value })}
-                            onBlur={() => void save(undefined, "manual")}
-                            onKeyDown={(event) => {
-                                if (
-                                    (event.metaKey || event.ctrlKey) &&
-                                    event.key.toLowerCase() === "s"
-                                ) {
-                                    event.preventDefault();
-                                    void save(undefined, "manual");
-                                }
-                            }}
-                            className="flex-1 w-full h-full min-h-[260px] resize-none font-mono text-sm"
-                        />
-                    </div>
+                    {bodyEditor("note-body-textarea-split")}
                     <div className="preview-pane flex-1 overflow-y-auto">
                         {markdown(draft.body)}
                     </div>

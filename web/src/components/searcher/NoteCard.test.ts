@@ -1,5 +1,7 @@
 import { assertEquals } from "@std/assert";
-import { getNoteDisplayTitle, isNoteCompact } from "./NoteCard.tsx";
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+import { getNoteDisplayTitle, isNoteCompact, NoteCard } from "./NoteCard.tsx";
 
 Deno.test("isNoteCompact logic handles explicit mode and layout expanded fallback for 展开 and 折叠", () => {
     assertEquals(isNoteCompact("compact", true), true);
@@ -37,4 +39,55 @@ Deno.test("getNoteDisplayTitle extracts stripped first line when title is empty"
         getNoteDisplayTitle("", ""),
         "空白便签",
     );
+});
+
+Deno.test("NoteCard renders NoteMarkdown preview with shared breaks and markdown in full mode", () => {
+    const html = ReactDOMServer.renderToStaticMarkup(
+        React.createElement(NoteCard, {
+            note: {
+                id: "test-note-1",
+                title: "Test Title",
+                body:
+                    "First line\nSecond line with [Link](https://example.com)",
+                version: 1,
+            },
+            mode: "full",
+        }),
+    );
+    assertEquals(html.includes("note-preview markdown"), true);
+    assertEquals(html.includes("<br/>"), true);
+    assertEquals(html.includes('href="https://example.com"'), true);
+    assertEquals(html.includes('target="_blank"'), true);
+    assertEquals(html.includes('rel="noopener noreferrer"'), true);
+});
+
+Deno.test("NoteCard renders placeholder when note body is empty or whitespace", () => {
+    const html = ReactDOMServer.renderToStaticMarkup(
+        React.createElement(NoteCard, {
+            note: {
+                id: "test-note-2",
+                title: "Empty Body",
+                body: "   ",
+                version: 1,
+            },
+            mode: "full",
+        }),
+    );
+    assertEquals(html.includes("note-placeholder"), true);
+    assertEquals(html.includes("写下你的想法…"), true);
+});
+
+Deno.test("NoteCard omits preview in compact mode", () => {
+    const html = ReactDOMServer.renderToStaticMarkup(
+        React.createElement(NoteCard, {
+            note: {
+                id: "test-note-3",
+                title: "Compact Note",
+                body: "Some content",
+                version: 1,
+            },
+            mode: "compact",
+        }),
+    );
+    assertEquals(html.includes("note-preview"), false);
 });

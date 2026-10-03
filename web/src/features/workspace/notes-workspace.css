@@ -41,7 +41,8 @@
     min-height: 100%;
     padding: 0;
 }
-.notes-workspace-editor .note-editor-view-split {
+.notes-workspace-editor .editor-view--split {
+    display: flex;
     flex-direction: column;
 }
 .notes-workspace-editor .note-editor-toolbar {

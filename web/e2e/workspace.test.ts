@@ -405,9 +405,11 @@ Deno.test("production workspace contracts", async (t) => {
             ).click();
             await panel.waitFor();
 
-            // Click note item to re-enter editor
-            await page.locator(".notes-workspace-list .note-card").first()
-                .click();
+            // Close/reopen retains the current nested editor; root cards are only present after Back.
+            if (!(await page.locator("#note-body-textarea-edit").isVisible())) {
+                await page.locator(".notes-workspace-list .note-card").first()
+                    .click();
+            }
             await page.locator("#note-title-input").waitFor();
 
             // Draft content was restored from local draft!

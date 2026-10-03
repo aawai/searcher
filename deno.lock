@@ -61,6 +61,7 @@
     "npm:react-router-dom@7.9.1": "7.9.1_react@19.1.1_react-dom@19.1.1",
     "npm:react@19.1.1": "19.1.1",
     "npm:rehype-sanitize@6.0.0": "6.0.0",
+    "npm:remark-breaks@4.0.0": "4.0.0",
     "npm:remark-gfm@4.0.1": "4.0.1",
     "npm:rotating-file-stream@3.2.9": "3.2.9",
     "npm:shadcn@latest": "4.21.0_typescript@5.9.3",
@@ -167,21 +168,6 @@
     }
   },
   "npm": {
-    "@assistant-ui/core@0.3.21_@assistant-ui+store@0.3.15_@assistant-ui+tap@0.9.19_@types+react@19.3.0_assistant-cloud@0.1.43_react@19.1.1": {
-      "integrity": "sha512-zD0u/N4RC57jcHWbsMezAkuUK6IbBzfjkl37o9TdRRDIseDs/iEpqede551kdGpgkuSVA7qlbMokHtY4upAbYw==",
-      "dependencies": [
-        "@assistant-ui/store",
-        "@assistant-ui/tap",
-        "@types/react",
-        "assistant-stream",
-        "nanoid@6.0.1",
-        "react"
-      ],
-      "optionalPeers": [
-        "@types/react",
-        "react"
-      ]
-    },
     "@assistant-ui/core@0.3.21_@assistant-ui+store@0.3.15_@assistant-ui+tap@0.9.19_@types+react@19.3.0_assistant-cloud@0.2.3_react@19.1.1": {
       "integrity": "sha512-zD0u/N4RC57jcHWbsMezAkuUK6IbBzfjkl37o9TdRRDIseDs/iEpqede551kdGpgkuSVA7qlbMokHtY4upAbYw==",
       "dependencies": [
@@ -202,7 +188,7 @@
     "@assistant-ui/react@0.15.2_@types+react@19.3.0_@types+react-dom@19.3.0_react@19.1.1_react-dom@19.1.1": {
       "integrity": "sha512-AheazgXVi15tLWE7bxsleCb2CAahpo+PkA0+OYDFbcwngAO3w84R30ixjl3yaLHyLE8qLXc15JDPEyLCI+sbqA==",
       "dependencies": [
-        "@assistant-ui/core@0.3.21_@assistant-ui+store@0.3.15_@assistant-ui+tap@0.9.19_@types+react@19.3.0_assistant-cloud@0.1.43_react@19.1.1",
+        "@assistant-ui/core",
         "@assistant-ui/store",
         "@assistant-ui/tap",
         "@radix-ui/primitive",
@@ -3614,6 +3600,13 @@
         "mdast-util-to-markdown"
       ]
     },
+    "mdast-util-newline-to-break@2.0.0": {
+      "integrity": "sha512-MbgeFca0hLYIEx/2zGsszCSEJJ1JSCdiY5xQxRcLDDGa8EPvlLPupJ4DSajbMPAnC0je8jfb9TiUATnxxrHUog==",
+      "dependencies": [
+        "@types/mdast",
+        "mdast-util-find-and-replace"
+      ]
+    },
     "mdast-util-phrasing@4.1.0": {
       "integrity": "sha512-TqICwyvJJpBwvGAMZjj4J2n0X8QWp21b9l0o7eXyVJ25YNWYbJDVIyD1bZXE6WtV6RmKJVYmQAKWa0zWOABz2w==",
       "dependencies": [
@@ -4465,6 +4458,14 @@
         "hast-util-sanitize"
       ]
     },
+    "remark-breaks@4.0.0": {
+      "integrity": "sha512-IjEjJOkH4FuJvHZVIW0QCDWxcG96kCq7An/KVH2NfJe6rKZU2AsHeB3OEjPNRxi4QC34Xdx7I2KGYn6IpT7gxQ==",
+      "dependencies": [
+        "@types/mdast",
+        "mdast-util-newline-to-break",
+        "unified"
+      ]
+    },
     "remark-gfm@4.0.1": {
       "integrity": "sha512-1quofZ2RQ9EWdeN34S79+KExV1764+wCUGop5CPL1WGdD0ocPpu91lzPGbwWMECpEpd42kJGQwzRfyov9j4yNg==",
       "dependencies": [
@@ -5181,6 +5182,7 @@
       "npm:react-router-dom@7.9.1",
       "npm:react@19.1.1",
       "npm:rehype-sanitize@6.0.0",
+      "npm:remark-breaks@4.0.0",
       "npm:remark-gfm@4.0.1",
       "npm:rotating-file-stream@3.2.9",
       "npm:tailwind-merge@3.3.1",
