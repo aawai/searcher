@@ -87,7 +87,6 @@
     --space-note-heading-divider: 5px;
     --space-note-footer-divider: 6px;
     --layout-note-actions-reserve: 56px;
-    --note-editor-min-block-size: 260px;
     --space-markdown-heading-before: var(--space-2);
     --space-markdown-heading-after: var(--space-1);
     --space-markdown-list-indent: var(--space-5);

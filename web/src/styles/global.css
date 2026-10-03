@@ -901,17 +901,6 @@ a {
 [data-theme="dark"] :where(.app-shell[data-wallpaper-image]) .note-card.note-card--compact:hover {
     box-shadow: var(--shadow-note-wallpaper-hover);
 }
-.note-editor {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-    gap: var(--space-row-gap);
-    padding: var(--space-row-gap) var(--space-5);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface-solid);
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
 .note-amber,
 .note-yellow {
     background: color-mix(in srgb, #f59e0b 8%, var(--surface-solid));
@@ -1176,6 +1165,17 @@ a {
     position: relative;
     z-index: var(--elevation-card);
 }
+.note-editor {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    gap: var(--space-row-gap);
+    padding: var(--space-row-gap) var(--space-5);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
 .note-title-frameless {
     font-size: var(--font-section-title-size);
     font-weight: 700;
@@ -1194,6 +1194,34 @@ a {
 .note-editor .cn-textarea:focus {
     border-color: var(--accent);
     background: color-mix(in srgb, var(--surface-solid) 50%, transparent);
+}
+.editor-view {
+    display: flex;
+    flex: 1;
+    min-height: 360px;
+    gap: var(--space-row-gap);
+}
+.editor-view--split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-row-gap);
+}
+@media (max-width: 767px) {
+    .editor-view--split {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-row-gap);
+    }
+}
+.preview-pane {
+    background: color-mix(in srgb, var(--surface-soft) 40%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: var(--radius);
+    padding: var(--space-row-gap);
+    overflow-y: auto;
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: 1.6;
 }
 .note-placeholder {
     display: block;
@@ -1266,15 +1294,6 @@ a {
     background: var(--surface-soft);
     padding: calc(var(--space-1) / 4) var(--space-1);
     border-radius: var(--radius-inline-code);
-}
-.note-preview.markdown pre code {
-    padding: 0;
-    background: none;
-    border-radius: 0;
-}
-.note-preview.markdown img {
-    max-width: 100%;
-    height: auto;
 }
 
 .save-state {

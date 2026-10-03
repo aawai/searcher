@@ -344,13 +344,6 @@ Deno.test("production workspace contracts", async (t) => {
             await page.locator(
                 '.workspace-switcher button[aria-label="便签工作区"]',
             ).click();
-            const searchInput = panel.locator("input[data-workspace-search]");
-            if (await searchInput.isVisible()) {
-                const q = await searchInput.inputValue();
-                if (q) {
-                    await searchInput.fill("");
-                }
-            }
             const createNoteBtn = page.locator(
                 ".workspace-footer button.workspace-primary",
             );
@@ -358,7 +351,6 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Empty state regression check before any note is created
             const emptyNotice = panel.locator(".workspace-empty");
-            await emptyNotice.waitFor({ state: "visible" });
             assertEquals(
                 await emptyNotice.textContent(),
                 "还没有便签，点击底部“新建便签”开始记录。",
@@ -386,9 +378,9 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Type in title and body
             await page.locator("#note-title-input").fill("Local Draft Title");
-            await page.locator(
-                ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-            ).fill("Local unpersisted draft content");
+            await page.locator("#note-body-textarea-edit").fill(
+                "Local unpersisted draft content",
+            );
             // Status is unsynced before debounce
             await page.waitForFunction(() =>
                 document.querySelector(".save-state")?.textContent?.includes(
@@ -419,9 +411,7 @@ Deno.test("production workspace contracts", async (t) => {
                 "Local Draft Title",
             );
             assertEquals(
-                (await page.locator(
-                    ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-                ).innerText()).trim(),
+                await page.locator("#note-body-textarea-edit").inputValue(),
                 "Local unpersisted draft content",
             );
 
@@ -432,12 +422,12 @@ Deno.test("production workspace contracts", async (t) => {
                     request.url().endsWith(
                         `/api/notes/${encodeURIComponent(createdNoteId)}`,
                     ) &&
-                    request.postDataJSON()?.body?.trim() ===
+                    request.postDataJSON()?.body ===
                         "Persisted content after autosave";
             }, { timeout: 5000 });
-            await page.locator(
-                ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-            ).fill("Persisted content after autosave");
+            await page.locator("#note-body-textarea-edit").fill(
+                "Persisted content after autosave",
+            );
             assertEquals((await autosave).status(), 200);
 
             // Verify real server received the autosave
@@ -452,7 +442,7 @@ Deno.test("production workspace contracts", async (t) => {
                 };
             }, createdNoteId);
             assertEquals(
-                updatedNote.body.trim(),
+                updatedNote.body,
                 "Persisted content after autosave",
             );
             assertEquals(updatedNote.title, "Local Draft Title");
@@ -472,9 +462,9 @@ Deno.test("production workspace contracts", async (t) => {
                 },
             );
             try {
-                await page.locator(
-                    ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-                ).fill("Observed in flight saving text");
+                await page.locator("#note-body-textarea-edit").fill(
+                    "Observed in flight saving text",
+                );
                 await page.waitForFunction(() =>
                     document.querySelector(".save-state")?.textContent
                         ?.includes("保存中")
@@ -521,14 +511,11 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(concurrentStatus, 200);
 
             // Client attempts to save with outdated version
-            await page.locator(
-                ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-            ).fill("Client conflicting edit");
-            await page.waitForFunction(() =>
-                document.querySelector(".save-state")?.textContent?.includes(
-                    "未同步至云端",
-                )
+            await page.locator("#note-body-textarea-edit").fill(
+                "Client conflicting edit",
             );
+            // Trigger manual save
+            await page.locator("#note-body-textarea-edit").blur();
             await page.keyboard.press("Control+s");
 
             // Conflict alert dialog appears
@@ -555,17 +542,12 @@ Deno.test("production workspace contracts", async (t) => {
                     version: number;
                 };
             }, createdNoteId);
-            assertEquals(resolved.body.trim(), "Client conflicting edit");
+            assertEquals(resolved.body, "Client conflicting edit");
             assertEquals(resolved.version, baseVersion + 2);
 
             // After conflict resolution, user can edit and autosave persists
-            await page.locator(
-                ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-            ).fill("Post-conflict resolved content");
-            await page.waitForFunction(() =>
-                document.querySelector(".save-state")?.textContent?.includes(
-                    "未同步至云端",
-                )
+            await page.locator("#note-body-textarea-edit").fill(
+                "Post-conflict resolved content",
             );
             await page.waitForFunction(
                 () =>
@@ -580,7 +562,7 @@ Deno.test("production workspace contracts", async (t) => {
                 return body.data as { version: number; body: string };
             }, createdNoteId);
             assertEquals(
-                postConflictNote.body.trim(),
+                postConflictNote.body,
                 "Post-conflict resolved content",
             );
 
@@ -598,9 +580,9 @@ Deno.test("production workspace contracts", async (t) => {
             await cloudSnapshot.getByRole("button", { name: "恢复此版本" })
                 .click();
             await page.waitForFunction(() =>
-                document.querySelector(
-                    ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-                )?.textContent?.includes("Client conflicting edit")
+                document.querySelector<HTMLTextAreaElement>(
+                    "#note-body-textarea-edit",
+                )?.value === "Client conflicting edit"
             );
             const restored = await page.evaluate(async (id) => {
                 const response = await fetch("/api/notes/" + id);
@@ -609,7 +591,7 @@ Deno.test("production workspace contracts", async (t) => {
                     version: number;
                 };
             }, createdNoteId);
-            assertEquals(restored.body.trim(), "Client conflicting edit");
+            assertEquals(restored.body, "Client conflicting edit");
             assertEquals(restored.version > postConflictNote.version, true);
 
             // Version history fetch error state regression
@@ -655,13 +637,10 @@ Deno.test("production workspace contracts", async (t) => {
                         return route.continue();
                     },
                 );
-                await page.locator(
-                    ".note-milkdown-editor .ProseMirror[contenteditable='true'][aria-label='便签正文']",
-                ).fill("Error triggering content");
-                await page.waitForFunction(() =>
-                    document.querySelector(".save-state")?.textContent
-                        ?.includes("未同步至云端")
+                await page.locator("#note-body-textarea-edit").fill(
+                    "Error triggering content",
                 );
+                await page.locator("#note-body-textarea-edit").blur();
                 await page.keyboard.press("Control+s");
                 await page.waitForFunction(() =>
                     document.querySelector(".save-state")?.textContent
