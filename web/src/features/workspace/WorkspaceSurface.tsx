@@ -1,10 +1,22 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
 
-export function WorkspacePanel(
-    { title, routeKey, nested, onBack, onClose, children, footer }: {
+export type WorkspacePresentation = "panel" | "window" | "sheet";
+
+export function WorkspaceSurface(
+    {
+        presentation,
+        title,
+        routeKey,
+        nested,
+        onBack,
+        onClose,
+        children,
+        footer,
+    }: {
+        presentation: WorkspacePresentation;
         title: string;
         routeKey: string;
         nested: boolean;
@@ -14,18 +26,10 @@ export function WorkspacePanel(
         footer: ReactNode;
     },
 ) {
-    const [mobile, setMobile] = useState(() =>
-        globalThis.matchMedia("(max-width: 767px)").matches
-    );
+    const mobile = presentation === "sheet";
     const back = useRef<HTMLButtonElement>(null);
     const close = useRef<HTMLButtonElement>(null);
     const touchY = useRef<number | null>(null);
-    useEffect(() => {
-        const media = globalThis.matchMedia("(max-width: 767px)");
-        const change = () => setMobile(media.matches);
-        media.addEventListener("change", change);
-        return () => media.removeEventListener("change", change);
-    }, []);
     useEffect(() => {
         const frame = requestAnimationFrame(() => {
             if (nested) back.current?.focus();
@@ -109,6 +113,7 @@ export function WorkspacePanel(
             >
                 <SheetContent
                     className="workspace-panel workspace-panel--mobile"
+                    data-presentation={presentation}
                     aria-describedby={undefined}
                     initialFocus={() => nested ? back.current : close.current}
                     finalFocus={false}
@@ -118,7 +123,11 @@ export function WorkspacePanel(
             </Sheet>
         )
         : (
-            <aside className="workspace-panel" aria-label={title + "工作区"}>
+            <aside
+                className="workspace-panel"
+                data-presentation={presentation}
+                aria-label={title + "工作区"}
+            >
                 {content}
             </aside>
         );

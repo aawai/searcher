@@ -651,7 +651,7 @@ export function SearchHome() {
                 <WorkspaceShell
                     state={route}
                     title={title}
-                    dock={layoutStyle === "widgets"}
+                    style={layoutStyle}
                     appsArranging={appsArranging}
                     navigate={navigateWorkspace}
                     onBack={backWorkspace}

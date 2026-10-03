@@ -166,6 +166,28 @@ AlertDialog）具有严格不同的交互与视觉语义：
   Tab 导航获得焦点。嵌套页初始焦点仍落在“返回上一级”。移动端保留 Sheet focus
   trap，关闭后焦点归还对应 opener。
 
+#### Shared Workspace Core 与 Presenter Contract
+
+- `workspace-state.ts` 是唯一 Core：route、back stack、Apps/Notes 独立 query、
+  nested navigation、close/reset。不得加入 window geometry、z-order、Dock 或
+  viewport state；`SearchHome` 在 auth user change/logout 时 reset transient
+  state。
+- `WorkspacePresentation = "panel" | "window" | "sheet"` 唯一定义于
+  `WorkspaceSurface.tsx`。Host `WorkspaceShell` 集中选择：<768 为 sheet，
+  > =768 时 Zen 为 panel、Widgets 为 window；Apps/Notes 不读取 breakpoint 或
+  > presentation。
+- `WorkspaceSurface` 统一拥有 title/header、back/close controls、footer slot、
+  accessible name 与唯一 `.workspace-body` scroll boundary，通过
+  `data-presentation` 暴露 presentation。Root 内容复用 WorkspaceSearch、
+  WorkspaceSection 与 canonical LoadingState/StatusBanner/EmptyState。
+- 同一 `children` content slot 承载唯一 Apps/Notes 实现，不复制 presenter
+  专属业务 JSX。 closed 时卸载 Surface/content；panel↔window 不因 presentation
+  改变重挂载， sheet 使用 shadcn Sheet portal，切换 sheet 可重挂载内容，但 Core
+  route/stack/query 保存在 Host 外不受影响。编辑草稿继续遵循既有 AppForm 与
+  NoteEditor 保存契约。
+- window 当前复用桌面非模态 aside 的视觉/尺寸/交互，不包含 drag/resize、Dock、
+  multi-window、minimize/maximize/snap 或新的 Desktop Window Manager。
+
 #### Workspace Root layout contract
 
 Apps 与 Notes 是同一 Shell 内的两个工作区，共享 Root
@@ -185,7 +207,7 @@ chrome，不统一内容列表的表现形式：
   draggable tile 使用 `touch-action: none`。
 - `WorkspaceSearch` 复用 Input / Button；两侧使用 `--control-input-height`、
   `--radius-input`，提供相同 Search icon、clear action 和可辨识的 focus-visible
-  ring。 Root autofocus 保留，不叠加全局 outline，不因 focus 改变布局。Apps
+  ring。Root 不 autofocus Search，不叠加全局 outline，不因 focus 改变布局。Apps
   整理时禁用搜索， 进入整理时清空 query；Notes 标题/正文搜索与独立 query
   状态不变。
 - Footer Root create slot 统一使用 default primary Button（“添加应用” /
@@ -341,7 +363,7 @@ navigation。Section/SectionHeader 管理分组；SettingsCard/SettingsRow 管�
 label/description/control；ActionGroup 管理动作；EmptyState/StatusBanner
 管理空/状态；WorkspaceToolbar 管理上下文；LocalNavigation 管理
 route-current；ManagementTable 复用 shadcn Table 与局部 overflow。基础交互继续由
-shadcn 提供。 WorkspaceShell / WorkspacePanel
+shadcn 提供。 WorkspaceShell / WorkspaceSurface
 作为统一工作区语义容器，在桌面端渲染非模态 aside，在移动端渲染 Sheet；内部由
 WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 ContentSheet
 与居中 Dialog。

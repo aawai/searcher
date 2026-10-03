@@ -1,6 +1,9 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "../../components/ui/button.tsx";
-import { WorkspacePanel } from "./WorkspacePanel.tsx";
+import {
+    type WorkspacePresentation,
+    WorkspaceSurface,
+} from "./WorkspaceSurface.tsx";
 import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 import {
     isAppsWorkspaceView,
@@ -13,7 +16,7 @@ export function WorkspaceShell(
     {
         state,
         title,
-        dock,
+        style,
         navigate,
         onBack,
         onClose,
@@ -23,7 +26,7 @@ export function WorkspaceShell(
     }: {
         state: WorkspaceState;
         title: string;
-        dock: boolean;
+        style: "zen" | "widgets";
         navigate: (state: WorkspaceState) => void;
         onBack: () => void;
         onClose: () => void;
@@ -32,6 +35,21 @@ export function WorkspaceShell(
         children: ReactNode;
     },
 ) {
+    const [mobile, setMobile] = useState(() =>
+        globalThis.matchMedia("(max-width: 767px)").matches
+    );
+    useEffect(() => {
+        const media = globalThis.matchMedia("(max-width: 767px)");
+        const change = () => setMobile(media.matches);
+        media.addEventListener("change", change);
+        return () => media.removeEventListener("change", change);
+    }, []);
+    const presentation: WorkspacePresentation = mobile
+        ? "sheet"
+        : style === "zen"
+        ? "panel"
+        : "window";
+    const dock = style === "widgets";
     const open = state.view !== "closed";
     const workspace: WorkspaceKind = isAppsWorkspaceView(state)
         ? "apps"
@@ -60,7 +78,8 @@ export function WorkspaceShell(
     const editing = state.view === "apps/create" ||
         state.view === "apps/edit" || state.view === "notes/edit";
     return (
-        <WorkspacePanel
+        <WorkspaceSurface
+            presentation={presentation}
             title={title}
             routeKey={JSON.stringify(state)}
             nested={!root}
@@ -87,6 +106,6 @@ export function WorkspaceShell(
             }
         >
             {children}
-        </WorkspacePanel>
+        </WorkspaceSurface>
     );
 }
