@@ -477,7 +477,7 @@
 
 .editor-view--split {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-row-gap);
 }
 
@@ -676,4 +676,27 @@
 }
 .note-drag-handle:active {
     cursor: grabbing;
+}
+
+.note-body-composite {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: var(--space-control-gap);
+}
+.note-markdown-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-inline-gap);
+    min-width: 0;
+}
+.note-body-textarea {
+    flex: 1;
+    min-width: 0;
+    min-height: calc(var(--control-touch-target) * 6);
+    resize: vertical;
+}
+.editor-view--split > * {
+    min-width: 0;
 }

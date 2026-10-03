@@ -50,6 +50,22 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   信息架构进入 Workspace layer；Apps / Notes domain presentation 留在对应
   feature owner。
 
+### Notes Markdown editor
+
+- Textarea 与 NoteMarkdownToolbar 构成一个 focus composite；工具栏只发送纯文本
+  command，选区在受控值提交后恢复。内部焦点切换不保存，离开 composite 或切到
+  Preview flush，标题 blur 与 Ctrl/Cmd+S 保持 manual save。IME composition
+  不执行格式快捷键，Tab 保持导航。
+- Toolbar 复用 Button ghost/icon 与 lucide；Button 的 compact / coarse-pointer
+  touch geometry 仍由 primitives.css 拥有。notes.css
+  只管理工具栏换行、正文布局；Notes Workspace 的 split 在 notes-workspace.css
+  退化为上下布局。
+- NoteCard、Preview、Split、Conflict、Version 共用 NoteMarkdown 的
+  GFM、soft-break、sanitize 与安全链接策略；不启用 raw HTML。markdown.css 管
+  inline/fenced code、task、table、quote、HR、image，pre/table
+  可键盘聚焦并局部滚动；任务状态有可访问名称且保持只读。Markdown
+  string、API、数据库与版本模型不变。
+
 ### Page compositions
 
 - Auth 使用 utility PageShell 管页面留白与 margin；内部 auth-surface

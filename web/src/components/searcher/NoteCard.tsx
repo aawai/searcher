@@ -7,10 +7,8 @@ import {
     Pin,
     Trash2,
 } from "lucide-react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import ReactMarkdown from "react-markdown";
-import rehypeSanitize from "rehype-sanitize";
-import remarkGfm from "remark-gfm";
+import type { ReactNode } from "react";
+import { NoteMarkdown } from "./NoteMarkdown.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -251,31 +249,7 @@ export function NoteCard(
             {!isCompact && (
                 <div className="note-preview markdown">
                     {note.body?.trim()
-                        ? (
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeSanitize]}
-                                components={{
-                                    a: (
-                                        {
-                                            href,
-                                            children,
-                                        }: ComponentPropsWithoutRef<"a">,
-                                    ) => (
-                                        <a
-                                            href={href}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            {children}
-                                        </a>
-                                    ),
-                                }}
-                            >
-                                {note.body}
-                            </ReactMarkdown>
-                        )
+                        ? <NoteMarkdown body={note.body} />
                         : (
                             <span className="note-placeholder">
                                 写下你的想法…

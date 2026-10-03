@@ -798,3 +798,45 @@
   legacy-behavior 提示；本次不改变服务端 lifecycle，无新增处理或 suppress。
 - 不适用：未修改业务 API/数据模型或 AI conversation runtime；AI
   对话删除撤销无需真实模型，未执行额外模型推理。
+
+## Issue #78 Markdown 便签验收（2026-10-03）
+
+- [x] Notes Workspace 编辑 archetype；正文 Textarea 为 primary
+      interaction。Toolbar 组合现有 ghost/icon Button，不新增 surface、raw
+      visual value 或 editor framework；布局由 notes.css / notes-workspace.css
+      拥有，Markdown presentation 由 markdown.css 拥有。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark 共六组实页截图与 geometry
+      检查：页面无横向溢出，Toolbar 换行，split 在窄 Workspace 上下排列；长 code
+      与表格留在容器内。最终 renderer
+      复查截图：/tmp/omp-sshots-1597d58f1974d48b.webp。
+- [x] 媒体校准：以 documentElement.dataset.theme、split DOM
+      提交与两帧布局完成作为断言前提；设备模拟重载后重新打开编辑器。coarse-pointer
+      另用真实 Chromium hasTouch context 验证，15 个 Toolbar 按钮均至少
+      44×44，未将普通桌面 pointer 的 36px icon size 当作触控结果。
+- [x] 全部 15 个 command、中文 UTF-16 selection、Ctrl/Cmd+B/I/K/S、composition
+      event 保护、focus 恢复、Tab
+      导航保持；不启用跨浏览器稳定性尚未验证的反引号快捷键。未使用 OS
+      原生中文输入法做额外验收。
+- [x] 自动保存只提交格式后的 body；Textarea↔Toolbar 不保存旧正文，离开 composite
+      与切 Preview flush。恢复的本地草稿无 debounce timer 也可
+      flush；该边界回归修复前失败、修复后通过。快速连续快捷键选区竞态由 commit
+      后的 layout effect 消除。
+- [x] 保存失败的格式草稿经 IndexedDB reload 恢复；retry、409
+      使用云端/覆盖云端、版本恢复均使用真实 API。API 与数据库 schema、Markdown
+      string、版本及冲突模型保持不变。
+- [x] NoteCard、Preview、Split、Conflict、Version 共用 GFM / breaks /
+      sanitize；不启用 raw HTML。只读 checkbox
+      有可访问名称，代码与表格可键盘聚焦；局部 NoteEditor axe 30 passes、0
+      violations。Console 无 runtime error，编辑器重挂载时关闭旧 SSE 的
+      ERR_ABORTED 不属于 runtime error。
+- [x] Guest 无便签编辑入口；Zen/Widgets 与固定卡片隔离由现有 Workspace E2E
+      覆盖。未扩展壁纸、title preference 或新的视觉主题语义；已有 Home
+      偏好矩阵不重复执行。
+- [x] renderer / transform 用户可观察契约测试、production Notes 13 steps、完整
+      Workspace suite、build、typecheck、lint/format、check:ui 验证；UI Guard
+      119 ownership files / 101 visual files，0 violations / allowances。未增加
+      baseline 或 prefix 豁免。
+- [x] 验收校准记录：补上 card hover 与 reload 后入口等待；触屏 fixture
+      使用独立便签并在结束时删除，避免 SSE 污染后续用例。早期完整 suite
+      曾出现无关 Launcher 菜单关闭与 AppForm tile
+      等待的偶发超时；未修改相应产品逻辑。

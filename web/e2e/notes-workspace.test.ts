@@ -62,12 +62,11 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         const currentPanel = p.locator(".workspace-panel");
         if (!(await currentPanel.isVisible())) {
             const dockNotesBtn = p.locator(
-                '.workspace-dock button[aria-label="便签工作区"]',
-            );
-            if (await dockNotesBtn.isVisible()) {
-                await dockNotesBtn.click();
-                await currentPanel.waitFor({ state: "visible" });
-            }
+                '.workspace-dock button[aria-label="便签工作区"], .zen-edge-btn[data-workspace="notes"]',
+            ).first();
+            await dockNotesBtn.waitFor({ state: "visible" });
+            await dockNotesBtn.click();
+            await currentPanel.waitFor({ state: "visible" });
         }
         // If inside editor, click back button
         const backBtn = currentPanel.locator(
@@ -658,6 +657,299 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     );
 
     await t.step(
+        "Notes #78: toolbar, shortcuts, composite blur, Markdown persistence and newline parity",
+        async () => {
+            await ensureNotesRoot(page);
+            const card = page.locator(".notes-workspace-list .note-card")
+                .first();
+            await card.locator(".note-title").click();
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("aria-label") ===
+                    "返回上一级"
+            );
+            const input = page.locator("#note-body-textarea-edit");
+            const writes: Array<{ body: string; origin: string }> = [];
+            const capture = (request: import("playwright").Request) => {
+                if (
+                    request.method() === "PATCH" &&
+                    new RegExp("/api/notes/[^/]+$").test(
+                        new URL(request.url()).pathname,
+                    )
+                ) {
+                    const data = request.postDataJSON();
+                    if (typeof data.body === "string") writes.push(data);
+                }
+            };
+            page.on("request", capture);
+            try {
+                await input.fill("中文正文");
+                await input.evaluate((element) => {
+                    if (!(element instanceof HTMLTextAreaElement)) {
+                        throw new Error("Expected textarea");
+                    }
+                    element.setSelectionRange(0, 4);
+                });
+                await page.getByRole("button", { name: "粗体", exact: true })
+                    .click();
+                await page.waitForFunction(() => {
+                    const el = document.querySelector<HTMLTextAreaElement>(
+                        "#note-body-textarea-edit",
+                    );
+                    return el?.value === "**中文正文**" &&
+                        el.selectionStart === 2 && el.selectionEnd === 6 &&
+                        document.activeElement === el;
+                });
+                assertEquals(
+                    writes,
+                    [],
+                    "toolbar must not flush the old draft",
+                );
+                // Keyboard focus inside the composite must also retain the debounce.
+                await page.getByRole("button", { name: "斜体", exact: true })
+                    .focus();
+                await input.focus();
+                assertEquals(writes, []);
+                await page.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent ===
+                        "已保存"
+                );
+                assertEquals(
+                    writes.map(({ body, origin }) => ({ body, origin })),
+                    [{ body: "**中文正文**", origin: "autosave" }],
+                );
+                await input.press("Control+b");
+                assertEquals(await input.inputValue(), "中文正文");
+                await input.press("Control+k");
+                assertEquals(await input.inputValue(), "[中文正文](https://)");
+                await input.press("Control+s");
+                await page.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent ===
+                        "已保存"
+                );
+                assertEquals(writes.at(-1)?.origin, "manual");
+                for (
+                    const [label, text, expected] of [
+                        ["一级标题", "a", "# a"],
+                        ["二级标题", "a", "## a"],
+                        ["三级标题", "a", "### a"],
+                        ["斜体", "a", "*a*"],
+                        ["删除线", "a", "~~a~~"],
+                        ["行内代码", "a", "`a`"],
+                        ["无序列表", "a\nb", "- a\n- b"],
+                        ["有序列表", "a\nb", "1. a\n2. b"],
+                        ["任务列表", "a\nb", "- [ ] a\n- [ ] b"],
+                        ["引用", "a\nb", "> a\n> b"],
+                        ["链接", "a", "[a](https://)"],
+                        ["代码块", "code", "```\ncode\n```"],
+                        ["表格", "", "| 列 1 | 列 2 |"],
+                        ["分隔线", "", "---"],
+                    ]
+                ) {
+                    await input.fill(text);
+                    await input.evaluate((element) => {
+                        if (!(element instanceof HTMLTextAreaElement)) {
+                            throw new Error("Expected textarea");
+                        }
+                        element.setSelectionRange(0, element.value.length);
+                    });
+                    await page.getByRole("button", { name: label, exact: true })
+                        .click();
+                    assertStringIncludes(await input.inputValue(), expected);
+                }
+                await input.fill("输入中文");
+                await input.dispatchEvent("compositionstart", { data: "中文" });
+                await input.dispatchEvent("keydown", {
+                    key: "b",
+                    ctrlKey: true,
+                    isComposing: true,
+                });
+                assertEquals(await input.inputValue(), "输入中文");
+                await input.dispatchEvent("compositionend", { data: "中文" });
+                await input.evaluate((element) => {
+                    if (!(element instanceof HTMLTextAreaElement)) {
+                        throw new Error("Expected textarea");
+                    }
+                    element.setSelectionRange(0, element.value.length);
+                });
+                await input.press("Meta+i");
+                assertEquals(await input.inputValue(), "*输入中文*");
+                await input.fill("A\nB\nC");
+                await page.getByRole("tab", { name: "预览", exact: true })
+                    .click();
+                await page.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent ===
+                        "已保存"
+                );
+                assertEquals(await page.locator(".preview-pane br").count(), 2);
+                assertEquals(
+                    await page.locator(".note-markdown-toolbar:visible")
+                        .count(),
+                    0,
+                );
+                assertEquals(writes.at(-1)?.body, "A\nB\nC");
+                assertEquals(writes.at(-1)?.origin, "manual");
+                await ensureNotesRoot(page);
+                await card.hover();
+                await card.getByRole("button", { name: "展开", exact: true })
+                    .click();
+                assertEquals(await card.locator("br").count(), 2);
+                await page.reload();
+                await ensureNotesRoot(page);
+                const reloaded = page.locator(
+                    ".notes-workspace-list .note-card",
+                ).first();
+                await reloaded.hover();
+                await reloaded.getByRole("button", {
+                    name: "展开",
+                    exact: true,
+                }).click();
+                assertEquals(await reloaded.locator("br").count(), 2);
+            } finally {
+                page.off("request", capture);
+            }
+        },
+    );
+
+    await t.step(
+        "Notes #78: coarse-pointer toolbar touch targets, split and read-only task rendering",
+        async () => {
+            const touch = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                hasTouch: true,
+                colorScheme: "light",
+                storageState: await context.storageState(),
+            });
+            const mobile = await touch.newPage();
+            let fixtureId = "";
+            try {
+                await mobile.goto(origin + "/");
+                await mobile.locator(".workspace-dock, .zen-edge-trigger")
+                    .waitFor();
+                fixtureId = await mobile.evaluate(async () => {
+                    const response = await fetch("/api/notes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: "Touch Markdown fixture",
+                            body: "",
+                        }),
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                    return (await response.json()).data.id as string;
+                });
+                await mobile.reload();
+                await mobile.locator(
+                    '.workspace-dock button[aria-label="便签工作区"], .zen-edge-btn[data-workspace="notes"]',
+                ).first().click();
+                await mobile.locator(".notes-workspace-list .note-title", {
+                    hasText: "Touch Markdown fixture",
+                }).click();
+                await mobile.waitForFunction(() =>
+                    document.activeElement?.getAttribute("aria-label") ===
+                        "返回上一级"
+                );
+                assertEquals(
+                    await mobile.evaluate(() =>
+                        matchMedia("(pointer: coarse)").matches
+                    ),
+                    true,
+                );
+                const geometry = await mobile.locator(
+                    ".note-markdown-toolbar button",
+                ).evaluateAll((elements) =>
+                    elements.map((el) => {
+                        const r = el.getBoundingClientRect();
+                        return {
+                            width: r.width,
+                            height: r.height,
+                            right: r.right,
+                        };
+                    })
+                );
+                assertEquals(
+                    geometry.every((r) =>
+                        r.width >= 44 && r.height >= 44 && r.right <= 390
+                    ),
+                    true,
+                );
+                assertEquals(
+                    await mobile.evaluate(() =>
+                        document.documentElement.scrollWidth <= innerWidth
+                    ),
+                    true,
+                );
+                await mobile.locator("#note-body-textarea-edit").fill(
+                    "- [ ] 未完成\n- [x] 已完成\n\n[本地链接](" + origin + ")",
+                );
+                await mobile.getByRole("tab", { name: "分栏", exact: true })
+                    .click();
+                const checkboxes = mobile.locator(
+                    '.preview-pane input[type="checkbox"]',
+                );
+                assertEquals(
+                    await checkboxes.evaluateAll((elements) =>
+                        elements.map((el) => {
+                            if (!(el instanceof HTMLInputElement)) {
+                                throw new Error("Expected checkbox");
+                            }
+                            return {
+                                checked: el.checked,
+                                disabled: el.disabled,
+                                hasName: !!el.getAttribute("aria-label"),
+                            };
+                        })
+                    ),
+                    [{ checked: false, disabled: true, hasName: true }, {
+                        checked: true,
+                        disabled: true,
+                        hasName: true,
+                    }],
+                );
+                await mobile.waitForFunction(() =>
+                    document.querySelector(".save-state")?.textContent ===
+                        "已保存"
+                );
+                await mobile.getByRole("button", {
+                    name: "返回上一级",
+                    exact: true,
+                }).click();
+                const fixtureCard = mobile.locator(".note-card", {
+                    hasText: "Touch Markdown fixture",
+                });
+                await fixtureCard.getByRole("button", {
+                    name: "展开",
+                    exact: true,
+                }).click();
+                const popup = mobile.waitForEvent("popup");
+                await fixtureCard.getByRole("link", {
+                    name: "本地链接",
+                    exact: true,
+                }).click();
+                await (await popup).close();
+                assertEquals(
+                    await mobile.locator(".note-editor").count(),
+                    0,
+                    "links must not open the editor",
+                );
+            } finally {
+                if (fixtureId) {
+                    await mobile.evaluate(async (id) => {
+                        const response = await fetch("/api/notes/" + id, {
+                            method: "DELETE",
+                        });
+                        if (!response.ok) {
+                            throw new Error(await response.text());
+                        }
+                    }, fixtureId);
+                }
+                await touch.close();
+            }
+            await page.reload();
+            await ensureNotesRoot(page);
+        },
+    );
+
+    await t.step(
         "Notes #44: NoteEditor saving / unsynced / error and retry lifecycle",
         async () => {
             await ensureNotesRoot(page);
@@ -716,6 +1008,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             try {
                 await bodyInput.fill("Trigger error state body content");
+                await bodyInput.evaluate((element) => {
+                    if (!(element instanceof HTMLTextAreaElement)) {
+                        throw new Error("Expected textarea");
+                    }
+                    element.setSelectionRange(0, element.value.length);
+                });
+                await page.getByRole("button", { name: "粗体", exact: true })
+                    .click();
                 await bodyInput.blur();
 
                 // Wait for error state
@@ -738,6 +1038,22 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 );
                 await copyBtn.waitFor({ state: "visible" });
 
+                // Failed toolbar edits must survive a full page reload via IndexedDB.
+                await page.reload();
+                if (!(await bodyInput.isVisible())) {
+                    await ensureNotesRoot(page);
+                    await page.locator(".notes-workspace-list .note-card")
+                        .first().locator(".note-title").click();
+                }
+                await page.waitForFunction(() =>
+                    document.querySelector<HTMLTextAreaElement>(
+                        "#note-body-textarea-edit",
+                    )?.value === "**Trigger error state body content**"
+                );
+                // A recovered draft has no debounce timer: Preview must still flush it.
+                await page.getByRole("tab", { name: "预览", exact: true })
+                    .click();
+                await retryBtn.waitFor({ state: "visible" });
                 // Clear route intercept to restore healthy server
                 await page.unroute("**/api/notes/*");
 
@@ -950,6 +1266,34 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     await versionsSection.textContent() ?? "",
                     "版本历史",
                 );
+                const historical = await page.evaluate(async () => {
+                    const note = (await fetch("/api/notes").then((r) =>
+                        r.json()
+                    )).data[0];
+                    const versions =
+                        (await fetch("/api/notes/" + note.id + "/versions")
+                            .then((r) => r.json())).data;
+                    return {
+                        id: note.id as string,
+                        body: versions[0].body as string,
+                    };
+                });
+                await versionsSection.getByRole("button", {
+                    name: "恢复此版本",
+                    exact: true,
+                }).first().click();
+                await versionsSection.waitFor({ state: "detached" });
+                assertEquals(
+                    await page.locator("#note-body-textarea-edit").inputValue(),
+                    historical.body,
+                );
+                const restoredBody = await page.evaluate(
+                    async (id) =>
+                        (await fetch("/api/notes/" + id).then((r) => r.json()))
+                            .data.body,
+                    historical.id,
+                );
+                assertEquals(restoredBody, historical.body);
             } finally {
                 await page.unroute("**/api/notes/*/versions").catch(() => {});
             }
