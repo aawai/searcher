@@ -91,6 +91,11 @@ AlertDialog）具有严格不同的交互与视觉语义：
   backdrop 与
   focus-trap），严禁将普通工作区浏览和常规表单伪装成模态弹窗，也严禁将破坏性操作静默退化为非模态。
 
+- Apps / Notes Root
+  打开或切换时，初始焦点落在“收起工作区”，不自动聚焦搜索输入；搜索仅由用户点击或
+  Tab 导航获得焦点。嵌套页初始焦点仍落在“返回上一级”。移动端保留 Sheet focus
+  trap，关闭后焦点归还对应 opener。
+
 #### Workspace Root layout contract
 
 Apps 与 Notes 是同一 Shell 内的两个工作区，共享 Root

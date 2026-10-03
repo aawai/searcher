@@ -385,9 +385,17 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await page.keyboard.press("Enter");
                         await search().waitFor();
                         await page.waitForFunction(() =>
-                            document.activeElement?.matches(
-                                "input[data-workspace-search]",
-                            )
+                            document.activeElement?.getAttribute(
+                                "aria-label",
+                            ) ===
+                                "收起工作区"
+                        );
+                        await page.keyboard.press("Tab");
+                        assertEquals(
+                            await search().evaluate((el) =>
+                                el === document.activeElement
+                            ),
+                            true,
                         );
                         assert(await search().getAttribute("aria-label"));
                         assertEquals(
@@ -474,9 +482,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await page.keyboard.press("Enter");
                         await panel.locator(".notes-workspace").waitFor();
                         await page.waitForFunction(() =>
-                            document.activeElement?.matches(
-                                "input[data-workspace-search]",
-                            )
+                            document.activeElement?.getAttribute(
+                                "aria-label",
+                            ) === "收起工作区"
                         );
                         assertEquals(
                             await panel.locator(
@@ -562,7 +570,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.keyboard.press("Enter");
             await search().waitFor();
             await page.waitForFunction(() =>
-                document.activeElement?.matches("input[data-workspace-search]")
+                document.activeElement?.getAttribute("aria-label") ===
+                    "收起工作区"
             );
             await panel.getByRole("button", { name: "便签工作区", exact: true })
                 .focus();
@@ -598,9 +607,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await openApps();
                     await search().waitFor();
                     await page.waitForFunction(() =>
-                        document.activeElement?.matches(
-                            "input[data-workspace-search]",
-                        )
+                        document.activeElement?.getAttribute("aria-label") ===
+                            "收起工作区"
                     );
                     await panel.locator(".apps-workspace-banner--loading")
                         .waitFor({ state: "detached" });
@@ -635,9 +643,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await panel.locator(".notes-workspace").waitFor();
                     await search().waitFor();
                     await page.waitForFunction(() =>
-                        document.activeElement?.matches(
-                            "input[data-workspace-search]",
-                        )
+                        document.activeElement?.getAttribute("aria-label") ===
+                            "收起工作区"
                     );
                     await panel.locator('p[role="status"]', {
                         hasText: "正在加载",
@@ -696,9 +703,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         .waitFor();
                     await search().waitFor();
                     await page.waitForFunction(() =>
-                        document.activeElement?.matches(
-                            "input[data-workspace-search]",
-                        )
+                        document.activeElement?.getAttribute("aria-label") ===
+                            "收起工作区"
                     );
                     await assertChromeInViewport(page);
                 }
@@ -710,12 +716,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await openApps();
             await search().waitFor();
             await page.waitForFunction(() =>
-                document.activeElement?.matches("input[data-workspace-search]")
+                document.activeElement?.getAttribute("aria-label") ===
+                    "收起工作区"
             );
 
             // 1. Focus visibility and blur without shift
-            // Search starts autofocused: blur first to establish neutral baseline
-            await search().blur();
             await search().evaluate(async (el) => {
                 await Promise.all(el.getAnimations().map((a) => a.finished));
             });
