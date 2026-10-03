@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { GripVertical } from "lucide-react";
 import {
     closestCenter,
@@ -23,11 +23,15 @@ import {
     NoteCard,
     type NoteItem,
 } from "../../components/searcher/NoteCard.tsx";
-import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import type { WorkspaceState } from "./workspace-state.ts";
 import "./notes-workspace.css";
+const NoteEditor = lazy(() =>
+    import("../../components/searcher/NoteEditor.tsx").then((module) => ({
+        default: module.NoteEditor,
+    }))
+);
 
 type NoteActions = Pick<
     HomeLayoutProps,
@@ -209,11 +213,23 @@ export function NotesWorkspace(
     if (state.view === "notes/edit") {
         return editing
             ? (
-                <NoteEditor
-                    key={userId + ":" + editing.id}
-                    note={editing}
-                    onSaved={onSaved}
-                />
+                <Suspense
+                    fallback={
+                        <div
+                            className="note-editor"
+                            role="status"
+                            aria-busy="true"
+                        >
+                            正在加载便签编辑器…
+                        </div>
+                    }
+                >
+                    <NoteEditor
+                        key={userId + ":" + editing.id}
+                        note={editing}
+                        onSaved={onSaved}
+                    />
+                </Suspense>
             )
             : <p role="status">便签已被删除，请返回便签列表。</p>;
     }
