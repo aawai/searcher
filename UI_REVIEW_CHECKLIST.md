@@ -41,6 +41,38 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #75 壁纸构图与设置页验收（2026-10-03）
+
+- [x] Utility archetype：SettingsPage 外观页；primary interaction
+      为壁纸构图调整与偏好同步。
+- [x] 壁纸表面语义：复用 Design System 材质，WallpaperSurface
+      作为共享组件服务于首页全屏底色与设置页实时构图预览；系统级语义新增
+      `--wallpaper-overlay-contrast: #ffffff;`（图像反差叠加层专属）、`--wallpaper-focal-marker-size: 24px;`、`--wallpaper-focal-marker-dot-size: 4px;`、`--wallpaper-preview-mobile-height: 380px;`（移动竖屏视口），全部由
+      `tokens.css` 拥有。
+- [x] 构图与裁剪几何：blur = 0 时彻底移除历史固定的
+      `transform: scale(1.06)`，消除多余裁切；blur > 0 时采用基于模糊半径的负
+      inset 过扫描；桌面 16:9 与移动端 9:19.5
+      双视口实时同步，指针交互严格反向映射至原图归一化坐标（0..1），方向键/Home
+      键提供精细与复位控制且防页面滚屏。
+- [x] 历史卡片采用按可用宽度自动换行的网格，最小宽度由两个
+      `--control-touch-target` 加行间距确定；菜单保持 44px
+      触控目标。390/768/1440 × light/dark
+      实测卡片中心命中主操作，菜单不拦截，页面无横向溢出。
+- [x] 生命周期与引用完整性：删除当前壁纸提供明确的“恢复默认背景”双重风险确认，删除成功后原位清除并以
+      `sync: false` 从本地 `wallpaperCompositions` 剔除该
+      UUID，避免后续请求携带已删除资源
+      404；失败保留卡片与提示；清除壁纸仅停止使用、保留上传历史；远程
+      URL/渐变仅更新偏好不调用资源 API。
+- [x] 匿名设备语义：文案校准为“设置保存在当前设备/浏览器；仅登录后新上传的壁纸可同步至云端（壁纸最大
+      5 MiB）”，不产生匿名自动迁移歧义。
+- [x] 390×844 / 768×1024 / 1440×900 实页与截图：light/dark 共 6
+      种视口与主题实页无横向溢出，卡片单列至多列响应式正常；Dialog
+      在移动端自适应。
+- [x] 门禁：UI Guard 92 files、0
+      violations/allowances/drift；全量契约测试与生产壁纸 E2E 7
+      步通过；SettingsPage/后端入口 typecheck
+      通过。最终实页重新验证六种布局与构图 Dialog；浏览器 runtime error 为 0。
+
 ## Issue #68 Auth surface 验收（2026-10-03）
 
 - [x] Utility archetype 不变；PageShell 管页面布局，auth.css

@@ -1,3 +1,5 @@
+export * from "./wallpaper.ts";
+import type { WallpaperComposition } from "./wallpaper.ts";
 import type { EngineId } from "./engines.ts";
 
 export type ThemeId = "system" | "light" | "dark";
@@ -190,6 +192,7 @@ export interface PreferencesDto {
     wallpaperGlowStrength: number;
     ambientMotionMode: AmbientMotionMode;
     ambientMotionStrength: number;
+    wallpaperCompositions: Record<string, WallpaperComposition>;
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";

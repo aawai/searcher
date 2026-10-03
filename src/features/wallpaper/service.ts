@@ -1,4 +1,13 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { dirname, join } from "@std/path";
+import { eq } from "drizzle-orm";
+import type { DatabaseStore } from "../../db/database.ts";
+import { preferences } from "../../db/schema.ts";
+import {
+    normalizeWallpaperCompositions,
+    parseWallpaperSource,
+    type WallpaperComposition,
+} from "@shared/wallpaper.ts";
 
 export interface WallpaperRecord {
     id: string;
@@ -6,6 +15,8 @@ export interface WallpaperRecord {
     contentType: "image/png" | "image/jpeg" | "image/webp" | "image/avif";
     size: number;
     createdAt: number;
+    focalX: number;
+    focalY: number;
 }
 
 export type RasterValidationResult =
@@ -112,7 +123,7 @@ const ALLOWED_CONTENT_TYPES: Record<string, true> = {
 const UUID_REGEX =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function validateWallpaperRecord(raw: unknown): WallpaperRecord | null {
+export function validateWallpaperRecord(raw: unknown): WallpaperRecord | null {
     if (typeof raw !== "object" || raw === null) return null;
     const r = raw as Record<string, unknown>;
     if (typeof r.id !== "string" || !UUID_REGEX.test(r.id)) return null;
@@ -134,6 +145,31 @@ function validateWallpaperRecord(raw: unknown): WallpaperRecord | null {
     ) {
         return null;
     }
+    let focalX = 0.5;
+    if (r.focalX !== undefined && r.focalX !== null) {
+        if (
+            typeof r.focalX !== "number" ||
+            !Number.isFinite(r.focalX) ||
+            r.focalX < 0 ||
+            r.focalX > 1
+        ) {
+            return null;
+        }
+        focalX = r.focalX;
+    }
+
+    let focalY = 0.5;
+    if (r.focalY !== undefined && r.focalY !== null) {
+        if (
+            typeof r.focalY !== "number" ||
+            !Number.isFinite(r.focalY) ||
+            r.focalY < 0 ||
+            r.focalY > 1
+        ) {
+            return null;
+        }
+        focalY = r.focalY;
+    }
 
     return {
         id: r.id,
@@ -141,6 +177,8 @@ function validateWallpaperRecord(raw: unknown): WallpaperRecord | null {
         contentType: r.contentType as WallpaperRecord["contentType"],
         size: r.size,
         createdAt: r.createdAt,
+        focalX,
+        focalY,
     };
 }
 
@@ -155,6 +193,46 @@ export class ManifestCorruptionError extends Error {
     }
 }
 
+async function removeWallpaperFile(path: string): Promise<void> {
+    try {
+        await Deno.remove(path);
+    } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+}
+
+async function restoreStagedWallpaper(
+    payload: { original: string; staged: string; bytes: Uint8Array },
+): Promise<void> {
+    try {
+        await Deno.rename(payload.staged, payload.original);
+    } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
+        await Deno.writeFile(payload.original, payload.bytes);
+    }
+}
+
+async function rollbackWallpaperMutation(
+    error: unknown,
+    steps: Array<() => Promise<unknown>>,
+): Promise<never> {
+    const failures: unknown[] = [];
+    for (const step of steps) {
+        try {
+            await step();
+        } catch (failure) {
+            failures.push(failure);
+        }
+    }
+    if (failures.length) {
+        throw new AggregateError(
+            [error, ...failures],
+            "Wallpaper mutation failed and rollback was incomplete; staged payloads are retained",
+        );
+    }
+    throw error;
+}
+
 export const MAX_USER_WALLPAPERS = 5;
 
 export class WallpaperService {
@@ -162,13 +240,17 @@ export class WallpaperService {
     readonly #manifestPath: string;
     readonly #maxUserWallpapers: number;
     readonly #now: () => number;
+    #store?: DatabaseStore;
+    readonly #lockDepth = new AsyncLocalStorage<boolean>();
     #lockTail: Promise<void> = Promise.resolve();
 
     constructor(
         storageDir?: string,
         maxUserWallpapers = MAX_USER_WALLPAPERS,
         now: () => number = () => Date.now(),
+        store?: DatabaseStore,
     ) {
+        this.#store = store;
         if (storageDir) {
             this.#storageDir = storageDir;
         } else {
@@ -188,17 +270,27 @@ export class WallpaperService {
     get storageDir(): string {
         return this.#storageDir;
     }
+    setStore(store: DatabaseStore): void {
+        this.#store = store;
+    }
+
+    get store(): DatabaseStore | undefined {
+        return this.#store;
+    }
 
     /**
      * Internal mutex using Promise.withResolvers to serialize operations on this instance and prevent concurrent races.
      */
-    async #withLock<T>(fn: () => Promise<T>): Promise<T> {
+    async withLock<T>(fn: () => Promise<T>): Promise<T> {
+        if (this.#lockDepth.getStore()) {
+            return await fn();
+        }
         const prev = this.#lockTail;
         const { promise, resolve } = Promise.withResolvers<void>();
         this.#lockTail = promise;
         await prev;
         try {
-            return await fn();
+            return await this.#lockDepth.run(true, fn);
         } finally {
             resolve();
         }
@@ -275,6 +367,7 @@ export class WallpaperService {
     async saveWallpaper(
         userId: string,
         bytes: Uint8Array,
+        focal?: { focalX?: number; focalY?: number },
     ): Promise<{ id: string; url: string; record: WallpaperRecord }> {
         const validation = validateRasterMagicBytes(bytes);
         if (!validation.valid) {
@@ -284,25 +377,20 @@ export class WallpaperService {
         if (bytes.length > 5 * 1024 * 1024) {
             throw new Error("壁纸文件大小不能超过 5 MiB");
         }
+        const focalX = typeof focal?.focalX === "number" &&
+                Number.isFinite(focal.focalX)
+            ? Math.max(0, Math.min(1, focal.focalX))
+            : 0.5;
+        const focalY = typeof focal?.focalY === "number" &&
+                Number.isFinite(focal.focalY)
+            ? Math.max(0, Math.min(1, focal.focalY))
+            : 0.5;
 
-        return await this.#withLock(async () => {
+        return await this.withLock(async () => {
             // 1. Read existing manifest
             const manifest = await this.#readManifest();
 
-            // 2. Generate opaque ID and write payload file
-            const id = crypto.randomUUID();
-            const filePath = join(this.#storageDir, `${id}.bin`);
-            await Deno.writeFile(filePath, bytes);
-
-            const record: WallpaperRecord = {
-                id,
-                userId,
-                contentType: validation.contentType,
-                size: bytes.length,
-                createdAt: this.#now(),
-            };
-
-            // 3. Plan user quota eviction: keep at most (maxUserWallpapers - 1) prior wallpapers
+            // 2. Plan quota eviction strictly keeping the most recent (maxUserWallpapers - 1)
             const userRecords: WallpaperRecord[] = [];
             const otherRecords: WallpaperRecord[] = [];
             for (const r of manifest.values()) {
@@ -313,7 +401,7 @@ export class WallpaperService {
                 }
             }
 
-            // Sort existing user wallpapers oldest first
+            // Sort oldest first for FIFO eviction
             userRecords.sort((a, b) => a.createdAt - b.createdAt);
 
             const toEvict: WallpaperRecord[] = [];
@@ -324,22 +412,234 @@ export class WallpaperService {
                 }
             }
 
+            const id = crypto.randomUUID();
+            const filePath = join(this.#storageDir, `${id}.bin`);
+            const tempFilePath = `${filePath}.tmp`;
+
+            // Step A: Stage write new payload to temp file
+            await Deno.writeFile(tempFilePath, bytes);
+
+            // Step B: Read evicted payload bytes into memory for 100% recoverable eviction rollback,
+            // then stage rename to .deleting
+            const evictedPayloads: Array<{
+                id: string;
+                original: string;
+                staged: string;
+                bytes: Uint8Array;
+            }> = [];
+            try {
+                for (const evicted of toEvict) {
+                    const original = join(
+                        this.#storageDir,
+                        `${evicted.id}.bin`,
+                    );
+                    const staged = `${original}.deleting`;
+                    const fileBytes = await Deno.readFile(original);
+                    await Deno.rename(original, staged);
+                    evictedPayloads.push({
+                        id: evicted.id,
+                        original,
+                        staged,
+                        bytes: fileBytes,
+                    });
+                }
+            } catch (stageErr) {
+                return await rollbackWallpaperMutation(stageErr, [
+                    ...evictedPayloads.map((item) => () =>
+                        restoreStagedWallpaper(item)
+                    ),
+                    () => removeWallpaperFile(tempFilePath),
+                ]);
+            }
+
+            // Step C: DB operations - clear reference & compositions for evicted items (canonical matching)
+            let dbRollbackState: {
+                backgroundImage: string | null;
+                wallpaperCompositions: string | null;
+            } | null = null;
+
+            if (this.#store && toEvict.length > 0) {
+                try {
+                    const canonicalEvictedSet = new Set(
+                        toEvict.map((e) =>
+                            `/api/wallpaper/${e.id.toLowerCase()}`
+                        ),
+                    );
+                    await this.#store.run(async (db) => {
+                        const rows = await db.select({
+                            backgroundImage: preferences.backgroundImage,
+                            wallpaperCompositions:
+                                preferences.wallpaperCompositions,
+                        })
+                            .from(preferences)
+                            .where(eq(preferences.userId, userId))
+                            .limit(1)
+                            .all();
+
+                        if (rows[0]) {
+                            const curBg = rows[0].backgroundImage;
+                            const curCompsRaw = rows[0].wallpaperCompositions;
+                            let needsUpdate = false;
+                            let newBg = curBg;
+
+                            if (curBg) {
+                                const s = parseWallpaperSource(curBg);
+                                if (
+                                    s?.type === "uploaded" &&
+                                    canonicalEvictedSet.has(s.value)
+                                ) {
+                                    newBg = null;
+                                    needsUpdate = true;
+                                } else if (
+                                    canonicalEvictedSet.has(
+                                        curBg.trim().toLowerCase(),
+                                    )
+                                ) {
+                                    newBg = null;
+                                    needsUpdate = true;
+                                }
+                            }
+
+                            let comps: Record<string, WallpaperComposition> =
+                                {};
+                            if (curCompsRaw) {
+                                try {
+                                    comps = normalizeWallpaperCompositions(
+                                        JSON.parse(curCompsRaw),
+                                    );
+                                } catch {
+                                    comps = {};
+                                }
+                            }
+
+                            for (const key of Object.keys(comps)) {
+                                const s = parseWallpaperSource(key);
+                                if (
+                                    s?.type === "uploaded" &&
+                                    canonicalEvictedSet.has(s.value)
+                                ) {
+                                    delete comps[key];
+                                    needsUpdate = true;
+                                } else if (
+                                    canonicalEvictedSet.has(
+                                        key.trim().toLowerCase(),
+                                    )
+                                ) {
+                                    delete comps[key];
+                                    needsUpdate = true;
+                                }
+                            }
+
+                            if (needsUpdate) {
+                                dbRollbackState = {
+                                    backgroundImage: curBg,
+                                    wallpaperCompositions: curCompsRaw,
+                                };
+                                await db.update(preferences)
+                                    .set({
+                                        backgroundImage: newBg,
+                                        wallpaperCompositions: JSON.stringify(
+                                            comps,
+                                        ),
+                                    })
+                                    .where(eq(preferences.userId, userId))
+                                    .run();
+                            }
+                        }
+                    });
+                } catch (dbErr) {
+                    return await rollbackWallpaperMutation(dbErr, [
+                        ...evictedPayloads.map((item) => () =>
+                            restoreStagedWallpaper(item)
+                        ),
+                        () => removeWallpaperFile(tempFilePath),
+                    ]);
+                }
+            }
+
+            const record: WallpaperRecord = {
+                id,
+                userId,
+                contentType: validation.contentType,
+                size: bytes.length,
+                createdAt: this.#now(),
+                focalX,
+                focalY,
+            };
+
             userRecords.push(record);
             const newManifestList = [...otherRecords, ...userRecords];
 
-            // 4. Commit manifest atomically
+            // Step D: Commit manifest atomically
             try {
                 await this.#atomicWriteManifest(newManifestList);
             } catch (manifestError) {
-                // Orphan cleanup: remove newly written binary file so no unreferenced payload lingers
-                await Deno.remove(filePath).catch(() => {});
-                throw manifestError;
+                return await rollbackWallpaperMutation(manifestError, [
+                    ...evictedPayloads.map((item) => () =>
+                        restoreStagedWallpaper(item)
+                    ),
+                    async () => {
+                        const previous = dbRollbackState;
+                        if (!previous || !this.#store) return;
+                        await this.#store.run((db) =>
+                            db.update(preferences).set(previous).where(
+                                eq(preferences.userId, userId),
+                            ).run()
+                        );
+                    },
+                    () => removeWallpaperFile(tempFilePath),
+                ]);
             }
 
-            // 5. Post-commit eviction: cleanup evicted wallpaper files
-            for (const evicted of toEvict) {
-                const evictedPath = join(this.#storageDir, `${evicted.id}.bin`);
-                await Deno.remove(evictedPath).catch(() => {});
+            // Step E: Commit payload & unlink staged evictions
+            try {
+                await Deno.rename(tempFilePath, filePath);
+            } catch (renameErr) {
+                return await rollbackWallpaperMutation(renameErr, [
+                    ...evictedPayloads.map((item) => () =>
+                        restoreStagedWallpaper(item)
+                    ),
+                    () =>
+                        this.#atomicWriteManifest(
+                            Array.from(manifest.values()),
+                        ),
+                    async () => {
+                        const previous = dbRollbackState;
+                        if (!previous || !this.#store) return;
+                        await this.#store.run((db) =>
+                            db.update(preferences).set(previous).where(
+                                eq(preferences.userId, userId),
+                            ).run()
+                        );
+                    },
+                    () => removeWallpaperFile(tempFilePath),
+                ]);
+            }
+
+            try {
+                for (const item of evictedPayloads) {
+                    await Deno.remove(item.staged);
+                }
+            } catch (unlinkErr) {
+                return await rollbackWallpaperMutation(unlinkErr, [
+                    ...evictedPayloads.map((item) => () =>
+                        restoreStagedWallpaper(item)
+                    ),
+                    () =>
+                        this.#atomicWriteManifest(
+                            Array.from(manifest.values()),
+                        ),
+                    async () => {
+                        const previous = dbRollbackState;
+                        if (!previous || !this.#store) return;
+                        await this.#store.run((db) =>
+                            db.update(preferences).set(previous).where(
+                                eq(preferences.userId, userId),
+                            ).run()
+                        );
+                    },
+                    () => removeWallpaperFile(filePath),
+                ]);
             }
 
             return {
@@ -362,7 +662,7 @@ export class WallpaperService {
             return null;
         }
 
-        return await this.#withLock(async () => {
+        return await this.withLock(async () => {
             const manifest = await this.#readManifest();
             const record = manifest.get(id);
             if (!record || record.userId !== userId) {
@@ -390,19 +690,274 @@ export class WallpaperService {
             return false;
         }
 
-        return await this.#withLock(async () => {
+        return await this.withLock(async () => {
             const manifest = await this.#readManifest();
             const record = manifest.get(id);
             if (!record || record.userId !== userId) {
                 return false;
             }
 
+            const canonicalTarget = `/api/wallpaper/${id.toLowerCase()}`;
+            const originalPath = join(this.#storageDir, `${id}.bin`);
+            const stagedPath = `${originalPath}.deleting`;
+
+            // Read payload bytes into memory for 100% recoverable rollback
+            let payloadBytes: Uint8Array;
+            try {
+                payloadBytes = await Deno.readFile(originalPath);
+            } catch (readErr) {
+                throw readErr;
+            }
+
+            // Step A: Stage payload by renaming to .deleting
+            try {
+                await Deno.rename(originalPath, stagedPath);
+            } catch (renameErr) {
+                throw renameErr;
+            }
+
+            // Step B: DB Queue - check if preference references this wallpaper and clear (canonical matching)
+            let dbRollbackState: {
+                backgroundImage: string | null;
+                wallpaperCompositions: string | null;
+            } | null = null;
+
+            if (this.#store) {
+                try {
+                    await this.#store.run(async (db) => {
+                        const rows = await db.select({
+                            backgroundImage: preferences.backgroundImage,
+                            wallpaperCompositions:
+                                preferences.wallpaperCompositions,
+                        })
+                            .from(preferences)
+                            .where(eq(preferences.userId, userId))
+                            .limit(1)
+                            .all();
+
+                        if (rows[0]) {
+                            const curBg = rows[0].backgroundImage;
+                            const curCompsRaw = rows[0].wallpaperCompositions;
+                            let needsUpdate = false;
+                            let newBg = curBg;
+
+                            if (curBg) {
+                                const s = parseWallpaperSource(curBg);
+                                if (
+                                    s?.type === "uploaded" &&
+                                    s.value === canonicalTarget
+                                ) {
+                                    newBg = null;
+                                    needsUpdate = true;
+                                } else if (
+                                    curBg.trim().toLowerCase() ===
+                                        canonicalTarget
+                                ) {
+                                    newBg = null;
+                                    needsUpdate = true;
+                                }
+                            }
+
+                            let comps: Record<string, WallpaperComposition> =
+                                {};
+                            if (curCompsRaw) {
+                                try {
+                                    comps = normalizeWallpaperCompositions(
+                                        JSON.parse(curCompsRaw),
+                                    );
+                                } catch {
+                                    comps = {};
+                                }
+                            }
+
+                            for (const key of Object.keys(comps)) {
+                                const s = parseWallpaperSource(key);
+                                if (
+                                    s?.type === "uploaded" &&
+                                    s.value === canonicalTarget
+                                ) {
+                                    delete comps[key];
+                                    needsUpdate = true;
+                                } else if (
+                                    key.trim().toLowerCase() === canonicalTarget
+                                ) {
+                                    delete comps[key];
+                                    needsUpdate = true;
+                                }
+                            }
+
+                            if (needsUpdate) {
+                                dbRollbackState = {
+                                    backgroundImage: curBg,
+                                    wallpaperCompositions: curCompsRaw,
+                                };
+                                await db.update(preferences)
+                                    .set({
+                                        backgroundImage: newBg,
+                                        wallpaperCompositions: JSON.stringify(
+                                            comps,
+                                        ),
+                                    })
+                                    .where(eq(preferences.userId, userId))
+                                    .run();
+                            }
+                        }
+                    });
+                } catch (dbErr) {
+                    return await rollbackWallpaperMutation(dbErr, [
+                        () =>
+                            restoreStagedWallpaper({
+                                original: originalPath,
+                                staged: stagedPath,
+                                bytes: payloadBytes,
+                            }),
+                    ]);
+                }
+            }
+
+            // Step C: Manifest commit
             manifest.delete(id);
+            try {
+                await this.#atomicWriteManifest(Array.from(manifest.values()));
+            } catch (manifestError) {
+                return await rollbackWallpaperMutation(manifestError, [
+                    () =>
+                        restoreStagedWallpaper({
+                            original: originalPath,
+                            staged: stagedPath,
+                            bytes: payloadBytes,
+                        }),
+                    async () => {
+                        const previous = dbRollbackState;
+                        if (!previous || !this.#store) return;
+                        await this.#store.run((db) =>
+                            db.update(preferences).set(previous).where(
+                                eq(preferences.userId, userId),
+                            ).run()
+                        );
+                    },
+                ]);
+            }
+
+            // Step D: Unlink staged payload with full failure rollback
+            try {
+                await Deno.remove(stagedPath);
+            } catch (unlinkErr) {
+                manifest.set(id, record);
+                return await rollbackWallpaperMutation(unlinkErr, [
+                    () =>
+                        restoreStagedWallpaper({
+                            original: originalPath,
+                            staged: stagedPath,
+                            bytes: payloadBytes,
+                        }),
+                    () =>
+                        this.#atomicWriteManifest(
+                            Array.from(manifest.values()),
+                        ),
+                    async () => {
+                        const previous = dbRollbackState;
+                        if (!previous || !this.#store) return;
+                        await this.#store.run((db) =>
+                            db.update(preferences).set(previous).where(
+                                eq(preferences.userId, userId),
+                            ).run()
+                        );
+                    },
+                ]);
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Updates focal point composition of an asset record.
+     */
+    async updateWallpaperComposition(
+        id: string,
+        userId: string,
+        focal: { focalX?: number; focalY?: number },
+    ): Promise<WallpaperRecord | null> {
+        if (!UUID_REGEX.test(id)) {
+            return null;
+        }
+
+        return await this.withLock(async () => {
+            const manifest = await this.#readManifest();
+            const record = manifest.get(id);
+            if (!record || record.userId !== userId) {
+                return null;
+            }
+
+            const oldFocalX = record.focalX;
+            const oldFocalY = record.focalY;
+            if (focal.focalX !== undefined) {
+                record.focalX = Math.max(0, Math.min(1, focal.focalX));
+            }
+            if (focal.focalY !== undefined) {
+                record.focalY = Math.max(0, Math.min(1, focal.focalY));
+            }
+
             await this.#atomicWriteManifest(Array.from(manifest.values()));
 
-            const filePath = join(this.#storageDir, `${id}.bin`);
-            await Deno.remove(filePath).catch(() => {});
-            return true;
+            // Synchronize with preferences.wallpaperCompositions if store is available
+            if (this.#store) {
+                try {
+                    await this.#store.run(async (db) => {
+                        const rows = await db.select({
+                            wallpaperCompositions:
+                                preferences.wallpaperCompositions,
+                        })
+                            .from(preferences)
+                            .where(eq(preferences.userId, userId))
+                            .limit(1)
+                            .all();
+                        if (rows[0]) {
+                            let comps: Record<string, WallpaperComposition> =
+                                {};
+                            if (rows[0].wallpaperCompositions) {
+                                try {
+                                    comps = normalizeWallpaperCompositions(
+                                        JSON.parse(
+                                            rows[0].wallpaperCompositions,
+                                        ),
+                                    );
+                                } catch {
+                                    comps = {};
+                                }
+                            }
+                            comps[`/api/wallpaper/${id.toLowerCase()}`] = {
+                                focalX: record.focalX,
+                                focalY: record.focalY,
+                            };
+                            await db.update(preferences)
+                                .set({
+                                    wallpaperCompositions: JSON.stringify(
+                                        comps,
+                                    ),
+                                })
+                                .where(eq(preferences.userId, userId))
+                                .run();
+                        }
+                    });
+                } catch (dbErr) {
+                    // Rollback manifest!
+                    record.focalX = oldFocalX;
+                    record.focalY = oldFocalY;
+                    await this.#atomicWriteManifest(
+                        Array.from(manifest.values()),
+                    ).catch((rollErr) => {
+                        throw new AggregateError(
+                            [dbErr, rollErr],
+                            "Failed to rollback manifest after DB preferences sync failure",
+                        );
+                    });
+                    throw dbErr;
+                }
+            }
+
+            return record;
         });
     }
 
@@ -410,7 +965,7 @@ export class WallpaperService {
      * Lists wallpapers belonging to a user (newest first).
      */
     async listUserWallpapers(userId: string): Promise<WallpaperRecord[]> {
-        return await this.#withLock(async () => {
+        return await this.withLock(async () => {
             const manifest = await this.#readManifest();
             const userList: WallpaperRecord[] = [];
             for (const r of manifest.values()) {

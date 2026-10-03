@@ -20,6 +20,10 @@
     --wallpaper-glow-peak-scale: 1.0175;
     --wallpaper-ripple-peak-opacity: .063;
     --wallpaper-ripple-peak-scale: 1.07;
+    --wallpaper-overlay-contrast: #ffffff;
+    --wallpaper-focal-marker-size: 24px;
+    --wallpaper-focal-marker-dot-size: 4px;
+    --wallpaper-preview-mobile-height: 380px;
     --surface-l1: color-mix(in srgb, var(--surface-solid) 86%, transparent);
     --surface-l2: var(--surface-solid);
     --surface-l3: var(--surface-solid);

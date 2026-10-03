@@ -102,6 +102,7 @@ export const preferences = sqliteTable("preferences", {
     showAppLabels: integer("show_app_labels", { mode: "boolean" })
         .notNull().default(true),
     aiGenerationDefaults: text("ai_generation_defaults"),
+    wallpaperCompositions: text("wallpaper_compositions"),
 }, (t) => [
     check(
         "preferences_engine_check",

@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
-import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
+import { AuthService } from "../auth/service.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
 import { createApp } from "../../app.ts";
 import type { Envelope, PreferencesDto } from "@shared/contracts.ts";
