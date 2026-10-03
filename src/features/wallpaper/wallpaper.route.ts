@@ -115,7 +115,7 @@ export function registerWallpaperRoutes(
     });
 
     // 2. PROTECTED GET /api/wallpaper/:id
-    // Returns raw image binary with exact Content-Type, Cache-Control: no-store, nosniff
+    // Returns authenticated image bytes with private revalidation, ETag and nosniff.
     routes.get("/api/wallpaper/:id", async (c) => {
         const user = c.get("user");
         if (!user) {
