@@ -1,0 +1,26 @@
+.auth-surface {
+    width: 100%;
+    max-width: var(--layout-auth-max);
+    margin-inline: auto;
+    padding: var(--space-card-padding);
+    background: var(--surface-solid);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    box-shadow: var(--card-highlight), var(--card-shadow);
+}
+.auth-surface form {
+    display: flex;
+    flex-direction: column;
+}
+.auth-surface .field {
+    margin: 0 0 var(--space-row-gap);
+}
+.auth-surface button[type="submit"] {
+    width: 100%;
+    margin-top: var(--space-control-gap);
+}
+.auth-surface .auth-footer {
+    margin: var(--space-section-gap) 0 0;
+    text-align: center;
+    font-size: var(--font-caption-size);
+}

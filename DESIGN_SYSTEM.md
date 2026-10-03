@@ -9,6 +9,9 @@
 - components/ui/：shadcn primitives，基础交互、ARIA、几何。
 - components/searcher/PageShell.tsx、PageHeader.tsx、semantic.tsx、semantic.css：页面与组合结构。
 - feature stylesheet：场景布局，不写普通控件几何。
+- Auth 使用 utility PageShell 管页面留白与 margin；内部 auth-surface
+  的最大宽度、 padding、surface、border、radius、shadow、表单与 footer 间距仅由
+  web/src/app/auth.css 管理。PageHeader 与 Input/Button 保持通用语义和几何。
 - Settings 使用 utility archetype：页面 `h1 设置`、当前 tab `h2`、分组 `h3`。
   `SettingsSection` 组合通用 `Section` / `SectionHeader`，description 与 actions
   是 header 字段；标题与描述的间距由 header 内部 `gap` 控制，均无自身 margin。

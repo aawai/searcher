@@ -15,10 +15,6 @@
 .page-shell[data-archetype="workbench"] {
     max-width: var(--layout-workbench-max);
 }
-.page-shell.auth-page {
-    max-width: var(--layout-auth-max);
-    padding: 0;
-}
 .page-shell.account-page {
     max-width: var(--layout-settings-max);
 }
