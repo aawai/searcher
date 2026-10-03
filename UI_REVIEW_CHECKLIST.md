@@ -41,6 +41,24 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #68 Auth surface 验收（2026-10-03）
+
+- [x] Utility archetype 不变；PageShell 管页面布局，auth.css
+      唯一管理内部窄卡片。
+- [x] 复用 surface/border/radius/shadow/spacing token；无新 raw 值，不修改
+      Input/Button。
+- [x] /login 与 /register：390/768/1440 × light/dark 实页截图与 geometry 检查。
+      卡片宽分别为 358/420/420px，padding 均为
+      24px，无横向溢出；字段和按钮不越界。
+- [x] 标题、说明、字段、按钮与 footer 共用内容轴；桌面窄表单、手机左右各 16px
+      留白。
+- [x] Tab 到密码字段保持 focus-visible；Enter 提交错误凭据展示错误，next 保留。
+- [x] Production routing 10 steps 通过，覆盖登录/注册成功及 next 跳转；geometry
+      修复前失败、修复后通过。
+- [x] UI Guard：90 files、0 violations；build、Auth typecheck、受影响 TS lint
+      通过。
+- [x] 浏览器无 page errors；主题截图等待 theme 提交及正文颜色 transition 完成。
+
 ## Issue #33 advisor 核查记录（2026-09-30）
 
 本记录区分已验证结果、保留的迁移边界与未解决问题；不代替上述 PR 验收。

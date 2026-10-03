@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { eq } from "drizzle-orm";
 import { createApp } from "../../src/app.ts";
@@ -55,6 +55,113 @@ Deno.test("production navigation contracts", async (t) => {
         await target.locator("#auth-password").fill(password);
         await target.locator('form button[type="submit"]').click();
     }
+    await t.step(
+        "auth surfaces retain responsive geometry in both themes",
+        async () => {
+            const guest = await browser.newContext();
+            try {
+                const target = await guest.newPage();
+                for (const colorScheme of ["light", "dark"] as const) {
+                    await target.emulateMedia({
+                        colorScheme,
+                        reducedMotion: "reduce",
+                    });
+                    for (const width of [390, 768, 1440]) {
+                        await target.setViewportSize({ width, height: 900 });
+                        for (const path of ["/login", "/register"]) {
+                            await visit(path, target);
+                            await target.locator("#auth-username").waitFor();
+                            await target.waitForFunction(
+                                (theme) =>
+                                    document.documentElement.dataset.theme ===
+                                        theme,
+                                colorScheme,
+                            );
+                            const geometry = await target.locator(
+                                ".auth-surface",
+                            ).last().evaluate((surface) => {
+                                const rect = surface.getBoundingClientRect();
+                                const style = getComputedStyle(surface);
+                                const padding = [
+                                    style.paddingTop,
+                                    style.paddingRight,
+                                    style.paddingBottom,
+                                    style.paddingLeft,
+                                ].map(parseFloat);
+                                const max = parseFloat(
+                                    style.getPropertyValue("--layout-auth-max"),
+                                );
+                                const controls = [
+                                    ...surface.querySelectorAll(
+                                        "input, button[type=submit]",
+                                    ),
+                                ].map((control) => {
+                                    const box = control.getBoundingClientRect();
+                                    return { left: box.left, right: box.right };
+                                });
+                                const axes = [
+                                    ...surface.querySelectorAll(
+                                        "h1, .page-description, label, form, .auth-footer",
+                                    ),
+                                ].map((element) =>
+                                    element.getBoundingClientRect().left
+                                );
+                                return {
+                                    width: rect.width,
+                                    left: rect.left,
+                                    right: rect.right,
+                                    padding,
+                                    max,
+                                    controls,
+                                    axes,
+                                    overflow:
+                                        document.documentElement.scrollWidth >
+                                            innerWidth,
+                                };
+                            });
+                            const scenario = path + " " + width + "px " +
+                                colorScheme;
+                            assert(
+                                geometry.width <= geometry.max,
+                                scenario + " narrow surface",
+                            );
+                            assert(
+                                geometry.padding.every((value) => value > 0),
+                                scenario + " card padding",
+                            );
+                            assert(
+                                !geometry.overflow,
+                                scenario + " horizontal overflow",
+                            );
+                            assert(
+                                geometry.left > 0 && geometry.right < width,
+                                scenario + " page gutters",
+                            );
+                            for (const control of geometry.controls) {
+                                assert(
+                                    control.left >=
+                                            geometry.left +
+                                                geometry.padding[3] &&
+                                        control.right <=
+                                            geometry.right -
+                                                geometry.padding[1],
+                                    scenario + " control containment",
+                                );
+                            }
+                            assert(
+                                geometry.axes.every((left) =>
+                                    Math.abs(left - geometry.axes[0]) < 1
+                                ),
+                                scenario + " content axis",
+                            );
+                        }
+                    }
+                }
+            } finally {
+                await guest.close();
+            }
+        },
+    );
     await t.step(
         "settings direct-entry, refresh, canonicalization and one-step Back",
         async () => {

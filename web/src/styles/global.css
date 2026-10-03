@@ -1442,45 +1442,6 @@ a {
     letter-spacing: -0.01em;
     margin-bottom: var(--space-section-gap);
 }
-.auth-page {
-    width: min(100% - 2 * var(--space-4), var(--layout-auth-max));
-    margin: clamp(40px, 10vh, 100px) auto var(--space-page-footer);
-    padding: var(--space-7);
-    background: var(--surface-solid);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius);
-    box-shadow: var(--card-highlight), var(--card-shadow);
-}
-.auth-page h1 {
-    font-size: var(--font-page-title-size);
-    line-height: 32px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 0 0 var(--space-control-gap);
-}
-.auth-page > .muted {
-    margin: 0 0 var(--space-section);
-    font-size: var(--font-caption-size);
-}
-.auth-page form {
-    display: flex;
-    flex-direction: column;
-}
-.auth-page .field {
-    margin: 0 0 var(--space-4);
-}
-.auth-page button[type="submit"] {
-    width: 100%;
-    margin-top: var(--space-2);
-    min-height: var(--control-height);
-    font-size: var(--font-body-size);
-    font-weight: 500;
-}
-.auth-page .auth-footer {
-    margin-top: var(--space-section-gap);
-    text-align: center;
-    font-size: var(--font-caption-size);
-}
 .choice-row {
     display: flex;
     flex-wrap: wrap;
