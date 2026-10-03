@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-01T14:11:16.602Z",
+  "last_updated": "2026-10-02T12:42:03.539Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1060,6 +1060,33 @@
       "source_context": "Issue #52 UI Guard stock violations cleanup",
       "created": "2026-10-01",
       "updated": "2026-10-01"
+    },
+    "sources/obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m": {
+      "type": "source",
+      "title": "Observation: Issue #63 Settings primitives unified and PR #66 merged into main",
+      "tags": [
+        "settings,issue-63,pr-66,merged,ui-contract"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m",
+      "relevance": "high",
+      "observed_at": "2026-10-02T12:42:03.505Z",
+      "source_context": "User requested implementation in worktree, then explicitly confirmed merging PR #66 into main and closing #63.",
+      "created": "2026-10-02",
+      "updated": "2026-10-02"
+    },
+    "sources/obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main": {
+      "type": "source",
+      "title": "Observation: PR #58 Docker deployment hardening merged into main",
+      "tags": [
+        "docker,ghcr,unraid,deployment,pr-58"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main",
+      "relevance": "high",
+      "observed_at": "2026-10-02T07:43:26.919Z",
+      "created": "2026-10-02",
+      "updated": "2026-10-02"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

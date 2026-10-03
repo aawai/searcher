@@ -60,6 +60,8 @@
 - [[sources/obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-]] — Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard *(created: 2026-10-01)*
 - [[sources/obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa]] — Observation: Preferences API and schema migration for Issue #55 ambient wallpaper fields *(created: 2026-10-01)*
 - [[sources/obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components]] — Observation: UI Guard Migration: Settings & Searcher Presentation Components *(created: 2026-10-01)*
+- [[sources/obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m]] — Observation: Issue #63 Settings primitives unified and PR #66 merged into main *(created: 2026-10-02)*
+- [[sources/obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main]] — Observation: PR #58 Docker deployment hardening merged into main *(created: 2026-10-02)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -112,4 +114,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-01T14:11:16.602Z* | *Total pages: 97*
+*Last updated: 2026-10-02T12:42:03.539Z* | *Total pages: 99*

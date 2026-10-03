@@ -71,4 +71,6 @@
 - [Observation: NotesWorkspace inline expand, deduplication, and hit-testable drag grip guard](obs-2026-10-01-notesworkspace-inline-expand-deduplication-and-hit-testable-.md)
 - [Observation: Preferences API and schema migration for Issue #55 ambient wallpaper fields](obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa.md)
 - [Observation: UI Guard Migration: Settings & Searcher Presentation Components](obs-2026-10-01-ui-guard-migration-settings-searcher-presentation-components.md)
+- [Observation: Issue #63 Settings primitives unified and PR #66 merged into main](obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m.md)
+- [Observation: PR #58 Docker deployment hardening merged into main](obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

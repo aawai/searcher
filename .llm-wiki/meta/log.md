@@ -302,3 +302,9 @@
 ## [2026-10-01T14:11:16.585Z] observe
 - slug: "obs-2026-10-01-preferences-api-and-schema-migration-for-issue-55-ambient-wa", title: "Preferences API and schema migration for Issue #55 ambient wallpaper fields", relevance: "high"
 
+## [2026-10-02T07:43:26.925Z] observe
+- slug: "obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main", title: "PR #58 Docker deployment hardening merged into main", relevance: "high"
+
+## [2026-10-02T12:42:03.509Z] observe
+- slug: "obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m", title: "Issue #63 Settings primitives unified and PR #66 merged into main", relevance: "high"
+

@@ -202,7 +202,7 @@ export function ZenLayout(props: HomeLayoutProps) {
                             openWorkspace("apps")}
                     >
                         <Folder size={13} />
-                        <span>网站 · {apps.length}</span>
+                        <span>应用 · {apps.length}</span>
                     </button>
                     <button
                         type="button"
