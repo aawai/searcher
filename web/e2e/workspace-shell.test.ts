@@ -384,11 +384,19 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await trigger.focus();
                         await page.keyboard.press("Enter");
                         await search().waitFor();
-                        await page.waitForFunction(() =>
-                            document.activeElement?.matches(
-                                "input[data-workspace-search]",
-                            )
-                        );
+                        if (width >= 768) {
+                            await page.waitForFunction(() =>
+                                document.activeElement?.matches(
+                                    "input[data-workspace-search]",
+                                )
+                            );
+                        } else {
+                            await page.waitForFunction(() =>
+                                document.activeElement?.getAttribute(
+                                    "aria-label",
+                                ) === "收起工作区"
+                            );
+                        }
                         assert(await search().getAttribute("aria-label"));
                         assertEquals(
                             await panel.locator(
