@@ -194,6 +194,28 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - window 当前复用桌面非模态 aside 的视觉/尺寸/交互，不包含 drag/resize、Dock、
   multi-window、minimize/maximize/snap 或新的 Desktop Window Manager。
 
+#### Desktop Window Manager（#88 demo）
+
+- `/design-lab` 使用独立 `features/desktop` 引擎；此阶段不迁移业务、不接
+  Dock、不持久化。
+- `DesktopCanvas` 是 viewport-fixed、背景 pointer-events:none 的唯一坐标
+  owner。frame x/y 相对 safe rect；顶边为可见 Topbar/connection banner 下边界加
+  `--space-window-gap`， 左右为 viewport 加 gap，底边为 viewport 减 gap；可提供
+  bottomElement 供后续 Dock 使用。
+- window 使用 `--window-surface/border`、`--shadow-window`、`--radius-window`、
+  `--window-elevation`、`--window-chrome-height` 与
+  `--window-resize-hit`；不叠加 blur。
+- 默认 Apps/Notes/Note 尺寸分别为 min(760,72%)/min(720,78%)、
+  min(640,62%)/min(680,74%)、min(560,54%)/min(600,68%)，以 safe rect
+  为基准居中。 同类窗口按 24px cascade，触边循环到居中起点；min size 分别为
+  480×360、400×320、 320×240，最终均受 safe rect 限制。
+- 仅标题栏拖动；>=1024 八向 resize；Pointer capture + rAF 只更新临时 DOM 几何，
+  pointerup/cancel 才 commit frame，safe rect 变化也终止手势并 clamp。
+  标题栏方向键移动、把手方向键 resize；reduce-motion 不参与几何正确性。
+- minimize 保留 mounted content；maximize 保存 restoreFrame；restore 与 viewport
+  resize 始终 clamp；每次提层 normalize 到 1..N。UI Guard 仅对两个 owner 的计算
+  frame 开放运行时例外，不允许任意视觉属性。
+
 #### Workspace Root layout contract
 
 Apps 与 Notes 是同一 Shell 内的两个工作区，共享 Root

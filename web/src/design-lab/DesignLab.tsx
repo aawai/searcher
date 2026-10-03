@@ -83,6 +83,7 @@ import {
 } from "../features/workspace/workspace-state.ts";
 
 import "./design-lab.css";
+import { DesktopDemo } from "../features/desktop/DesktopDemo.tsx";
 
 // Fixture Data
 const appsFixture: WebAppItem[] = [
@@ -265,6 +266,7 @@ export function DesignLab() {
                 }
             />
 
+            <DesktopDemo />
             {/* Top Inspector & Live Preview Controls */}
             <div className="lab-inspector-card">
                 <div className="lab-stage-header">

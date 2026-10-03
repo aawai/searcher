@@ -223,6 +223,17 @@ export function isDomainValueException(
     const norm = value.trim();
     const p = normalizePath(file);
 
+    // Desktop frames are computed in the sole Canvas safe-rect coordinate system.
+    if (p === "web/src/features/desktop/DesktopCanvas.tsx") {
+        return /^(left|top|width|height)$/.test(prop) &&
+            /^rect\.(x|y|width|height)$/.test(norm);
+    }
+    if (p === "web/src/features/desktop/DesktopWindow.tsx") {
+        return (prop === "zIndex" && norm === "win.zOrder") ||
+            (/^(width|height|transform)$/.test(prop) &&
+                norm.includes("win.frame."));
+    }
+
     // Floating note domain coordinates and tilt (scoped to FloatingNotes)
     if (p.endsWith("FloatingNotes.tsx") || p.includes("/fixtures/notes/")) {
         if (prop === "--note-tilt") {

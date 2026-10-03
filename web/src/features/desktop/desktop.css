@@ -1,0 +1,219 @@
+/* Desktop Window Manager Styles
+ * Semantic Tokens:
+ * --window-surface, --window-border, --shadow-window, --radius-window,
+ * --space-window-gap, --window-elevation, --window-resize-hit, --window-chrome-height
+ */
+
+.desktop-canvas {
+    position: fixed;
+    pointer-events: none;
+    z-index: var(--window-elevation);
+    box-sizing: border-box;
+}
+
+.desktop-window {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    z-index: var(--window-elevation);
+    background: var(--window-surface);
+    border: 1px solid var(--window-border);
+    border-radius: var(--radius-window);
+    box-shadow: var(--shadow-window);
+    overflow: hidden;
+    box-sizing: border-box;
+    outline: none;
+    will-change: transform, width, height;
+}
+
+.desktop-window--active {
+    box-shadow: var(--shadow-l3);
+    border-color: var(--accent);
+}
+
+.desktop-window--maximized {
+    border-radius: 0;
+}
+
+.desktop-window--minimized {
+    display: none;
+}
+
+/* Titlebar / Chrome */
+.desktop-window-chrome {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--window-chrome-height);
+    min-height: var(--window-chrome-height);
+    padding-inline: var(--space-window-gap);
+    background: var(--window-surface);
+    border-bottom: 1px solid var(--window-border);
+    user-select: none;
+    cursor: default;
+    box-sizing: border-box;
+    gap: var(--space-window-gap);
+}
+
+.desktop-window-chrome--draggable {
+    cursor: grab;
+}
+
+.desktop-window-chrome--dragging {
+    cursor: grabbing;
+}
+
+.desktop-window-chrome-title-wrap {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    cursor: inherit;
+}
+
+.desktop-window-chrome-title {
+    font-size: inherit;
+    font-weight: 500;
+    color: var(--foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+}
+
+.desktop-window-chrome-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+.desktop-window-chrome-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--window-chrome-height) - var(--space-window-gap));
+    width: calc(var(--window-chrome-height) - var(--space-window-gap));
+    padding: 0;
+    border-radius: var(--control-radius);
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.desktop-window-chrome-btn:hover {
+    color: var(--foreground);
+    background: var(--surface-soft);
+}
+
+.desktop-window-chrome-btn--close:hover {
+    color: var(--accent-foreground);
+    background: var(--danger);
+}
+
+.desktop-window-chrome-icon {
+    width: calc((var(--window-chrome-height) - var(--space-window-gap)) * 0.5);
+    height: calc((var(--window-chrome-height) - var(--space-window-gap)) * 0.5);
+}
+
+/* Window Content Body */
+.desktop-window-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    position: relative;
+    box-sizing: border-box;
+    color: var(--foreground);
+}
+
+/* Demo Content helper */
+.desktop-demo-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-window-gap);
+    padding: var(--space-window-gap);
+    box-sizing: border-box;
+    height: 100%;
+}
+
+/* 8-Way Window Resize Handles */
+.desktop-window-resize-handle {
+    position: absolute;
+    z-index: 10;
+    touch-action: none;
+    user-select: none;
+}
+
+/* Edges */
+.desktop-window-resize-handle--n {
+    top: 0;
+    left: calc(var(--window-resize-hit) * 1.5);
+    right: calc(var(--window-resize-hit) * 1.5);
+    height: var(--window-resize-hit);
+    cursor: ns-resize;
+}
+
+.desktop-window-resize-handle--s {
+    bottom: 0;
+    left: calc(var(--window-resize-hit) * 1.5);
+    right: calc(var(--window-resize-hit) * 1.5);
+    height: var(--window-resize-hit);
+    cursor: ns-resize;
+}
+
+.desktop-window-resize-handle--w {
+    left: 0;
+    top: calc(var(--window-resize-hit) * 1.5);
+    bottom: calc(var(--window-resize-hit) * 1.5);
+    width: var(--window-resize-hit);
+    cursor: ew-resize;
+}
+
+.desktop-window-resize-handle--e {
+    right: 0;
+    top: calc(var(--window-resize-hit) * 1.5);
+    bottom: calc(var(--window-resize-hit) * 1.5);
+    width: var(--window-resize-hit);
+    cursor: ew-resize;
+}
+
+/* Corners */
+.desktop-window-resize-handle--nw {
+    top: 0;
+    left: 0;
+    width: calc(var(--window-resize-hit) * 2);
+    height: calc(var(--window-resize-hit) * 2);
+    cursor: nwse-resize;
+}
+
+.desktop-window-resize-handle--ne {
+    top: 0;
+    right: 0;
+    width: calc(var(--window-resize-hit) * 2);
+    height: calc(var(--window-resize-hit) * 2);
+    cursor: nesw-resize;
+}
+
+.desktop-window-resize-handle--sw {
+    bottom: 0;
+    left: 0;
+    width: calc(var(--window-resize-hit) * 2);
+    height: calc(var(--window-resize-hit) * 2);
+    cursor: nesw-resize;
+}
+
+.desktop-window-resize-handle--se {
+    bottom: 0;
+    right: 0;
+    width: calc(var(--window-resize-hit) * 2);
+    height: calc(var(--window-resize-hit) * 2);
+    cursor: nwse-resize;
+}
+
+/* Resize disabled below 1024px viewport width */
+@media (max-width: 1023px) {
+    .desktop-window-resize-handle {
+        display: none !important;
+    }
+}

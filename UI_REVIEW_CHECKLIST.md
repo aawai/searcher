@@ -901,3 +901,25 @@
       header/footer 稳定性；触屏尺寸检查使用 reduced-motion，避免入场缩放
       尚未完成时读取按钮尺寸。实页工具栏 15 个按钮均为 44×44。
 - [x] build、前端 typecheck、4 个受影响 TS 文件 lint/format 与 382 项单测通过。
+
+## Issue #88 Desktop Window Manager 验收
+
+- [x] Design Lab workbench 的非模态 demo；复用
+      Section/ActionGroup/Input/Button， window solid
+      surface、border、shadow、radius、gap/elevation 仅由系统 token 拥有。
+- [x] frame 坐标只相对 Canvas safe rect；window pointer-events:auto、Canvas
+      none； 实页点击窗口外的“重置预览”成功，背景不拦截控件。
+- [x] 八向把手逐向验证：每次 8px resize 对应轴增长 8px，其他轴不变。 修复
+      overflow:hidden 对右/下把手命中中心的裁剪。
+- [x] input/button 不拖动；标题栏 pointer capture 拖动；多窗口内容点击提层；
+      maximize→minimize→restore 保持 maximized，再 restore 回原
+      frame；最小化保留输入。
+- [x] viewport 中途改变后最后 frame commit，下一次手势不跳回； 1440→390
+      保持可见；min-size/clamp/cascade/z-order 边界由核心测试覆盖。
+- [x] 拖动中 IndexedDB readwrite transaction 与非 GET/HEAD API 请求均为 0；
+      reduced-motion 与正常媒体偏好均运行几何交互；Console 无 page errors。
+- [x] 390×844、768×1024、1024×768、1440×900 × light/dark， 8
+      组实页均无横向溢出、窗口在 safe rect 内；截图
+      `/tmp/omp-sshots-1597fbd*.webp`。
+- [x] 全量 397 项测试、前端 typecheck、build、focused lint/format 通过； UI
+      Guard 107 文件、0 violations、0 allowances、0 ownership drift。
