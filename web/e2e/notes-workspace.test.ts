@@ -818,6 +818,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 hasTouch: true,
                 colorScheme: "light",
                 storageState: await context.storageState(),
+                reducedMotion: "reduce",
             });
             const mobile = await touch.newPage();
             let fixtureId = "";

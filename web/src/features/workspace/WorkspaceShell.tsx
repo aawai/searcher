@@ -1,4 +1,10 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+    type ReactNode,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     type WorkspacePresentation,
@@ -54,16 +60,29 @@ export function WorkspaceShell(
     const workspace: WorkspaceKind = isAppsWorkspaceView(state)
         ? "apps"
         : "notes";
-    const lastWorkspace = useRef<WorkspaceKind>(workspace);
+    const opener = useRef<HTMLElement | null>(null);
+    const openingWorkspace = useRef<WorkspaceKind>(workspace);
     const wasOpen = useRef(false);
-    useEffect(() => {
-        if (open) lastWorkspace.current = workspace;
+    useLayoutEffect(() => {
+        if (open && !wasOpen.current) {
+            const active = document.activeElement;
+            opener.current = active instanceof HTMLElement &&
+                    active !== document.body &&
+                    !active.closest(".workspace-panel")
+                ? active
+                : null;
+            openingWorkspace.current = workspace;
+        }
         if (!open && wasOpen.current) {
-            const frame = requestAnimationFrame(() =>
-                document.querySelector<HTMLButtonElement>(
-                    '[data-workspace="' + lastWorkspace.current + '"]',
-                )?.focus()
-            );
+            const frame = requestAnimationFrame(() => {
+                const target = opener.current?.isConnected
+                    ? opener.current
+                    : document.querySelector<HTMLButtonElement>(
+                        '[data-workspace="' + openingWorkspace.current + '"]',
+                    );
+                target?.focus({ preventScroll: true });
+                opener.current = null;
+            });
             wasOpen.current = false;
             return () => cancelAnimationFrame(frame);
         }

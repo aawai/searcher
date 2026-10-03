@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
@@ -30,11 +30,20 @@ export function WorkspaceSurface(
     const back = useRef<HTMLButtonElement>(null);
     const close = useRef<HTMLButtonElement>(null);
     const touchY = useRef<number | null>(null);
-    useEffect(() => {
-        const frame = requestAnimationFrame(() => {
-            if (nested) back.current?.focus();
-            else close.current?.focus();
-        });
+    const mounted = useRef(false);
+    useLayoutEffect(() => {
+        const focusChrome = () => {
+            (nested ? back.current : close.current)?.focus({
+                preventScroll: true,
+            });
+        };
+        if (mounted.current && !nested) {
+            // Move focus before Sheet restores a removed nested control to its popup.
+            focusChrome();
+            return;
+        }
+        mounted.current = true;
+        const frame = requestAnimationFrame(focusChrome);
         return () => cancelAnimationFrame(frame);
     }, [routeKey, mobile, nested]);
     useEffect(() => {

@@ -876,3 +876,28 @@
 - [x] Design Lab 的“打开 Workspace”实页在 768px 挂载 panel，title、Search、
       close、primary footer 与 Apps/Notes navigation
       正常；与真实业务页证据分开。
+
+## Issue #87 Zen Panel/Sheet 验收
+
+- [x] 复用 Shared WorkspaceSurface、shadcn Sheet/Button 与 canonical workspace
+      tokens；未新增视觉值、业务视图副本、Dock 或窗口几何。
+- [x] 实页 390×844、768×1024、1024×768、1440×900 × light/dark 截图： <768 为模态
+      Sheet，>=768 为 400px 非模态 Panel，无横向溢出。
+- [x] Root 初始焦点为 Close、无输入 autofocus；桌面 Home Search 可直接聚焦，
+      Panel 打开前后 hero geometry 相同。Close 返回实际 opener，切换 Apps/Notes
+      不替换 opener；修复前 Apps→Notes→Close 错误返回 Notes，修复后返回 Apps。
+- [x] reduced-motion 实页验收；browser console error 与 page errors 均为 0。
+- [x] 无业务/API/schema 变更；FloatingNotes 与 note_layouts 未修改。
+- [x] Design Lab 未修改，本次证据来自隔离数据库的真实首页。
+- [x] check:ui：101 files、0 violations、0 allowances；前端 typecheck 与
+      WorkspaceShell lint 通过。
+- [x] `deno task test:workspace`：7 suites、77 steps、0 failed，覆盖 Apps/Notes
+      正常/空态/loading/error、query、nested Back、Escape overlay
+      precedence、Sheet trap/swipe/safe-area、FloatingNotes/layout 与 auth
+      reset。
+- [x] 移动端 Back→Root 原先被 Base UI popup restore 覆盖，实页修复后聚焦 Close；
+      仅 Root 返回同步转移，嵌套进入保留 refs 就绪后的时序。
+- [x] 精确视口下移除“内容必须产生滚动”的偶然断言，保留 scroll boundary 与
+      header/footer 稳定性；触屏尺寸检查使用 reduced-motion，避免入场缩放
+      尚未完成时读取按钮尺寸。实页工具栏 15 个按钮均为 44×44。
+- [x] build、前端 typecheck、4 个受影响 TS 文件 lint/format 与 382 项单测通过。
