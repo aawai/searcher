@@ -1,26 +1,18 @@
-import { type CSSProperties, type ReactNode, useEffect, useRef } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
 import { cn } from "../../lib/utils.ts";
+import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
-    type AmbientMotionMode,
-    DEFAULT_AMBIENT_MOTION_MODE,
-    DEFAULT_AMBIENT_MOTION_STRENGTH,
-    DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    DEFAULT_WALLPAPER_MASK,
-} from "@shared/contracts.ts";
-import {
-    DEFAULT_WALLPAPER_COMPOSITION,
-    parseWallpaperSource,
-    type WallpaperComposition,
-} from "@shared/wallpaper.ts";
+    DEFAULT_WALLPAPER_PRESENTATION,
+    resolveWallpaperPresentation,
+    type WallpaperMotion,
+    type WallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
+
 export interface WallpaperSurfaceProps {
     source?: string | null;
-    composition?: WallpaperComposition | null;
-    blur?: number;
-    grayscale?: number;
-    mask?: number;
-    glowStrength?: number;
-    ambientMotionMode?: AmbientMotionMode;
-    ambientMotionStrength?: number;
+    presentation?: WallpaperPresentation | null;
+    /** Freeze presentation in focal editors without changing persisted intent. */
+    motionOverride?: WallpaperMotion;
     className?: string;
     style?: CSSProperties;
     embedded?: boolean;
@@ -32,127 +24,146 @@ export function formatWallpaperCss(source: string | null | undefined): string {
     if (!source || typeof source !== "string") return "none";
     const trimmed = source.trim();
     if (!trimmed) return "none";
-
-    // 1. Guest Data URL (strictly validated format and supported mime types)
     if (trimmed.startsWith("data:")) {
-        if (
-            /^data:image\/(?:png|jpeg|webp|avif);base64,[A-Za-z0-9+/=]+$/.test(
-                trimmed,
-            )
-        ) {
-            return `url(${JSON.stringify(trimmed)})`;
-        }
-        return "none";
+        return /^data:image\/(?:png|jpeg|webp|avif);base64,[A-Za-z0-9+/=]+$/
+                .test(trimmed)
+            ? `url(${JSON.stringify(trimmed)})`
+            : "none";
     }
-
-    // 2. Verified uploaded, remote HTTPS, or whitelisted CSS gradient
     const parsed = parseWallpaperSource(trimmed);
     if (!parsed) return "none";
+    return parsed.type === "gradient"
+        ? parsed.value
+        : `url(${JSON.stringify(parsed.value)})`;
+}
 
-    if (parsed.type === "uploaded" || parsed.type === "remote") {
-        return `url(${JSON.stringify(parsed.value)})`;
-    }
-    if (parsed.type === "gradient") {
-        return parsed.value;
-    }
-    return "none";
+function useWallpaperEnvironment() {
+    const [theme, setTheme] = useState<"light" | "dark">(() =>
+        typeof document !== "undefined" &&
+            document.documentElement.dataset.theme === "dark"
+            ? "dark"
+            : "light"
+    );
+    const [reducedMotion, setReducedMotion] = useState(() =>
+        typeof globalThis.matchMedia === "function"
+            ? globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
+            : false
+    );
+    useEffect(() => {
+        const readTheme = () =>
+            setTheme(
+                document.documentElement.dataset.theme === "dark"
+                    ? "dark"
+                    : "light",
+            );
+        const observer = new MutationObserver(readTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-theme"],
+        });
+        readTheme();
+        const media = globalThis.matchMedia("(prefers-reduced-motion: reduce)");
+        const readMotion = () => setReducedMotion(media.matches);
+        media.addEventListener("change", readMotion);
+        readMotion();
+        return () => {
+            observer.disconnect();
+            media.removeEventListener("change", readMotion);
+        };
+    }, []);
+    return { theme, reducedMotion };
 }
 
 export function WallpaperSurface({
     source,
-    composition,
-    blur = 0,
-    grayscale = 0,
-    mask = DEFAULT_WALLPAPER_MASK,
-    glowStrength = DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    ambientMotionMode = DEFAULT_AMBIENT_MOTION_MODE,
-    ambientMotionStrength = DEFAULT_AMBIENT_MOTION_STRENGTH,
+    presentation,
+    motionOverride,
     className,
     style,
     embedded = false,
     testId,
     children,
 }: WallpaperSurfaceProps) {
+    const environment = useWallpaperEnvironment();
     const wallpaperCss = formatWallpaperCss(source);
-    const focalX = composition?.focalX ?? DEFAULT_WALLPAPER_COMPOSITION.focalX;
-    const focalY = composition?.focalY ?? DEFAULT_WALLPAPER_COMPOSITION.focalY;
-
-    const S = ambientMotionMode === "off" ? 0 : ambientMotionStrength;
-    const glowRestOpacity = 1 - 0.18 * S;
-    const glowPeakScale = 1 + 0.05 * S;
-    const ripplePeakOpacity = 0.18 * S;
-    const ripplePeakScale = 1 + 0.20 * S;
-
-    const focalXPercent = `${focalX * 100}%`;
-    const focalYPercent = `${focalY * 100}%`;
-    const positionCss = `${focalXPercent} ${focalYPercent}`;
-    const rootRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const el = rootRef.current;
-        if (!el) return;
-        el.style.setProperty("--wallpaper-position", positionCss);
-        el.style.setProperty("--wallpaper-focal-x", focalXPercent);
-        el.style.setProperty("--wallpaper-focal-y", focalYPercent);
-        el.style.setProperty(
-            "--wallpaper-glow-strength",
-            `${glowStrength * 100}%`,
-        );
-        el.style.setProperty("--wallpaper-glow-duration", "8s");
-        el.style.setProperty(
-            "--wallpaper-glow-rest-opacity",
-            String(glowRestOpacity),
-        );
-        el.style.setProperty(
-            "--wallpaper-glow-peak-scale",
-            String(glowPeakScale),
-        );
-        el.style.setProperty(
-            "--wallpaper-ripple-peak-opacity",
-            String(ripplePeakOpacity),
-        );
-        el.style.setProperty(
-            "--wallpaper-ripple-peak-scale",
-            String(ripplePeakScale),
-        );
-    }, [
-        positionCss,
-        focalXPercent,
-        focalYPercent,
-        glowStrength,
-        glowRestOpacity,
-        glowPeakScale,
-        ripplePeakOpacity,
-        ripplePeakScale,
-    ]);
-
+    const intent = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
+    const resolved = resolveWallpaperPresentation(
+        motionOverride ? { ...intent, motion: motionOverride } : intent,
+        { ...environment, hasWallpaper: wallpaperCss !== "none" },
+    );
+    const inset = (percentage: number, pixels: number) =>
+        `calc(-${percentage}% - ${pixels}px)`;
     return (
         <div
-            ref={rootRef}
             className={cn(
-                "wallpaper",
                 "wallpaper-surface",
                 embedded && "wallpaper-surface--embedded",
                 className,
             )}
-            data-ambient-motion={ambientMotionMode}
+            data-motion={resolved.motion}
+            data-tone={resolved.tone}
+            data-motion-level={resolved.motionLevel}
             data-wallpaper-image={wallpaperCss.startsWith("url(")
                 ? "true"
                 : undefined}
             data-testid={testId}
             style={{
-                "--wallpaper-image": wallpaperCss,
-                "--wallpaper-blur": `${blur}px`,
-                "--wallpaper-grayscale": grayscale,
-                "--wallpaper-mask": mask,
                 ...style,
+                "--wallpaper-image": wallpaperCss,
+                "--wallpaper-filter": resolved.filter,
+                "--wallpaper-mask": resolved.mask,
+                "--wallpaper-position": `${
+                    resolved.composition.focalX * 100
+                }% ${resolved.composition.focalY * 100}%`,
+                "--wallpaper-overscan-x": inset(
+                    resolved.overscan.percentageX,
+                    resolved.overscan.pixelsX,
+                ),
+                "--wallpaper-overscan-y": inset(
+                    resolved.overscan.percentageY,
+                    resolved.overscan.pixelsY,
+                ),
+                "--wallpaper-ambient-mix": `${resolved.ambient.fieldMix}%`,
+                "--wallpaper-radius-a": resolved.timing.ambient.radiusA,
+                "--wallpaper-radius-b": resolved.timing.ambient.radiusB,
+                "--wallpaper-duration-a":
+                    `${resolved.timing.ambient.durationA}s`,
+                "--wallpaper-duration-b":
+                    `${resolved.timing.ambient.durationB}s`,
+                "--wallpaper-phase": `${-resolved.timing.ambient.phaseOffset}s`,
+                "--wallpaper-drift-duration":
+                    `${resolved.timing.drift.duration}s`,
+                "--wallpaper-zoom-duration":
+                    `${resolved.timing.zoom.duration}s`,
+                "--wallpaper-easing": resolved.timing.ambient.easing,
+                "--wallpaper-ambient-color": resolved.ambient.neutral
+                    ? "var(--wallpaper-neutral-light)"
+                    : "var(--accent)",
+                "--wallpaper-ambient-travel": `${resolved.ambient.travel}vmax`,
+                "--wallpaper-ambient-scale": resolved.ambient.scale,
+                "--wallpaper-drift-x": `${resolved.drift.x}%`,
+                "--wallpaper-drift-y": `${resolved.drift.y}%`,
+                "--wallpaper-motion-scale": resolved.motion === "zoom"
+                    ? resolved.zoom.scale
+                    : resolved.drift.scale,
             } as CSSProperties}
             aria-hidden={!children}
         >
-            <div
-                className="wallpaper__image wallpaper-surface__image"
-                data-testid={testId ? `${testId}-image` : undefined}
-            />
-            <div className="wallpaper__ripple wallpaper-surface__ripple" />
+            {wallpaperCss !== "none" && (
+                <div className="wallpaper-surface__overscan">
+                    <div
+                        className="wallpaper-surface__image"
+                        data-testid={testId ? `${testId}-image` : undefined}
+                    />
+                </div>
+            )}
+            {resolved.motion === "ambient" && (
+                <div className="wallpaper__ambient">
+                    <div className="wallpaper__ambient-field-a" />
+                    <div className="wallpaper__ambient-field-b" />
+                </div>
+            )}
+            <div className="wallpaper-surface__mask" />
             {children}
         </div>
     );

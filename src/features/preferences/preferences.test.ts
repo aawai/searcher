@@ -1,5 +1,6 @@
 import type { Envelope, PreferencesDto } from "@shared/contracts.ts";
 import { assertEquals } from "@std/assert";
+import { eq } from "drizzle-orm";
 import { createApp } from "../../app.ts";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
@@ -46,9 +47,8 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 accent: "violet",
                 searchShape: "pill",
                 searchOpacity: 0.85,
-                wallpaperBlur: 16,
-                wallpaperGrayscale: 0.3,
-                wallpaperMask: 0.65,
+                canvasMotion: "ambient",
+                canvasMotionLevel: "standard",
                 defaultEngine: "google",
                 webAppHomeLimit: 16,
                 webAppIconSize: "large",
@@ -71,11 +71,11 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 cookie: first,
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ wallpaperMask: 0.4, accent: "rose" }),
+            body: JSON.stringify({ canvasMotion: "off", accent: "rose" }),
         });
         assertEquals(partial.status, 200);
         const changed = await partial.json() as Envelope<PreferencesDto>;
-        assertEquals(changed.data?.wallpaperMask, 0.4);
+        assertEquals(changed.data?.canvasMotion, "off");
         assertEquals(changed.data?.style, "widgets");
         assertEquals(changed.data?.accent, "rose");
         assertEquals(changed.data?.searchOpacity, 0.85);
@@ -119,10 +119,8 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.webAppIconSize, "default");
         assertEquals(isolated.data?.showAppLabels, true);
-        assertEquals(isolated.data?.wallpaperMask, 0.36);
-        assertEquals(isolated.data?.wallpaperGlowStrength, 0.14);
-        assertEquals(isolated.data?.ambientMotionMode, "breathe_ripple");
-        assertEquals(isolated.data?.ambientMotionStrength, 0.35);
+        assertEquals(isolated.data?.canvasMotion, "off");
+        assertEquals(isolated.data?.canvasMotionLevel, "soft");
     } finally {
         await store.close();
     }
@@ -148,12 +146,20 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
             const patch of [
                 { style: "neon" },
                 { accent: "red" },
-                { searchShape: "square" },
-                { wallpaperBlur: -1 },
-                { wallpaperBlur: 25 },
-                { wallpaperGrayscale: 1.1 },
-                { wallpaperMask: 0.9 },
-                { backgroundImage: "javascript:alert(1)" },
+                { canvasMotion: "breathe" },
+                { canvasMotionLevel: "invalid" },
+                {
+                    wallpaperPresentations: {
+                        "invalid-source": { readability: "clear" },
+                    },
+                },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/a.png": {
+                            readability: "invalid",
+                        },
+                    },
+                },
                 { backgroundImage: "https://user:pass@example.com/a.png" },
                 { webAppHomeLimit: 15 },
                 { webAppIconSize: "huge" },
@@ -186,10 +192,9 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults inc
         const guestRes = await app.request("/api/preferences");
         assertEquals(guestRes.status, 200);
         const guestBody = await guestRes.json() as Envelope<PreferencesDto>;
-        assertEquals(guestBody.data?.wallpaperMask, 0.36);
-        assertEquals(guestBody.data?.wallpaperGlowStrength, 0.14);
-        assertEquals(guestBody.data?.ambientMotionMode, "breathe_ripple");
-        assertEquals(guestBody.data?.ambientMotionStrength, 0.35);
+        assertEquals(guestBody.data?.canvasMotion, "off");
+        assertEquals(guestBody.data?.canvasMotionLevel, "soft");
+        assertEquals(guestBody.data?.wallpaperPresentations, {});
 
         // 2. New registered user GET returns same canonical defaults
         const regRes = await app.request("/api/auth/register", {
@@ -208,10 +213,9 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults inc
         });
         assertEquals(userRes.status, 200);
         const userBody = await userRes.json() as Envelope<PreferencesDto>;
-        assertEquals(userBody.data?.wallpaperMask, 0.36);
-        assertEquals(userBody.data?.wallpaperGlowStrength, 0.14);
-        assertEquals(userBody.data?.ambientMotionMode, "breathe_ripple");
-        assertEquals(userBody.data?.ambientMotionStrength, 0.35);
+        assertEquals(userBody.data?.canvasMotion, "off");
+        assertEquals(userBody.data?.canvasMotionLevel, "soft");
+        assertEquals(userBody.data?.wallpaperPresentations, {});
         assertEquals(userBody.data?.accent, "blue");
         assertEquals(userBody.data?.style, "zen");
     } finally {
@@ -259,11 +263,9 @@ Deno.test("preferences: first partial PATCH with accent-only seeds full canonica
         const patchBody = await patchRes.json() as Envelope<PreferencesDto>;
 
         // Verify that accent was updated, and all other defaults did not drift
-        assertEquals(patchBody.data?.accent, "violet");
-        assertEquals(patchBody.data?.wallpaperMask, 0.36);
-        assertEquals(patchBody.data?.wallpaperGlowStrength, 0.14);
-        assertEquals(patchBody.data?.ambientMotionMode, "breathe_ripple");
-        assertEquals(patchBody.data?.ambientMotionStrength, 0.35);
+        assertEquals(patchBody.data?.canvasMotion, "off");
+        assertEquals(patchBody.data?.canvasMotionLevel, "soft");
+        assertEquals(patchBody.data?.wallpaperPresentations, {});
         assertEquals(patchBody.data?.defaultEngine, "duckduckgo");
         assertEquals(patchBody.data?.theme, "dark");
         assertEquals(patchBody.data?.searchTarget, "new");
@@ -280,11 +282,9 @@ Deno.test("preferences: first partial PATCH with accent-only seeds full canonica
         });
         assertEquals(getRes.status, 200);
         const getBody = await getRes.json() as Envelope<PreferencesDto>;
-        assertEquals(getBody.data?.accent, "violet");
-        assertEquals(getBody.data?.wallpaperMask, 0.36);
-        assertEquals(getBody.data?.wallpaperGlowStrength, 0.14);
-        assertEquals(getBody.data?.ambientMotionMode, "breathe_ripple");
-        assertEquals(getBody.data?.ambientMotionStrength, 0.35);
+        assertEquals(getBody.data?.canvasMotion, "off");
+        assertEquals(getBody.data?.canvasMotionLevel, "soft");
+        assertEquals(getBody.data?.wallpaperPresentations, {});
         assertEquals(getBody.data?.defaultEngine, "duckduckgo");
         assertEquals(getBody.data?.theme, "dark");
         assertEquals(getBody.data?.searchTarget, "new");
@@ -292,8 +292,7 @@ Deno.test("preferences: first partial PATCH with accent-only seeds full canonica
         await store.close();
     }
 });
-
-Deno.test("preferences: ambient fields accept boundary values and reject invalid ranges and enums", async () => {
+Deno.test("preferences: canvasMotion and presentation fields accept valid stages and reject invalid enums", async () => {
     const store = openDatabase(":memory:");
     try {
         await migrateDatabase(store);
@@ -311,46 +310,126 @@ Deno.test("preferences: ambient fields accept boundary values and reject invalid
         });
         const cookie = regRes.headers.get("set-cookie")?.split(";")[0] ?? "";
 
-        // Accept boundaries and valid values
+        // Accept valid canvasMotion stages
+        for (const mode of ["off", "ambient"] as const) {
+            const res = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: { origin, cookie, "content-type": "application/json" },
+                body: JSON.stringify({ canvasMotion: mode }),
+            });
+            assertEquals(res.status, 200);
+            const body = await res.json() as Envelope<PreferencesDto>;
+            assertEquals(body.data?.canvasMotion, mode);
+        }
+
+        // Accept valid canvasMotionLevel stages
         for (
-            const [key, value] of [
-                ["wallpaperGlowStrength", 0],
-                ["wallpaperGlowStrength", 0.14],
-                ["wallpaperGlowStrength", 0.30],
-                ["ambientMotionStrength", 0],
-                ["ambientMotionStrength", 0.35],
-                ["ambientMotionStrength", 1],
-                ["ambientMotionMode", "off"],
-                ["ambientMotionMode", "breathe"],
-                ["ambientMotionMode", "breathe_ripple"],
+            const level of [
+                "subtle",
+                "soft",
+                "standard",
+                "pronounced",
             ] as const
         ) {
             const res = await app.request("/api/preferences", {
                 method: "PATCH",
                 headers: { origin, cookie, "content-type": "application/json" },
-                body: JSON.stringify({ [key]: value }),
+                body: JSON.stringify({ canvasMotionLevel: level }),
             });
-            assertEquals(res.status, 200, `Expected 200 for ${key}=${value}`);
+            assertEquals(res.status, 200);
             const body = await res.json() as Envelope<PreferencesDto>;
-            assertEquals(body.data?.[key as keyof PreferencesDto], value);
+            assertEquals(body.data?.canvasMotionLevel, level);
         }
 
-        // Reject out-of-range values and invalid enums
+        // Accept valid wallpaperPresentations
+        const testPresentation = {
+            readability: "quiet",
+            softness: "soft",
+            tone: "mono",
+            motion: "drift",
+            motionLevel: "pronounced",
+            composition: { focalX: 0.3, focalY: 0.7 },
+        };
+        const resPres = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                wallpaperPresentations: {
+                    "https://example.com/bg.jpg": testPresentation,
+                },
+            }),
+        });
+        assertEquals(resPres.status, 200);
+        const presBody = await resPres.json() as Envelope<PreferencesDto>;
+        assertEquals(
+            presBody.data?.wallpaperPresentations
+                ?.["https://example.com/bg.jpg"]
+                ?.readability,
+            "quiet",
+        );
+        assertEquals(
+            presBody.data?.wallpaperPresentations
+                ?.["https://example.com/bg.jpg"]
+                ?.tone,
+            "mono",
+        );
+        assertEquals(
+            presBody.data?.wallpaperPresentations
+                ?.["https://example.com/bg.jpg"]
+                ?.motion,
+            "drift",
+        );
+        assertEquals(
+            presBody.data?.wallpaperPresentations
+                ?.["https://example.com/bg.jpg"]
+                ?.motionLevel,
+            "pronounced",
+        );
+
+        // Reject invalid enums and ranges
         for (
             const patch of [
-                { wallpaperGlowStrength: -0.01 },
-                { wallpaperGlowStrength: -1 },
-                { wallpaperGlowStrength: 0.31 },
-                { wallpaperGlowStrength: 1 },
-                { ambientMotionStrength: -0.01 },
-                { ambientMotionStrength: -0.5 },
-                { ambientMotionStrength: 1.01 },
-                { ambientMotionStrength: 2 },
-                { ambientMotionMode: "none" },
-                { ambientMotionMode: "wave" },
-                { ambientMotionMode: "ripple" },
-                { ambientMotionMode: "" },
-                { ambientMotionMode: 123 },
+                { canvasMotion: "breathe" },
+                { canvasMotion: "breathe_ripple" },
+                { canvasMotion: "unknown" },
+                { canvasMotionLevel: "high" },
+                { canvasMotionLevel: 1 },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/bg.jpg": {
+                            readability: "super",
+                        },
+                    },
+                },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/bg.jpg": { tone: "sepia" },
+                    },
+                },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/bg.jpg": { motion: "spin" },
+                    },
+                },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/bg.jpg": { motionLevel: "max" },
+                    },
+                },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/bg.jpg": {
+                            composition: { focalX: -0.1, focalY: 0.5 },
+                        },
+                    },
+                },
+                {
+                    wallpaperPresentations: {
+                        "https://example.com/bg.jpg": {
+                            composition: { focalX: 0.5, focalY: 1.5 },
+                        },
+                    },
+                },
             ]
         ) {
             const res = await app.request("/api/preferences", {
@@ -369,7 +448,7 @@ Deno.test("preferences: ambient fields accept boundary values and reject invalid
     }
 });
 
-Deno.test("preferences: subsequent partial updates preserve existing ambient and appearance fields", async () => {
+Deno.test("preferences: subsequent partial updates preserve existing presentation and canvas motion fields", async () => {
     const store = openDatabase(":memory:");
     try {
         await migrateDatabase(store);
@@ -387,67 +466,108 @@ Deno.test("preferences: subsequent partial updates preserve existing ambient and
         });
         const cookie = regRes.headers.get("set-cookie")?.split(";")[0] ?? "";
 
-        // Initial setup with customized ambient settings
+        // Initial setup with customized canvas motion and wallpaper presentations
         const initRes = await app.request("/api/preferences", {
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
             body: JSON.stringify({
                 accent: "emerald",
-                wallpaperMask: 0.5,
-                wallpaperGlowStrength: 0.25,
-                ambientMotionMode: "breathe",
-                ambientMotionStrength: 0.75,
+                canvasMotion: "ambient",
+                canvasMotionLevel: "pronounced",
+                wallpaperPresentations: {
+                    "https://example.com/wall-1.jpg": {
+                        readability: "focus",
+                        softness: "hazy",
+                        tone: "soft",
+                        motion: "drift",
+                        motionLevel: "standard",
+                        composition: { focalX: 0.4, focalY: 0.6 },
+                    },
+                },
             }),
         });
         assertEquals(initRes.status, 200);
         const initBody = await initRes.json() as Envelope<PreferencesDto>;
         assertEquals(initBody.data?.accent, "emerald");
-        assertEquals(initBody.data?.wallpaperMask, 0.5);
-        assertEquals(initBody.data?.wallpaperGlowStrength, 0.25);
-        assertEquals(initBody.data?.ambientMotionMode, "breathe");
-        assertEquals(initBody.data?.ambientMotionStrength, 0.75);
+        assertEquals(initBody.data?.canvasMotion, "ambient");
+        assertEquals(initBody.data?.canvasMotionLevel, "pronounced");
+        assertEquals(
+            initBody.data
+                ?.wallpaperPresentations?.["https://example.com/wall-1.jpg"]
+                ?.readability,
+            "focus",
+        );
 
-        // Partial update 1: change only wallpaperGlowStrength to 0.1
+        // Partial update 1: change only canvasMotionLevel to "soft"
         const patch1 = await app.request("/api/preferences", {
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
-            body: JSON.stringify({ wallpaperGlowStrength: 0.1 }),
+            body: JSON.stringify({ canvasMotionLevel: "soft" }),
         });
         assertEquals(patch1.status, 200);
         const body1 = await patch1.json() as Envelope<PreferencesDto>;
-        assertEquals(body1.data?.wallpaperGlowStrength, 0.1);
+        assertEquals(body1.data?.canvasMotionLevel, "soft");
+        assertEquals(body1.data?.canvasMotion, "ambient");
         assertEquals(body1.data?.accent, "emerald");
-        assertEquals(body1.data?.wallpaperMask, 0.5);
-        assertEquals(body1.data?.ambientMotionMode, "breathe");
-        assertEquals(body1.data?.ambientMotionStrength, 0.75);
+        assertEquals(
+            body1.data
+                ?.wallpaperPresentations?.["https://example.com/wall-1.jpg"]
+                ?.readability,
+            "focus",
+        );
 
-        // Partial update 2: change only ambientMotionMode to "off"
+        // Partial update 2: change only canvasMotion to "off"
         const patch2 = await app.request("/api/preferences", {
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
-            body: JSON.stringify({ ambientMotionMode: "off" }),
+            body: JSON.stringify({ canvasMotion: "off" }),
         });
         assertEquals(patch2.status, 200);
         const body2 = await patch2.json() as Envelope<PreferencesDto>;
-        assertEquals(body2.data?.ambientMotionMode, "off");
-        assertEquals(body2.data?.wallpaperGlowStrength, 0.1);
+        assertEquals(body2.data?.canvasMotion, "off");
+        assertEquals(body2.data?.canvasMotionLevel, "soft");
         assertEquals(body2.data?.accent, "emerald");
-        assertEquals(body2.data?.wallpaperMask, 0.5);
-        assertEquals(body2.data?.ambientMotionStrength, 0.75);
+        assertEquals(
+            body2.data
+                ?.wallpaperPresentations?.["https://example.com/wall-1.jpg"]
+                ?.readability,
+            "focus",
+        );
 
-        // Partial update 3: change only ambientMotionStrength to 0.35
+        // Partial update 3: add presentation for a second wallpaper
         const patch3 = await app.request("/api/preferences", {
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
-            body: JSON.stringify({ ambientMotionStrength: 0.35 }),
+            body: JSON.stringify({
+                wallpaperPresentations: {
+                    "https://example.com/wall-2.jpg": {
+                        readability: "clear",
+                        softness: "none",
+                        tone: "natural",
+                        motion: "zoom",
+                        motionLevel: "subtle",
+                        composition: { focalX: 0.5, focalY: 0.5 },
+                    },
+                },
+            }),
         });
         assertEquals(patch3.status, 200);
         const body3 = await patch3.json() as Envelope<PreferencesDto>;
-        assertEquals(body3.data?.ambientMotionStrength, 0.35);
-        assertEquals(body3.data?.ambientMotionMode, "off");
-        assertEquals(body3.data?.wallpaperGlowStrength, 0.1);
+        assertEquals(body3.data?.canvasMotion, "off");
+        assertEquals(body3.data?.canvasMotionLevel, "soft");
         assertEquals(body3.data?.accent, "emerald");
-        assertEquals(body3.data?.wallpaperMask, 0.5);
+        assertEquals(
+            body3.data
+                ?.wallpaperPresentations?.["https://example.com/wall-1.jpg"]
+                ?.readability,
+            "focus",
+        );
+        assertEquals(
+            body3.data
+                ?.wallpaperPresentations?.["https://example.com/wall-2.jpg"]
+                ?.readability,
+            "clear",
+        );
     } finally {
         await store.close();
     }
@@ -510,12 +630,23 @@ Deno.test("preferences: upgrade preserves legacy masks and future rows use canon
                 "cyan",
             ]] as const
         ) {
+            // Verify physical DB preserved values for rollback
+            const dbRows = await store.run(async (db) => {
+                return await db.select().from(preferences).where(
+                    eq(preferences.userId, id),
+                ).limit(1).all();
+            });
+            assertEquals(dbRows[0]?.wallpaperMask, mask);
+            assertEquals(dbRows[0]?.accent, accent);
+            assertEquals(dbRows[0]?.wallpaperGlowStrength, 0.14);
+            assertEquals(dbRows[0]?.ambientMotionMode, "breathe_ripple");
+            assertEquals(dbRows[0]?.ambientMotionStrength, 0.35);
+
+            // Verify public GET API returns clean DTO with new defaults
             const upgraded = await read(id);
-            assertEquals(upgraded?.wallpaperMask, mask);
             assertEquals(upgraded?.accent, accent);
-            assertEquals(upgraded?.wallpaperGlowStrength, 0.14);
-            assertEquals(upgraded?.ambientMotionMode, "breathe_ripple");
-            assertEquals(upgraded?.ambientMotionStrength, 0.35);
+            assertEquals(upgraded?.canvasMotion, "off");
+            assertEquals(upgraded?.canvasMotionLevel, "soft");
         }
         await store.run(async (db) => {
             await db.insert(users).values({
@@ -528,11 +659,213 @@ Deno.test("preferences: upgrade preserves legacy masks and future rows use canon
             }).run();
             await db.insert(preferences).values({ userId: "future" }).run();
         });
+        const futureDb = await store.run(async (db) => {
+            return await db.select().from(preferences).where(
+                eq(preferences.userId, "future"),
+            ).limit(1).all();
+        });
+        assertEquals(futureDb[0]?.wallpaperMask, 0.36);
+        assertEquals(futureDb[0]?.wallpaperGlowStrength, 0.14);
+        assertEquals(futureDb[0]?.ambientMotionMode, "breathe_ripple");
+        assertEquals(futureDb[0]?.ambientMotionStrength, 0.35);
+
         const future = await read("future");
-        assertEquals(future?.wallpaperMask, 0.36);
-        assertEquals(future?.wallpaperGlowStrength, 0.14);
-        assertEquals(future?.ambientMotionMode, "breathe_ripple");
-        assertEquals(future?.ambientMotionStrength, 0.35);
+        assertEquals(future?.canvasMotion, "off");
+        assertEquals(future?.canvasMotionLevel, "soft");
+        assertEquals(future?.wallpaperPresentations, {});
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("preferences: legacy DB row with NULL wallpaper_presentations deterministically migrates on GET", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+
+        // Manually insert legacy row with null wallpaper_presentations
+        const now = Date.now();
+        await store.run(async (db) => {
+            await db.insert(users).values({
+                id: "legacy_user",
+                username: "legacy_user",
+                displayName: "Legacy",
+                passwordHash: "hash",
+                createdAt: now,
+                updatedAt: now,
+            }).run();
+
+            await db.insert(preferences).values({
+                userId: "legacy_user",
+                backgroundImage: "https://example.com/legacy.jpg",
+                wallpaperBlur: 5,
+                wallpaperGrayscale: 0.5,
+                wallpaperMask: 0.24,
+                wallpaperGlowStrength: 0.20,
+                ambientMotionMode: "breathe",
+                ambientMotionStrength: 0.75,
+                wallpaperCompositions: JSON.stringify({
+                    "https://example.com/legacy.jpg": {
+                        focalX: 0.25,
+                        focalY: 0.75,
+                    },
+                }),
+                wallpaperPresentations: null,
+            }).run();
+        });
+
+        const session = await auth.createSession("legacy_user", 1);
+        const res = await app.request("/api/preferences", {
+            headers: { cookie: `${SESSION_COOKIE_NAME}=${session.token}` },
+        });
+        assertEquals(res.status, 200);
+        const body = await res.json() as Envelope<PreferencesDto>;
+        assertEquals(
+            body.data?.backgroundImage,
+            "https://example.com/legacy.jpg",
+        );
+        assertEquals(body.data?.canvasMotion, "off");
+        assertEquals(body.data?.canvasMotionLevel, "soft");
+
+        // Migrated presentation for legacy.jpg
+        const pres = body.data?.wallpaperPresentations
+            ?.["https://example.com/legacy.jpg"];
+        assertEquals(pres?.readability, "balanced"); // 0.24 -> balanced
+        assertEquals(pres?.softness, "soft"); // 5px -> soft
+        assertEquals(pres?.tone, "soft"); // 0.50 -> soft
+        assertEquals(pres?.motion, "ambient"); // breathe -> ambient
+        assertEquals(pres?.motionLevel, "pronounced"); // 0.75 -> pronounced
+        assertEquals(pres?.composition, { focalX: 0.25, focalY: 0.75 });
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("preferences: clear backgroundImage deactivates wallpaper but retains presentation record", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+
+        const regRes = await app.request("/api/auth/register", {
+            method: "POST",
+            headers: { origin, "content-type": "application/json" },
+            body: JSON.stringify({
+                username: "clear_test_user",
+                displayName: "ClearTest",
+                password: "Password123456!",
+            }),
+        });
+        const cookie = regRes.headers.get("set-cookie")?.split(";")[0] ?? "";
+
+        // Set wallpaper with presentation
+        const setRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                backgroundImage: "https://example.com/to-clear.jpg",
+                wallpaperPresentations: {
+                    "https://example.com/to-clear.jpg": {
+                        readability: "focus",
+                        softness: "hazy",
+                        tone: "mono",
+                        motion: "zoom",
+                        motionLevel: "pronounced",
+                    },
+                },
+            }),
+        });
+        assertEquals(setRes.status, 200);
+
+        // Now clear wallpaper (backgroundImage: null)
+        const clearRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({ backgroundImage: null }),
+        });
+        assertEquals(clearRes.status, 200);
+        const clearBody = await clearRes.json() as Envelope<PreferencesDto>;
+        assertEquals(clearBody.data?.backgroundImage, null);
+        // Presentation MUST be retained!
+        assertEquals(
+            clearBody.data
+                ?.wallpaperPresentations?.["https://example.com/to-clear.jpg"]
+                ?.readability,
+            "focus",
+        );
+        assertEquals(
+            clearBody.data
+                ?.wallpaperPresentations?.["https://example.com/to-clear.jpg"]
+                ?.tone,
+            "mono",
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("preferences: remote/gradient LRU enforces max 24 limit while uploaded excluded from quota", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+
+        const regRes = await app.request("/api/auth/register", {
+            method: "POST",
+            headers: { origin, "content-type": "application/json" },
+            body: JSON.stringify({
+                username: "lru_user",
+                displayName: "LRU",
+                password: "Password123456!",
+            }),
+        });
+        const cookie = regRes.headers.get("set-cookie")?.split(";")[0] ?? "";
+
+        // Build 26 remote presentations
+        const presentations: Record<string, unknown> = {};
+        for (let i = 1; i <= 26; i++) {
+            presentations[`https://example.com/bg-${i}.jpg`] = {
+                readability: "balanced",
+                softness: "none",
+                tone: "natural",
+                motion: "off",
+                motionLevel: "soft",
+            };
+        }
+
+        const res = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                backgroundImage: "https://example.com/bg-26.jpg",
+                wallpaperPresentations: presentations,
+            }),
+        });
+        assertEquals(res.status, 200);
+        const body = await res.json() as Envelope<PreferencesDto>;
+        const keys = Object.keys(body.data?.wallpaperPresentations ?? {});
+        // Max 24 remote entries!
+        assertEquals(keys.length, 24);
+        // Oldest (1 and 2) should be evicted
+        assertEquals(
+            body.data?.wallpaperPresentations?.["https://example.com/bg-1.jpg"],
+            undefined,
+        );
+        assertEquals(
+            body.data?.wallpaperPresentations?.["https://example.com/bg-2.jpg"],
+            undefined,
+        );
+        // Current background (26) must NOT be evicted
+        assertEquals(
+            body.data
+                ?.wallpaperPresentations?.["https://example.com/bg-26.jpg"]
+                ?.readability,
+            "balanced",
+        );
     } finally {
         await store.close();
     }

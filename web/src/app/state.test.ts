@@ -55,71 +55,132 @@ Deno.test("AppState: Recovery after connectionError restores normal state", () =
     assertEquals(result.connectionError, false);
 });
 
-Deno.test("Appearance: old device preferences gain ambient defaults without overwriting zero mask", () => {
-    const result = normalizeAppearance({ mask: 0, accent: "violet" });
-    assertEquals(result.mask, 0);
+Deno.test("Appearance: old device preferences migrate to semantic wallpaper presentations and canvas motion", () => {
+    const wallpaper = "https://example.com/bg.png";
+    const result = normalizeAppearance({
+        wallpaper,
+        mask: 0,
+        accent: "violet",
+        wallpaperGlowStrength: 0.14,
+        ambientMotionMode: "breathe_ripple",
+        ambientMotionStrength: 0.35,
+    });
     assertEquals(result.accent, "violet");
-    assertEquals(result.wallpaperGlowStrength, 0.14);
-    assertEquals(result.ambientMotionMode, "breathe_ripple");
-    assertEquals(result.ambientMotionStrength, 0.35);
+    assertEquals(result.canvasMotion, "ambient");
+    assertEquals(result.canvasMotionLevel, "soft");
+    const pres = result.wallpaperPresentations[wallpaper];
+    assertEquals(pres.readability, "clear");
+    assertEquals(pres.motion, "ambient");
+    assertEquals(pres.motionLevel, "soft");
 });
 
-Deno.test("Appearance: invalid ambient cache values fall back while valid boundaries survive", () => {
+Deno.test("Appearance: invalid canvas motion cache values fall back while valid boundaries survive", () => {
     const invalid = normalizeAppearance({
-        wallpaperGlowStrength: NaN,
-        ambientMotionStrength: Infinity,
-        ambientMotionMode: "old_mode",
+        canvasMotion: "invalid_mode",
+        canvasMotionLevel: "hyper_fast",
     });
-    assertEquals(invalid.wallpaperGlowStrength, 0.14);
-    assertEquals(invalid.ambientMotionStrength, 0.35);
-    assertEquals(invalid.ambientMotionMode, "breathe_ripple");
-    for (const strength of [0, 1]) {
-        const valid = normalizeAppearance({
-            wallpaperGlowStrength: strength * 0.3,
-            ambientMotionStrength: strength,
-            ambientMotionMode: "off",
-        });
-        assertEquals(valid.wallpaperGlowStrength, strength * 0.3);
-        assertEquals(valid.ambientMotionStrength, strength);
-        assertEquals(valid.ambientMotionMode, "off");
+    assertEquals(invalid.canvasMotion, "off");
+    assertEquals(invalid.canvasMotionLevel, "soft");
+    for (const motion of ["off", "ambient"] as const) {
+        for (
+            const level of ["subtle", "soft", "standard", "pronounced"] as const
+        ) {
+            const valid = normalizeAppearance({
+                canvasMotion: motion,
+                canvasMotionLevel: level,
+            });
+            assertEquals(valid.canvasMotion, motion);
+            assertEquals(valid.canvasMotionLevel, level);
+        }
     }
 });
-Deno.test("Appearance: switching cached wallpapers restores their own composition", () => {
+
+Deno.test("Appearance: switching cached wallpapers restores their own presentation and composition", () => {
     const first = "https://example.com/left.png";
     const second = "https://example.com/right.png";
     const result = normalizeAppearance({
         wallpaper: second,
-        wallpaperCompositions: {
-            [first]: { focalX: 0.2, focalY: 0.3 },
-            [second]: { focalX: 0.8, focalY: 0.7 },
+        wallpaperPresentations: {
+            [first]: {
+                composition: { focalX: 0.2, focalY: 0.3 },
+                readability: "clear",
+                softness: "subtle",
+                tone: "natural",
+                motion: "off",
+                motionLevel: "soft",
+            },
+            [second]: {
+                composition: { focalX: 0.8, focalY: 0.7 },
+                readability: "quiet",
+                softness: "hazy",
+                tone: "mono",
+                motion: "drift",
+                motionLevel: "pronounced",
+            },
         },
     });
-    assertEquals(result.wallpaperCompositions[first], {
+    assertEquals(result.wallpaperPresentations[first].composition, {
         focalX: 0.2,
         focalY: 0.3,
     });
-    assertEquals(result.wallpaperCompositions[second], {
+    assertEquals(result.wallpaperPresentations[first].readability, "clear");
+    assertEquals(result.wallpaperPresentations[second].composition, {
         focalX: 0.8,
         focalY: 0.7,
     });
-    assertEquals(
-        normalizeAppearance({ wallpaper: first }).wallpaperCompositions,
-        {},
-    );
+    assertEquals(result.wallpaperPresentations[second].readability, "quiet");
+    assertEquals(result.wallpaperPresentations[second].motion, "drift");
 });
+
 Deno.test("Appearance: guest image cache keeps only the current local asset and rejects oversized images", () => {
     const current = "data:image/png;base64,aGVsbG8=";
     const previous = "data:image/png;base64,b2xk";
     const result = normalizeAppearance({
         wallpaper: current,
-        wallpaperCompositions: {
-            [current]: { focalX: 0.2, focalY: 0.3 },
-            [previous]: { focalX: 0.8, focalY: 0.7 },
+        wallpaperPresentations: {
+            [current]: {
+                composition: { focalX: 0.2, focalY: 0.3 },
+                readability: "clear",
+                softness: "none",
+                tone: "natural",
+                motion: "off",
+                motionLevel: "soft",
+            },
+            [previous]: {
+                composition: { focalX: 0.8, focalY: 0.7 },
+                readability: "quiet",
+                softness: "none",
+                tone: "natural",
+                motion: "off",
+                motionLevel: "soft",
+            },
         },
     });
     assertEquals(result.wallpaper, current);
-    assertEquals(result.wallpaperCompositions[previous], undefined);
+    assertEquals(result.wallpaperPresentations[current] !== undefined, true);
+    assertEquals(result.wallpaperPresentations[previous], undefined);
     const oversized = "data:image/png;base64," +
         "A".repeat(4 * Math.ceil(5 * 1024 * 1024 / 3) + 4);
     assertEquals(normalizeAppearance({ wallpaper: oversized }).wallpaper, "");
+});
+
+Deno.test("Appearance: malformed presentation records normalize to canonical defaults safely", () => {
+    const result = normalizeAppearance({
+        wallpaper: "https://example.com/test.png",
+        wallpaperPresentations: {
+            "https://example.com/test.png": {
+                readability: "invalid_readability",
+                softness: "invalid_softness",
+                tone: "invalid_tone",
+                motion: "invalid_motion",
+                motionLevel: "invalid_level",
+            },
+        },
+    });
+    const pres = result.wallpaperPresentations["https://example.com/test.png"];
+    assertEquals(pres.readability, "balanced");
+    assertEquals(pres.softness, "none");
+    assertEquals(pres.tone, "natural");
+    assertEquals(pres.motion, "off");
+    assertEquals(pres.motionLevel, "soft");
 });

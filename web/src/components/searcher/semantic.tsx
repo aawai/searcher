@@ -259,3 +259,8 @@ export function ManagementTable(
         </div>
     );
 }
+export {
+    type PresetSliderStage,
+    SettingsPresetSlider,
+    type SettingsPresetSliderProps,
+} from "./SettingsPresetSlider.tsx";

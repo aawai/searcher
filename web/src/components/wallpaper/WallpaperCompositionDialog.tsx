@@ -3,6 +3,7 @@ import {
     type PointerEvent as ReactPointerEvent,
     useCallback,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from "react";
@@ -16,7 +17,10 @@ import {
 } from "../ui/dialog.tsx";
 import { Button } from "../ui/button.tsx";
 import { WallpaperSurface } from "./WallpaperSurface.tsx";
-import type { AmbientMotionMode } from "@shared/contracts.ts";
+import {
+    DEFAULT_WALLPAPER_PRESENTATION,
+    type WallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
 import {
     DEFAULT_WALLPAPER_COMPOSITION,
     type WallpaperComposition,
@@ -28,12 +32,7 @@ export interface WallpaperCompositionDialogProps {
     onOpenChange: (open: boolean) => void;
     source: string | null;
     initialComposition?: WallpaperComposition | null;
-    blur?: number;
-    grayscale?: number;
-    mask?: number;
-    glowStrength?: number;
-    ambientMotionMode?: AmbientMotionMode;
-    ambientMotionStrength?: number;
+    presentation?: WallpaperPresentation | null;
     isCurrent?: boolean;
     onSaveComposition: (
         composition: WallpaperComposition,
@@ -48,12 +47,7 @@ export function WallpaperCompositionDialog({
     onOpenChange,
     source,
     initialComposition,
-    blur = 0,
-    grayscale = 0,
-    mask,
-    glowStrength,
-    ambientMotionMode,
-    ambientMotionStrength,
+    presentation,
     isCurrent = false,
     onSaveComposition,
     onSetAsCurrent,
@@ -63,6 +57,14 @@ export function WallpaperCompositionDialog({
     );
     const [saving, setSaving] = useState(false);
     const [imageAspect, setImageAspect] = useState<number | null>(null);
+    const effectivePresentation = useMemo<WallpaperPresentation>(() => {
+        const base = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
+        return {
+            ...base,
+            composition: focal,
+        };
+    }, [presentation, focal]);
+
     const isDraggingRef = useRef(false);
 
     useEffect(() => {
@@ -280,13 +282,8 @@ export function WallpaperCompositionDialog({
                         >
                             <WallpaperSurface
                                 source={source}
-                                composition={focal}
-                                blur={blur}
-                                grayscale={grayscale}
-                                mask={mask}
-                                glowStrength={glowStrength}
-                                ambientMotionMode={ambientMotionMode}
-                                ambientMotionStrength={ambientMotionStrength}
+                                presentation={effectivePresentation}
+                                motionOverride="off"
                                 embedded
                             />
                             {/* Focal marker */}
@@ -323,13 +320,8 @@ export function WallpaperCompositionDialog({
                         >
                             <WallpaperSurface
                                 source={source}
-                                composition={focal}
-                                blur={blur}
-                                grayscale={grayscale}
-                                mask={mask}
-                                glowStrength={glowStrength}
-                                ambientMotionMode={ambientMotionMode}
-                                ambientMotionStrength={ambientMotionStrength}
+                                presentation={effectivePresentation}
+                                motionOverride="off"
                                 embedded
                             />
                             {/* Focal marker */}

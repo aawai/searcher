@@ -1,16 +1,31 @@
-import {
-    ACCENTS,
-    type AmbientMotionMode,
-    DEFAULT_AMBIENT_MOTION_MODE,
-    DEFAULT_AMBIENT_MOTION_STRENGTH,
-    DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    DEFAULT_WALLPAPER_MASK,
-} from "@shared/contracts.ts";
+import { ACCENTS } from "@shared/contracts.ts";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     parseWallpaperSource,
     type WallpaperComposition,
 } from "@shared/wallpaper.ts";
+import {
+    CANVAS_MOTION_STAGES,
+    type CanvasMotion,
+    DEFAULT_CANVAS_MOTION,
+    DEFAULT_CANVAS_MOTION_LEVEL,
+    DEFAULT_WALLPAPER_PRESENTATION,
+    purgeWallpaperPresentation,
+    touchWallpaperPresentation,
+    WALLPAPER_MOTION_LEVEL_STAGES,
+    WALLPAPER_MOTION_STAGES,
+    WALLPAPER_READABILITY_STAGES,
+    WALLPAPER_SOFTNESS_STAGES,
+    WALLPAPER_TONE_STAGES,
+    type WallpaperMotion,
+    type WallpaperMotionLevel,
+    type WallpaperPresentation,
+    wallpaperPresentation,
+    type WallpaperReadability,
+    type WallpaperSoftness,
+    type WallpaperTone,
+} from "@shared/wallpaper-presentation.ts";
+import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
 import {
     Check,
     Keyboard,
@@ -23,7 +38,14 @@ import {
     Sparkles,
     Upload,
 } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
@@ -173,23 +195,6 @@ function Choices<T extends string>(
         </SettingsRow>
     );
 }
-function getAppearanceCompositions(
-    appearance: unknown,
-): Record<string, WallpaperComposition> {
-    if (
-        appearance &&
-        typeof appearance === "object" &&
-        "wallpaperCompositions" in appearance &&
-        typeof appearance.wallpaperCompositions === "object" &&
-        appearance.wallpaperCompositions !== null
-    ) {
-        return appearance.wallpaperCompositions as Record<
-            string,
-            WallpaperComposition
-        >;
-    }
-    return {};
-}
 
 export interface WallpaperHistoryRecord {
     id: string;
@@ -255,6 +260,99 @@ export function SettingsPage() {
         setDraftError(null);
     }, [appearance.wallpaper]);
 
+    const hasWallpaper = Boolean(appearance.wallpaper);
+    const currentPresentation = useMemo<WallpaperPresentation>(() => {
+        if (hasWallpaper) {
+            return wallpaperPresentation(
+                appearance.wallpaper,
+                appearance.wallpaperPresentations,
+            );
+        }
+        return {
+            ...DEFAULT_WALLPAPER_PRESENTATION,
+            motion: appearance.canvasMotion,
+            motionLevel: appearance.canvasMotionLevel,
+        };
+    }, [
+        hasWallpaper,
+        appearance.wallpaper,
+        appearance.wallpaperPresentations,
+        appearance.canvasMotion,
+        appearance.canvasMotionLevel,
+    ]);
+
+    const updatePresentation = useCallback(
+        (
+            diff: Partial<WallpaperPresentation>,
+            options?: { sync?: boolean; persist?: boolean },
+        ) => {
+            if (appearance.wallpaper) {
+                const current = wallpaperPresentation(
+                    appearance.wallpaper,
+                    appearance.wallpaperPresentations,
+                );
+                const nextPres: WallpaperPresentation = {
+                    ...current,
+                    ...diff,
+                };
+                const nextRecords = touchWallpaperPresentation(
+                    appearance.wallpaperPresentations,
+                    appearance.wallpaper,
+                    nextPres,
+                );
+                void setAppearance(
+                    { wallpaperPresentations: nextRecords },
+                    options,
+                );
+            }
+        },
+        [
+            appearance.wallpaper,
+            appearance.wallpaperPresentations,
+            setAppearance,
+        ],
+    );
+
+    const [draftPresentation, setDraftPresentation] = useState<
+        WallpaperPresentation | null
+    >(null);
+    const [draftCanvasMotionLevel, setDraftCanvasMotionLevel] = useState<
+        WallpaperMotionLevel | null
+    >(null);
+
+    const effectivePresentation = draftPresentation ?? currentPresentation;
+    const effectiveCanvasMotionLevel = draftCanvasMotionLevel ??
+        appearance.canvasMotionLevel;
+
+    const readabilityStage = WALLPAPER_READABILITY_STAGES.find(
+        (s) => s.id === effectivePresentation.readability,
+    );
+    const readabilityText = readabilityStage
+        ? `${readabilityStage.label} · ${readabilityStage.detail}`
+        : "";
+
+    const softnessStage = WALLPAPER_SOFTNESS_STAGES.find(
+        (s) => s.id === effectivePresentation.softness,
+    );
+    const softnessText = softnessStage
+        ? `${softnessStage.label} · ${softnessStage.detail}`
+        : "";
+
+    const activeMotion = hasWallpaper
+        ? effectivePresentation.motion
+        : appearance.canvasMotion;
+
+    const activeMotionLevel = hasWallpaper
+        ? effectivePresentation.motionLevel
+        : effectiveCanvasMotionLevel;
+
+    const motionLevelStage = WALLPAPER_MOTION_LEVEL_STAGES.find(
+        (s) => s.id === activeMotionLevel,
+    );
+    const motionLevelText = motionLevelStage?.label ?? "";
+
+    const isMotionActive = activeMotion !== "off";
+
     useEffect(() => {
         setWallpaperHistory([]);
         if (!user) return;
@@ -312,14 +410,22 @@ export function SettingsPage() {
                 focalX: 0.5,
                 focalY: 0.5,
             };
-            const currentComps = getAppearanceCompositions(appearance);
-            const nextComps = {
-                ...currentComps,
-                [url]: { focalX: 0.5, focalY: 0.5 },
+            const existingPres = wallpaperPresentation(
+                url,
+                appearance.wallpaperPresentations,
+            );
+            const nextPres: WallpaperPresentation = {
+                ...existingPres,
+                composition: { focalX: 0.5, focalY: 0.5 },
             };
+            const nextRecords = touchWallpaperPresentation(
+                appearance.wallpaperPresentations,
+                url,
+                nextPres,
+            );
             await setAppearance({
                 wallpaper: url,
-                wallpaperCompositions: nextComps,
+                wallpaperPresentations: nextRecords,
             });
             setWallpaperHistory((current) =>
                 [
@@ -352,7 +458,14 @@ export function SettingsPage() {
         setDraftError(null);
         setIsApplyingDraft(true);
         try {
-            await setAppearance({ wallpaper: parsed.value });
+            const nextRecords = touchWallpaperPresentation(
+                appearance.wallpaperPresentations,
+                parsed.value,
+            );
+            await setAppearance({
+                wallpaper: parsed.value,
+                wallpaperPresentations: nextRecords,
+            });
             showToast("壁纸已更新");
         } catch {
             setDraftError("同步壁纸失败，请重试");
@@ -374,15 +487,26 @@ export function SettingsPage() {
 
     async function handleSetCurrentFromHistory(record: WallpaperHistoryRecord) {
         try {
-            const currentComps = getAppearanceCompositions(appearance);
-            const focal = currentComps[record.url] ?? {
-                focalX: record.focalX ?? 0.5,
-                focalY: record.focalY ?? 0.5,
+            const existingPres = wallpaperPresentation(
+                record.url,
+                appearance.wallpaperPresentations,
+            );
+            const focal = {
+                focalX: record.focalX ?? existingPres.composition.focalX ?? 0.5,
+                focalY: record.focalY ?? existingPres.composition.focalY ?? 0.5,
             };
-            const nextComps = { ...currentComps, [record.url]: focal };
+            const nextPres: WallpaperPresentation = {
+                ...existingPres,
+                composition: focal,
+            };
+            const nextRecords = touchWallpaperPresentation(
+                appearance.wallpaperPresentations,
+                record.url,
+                nextPres,
+            );
             await setAppearance({
                 wallpaper: record.url,
-                wallpaperCompositions: nextComps,
+                wallpaperPresentations: nextRecords,
             });
             showToast("已设为当前壁纸");
         } catch (error) {
@@ -398,6 +522,19 @@ export function SettingsPage() {
         try {
             const parsed = parseWallpaperSource(target.url);
             const isUploadedAsset = user && parsed?.type === "uploaded";
+            const targetPres = wallpaperPresentation(
+                target.url,
+                appearance.wallpaperPresentations,
+            );
+            const nextPres: WallpaperPresentation = {
+                ...targetPres,
+                composition: focal,
+            };
+            const nextRecords = touchWallpaperPresentation(
+                appearance.wallpaperPresentations,
+                target.url,
+                nextPres,
+            );
             if (isUploadedAsset) {
                 await settleAppearanceSync();
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
@@ -409,19 +546,14 @@ export function SettingsPage() {
                     }),
                     headers: { "Content-Type": "application/json" },
                 });
-                // Backend PATCH updated asset record & preference; adopt locally without duplicate PATCH
-                const currentComps = getAppearanceCompositions(appearance);
-                const nextComps = { ...currentComps, [target.url]: focal };
                 await setAppearance(
-                    { wallpaperCompositions: nextComps },
+                    { wallpaperPresentations: nextRecords },
                     { sync: false },
                 );
             } else {
                 const isCurrent = appearance.wallpaper === target.url;
-                const currentComps = getAppearanceCompositions(appearance);
-                const nextComps = { ...currentComps, [target.url]: focal };
                 await setAppearance(
-                    { wallpaperCompositions: nextComps },
+                    { wallpaperPresentations: nextRecords },
                     { sync: isCurrent },
                 );
             }
@@ -463,11 +595,22 @@ export function SettingsPage() {
                     headers: { "Content-Type": "application/json" },
                 });
             }
-            const currentComps = getAppearanceCompositions(appearance);
-            const nextComps = { ...currentComps, [target.url]: focal };
+            const targetPres = wallpaperPresentation(
+                target.url,
+                appearance.wallpaperPresentations,
+            );
+            const nextPres: WallpaperPresentation = {
+                ...targetPres,
+                composition: focal,
+            };
+            const nextRecords = touchWallpaperPresentation(
+                appearance.wallpaperPresentations,
+                target.url,
+                nextPres,
+            );
             await setAppearance({
                 wallpaper: target.url,
-                wallpaperCompositions: nextComps,
+                wallpaperPresentations: nextRecords,
             });
             setWallpaperHistory((prev) =>
                 prev.map((item) =>
@@ -501,19 +644,19 @@ export function SettingsPage() {
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, { method: "DELETE" });
             }
-            // Purge deleted asset from wallpaperCompositions with sync: false
-            const currentComps = getAppearanceCompositions(appearance);
-            const nextComps = { ...currentComps };
-            delete nextComps[target.url];
+            const nextRecords = purgeWallpaperPresentation(
+                appearance.wallpaperPresentations,
+                target.url,
+            );
             if (isCurrent) {
                 await setAppearance(
-                    { wallpaper: "", wallpaperCompositions: nextComps },
+                    { wallpaper: "", wallpaperPresentations: nextRecords },
                     { sync: false },
                 );
                 showToast("壁纸已删除，已恢复默认背景");
             } else {
                 await setAppearance(
-                    { wallpaperCompositions: nextComps },
+                    { wallpaperPresentations: nextRecords },
                     { sync: false },
                 );
                 showToast("壁纸已删除");
@@ -830,16 +973,10 @@ export function SettingsPage() {
                                             onClick={() => {
                                                 void setAppearance({
                                                     wallpaper: "",
-                                                    mask:
-                                                        DEFAULT_WALLPAPER_MASK,
-                                                    blur: 0,
-                                                    grayscale: 0,
-                                                    wallpaperGlowStrength:
-                                                        DEFAULT_WALLPAPER_GLOW_STRENGTH,
-                                                    ambientMotionMode:
-                                                        DEFAULT_AMBIENT_MOTION_MODE,
-                                                    ambientMotionStrength:
-                                                        DEFAULT_AMBIENT_MOTION_STRENGTH,
+                                                    canvasMotion:
+                                                        DEFAULT_CANVAS_MOTION,
+                                                    canvasMotionLevel:
+                                                        DEFAULT_CANVAS_MOTION_LEVEL,
                                                 });
                                             }}
                                             title="恢复壁纸与效果默认值"
@@ -967,16 +1104,9 @@ export function SettingsPage() {
                                                         <WallpaperSurface
                                                             source={appearance
                                                                 .wallpaper}
-                                                            composition={getAppearanceCompositions(
-                                                                appearance,
-                                                            )[
-                                                                appearance
-                                                                    .wallpaper
-                                                            ]}
+                                                            presentation={effectivePresentation}
                                                             embedded
-                                                            mask={0}
-                                                            glowStrength={0}
-                                                            ambientMotionMode="off"
+                                                            motionOverride="off"
                                                             testId="wallpaper-current-preview"
                                                         />
                                                     </div>
@@ -1006,18 +1136,8 @@ export function SettingsPage() {
                                                                 variant="outline"
                                                                 onClick={() => {
                                                                     const focal =
-                                                                        getAppearanceCompositions(
-                                                                            appearance,
-                                                                        )[
-                                                                            appearance
-                                                                                .wallpaper
-                                                                        ] ??
-                                                                            {
-                                                                                focalX:
-                                                                                    0.5,
-                                                                                focalY:
-                                                                                    0.5,
-                                                                            };
+                                                                        currentPresentation
+                                                                            .composition;
                                                                     setCompositionTarget(
                                                                         {
                                                                             id: "current",
@@ -1194,268 +1314,270 @@ export function SettingsPage() {
                                                     </div>
                                                 )}
                                         </div>
+                                        {/* 1. 可读性 (Readability) */}
                                         <div className="settings-row settings-row--stack-mobile">
                                             <div className="settings-row-label">
                                                 <div className="flex justify-between items-center sm:block">
                                                     <span className="settings-row-title">
-                                                        遮罩不透明度
+                                                        可读性
                                                     </span>
-                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                        {Math.round(
-                                                            appearance.mask *
-                                                                100,
-                                                        )}%
-                                                    </span>
+                                                    {hasWallpaper && (
+                                                        <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                            {readabilityText}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <p className="settings-row-desc">
-                                                    覆盖在壁纸上的背景遮罩浓度
+                                                    覆在壁纸上的背景遮罩浓度，保障内容阅读舒适
                                                 </p>
                                             </div>
                                             <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                    {Math.round(
-                                                        appearance.mask * 100,
-                                                    )}%
-                                                </div>
-                                                <Slider
-                                                    min={0}
-                                                    max={0.8}
-                                                    step={0.05}
-                                                    value={appearance.mask}
-                                                    onValueChange={(v) =>
-                                                        set(
-                                                            "mask",
-                                                            typeof v ===
-                                                                    "number"
-                                                                ? v
-                                                                : v[0],
-                                                        )}
-                                                    aria-label="遮罩不透明度"
-                                                    className="w-full"
+                                                {hasWallpaper && (
+                                                    <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                        {readabilityText}
+                                                    </div>
+                                                )}
+                                                <SettingsPresetSlider
+                                                    stages={WALLPAPER_READABILITY_STAGES}
+                                                    value={effectivePresentation
+                                                        .readability}
+                                                    disabled={!hasWallpaper}
+                                                    onChange={(v) =>
+                                                        setDraftPresentation((
+                                                            prev,
+                                                        ) => ({
+                                                            ...(prev ??
+                                                                currentPresentation),
+                                                            readability:
+                                                                v as WallpaperReadability,
+                                                        }))}
+                                                    onCommit={(v) => {
+                                                        setDraftPresentation(
+                                                            null,
+                                                        );
+                                                        updatePresentation({
+                                                            readability:
+                                                                v as WallpaperReadability,
+                                                        });
+                                                    }}
+                                                    aria-label="可读性"
+                                                    testId="wallpaper-readability-slider"
                                                 />
                                             </div>
                                         </div>
+
+                                        {/* 2. 柔化 (Softness) */}
                                         <div className="settings-row settings-row--stack-mobile">
                                             <div className="settings-row-label">
                                                 <div className="flex justify-between items-center sm:block">
                                                     <span className="settings-row-title">
-                                                        模糊半径
+                                                        柔化
                                                     </span>
-                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                        {appearance.blur}px
-                                                    </span>
+                                                    {hasWallpaper && (
+                                                        <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                            {softnessText}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <p className="settings-row-desc">
-                                                    壁纸背景的高斯模糊程度
+                                                    背景高斯柔化程度，降低高频纹理干扰
                                                 </p>
                                             </div>
                                             <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                    {appearance.blur}px
-                                                </div>
-                                                <Slider
-                                                    min={0}
-                                                    max={24}
-                                                    step={1}
-                                                    value={appearance.blur}
-                                                    onValueChange={(v) =>
-                                                        set(
-                                                            "blur",
-                                                            typeof v ===
-                                                                    "number"
-                                                                ? v
-                                                                : v[0],
-                                                        )}
-                                                    aria-label="模糊半径"
-                                                    className="w-full"
+                                                {hasWallpaper && (
+                                                    <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                        {softnessText}
+                                                    </div>
+                                                )}
+                                                <SettingsPresetSlider
+                                                    stages={WALLPAPER_SOFTNESS_STAGES}
+                                                    value={effectivePresentation
+                                                        .softness}
+                                                    disabled={!hasWallpaper}
+                                                    onChange={(v) =>
+                                                        setDraftPresentation((
+                                                            prev,
+                                                        ) => ({
+                                                            ...(prev ??
+                                                                currentPresentation),
+                                                            softness:
+                                                                v as WallpaperSoftness,
+                                                        }))}
+                                                    onCommit={(v) => {
+                                                        setDraftPresentation(
+                                                            null,
+                                                        );
+                                                        updatePresentation({
+                                                            softness:
+                                                                v as WallpaperSoftness,
+                                                        });
+                                                    }}
+                                                    aria-label="柔化"
+                                                    testId="wallpaper-softness-slider"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="settings-row settings-row--stack-mobile">
-                                            <div className="settings-row-label">
-                                                <div className="flex justify-between items-center sm:block">
-                                                    <span className="settings-row-title">
-                                                        灰度滤镜
-                                                    </span>
-                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                        {Math.round(
-                                                            appearance
-                                                                .grayscale *
-                                                                100,
-                                                        )}%
-                                                    </span>
-                                                </div>
-                                                <p className="settings-row-desc">
-                                                    将壁纸转换为黑白灰度
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                    {Math.round(
-                                                        appearance.grayscale *
-                                                            100,
-                                                    )}%
-                                                </div>
-                                                <Slider
-                                                    min={0}
-                                                    max={1}
-                                                    step={0.05}
-                                                    value={appearance.grayscale}
-                                                    onValueChange={(v) =>
-                                                        set(
-                                                            "grayscale",
-                                                            typeof v ===
-                                                                    "number"
-                                                                ? v
-                                                                : v[0],
-                                                        )}
-                                                    aria-label="灰度比例"
-                                                    className="w-full"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="settings-row settings-row--stack-mobile">
-                                            <div className="settings-row-label">
-                                                <div className="flex justify-between items-center sm:block">
-                                                    <span className="settings-row-title">
-                                                        主题光晕强度
-                                                    </span>
-                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                        {Math.round(
-                                                            (appearance
-                                                                .wallpaperGlowStrength ??
-                                                                DEFAULT_WALLPAPER_GLOW_STRENGTH) *
-                                                                100,
-                                                        )}%
-                                                    </span>
-                                                </div>
-                                                <p className="settings-row-desc">
-                                                    控制搜索页主题色环境光的明显程度
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                    {Math.round(
-                                                        (appearance
-                                                            .wallpaperGlowStrength ??
-                                                            DEFAULT_WALLPAPER_GLOW_STRENGTH) *
-                                                            100,
-                                                    )}%
-                                                </div>
-                                                <Slider
-                                                    min={0}
-                                                    max={0.30}
-                                                    step={0.01}
-                                                    value={appearance
-                                                        .wallpaperGlowStrength ??
-                                                        DEFAULT_WALLPAPER_GLOW_STRENGTH}
-                                                    onValueChange={(v) =>
-                                                        set(
-                                                            "wallpaperGlowStrength",
-                                                            typeof v ===
-                                                                    "number"
-                                                                ? v
-                                                                : v[0],
-                                                        )}
-                                                    aria-label="主题光晕强度"
-                                                    className="w-full"
-                                                />
-                                            </div>
-                                        </div>
+
+                                        {/* 3. 色调 (Tone) */}
                                         <div className="settings-row settings-row--stack-mobile">
                                             <div className="settings-row-label">
                                                 <span className="settings-row-title">
-                                                    动态氛围
+                                                    色调
                                                 </span>
                                                 <p className="settings-row-desc">
-                                                    选择背景环境光的动态效果
+                                                    调整壁纸色彩饱和与对比，融入界面主题
                                                 </p>
                                             </div>
                                             <div className="settings-row-control">
                                                 <RadioGroup
-                                                    value={appearance
-                                                        .ambientMotionMode ??
-                                                        DEFAULT_AMBIENT_MOTION_MODE}
-                                                    onValueChange={(v) =>
-                                                        set(
-                                                            "ambientMotionMode",
-                                                            v as AmbientMotionMode,
-                                                        )}
-                                                    aria-label="动态氛围"
+                                                    value={effectivePresentation
+                                                        .tone}
+                                                    disabled={!hasWallpaper}
+                                                    onValueChange={(v) => {
+                                                        setDraftPresentation(
+                                                            null,
+                                                        );
+                                                        updatePresentation({
+                                                            tone:
+                                                                v as WallpaperTone,
+                                                        });
+                                                    }}
+                                                    aria-label="壁纸色调"
+                                                    data-testid="wallpaper-tone-group"
                                                 >
-                                                    <RadioGroupItem
-                                                        value="off"
-                                                        aria-label="关闭"
-                                                    >
-                                                        关闭
-                                                    </RadioGroupItem>
-                                                    <RadioGroupItem
-                                                        value="breathe"
-                                                        aria-label="呼吸"
-                                                    >
-                                                        呼吸
-                                                    </RadioGroupItem>
-                                                    <RadioGroupItem
-                                                        value="breathe_ripple"
-                                                        aria-label="呼吸 + 涟漪"
-                                                    >
-                                                        呼吸 + 涟漪
-                                                    </RadioGroupItem>
+                                                    {WALLPAPER_TONE_STAGES.map((
+                                                        stage,
+                                                    ) => (
+                                                        <RadioGroupItem
+                                                            key={stage.id}
+                                                            value={stage.id}
+                                                            aria-label={stage
+                                                                .label}
+                                                        >
+                                                            {stage.label}
+                                                        </RadioGroupItem>
+                                                    ))}
                                                 </RadioGroup>
                                             </div>
                                         </div>
+
+                                        {/* 4. 动态背景 (Motion) */}
                                         <div className="settings-row settings-row--stack-mobile">
                                             <div className="settings-row-label">
-                                                <div className="flex justify-between items-center sm:block">
-                                                    <span className="settings-row-title">
-                                                        动态强度
-                                                    </span>
-                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                        {Math.round(
-                                                            (appearance
-                                                                .ambientMotionStrength ??
-                                                                DEFAULT_AMBIENT_MOTION_STRENGTH) *
-                                                                100,
-                                                        )}%
-                                                    </span>
-                                                </div>
+                                                <span className="settings-row-title">
+                                                    动态背景
+                                                </span>
                                                 <p className="settings-row-desc">
-                                                    控制呼吸与涟漪的可见程度
+                                                    平缓微动效果，采用符合视觉舒适预算的缓动轨迹
                                                 </p>
                                             </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                    {Math.round(
-                                                        (appearance
-                                                            .ambientMotionStrength ??
-                                                            DEFAULT_AMBIENT_MOTION_STRENGTH) *
-                                                            100,
-                                                    )}%
-                                                </div>
-                                                <Slider
-                                                    min={0}
-                                                    max={1}
-                                                    step={0.05}
-                                                    value={appearance
-                                                        .ambientMotionStrength ??
-                                                        DEFAULT_AMBIENT_MOTION_STRENGTH}
-                                                    disabled={(appearance
-                                                        .ambientMotionMode ??
-                                                        DEFAULT_AMBIENT_MOTION_MODE) ===
-                                                        "off"}
-                                                    onValueChange={(v) =>
-                                                        set(
-                                                            "ambientMotionStrength",
-                                                            typeof v ===
-                                                                    "number"
-                                                                ? v
-                                                                : v[0],
-                                                        )}
-                                                    aria-label="动态强度"
-                                                    className="w-full"
-                                                />
+                                            <div className="settings-row-control">
+                                                <RadioGroup
+                                                    value={activeMotion}
+                                                    onValueChange={(v) => {
+                                                        setDraftPresentation(
+                                                            null,
+                                                        );
+                                                        if (hasWallpaper) {
+                                                            updatePresentation({
+                                                                motion:
+                                                                    v as WallpaperMotion,
+                                                            });
+                                                        } else {
+                                                            void setAppearance({
+                                                                canvasMotion:
+                                                                    v as CanvasMotion,
+                                                            });
+                                                        }
+                                                    }}
+                                                    aria-label="动态背景"
+                                                    data-testid="wallpaper-motion-group"
+                                                >
+                                                    {(hasWallpaper
+                                                        ? WALLPAPER_MOTION_STAGES
+                                                        : CANVAS_MOTION_STAGES)
+                                                        .map((stage) => (
+                                                            <RadioGroupItem
+                                                                key={stage.id}
+                                                                value={stage.id}
+                                                                aria-label={stage
+                                                                    .label}
+                                                            >
+                                                                {stage.label}
+                                                            </RadioGroupItem>
+                                                        ))}
+                                                </RadioGroup>
                                             </div>
                                         </div>
+
+                                        {/* 5. 动态程度 (Motion level) */}
+                                        {isMotionActive && (
+                                            <div className="settings-row settings-row--stack-mobile">
+                                                <div className="settings-row-label">
+                                                    <div className="flex justify-between items-center sm:block">
+                                                        <span className="settings-row-title">
+                                                            动态程度
+                                                        </span>
+                                                        <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
+                                                            {motionLevelText}
+                                                        </span>
+                                                    </div>
+                                                    <p className="settings-row-desc">
+                                                        控制动态效果的视觉幅度
+                                                    </p>
+                                                </div>
+                                                <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
+                                                    <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                                        {motionLevelText}
+                                                    </div>
+                                                    <SettingsPresetSlider
+                                                        stages={WALLPAPER_MOTION_LEVEL_STAGES}
+                                                        value={activeMotionLevel}
+                                                        onChange={(v) => {
+                                                            if (hasWallpaper) {
+                                                                setDraftPresentation(
+                                                                    (prev) => ({
+                                                                        ...(prev ??
+                                                                            currentPresentation),
+                                                                        motionLevel:
+                                                                            v as WallpaperMotionLevel,
+                                                                    }),
+                                                                );
+                                                            } else {
+                                                                setDraftCanvasMotionLevel(
+                                                                    v as WallpaperMotionLevel,
+                                                                );
+                                                            }
+                                                        }}
+                                                        onCommit={(v) => {
+                                                            if (hasWallpaper) {
+                                                                setDraftPresentation(
+                                                                    null,
+                                                                );
+                                                                updatePresentation(
+                                                                    {
+                                                                        motionLevel:
+                                                                            v as WallpaperMotionLevel,
+                                                                    },
+                                                                );
+                                                            } else {
+                                                                setDraftCanvasMotionLevel(
+                                                                    null,
+                                                                );
+                                                                void setAppearance(
+                                                                    {
+                                                                        canvasMotionLevel:
+                                                                            v as WallpaperMotionLevel,
+                                                                    },
+                                                                );
+                                                            }
+                                                        }}
+                                                        aria-label="动态程度"
+                                                        testId="wallpaper-motion-level-slider"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </SettingsCard>
                                 </SettingsSection>
                             </div>
@@ -1556,19 +1678,17 @@ export function SettingsPage() {
                 }}
                 source={compositionTarget?.url ?? null}
                 initialComposition={compositionTarget
-                    ? (getAppearanceCompositions(
-                        appearance,
-                    )[compositionTarget.url] ?? {
+                    ? {
                         focalX: compositionTarget.focalX ?? 0.5,
                         focalY: compositionTarget.focalY ?? 0.5,
-                    })
+                    }
                     : null}
-                blur={appearance.blur}
-                grayscale={appearance.grayscale}
-                mask={appearance.mask}
-                glowStrength={appearance.wallpaperGlowStrength}
-                ambientMotionMode={appearance.ambientMotionMode}
-                ambientMotionStrength={appearance.ambientMotionStrength}
+                presentation={compositionTarget
+                    ? wallpaperPresentation(
+                        compositionTarget.url,
+                        appearance.wallpaperPresentations,
+                    )
+                    : null}
                 isCurrent={compositionTarget
                     ? appearance.wallpaper === compositionTarget.url
                     : false}

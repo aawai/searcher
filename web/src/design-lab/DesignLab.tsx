@@ -408,52 +408,6 @@ export function DesignLab() {
 
                     <div className="lab-field">
                         <div className="lab-field-label">
-                            <span>壁纸遮罩</span>
-                            <span className="lab-field-value">
-                                {Math.round((appearance.mask ?? 0) * 100)}%
-                            </span>
-                        </div>
-                        <div className="lab-field-control">
-                            <Slider
-                                min={0}
-                                max={0.8}
-                                step={0.05}
-                                value={appearance.mask ?? 0}
-                                onValueChange={(val) =>
-                                    changeAppearance(
-                                        "mask",
-                                        Array.isArray(val) ? val[0] : val,
-                                    )}
-                                aria-label="壁纸遮罩比例"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="lab-field">
-                        <div className="lab-field-label">
-                            <span>壁纸模糊</span>
-                            <span className="lab-field-value">
-                                {appearance.blur ?? 0}px
-                            </span>
-                        </div>
-                        <div className="lab-field-control">
-                            <Slider
-                                min={0}
-                                max={24}
-                                step={1}
-                                value={appearance.blur ?? 0}
-                                onValueChange={(val) =>
-                                    changeAppearance(
-                                        "blur",
-                                        Array.isArray(val) ? val[0] : val,
-                                    )}
-                                aria-label="壁纸模糊像素"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="lab-field">
-                        <div className="lab-field-label">
                             <span>搜索框透明度</span>
                             <span className="lab-field-value">
                                 {Math.round(
@@ -1097,12 +1051,6 @@ export function DesignLab() {
                                 style={{
                                     "--search-opacity":
                                         appearance.searchOpacity ?? 1,
-                                    "--wallpaper-mask": appearance.mask ?? 0,
-                                    "--wallpaper-blur": `${
-                                        appearance.blur ?? 0
-                                    }px`,
-                                    "--wallpaper-grayscale":
-                                        appearance.grayscale ?? 0,
                                 } as React.CSSProperties}
                             >
                                 {appearance.showTitle !== false && (

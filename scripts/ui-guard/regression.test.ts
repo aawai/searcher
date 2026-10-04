@@ -302,14 +302,16 @@ Deno.test("regression - runtime exception safety: wallpaper, drag, masonry, doma
             recursive: true,
         });
 
-        // 1. Wallpaper in App.tsx
+        await Deno.mkdir(`${targetDir}/components/wallpaper`, {
+            recursive: true,
+        });
         await Deno.writeTextFile(
-            `${targetDir}/App.tsx`,
-            `export function App({ wallpaper, blur }: { wallpaper: string; blur: number }) {
+            `${targetDir}/components/wallpaper/WallpaperSurface.tsx`,
+            `export function WallpaperSurface({ wallpaper, filter }: { wallpaper: string; filter: string }) {
                 return (
                     <div style={{
                         "--wallpaper-image": wallpaper,
-                        "--wallpaper-blur": blur + "px",
+                        "--wallpaper-filter": filter,
                         "--search-opacity": 0.95,
                     } as React.CSSProperties} />
                 );

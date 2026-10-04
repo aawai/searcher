@@ -176,7 +176,7 @@ Deno.test("Rule C: undefined-css-token - allows tokens defined in tokens.css, lo
     color: var(--accent);
     border-radius: var(--radius);
     background-image: var(--wallpaper-image);
-    filter: blur(var(--wallpaper-blur, 0px));
+    filter: var(--wallpaper-filter);
 }
 `;
 

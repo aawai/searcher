@@ -1,5 +1,4 @@
 import { assertEquals } from "@std/assert";
-import React from "react";
 import ReactDOMServer from "react-dom/server";
 import { Slider } from "./slider.tsx";
 
@@ -67,4 +66,20 @@ Deno.test("Slider: custom getAriaLabel applies to multiple thumbs", () => {
     assertEquals(inputs[0].includes('aria-label="阶段 1"'), true);
     assertEquals(inputs[1].includes('aria-label="阶段 2"'), true);
     assertEquals(inputs[2].includes('aria-label="阶段 3"'), true);
+});
+
+Deno.test("Slider: custom getAriaValueText formats aria-valuetext", () => {
+    const html = ReactDOMServer.renderToString(
+        <Slider
+            min={0}
+            max={3}
+            step={1}
+            value={1}
+            aria-label="可读性"
+            getAriaValueText={(_fmt, val) => `均衡 · 24% (${val})`}
+        />,
+    );
+    const inputs = extractRangeInputs(html);
+    assertEquals(inputs.length, 1);
+    assertEquals(inputs[0].includes('aria-valuetext="均衡 · 24% (1)"'), true);
 });

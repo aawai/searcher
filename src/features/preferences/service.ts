@@ -3,11 +3,6 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
 import {
     type AiGenerationDefaultsDto,
-    type AmbientMotionMode,
-    DEFAULT_AMBIENT_MOTION_MODE,
-    DEFAULT_AMBIENT_MOTION_STRENGTH,
-    DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    DEFAULT_WALLPAPER_MASK,
     type LegacyStylePreset,
     normalizeStylePreset,
     normalizeWallpaperCompositions,
@@ -16,6 +11,19 @@ import {
     type UserGenerationConfig,
     type WallpaperComposition,
 } from "@shared/contracts.ts";
+import {
+    type CanvasMotion,
+    DEFAULT_CANVAS_MOTION,
+    DEFAULT_CANVAS_MOTION_LEVEL,
+    DEFAULT_WALLPAPER_PRESENTATION,
+    normalizeWallpaperPresentation,
+    normalizeWallpaperPresentations,
+    touchWallpaperPresentation,
+    type WallpaperMotionLevel,
+    type WallpaperPresentation,
+    wallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
+import { parseWallpaperSource } from "@shared/wallpaper.ts";
 
 export type UpdateAiGenerationDefaultsInput = {
     default?:
@@ -49,12 +57,8 @@ const defaults: PreferencesDto = {
     searchShape: "rounded",
     searchOpacity: 1,
     backgroundImage: null,
-    wallpaperBlur: 0,
-    wallpaperGrayscale: 0,
-    wallpaperMask: DEFAULT_WALLPAPER_MASK,
-    wallpaperGlowStrength: DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    ambientMotionMode: DEFAULT_AMBIENT_MOTION_MODE,
-    ambientMotionStrength: DEFAULT_AMBIENT_MOTION_STRENGTH,
+    canvasMotion: DEFAULT_CANVAS_MOTION,
+    canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
     searchTarget: "same",
     searchHistoryEnabled: false,
     webAppHomeLimit: 12,
@@ -63,7 +67,7 @@ const defaults: PreferencesDto = {
     aiGenerationDefaults: {
         models: {},
     },
-    wallpaperCompositions: {},
+    wallpaperPresentations: {},
 };
 
 function cleanConfig(
@@ -134,11 +138,61 @@ function parseWallpaperCompositions(
     }
 }
 
+function parseWallpaperPresentations(
+    raw?: string | null,
+): Record<string, WallpaperPresentation> | undefined {
+    if (!raw) return undefined;
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            return parsed as Record<string, WallpaperPresentation>;
+        }
+    } catch {
+        // Fall back to undefined so migration runs
+    }
+    return undefined;
+}
+
 function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     const compositions = parseWallpaperCompositions(row.wallpaperCompositions);
-    if (row.backgroundImage && !compositions[row.backgroundImage]) {
-        compositions[row.backgroundImage] = { focalX: 0.5, focalY: 0.5 };
+    const rawPresentations = parseWallpaperPresentations(
+        row.wallpaperPresentations,
+    );
+    const presentations = normalizeWallpaperPresentations(rawPresentations, {
+        currentSource: row.backgroundImage,
+        legacy: {
+            wallpaperBlur: row.wallpaperBlur,
+            wallpaperGrayscale: row.wallpaperGrayscale,
+            wallpaperMask: row.wallpaperMask,
+            wallpaperGlowStrength: row.wallpaperGlowStrength,
+            ambientMotionMode: row.ambientMotionMode,
+            ambientMotionStrength: row.ambientMotionStrength,
+        },
+        legacyCompositions: compositions,
+    });
+
+    if (row.backgroundImage) {
+        const parsedBg = parseWallpaperSource(row.backgroundImage);
+        const canonicalBg = parsedBg ? parsedBg.value : row.backgroundImage;
+        if (!presentations[canonicalBg]) {
+            presentations[canonicalBg] = wallpaperPresentation(
+                canonicalBg,
+                presentations,
+            );
+        }
+        if (compositions[canonicalBg]) {
+            presentations[canonicalBg].composition = compositions[canonicalBg];
+        } else if (presentations[canonicalBg]?.composition) {
+            compositions[canonicalBg] = presentations[canonicalBg].composition;
+        }
     }
+
+    for (const [key, comp] of Object.entries(compositions)) {
+        if (presentations[key]) {
+            presentations[key].composition = comp;
+        }
+    }
+
     return {
         defaultEngine: row.defaultEngine,
         theme: row.theme,
@@ -147,16 +201,11 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         searchShape: row.searchShape ?? "rounded",
         searchOpacity: row.searchOpacity ?? 1,
         backgroundImage: row.backgroundImage,
-        wallpaperBlur: row.wallpaperBlur,
-        wallpaperGrayscale: row.wallpaperGrayscale,
-        wallpaperMask: row.wallpaperMask ?? DEFAULT_WALLPAPER_MASK,
-        wallpaperGlowStrength: row.wallpaperGlowStrength ??
-            DEFAULT_WALLPAPER_GLOW_STRENGTH,
-        ambientMotionMode: (row.ambientMotionMode as AmbientMotionMode) ??
-            DEFAULT_AMBIENT_MOTION_MODE,
-        ambientMotionStrength: row.ambientMotionStrength ??
-            DEFAULT_AMBIENT_MOTION_STRENGTH,
-        wallpaperCompositions: compositions,
+        wallpaperPresentations: presentations,
+        canvasMotion: (row.canvasMotion as CanvasMotion) ??
+            DEFAULT_CANVAS_MOTION,
+        canvasMotionLevel: (row.canvasMotionLevel as WallpaperMotionLevel) ??
+            DEFAULT_CANVAS_MOTION_LEVEL,
         searchTarget: row.searchTarget,
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
         webAppHomeLimit: row.webAppHomeLimit === "all"
@@ -202,7 +251,12 @@ export class PreferencesService {
             & Partial<
                 Omit<
                     PreferencesDto,
-                    "style" | "aiGenerationDefaults" | "wallpaperCompositions"
+                    | "style"
+                    | "aiGenerationDefaults"
+                    | "wallpaperCompositions"
+                    | "wallpaperPresentations"
+                    | "canvasMotion"
+                    | "canvasMotionLevel"
                 >
             >
             & {
@@ -211,6 +265,11 @@ export class PreferencesService {
                 wallpaperCompositions?:
                     | Record<string, WallpaperComposition>
                     | null;
+                wallpaperPresentations?:
+                    | Record<string, Partial<WallpaperPresentation>>
+                    | null;
+                canvasMotion?: CanvasMotion;
+                canvasMotionLevel?: WallpaperMotionLevel;
             },
     ): Promise<PreferencesDto> {
         const canonicalDefaults = await this.getDefaults();
@@ -219,6 +278,9 @@ export class PreferencesService {
             style,
             aiGenerationDefaults,
             wallpaperCompositions,
+            wallpaperPresentations,
+            canvasMotion,
+            canvasMotionLevel,
             ...rest
         } = updates;
         return await this.store.run(async (db) => {
@@ -272,24 +334,129 @@ export class PreferencesService {
                 };
                 serializedAiDefaults = JSON.stringify(merged);
             }
+            let serializedWallpaperPresentations: string | undefined =
+                undefined;
             let serializedWallpaperCompositions: string | undefined = undefined;
-            if (wallpaperCompositions === null) {
-                serializedWallpaperCompositions = JSON.stringify({});
-            } else if (wallpaperCompositions !== undefined) {
+
+            if (
+                wallpaperPresentations !== undefined ||
+                wallpaperCompositions !== undefined ||
+                rest.backgroundImage !== undefined
+            ) {
                 const [existingRow] = await db.select().from(preferences)
                     .where(eq(preferences.userId, userId)).limit(1).all();
-                const current = parseWallpaperCompositions(
+
+                const currentComps = parseWallpaperCompositions(
                     existingRow?.wallpaperCompositions,
                 );
-                const normalized = normalizeWallpaperCompositions(
-                    wallpaperCompositions,
+                const rawCurrentPres = parseWallpaperPresentations(
+                    existingRow?.wallpaperPresentations,
                 );
-                serializedWallpaperCompositions = JSON.stringify({
-                    ...current,
-                    ...normalized,
-                });
-            }
+                let mergedPres = normalizeWallpaperPresentations(
+                    rawCurrentPres,
+                    {
+                        currentSource: existingRow?.backgroundImage,
+                        legacy: existingRow
+                            ? {
+                                wallpaperBlur: existingRow.wallpaperBlur,
+                                wallpaperGrayscale:
+                                    existingRow.wallpaperGrayscale,
+                                wallpaperMask: existingRow.wallpaperMask,
+                                wallpaperGlowStrength:
+                                    existingRow.wallpaperGlowStrength,
+                                ambientMotionMode:
+                                    existingRow.ambientMotionMode,
+                                ambientMotionStrength:
+                                    existingRow.ambientMotionStrength,
+                            }
+                            : undefined,
+                        legacyCompositions: currentComps,
+                    },
+                );
 
+                if (wallpaperPresentations === null) {
+                    mergedPres = {};
+                } else if (wallpaperPresentations !== undefined) {
+                    for (
+                        const [key, pres] of Object.entries(
+                            wallpaperPresentations,
+                        )
+                    ) {
+                        const s = parseWallpaperSource(key);
+                        const canonicalKey = s ? s.value : key;
+                        mergedPres = touchWallpaperPresentation(
+                            mergedPres,
+                            canonicalKey,
+                            normalizeWallpaperPresentation(pres),
+                        );
+                    }
+                }
+
+                if (wallpaperCompositions === null) {
+                    for (const key of Object.keys(currentComps)) {
+                        delete currentComps[key];
+                    }
+                } else if (wallpaperCompositions !== undefined) {
+                    const normalizedComps = normalizeWallpaperCompositions(
+                        wallpaperCompositions,
+                    );
+                    for (const [key, comp] of Object.entries(normalizedComps)) {
+                        currentComps[key] = comp;
+                        if (mergedPres[key]) {
+                            mergedPres[key].composition = comp;
+                        } else {
+                            mergedPres[key] = {
+                                ...DEFAULT_WALLPAPER_PRESENTATION,
+                                composition: comp,
+                            };
+                        }
+                    }
+                }
+
+                const nextBg = rest.backgroundImage !== undefined
+                    ? rest.backgroundImage
+                    : existingRow?.backgroundImage;
+                if (nextBg) {
+                    const s = parseWallpaperSource(nextBg);
+                    const bgKey = s ? s.value : nextBg;
+                    if (!mergedPres[bgKey]) {
+                        mergedPres[bgKey] = wallpaperPresentation(
+                            bgKey,
+                            mergedPres,
+                        );
+                    }
+                    mergedPres = touchWallpaperPresentation(
+                        mergedPres,
+                        bgKey,
+                        mergedPres[bgKey],
+                    );
+                }
+
+                for (const [key, pres] of Object.entries(mergedPres)) {
+                    const presentation = pres as WallpaperPresentation;
+                    if (presentation.composition) {
+                        currentComps[key] = presentation.composition;
+                    }
+                }
+
+                if (
+                    wallpaperPresentations !== undefined ||
+                    wallpaperCompositions !== undefined ||
+                    rest.backgroundImage !== undefined
+                ) {
+                    serializedWallpaperPresentations = JSON.stringify(
+                        mergedPres,
+                    );
+                }
+                if (
+                    wallpaperCompositions !== undefined ||
+                    wallpaperPresentations !== undefined
+                ) {
+                    serializedWallpaperCompositions = JSON.stringify(
+                        currentComps,
+                    );
+                }
+            }
             const patchValues: Record<string, unknown> = {};
             for (const [key, val] of Object.entries(rest)) {
                 if (val !== undefined) {
@@ -302,6 +469,16 @@ export class PreferencesService {
             if (serializedWallpaperCompositions !== undefined) {
                 patchValues.wallpaperCompositions =
                     serializedWallpaperCompositions;
+            }
+            if (serializedWallpaperPresentations !== undefined) {
+                patchValues.wallpaperPresentations =
+                    serializedWallpaperPresentations;
+            }
+            if (canvasMotion !== undefined) {
+                patchValues.canvasMotion = canvasMotion;
+            }
+            if (canvasMotionLevel !== undefined) {
+                patchValues.canvasMotionLevel = canvasMotionLevel;
             }
             if (style !== undefined) {
                 patchValues.style = normalizeStylePreset(style);
@@ -325,12 +502,12 @@ export class PreferencesService {
                 searchShape: canonicalDefaults.searchShape,
                 searchOpacity: canonicalDefaults.searchOpacity,
                 backgroundImage: canonicalDefaults.backgroundImage,
-                wallpaperBlur: canonicalDefaults.wallpaperBlur,
-                wallpaperGrayscale: canonicalDefaults.wallpaperGrayscale,
-                wallpaperMask: canonicalDefaults.wallpaperMask,
-                wallpaperGlowStrength: canonicalDefaults.wallpaperGlowStrength,
-                ambientMotionMode: canonicalDefaults.ambientMotionMode,
-                ambientMotionStrength: canonicalDefaults.ambientMotionStrength,
+                wallpaperBlur: 0,
+                wallpaperGrayscale: 0,
+                wallpaperMask: 0.24,
+                wallpaperGlowStrength: 0,
+                ambientMotionMode: "off" as const,
+                ambientMotionStrength: 0,
                 searchTarget: canonicalDefaults.searchTarget,
                 searchHistoryEnabled: canonicalDefaults.searchHistoryEnabled ??
                     false,
@@ -344,11 +521,14 @@ export class PreferencesService {
                 aiGenerationDefaults: JSON.stringify(
                     canonicalDefaults.aiGenerationDefaults ?? { models: {} },
                 ),
-                wallpaperCompositions: JSON.stringify(
-                    canonicalDefaults.wallpaperCompositions ?? {},
+                wallpaperCompositions: JSON.stringify({}),
+                canvasMotion: canonicalDefaults.canvasMotion ?? "off",
+                canvasMotionLevel: canonicalDefaults.canvasMotionLevel ??
+                    "soft",
+                wallpaperPresentations: JSON.stringify(
+                    canonicalDefaults.wallpaperPresentations ?? {},
                 ),
             };
-
             const insertValues = {
                 ...defaultRowValues,
                 ...patchValues,

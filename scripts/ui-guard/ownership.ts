@@ -80,15 +80,47 @@ export const GLOBAL_FEATURE_SELECTOR_WHITELIST: Record<string, string> = {
  */
 export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
     "--wallpaper-image":
-        "Wallpaper presentation layer: dynamic background image URL injected by WallpaperSurface runtime",
-    "--wallpaper-blur":
-        "Wallpaper presentation layer: dynamic blur radius in px injected by WallpaperSurface runtime",
-    "--wallpaper-grayscale":
-        "Wallpaper presentation layer: dynamic grayscale intensity injected by WallpaperSurface runtime",
+        "WallpaperSurface runtime owner: Validated source URL or CSS gradient",
+    "--wallpaper-filter":
+        "WallpaperSurface runtime owner: Shared resolver fixed-order tone and softness filter",
     "--wallpaper-mask":
-        "Wallpaper presentation layer: dynamic dark/light surface mask opacity injected by WallpaperSurface runtime",
+        "WallpaperSurface runtime owner: Shared resolver readability stage",
     "--wallpaper-position":
-        "Wallpaper presentation layer: dynamic background positioning coordinates injected by WallpaperSurface runtime",
+        "WallpaperSurface runtime owner: Normalized focal point",
+    "--wallpaper-overscan-x":
+        "WallpaperSurface runtime owner: Center expansion covering blur and XY movement on horizontal axis",
+    "--wallpaper-overscan-y":
+        "WallpaperSurface runtime owner: Center expansion covering blur and XY movement on vertical axis",
+    "--wallpaper-ambient-mix":
+        "WallpaperSurface runtime owner: Per-field shared tone-aware contribution within total budget",
+    "--wallpaper-ambient-color":
+        "WallpaperSurface runtime owner: Accent or neutral luminance selected by shared tone resolver",
+    "--wallpaper-ambient-travel":
+        "WallpaperSurface runtime owner: Preset slow field travel in vmax",
+    "--wallpaper-ambient-scale":
+        "WallpaperSurface runtime owner: Preset field scale",
+    "--wallpaper-radius-a":
+        "WallpaperSurface runtime owner: Shared canonical ambient field A radius",
+    "--wallpaper-radius-b":
+        "WallpaperSurface runtime owner: Shared canonical ambient field B radius",
+    "--wallpaper-duration-a":
+        "WallpaperSurface runtime owner: Shared fixed ambient period A",
+    "--wallpaper-duration-b":
+        "WallpaperSurface runtime owner: Shared fixed ambient period B",
+    "--wallpaper-phase":
+        "WallpaperSurface runtime owner: Shared fixed ambient phase offset",
+    "--wallpaper-drift-duration":
+        "WallpaperSurface runtime owner: Shared fixed drift period",
+    "--wallpaper-zoom-duration":
+        "WallpaperSurface runtime owner: Shared fixed zoom period",
+    "--wallpaper-easing":
+        "WallpaperSurface runtime owner: Shared fixed compositor motion easing",
+    "--wallpaper-drift-x":
+        "WallpaperSurface runtime owner: Preset XY horizontal amplitude",
+    "--wallpaper-drift-y":
+        "WallpaperSurface runtime owner: Preset XY vertical amplitude",
+    "--wallpaper-motion-scale":
+        "WallpaperSurface runtime owner: Shared drift or zoom scale",
 };
 
 /**

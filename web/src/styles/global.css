@@ -52,7 +52,6 @@ a {
     position: relative;
     isolation: isolate;
 }
-.wallpaper,
 .wallpaper-surface {
     position: fixed;
     inset: 0;
@@ -60,108 +59,135 @@ a {
     isolation: isolate;
     overflow: hidden;
     pointer-events: none;
-    background:
-        linear-gradient(155deg, color-mix(in srgb, var(--accent) 3%, #f4f4f5),
-        #fafafa 52%, color-mix(in srgb, var(--accent) 4%, #e4e4e7));
+    background: linear-gradient(155deg, color-mix(in srgb, var(--accent) 3%,
+        #f4f4f5), #fafafa 52%, color-mix(in srgb, var(--accent) 4%, #e4e4e7));
 }
-[data-theme="dark"] .wallpaper,
 [data-theme="dark"] .wallpaper-surface {
-    background:
-        linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%, #18181b),
-        #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b));
+    background: linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%,
+        #18181b), #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b));
+}
+.wallpaper-surface[data-tone="mono"] {
+    background: var(--wallpaper-neutral-light);
+}
+[data-theme="dark"] .wallpaper-surface[data-tone="mono"] {
+    background: var(--wallpaper-neutral-dark);
+}
+.wallpaper-surface[data-tone="mono"] .wallpaper-surface__mask {
+    background: inherit;
 }
 .wallpaper-surface--embedded {
     position: absolute;
     z-index: 0;
-    pointer-events: auto;
 }
-.wallpaper__image,
+.wallpaper-surface__overscan {
+    position: absolute;
+    inset: var(--wallpaper-overscan-y) var(--wallpaper-overscan-x);
+    z-index: 0;
+}
 .wallpaper-surface__image {
     position: absolute;
-    /* Three blur radii keep the clipped viewport inside the opaque image. When blur=0, inset is 0px. */
-    inset: calc(-3 * var(--wallpaper-blur, 0px));
-    z-index: 0;
-    pointer-events: none;
-    background-image: var(--wallpaper-image, none);
-    background-position: var(--wallpaper-position, center);
+    inset: 0;
+    background-image: var(--wallpaper-image);
+    background-position: var(--wallpaper-position);
     background-size: cover;
     background-repeat: no-repeat;
-    filter: blur(var(--wallpaper-blur, 0px))
-        grayscale(var(--wallpaper-grayscale, 0));
+    filter: var(--wallpaper-filter);
+    transform-origin: var(--wallpaper-position);
 }
-.wallpaper::after,
-.wallpaper-surface::after {
-    content: "";
+.wallpaper__ambient {
     position: absolute;
     inset: 0;
     z-index: 1;
-    pointer-events: none;
-    background: var(--surface-l0);
-    opacity: var(--wallpaper-mask, .36);
 }
-.wallpaper::before,
-.wallpaper-surface::before {
-    content: "";
+.wallpaper__ambient-field-a,
+.wallpaper__ambient-field-b {
+    position: absolute;
+    width: calc(2 * var(--wallpaper-radius-a));
+    height: calc(2 * var(--wallpaper-radius-a));
+    left: -35vmax;
+    top: -40vmax;
+    background: radial-gradient(circle, color-mix(in srgb,
+        var(--wallpaper-ambient-color) var(--wallpaper-ambient-mix),
+        transparent), transparent 70%);
+    animation: wallpaper-ambient-a var(--wallpaper-duration-a)
+        var(--wallpaper-easing) var(--wallpaper-phase) infinite;
+}
+.wallpaper__ambient-field-b {
+    width: calc(2 * var(--wallpaper-radius-b));
+    height: calc(2 * var(--wallpaper-radius-b));
+    left: auto;
+    right: -28vmax;
+    top: 20%;
+    animation-name: wallpaper-ambient-b;
+    animation-duration: var(--wallpaper-duration-b);
+}
+.wallpaper-surface__mask {
     position: absolute;
     inset: 0;
     z-index: 2;
-    pointer-events: none;
-    background: var(--wallpaper-glow);
-    transform-origin: var(--wallpaper-glow-origin);
+    background: var(--surface-l0);
+    opacity: var(--wallpaper-mask);
 }
-.wallpaper__ripple,
-.wallpaper-surface__ripple {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none;
-    transform-origin: var(--wallpaper-glow-origin);
-    background: radial-gradient(
-        circle at var(--wallpaper-glow-origin),
-        var(--accent) 0%,
-        transparent 70%
-    );
-    opacity: 0;
-    display: none;
+.wallpaper-surface[data-motion="drift"] .wallpaper-surface__image {
+    animation: wallpaper-drift var(--wallpaper-drift-duration)
+        var(--wallpaper-easing) infinite;
 }
-.wallpaper[data-ambient-motion="breathe"]::before,
-.wallpaper[data-ambient-motion="breathe_ripple"]::before,
-.wallpaper-surface[data-ambient-motion="breathe"]::before,
-.wallpaper-surface[data-ambient-motion="breathe_ripple"]::before {
-    animation: wallpaper-glow-breathe var(--wallpaper-glow-duration, 8s)
-        ease-in-out infinite;
+.wallpaper-surface[data-motion="zoom"] .wallpaper-surface__image {
+    animation: wallpaper-zoom var(--wallpaper-zoom-duration)
+        var(--wallpaper-easing) infinite;
 }
-.wallpaper[data-ambient-motion="breathe_ripple"] .wallpaper__ripple,
-.wallpaper-surface[data-ambient-motion="breathe_ripple"] .wallpaper-surface__ripple,
-.wallpaper-surface[data-ambient-motion="breathe_ripple"] .wallpaper__ripple,
-.wallpaper[data-ambient-motion="breathe_ripple"] .wallpaper-surface__ripple {
-    display: block;
-    animation: wallpaper-ripple-drift var(--wallpaper-glow-duration, 8s)
-        ease-out 1.5s infinite;
-}
-@keyframes wallpaper-glow-breathe {
+@keyframes wallpaper-ambient-a {
     0%,
     100% {
-        opacity: var(--wallpaper-glow-rest-opacity);
+        transform: translate(0, 0) scale(1);
+    }
+    35% {
+        transform: translate(var(--wallpaper-ambient-travel), calc(-1 *
+            var(--wallpaper-ambient-travel)))
+            scale(var(--wallpaper-ambient-scale));
+    }
+    70% {
+        transform: translate(calc(-0.5 * var(--wallpaper-ambient-travel)),
+            var(--wallpaper-ambient-travel)) scale(1);
+    }
+}
+@keyframes wallpaper-ambient-b {
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+    40% {
+        transform: translate(calc(-1 * var(--wallpaper-ambient-travel)),
+            var(--wallpaper-ambient-travel))
+            scale(var(--wallpaper-ambient-scale));
+    }
+    75% {
+        transform: translate(var(--wallpaper-ambient-travel), calc(-0.5 *
+            var(--wallpaper-ambient-travel))) scale(1);
+    }
+}
+@keyframes wallpaper-drift {
+    0%,
+    100% {
+        transform: translate(calc(-1 * var(--wallpaper-drift-x)),
+            var(--wallpaper-drift-y)) scale(var(--wallpaper-motion-scale));
+    }
+    33% {
+        transform: translate(var(--wallpaper-drift-x), 0)
+            scale(var(--wallpaper-motion-scale));
+    }
+    66% {
+        transform: translate(0, calc(-1 * var(--wallpaper-drift-y)))
+            scale(var(--wallpaper-motion-scale));
+    }
+}
+@keyframes wallpaper-zoom {
+    0%,
+    100% {
         transform: scale(1);
     }
     50% {
-        opacity: 1;
-        transform: scale(var(--wallpaper-glow-peak-scale));
-    }
-}
-@keyframes wallpaper-ripple-drift {
-    0% {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    35% {
-        opacity: var(--wallpaper-ripple-peak-opacity);
-    }
-    75%,
-    100% {
-        opacity: 0;
-        transform: scale(var(--wallpaper-ripple-peak-scale));
+        transform: scale(var(--wallpaper-motion-scale));
     }
 }
 .topbar {
@@ -293,13 +319,10 @@ a {
         transition-duration: .01ms!important;
         scroll-behavior: auto!important;
     }
-    .wallpaper[data-ambient-motion]::before,
-    .wallpaper-surface[data-ambient-motion]::before {
-        animation: none;
-    }
-    .wallpaper[data-ambient-motion] .wallpaper__ripple,
-    .wallpaper-surface[data-ambient-motion] .wallpaper-surface__ripple {
-        animation: none;
-        display: none;
+    .wallpaper-surface .wallpaper-surface__image,
+    .wallpaper-surface .wallpaper__ambient-field-a,
+    .wallpaper-surface .wallpaper__ambient-field-b {
+        animation: none !important;
+        transform: none;
     }
 }

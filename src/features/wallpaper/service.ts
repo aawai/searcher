@@ -4,6 +4,10 @@ import { eq } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
 import {
+    DEFAULT_WALLPAPER_PRESENTATION,
+    type WallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
+import {
     normalizeWallpaperCompositions,
     parseWallpaperSource,
     type WallpaperComposition,
@@ -456,6 +460,7 @@ export class WallpaperService {
             let dbRollbackState: {
                 backgroundImage: string | null;
                 wallpaperCompositions: string | null;
+                wallpaperPresentations: string | null;
             } | null = null;
 
             if (this.#store && toEvict.length > 0) {
@@ -470,6 +475,8 @@ export class WallpaperService {
                             backgroundImage: preferences.backgroundImage,
                             wallpaperCompositions:
                                 preferences.wallpaperCompositions,
+                            wallpaperPresentations:
+                                preferences.wallpaperPresentations,
                         })
                             .from(preferences)
                             .where(eq(preferences.userId, userId))
@@ -530,16 +537,51 @@ export class WallpaperService {
                                 }
                             }
 
+                            const curPresRaw = rows[0].wallpaperPresentations;
+                            let presentations: Record<
+                                string,
+                                WallpaperPresentation
+                            > = {};
+                            if (curPresRaw) {
+                                try {
+                                    presentations = JSON.parse(curPresRaw);
+                                } catch {
+                                    presentations = {};
+                                }
+                            }
+
+                            for (const key of Object.keys(presentations)) {
+                                const s = parseWallpaperSource(key);
+                                if (
+                                    s?.type === "uploaded" &&
+                                    canonicalEvictedSet.has(s.value)
+                                ) {
+                                    delete presentations[key];
+                                    needsUpdate = true;
+                                } else if (
+                                    canonicalEvictedSet.has(
+                                        key.trim().toLowerCase(),
+                                    )
+                                ) {
+                                    delete presentations[key];
+                                    needsUpdate = true;
+                                }
+                            }
+
                             if (needsUpdate) {
                                 dbRollbackState = {
                                     backgroundImage: curBg,
                                     wallpaperCompositions: curCompsRaw,
+                                    wallpaperPresentations: curPresRaw,
                                 };
                                 await db.update(preferences)
                                     .set({
                                         backgroundImage: newBg,
                                         wallpaperCompositions: JSON.stringify(
                                             comps,
+                                        ),
+                                        wallpaperPresentations: JSON.stringify(
+                                            presentations,
                                         ),
                                     })
                                     .where(eq(preferences.userId, userId))
@@ -720,6 +762,7 @@ export class WallpaperService {
             let dbRollbackState: {
                 backgroundImage: string | null;
                 wallpaperCompositions: string | null;
+                wallpaperPresentations: string | null;
             } | null = null;
 
             if (this.#store) {
@@ -729,6 +772,8 @@ export class WallpaperService {
                             backgroundImage: preferences.backgroundImage,
                             wallpaperCompositions:
                                 preferences.wallpaperCompositions,
+                            wallpaperPresentations:
+                                preferences.wallpaperPresentations,
                         })
                             .from(preferences)
                             .where(eq(preferences.userId, userId))
@@ -785,17 +830,49 @@ export class WallpaperService {
                                     needsUpdate = true;
                                 }
                             }
+                            const curPresRaw = rows[0].wallpaperPresentations;
+                            let presentations: Record<
+                                string,
+                                WallpaperPresentation
+                            > = {};
+                            if (curPresRaw) {
+                                try {
+                                    presentations = JSON.parse(curPresRaw);
+                                } catch {
+                                    presentations = {};
+                                }
+                            }
+
+                            for (const key of Object.keys(presentations)) {
+                                const s = parseWallpaperSource(key);
+                                if (
+                                    s?.type === "uploaded" &&
+                                    s.value === canonicalTarget
+                                ) {
+                                    delete presentations[key];
+                                    needsUpdate = true;
+                                } else if (
+                                    key.trim().toLowerCase() === canonicalTarget
+                                ) {
+                                    delete presentations[key];
+                                    needsUpdate = true;
+                                }
+                            }
 
                             if (needsUpdate) {
                                 dbRollbackState = {
                                     backgroundImage: curBg,
                                     wallpaperCompositions: curCompsRaw,
+                                    wallpaperPresentations: curPresRaw,
                                 };
                                 await db.update(preferences)
                                     .set({
                                         backgroundImage: newBg,
                                         wallpaperCompositions: JSON.stringify(
                                             comps,
+                                        ),
+                                        wallpaperPresentations: JSON.stringify(
+                                            presentations,
                                         ),
                                     })
                                     .where(eq(preferences.userId, userId))
@@ -908,6 +985,8 @@ export class WallpaperService {
                         const rows = await db.select({
                             wallpaperCompositions:
                                 preferences.wallpaperCompositions,
+                            wallpaperPresentations:
+                                preferences.wallpaperPresentations,
                         })
                             .from(preferences)
                             .where(eq(preferences.userId, userId))
@@ -927,14 +1006,48 @@ export class WallpaperService {
                                     comps = {};
                                 }
                             }
-                            comps[`/api/wallpaper/${id.toLowerCase()}`] = {
+                            const targetKey =
+                                `/api/wallpaper/${id.toLowerCase()}`;
+                            comps[targetKey] = {
                                 focalX: record.focalX,
                                 focalY: record.focalY,
                             };
+
+                            let presentations: Record<
+                                string,
+                                WallpaperPresentation
+                            > = {};
+                            if (rows[0].wallpaperPresentations) {
+                                try {
+                                    presentations = JSON.parse(
+                                        rows[0].wallpaperPresentations,
+                                    );
+                                } catch {
+                                    presentations = {};
+                                }
+                            }
+                            if (presentations[targetKey]) {
+                                presentations[targetKey].composition = {
+                                    focalX: record.focalX,
+                                    focalY: record.focalY,
+                                };
+                            } else {
+                                presentations[targetKey] = {
+                                    ...DEFAULT_WALLPAPER_PRESENTATION,
+                                    composition: {
+                                        focalX: record.focalX,
+                                        focalY: record.focalY,
+                                    },
+                                };
+                            }
+
                             await db.update(preferences)
                                 .set({
                                     wallpaperCompositions: JSON.stringify(
                                         comps,
+                                    ),
+                                    wallpaperPresentations: JSON.stringify(
+                                        presentations,
                                     ),
                                 })
                                 .where(eq(preferences.userId, userId))
