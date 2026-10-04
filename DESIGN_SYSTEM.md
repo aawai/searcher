@@ -66,6 +66,24 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   可键盘聚焦并局部滚动；任务状态有可访问名称且保持只读。Markdown
   string、API、数据库与版本模型不变。
 
+### Shortcut catalog 与可发现性
+
+- `/settings/shortcuts` 是完整用户说明入口，沿用 Settings utility archetype 的
+  h1 → h2 → h3 层级，按全局、搜索、AI
+  问答、便签编辑、快捷命令分组；访客可查阅，不持久化配置。
+- `features/shortcuts/shortcut-catalog.ts` 拥有 keyboard binding、slash command
+  target、平台 formatter 与 editable guard。Search suggestion/parser、Notes/Ask
+  handler 和上下文提示共享定义；事件监听留在业务组件，不新增全局 dispatcher。
+- 优先级：本地可编辑控件 > 当前页面/工作区 > 首页 global shortcut >
+  浏览器默认。首页 global 不接管
+  input/textarea/select/contenteditable/role=textbox；已处理事件与 IME
+  composition 不再执行快捷操作。Ask 会话查找保留包含 composer 的页面级语义，离开
+  Ask 后不接管浏览器查找。
+- keycap 由 `app/settings.css` 管理，消费已有
+  typography/surface/border/radius/spacing token；可视符号与完整 screen-reader
+  组合键文本分离，macOS 使用 Command，其他平台使用 Ctrl。普通
+  Arrow/Escape/Enter/Tab/Space 导航不进入产品快捷键列表。
+
 ### Page compositions
 
 - Auth 使用 utility PageShell 管页面留白与 margin；内部 auth-surface

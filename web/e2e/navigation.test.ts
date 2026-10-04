@@ -171,6 +171,7 @@ Deno.test("production navigation contracts", async (t) => {
                     ["/settings/appearance", "外观"],
                     ["/settings/ai", "AI 问答"],
                     ["/settings/data", "数据与同步"],
+                    ["/settings/shortcuts", "快捷键"],
                 ]
             ) {
                 const sections: Record<string, string[]> = {
@@ -182,6 +183,13 @@ Deno.test("production navigation contracts", async (t) => {
                     ],
                     "/settings/ai": ["AI 问答工作区", "已配置的 Provider"],
                     "/settings/data": ["同步", "数据管理"],
+                    "/settings/shortcuts": [
+                        "全局",
+                        "搜索",
+                        "AI 问答",
+                        "便签编辑",
+                        "快捷命令",
+                    ],
                 };
                 await visit(path);
                 await page.getByRole("heading", {
@@ -218,12 +226,12 @@ Deno.test("production navigation contracts", async (t) => {
             await visit("/");
             await page.getByRole("link", { name: "设置", exact: true })
                 .click();
-            for (const label of ["外观", "AI 问答", "数据与同步"]) {
+            for (const label of ["外观", "AI 问答", "数据与同步", "快捷键"]) {
                 await page.getByRole("navigation", { name: "设置分类" })
                     .getByRole("button", { name: label, exact: true })
                     .click();
             }
-            await page.waitForURL(origin + "/settings/data");
+            await page.waitForURL(origin + "/settings/shortcuts");
             await page.goBack();
             await page.waitForURL(origin + "/");
             await visit("/settings/search");
@@ -287,6 +295,7 @@ Deno.test("production navigation contracts", async (t) => {
                     "/missing",
                     "/settings/nope",
                     "/settings/ai/extra",
+                    "/settings/shortcuts/extra",
                     "/admin/nope",
                     "/admin/users/extra",
                 ]

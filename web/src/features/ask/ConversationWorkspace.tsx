@@ -17,6 +17,11 @@ import {
     resolveLeafForSibling,
 } from "./tree-utils.ts";
 import { ConversationSearchDialog } from "./ConversationSearchDialog.tsx";
+import {
+    matchesShortcut,
+    type ShortcutPlatform,
+    SHORTCUTS,
+} from "../shortcuts/shortcut-catalog.ts";
 
 interface ConversationWorkspaceProps {
     conversation: AiConversationDto | null;
@@ -49,6 +54,7 @@ interface ConversationWorkspaceProps {
     onSelectLeafMessage: (leafId: string) => Promise<void>;
     isNewConversationTemporary?: boolean;
     newConversationInstruction?: string | null;
+    platform?: ShortcutPlatform;
 }
 
 export function ConversationWorkspace({
@@ -82,6 +88,7 @@ export function ConversationWorkspace({
     onSelectLeafMessage,
     isNewConversationTemporary = false,
     newConversationInstruction = null,
+    platform,
 }: ConversationWorkspaceProps) {
     const [searchOpen, setSearchOpen] = useState(false);
 
@@ -95,10 +102,10 @@ export function ConversationWorkspace({
 
     const activeModel = models.find((m) => m.id === selectedModelId);
 
-    // Global keyboard shortcut for search (Cmd/Ctrl + F)
+    // Keyboard shortcut for conversation search (Cmd/Ctrl + F)
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f") {
+            if (matchesShortcut(e, SHORTCUTS.askFind.binding)) {
                 e.preventDefault();
                 setSearchOpen(true);
             }
@@ -149,6 +156,7 @@ export function ConversationWorkspace({
                     onOpenSearch={() => setSearchOpen(true)}
                     isNewConversationTemporary={isNewConversationTemporary}
                     newConversationInstruction={newConversationInstruction}
+                    platform={platform}
                 />
 
                 <SearcherThread
@@ -170,6 +178,7 @@ export function ConversationWorkspace({
                     open={searchOpen}
                     onOpenChange={setSearchOpen}
                     messages={allMessages}
+                    platform={platform}
                     onSelectMessage={(msgId) => {
                         const targetLeaf = resolveLeafForSibling(
                             allMessages,

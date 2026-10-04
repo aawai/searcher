@@ -13,6 +13,7 @@ import {
 } from "@shared/wallpaper.ts";
 import {
     Check,
+    Keyboard,
     MoreVertical,
     Palette,
     RefreshCw,
@@ -61,6 +62,7 @@ import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCom
 import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
 import { api } from "../lib/api.ts";
+import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
 import { routes, type SettingsTab, settingsTab } from "./routes.ts";
@@ -75,6 +77,7 @@ const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     appearance: { label: "外观", icon: Palette },
     ai: { label: "AI 问答", icon: Sparkles },
     data: { label: "数据与同步", icon: RefreshCw },
+    shortcuts: { label: "快捷键", icon: Keyboard },
 };
 
 function getAccentLight(id: string): string {
@@ -1535,6 +1538,11 @@ export function SettingsPage() {
                                         </Button>
                                     </SettingsActionCard>
                                 </SettingsSection>
+                            </div>
+                        )}
+                        {tab === "shortcuts" && (
+                            <div className="settings-content">
+                                <ShortcutsSettings />
                             </div>
                         )}
                     </section>

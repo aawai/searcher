@@ -1,4 +1,4 @@
-export type SettingsTab = "search" | "appearance" | "ai" | "data";
+export type SettingsTab = "search" | "appearance" | "ai" | "data" | "shortcuts";
 export type AdminTab = "overview" | "users" | "settings" | "audit" | "backup";
 
 export const routes = {
@@ -25,6 +25,8 @@ export function settingsTab(pathname: string): SettingsTab | null {
             return "ai";
         case routes.settings("data"):
             return "data";
+        case routes.settings("shortcuts"):
+            return "shortcuts";
         default:
             return null;
     }

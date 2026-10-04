@@ -10,11 +10,18 @@ import {
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import type { AiMessageDto } from "./types.ts";
+import {
+    formatShortcut,
+    type ShortcutPlatform,
+    SHORTCUTS,
+} from "../shortcuts/shortcut-catalog.ts";
+
 interface ConversationSearchDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     messages: AiMessageDto[];
     onSelectMessage: (messageId: string) => void;
+    platform?: ShortcutPlatform;
 }
 
 export function ConversationSearchDialog({
@@ -22,6 +29,7 @@ export function ConversationSearchDialog({
     onOpenChange,
     messages,
     onSelectMessage,
+    platform,
 }: ConversationSearchDialogProps) {
     const [query, setQuery] = useState("");
 
@@ -43,7 +51,8 @@ export function ConversationSearchDialog({
                         <span>会话内搜索</span>
                     </DialogTitle>
                     <DialogDescription>
-                        搜索当前对话中的所有历史消息内容 (快捷键: Cmd/Ctrl + F)
+                        搜索当前对话中的所有历史消息内容 (快捷键:{" "}
+                        {formatShortcut(SHORTCUTS.askFind.binding, platform)})
                     </DialogDescription>
                 </DialogHeader>
 

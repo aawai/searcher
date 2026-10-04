@@ -1,8 +1,6 @@
 import { assertEquals } from "@std/assert";
-import {
-    parseCommandPrefix,
-    splitSuggestionLabel,
-} from "./SearcherSearchInput.tsx";
+import { splitSuggestionLabel } from "./SearcherSearchInput.tsx";
+import { parseCommandPrefix } from "../../features/shortcuts/shortcut-catalog.ts";
 
 Deno.test("SearcherSearchInput: parseCommandPrefix accurately extracts command, target engine, and rest query without pollution", () => {
     // 1. Regular query without command
