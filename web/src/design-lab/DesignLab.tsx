@@ -79,11 +79,10 @@ import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
 import { WorkspaceNavigation } from "../features/workspace/WorkspaceNavigation.tsx";
 import {
     parentWorkspaceRoute,
-    type WorkspaceState,
+    type WorkspaceRoute,
 } from "../features/workspace/workspace-state.ts";
 
 import "./design-lab.css";
-import { DesktopDemo } from "../features/desktop/DesktopDemo.tsx";
 
 // Fixture Data
 const appsFixture: WebAppItem[] = [
@@ -154,8 +153,9 @@ export function DesignLab() {
     const [engine, setEngine] = useState<EngineId>("bing");
     const [searchMode, setSearchMode] = useState<"search" | "ai">("search");
     const [model, setModel] = useState("fixture-a");
-    const [workspace, setWorkspace] = useState<WorkspaceState>({
-        view: "closed",
+    const [workspaceOpen, setWorkspaceOpen] = useState(false);
+    const [workspace, setWorkspace] = useState<WorkspaceRoute>({
+        view: "apps/root",
     });
     const [feedbackMessage, setFeedbackMessage] = useState("");
 
@@ -266,7 +266,6 @@ export function DesignLab() {
                 }
             />
 
-            <DesktopDemo />
             {/* Top Inspector & Live Preview Controls */}
             <div className="lab-inspector-card">
                 <div className="lab-stage-header">
@@ -898,8 +897,10 @@ export function DesignLab() {
                                     {/* Sheet trigger */}
                                     <Button
                                         variant="default"
-                                        onClick={() =>
-                                            setWorkspace({ view: "apps/root" })}
+                                        onClick={() => {
+                                            setWorkspace({ view: "apps/root" });
+                                            setWorkspaceOpen(true);
+                                        }}
                                     >
                                         打开 Workspace
                                     </Button>
@@ -1204,11 +1205,14 @@ export function DesignLab() {
                                 </div>
 
                                 <WorkspaceNavigation
-                                    onSelect={(kind) => setWorkspace({
-                                        view: kind === "apps"
-                                            ? "apps/root"
-                                            : "notes/root",
-                                    })}
+                                    onSelect={(kind) => {
+                                        setWorkspace({
+                                            view: kind === "apps"
+                                                ? "apps/root"
+                                                : "notes/root",
+                                        });
+                                        setWorkspaceOpen(true);
+                                    }}
                                 />
                             </div>
                         </div>
@@ -1478,11 +1482,15 @@ export function DesignLab() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() =>
+                                                        onClick={() => {
                                                             setWorkspace({
                                                                 view:
                                                                     "apps/root",
-                                                            })}
+                                                            });
+                                                            setWorkspaceOpen(
+                                                                true,
+                                                            );
+                                                        }}
                                                     >
                                                         呼出 Workspace
                                                     </Button>
@@ -1762,13 +1770,14 @@ export function DesignLab() {
             </div>
 
             <WorkspaceShell
+                open={workspaceOpen}
                 state={workspace}
                 title={workspace.view.startsWith("apps/") ? "应用" : "便签"}
                 style="zen"
                 appsArranging={false}
                 navigate={setWorkspace}
                 onBack={() => setWorkspace(parentWorkspaceRoute(workspace))}
-                onClose={() => setWorkspace({ view: "closed" })}
+                onClose={() => setWorkspaceOpen(false)}
                 onCreate={() => setFeedbackMessage("Workspace primary action")}
             >
                 <Input

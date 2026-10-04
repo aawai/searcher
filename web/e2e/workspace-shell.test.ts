@@ -172,7 +172,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
                 if (await win.isVisible()) {
                     const btn = win.locator(
-                        'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                        '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
                     ).first();
                     if (await btn.isVisible()) {
                         await btn.click();
@@ -186,7 +186,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         );
         if (await panelOrSheet.first().isVisible()) {
             const closeBtn = panelOrSheet.locator(
-                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
             ).first();
             if (await closeBtn.isVisible()) {
                 await closeBtn.click();
@@ -197,7 +197,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     }
     const close = async () => {
         const btn = panel.locator(
-            'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+            '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
         ).first();
         if (await btn.isVisible()) {
             await btn.click();

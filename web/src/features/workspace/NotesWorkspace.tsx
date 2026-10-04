@@ -32,7 +32,7 @@ import {
     LoadingState,
     StatusBanner,
 } from "../../components/searcher/semantic.tsx";
-import type { WorkspaceState } from "./workspace-state.ts";
+import type { NotesRoute } from "./workspace-state.ts";
 import "./notes-workspace.css";
 
 type NoteActions = Pick<
@@ -120,7 +120,7 @@ export function NotesWorkspace(
         error,
         onRetry,
     }: {
-        state: WorkspaceState;
+        state: NotesRoute;
         notes: NoteItem[];
         userId: string;
         query: string;

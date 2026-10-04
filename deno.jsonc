@@ -12,7 +12,7 @@
         "admin:reset": "deno run -A src/commands/admin.ts reset",
         "test": "deno test -A src web/src",
         "test:routing": "deno task build && NODE_ENV=test deno test -A web/e2e/navigation.test.ts",
-        "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/notes-workspace.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts web/e2e/workspace-contract.test.ts",
+        "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/notes-workspace.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts web/e2e/workspace-contract.test.ts web/e2e/workspace-matrix.test.ts",
         "test:wallpaper": "deno task build && NODE_ENV=test deno test -A web/e2e/wallpaper.test.ts",
         "check:ui": "deno run -A scripts/check-ui.ts"
     },

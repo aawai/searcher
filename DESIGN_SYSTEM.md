@@ -174,17 +174,18 @@ AlertDialog）具有严格不同的交互与视觉语义：
 
 #### Shared Workspace Core 与 Presenter Contract
 
-- `workspace-state.ts` 是唯一 Core：route、back stack、Apps/Notes 独立 query、
-  nested navigation、close/reset。不得加入 window geometry、z-order、Dock 或
-  viewport state；`SearchHome` 在 auth user change/logout 时 reset transient
-  state。
-- `WorkspacePresentation = "panel" | "window" | "sheet"` 定义于
-  WorkspaceSurface。 Host 在 <768 选择 shared Sheet；Zen >=768 使用
-  WorkspaceShell/Panel； Widgets >=768 使用 DesktopWorkspaces。Apps/Notes
-  content 不读取 breakpoint 或 presentation。
-- `workspace-host.ts` 为 Apps/Notes 各保留一份 Core model；两者
-  route、stack、query 独立。SearchHome 统一接收 openWorkspace/openNote 与业务
-  action，负责选择 domain 和 presenter。
+- `workspace-state.ts` 是 presenter-independent Core：Apps/Notes 分别保存
+  route、back stack、query 和 nested navigation；reset 只重置对应 domain， auth
+  user change/logout 清除两域 transient state。Core 无 `closed` route、
+  open/close、geometry、z-order、Dock 或 viewport state。
+- Presenter contract 为 `panel | window | sheet`：Host 在 <768 选择 shared
+  Sheet；Zen >=768 使用 WorkspaceShell/Panel；Widgets >=768 使用
+  DesktopWorkspaces。Apps/Notes content 不读取 breakpoint 或 presentation。
+- `workspace-host.ts` 保存独立 domain Core model，并管理 Panel/Sheet 的 active
+  domain；Widgets 可见性由 DesktopState.windows/activeId 决定。 SearchHome 接收
+  openWorkspace/openNote intent，选择 domain 和 presenter。 未存在的 surface
+  打开前归一到 root；已有或 minimized window 仅 focus/restore， 保留 nested
+  route 和 query。
 - AppsWorkspace/NotesWorkspace 各只有一套 content JSX，复用
   WorkspaceSearch、WorkspaceSection、 LoadingState/StatusBanner/EmptyState；各
   presenter 的唯一 scroll boundary 为 .workspace-body。
@@ -222,10 +223,13 @@ AlertDialog）具有严格不同的交互与视觉语义：
   record；用户切换严格隔离。Widgets→Zen 保存并卸载， Zen→Widgets 恢复；不转换
   Zen geometry、不写 `note_layouts`、不跨设备同步。
 
-#### Desktop Window Manager（#88 demo / #89–91 production）
+#### Desktop Window Manager（Widgets 正式 owner）
 
-- /design-lab 保留独立非业务 demo；Widgets production 复用同一 features/desktop
-  引擎，>=1024 提供 Snap、Overview 与 transient running note Dock items。
+- Widgets 的唯一窗口引擎位于 features/desktop；/design-lab 不再保留临时 Window
+  demo。>=1024 提供 Snap、Overview 与 transient running note Dock items。
+- WorkspaceSurface 负责 Panel/Sheet semantic chrome 和滚动容器；window 的
+  titlebar、Back/Close、drag region 及空间操作仅由 DesktopWindow/WindowChrome
+  负责，不嵌套第二层 Workspace titlebar，也不复制 Apps/Notes content。
 - `DesktopCanvas` 是 viewport-fixed、背景 pointer-events:none 的唯一坐标
   owner。frame x/y 相对 safe rect；顶边为可见 Topbar/connection banner 下边界加
   `--space-window-gap`， 左右为 viewport 加 gap，底边为 viewport 减 gap；可提供
@@ -240,6 +244,9 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - 仅标题栏拖动；>=1024 八向 resize；Pointer capture + rAF 只更新临时 DOM 几何，
   pointerup/cancel 才 commit frame，safe rect 变化也终止手势并 clamp。
   标题栏方向键移动、把手方向键 resize；reduce-motion 不参与几何正确性。
+  窗口标题为 h2、业务 subsection 为 h3；toolbar 使用允许该 role 的容器。 Resize
+  separator 提供当前尺寸的 aria-valuetext 与 safe rect 内的百分比值，
+  键盘提交后同步更新；不以静态 ARIA 值掩盖可调整控件。
 - minimize 保留 mounted content；snap/maximize 首次保存 restoreFrame，切换模式
   不覆写。七种 semantic：left/right、四角、maximize；按 safe rect
   半宽/半高计算， 不用 normal minimum size 扩大分屏。viewport resize

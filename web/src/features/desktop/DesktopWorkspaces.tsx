@@ -32,9 +32,9 @@ import type {
 } from "./desktop-state.ts";
 import { getTopmostVisibleWindowId } from "./desktop-state.ts";
 import type {
+    WorkspaceCoreState,
     WorkspaceKind,
-    WorkspaceModel,
-    WorkspaceState,
+    WorkspaceRoute,
 } from "../workspace/workspace-state.ts";
 import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
 import {
@@ -47,7 +47,7 @@ export interface DesktopWorkspacesProps {
     state: DesktopState;
     rect: SafeRect;
     dispatch: Dispatch<DesktopAction>;
-    models: Record<WorkspaceKind, WorkspaceModel>;
+    models: WorkspaceCoreState;
     renderContent: (kind: WorkspaceKind) => ReactNode;
     onOpen: (kind: WorkspaceKind) => void;
     onClose: (kind: WorkspaceKind) => void;
@@ -66,7 +66,7 @@ export function isWorkspaceKind(kind: string): kind is WorkspaceKind {
 
 export function getWorkspaceTitle(
     kind: WorkspaceKind,
-    route: WorkspaceState,
+    route: WorkspaceRoute,
 ): string {
     switch (route.view) {
         case "apps/create":
@@ -166,10 +166,10 @@ export function DesktopWorkspaces({
         return () => globalThis.removeEventListener("resize", handleResize);
     }, []);
 
-    // Filter to workspace windows that exist in state and whose model is not closed
+    // DesktopState.windows is the single source of truth for window visibility
     const openWindows = state.windows.filter((w) => {
         if (isWorkspaceKind(w.kind)) {
-            return models[w.kind]?.route.view !== "closed";
+            return true;
         }
         if (w.kind === "note") {
             return !isConstrained;
@@ -177,11 +177,12 @@ export function DesktopWorkspaces({
         return false;
     });
 
-    const appsOpen = models.apps.route.view !== "closed" &&
-        state.windows.some((w) => w.kind === "apps" || w.id === "apps");
-    const notesOpen = models.notes.route.view !== "closed" &&
-        state.windows.some((w) => w.kind === "notes" || w.id === "notes");
-
+    const appsOpen = state.windows.some((w) =>
+        w.kind === "apps" || w.id === "apps"
+    );
+    const notesOpen = state.windows.some((w) =>
+        w.kind === "notes" || w.id === "notes"
+    );
     // Focus restoration to Dock on close: update refs unconditionally to prevent stale restoration
     const wasAppsOpen = useRef(appsOpen);
     const wasNotesOpen = useRef(notesOpen);
@@ -214,8 +215,8 @@ export function DesktopWorkspaces({
 
     // Focus management on route change or initial open: root focuses close button, nested focuses back button.
     // Exclude state.activeId so pointer activation does not steal internal focus from inputs/textareas.
-    const prevAppsRoute = useRef<WorkspaceState>(models.apps.route);
-    const prevNotesRoute = useRef<WorkspaceState>(models.notes.route);
+    const prevAppsRoute = useRef<WorkspaceRoute>(models.apps.route);
+    const prevNotesRoute = useRef<WorkspaceRoute>(models.notes.route);
     const wasAppsOpenForFocus = useRef(appsOpen);
     const wasNotesOpenForFocus = useRef(notesOpen);
 

@@ -329,6 +329,16 @@ export function WindowResizeHandles({
                     role="separator"
                     tabIndex={0}
                     aria-label={DIRECTION_LABELS[dir]}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(
+                        100 * (dir === "n" || dir === "s"
+                            ? win.frame.height / Math.max(1, rect.height)
+                            : win.frame.width / Math.max(1, rect.width)),
+                    )}
+                    aria-valuetext={`${Math.round(win.frame.width)} × ${
+                        Math.round(win.frame.height)
+                    } 像素`}
                     aria-orientation={dir === "n" || dir === "s"
                         ? "horizontal"
                         : "vertical"}

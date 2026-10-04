@@ -192,7 +192,7 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(await appsWindow.isVisible(), true);
             // Explicit close button closes window and returns focus to dock opener
             await appsWindow.locator(
-                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
             ).click();
             await appsWindow.waitFor({ state: "detached" });
             // Dock remains visible and focus returns to the Apps dock button
@@ -343,7 +343,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Header has Back button
             const backBtn = appsWindow.locator(
-                'header .desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
+                '.desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
             );
             await backBtn.waitFor();
 
@@ -391,7 +391,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Dirty Close navigation triggers confirmation alert dialog
             const closeBtn = appsWindow.locator(
-                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
             );
             await closeBtn.click();
             await alert.waitFor();
@@ -446,7 +446,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Close apps window
             await appsWindow.locator(
-                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
             ).click();
             await appsWindow.waitFor({ state: "detached" });
         },
@@ -530,7 +530,7 @@ Deno.test("production workspace contracts", async (t) => {
                 await noteEntityWin.waitFor({ state: "detached" });
             } else {
                 await notesWindow.locator(
-                    'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                    '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
                 ).click();
                 await notesWindow.waitFor({ state: "detached" });
             }
@@ -805,7 +805,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Close editor: Back button if nested, or close note window if desktop entity
             const backBtn = notesWindow.locator(
-                'header .desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
+                '.desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
             );
             if (await backBtn.isVisible()) {
                 await backBtn.click();
@@ -853,7 +853,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Close workspace
             await notesWindow.locator(
-                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
             ).click();
             await notesWindow.waitFor({ state: "detached" });
         },
@@ -1087,7 +1087,7 @@ Deno.test("production workspace contracts", async (t) => {
                     // On mobile sheet (< 768px), dismiss sheet before switching viewport
                     if (vp.width < 768) {
                         const closeBtn = currentPanel.locator(
-                            'header .desktop-window-chrome-btn--close, .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
+                            '.desktop-window-chrome-btn--close, .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
                         );
                         if (await closeBtn.isVisible()) {
                             await closeBtn.click();
@@ -1107,7 +1107,7 @@ Deno.test("production workspace contracts", async (t) => {
             );
             if (await finalPanel.isVisible()) {
                 const closeBtn = finalPanel.locator(
-                    'header .desktop-window-chrome-btn--close, .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
+                    '.desktop-window-chrome-btn--close, .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
                 );
                 if (await closeBtn.isVisible()) {
                     await closeBtn.click();
@@ -1235,7 +1235,7 @@ Deno.test("production workspace contracts", async (t) => {
                 );
                 if (await win.isVisible()) {
                     await win.locator(
-                        'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                        '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
                     ).click();
                     await win.waitFor({ state: "detached" });
                 }
@@ -1322,7 +1322,7 @@ Deno.test("production workspace contracts", async (t) => {
                         '.desktop-window[data-window-id="apps"]',
                     );
                     await appsWindow.locator(
-                        'header button[aria-label="收起工作区"]',
+                        '.desktop-window-chrome button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
                     ).click();
                     await appsWindow.waitFor({ state: "detached" });
                 }
@@ -1465,7 +1465,7 @@ Deno.test("production workspace contracts", async (t) => {
                 );
                 if (await win.isVisible()) {
                     await win.locator(
-                        'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                        '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
                     ).click();
                     await win.waitFor({ state: "detached" });
                 }

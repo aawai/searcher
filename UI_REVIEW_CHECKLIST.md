@@ -39,7 +39,7 @@
 - [ ] 组合覆盖与重跑策略遵循
       [仓库指南](AGENTS.md#验证范围与重复执行)，不替代既有验证阶梯及测试、typecheck、lint、format
       和 UI 门禁；full suite 按风险和仓库要求执行。
-- [ ] check:ui 的 A–F ownership rules 全部通过，无 baseline allowance 或 prefix
+- [ ] check:ui 的 A–L ownership rules 全部通过，无 baseline allowance 或 prefix
       通配放宽。
 - [ ] deno task check:ui；baseline 只删除迁移旧项，不增加 allowlist 债务。
 - [ ] deno task build 与 affected focused tests；路由变更用 deno task
@@ -1006,3 +1006,68 @@
       通过；无新增 token、baseline allowance 或 ownership drift。
 - [x] 最终 `deno task test:workspace`：7 passed（78 steps）、0
       failed，含生产构建；七种拖拽释放、restoreFrame、刷新持久化及既有业务交互通过。
+
+## Issue #92 最终双工作区验收
+
+- [x] 移除 /design-lab 临时 DesktopDemo 与专属 CSS；真实页面仍展示 semantic
+      component fixtures，未新增平行窗口 presenter。截图
+      `/tmp/omp-sshots-1598c80b21296e9f.webp`；页面无新增 JS 错误。
+- [x] 窗口标题为 h2，Apps/Notes subsection 为 h3；toolbar 使用合法 role
+      容器，resize separator 暴露当前尺寸。Widgets 1440 实页双窗口 axe 0
+      violations；右侧把手 ArrowRight 将可访问值从 760×569 更新到
+      770×569，每个窗口只有一个 chrome/titlebar。截图
+      `/tmp/omp-sshots-1598c99f7f696ea2.webp`。
+- [x] A. Core responsive / visual（16 组合全覆盖）： 390×844 / 768×1024 /
+      1024×768 / 1440×900 × light/dark × zen/widgets。全部 16 场景执行：
+      `document.documentElement.scrollWidth <= innerWidth`
+      无横向溢出；Search/Home 几何边界正常； Presenter 对应
+      sheet（390）、panel（zen）、window（widgets >=768）； Keyboard Tab
+      `:focus-visible` 焦点环正常；Dock 存在性契约（390 及 zen 无 Dock，widgets
+      >=768 有 Dock）。
+      截图：`/tmp/issue-92-e2e-screenshots/matrix-a-1440-widgets-light.png`。
+- [x] B. Wallpaper material（壁纸材质与分离度）： 390×844 wallpaper on/off
+      light，1440×900 wallpaper on/off dark。 Surface
+      边界清晰（背景色/边框不透明）、文字高对比度可读； Active 窗口拥有明确
+      elevation shadow 与 accent 边框，与壁纸 canvas 清晰分离。
+      实测截图：`/tmp/omp-sshots-1598ce6ccda96ea7.webp`（1440 dark widgets 壁纸
+      on，axe 0，无溢出）、`/tmp/omp-sshots-1598ce889d296ea9.webp`（390 dark
+      widgets 壁纸 on，modalSheet，dock false，axe 0，无溢出）。
+- [x] C. 390 与 1440 分别验证 Apps root/nested/empty、Notes
+      root/edit/empty；两业务域均覆盖 delayed loading（可见 status live
+      region）、500 error（alert）及 retry 恢复真实列表。Apps nested 与 Notes
+      edit 可同时保持；关闭 Apps 不影响 Notes 编辑，域内 Back 与 query
+      不互相覆盖。 实页截图：`/tmp/omp-sshots-1598d9d682e2c62e.webp`（390 Apps
+      错误与重试）、`/tmp/omp-sshots-1598da1b31e2c62f.webp`（390 Notes
+      加载态）。
+- [x] D. Desktop Window 行为（1024 & 1440 Widgets）： Multi-window
+      双窗口同时呈现；单 chrome 契约（每个窗口 1 个 chrome，0 个
+      WorkspaceSurface 标题栏，h2 标题 axe 0）；
+      Drag/resize（WindowResizeHandles 提供 separator
+      `aria-valuenow`/`aria-valuetext` 并随 keyboard Arrow 响应）；
+      Minimize/maximize/restore 状态机；Overview 窗口总览选择还原；Dock
+      焦点还原； DesktopCanvas 未遮挡区域向 Home 搜索框完美
+      pointer-through；reduced-motion 禁用动画/过渡。
+- [x] Window Menu portal 事件与标题栏 DOM 隔离：1024 light
+      鼠标点击左分屏后窗口为 Canvas 左半区（496×598 / 992×598）；1440 dark 用
+      ArrowDown/Enter 选择右分屏成功。两次实页 axe 均为 0 confirmed
+      violations、2 incomplete；截图
+      `/tmp/omp-sshots-1598e99bdab2898c.webp`。矩阵在 1024/1440 均验证 Snap
+      geometry 与 Restore 原 frame。
+- [x] E. Persistence / Identity 隔离： 1440 窗口坐标刷新保持；1440→1024 resize
+      自动 clamp 保证标题栏在安全区内可交互； Stale note
+      清理（已删除便签窗口静默忽略不崩溃）； Unsupported version 999 与 Corrupt
+      version 1 分别回退为默认尺寸，不写污染数据； IndexedDB unavailable
+      抛错回退时窗口正常 open/drag 且禁止向 localStorage 写入 desktop layout；
+      同 context logout -> 注册登录 User 2（默认独立无实体窗口） -> logout ->
+      重新登录 User 1（自定义坐标完整恢复）； Zen ↔ Widgets 切换 Dock/Canvas
+      正常卸载与恢复。
+- [x] F. Tablet constrained 约束（768 Widgets）：
+      单活动窗口（打开另一窗口时前一窗口自动
+      constrained-hidden）；无自由拖拽与缩放（0 个 resize handles，titlebar
+      拖拽坐标固定）； 3
+      档尺寸预设（中等尺寸、大尺寸、全屏）按预设比例调整；Note
+      嵌套编辑在约束窗内无横向溢出；Dock 无 Overview 总览按钮。
+      实测截图：`/tmp/omp-sshots-1598ce7cb7296ea8.webp`（768 dark widgets
+      on）、`/tmp/omp-sshots-1598ceac4b296eaa.webp`（768 light widgets off）。
+- [x] 最终 `deno task test:workspace`：8 passed（85 steps）、0 failed。全套 E2E
+      矩阵与既有套件全量绿色通过。

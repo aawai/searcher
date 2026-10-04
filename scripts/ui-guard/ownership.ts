@@ -22,7 +22,13 @@ export type OwnershipRuleId =
     | "undefined-css-token"
     | "native-destructive-confirm"
     | "forbidden-legacy-ui-class"
-    | "css-prefix-ownership";
+    | "css-prefix-ownership"
+    | "workspace-core-isolation"
+    | "desktop-persistence-boundary"
+    | "canvas-coordinate-owner"
+    | "home-document-token"
+    | "widgets-no-adhoc-window"
+    | "forbidden-legacy-path";
 
 export interface OwnershipViolation {
     rule: OwnershipRuleId;
@@ -126,6 +132,15 @@ export const FORBIDDEN_LEGACY_UI_CLASSES: readonly string[] = [
     "apps-workspace-empty",
     "apps-workspace-empty-title",
     "workspace-empty",
+    // Legacy Widgets desktop fixed WorkspacePanel clones & dead presenter classes (Issue #92)
+    "workspace-panel-fixed",
+    "workspace-panel--fixed",
+    "widgets-workspace-panel",
+    "desktop-workspace-panel",
+    "desktop-window-workspace-panel",
+    "desktop-demo",
+    "desktop-demo-content",
+    "workspace-dock-item",
 ] as const;
 
 /**
@@ -172,6 +187,15 @@ export const CANONICAL_SEMANTIC_CLASS_OWNERS: Record<
     "workspace-toolbar": [
         "web/src/components/searcher/semantic.css",
     ],
+    // Presenter single-owner classes (Issue #92)
+    "workspace-surface": ["web/src/features/workspace/workspace.css"],
+    "workspace-panel": ["web/src/features/workspace/workspace.css"],
+    "workspace-sheet": ["web/src/features/workspace/workspace.css"],
+    "workspace-shell": ["web/src/features/workspace/workspace.css"],
+    "desktop-canvas": ["web/src/features/desktop/desktop.css"],
+    "desktop-window": ["web/src/features/desktop/desktop.css"],
+    "desktop-dock": ["web/src/features/desktop/desktop.css"],
+    "desktop-overview": ["web/src/features/desktop/desktop.css"],
 };
 /**
  * Canonical mapping between CSS feature class prefixes and their authorized owner files.
@@ -192,7 +216,20 @@ export const CSS_PREFIX_OWNER_MAP: Record<string, readonly string[]> = {
     "zen-": ["web/src/features/home-layouts/home-layouts.css"],
     "auth-": ["web/src/app/auth.css"],
     "design-lab-": ["web/src/design-lab/design-lab.css"],
+    "desktop-": ["web/src/features/desktop/desktop.css"],
+    "window-": ["web/src/features/desktop/desktop.css"],
+    "controlled-note-": ["web/src/features/home-layouts/home-layouts.css"],
+    "controlled-notes-": ["web/src/features/home-layouts/home-layouts.css"],
 };
+
+/**
+ * Forbidden legacy file paths that have been removed and must never be reintroduced.
+ */
+export const FORBIDDEN_LEGACY_PATHS: readonly string[] = [
+    "web/src/features/desktop/DesktopDemo.tsx",
+    "web/src/features/desktop/WidgetsPanel.tsx",
+    "web/src/features/workspace/WidgetsPanel.tsx",
+] as const;
 
 /**
  * Helper to strip CSS comments while preserving line breaks for accurate line numbers.
@@ -698,7 +735,747 @@ export function checkRuleF_CssPrefixOwnership(
 }
 
 /**
- * Recursively scans target directory and enforces all P3 ownership rules (A-F).
+ * Rule G: workspace-core-isolation
+ *
+ * Enforces architectural boundaries for Workspace Core (web/src/features/workspace/):
+ * 1. Core must never depend on desktop geometry modules (desktop-geometry, constrained-geometry, etc.)
+ *    or spatial geometry types (SafeRect, Frame, SnapMode, WindowMode, clampFrame, etc.).
+ * 2. Core must not define or use 'closed' route view variant.
+ *    Presenter visibility is owned by Host (activeWorkspace / DesktopState.windows), not Core routes.
+ */
+export function checkRuleG_WorkspaceCoreIsolation(
+    file: string,
+    content: string,
+): OwnershipViolation[] {
+    const normPath = file.replaceAll("\\", "/");
+    if (!normPath.includes("features/workspace/")) {
+        return [];
+    }
+    if (
+        isTestFile(normPath) ||
+        (!normPath.endsWith(".ts") && !normPath.endsWith(".tsx"))
+    ) {
+        return [];
+    }
+
+    const violations: OwnershipViolation[] = [];
+    const source = ts.createSourceFile(
+        file,
+        content,
+        ts.ScriptTarget.Latest,
+        true,
+        normPath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
+
+    const GEOMETRY_MODULE_REGEX =
+        /(desktop-geometry|constrained-geometry|features\/desktop\/.*geometry|desktop\/.*geometry|\bgeometry(\.ts)?$)/i;
+    const FORBIDDEN_GEOMETRY_SYMBOLS: Record<string, true> = {
+        SafeRect: true,
+        Frame: true,
+        SnapMode: true,
+        WindowMode: true,
+        NormalizedFrame: true,
+        clampFrame: true,
+        snapFrame: true,
+        calculateConstrainedFrame: true,
+    };
+
+    visitNodes(source, (node) => {
+        // Check 1: Import declarations
+        if (ts.isImportDeclaration(node)) {
+            const specifier = node.moduleSpecifier;
+            if (ts.isStringLiteral(specifier)) {
+                if (GEOMETRY_MODULE_REGEX.test(specifier.text)) {
+                    const { line, character } = source
+                        .getLineAndCharacterOfPosition(
+                            node.getStart(source),
+                        );
+                    violations.push({
+                        rule: "workspace-core-isolation",
+                        file: normPath,
+                        line: line + 1,
+                        column: character + 1,
+                        message:
+                            `Workspace Core must never depend on desktop geometry module '${specifier.text}'. Core must remain presenter-agnostic domain state.`,
+                        snippet: node.getText(source),
+                    });
+                }
+            }
+
+            // Named import bindings
+            if (
+                node.importClause?.namedBindings &&
+                ts.isNamedImports(node.importClause.namedBindings)
+            ) {
+                for (
+                    const element of node.importClause.namedBindings.elements
+                ) {
+                    const importedName = element.propertyName?.text ??
+                        element.name.text;
+                    if (FORBIDDEN_GEOMETRY_SYMBOLS[importedName]) {
+                        const { line, character } = source
+                            .getLineAndCharacterOfPosition(
+                                element.getStart(source),
+                            );
+                        violations.push({
+                            rule: "workspace-core-isolation",
+                            file: normPath,
+                            line: line + 1,
+                            column: character + 1,
+                            message:
+                                `Workspace Core must never import desktop geometry symbol '${importedName}'. Core must remain independent of spatial geometry.`,
+                            snippet: element.getText(source),
+                        });
+                    }
+                }
+            }
+        }
+
+        // Check 2: 'closed' view in route types / objects
+        if (ts.isPropertySignature(node) || ts.isPropertyAssignment(node)) {
+            const propName = node.name.getText(source);
+            if (propName === "view" || propName === '"view"') {
+                let isClosedLiteral = false;
+                if (
+                    ts.isPropertySignature(node) && node.type &&
+                    ts.isLiteralTypeNode(node.type)
+                ) {
+                    if (
+                        ts.isStringLiteral(node.type.literal) &&
+                        node.type.literal.text === "closed"
+                    ) {
+                        isClosedLiteral = true;
+                    }
+                } else if (
+                    ts.isPropertyAssignment(node) &&
+                    ts.isStringLiteral(node.initializer) &&
+                    node.initializer.text === "closed"
+                ) {
+                    isClosedLiteral = true;
+                }
+
+                if (isClosedLiteral) {
+                    const { line, character } = source
+                        .getLineAndCharacterOfPosition(node.getStart(source));
+                    violations.push({
+                        rule: "workspace-core-isolation",
+                        file: normPath,
+                        line: line + 1,
+                        column: character + 1,
+                        message:
+                            `Workspace Core must not define or use 'closed' route view. Presenter visibility is owned by Host (activeWorkspace / DesktopState.windows).`,
+                        snippet: node.getText(source),
+                    });
+                }
+            }
+        }
+    });
+
+    return violations;
+}
+
+/**
+ * Rule H: desktop-persistence-boundary
+ *
+ * Enforces desktop persistence rules (web/src/features/desktop/):
+ * 1. Desktop persistence must reuse web/src/lib/local.ts (IndexedDB helper).
+ * 2. Direct browser localStorage is strictly forbidden.
+ * 3. Widgets desktop window geometry must never write to or reference 'note_layouts'.
+ * 4. Direct raw indexedDB.open() bypassing local.ts is forbidden.
+ */
+export function checkRuleH_DesktopPersistenceBoundary(
+    file: string,
+    content: string,
+): OwnershipViolation[] {
+    const normPath = file.replaceAll("\\", "/");
+    if (!normPath.includes("features/desktop/")) {
+        return [];
+    }
+    if (
+        isTestFile(normPath) ||
+        (!normPath.endsWith(".ts") && !normPath.endsWith(".tsx"))
+    ) {
+        return [];
+    }
+
+    const violations: OwnershipViolation[] = [];
+    const source = ts.createSourceFile(
+        file,
+        content,
+        ts.ScriptTarget.Latest,
+        true,
+        normPath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
+
+    let importsLocalHelper = false;
+
+    visitNodes(source, (node) => {
+        // Track import of local.ts
+        if (ts.isImportDeclaration(node)) {
+            const spec = node.moduleSpecifier;
+            if (ts.isStringLiteral(spec) && /local(\.ts)?$/.test(spec.text)) {
+                importsLocalHelper = true;
+            }
+        }
+
+        // Check A: localStorage usage
+        if (ts.isIdentifier(node) && node.text === "localStorage") {
+            const { line, character } = source.getLineAndCharacterOfPosition(
+                node.getStart(source),
+            );
+            violations.push({
+                rule: "desktop-persistence-boundary",
+                file: normPath,
+                line: line + 1,
+                column: character + 1,
+                message:
+                    "Desktop persistence must reuse web/src/lib/local.ts (IndexedDB); direct browser localStorage is strictly forbidden.",
+                snippet: node.parent
+                    ? node.parent.getText(source)
+                    : node.getText(source),
+            });
+        }
+
+        // Check B: note_layouts reference
+        if (ts.isStringLiteral(node) || ts.isIdentifier(node)) {
+            const text = ts.isStringLiteral(node) ? node.text : node.text;
+            if (text.includes("note_layouts") || text.includes("noteLayouts")) {
+                const { line, character } = source
+                    .getLineAndCharacterOfPosition(
+                        node.getStart(source),
+                    );
+                violations.push({
+                    rule: "desktop-persistence-boundary",
+                    file: normPath,
+                    line: line + 1,
+                    column: character + 1,
+                    message:
+                        "Widgets desktop window geometry must never write to or reference 'note_layouts' (which belongs solely to Zen FloatingNotes).",
+                    snippet: node.getText(source),
+                });
+            }
+        }
+
+        // Check C: raw indexedDB.open
+        if (ts.isCallExpression(node)) {
+            const exprText = node.expression.getText(source);
+            if (
+                exprText === "indexedDB.open" ||
+                exprText === "window.indexedDB.open"
+            ) {
+                const { line, character } = source
+                    .getLineAndCharacterOfPosition(
+                        node.getStart(source),
+                    );
+                violations.push({
+                    rule: "desktop-persistence-boundary",
+                    file: normPath,
+                    line: line + 1,
+                    column: character + 1,
+                    message:
+                        "Desktop features must not call raw indexedDB.open(); desktop persistence must reuse web/src/lib/local.ts.",
+                    snippet: node.getText(source),
+                });
+            }
+        }
+    });
+
+    // Check D: If it is desktop-persistence.ts, ensure it reuses local.ts
+    if (normPath.endsWith("desktop-persistence.ts") && !importsLocalHelper) {
+        violations.push({
+            rule: "desktop-persistence-boundary",
+            file: normPath,
+            line: 1,
+            column: 1,
+            message:
+                "Desktop persistence engine (desktop-persistence.ts) must import and reuse web/src/lib/local.ts.",
+            snippet: "import ... from '../../lib/local.ts'",
+        });
+    }
+
+    return violations;
+}
+
+/**
+ * Rule I: canvas-coordinate-owner
+ *
+ * Enforces DesktopCanvas single safe-rect coordinate owner:
+ * 1. DesktopCanvas (web/src/features/desktop/DesktopCanvas.tsx) is the sole authorized owner
+ *    that may declare/derive a safe-rect coordinate system from Viewport/Topbar/Dock DOM measurements.
+ * 2. Files outside DesktopCanvas.tsx (in desktop/ or home-layouts/) are forbidden to declare
+ *    competing geometry hooks or functions that measure DOM/viewport (getBoundingClientRect,
+ *    innerWidth/innerHeight, querySelector) to produce/return a SafeRect.
+ * 3. Legitimate geometry pure calculation functions (e.g. clampFrame, snapFrame,
+ *    calculateConstrainedFrame) taking SafeRect as input without DOM measurement are explicitly allowed.
+ */
+export function checkRuleI_CanvasCoordinateOwner(
+    file: string,
+    content: string,
+): OwnershipViolation[] {
+    const normPath = file.replaceAll("\\", "/");
+    if (
+        !normPath.includes("features/desktop/") &&
+        !normPath.includes("features/home-layouts/")
+    ) {
+        return [];
+    }
+    if (
+        isTestFile(normPath) ||
+        (!normPath.endsWith(".ts") && !normPath.endsWith(".tsx"))
+    ) {
+        return [];
+    }
+    // DesktopCanvas.tsx is the sole authorized owner
+    if (normPath.endsWith("features/desktop/DesktopCanvas.tsx")) {
+        return [];
+    }
+
+    const violations: OwnershipViolation[] = [];
+    const source = ts.createSourceFile(
+        file,
+        content,
+        ts.ScriptTarget.Latest,
+        true,
+        normPath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
+
+    function measuresDomOrViewport(fnNode: ts.Node): boolean {
+        let hasMeasurement = false;
+        visitNodes(fnNode, (node) => {
+            if (hasMeasurement) return;
+            if (ts.isIdentifier(node)) {
+                if (
+                    node.text === "innerWidth" ||
+                    node.text === "innerHeight" ||
+                    node.text === "getBoundingClientRect"
+                ) {
+                    hasMeasurement = true;
+                }
+            } else if (ts.isPropertyAccessExpression(node)) {
+                const prop = node.name.text;
+                if (
+                    prop === "getBoundingClientRect" ||
+                    prop === "innerWidth" ||
+                    prop === "innerHeight"
+                ) {
+                    hasMeasurement = true;
+                }
+            }
+        });
+        return hasMeasurement;
+    }
+
+    function hasSafeRectType(typeNode?: ts.TypeNode): boolean {
+        if (!typeNode) return false;
+        let isSafeRect = false;
+        visitNodes(typeNode, (node) => {
+            if (ts.isIdentifier(node) && node.text === "SafeRect") {
+                isSafeRect = true;
+            }
+        });
+        return isSafeRect;
+    }
+
+    visitNodes(source, (node) => {
+        // 1. Function declarations: function foo(...): SafeRect { ... }
+        if (ts.isFunctionDeclaration(node) && node.body) {
+            const returnsSafeRect = hasSafeRectType(node.type);
+            if (returnsSafeRect && measuresDomOrViewport(node.body)) {
+                const fnName = node.name
+                    ? node.name.text
+                    : "anonymous function";
+                const { line, character } = source
+                    .getLineAndCharacterOfPosition(
+                        node.getStart(source),
+                    );
+                violations.push({
+                    rule: "canvas-coordinate-owner",
+                    file: normPath,
+                    line: line + 1,
+                    column: character + 1,
+                    message:
+                        `Competing safe-rect derivation function '${fnName}' detected. Desktop safe-rect coordinate measurement is exclusively owned by 'useDesktopSafeRect' in DesktopCanvas.tsx.`,
+                    snippet: node.name ? node.name.getText(source) : fnName,
+                });
+            }
+        }
+
+        // 2. Variable declarations: const foo = (...): SafeRect => { ... } or const foo: () => SafeRect = ...
+        if (ts.isVariableDeclaration(node) && node.initializer) {
+            const hasAnnotation = hasSafeRectType(node.type);
+            let returnsSafeRect = hasAnnotation;
+            let fnBody: ts.Node | null = null;
+
+            if (
+                ts.isArrowFunction(node.initializer) ||
+                ts.isFunctionExpression(node.initializer)
+            ) {
+                if (hasSafeRectType(node.initializer.type)) {
+                    returnsSafeRect = true;
+                }
+                fnBody = node.initializer.body;
+            }
+
+            if (returnsSafeRect && fnBody && measuresDomOrViewport(fnBody)) {
+                const varName = node.name.getText(source);
+                const { line, character } = source
+                    .getLineAndCharacterOfPosition(
+                        node.getStart(source),
+                    );
+                violations.push({
+                    rule: "canvas-coordinate-owner",
+                    file: normPath,
+                    line: line + 1,
+                    column: character + 1,
+                    message:
+                        `Competing safe-rect derivation function '${varName}' detected. Desktop safe-rect coordinate measurement is exclusively owned by 'useDesktopSafeRect' in DesktopCanvas.tsx.`,
+                    snippet: varName,
+                });
+            }
+        }
+    });
+
+    return violations;
+}
+
+/**
+ * Rule J: home-document-token
+ *
+ * Enforces that Home layout styles and components do not pollute document-level visual tokens:
+ * 1. Home stylesheets (web/src/features/home-layouts/ and launcher.css) must not declare or
+ *    override document-level visual tokens (--background, --foreground, --surface*, --radius*, --border*,
+ *    --accent*, --shadow-l*, --window-*) on document root selectors (:root, html, body, [data-theme],
+ *    and combinations like :root[data-theme='dark'], html[data-theme]).
+ *    Global visual tokens are exclusively owned by web/src/design-system/tokens.css & global.css.
+ * 2. Home TSX components must not directly mutate document.documentElement.style or document.body.style.
+ */
+export function checkRuleJ_HomeDocumentTokenPollution(
+    file: string,
+    content: string,
+): OwnershipViolation[] {
+    const normPath = file.replaceAll("\\", "/");
+    const isHomeCss = normPath.endsWith(".css") && (
+        normPath.includes("features/home-layouts/") ||
+        normPath.endsWith("components/searcher/launcher.css")
+    );
+    const isHomeTsx = normPath.endsWith(".tsx") && (
+        normPath.includes("features/home-layouts/") ||
+        normPath.includes("components/searcher/")
+    );
+
+    if (!isHomeCss && !isHomeTsx) {
+        return [];
+    }
+    if (isTestFile(normPath)) {
+        return [];
+    }
+
+    const violations: OwnershipViolation[] = [];
+
+    const PROTECTED_GLOBAL_TOKENS: Record<string, true> = {
+        "--background": true,
+        "--foreground": true,
+        "--surface": true,
+        "--surface-soft": true,
+        "--surface-solid": true,
+        "--surface-l0": true,
+        "--surface-l1": true,
+        "--surface-l2": true,
+        "--surface-l3": true,
+        "--surface-navigation": true,
+        "--border": true,
+        "--border-subtle": true,
+        "--accent": true,
+        "--accent-hover": true,
+        "--accent-active": true,
+        "--accent-foreground": true,
+        "--accent-soft": true,
+        "--radius": true,
+        "--radius-sm": true,
+        "--radius-md": true,
+        "--radius-lg": true,
+        "--radius-full": true,
+        "--shadow-l1": true,
+        "--shadow-l2": true,
+        "--shadow-l3": true,
+        "--shadow-navigation": true,
+        "--window-surface": true,
+        "--window-border": true,
+        "--shadow-window": true,
+        "--radius-window": true,
+        "--surface-window": true,
+        "--surface-window-active": true,
+        "--border-window": true,
+        "--border-window-active": true,
+        "--shadow-window-active": true,
+        "--elevation-window-base": true,
+        "--elevation-desktop-dock": true,
+        "--desktop-window-gap": true,
+    };
+
+    if (isHomeCss) {
+        const cleanContent = stripCssComments(content);
+        const ruleRegex = /([^{}]+)\{([^{}]+)\}/g;
+        let match: RegExpExecArray | null = null;
+
+        while ((match = ruleRegex.exec(cleanContent)) !== null) {
+            const rawSelector = match[1].trim();
+            const body = match[2];
+            const selectorList = rawSelector.split(",").map((s) => s.trim());
+
+            // Check if selector targets document-level root scope
+            // Matches :root, html, body, and combinations like :root[data-theme='dark'], html[data-theme], body.dark
+            // But does NOT match scoped descendant selectors like .home-widgets, [data-theme="dark"] .home-widgets
+            const isDocLevel = selectorList.some((sel) => {
+                const normalized = sel.replace(/\s+/g, " ").trim();
+                // If it contains a descendant space before a class (e.g. "[data-theme='dark'] .home-widgets"), it is scoped!
+                if (/\s+\.[a-zA-Z0-9_-]+/.test(normalized)) {
+                    return false;
+                }
+                return (
+                    /^(:root|html|body)(\[[^\]]+\]|\.[a-zA-Z0-9_-]+|:[a-zA-Z0-9_-]+)*$/
+                        .test(
+                            normalized,
+                        ) ||
+                    /^\[data-theme(=[^\]]+)?\]$/.test(normalized)
+                );
+            });
+
+            if (isDocLevel) {
+                const declRegex = /(--[a-zA-Z0-9_-]+)\s*:/g;
+                let declMatch: RegExpExecArray | null = null;
+                while ((declMatch = declRegex.exec(body)) !== null) {
+                    const tokenName = declMatch[1];
+                    if (PROTECTED_GLOBAL_TOKENS[tokenName]) {
+                        const preText = cleanContent.slice(0, match.index);
+                        const line = preText.split("\n").length;
+                        violations.push({
+                            rule: "home-document-token",
+                            file: normPath,
+                            line,
+                            column: 1,
+                            message:
+                                `Home stylesheet must not declare or override document-level global visual token '${tokenName}' in '${rawSelector}'. Document tokens are strictly owned by tokens.css / global.css.`,
+                            snippet: `${rawSelector} { ${tokenName}: ... }`,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    if (isHomeTsx) {
+        const source = ts.createSourceFile(
+            file,
+            content,
+            ts.ScriptTarget.Latest,
+            true,
+            ts.ScriptKind.TSX,
+        );
+
+        visitNodes(source, (node) => {
+            if (ts.isPropertyAccessExpression(node)) {
+                const exprText = node.getText(source);
+                if (
+                    exprText === "document.documentElement.style" ||
+                    exprText === "document.body.style"
+                ) {
+                    const { line, character } = source
+                        .getLineAndCharacterOfPosition(node.getStart(source));
+                    violations.push({
+                        rule: "home-document-token",
+                        file: normPath,
+                        line: line + 1,
+                        column: character + 1,
+                        message:
+                            "Home components must not directly mutate documentElement or document.body styles.",
+                        snippet: exprText,
+                    });
+                }
+            }
+        });
+    }
+
+    return violations;
+}
+
+/**
+ * Rule K: widgets-no-adhoc-window
+ *
+ * Enforces that WidgetsLayout and home layout components do not implement ad-hoc absolute windows:
+ * 1. Must not import Desktop Window Manager presenter components (DesktopWindow, DesktopWorkspaces, DesktopCanvas, DesktopDock),
+ *    including via import aliases (e.g. import { DesktopWindow as Foo }).
+ * 2. Must not render ad-hoc floating/absolute window containers simulating windows inside WidgetsLayout
+ *    via window container class names or inline style={{ position: 'absolute', zIndex: ... }}.
+ *    Windows belong exclusively to DesktopWorkspaces at the desktop layer.
+ */
+export function checkRuleK_WidgetsNoAdhocWindow(
+    file: string,
+    content: string,
+): OwnershipViolation[] {
+    const normPath = file.replaceAll("\\", "/");
+    if (!normPath.includes("features/home-layouts/")) {
+        return [];
+    }
+    if (isTestFile(normPath) || !normPath.endsWith(".tsx")) {
+        return [];
+    }
+
+    const violations: OwnershipViolation[] = [];
+    const source = ts.createSourceFile(
+        file,
+        content,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX,
+    );
+
+    const FORBIDDEN_WINDOW_IMPORTS: Record<string, true> = {
+        DesktopWindow: true,
+        DesktopCanvas: true,
+        DesktopWorkspaces: true,
+        DesktopDock: true,
+    };
+
+    visitNodes(source, (node) => {
+        // Check 1: Forbidden window component imports with alias checking (element.propertyName ?? element.name)
+        if (ts.isImportDeclaration(node)) {
+            if (
+                node.importClause?.namedBindings &&
+                ts.isNamedImports(node.importClause.namedBindings)
+            ) {
+                for (
+                    const element of node.importClause.namedBindings.elements
+                ) {
+                    const originalName = element.propertyName
+                        ? element.propertyName.text
+                        : element.name.text;
+                    if (FORBIDDEN_WINDOW_IMPORTS[originalName]) {
+                        const { line, character } = source
+                            .getLineAndCharacterOfPosition(
+                                element.getStart(source),
+                            );
+                        violations.push({
+                            rule: "widgets-no-adhoc-window",
+                            file: normPath,
+                            line: line + 1,
+                            column: character + 1,
+                            message:
+                                `WidgetsLayout must not import desktop window component '${originalName}' (imported as '${element.name.text}'). Desktop windows belong exclusively to DesktopWorkspaces.`,
+                            snippet: element.getText(source),
+                        });
+                    }
+                }
+            }
+        }
+
+        // Check 2: JSX elements simulating ad-hoc window containers via class names
+        if (
+            ts.isJsxAttribute(node) &&
+            node.name.getText(source) === "className" &&
+            node.initializer
+        ) {
+            const classText = node.initializer.getText(source);
+            if (
+                /\b(adhoc-window|desktop-window|floating-window)\b/.test(
+                    classText,
+                )
+            ) {
+                const { line, character } = source
+                    .getLineAndCharacterOfPosition(
+                        node.getStart(source),
+                    );
+                violations.push({
+                    rule: "widgets-no-adhoc-window",
+                    file: normPath,
+                    line: line + 1,
+                    column: character + 1,
+                    message:
+                        "WidgetsLayout must not render ad-hoc floating/desktop window containers.",
+                    snippet: classText,
+                });
+            }
+        }
+
+        // Check 3: Inline style simulating window with position: 'absolute' AND zIndex
+        if (
+            ts.isJsxAttribute(node) &&
+            node.name.getText(source) === "style" &&
+            node.initializer &&
+            ts.isJsxExpression(node.initializer) &&
+            node.initializer.expression &&
+            ts.isObjectLiteralExpression(node.initializer.expression)
+        ) {
+            let hasAbsolutePosition = false;
+            let hasZIndex = false;
+
+            for (const prop of node.initializer.expression.properties) {
+                if (ts.isPropertyAssignment(prop)) {
+                    const propName = prop.name.getText(source).replaceAll(
+                        /['"]/g,
+                        "",
+                    );
+                    const propVal = prop.initializer.getText(source).replaceAll(
+                        /['"]/g,
+                        "",
+                    );
+                    if (propName === "position" && propVal === "absolute") {
+                        hasAbsolutePosition = true;
+                    }
+                    if (propName === "zIndex") {
+                        hasZIndex = true;
+                    }
+                }
+            }
+
+            if (hasAbsolutePosition && hasZIndex) {
+                const { line, character } = source
+                    .getLineAndCharacterOfPosition(
+                        node.getStart(source),
+                    );
+                violations.push({
+                    rule: "widgets-no-adhoc-window",
+                    file: normPath,
+                    line: line + 1,
+                    column: character + 1,
+                    message:
+                        "WidgetsLayout must not implement ad-hoc absolute window containers with inline position: 'absolute' and zIndex. Windows must be managed by the Desktop Window Manager.",
+                    snippet: node.getText(source),
+                });
+            }
+        }
+    });
+
+    return violations;
+}
+
+/**
+ * Rule L: forbidden-legacy-path
+ *
+ * Enforces that removed legacy files and components do not reappear.
+ */
+export function checkRuleL_ForbiddenLegacyPaths(
+    file: string,
+): OwnershipViolation[] {
+    const normPath = file.replaceAll("\\", "/");
+    for (const legacyPath of FORBIDDEN_LEGACY_PATHS) {
+        if (normPath.endsWith(legacyPath) || normPath === legacyPath) {
+            return [{
+                rule: "forbidden-legacy-path",
+                file: normPath,
+                line: 1,
+                column: 1,
+                message:
+                    `Forbidden legacy presentation file '${legacyPath}' detected. Legacy presentation files have been abolished and must not be reintroduced.`,
+                snippet: legacyPath,
+            }];
+        }
+    }
+    return [];
+}
+
+/**
+ * Recursively scans target directory and enforces all P3 & Issue #92 ownership rules (A-L).
  * Ownership violations are absolute: NOT subject to baseline, allowances, or exceptions.
  */
 export async function scanOwnership(
@@ -754,6 +1531,8 @@ export async function scanOwnership(
         const relPath = relative(baseDir, entry.path).replaceAll("\\", "/");
         const content = await Deno.readTextFile(entry.path);
 
+        violations.push(...checkRuleL_ForbiddenLegacyPaths(relPath));
+
         if (normPath.endsWith(".css")) {
             cssFiles.push({ file: relPath, content });
             violations.push(
@@ -764,16 +1543,43 @@ export async function scanOwnership(
                 ...checkRuleE_ForbiddenLegacyUiClass(relPath, content),
             );
             violations.push(...checkRuleF_CssPrefixOwnership(relPath, content));
+            violations.push(
+                ...checkRuleJ_HomeDocumentTokenPollution(relPath, content),
+            );
         } else if (normPath.endsWith(".tsx")) {
             violations.push(...checkRuleB_PageLayout(relPath, content));
             violations.push(...checkRuleD_NativeConfirm(relPath, content));
             violations.push(
                 ...checkRuleE_ForbiddenLegacyUiClass(relPath, content),
             );
+            violations.push(
+                ...checkRuleG_WorkspaceCoreIsolation(relPath, content),
+            );
+            violations.push(
+                ...checkRuleH_DesktopPersistenceBoundary(relPath, content),
+            );
+            violations.push(
+                ...checkRuleI_CanvasCoordinateOwner(relPath, content),
+            );
+            violations.push(
+                ...checkRuleJ_HomeDocumentTokenPollution(relPath, content),
+            );
+            violations.push(
+                ...checkRuleK_WidgetsNoAdhocWindow(relPath, content),
+            );
         } else if (normPath.endsWith(".ts")) {
             violations.push(...checkRuleD_NativeConfirm(relPath, content));
             violations.push(
                 ...checkRuleE_ForbiddenLegacyUiClass(relPath, content),
+            );
+            violations.push(
+                ...checkRuleG_WorkspaceCoreIsolation(relPath, content),
+            );
+            violations.push(
+                ...checkRuleH_DesktopPersistenceBoundary(relPath, content),
+            );
+            violations.push(
+                ...checkRuleI_CanvasCoordinateOwner(relPath, content),
             );
         }
     }
@@ -800,6 +1606,12 @@ export async function scanOwnership(
         "native-destructive-confirm": [],
         "forbidden-legacy-ui-class": [],
         "css-prefix-ownership": [],
+        "workspace-core-isolation": [],
+        "desktop-persistence-boundary": [],
+        "canvas-coordinate-owner": [],
+        "home-document-token": [],
+        "widgets-no-adhoc-window": [],
+        "forbidden-legacy-path": [],
     };
 
     for (const v of violations) {
@@ -821,39 +1633,69 @@ export function formatOwnershipReport(result: OwnershipCheckResult): string {
     const lines: string[] = [];
     lines.push("============================================================");
     lines.push(
-        "Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 P3)",
+        "Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)",
     );
     lines.push("============================================================");
     lines.push(`Total scanned files: ${result.totalFilesScanned}`);
     lines.push(`Total violations:    ${result.violations.length}`);
     lines.push(
-        `  Rule A (feature-selector-in-global):  ${
+        `  Rule A (feature-selector-in-global):    ${
             result.byRule["feature-selector-in-global"].length
         }`,
     );
     lines.push(
-        `  Rule B (legacy-page-layout):          ${
+        `  Rule B (legacy-page-layout):            ${
             result.byRule["legacy-page-layout"].length
         }`,
     );
     lines.push(
-        `  Rule C (undefined-css-token):         ${
+        `  Rule C (undefined-css-token):           ${
             result.byRule["undefined-css-token"].length
         }`,
     );
     lines.push(
-        `  Rule D (native-destructive-confirm):  ${
+        `  Rule D (native-destructive-confirm):    ${
             result.byRule["native-destructive-confirm"].length
         }`,
     );
     lines.push(
-        `  Rule E (forbidden-legacy-ui-class):   ${
+        `  Rule E (forbidden-legacy-ui-class):     ${
             result.byRule["forbidden-legacy-ui-class"].length
         }`,
     );
     lines.push(
-        `  Rule F (css-prefix-ownership):        ${
+        `  Rule F (css-prefix-ownership):          ${
             result.byRule["css-prefix-ownership"].length
+        }`,
+    );
+    lines.push(
+        `  Rule G (workspace-core-isolation):      ${
+            result.byRule["workspace-core-isolation"].length
+        }`,
+    );
+    lines.push(
+        `  Rule H (desktop-persistence-boundary):  ${
+            result.byRule["desktop-persistence-boundary"].length
+        }`,
+    );
+    lines.push(
+        `  Rule I (canvas-coordinate-owner):       ${
+            result.byRule["canvas-coordinate-owner"].length
+        }`,
+    );
+    lines.push(
+        `  Rule J (home-document-token):           ${
+            result.byRule["home-document-token"].length
+        }`,
+    );
+    lines.push(
+        `  Rule K (widgets-no-adhoc-window):       ${
+            result.byRule["widgets-no-adhoc-window"].length
+        }`,
+    );
+    lines.push(
+        `  Rule L (forbidden-legacy-path):         ${
+            result.byRule["forbidden-legacy-path"].length
         }`,
     );
     lines.push("------------------------------------------------------------");

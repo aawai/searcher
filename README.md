@@ -76,7 +76,7 @@ deno task test:routing
 
 `test:routing` 先构建生产前端，再启动隔离的真实 Hono 服务、内存数据库与临时资源目录，验证直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航；不连接开发实例或使用真实账户。
 
-`deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序与 Bento 六套实页回归，使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及响应式/主题布局；不会使用真实账户或开发数据库。
+`deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序、Bento、workspace-contract 与 workspace-matrix 八套实页回归，使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的 A–F 分层响应式、主题、壁纸、窗口、持久化与 tablet contract；不会使用真实账户或开发数据库。
 
 `deno task test:wallpaper` 构建生产前端并运行壁纸 Playwright 链路：偏左/偏右主体构图、双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL 草稿、同步故障恢复、匿名持久化与 reduced-motion。使用隔离数据库和临时资源目录；PR/main CI 自动执行该链路、`deno task test` 与既有 UI 门禁。
 ## UI Contract 与门禁
