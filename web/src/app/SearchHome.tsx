@@ -32,18 +32,28 @@ import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
+import { WorkspaceNavigation } from "../features/workspace/WorkspaceNavigation.tsx";
 import {
     AppsWorkspace,
     type AppsWorkspaceProps,
 } from "../features/workspace/AppsWorkspace.tsx";
 import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
 import {
-    initialWorkspaceState,
     isAppsWorkspaceView,
+    type WorkspaceAction,
     type WorkspaceKind,
-    workspaceReducer,
     type WorkspaceState,
 } from "../features/workspace/workspace-state.ts";
+import {
+    initialWorkspaceHost,
+    workspaceHostReducer,
+} from "../features/workspace/workspace-host.ts";
+import {
+    desktopReducer,
+    initialDesktopState,
+} from "../features/desktop/desktop-state.ts";
+import { useDesktopSafeRect } from "../features/desktop/DesktopCanvas.tsx";
+import { DesktopWorkspaces } from "../features/desktop/DesktopWorkspaces.tsx";
 
 export interface WebAppGroup {
     id: string;
@@ -83,53 +93,130 @@ export function SearchHome() {
     const [appsError, setAppsError] = useState("");
     const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
     const [reloadApps, setReloadApps] = useState(0);
-    const [workspace, dispatchWorkspace] = useReducer(
-        workspaceReducer,
-        initialWorkspaceState,
+    const [host, dispatchHost] = useReducer(
+        workspaceHostReducer,
+        initialWorkspaceHost,
     );
+    const [desktop, dispatchDesktop] = useReducer(
+        desktopReducer,
+        initialDesktopState,
+    );
+    const [dockElement, setDockElement] = useState<HTMLElement | null>(null);
+    const safeRect = useDesktopSafeRect(dockElement);
+    const [mobile, setMobile] = useState(() =>
+        globalThis.matchMedia("(max-width: 767px)").matches
+    );
+    useEffect(() => {
+        const media = globalThis.matchMedia("(max-width: 767px)");
+        const change = () => setMobile(media.matches);
+        media.addEventListener("change", change);
+        return () => media.removeEventListener("change", change);
+    }, []);
     const [appsArranging, setAppsArranging] = useState(false);
     const dirtyForm = useRef(false);
     const [pendingAction, setPendingAction] = useState<
-        | { type: "navigate"; route: WorkspaceState }
-        | { type: "back" }
-        | { type: "close" }
-        | null
+        { kind: WorkspaceKind; action: WorkspaceAction } | null
     >(null);
     const [notesLoading, setNotesLoading] = useState(true);
     const [notesError, setNotesError] = useState("");
+    function applyWorkspace(kind: WorkspaceKind, action: WorkspaceAction) {
+        if (kind === "apps") {
+            setAppsArranging(false);
+            if (action.type === "close") setActiveFolderId(null);
+        }
+        dispatchHost({ type: "domain", kind, action });
+        if (action.type === "close" && (mobile || appearance.style === "zen")) {
+            dispatchHost({ type: "activate", kind: null });
+        }
+        if (appearance.style === "widgets") {
+            if (action.type === "close") {
+                dispatchDesktop({ type: "CLOSE", id: kind });
+            } else if (action.type !== "query") {
+                dispatchDesktop({
+                    type: "OPEN",
+                    id: kind,
+                    kind,
+                    rect: safeRect,
+                });
+            }
+        }
+    }
+    function requestWorkspace(kind: WorkspaceKind, action: WorkspaceAction) {
+        if (
+            dirtyForm.current && (kind === "apps" || appearance.style === "zen")
+        ) {
+            setPendingAction({ kind, action });
+            return;
+        }
+        applyWorkspace(kind, action);
+    }
     function navigateWorkspace(route: WorkspaceState) {
-        if (dirtyForm.current) {
-            setPendingAction({ type: "navigate", route });
-            return;
-        }
-        setAppsArranging(false);
-        dispatchWorkspace({ type: "navigate", route });
+        const kind = route.view === "closed"
+            ? host.activeKind
+            : isAppsWorkspaceView(route)
+            ? "apps"
+            : "notes";
+        if (kind) requestWorkspace(kind, { type: "navigate", route });
     }
-    function backWorkspace() {
-        if (dirtyForm.current) {
-            setPendingAction({ type: "back" });
-            return;
-        }
-        setAppsArranging(false);
-        dispatchWorkspace({ type: "back" });
+    function backWorkspace(kind = host.activeKind) {
+        if (kind) requestWorkspace(kind, { type: "back" });
     }
-    function closeWorkspace() {
-        if (dirtyForm.current) {
-            setPendingAction({ type: "close" });
-            return;
-        }
-        setAppsArranging(false);
-        setActiveFolderId(null);
-        dispatchWorkspace({ type: "close" });
+    function closeWorkspace(kind = host.activeKind) {
+        if (kind) requestWorkspace(kind, { type: "close" });
     }
     function openWorkspace(kind: WorkspaceKind) {
-        navigateWorkspace({
-            view: kind === "apps" ? "apps/root" : "notes/root",
-        });
+        if (appearance.style === "zen") {
+            navigateWorkspace({
+                view: kind === "apps" ? "apps/root" : "notes/root",
+            });
+            return;
+        }
+        // Dock focus does not reset nested navigation or discard an existing form.
+        if (host.models[kind].route.view === "closed") {
+            applyWorkspace(kind, {
+                type: "navigate",
+                route: { view: kind === "apps" ? "apps/root" : "notes/root" },
+            });
+        } else {
+            dispatchHost({ type: "activate", kind });
+            if (appearance.style === "widgets") {
+                dispatchDesktop({
+                    type: "OPEN",
+                    id: kind,
+                    kind,
+                    rect: safeRect,
+                });
+            }
+            if (!mobile) {
+                requestAnimationFrame(() => {
+                    const nested =
+                        host.models[kind].route.view !== `${kind}/root`;
+                    document.querySelector<HTMLButtonElement>(
+                        `[data-window-id="${kind}"] button[aria-label="${
+                            nested ? "返回上一级" : "收起工作区"
+                        }"]`,
+                    )?.focus({ preventScroll: true });
+                });
+            }
+        }
     }
     useEffect(() => {
+        if (appearance.style === "widgets" && !mobile) {
+            dispatchHost({
+                type: "activate",
+                kind:
+                    desktop.activeId === "apps" || desktop.activeId === "notes"
+                        ? desktop.activeId
+                        : null,
+            });
+        }
+    }, [desktop.activeId, appearance.style, mobile]);
+    useEffect(() => {
         dirtyForm.current = false;
-        dispatchWorkspace({ type: "reset" });
+        dispatchHost({ type: "reset" });
+        for (const id of ["apps", "notes"]) {
+            dispatchDesktop({ type: "CLOSE", id });
+        }
         setPendingAction(null);
         setAppsArranging(false);
         setActiveFolderId(null);
@@ -618,7 +705,9 @@ export function SearchHome() {
         error,
         setError,
     };
-    const route = workspace.route;
+    const route = host.activeKind
+        ? host.models[host.activeKind].route
+        : { view: "closed" as const };
     const appsView = isAppsWorkspaceView(route);
     const title = route.view === "apps/create"
         ? "添加应用"
@@ -629,6 +718,80 @@ export function SearchHome() {
         : appsView
         ? "应用"
         : "便签";
+    function createWorkspaceItem(kind: WorkspaceKind) {
+        if (kind === "apps") {
+            navigateWorkspace({
+                view: "apps/create",
+                groupId: activeFolderId ?? undefined,
+            });
+        } else void createNote();
+    }
+    function renderWorkspaceContent(kind: WorkspaceKind) {
+        if (!user) return null;
+        const model = host.models[kind];
+        return kind === "apps"
+            ? (
+                <AppsWorkspaceView
+                    state={model.route}
+                    navigate={navigateWorkspace}
+                    onBack={() => backWorkspace("apps")}
+                    activeFolderId={activeFolderId}
+                    onFolderChange={setActiveFolderId}
+                    apps={apps}
+                    groups={groups}
+                    setApps={setApps}
+                    setGroups={setGroups}
+                    isArranging={appsArranging}
+                    onArrangeChange={setAppsArranging}
+                    query={model.queries.apps}
+                    onQueryChange={(value) => {
+                        setAppsArranging(false);
+                        dispatchHost({
+                            type: "domain",
+                            kind,
+                            action: { type: "query", workspace: kind, value },
+                        });
+                    }}
+                    appearance={appearance}
+                    status={appsStatus}
+                    error={appsError}
+                    onRetry={layoutProps.onReloadApps}
+                    onOpen={openApp}
+                    onPin={togglePinApp}
+                    onMove={moveAppGroup}
+                    onDelete={softDeleteApp}
+                    onReorder={reorderApps}
+                    onDirtyChange={(dirty) => {
+                        dirtyForm.current = dirty;
+                    }}
+                />
+            )
+            : (
+                <NotesWorkspace
+                    state={model.route}
+                    notes={notes}
+                    userId={user.id}
+                    query={model.queries.notes}
+                    onQueryChange={(value) =>
+                        dispatchHost({
+                            type: "domain",
+                            kind,
+                            action: { type: "query", workspace: kind, value },
+                        })}
+                    onSaved={(next) =>
+                        setNotes((items) =>
+                            items.map((item) =>
+                                item.id === next.id ? next : item
+                            )
+                        )}
+                    onReorder={reorderNotes}
+                    actions={layoutProps}
+                    loading={notesLoading}
+                    error={notesError}
+                    onRetry={layoutProps.onReloadApps}
+                />
+            );
+    }
     return (
         <PageShell archetype="search" className={"home home-" + layoutStyle}>
             {error && (
@@ -647,87 +810,47 @@ export function SearchHome() {
             {layoutStyle === "widgets"
                 ? <WidgetsLayout {...layoutProps} />
                 : <ZenLayout {...layoutProps} />}
-            {user && (
-                <WorkspaceShell
-                    state={route}
-                    title={title}
-                    style={layoutStyle}
-                    appsArranging={appsArranging}
-                    navigate={navigateWorkspace}
-                    onBack={backWorkspace}
-                    onClose={closeWorkspace}
-                    onCreate={() =>
-                        appsView
-                            ? navigateWorkspace({
-                                view: "apps/create",
-                                groupId: activeFolderId ?? undefined,
-                            })
-                            : void createNote()}
-                >
-                    {appsView
-                        ? (
-                            <AppsWorkspaceView
-                                state={route}
-                                navigate={navigateWorkspace}
-                                onBack={backWorkspace}
-                                activeFolderId={activeFolderId}
-                                onFolderChange={setActiveFolderId}
-                                apps={apps}
-                                groups={groups}
-                                setApps={setApps}
-                                setGroups={setGroups}
-                                isArranging={appsArranging}
-                                onArrangeChange={setAppsArranging}
-                                query={workspace.queries.apps}
-                                onQueryChange={(value) => {
-                                    setAppsArranging(false);
-                                    dispatchWorkspace({
-                                        type: "query",
-                                        workspace: "apps",
-                                        value,
-                                    });
-                                }}
-                                appearance={appearance}
-                                status={appsStatus}
-                                error={appsError}
-                                onRetry={layoutProps.onReloadApps}
-                                onOpen={openApp}
-                                onPin={togglePinApp}
-                                onMove={moveAppGroup}
-                                onDelete={softDeleteApp}
-                                onReorder={reorderApps}
-                                onDirtyChange={(dirty) => {
-                                    dirtyForm.current = dirty;
-                                }}
-                            />
-                        )
-                        : (
-                            <NotesWorkspace
-                                state={route}
-                                notes={notes}
-                                userId={user.id}
-                                query={workspace.queries.notes}
-                                onQueryChange={(value) =>
-                                    dispatchWorkspace({
-                                        type: "query",
-                                        workspace: "notes",
-                                        value,
-                                    })}
-                                onSaved={(next) =>
-                                    setNotes((items) =>
-                                        items.map((item) =>
-                                            item.id === next.id ? next : item
-                                        )
-                                    )}
-                                onReorder={reorderNotes}
-                                actions={layoutProps}
-                                loading={notesLoading}
-                                error={notesError}
-                                onRetry={layoutProps.onReloadApps}
+            {user && (layoutStyle === "widgets" && !mobile
+                ? (
+                    <DesktopWorkspaces
+                        state={desktop}
+                        rect={safeRect}
+                        dispatch={dispatchDesktop}
+                        models={host.models}
+                        renderContent={renderWorkspaceContent}
+                        onOpen={openWorkspace}
+                        onClose={closeWorkspace}
+                        onBack={backWorkspace}
+                        onCreate={createWorkspaceItem}
+                        onDockElement={setDockElement}
+                        appsArranging={appsArranging}
+                    />
+                )
+                : (
+                    <>
+                        {layoutStyle === "widgets" && (
+                            <WorkspaceNavigation
+                                variant="mobile"
+                                onSelect={openWorkspace}
                             />
                         )}
-                </WorkspaceShell>
-            )}
+                        <WorkspaceShell
+                            state={route}
+                            title={title}
+                            style={layoutStyle}
+                            appsArranging={appsArranging}
+                            navigate={navigateWorkspace}
+                            onBack={() => backWorkspace()}
+                            onClose={() => closeWorkspace()}
+                            onCreate={() =>
+                                host.activeKind &&
+                                createWorkspaceItem(host.activeKind)}
+                        >
+                            {host.activeKind &&
+                                renderWorkspaceContent(host.activeKind)}
+                        </WorkspaceShell>
+                    </>
+                ))}
             {(undoApp || noteUndo) && (
                 <UndoToast
                     message={undoApp ? "应用已移至回收站" : "便签已移至回收站"}
@@ -758,7 +881,7 @@ export function SearchHome() {
                                 const action = pendingAction;
                                 dirtyForm.current = false;
                                 setPendingAction(null);
-                                dispatchWorkspace(action);
+                                applyWorkspace(action.kind, action.action);
                             }}
                         >
                             放弃修改

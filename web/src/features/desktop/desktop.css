@@ -40,6 +40,9 @@
     display: none;
 }
 
+.desktop-window--constrained-hidden {
+    display: none !important;
+}
 /* Titlebar / Chrome */
 .desktop-window-chrome {
     display: flex;
@@ -54,6 +57,13 @@
     cursor: default;
     box-sizing: border-box;
     gap: var(--space-window-gap);
+}
+
+.desktop-window-chrome-leading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
 }
 
 .desktop-window-chrome--draggable {
@@ -121,10 +131,17 @@
 .desktop-window-content {
     flex: 1 1 auto;
     min-height: 0;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     position: relative;
     box-sizing: border-box;
     color: var(--foreground);
+    padding-bottom: calc(var(--window-resize-hit));
+}
+
+.desktop-window--maximized .desktop-window-content {
+    padding-bottom: 0;
 }
 
 /* Demo Content helper */
@@ -214,6 +231,60 @@
 /* Resize disabled below 1024px viewport width */
 @media (max-width: 1023px) {
     .desktop-window-resize-handle {
+        display: none !important;
+    }
+}
+
+/* Desktop Dock */
+.desktop-dock {
+    position: fixed;
+    left: 50%;
+    bottom: max(var(--space-4), env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+    padding: var(--space-2);
+    background: var(--surface-navigation);
+    backdrop-filter: blur(var(--material-blur-navigation));
+    border: 1px solid var(--surface-navigation-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-navigation);
+    z-index: var(--elevation-desktop-dock);
+}
+
+.desktop-dock-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.desktop-dock-item[aria-pressed="true"],
+.desktop-dock-item--active {
+    color: var(--accent);
+    background: var(--surface-soft);
+}
+
+.desktop-dock-indicator {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.desktop-dock-indicator--active {
+    background: var(--accent);
+}
+
+.desktop-dock-indicator--minimized {
+    opacity: 0.5;
+}
+
+@media (max-width: 767px) {
+    .desktop-dock {
         display: none !important;
     }
 }

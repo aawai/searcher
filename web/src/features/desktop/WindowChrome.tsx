@@ -3,12 +3,13 @@ import {
     type KeyboardEvent,
     type MouseEvent as ReactMouseEvent,
     type PointerEvent as ReactPointerEvent,
+    type ReactNode,
     type RefObject,
     useEffect,
     useRef,
     useState,
 } from "react";
-import { Maximize2, Minimize2, Minus, X } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2, Minus, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import type { Frame, SafeRect } from "./desktop-geometry.ts";
 import { clampFrame } from "./desktop-geometry.ts";
@@ -22,6 +23,17 @@ export interface WindowChromeProps {
     dispatch: Dispatch<DesktopAction>;
     windowRef: RefObject<HTMLDivElement | null>;
     className?: string;
+    disableDrag?: boolean;
+    showMinimize?: boolean;
+    showMaximize?: boolean;
+    closeLabel?: string;
+    backLabel?: string;
+    onClose?: () => void;
+    onBack?: () => void;
+    leading?: ReactNode;
+    headerMenu?: ReactNode;
+    closeBtnRef?: RefObject<HTMLButtonElement | null>;
+    backBtnRef?: RefObject<HTMLButtonElement | null>;
 }
 
 interface DragSession {
@@ -41,6 +53,17 @@ export function WindowChrome({
     dispatch,
     windowRef,
     className,
+    disableDrag,
+    showMinimize,
+    showMaximize,
+    closeLabel,
+    backLabel,
+    onClose,
+    onBack,
+    leading,
+    headerMenu,
+    closeBtnRef,
+    backBtnRef,
 }: WindowChromeProps) {
     const dragSessionRef = useRef<DragSession | null>(null);
     const rafIdRef = useRef<number | null>(null);
@@ -75,8 +98,8 @@ export function WindowChrome({
             return;
         }
 
-        // Maximized window titlebar does not drag
-        if (win.mode === "maximized") return;
+        // Maximized or drag-disabled window titlebar does not drag
+        if (disableDrag || win.mode === "maximized") return;
 
         // Focus on start allowed
         if (!active) {
@@ -223,6 +246,7 @@ export function WindowChrome({
         ) {
             return;
         }
+        if (disableDrag || showMaximize === false) return;
 
         if (win.mode === "maximized") {
             dispatch({ type: "RESTORE", id: win.id, rect });
@@ -240,6 +264,8 @@ export function WindowChrome({
         ) {
             return;
         }
+
+        if (disableDrag) return;
 
         const step = e.shiftKey ? 40 : 10;
         let dx = 0;
@@ -282,8 +308,7 @@ export function WindowChrome({
         });
     };
 
-    const isDraggable = win.mode !== "maximized";
-
+    const isDraggable = !disableDrag && win.mode !== "maximized";
     return (
         <header
             role="toolbar"
@@ -304,6 +329,26 @@ export function WindowChrome({
             onDoubleClick={handleDoubleClick}
             onKeyDown={handleKeyDown}
         >
+            <div className="desktop-window-chrome-leading">
+                {onBack && (
+                    <Button
+                        ref={backBtnRef}
+                        variant="ghost"
+                        size="icon"
+                        className="desktop-window-chrome-btn desktop-window-chrome-btn--back"
+                        aria-label={backLabel ?? "返回上一级"}
+                        title={backLabel ?? "返回上一级"}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onBack();
+                        }}
+                    >
+                        <ArrowLeft className="desktop-window-chrome-icon" />
+                    </Button>
+                )}
+                {leading}
+            </div>
+
             <div className="desktop-window-chrome-title-wrap">
                 <span className="desktop-window-chrome-title" title={title}>
                     {title}
@@ -315,65 +360,80 @@ export function WindowChrome({
                 data-no-drag
                 onPointerDown={(e) => e.stopPropagation()}
             >
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="desktop-window-chrome-btn desktop-window-chrome-btn--minimize"
-                    aria-label="最小化窗口"
-                    title="最小化"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        dispatch({ type: "MINIMIZE", id: win.id });
-                    }}
-                >
-                    <Minus className="desktop-window-chrome-icon" />
-                </Button>
+                {headerMenu}
 
-                {win.mode === "maximized"
-                    ? (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="desktop-window-chrome-btn desktop-window-chrome-btn--restore"
-                            aria-label="向下还原窗口"
-                            title="向下还原"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                dispatch({ type: "RESTORE", id: win.id, rect });
-                            }}
-                        >
-                            <Minimize2 className="desktop-window-chrome-icon" />
-                        </Button>
-                    )
-                    : (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="desktop-window-chrome-btn desktop-window-chrome-btn--maximize"
-                            aria-label="最大化窗口"
-                            title="最大化"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                dispatch({
-                                    type: "MAXIMIZE",
-                                    id: win.id,
-                                    rect,
-                                });
-                            }}
-                        >
-                            <Maximize2 className="desktop-window-chrome-icon" />
-                        </Button>
-                    )}
+                {showMinimize !== false && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="desktop-window-chrome-btn desktop-window-chrome-btn--minimize"
+                        aria-label="最小化窗口"
+                        title="最小化"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch({ type: "MINIMIZE", id: win.id });
+                        }}
+                    >
+                        <Minus className="desktop-window-chrome-icon" />
+                    </Button>
+                )}
+
+                {showMaximize !== false && (
+                    win.mode === "maximized"
+                        ? (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="desktop-window-chrome-btn desktop-window-chrome-btn--restore"
+                                aria-label="向下还原窗口"
+                                title="向下还原"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    dispatch({
+                                        type: "RESTORE",
+                                        id: win.id,
+                                        rect,
+                                    });
+                                }}
+                            >
+                                <Minimize2 className="desktop-window-chrome-icon" />
+                            </Button>
+                        )
+                        : (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="desktop-window-chrome-btn desktop-window-chrome-btn--maximize"
+                                aria-label="最大化窗口"
+                                title="最大化"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    dispatch({
+                                        type: "MAXIMIZE",
+                                        id: win.id,
+                                        rect,
+                                    });
+                                }}
+                            >
+                                <Maximize2 className="desktop-window-chrome-icon" />
+                            </Button>
+                        )
+                )}
 
                 <Button
+                    ref={closeBtnRef}
                     variant="ghost"
                     size="icon"
                     className="desktop-window-chrome-btn desktop-window-chrome-btn--close"
-                    aria-label="关闭窗口"
-                    title="关闭"
+                    aria-label={closeLabel ?? "关闭窗口"}
+                    title={closeLabel ?? "关闭"}
                     onClick={(e) => {
                         e.stopPropagation();
-                        dispatch({ type: "CLOSE", id: win.id });
+                        if (onClose) {
+                            onClose();
+                        } else {
+                            dispatch({ type: "CLOSE", id: win.id });
+                        }
                     }}
                 >
                     <X className="desktop-window-chrome-icon" />

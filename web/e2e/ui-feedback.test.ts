@@ -546,12 +546,14 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // Open Apps workspace
             const appsBtn = page.locator(
-                'button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"], button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
             );
             await appsBtn.first().waitFor({ state: "visible" });
             await appsBtn.first().click();
 
-            const aside = page.locator("aside.workspace-panel");
+            const aside = page.locator(
+                '.desktop-window[data-window-id="apps"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel',
+            );
             await aside.waitFor({ state: "visible" });
 
             // 1. Duplicate app confirmation dialog
@@ -792,12 +794,14 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // 1. Home / Apps workspace: App delete and UndoToast restoration
             const appsBtn = page.locator(
-                'button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"], button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
             );
             await appsBtn.first().waitFor({ state: "visible" });
             await appsBtn.first().click();
 
-            const aside = page.locator("aside.workspace-panel");
+            const aside = page.locator(
+                '.desktop-window[data-window-id="apps"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel',
+            );
             await aside.waitFor({ state: "visible" });
 
             const appTile = aside.locator(
@@ -838,12 +842,17 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await appTile.waitFor({ state: "visible" });
 
             // 2. Home / Notes workspace: Note delete and UndoToast restoration
-            const notesNavBtn = aside.locator(
-                'button[aria-label="便签工作区"]',
+            const notesNavBtn = page.locator(
+                '.desktop-dock button[aria-label="便签工作区"], aside button[aria-label="便签工作区"], .workspace-mobile-navigation button[aria-label="便签工作区"]',
             );
-            await notesNavBtn.click();
+            await notesNavBtn.first().click();
 
-            const noteCard = aside.locator(
+            const notesAside = page.locator(
+                '.desktop-window[data-window-id="notes"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel',
+            );
+            await notesAside.waitFor({ state: "visible" });
+
+            const noteCard = notesAside.locator(
                 ".note-card:has-text('Undo Target Note')",
             );
             await noteCard.waitFor({ state: "visible" });
@@ -985,12 +994,14 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             await visit("/", notesTestPage);
             const notesBtn = notesTestPage.locator(
-                'button[data-workspace="notes"], .workspace-dock button[aria-label="便签工作区"]',
+                '.desktop-dock button[aria-label="便签工作区"], button[data-workspace="notes"], .workspace-dock button[aria-label="便签工作区"]',
             );
             await notesBtn.first().waitFor({ state: "visible" });
             await notesBtn.first().click();
 
-            const notesAside = notesTestPage.locator("aside.workspace-panel");
+            const notesAside = notesTestPage.locator(
+                '.desktop-window[data-window-id="notes"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel',
+            );
             await notesAside.waitFor({ state: "visible" });
 
             // While in flight: LoadingState is visible, EmptyState is NOT visible (no flicker!)
@@ -1029,11 +1040,10 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             // Reload page with 500 error route active
             await notesTestPage.reload();
             const notesReopenBtn = notesTestPage.locator(
-                'button[data-workspace="notes"], .workspace-dock button[aria-label="便签工作区"]',
+                '.desktop-dock button[aria-label="便签工作区"], button[data-workspace="notes"], .workspace-dock button[aria-label="便签工作区"]',
             );
             await notesReopenBtn.first().waitFor({ state: "visible" });
             await notesReopenBtn.first().click();
-
             const notesErrorBanner = notesAside.locator(
                 ".status-banner:has-text('便签服务发生内部异常')",
             );
@@ -1069,12 +1079,14 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             await visit("/", appsTestPage);
             const appsOpenBtn = appsTestPage.locator(
-                'button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"], button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
             );
             await appsOpenBtn.first().waitFor({ state: "visible" });
             await appsOpenBtn.first().click();
 
-            const appsAside = appsTestPage.locator("aside.workspace-panel");
+            const appsAside = appsTestPage.locator(
+                '.desktop-window[data-window-id="apps"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel',
+            );
             await appsAside.waitFor({ state: "visible" });
 
             // Loading state is visible in apps panel
@@ -1104,7 +1116,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             // Reload page with 500 error route active
             await appsTestPage.reload();
             const appsReopenBtn = appsTestPage.locator(
-                'button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"], button[data-workspace="apps"], .workspace-dock button[aria-label="应用工作区"]',
             );
             await appsReopenBtn.first().waitFor({ state: "visible" });
             await appsReopenBtn.first().click();

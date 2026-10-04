@@ -224,7 +224,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             await handleA.click();
             await page.waitForTimeout(150);
             assertEquals(
-                await page.locator(".workspace-panel").isVisible(),
+                await page.locator(
+                    ".desktop-window[data-window-id='notes'], .workspace-panel",
+                ).isVisible(),
                 false,
             );
             assertEquals(page.url(), origin + "/");
@@ -234,12 +236,14 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
                 `.controlled-note-slot[data-note-id="${noteA.id}"] .note-card`,
             );
             await cardBodyA.click();
-            const panel = page.locator(".workspace-panel");
+            const panel = page.locator(
+                ".desktop-window[data-window-id='notes'], .workspace-panel",
+            );
             await panel.waitFor({ state: "visible" });
 
             // Close workspace panel back to home
             const backOrClose = panel.locator(
-                '.workspace-header button[aria-label="关闭工作区"]',
+                'button[aria-label="收起工作区"], button[aria-label="关闭工作区"]',
             );
             if (await backOrClose.isVisible()) {
                 await backOrClose.click();
@@ -675,12 +679,14 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
 
             // Re-fix note1 and note2 via Workspace
             const dockNotesBtn = page.locator(
-                '.workspace-dock button[aria-label="便签工作区"]',
+                '.desktop-dock button[aria-label="便签工作区"], button[data-workspace="notes"], .workspace-dock button[aria-label="便签工作区"]',
             );
             await dockNotesBtn.waitFor({ state: "visible" });
             await dockNotesBtn.click();
 
-            const panel = page.locator(".workspace-panel");
+            const panel = page.locator(
+                ".desktop-window[data-window-id='notes'], .workspace-panel",
+            );
             await panel.waitFor({ state: "visible" });
             await page.waitForFunction(() => {
                 return document.querySelectorAll(
@@ -715,7 +721,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             await page.waitForTimeout(200);
 
             // Close workspace
-            const closeBtn = panel.locator('button[aria-label="关闭工作区"]');
+            const closeBtn = panel.locator(
+                'button[aria-label="收起工作区"], button[aria-label="关闭工作区"]',
+            );
             if (await closeBtn.isVisible()) {
                 await closeBtn.click();
             } else {
@@ -764,10 +772,13 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             await page.locator("main").waitFor({ state: "visible" });
 
             const dockNotesBtn = page.locator(
-                '.workspace-dock button[aria-label="便签工作区"]',
+                '.desktop-dock button[aria-label="便签工作区"], button[data-workspace="notes"], .workspace-dock button[aria-label="便签工作区"]',
             );
+            await dockNotesBtn.waitFor({ state: "visible" });
             await dockNotesBtn.click();
-            const panel = page.locator(".workspace-panel");
+            const panel = page.locator(
+                ".desktop-window[data-window-id='notes'], .workspace-panel",
+            );
             await panel.waitFor({ state: "visible" });
 
             await page.waitForFunction(() => {
@@ -871,7 +882,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             ]);
 
             // Close workspace
-            const closeBtn = panel.locator('button[aria-label="关闭工作区"]');
+            const closeBtn = panel.locator(
+                'button[aria-label="收起工作区"], button[aria-label="关闭工作区"]',
+            );
             if (await closeBtn.isVisible()) {
                 await closeBtn.click();
             } else {

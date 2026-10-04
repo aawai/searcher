@@ -50,12 +50,7 @@ export function WorkspaceShell(
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);
     }, []);
-    const presentation: WorkspacePresentation = mobile
-        ? "sheet"
-        : style === "zen"
-        ? "panel"
-        : "window";
-    const dock = style === "widgets";
+    const presentation: WorkspacePresentation = mobile ? "sheet" : "panel";
     const open = state.view !== "closed";
     const workspace: WorkspaceKind = isAppsWorkspaceView(state)
         ? "apps"
@@ -90,9 +85,7 @@ export function WorkspaceShell(
     }, [open, workspace]);
     const select = (kind: WorkspaceKind) =>
         navigate({ view: kind === "apps" ? "apps/root" : "notes/root" });
-    if (!open) {
-        return dock ? <WorkspaceNavigation dock onSelect={select} /> : null;
-    }
+    if (!open || (style === "widgets" && !mobile)) return null;
     const root = state.view === "apps/root" || state.view === "notes/root";
     const editing = state.view === "apps/create" ||
         state.view === "apps/edit" || state.view === "notes/edit";

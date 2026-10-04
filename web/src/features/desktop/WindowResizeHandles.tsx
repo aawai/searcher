@@ -17,6 +17,7 @@ export interface WindowResizeHandlesProps {
     active: boolean;
     dispatch: Dispatch<DesktopAction>;
     windowRef: RefObject<HTMLDivElement | null>;
+    disabled?: boolean;
 }
 
 const RESIZE_DIRECTIONS: readonly ResizeDirection[] = [
@@ -77,6 +78,7 @@ export function WindowResizeHandles({
     active,
     dispatch,
     windowRef,
+    disabled,
 }: WindowResizeHandlesProps) {
     const isDesktop = useIsDesktopViewport();
     const sessionRef = useRef<ResizeSession | null>(null);
@@ -307,7 +309,10 @@ export function WindowResizeHandles({
     };
 
     // Only allow resize on viewports >= 1024px and non-maximized/non-minimized windows
-    if (!isDesktop || win.mode === "maximized" || win.mode === "minimized") {
+    if (
+        disabled || !isDesktop || win.mode === "maximized" ||
+        win.mode === "minimized"
+    ) {
         return null;
     }
 
