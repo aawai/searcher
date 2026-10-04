@@ -153,8 +153,92 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         async () => {
             for (const focalX of [0.2, 0.8]) {
                 const source = await upload(focalX);
-                if (focalX === 0.2) left = source;
-                else right = source;
+                const input = page.getByTestId("wallpaper-input");
+                const applyBtn = page.getByTestId("wallpaper-apply-btn");
+
+                assertEquals(await input.inputValue(), "");
+                const placeholder = await input.getAttribute("placeholder");
+                assert(
+                    Boolean(placeholder && placeholder.includes("替换")),
+                    "Placeholder should prompt replacement instead of exposing uploaded source",
+                );
+                assert(
+                    await applyBtn.isDisabled(),
+                    "Apply button should be disabled when input is empty",
+                );
+
+                await input.press("Enter");
+                assertEquals(
+                    (await prefs()).backgroundImage,
+                    source,
+                    "Submitting empty draft via Enter must preserve current uploaded wallpaper",
+                );
+
+                await page.reload();
+                await input.waitFor();
+                assertEquals(
+                    await input.inputValue(),
+                    "",
+                    "Uploaded source path must remain hidden after reload",
+                );
+                const reloadPlaceholder = await input.getAttribute(
+                    "placeholder",
+                );
+                assert(
+                    Boolean(
+                        reloadPlaceholder && reloadPlaceholder.includes("替换"),
+                    ),
+                    "Placeholder must continue prompting replacement after reload",
+                );
+                assert(
+                    await applyBtn.isDisabled(),
+                    "Apply button must remain disabled after reload while input is empty",
+                );
+
+                if (focalX === 0.2) {
+                    left = source;
+                    const remote = "https://images.unsplash.com/photo-custom";
+                    await input.fill(remote);
+                    assert(
+                        !await applyBtn.isDisabled(),
+                        "Apply button should enable when new remote source is drafted",
+                    );
+                    await input.press("Enter");
+                    await waitCurrent(remote);
+                    assertEquals((await prefs()).backgroundImage, remote);
+                    assertEquals(await input.inputValue(), remote);
+                    assert(
+                        await applyBtn.isDisabled(),
+                        "Apply button should be disabled when input matches current remote source",
+                    );
+
+                    const gradient =
+                        "linear-gradient(135deg, #102030, #405060)";
+                    await input.fill(gradient);
+                    assert(
+                        !await applyBtn.isDisabled(),
+                        "Apply button should enable when new gradient source is drafted",
+                    );
+                    await input.press("Enter");
+                    await waitCurrent(gradient);
+                    assertEquals((await prefs()).backgroundImage, gradient);
+                    assertEquals(await input.inputValue(), gradient);
+                    assert(
+                        await applyBtn.isDisabled(),
+                        "Apply button should be disabled when input matches current gradient source",
+                    );
+
+                    const leftId = source.split("/").pop()!;
+                    await page.getByTestId(`wallpaper-menu-trigger-${leftId}`)
+                        .click();
+                    await page.getByTestId("wallpaper-menu-set-current")
+                        .click();
+                    await waitCurrent(source);
+                    assertEquals(await input.inputValue(), "");
+                    assert(await applyBtn.isDisabled());
+                } else {
+                    right = source;
+                }
                 await page.getByTestId("wallpaper-current-adjust-focal-btn")
                     .click();
                 const desktop = page.getByTestId("wallpaper-preview-desktop");

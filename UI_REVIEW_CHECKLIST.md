@@ -1086,3 +1086,25 @@
 - [x] 最终全量测试 443 passed；生产 build 与 Workspace 8 suites / 85 steps
       通过；前后端及 E2E typecheck、focused lint/format、check:ui 通过，
       ownership/visual violations 与 baseline allowances 均为 0。
+
+## Issue #84 外观壁纸资源布局验收（2026-10-04）
+
+- [x] Utility Settings archetype；复用 SettingsSection / SettingsCard、shadcn
+      Button / Input 与 WallpaperSurface，不修改通用 SettingsRow 或后端 API。
+- [x] 专用 wallpaper domain class 持有全宽 intro/source/current/history
+      布局；复用现有 spacing、surface、radius 与 touch-target Token，无新增
+      token、allowlist 或 baseline。
+- [x] 独立数据库真实账号上传 5 张图片；1440 / 1280 / 768 / 640 / 390 / 375px ×
+      light/dark 实页截图与尺寸检查通过，无页面横向滚动；桌面历史 5 列，窄屏 2
+      列。
+- [x] 来源输入不展示上传 API
+      路径；当前壁纸有独立图片预览、文字状态与动作域。错误关联输入并沿输入轴显示，访客提示保留在
+      intro。
+- [x] 壁纸 E2E 全部 7 步通过：上传、HTTPS / gradient / Enter
+      应用、空输入保护与刷新、构图保存、历史选择、停止使用、非当前/当前删除及失败保留、匿名设备隔离。
+- [x] Tab 实测按上传 → 来源 → 当前动作 → 历史卡片/菜单顺序移动（空输入时跳过
+      disabled 应用）；历史主按钮采用 inset focus outline，避免被缩略图裁切。
+- [x] 壁纸区 axe 0 confirmed violations、1 incomplete；page errors / console
+      errors 为 0。
+- [x] 443 项单元测试、build、前后端入口 typecheck、修改文件
+      lint/format、check:ui 通过；ownership 与 visual 违规均为 0。
