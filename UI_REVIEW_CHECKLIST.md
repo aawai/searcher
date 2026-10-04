@@ -1071,3 +1071,18 @@
       on）、`/tmp/omp-sshots-1598ceac4b296eaa.webp`（768 light widgets off）。
 - [x] 最终 `deno task test:workspace`：8 passed（85 steps）、0 failed。全套 E2E
       矩阵与既有套件全量绿色通过。
+
+## Issue #85 验收断言补强（2026-10-04）
+
+- [x] Matrix D 移除鼠标拖动失败后的键盘兜底。先通过 Dock 激活 Apps，避免标题栏
+      被 Notes 遮挡；1024/1440 分别断言指针拖动的两轴位移与尺寸保持。
+- [x] 鼠标 resize 的比较基准在键盘 resize 完成后重新读取；单独断言宽度减少
+      50px、高度减少 40px，左上角不变，键盘操作不能代替鼠标验收。
+- [x] Unsupported version 与 corrupt window 在 Settings 页面、DesktopCanvas
+      卸载后注入，避免 reload 的退出保存覆盖异常 payload；等待回退布局完成后
+      断言零窗口，再通过 Dock 打开 Apps，验证 canonical 默认尺寸与居中位置。
+- [x] 移除旧拖动兜底后 Matrix D 失败；修正命中前置条件与断言后聚焦 A–F 矩阵 7
+      steps 通过。仅修改验收测试，未改变产品行为或放宽 UI baseline。
+- [x] 最终全量测试 443 passed；生产 build 与 Workspace 8 suites / 85 steps
+      通过；前后端及 E2E typecheck、focused lint/format、check:ui 通过，
+      ownership/visual violations 与 baseline allowances 均为 0。

@@ -863,7 +863,8 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     "Notes window title must be an h2 heading for accessible heading order",
                 );
 
-                // 3. Drag window
+                // Raise Apps above Notes before hitting its titlebar.
+                await openWorkspace("apps");
                 const appsChrome = appsWin.locator(
                     ".desktop-window-chrome",
                 ).first();
@@ -875,27 +876,16 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 );
                 await page.mouse.down();
                 await page.mouse.move(
-                    chromeBox.x + chromeBox.width / 2 + 80,
-                    chromeBox.y + chromeBox.height / 2 + 50,
+                    chromeBox.x + chromeBox.width / 2 - 40,
+                    chromeBox.y + chromeBox.height / 2 + 30,
                     { steps: 10 },
                 );
                 await page.mouse.up();
-                await page.waitForTimeout(200);
-                let boxAfterDrag = await measure(appsWin);
-                if (
-                    boxAfterDrag.x === boxBeforeDrag.x &&
-                    boxAfterDrag.y === boxBeforeDrag.y
-                ) {
-                    await appsChrome.focus();
-                    await page.keyboard.press("ArrowRight");
-                    await page.waitForTimeout(100);
-                    boxAfterDrag = await measure(appsWin);
-                }
-                assert(
-                    boxAfterDrag.x !== boxBeforeDrag.x ||
-                        boxAfterDrag.y !== boxBeforeDrag.y,
-                    "Window position must change after drag",
-                );
+                const boxAfterDrag = await measure(appsWin);
+                assertEquals(boxAfterDrag.x, boxBeforeDrag.x - 40);
+                assertEquals(boxAfterDrag.y, boxBeforeDrag.y + 30);
+                assertEquals(boxAfterDrag.width, boxBeforeDrag.width);
+                assertEquals(boxAfterDrag.height, boxBeforeDrag.height);
 
                 // 4. Resize window & accessible separator contracts
                 const resizeHandle = appsWin.locator(
@@ -935,7 +925,8 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     "Keyboard arrow resize must update aria-valuetext",
                 );
 
-                // Pointer drag resize
+                // Measure after keyboard resize; pointer shrink must change both axes.
+                const boxBeforePointerResize = await measure(appsWin);
                 const handleBox = await measure(resizeHandle);
                 await page.mouse.move(
                     handleBox.x + handleBox.width / 2,
@@ -943,16 +934,22 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 );
                 await page.mouse.down();
                 await page.mouse.move(
-                    handleBox.x + handleBox.width / 2 + 50,
-                    handleBox.y + handleBox.height / 2 + 40,
+                    handleBox.x + handleBox.width / 2 - 50,
+                    handleBox.y + handleBox.height / 2 - 40,
                     { steps: 5 },
                 );
                 await page.mouse.up();
                 const boxAfterResize = await measure(appsWin);
-                assert(
-                    boxAfterResize.width > boxBeforeDrag.width,
-                    "Window width must increase after resize",
+                assertEquals(
+                    boxAfterResize.width,
+                    boxBeforePointerResize.width - 50,
                 );
+                assertEquals(
+                    boxAfterResize.height,
+                    boxBeforePointerResize.height - 40,
+                );
+                assertEquals(boxAfterResize.x, boxBeforePointerResize.x);
+                assertEquals(boxAfterResize.y, boxBeforePointerResize.y);
                 // 5. Minimize & Restore from Dock
                 const minBtn = appsWin.locator(
                     '.desktop-window-chrome-btn--minimize, button[aria-label*="最小化"]',
@@ -1237,19 +1234,12 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 "Stale note window must not be rendered",
             );
 
-            // 4a. Unsupported version fallback (e.g. version 999)
-            await page.evaluate(async () => {
-                const authData =
-                    (await (await fetch("/api/auth/me")).json()).data;
-                const { promise, resolve, reject } = Promise.withResolvers<
-                    void
-                >();
-                const req = indexedDB.open("searcher-client", 1);
-                req.onsuccess = () => {
-                    const db = req.result;
-                    const tx = db.transaction("state", "readwrite");
-                    tx.objectStore("state").put(
-                        {
+            // Unmount Workspace before injection so lifecycle flush cannot replace it.
+            for (
+                const fixture of [
+                    {
+                        name: "unsupported version",
+                        payload: {
                             version: 999,
                             windows: [{
                                 id: "apps",
@@ -1262,47 +1252,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                                 },
                             }],
                         },
-                        `searcher:desktop-layout:v1:${authData.user.id}`,
-                    );
-                    tx.oncomplete = () => {
-                        db.close();
-                        resolve();
-                    };
-                    tx.onerror = () => {
-                        db.close();
-                        reject(tx.error);
-                    };
-                };
-                req.onerror = () => reject(req.error);
-                await promise;
-            });
-            await page.reload();
-            await page.locator("main").waitFor({ state: "visible" });
-            await openWorkspace("apps");
-            const v999AppsWin = page.locator(
-                '.desktop-window[data-window-id="apps"]',
-            ).first();
-            await v999AppsWin.waitFor({ state: "visible" });
-            const v999Box = await measure(v999AppsWin);
-            assert(
-                v999Box.x < 1440 && v999Box.width <= 1440,
-                "Unsupported version must fall back to valid safeRect bounds",
-            );
-            await closeWorkspace("apps");
-
-            // 4b. Corrupt version 1 fallback
-            await page.evaluate(async () => {
-                const authData =
-                    (await (await fetch("/api/auth/me")).json()).data;
-                const { promise, resolve, reject } = Promise.withResolvers<
-                    void
-                >();
-                const req = indexedDB.open("searcher-client", 1);
-                req.onsuccess = () => {
-                    const db = req.result;
-                    const tx = db.transaction("state", "readwrite");
-                    tx.objectStore("state").put(
-                        {
+                    },
+                    {
+                        name: "corrupt window",
+                        payload: {
                             version: 1,
                             windows: [{
                                 id: "apps",
@@ -1310,33 +1263,97 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                                 frame: "not-a-frame",
                             }],
                         },
-                        `searcher:desktop-layout:v1:${authData.user.id}`,
+                    },
+                ]
+            ) {
+                await visit("/settings/appearance");
+                assertEquals(await page.locator(".desktop-canvas").count(), 0);
+                const storageKey = await page.evaluate(async (payload) => {
+                    const authData =
+                        (await (await fetch("/api/auth/me")).json()).data;
+                    const key =
+                        `searcher:desktop-layout:v1:${authData.user.id}`;
+                    const { promise, resolve, reject } = Promise.withResolvers<
+                        void
+                    >();
+                    const req = indexedDB.open("searcher-client", 1);
+                    req.onerror = () => reject(req.error);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        const tx = db.transaction("state", "readwrite");
+                        tx.objectStore("state").put(payload, key);
+                        tx.oncomplete = () => {
+                            db.close();
+                            resolve();
+                        };
+                        tx.onerror = () => {
+                            db.close();
+                            reject(tx.error);
+                        };
+                    };
+                    await promise;
+                    return key;
+                }, fixture.payload);
+                await visit("/");
+                await page.locator(".desktop-dock").waitFor({
+                    state: "visible",
+                });
+                // Wait for recovery to settle, not the initial pre-hydration render.
+                await page.waitForFunction(async (key) => {
+                    const payload = await new Promise<unknown>(
+                        (resolve, reject) => {
+                            const req = indexedDB.open("searcher-client", 1);
+                            req.onerror = () => reject(req.error);
+                            req.onsuccess = () => {
+                                const db = req.result;
+                                const tx = db.transaction("state", "readonly");
+                                const read = tx.objectStore("state").get(key);
+                                read.onsuccess = () => resolve(read.result);
+                                read.onerror = () => reject(read.error);
+                                tx.oncomplete = () => db.close();
+                            };
+                        },
                     );
-                    tx.oncomplete = () => {
-                        db.close();
-                        resolve();
-                    };
-                    tx.onerror = () => {
-                        db.close();
-                        reject(tx.error);
-                    };
-                };
-                req.onerror = () => reject(req.error);
-                await promise;
-            });
-            await page.reload();
-            await page.locator("main").waitFor({ state: "visible" });
-            await openWorkspace("apps");
-            const corruptAppsWin = page.locator(
-                '.desktop-window[data-window-id="apps"]',
-            ).first();
-            await corruptAppsWin.waitFor({ state: "visible" });
-            const corruptBox = await measure(corruptAppsWin);
-            assert(
-                corruptBox.width > 0 && corruptBox.height > 0,
-                "Corrupt version 1 must sanitize to valid default window dimensions",
-            );
-            await closeWorkspace("apps");
+                    return payload !== null && typeof payload === "object" &&
+                        "version" in payload && payload.version === 1 &&
+                        "windows" in payload &&
+                        Array.isArray(payload.windows) &&
+                        payload.windows.length === 0;
+                }, storageKey);
+                assertEquals(
+                    await page.locator(".desktop-window").count(),
+                    0,
+                    `${fixture.name} must restore an empty desktop`,
+                );
+                await openWorkspace("apps");
+                const defaultBox = await measure(appsWin);
+                const canvas = await measure(page.locator(".desktop-canvas"));
+                const expectedWidth = Math.min(760, canvas.width * 0.72);
+                const expectedHeight = Math.min(720, canvas.height * 0.78);
+                assert(
+                    Math.abs(defaultBox.width - expectedWidth) <= 1,
+                    fixture.name,
+                );
+                assert(
+                    Math.abs(defaultBox.height - expectedHeight) <= 1,
+                    fixture.name,
+                );
+                assert(
+                    Math.abs(
+                        defaultBox.x -
+                            (canvas.x + (canvas.width - expectedWidth) / 2),
+                    ) <= 1,
+                    `${fixture.name} must use the default centered horizontal position`,
+                );
+                assert(
+                    Math.abs(
+                        defaultBox.y -
+                            (canvas.y + (canvas.height - expectedHeight) / 2),
+                    ) <= 1,
+                    `${fixture.name} must use the default centered vertical position`,
+                );
+                await closeWorkspace("apps");
+            }
 
             // 4c. IndexedDB unavailable fallback
             await page.evaluate(() => {
