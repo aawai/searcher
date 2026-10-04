@@ -4,7 +4,7 @@ import {
     LoadingState,
     StatusBanner,
 } from "../../components/searcher/semantic.tsx";
-import type { WorkspaceState } from "./workspace-state.ts";
+import type { AppsRoute, WorkspaceRoute } from "./workspace-state.ts";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import type { Appearance } from "../../app/state.tsx";
 import { errorMessage } from "../../app/state.tsx";
@@ -20,8 +20,8 @@ import type {
 import "./apps-workspace.css";
 
 export interface AppsWorkspaceProps {
-    state: WorkspaceState;
-    navigate: (next: WorkspaceState) => void;
+    state: AppsRoute;
+    navigate: (next: WorkspaceRoute) => void;
     onBack: () => void;
     apps: ExtendedWebApp[];
     groups: WebAppGroup[];

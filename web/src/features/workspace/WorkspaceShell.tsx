@@ -14,12 +14,13 @@ import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 import {
     isAppsWorkspaceView,
     type WorkspaceKind,
-    type WorkspaceState,
+    type WorkspaceRoute,
 } from "./workspace-state.ts";
 import "./workspace.css";
 
 export function WorkspaceShell(
     {
+        open = true,
         state,
         title,
         style,
@@ -27,17 +28,18 @@ export function WorkspaceShell(
         onBack,
         onClose,
         onCreate,
-        appsArranging,
+        appsArranging = false,
         children,
     }: {
-        state: WorkspaceState;
+        open?: boolean;
+        state: WorkspaceRoute;
         title: string;
         style: "zen" | "widgets";
-        navigate: (state: WorkspaceState) => void;
+        navigate: (state: WorkspaceRoute) => void;
         onBack: () => void;
         onClose: () => void;
-        onCreate: () => void;
-        appsArranging: boolean;
+        onCreate?: () => void;
+        appsArranging?: boolean;
         children: ReactNode;
     },
 ) {
@@ -51,7 +53,6 @@ export function WorkspaceShell(
         return () => media.removeEventListener("change", change);
     }, []);
     const presentation: WorkspacePresentation = mobile ? "sheet" : "panel";
-    const open = state.view !== "closed";
     const workspace: WorkspaceKind = isAppsWorkspaceView(state)
         ? "apps"
         : "notes";

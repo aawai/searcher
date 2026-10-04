@@ -130,6 +130,8 @@ export function WindowChrome({
         win.frame.height,
     ]);
     const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+        // Portal events bubble through React ancestors, not the titlebar DOM.
+        if (!e.currentTarget.contains(e.target as Node)) return;
         // Only primary mouse/pointer button
         if (e.button !== 0) return;
 
@@ -379,6 +381,7 @@ export function WindowChrome({
     };
 
     const handleDoubleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+        if (!e.currentTarget.contains(e.target as Node)) return;
         const target = e.target as HTMLElement | null;
         if (
             target?.closest(
@@ -400,6 +403,7 @@ export function WindowChrome({
 
     // Keyboard geometry accessible & Alt+Space window menu
     const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+        if (!e.currentTarget.contains(e.target as Node)) return;
         // Alt+Space opens window system menu
         if (e.altKey && (e.code === "Space" || e.key === " ")) {
             e.preventDefault();
@@ -475,7 +479,7 @@ export function WindowChrome({
 
     return (
         <>
-            <header
+            <div
                 role="toolbar"
                 tabIndex={0}
                 aria-label={`窗口标题栏：${title}`}
@@ -529,9 +533,9 @@ export function WindowChrome({
                 </div>
 
                 <div className="desktop-window-chrome-title-wrap">
-                    <span className="desktop-window-chrome-title" title={title}>
+                    <h2 className="desktop-window-chrome-title" title={title}>
                         {title}
-                    </span>
+                    </h2>
                 </div>
 
                 <div
@@ -618,7 +622,7 @@ export function WindowChrome({
                         <X className="desktop-window-chrome-icon" />
                     </Button>
                 </div>
-            </header>
+            </div>
 
             {/* Snap preview: portal to canvas or window sibling ensuring coordinates are relative to safeRect */}
             {isDragging && activeSnapMode && snapPreviewFrame && portalTarget &&
