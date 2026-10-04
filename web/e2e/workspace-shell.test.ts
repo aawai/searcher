@@ -783,6 +783,16 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 .focus();
             await page.keyboard.press("Enter");
             assertEquals(await search().inputValue(), "Shell");
+            // Issue #91 contract: Desktop ordinary Escape does NOT close windows
+            await page.keyboard.press("Escape");
+            assertEquals(
+                await page.locator('.desktop-window[data-window-id="notes"]')
+                    .isVisible(),
+                true,
+            );
+            // Tablet viewport preserves legacy Escape close behavior
+            await page.setViewportSize({ width: 800, height: 900 });
+            await page.waitForFunction(() => globalThis.innerWidth === 800);
             await page.keyboard.press("Escape");
             await page.locator('.desktop-window[data-window-id="notes"]')
                 .waitFor({ state: "detached" });
@@ -797,6 +807,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 ),
                 true,
             );
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.waitForFunction(() => globalThis.innerWidth === 1440);
             await closeAllWorkspaces();
         },
     );
@@ -1354,6 +1366,269 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             )
                 .click();
             assertEquals(await search().inputValue(), "");
+            await closeAllWorkspaces();
+        },
+    );
+    await t.step(
+        "Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence",
+        async () => {
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await resetPersistedLayout();
+            await visit("/");
+            await openApps();
+            const appsWin = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
+            await appsWin.waitFor({ state: "visible" });
+            const originalFrame = await measureBox(appsWin);
+            const canvas = page.locator(".desktop-canvas");
+            await canvas.waitFor({ state: "visible" });
+            const canvasBox = await measureBox(canvas);
+
+            async function dragTitleTo(
+                toX: number,
+                toY: number,
+                release = true,
+            ) {
+                const titleEl = appsWin.locator(".desktop-window-chrome-title");
+                await titleEl.waitFor({ state: "visible" });
+                const titleBox = await measureBox(titleEl);
+                const startX = titleBox.x + titleBox.width / 2;
+                const startY = titleBox.y + titleBox.height / 2;
+                await page.mouse.move(startX, startY);
+                await page.mouse.down();
+                await page.mouse.move(toX, toY, { steps: 10 });
+                if (release) {
+                    await page.mouse.up();
+                }
+            }
+
+            async function waitForSnap(
+                mode: string,
+                snap: string,
+                expectedWidth = halfW,
+            ) {
+                await page.waitForFunction(
+                    ([expectedMode, expectedSnap, expectedW]) => {
+                        const win = document.querySelector(
+                            '.desktop-window[data-window-id="apps"]',
+                        ) as HTMLElement | null;
+                        if (!win) return false;
+                        const modeMatches =
+                            win.getAttribute("data-window-mode") ===
+                                expectedMode;
+                        const snapMatches =
+                            win.getAttribute("data-window-snap") ===
+                                expectedSnap;
+                        if (!modeMatches || !snapMatches) return false;
+                        if (expectedW !== undefined) {
+                            const currentW = win.getBoundingClientRect().width;
+                            if (
+                                Math.abs(currentW - (expectedW as number)) > 4
+                            ) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    },
+                    [mode, snap, expectedWidth],
+                );
+            }
+
+            const halfW = Math.floor(canvasBox.width / 2);
+            const halfH = Math.floor(canvasBox.height / 2);
+
+            // 1. Preview pointer-events: none and non-blocking during drag
+            await dragTitleTo(
+                canvasBox.x + 16,
+                canvasBox.y + canvasBox.height / 2,
+                false,
+            );
+            const preview = page.locator("[data-snap-preview]");
+            await preview.waitFor({ state: "visible" });
+            assertEquals(await preview.getAttribute("data-snap-mode"), "left");
+            const pointerEvents = await preview.evaluate((el) =>
+                getComputedStyle(el).pointerEvents
+            );
+            assertEquals(pointerEvents, "none");
+            // Complete release into "left" snap mode
+            await page.mouse.up();
+            await preview.waitFor({ state: "detached" });
+            await waitForSnap("snapped", "left", halfW);
+            const leftBox = await measureBox(appsWin);
+            assertNear(leftBox.x, canvasBox.x, 4);
+            assertNear(leftBox.width, halfW, 4);
+            assertNear(leftBox.height, canvasBox.height, 4);
+            // Resize handles hidden while snapped
+            assertEquals(
+                await appsWin.locator(".desktop-window-resize-handle").count(),
+                0,
+            );
+
+            // 2. RestoreFrame threshold: click without move (<4px) preserves snap
+            const titleEl = appsWin.locator(".desktop-window-chrome-title");
+            const titleBoxSnap = await measureBox(titleEl);
+            await page.mouse.move(
+                titleBoxSnap.x + titleBoxSnap.width / 2,
+                titleBoxSnap.y + titleBoxSnap.height / 2,
+            );
+            await page.mouse.down();
+            await page.mouse.up();
+            assertEquals(
+                await appsWin.getAttribute("data-window-mode"),
+                "snapped",
+            );
+            assertEquals(
+                await appsWin.getAttribute("data-window-snap"),
+                "left",
+            );
+
+            // Restore via titlebar button
+            const restoreBtn = appsWin.locator(
+                ".desktop-window-chrome-btn--restore",
+            );
+            await restoreBtn.click();
+            await page.waitForFunction((expected) => {
+                const el = document.querySelector<HTMLElement>(
+                    '.desktop-window[data-window-id="apps"]',
+                );
+                if (
+                    !el || el.dataset.windowMode !== "normal" ||
+                    el.hasAttribute("data-window-snap")
+                ) return false;
+                const box = el.getBoundingClientRect();
+                return Math.abs(box.x - expected.x) <= 1 &&
+                    Math.abs(box.y - expected.y) <= 1 &&
+                    Math.abs(box.width - expected.width) <= 1 &&
+                    Math.abs(box.height - expected.height) <= 1;
+            }, originalFrame);
+            assert(
+                (await appsWin.locator(".desktop-window-resize-handle")
+                    .count()) > 0,
+            );
+
+            // 3. 7 release modes matrix
+            // right
+            const rightTargetX = canvasBox.x + canvasBox.width - 16;
+            const rightTargetY = canvasBox.y + canvasBox.height / 2;
+            await dragTitleTo(rightTargetX, rightTargetY, false);
+            await page.mouse.up();
+            await waitForSnap("snapped", "right", canvasBox.width - halfW);
+            const rightBox = await measureBox(appsWin);
+            assertNear(rightBox.x, canvasBox.x + halfW, 4);
+            assertNear(rightBox.width, canvasBox.width - halfW, 4);
+            assertNear(rightBox.height, canvasBox.height, 4);
+
+            // top-left
+            await dragTitleTo(canvasBox.x + 30, canvasBox.y + 16);
+            await waitForSnap("snapped", "top-left");
+            const tlBox = await measureBox(appsWin);
+            assertNear(tlBox.x, canvasBox.x, 4);
+            assertNear(tlBox.y, canvasBox.y, 4);
+            assertNear(tlBox.width, halfW, 4);
+            assertNear(tlBox.height, halfH, 4);
+
+            // top-right
+            await dragTitleTo(
+                canvasBox.x + canvasBox.width - 30,
+                canvasBox.y + 16,
+            );
+            await waitForSnap("snapped", "top-right");
+            const trBox = await measureBox(appsWin);
+            assertNear(trBox.x, canvasBox.x + halfW, 4);
+            assertNear(trBox.y, canvasBox.y, 4);
+            assertNear(trBox.width, canvasBox.width - halfW, 4);
+            assertNear(trBox.height, halfH, 4);
+
+            // bottom-left
+            await dragTitleTo(
+                canvasBox.x + 30,
+                canvasBox.y + canvasBox.height - 16,
+            );
+            await waitForSnap("snapped", "bottom-left");
+            const blBox = await measureBox(appsWin);
+            assertNear(blBox.x, canvasBox.x, 4);
+            assertNear(blBox.y, canvasBox.y + halfH, 4);
+            assertNear(blBox.width, halfW, 4);
+            assertNear(blBox.height, canvasBox.height - halfH, 4);
+
+            // bottom-right
+            await dragTitleTo(
+                canvasBox.x + canvasBox.width - 30,
+                canvasBox.y + canvasBox.height - 16,
+            );
+            await waitForSnap("snapped", "bottom-right");
+            const brBox = await measureBox(appsWin);
+            assertNear(brBox.x, canvasBox.x + halfW, 4);
+            assertNear(brBox.y, canvasBox.y + halfH, 4);
+            assertNear(brBox.width, canvasBox.width - halfW, 4);
+            assertNear(brBox.height, canvasBox.height - halfH, 4);
+
+            // maximize
+            await dragTitleTo(
+                canvasBox.x + canvasBox.width / 2,
+                canvasBox.y + 16,
+            );
+            await waitForSnap("maximized", "maximize", canvasBox.width);
+            const maxBox = await measureBox(appsWin);
+            assertNear(maxBox.x, canvasBox.x, 4);
+            assertNear(maxBox.y, canvasBox.y, 4);
+            assertNear(maxBox.width, canvasBox.width, 4);
+            assertNear(maxBox.height, canvasBox.height, 4);
+
+            // 4. Drag away un-snaps to normal and restores frame
+            await dragTitleTo(
+                canvasBox.x + canvasBox.width / 2,
+                canvasBox.y + canvasBox.height / 2,
+            );
+            await page.waitForFunction(() => {
+                const el = document.querySelector(
+                    '.desktop-window[data-window-id="apps"]',
+                );
+                return el?.getAttribute("data-window-mode") === "normal" &&
+                    !el?.hasAttribute("data-window-snap");
+            });
+
+            // 5. 8-way resize handle active in normal mode
+            const seHandle = appsWin.locator(
+                ".desktop-window-resize-handle--se",
+            );
+            await seHandle.waitFor({ state: "visible" });
+            const handleBox = await measureBox(seHandle);
+            const boxBeforeResize = await measureBox(appsWin);
+            await page.mouse.move(
+                handleBox.x + handleBox.width / 2,
+                handleBox.y + handleBox.height / 2,
+            );
+            await page.mouse.down();
+            await page.mouse.move(
+                handleBox.x + handleBox.width / 2 - 50,
+                handleBox.y + handleBox.height / 2 - 40,
+                { steps: 5 },
+            );
+            await page.mouse.up();
+            await page.waitForFunction(
+                (w) => {
+                    const el = document.querySelector(
+                        '.desktop-window[data-window-id="apps"]',
+                    ) as HTMLElement | null;
+                    return el &&
+                        Math.abs(el.getBoundingClientRect().width - (w - 50)) <=
+                            1;
+                },
+                boxBeforeResize.width,
+            );
+
+            // 6. Reload persistence of snapped state
+            await dragTitleTo(
+                canvasBox.x + 16,
+                canvasBox.y + canvasBox.height / 2,
+            );
+            await waitForSnap("snapped", "left", halfW);
+            await page.reload();
+            await appsWin.waitFor({ state: "visible" });
+            await waitForSnap("snapped", "left", halfW);
+
             await closeAllWorkspaces();
         },
     );

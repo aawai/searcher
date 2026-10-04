@@ -233,6 +233,10 @@ export function isDomainValueException(
             (/^(width|height|transform)$/.test(prop) &&
                 norm.includes("win.frame."));
     }
+    if (p === "web/src/features/desktop/WindowChrome.tsx") {
+        return /^(width|height|transform)$/.test(prop) &&
+            norm.includes("snapPreviewFrame.");
+    }
 
     // Floating note domain coordinates and tilt (scoped to FloatingNotes)
     if (p.endsWith("FloatingNotes.tsx") || p.includes("/fixtures/notes/")) {

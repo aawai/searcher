@@ -6,6 +6,8 @@ import {
     minimumSize,
     resizeFrame,
     type SafeRect,
+    snapFrame,
+    snapTarget,
 } from "./desktop-geometry.ts";
 
 Deno.test("desktop-geometry: minimumSize returns sensible documented minima bounded by safe rect", () => {
@@ -200,4 +202,141 @@ Deno.test("desktop-geometry: robust handling of degraded/zero safeRect dimension
     assertEquals(clamped.height, 0);
     assertEquals(clamped.x, 0);
     assertEquals(clamped.y, 0);
+});
+
+Deno.test("desktop-geometry: snapFrame computes frames accurately for all 7 modes (even and odd dimensions)", () => {
+    // Even safe rect: 1440 x 900
+    const rectEven: SafeRect = { x: 100, y: 50, width: 1440, height: 900 };
+
+    assertEquals(snapFrame("maximize", rectEven), {
+        x: 0,
+        y: 0,
+        width: 1440,
+        height: 900,
+    });
+    assertEquals(snapFrame("left", rectEven), {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 900,
+    });
+    assertEquals(snapFrame("right", rectEven), {
+        x: 720,
+        y: 0,
+        width: 720,
+        height: 900,
+    });
+    assertEquals(snapFrame("top-left", rectEven), {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 450,
+    });
+    assertEquals(snapFrame("top-right", rectEven), {
+        x: 720,
+        y: 0,
+        width: 720,
+        height: 450,
+    });
+    assertEquals(snapFrame("bottom-left", rectEven), {
+        x: 0,
+        y: 450,
+        width: 720,
+        height: 450,
+    });
+    assertEquals(snapFrame("bottom-right", rectEven), {
+        x: 720,
+        y: 450,
+        width: 720,
+        height: 450,
+    });
+
+    // Odd safe rect: 1001 x 801 (halfW = 500, rightW = 501; halfH = 400, bottomH = 401)
+    const rectOdd: SafeRect = { x: 0, y: 0, width: 1001, height: 801 };
+    assertEquals(snapFrame("left", rectOdd), {
+        x: 0,
+        y: 0,
+        width: 500,
+        height: 801,
+    });
+    assertEquals(snapFrame("right", rectOdd), {
+        x: 500,
+        y: 0,
+        width: 501,
+        height: 801,
+    });
+    assertEquals(snapFrame("top-left", rectOdd), {
+        x: 0,
+        y: 0,
+        width: 500,
+        height: 400,
+    });
+    assertEquals(snapFrame("top-right", rectOdd), {
+        x: 500,
+        y: 0,
+        width: 501,
+        height: 400,
+    });
+    assertEquals(snapFrame("bottom-left", rectOdd), {
+        x: 0,
+        y: 400,
+        width: 500,
+        height: 401,
+    });
+    assertEquals(snapFrame("bottom-right", rectOdd), {
+        x: 500,
+        y: 400,
+        width: 501,
+        height: 401,
+    });
+    assertEquals(snapFrame("maximize", rectOdd), {
+        x: 0,
+        y: 0,
+        width: 1001,
+        height: 801,
+    });
+
+    // Zero/degraded rect
+    const zeroRect: SafeRect = { x: 0, y: 0, width: 0, height: 0 };
+    assertEquals(snapFrame("left", zeroRect), {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    });
+});
+
+Deno.test("desktop-geometry: snapTarget detects 7 modes across edges and corners, and returns null for center and degraded rects", () => {
+    const rect: SafeRect = { x: 100, y: 50, width: 1000, height: 800 };
+
+    // Corners
+    assertEquals(snapTarget(105, 55, rect), "top-left"); // (relX=5, relY=5)
+    assertEquals(snapTarget(1095, 55, rect), "top-right"); // (relX=995, relY=5)
+    assertEquals(snapTarget(105, 845, rect), "bottom-left"); // (relX=5, relY=795)
+    assertEquals(snapTarget(1095, 845, rect), "bottom-right"); // (relX=995, relY=795)
+
+    // Non-corner edges
+    assertEquals(snapTarget(600, 55, rect), "maximize"); // top edge center (relX=500, relY=5)
+    assertEquals(snapTarget(105, 450, rect), "left"); // left edge center (relX=5, relY=400)
+    assertEquals(snapTarget(1095, 450, rect), "right"); // right edge center (relX=995, relY=400)
+
+    // Bottom non-corner (no bottom snap mode)
+    assertEquals(snapTarget(600, 845, rect), null); // (relX=500, relY=795)
+
+    // Interior / center of safe rect
+    assertEquals(snapTarget(600, 450, rect), null); // (relX=500, relY=400)
+
+    // Over-drag within margin (e.g. into topbar relY = -20)
+    assertEquals(snapTarget(600, 30, rect), "maximize");
+    assertEquals(snapTarget(80, 30, rect), "top-left");
+
+    // Far outside safe rect
+    assertEquals(snapTarget(600, 1000, rect), null);
+    assertEquals(snapTarget(-500, 400, rect), null);
+
+    // Zero rect
+    assertEquals(
+        snapTarget(100, 50, { x: 100, y: 50, width: 0, height: 0 }),
+        null,
+    );
 });

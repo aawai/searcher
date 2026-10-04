@@ -9,7 +9,7 @@ import {
     saveDesktopLayout,
 } from "./desktop-persistence.ts";
 import type { DesktopState } from "./desktop-state.ts";
-import type { SafeRect } from "./desktop-geometry.ts";
+import { type SafeRect, snapFrame } from "./desktop-geometry.ts";
 
 const rect1440: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
 const rect1024: SafeRect = { x: 0, y: 0, width: 1024, height: 768 };
@@ -437,4 +437,211 @@ Deno.test("desktop-persistence: fallback to instance session memory when Indexed
         const resetEnv = globalThis as Record<string, unknown>;
         resetEnv.indexedDB = originalIDB;
     }
+});
+
+Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and restores across save/load for 7 modes", () => {
+    const state: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: snapFrame("left", rect1440),
+                restoreFrame: { x: 100, y: 100, width: 600, height: 400 },
+                mode: "snapped",
+                snap: "left",
+                zOrder: 1,
+            },
+            {
+                id: "notes",
+                kind: "notes",
+                entityId: null,
+                frame: snapFrame("bottom-right", rect1440),
+                restoreFrame: { x: 200, y: 200, width: 500, height: 350 },
+                mode: "snapped",
+                snap: "bottom-right",
+                zOrder: 2,
+            },
+            {
+                id: "note:item-1",
+                kind: "note",
+                entityId: "item-1",
+                frame: snapFrame("top-left", rect1440),
+                restoreFrame: { x: 50, y: 50, width: 400, height: 300 },
+                mode: "minimized",
+                snap: "top-left",
+                zOrder: 3,
+            },
+        ],
+        activeId: "notes",
+    };
+
+    const encoded = encodeDesktopLayout(state, rect1440);
+    assertEquals(encoded.windows.find((w) => w.id === "apps")!.mode, "snapped");
+    assertEquals(encoded.windows.find((w) => w.id === "apps")!.snap, "left");
+    assertEquals(
+        encoded.windows.find((w) => w.id === "notes")!.mode,
+        "snapped",
+    );
+    assertEquals(
+        encoded.windows.find((w) => w.id === "notes")!.snap,
+        "bottom-right",
+    );
+    assertEquals(
+        encoded.windows.find((w) => w.id === "note:item-1")!.mode,
+        "minimized",
+    );
+    assertEquals(
+        encoded.windows.find((w) => w.id === "note:item-1")!.snap,
+        "top-left",
+    );
+
+    // Decode into a different viewport: rect1024
+    const decoded = decodeDesktopLayout(encoded, rect1024);
+    assertNotEquals(decoded, null);
+
+    const appsWin = decoded!.windows.find((w) => w.id === "apps")!;
+    assertEquals(appsWin.mode, "snapped");
+    assertEquals(appsWin.snap, "left");
+    assertEquals(appsWin.frame, snapFrame("left", rect1024));
+
+    const notesWin = decoded!.windows.find((w) => w.id === "notes")!;
+    assertEquals(notesWin.mode, "snapped");
+    assertEquals(notesWin.snap, "bottom-right");
+    assertEquals(notesWin.frame, snapFrame("bottom-right", rect1024));
+
+    const noteWin = decoded!.windows.find((w) => w.id === "note:item-1")!;
+    assertEquals(noteWin.mode, "minimized");
+    assertEquals(noteWin.snap, "top-left");
+    assertEquals(noteWin.frame, snapFrame("top-left", rect1024));
+});
+
+Deno.test("desktop-persistence: backward compatibility with legacy schema v1 fixtures without snap property", () => {
+    const legacyPayload = {
+        version: 1,
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 0.1, y: 0.1, width: 0.5, height: 0.5 },
+                mode: "normal",
+                zOrder: 1,
+                snap: null,
+            },
+            {
+                id: "notes",
+                kind: "notes",
+                entityId: null,
+                frame: { x: 0.2, y: 0.2, width: 0.4, height: 0.4 },
+                mode: "maximized",
+                zOrder: 2,
+                // snap omitted completely or null
+            },
+        ],
+        activeId: "apps",
+    };
+
+    const decoded = decodeDesktopLayout(legacyPayload, rect1440);
+    assertNotEquals(decoded, null);
+    const appsWin = decoded!.windows.find((w) => w.id === "apps")!;
+    assertEquals(appsWin.mode, "normal");
+    assertEquals(appsWin.snap, null);
+
+    const notesWin = decoded!.windows.find((w) => w.id === "notes")!;
+    assertEquals(notesWin.mode, "maximized");
+    assertEquals(notesWin.snap, "maximize");
+    assertEquals(notesWin.frame, snapFrame("maximize", rect1440));
+});
+
+Deno.test("desktop-persistence: strict validation rejects invalid snap values or corrupt mode-snap combinations", () => {
+    const baseWindow = {
+        id: "apps",
+        kind: "apps",
+        entityId: null,
+        frame: { x: 0.1, y: 0.1, width: 0.5, height: 0.5 },
+        zOrder: 1,
+    };
+
+    // 1. mode="snapped" with snap=null -> invalid
+    assertEquals(
+        decodeDesktopLayout(
+            {
+                version: 1,
+                windows: [{ ...baseWindow, mode: "snapped", snap: null }],
+            },
+            rect1440,
+        ),
+        null,
+    );
+
+    for (const snap of ["toString", "constructor", "__proto__"]) {
+        assertEquals(
+            decodeDesktopLayout({
+                version: 1,
+                windows: [{ ...baseWindow, mode: "snapped", snap }],
+            }, rect1440),
+            null,
+        );
+    }
+
+    // 2. mode="snapped" with invalid snap name e.g. "center" -> invalid
+    assertEquals(
+        decodeDesktopLayout(
+            {
+                version: 1,
+                windows: [{ ...baseWindow, mode: "snapped", snap: "center" }],
+            },
+            rect1440,
+        ),
+        null,
+    );
+
+    // 3. mode="normal" with snap="left" -> invalid (normal windows cannot have snap)
+    assertEquals(
+        decodeDesktopLayout(
+            {
+                version: 1,
+                windows: [{ ...baseWindow, mode: "normal", snap: "left" }],
+            },
+            rect1440,
+        ),
+        null,
+    );
+
+    // 4. mode="maximized" with snap="left" -> invalid (maximized can only be snap="maximize" or null)
+    assertEquals(
+        decodeDesktopLayout(
+            {
+                version: 1,
+                windows: [{ ...baseWindow, mode: "maximized", snap: "left" }],
+            },
+            rect1440,
+        ),
+        null,
+    );
+
+    // 5. non-string / corrupt snap value e.g. snap=123
+    assertEquals(
+        decodeDesktopLayout(
+            {
+                version: 1,
+                windows: [{ ...baseWindow, mode: "snapped", snap: 123 }],
+            },
+            rect1440,
+        ),
+        null,
+    );
+
+    // 6. corrupt mode
+    assertEquals(
+        decodeDesktopLayout(
+            {
+                version: 1,
+                windows: [{ ...baseWindow, mode: "floating", snap: null }],
+            },
+            rect1440,
+        ),
+        null,
+    );
 });

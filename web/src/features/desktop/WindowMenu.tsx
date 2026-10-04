@@ -1,0 +1,214 @@
+import { type Dispatch, useEffect, useState } from "react";
+import {
+    AppWindow,
+    Maximize2,
+    Minimize2,
+    Minus,
+    PanelLeft,
+    PanelRight,
+    X,
+} from "lucide-react";
+import { Button } from "../../components/ui/button.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu.tsx";
+import type { SafeRect, SnapMode } from "./desktop-geometry.ts";
+import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
+
+export interface WindowMenuProps {
+    window: DesktopWindowState;
+    rect: SafeRect;
+    dispatch: Dispatch<DesktopAction>;
+    onClose?: () => void;
+    showMinimize?: boolean;
+    showMaximize?: boolean;
+    disabled?: boolean;
+    closeLabel?: string;
+    className?: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}
+
+export function WindowMenu({
+    window: win,
+    rect,
+    dispatch,
+    onClose,
+    showMinimize = true,
+    showMaximize = true,
+    disabled = false,
+    closeLabel = "关闭",
+    className,
+    open,
+    onOpenChange,
+}: WindowMenuProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(() => {
+        if (typeof globalThis.window === "undefined") return true;
+        return globalThis.innerWidth >= 1024;
+    });
+
+    useEffect(() => {
+        if (typeof globalThis.matchMedia !== "function") return;
+        const mq = globalThis.matchMedia("(min-width: 1024px)");
+        const handler = (e: MediaQueryListEvent) => {
+            setIsDesktop(e.matches);
+        };
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
+
+    const isControlled = open !== undefined;
+    const isOpen = isControlled ? open : internalOpen;
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!isControlled) {
+            setInternalOpen(nextOpen);
+        }
+        onOpenChange?.(nextOpen);
+    };
+
+    const handleRestore = () => {
+        handleOpenChange(false);
+        dispatch({ type: "RESTORE", id: win.id, rect });
+    };
+
+    const handleMinimize = () => {
+        handleOpenChange(false);
+        dispatch({ type: "MINIMIZE", id: win.id });
+    };
+
+    const handleMaximize = () => {
+        handleOpenChange(false);
+        dispatch({ type: "MAXIMIZE", id: win.id, rect });
+    };
+
+    const handleSnap = (snap: SnapMode) => {
+        handleOpenChange(false);
+        dispatch({ type: "SNAP", id: win.id, snap, rect });
+    };
+
+    const handleClose = () => {
+        handleOpenChange(false);
+        if (onClose) {
+            onClose();
+        } else {
+            dispatch({ type: "CLOSE", id: win.id });
+        }
+    };
+
+    const isMaximized = win.mode === "maximized";
+    const isNormal = win.mode === "normal";
+
+    return (
+        <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
+            <DropdownMenuTrigger
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={disabled}
+                        data-slot="window-menu-trigger"
+                        data-testid="window-menu-trigger"
+                        className={[
+                            "desktop-window-chrome-btn",
+                            "desktop-window-chrome-btn--window-menu",
+                            "desktop-window-menu-trigger",
+                            className ?? "",
+                        ].filter(Boolean).join(" ")}
+                        aria-label="窗口系统菜单"
+                        title="窗口系统菜单"
+                    >
+                        <AppWindow className="desktop-window-chrome-icon h-4 w-4" />
+                    </Button>
+                }
+            />
+
+            <DropdownMenuContent
+                sideOffset={4}
+                data-testid="window-menu-content"
+                className="desktop-window-menu-content w-44"
+            >
+                {/* 还原 (Restore) */}
+                <DropdownMenuItem
+                    disabled={isNormal || disabled}
+                    onClick={handleRestore}
+                    data-action="restore"
+                    data-testid="window-menu-item-restore"
+                    className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
+                >
+                    <Minimize2 className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                    <span>还原</span>
+                </DropdownMenuItem>
+
+                {/* 最小化 (Minimize) */}
+                {showMinimize && (
+                    <DropdownMenuItem
+                        disabled={disabled}
+                        onClick={handleMinimize}
+                        data-action="minimize"
+                        data-testid="window-menu-item-minimize"
+                        className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
+                    >
+                        <Minus className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                        <span>最小化</span>
+                    </DropdownMenuItem>
+                )}
+
+                {/* 最大化 (Maximize) */}
+                {showMaximize && (
+                    <DropdownMenuItem
+                        disabled={isMaximized || disabled}
+                        onClick={handleMaximize}
+                        data-action="maximize"
+                        data-testid="window-menu-item-maximize"
+                        className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
+                    >
+                        <Maximize2 className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                        <span>最大化</span>
+                    </DropdownMenuItem>
+                )}
+
+                {/* 桌面分屏 (Desktop Snap) - Tablet禁用或仅桌面展示 */}
+                {isDesktop && !disabled && (
+                    <>
+                        <DropdownMenuItem
+                            onClick={() => handleSnap("left")}
+                            data-action="snap-left"
+                            data-testid="window-menu-item-snap-left"
+                            className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
+                        >
+                            <PanelLeft className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                            <span>靠左分屏</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                            onClick={() => handleSnap("right")}
+                            data-action="snap-right"
+                            data-testid="window-menu-item-snap-right"
+                            className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
+                        >
+                            <PanelRight className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                            <span>靠右分屏</span>
+                        </DropdownMenuItem>
+                    </>
+                )}
+
+                {/* 关闭 (Close) - 复用 onClose 保护业务 dirty 状态 */}
+                <DropdownMenuItem
+                    onClick={handleClose}
+                    data-action="close"
+                    data-testid="window-menu-item-close"
+                    className="desktop-window-menu-item flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                >
+                    <X className="desktop-window-menu-item-icon h-4 w-4 shrink-0" />
+                    <span>{closeLabel}</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}

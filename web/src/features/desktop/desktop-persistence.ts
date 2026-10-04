@@ -8,6 +8,8 @@ import {
     clampFrame,
     type Frame,
     type SafeRect,
+    snapFrame,
+    type SnapMode,
     type WindowKind,
 } from "./desktop-geometry.ts";
 import {
@@ -20,6 +22,16 @@ import {
 import { getLocal, setLocal } from "../../lib/local.ts";
 
 export const DESKTOP_LAYOUT_SCHEMA_VERSION = 1 as const;
+
+const VALID_SNAP_MODES: Record<string, true> = {
+    "left": true,
+    "right": true,
+    "top-left": true,
+    "top-right": true,
+    "bottom-left": true,
+    "bottom-right": true,
+    "maximize": true,
+};
 
 export interface NormalizedFrame {
     x: number;
@@ -36,7 +48,7 @@ export interface PersistedWindowLayout {
     restoreFrame?: NormalizedFrame | null;
     mode: WindowMode;
     zOrder: number;
-    snap: string | null;
+    snap: SnapMode | null;
 }
 
 export interface PersistedDesktopLayout {
@@ -94,7 +106,7 @@ export function encodeDesktopLayout(
             restoreFrame: normalizedRestoreFrame,
             mode: win.mode,
             zOrder: win.zOrder,
-            snap: null, // Reserved nullable snap semantic
+            snap: win.snap ?? null,
         };
     });
 
@@ -142,9 +154,6 @@ export function decodeDesktopLayout(
         return null;
     }
 
-    const safeW = Math.max(0, rect.width);
-    const safeH = Math.max(0, rect.height);
-
     const seenIds = new Set<string>();
     const validWindows: DesktopWindowState[] = [];
 
@@ -185,8 +194,10 @@ export function decodeDesktopLayout(
 
         // Strict mode validation
         if (
-            w.mode !== "normal" && w.mode !== "minimized" &&
-            w.mode !== "maximized"
+            w.mode !== "normal" &&
+            w.mode !== "minimized" &&
+            w.mode !== "maximized" &&
+            w.mode !== "snapped"
         ) {
             return null;
         }
@@ -199,13 +210,33 @@ export function decodeDesktopLayout(
         const zOrder = w.zOrder;
 
         // Strict snap validation (nullable / string)
-        if (
-            w.snap !== null && typeof w.snap !== "string" &&
-            w.snap !== undefined
-        ) {
-            return null;
+        if (w.snap !== null && w.snap !== undefined) {
+            if (
+                typeof w.snap !== "string" ||
+                !Object.hasOwn(VALID_SNAP_MODES, w.snap)
+            ) {
+                return null;
+            }
         }
 
+        if (mode === "snapped") {
+            if (
+                !w.snap || typeof w.snap !== "string" ||
+                !Object.hasOwn(VALID_SNAP_MODES, w.snap)
+            ) {
+                return null;
+            }
+        } else if (mode === "normal") {
+            if (w.snap !== null && w.snap !== undefined) {
+                return null;
+            }
+        } else if (mode === "maximized") {
+            if (
+                w.snap !== null && w.snap !== undefined && w.snap !== "maximize"
+            ) {
+                return null;
+            }
+        }
         // Strict frame validation: all coordinates must be finite numbers in [0..1]
         const rawFrame = w.frame as Record<string, unknown> | undefined;
         if (
@@ -283,27 +314,34 @@ export function decodeDesktopLayout(
 
         let finalFrame: Frame;
         let finalRestoreFrame: Frame | null;
+        let finalSnap: SnapMode | null = null;
 
         if (mode === "maximized") {
-            finalFrame = {
-                x: 0,
-                y: 0,
-                width: safeW,
-                height: safeH,
-            };
+            finalFrame = snapFrame("maximize", rect);
             finalRestoreFrame = clampedNormal;
-        } else if (mode === "minimized" && rawRestoreFrame) {
-            // Minimized from maximized state preserves prior maximized geometry and normal restoreFrame
-            finalFrame = {
-                x: 0,
-                y: 0,
-                width: safeW,
-                height: safeH,
-            };
+            finalSnap = "maximize";
+        } else if (mode === "snapped") {
+            finalFrame = snapFrame(w.snap as SnapMode, rect);
             finalRestoreFrame = clampedNormal;
+            finalSnap = w.snap as SnapMode;
+        } else if (mode === "minimized") {
+            if (w.snap === "maximize" || (w.snap == null && rawRestoreFrame)) {
+                finalFrame = snapFrame("maximize", rect);
+                finalRestoreFrame = clampedNormal;
+                finalSnap = "maximize";
+            } else if (w.snap) {
+                finalFrame = snapFrame(w.snap as SnapMode, rect);
+                finalRestoreFrame = clampedNormal;
+                finalSnap = w.snap as SnapMode;
+            } else {
+                finalFrame = clampedNormal;
+                finalRestoreFrame = null;
+                finalSnap = null;
+            }
         } else {
             finalFrame = clampedNormal;
             finalRestoreFrame = null;
+            finalSnap = null;
         }
 
         validWindows.push({
@@ -314,6 +352,7 @@ export function decodeDesktopLayout(
             restoreFrame: finalRestoreFrame,
             mode,
             zOrder,
+            snap: finalSnap,
         });
     }
 

@@ -31,8 +31,8 @@ export interface DesktopWindowProps {
     headerMenu?: ReactNode;
     closeBtnRef?: RefObject<HTMLButtonElement | null>;
     backBtnRef?: RefObject<HTMLButtonElement | null>;
+    showWindowMenu?: boolean;
 }
-
 export function DesktopWindow({
     window: win,
     rect,
@@ -53,6 +53,7 @@ export function DesktopWindow({
     headerMenu,
     closeBtnRef,
     backBtnRef,
+    showWindowMenu,
 }: DesktopWindowProps) {
     const windowRef = useRef<HTMLDivElement | null>(null);
 
@@ -67,15 +68,17 @@ export function DesktopWindow({
 
     const isMinimized = win.mode === "minimized";
     const isMaximized = win.mode === "maximized";
+    const isSnapped = win.mode === "snapped";
 
     const classNames = [
         "desktop-window",
         active ? "desktop-window--active" : "",
         isMaximized ? "desktop-window--maximized" : "",
         isMinimized ? "desktop-window--minimized" : "",
+        isSnapped ? "desktop-window--snapped" : "",
+        isSnapped && win.snap ? `desktop-window--snapped-${win.snap}` : "",
         className ?? "",
     ].filter(Boolean).join(" ");
-
     return (
         <div
             ref={windowRef}
@@ -86,6 +89,7 @@ export function DesktopWindow({
             data-window-kind={win.kind}
             data-window-active={active}
             data-window-mode={win.mode}
+            data-window-snap={win.snap ?? undefined}
             data-presentation="window"
             className={classNames}
             style={{
@@ -115,13 +119,14 @@ export function DesktopWindow({
                 headerMenu={headerMenu}
                 closeBtnRef={closeBtnRef}
                 backBtnRef={backBtnRef}
+                showWindowMenu={showWindowMenu}
             />
 
             <div className="desktop-window-content">
                 {children}
             </div>
 
-            {!disableResize && !isMaximized && !isMinimized && (
+            {!disableResize && !isMaximized && !isMinimized && !isSnapped && (
                 <WindowResizeHandles
                     window={win}
                     rect={rect}
