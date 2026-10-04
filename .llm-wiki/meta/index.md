@@ -63,6 +63,14 @@
 - [[sources/obs-2026-10-02-issue-63-settings-primitives-unified-and-pr-66-merged-into-m]] — Observation: Issue #63 Settings primitives unified and PR #66 merged into main *(created: 2026-10-02)*
 - [[sources/obs-2026-10-02-pr-58-docker-deployment-hardening-merged-into-main]] — Observation: PR #58 Docker deployment hardening merged into main *(created: 2026-10-02)*
 - [[sources/obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive]] — Observation: AdminPage Users and Audit section unification and responsive actions *(created: 2026-10-03)*
+- [[sources/obs-2026-10-03-apps-root-and-folder-empty-state-canonicalization-acceptance]] — Observation: Apps root and folder empty state canonicalization acceptance *(created: 2026-10-03)*
+- [[sources/obs-2026-10-03-issue-80-workspace-responsive-matrix-acceptance-results]] — Observation: Issue 80 workspace responsive matrix acceptance results *(created: 2026-10-03)*
+- [[sources/obs-2026-10-03-pure-markdown-transform-functions-and-phase-13-1-tests-for-i]] — Observation: Pure Markdown transform functions and Phase 13.1 tests for Issue #78 *(created: 2026-10-03)*
+- [[sources/obs-2026-10-03-ui-ownership-regression-test-suite-added-for-issue-79]] — Observation: UI ownership regression test suite added for Issue 79 *(created: 2026-10-03)*
+- [[sources/obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and]] — Observation: Wallpaper subsystem refactor: backend contracts, lifecycle, and recoverable rollback *(created: 2026-10-03)*
+- [[sources/obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg]] — Observation: Zen workspace panel/sheet presenter migration and PR #95 merged *(created: 2026-10-03)*
+- [[sources/obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89]] — Observation: Desktop workspace E2E contract migration for Issue #89 *(created: 2026-10-04)*
+- [[sources/obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont]] — Observation: Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration *(created: 2026-10-04)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -115,4 +123,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-03T01:58:47.155Z* | *Total pages: 100*
+*Last updated: 2026-10-04T00:40:42.597Z* | *Total pages: 108*

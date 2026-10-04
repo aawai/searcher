@@ -311,3 +311,27 @@
 ## [2026-10-03T01:58:47.123Z] observe
 - slug: "obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive", title: "AdminPage Users and Audit section unification and responsive actions", relevance: "high"
 
+## [2026-10-03T07:35:29.400Z] observe
+- slug: "obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and", title: "Wallpaper subsystem refactor: backend contracts, lifecycle, and recoverable rollback", relevance: "high"
+
+## [2026-10-03T09:35:11.337Z] observe
+- slug: "obs-2026-10-03-ui-ownership-regression-test-suite-added-for-issue-79", title: "UI ownership regression test suite added for Issue 79", relevance: "high"
+
+## [2026-10-03T12:34:11.081Z] observe
+- slug: "obs-2026-10-03-issue-80-workspace-responsive-matrix-acceptance-results", title: "Issue 80 workspace responsive matrix acceptance results", relevance: "high"
+
+## [2026-10-03T12:48:10.498Z] observe
+- slug: "obs-2026-10-03-apps-root-and-folder-empty-state-canonicalization-acceptance", title: "Apps root and folder empty state canonicalization acceptance", relevance: "high"
+
+## [2026-10-03T13:39:59.996Z] observe
+- slug: "obs-2026-10-03-pure-markdown-transform-functions-and-phase-13-1-tests-for-i", title: "Pure Markdown transform functions and Phase 13.1 tests for Issue #78", relevance: "high"
+
+## [2026-10-03T16:24:45.208Z] observe
+- slug: "obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg", title: "Zen workspace panel/sheet presenter migration and PR #95 merged", relevance: "high"
+
+## [2026-10-04T00:35:43.421Z] observe
+- slug: "obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89", title: "Desktop workspace E2E contract migration for Issue #89", relevance: "high"
+
+## [2026-10-04T00:40:42.566Z] observe
+- slug: "obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont", title: "Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration", relevance: "high"
+

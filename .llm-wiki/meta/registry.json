@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-03T01:58:47.155Z",
+  "last_updated": "2026-10-04T00:40:42.597Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1104,6 +1104,144 @@
       "source_context": "Issue #72 admin refactoring slice: AdminPage.tsx Users and Audit tabs",
       "created": "2026-10-03",
       "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-03-apps-root-and-folder-empty-state-canonicalization-acceptance": {
+      "type": "source",
+      "title": "Observation: Apps root and folder empty state canonicalization acceptance",
+      "tags": [
+        "apps-empty",
+        "canonical-empty-state",
+        "responsive-matrix",
+        "issue-80"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-apps-root-and-folder-empty-state-canonicalization-acceptance",
+      "relevance": "high",
+      "observed_at": "2026-10-03T12:48:10.493Z",
+      "source_context": "Issue #80 Apps root/folder empty state canonical review",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-03-issue-80-workspace-responsive-matrix-acceptance-results": {
+      "type": "source",
+      "title": "Observation: Issue 80 workspace responsive matrix acceptance results",
+      "tags": [
+        "workspace",
+        "responsive",
+        "matrix",
+        "ui-acceptance",
+        "issue-80"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-issue-80-workspace-responsive-matrix-acceptance-results",
+      "relevance": "high",
+      "observed_at": "2026-10-03T12:34:11.078Z",
+      "source_context": "Issue #80 UI responsive matrix acceptance verification",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-03-pure-markdown-transform-functions-and-phase-13-1-tests-for-i": {
+      "type": "source",
+      "title": "Observation: Pure Markdown transform functions and Phase 13.1 tests for Issue #78",
+      "tags": [
+        "notes",
+        "markdown",
+        "editor",
+        "tests"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-pure-markdown-transform-functions-and-phase-13-1-tests-for-i",
+      "relevance": "high",
+      "observed_at": "2026-10-03T13:39:59.992Z",
+      "source_context": "Issue #78 Notes Markdown Transform",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-03-ui-ownership-regression-test-suite-added-for-issue-79": {
+      "type": "source",
+      "title": "Observation: UI ownership regression test suite added for Issue 79",
+      "tags": [
+        "e2e",
+        "ui-ownership",
+        "regression",
+        "testing",
+        "issue-79"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-ui-ownership-regression-test-suite-added-for-issue-79",
+      "relevance": "high",
+      "observed_at": "2026-10-03T09:35:11.329Z",
+      "source_context": "Issue #79 UI ownership E2E regression tests",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and": {
+      "type": "source",
+      "title": "Observation: Wallpaper subsystem refactor: backend contracts, lifecycle, and recoverable rollback",
+      "tags": [
+        "[\"wallpaper\",\"refactor\",\"contracts\",\"lifecycle\",\"issue-75\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and",
+      "relevance": "high",
+      "observed_at": "2026-10-03T07:35:29.389Z",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg": {
+      "type": "source",
+      "title": "Observation: Zen workspace panel/sheet presenter migration and PR #95 merged",
+      "tags": [
+        "workspace",
+        "zen",
+        "presenter",
+        "issue-87",
+        "focus",
+        "ui-contract"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg",
+      "relevance": "high",
+      "observed_at": "2026-10-03T16:24:45.206Z",
+      "source_context": "Issue #87 Zen workspace migration to unified panel/sheet presenter",
+      "created": "2026-10-03",
+      "updated": "2026-10-03"
+    },
+    "sources/obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89": {
+      "type": "source",
+      "title": "Observation: Desktop workspace E2E contract migration for Issue #89",
+      "tags": [
+        "issue-89",
+        "workspace",
+        "e2e",
+        "desktop-dock",
+        "desktop-windows"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89",
+      "relevance": "high",
+      "observed_at": "2026-10-04T00:35:43.417Z",
+      "source_context": "Issue #89 desktop dock and window contract migration for workspace.test.ts",
+      "created": "2026-10-04",
+      "updated": "2026-10-04"
+    },
+    "sources/obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont": {
+      "type": "source",
+      "title": "Observation: Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration",
+      "tags": [
+        "notes-workspace",
+        "e2e",
+        "desktop-dock",
+        "desktop-windows",
+        "contracts"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont",
+      "relevance": "high",
+      "observed_at": "2026-10-04T00:40:42.559Z",
+      "source_context": "Issue #89 migration of Notes workspace e2e tests",
+      "created": "2026-10-04",
+      "updated": "2026-10-04"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

@@ -1,7 +1,18 @@
 # Wiki Update Log
 
+## 2026-10-04
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont","title":"Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89","title":"Desktop workspace E2E contract migration for Issue #89"}
+
 ## 2026-10-03
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg","title":"Zen workspace panel/sheet presenter migration and PR #95 merged"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-03-pure-markdown-transform-functions-and-phase-13-1-tests-for-i","title":"Pure Markdown transform functions and Phase 13.1 tests for Issue #78"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-03-apps-root-and-folder-empty-state-canonicalization-acceptance","title":"Apps root and folder empty state canonicalization acceptance"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-03-issue-80-workspace-responsive-matrix-acceptance-results","title":"Issue 80 workspace responsive matrix acceptance results"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-03-ui-ownership-regression-test-suite-added-for-issue-79","title":"UI ownership regression test suite added for Issue 79"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and","title":"Wallpaper subsystem refactor: backend contracts, lifecycle, and recoverable rollback"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-03-adminpage-users-and-audit-section-unification-and-responsive","title":"AdminPage Users and Audit section unification and responsive actions"}
 
 ## 2026-10-02
