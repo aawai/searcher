@@ -47,6 +47,30 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #103 快捷键说明与上下文验收（2026-10-04）
+
+- [x] Utility archetype：设置 h1 → 快捷键 h2 → 五组 h3；复用
+      SettingsSection/SettingsActionCard。只读入口无需登录，无自定义、持久化或全局
+      dispatcher。
+- [x] Catalog 为 binding、平台格式化和搜索命令的唯一 owner；已有
+      Search/Notes/Ask handler 保持各自事件归属。keycap 消费既有 token，CSS 只归
+      settings.css，不增加 baseline。
+- [x] 修复前全局 Ctrl+K 抢占普通 input，额外 Shift 也触发；修复后
+      input/textarea/select/contenteditable/role=textbox descendants
+      均保留焦点。Notes K 插入链接并保留选区，B/I/Shift+X/S 与 Ask composer 内
+      F/离开 Ask 后不接管均通过真实 E2E。
+- [x] 全部五个 prefix、游客 AI 登录边界、登录后 AI 模式、新标签页 query
+      与原页不跳转通过。Settings 直接访问/刷新/active/未知路径404、真实
+      macOS/Linux userAgent 与 screen-reader 完整组合键通过。
+- [x] 最终页面 390×844 / 768×1024 / 1440×900 × light/dark
+      六组实测无横向溢出；截图 `/tmp/omp-sshots-15991c86d03376c8.webp` 至
+      `/tmp/omp-sshots-15991c8816f376cd.webp`。媒体主题提交后再断言，reduced-motion
+      下验收；axe 0 违规、浏览器 runtime error 0。
+- [x] 工作区与路由共9套95步通过；三个快捷键E2E共12步通过；production
+      build/typecheck/lint/format 与 check:ui 通过（111 visual files，0
+      violations/allowances/drift）。未涉及 Design Lab，既有壁纸/布局/状态矩阵由
+      workspace suite 回归。
+
 ## Issue #80 Workspace semantic 验收（2026-10-03）
 
 - [x] WorkspaceSection 为 Apps / Notes 唯一 subsection grammar：panel h2 →

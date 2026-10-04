@@ -661,3 +661,79 @@
     display: flex;
     gap: var(--space-2);
 }
+
+/* Shortcuts Settings */
+.settings-shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-section-gap);
+    width: 100%;
+    min-width: 0;
+}
+
+.settings-shortcut-keycap-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+.settings-shortcut-keycap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1) var(--space-2);
+    font-family: var(--font-code-family);
+    font-size: var(--font-code-size);
+    line-height: var(--font-code-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.settings-shortcut-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+    width: 100%;
+}
+
+.settings-shortcut-scope {
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+    line-height: var(--font-caption-line-height);
+    word-break: break-word;
+}
+
+.settings-shortcut-label {
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+
+.settings-shortcut-note {
+    font-size: var(--font-caption-size);
+    color: var(--muted);
+    line-height: var(--font-caption-line-height);
+    word-break: break-word;
+}
+
+.settings-shortcut-command-example {
+    font-family: var(--font-code-family);
+    font-size: var(--font-code-size);
+    padding: 0 var(--space-1);
+    background: var(--surface-soft);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-inline-code);
+    color: var(--foreground);
+}
+
+@container settings-panel (max-width: 600px) {
+    .settings-shortcut-keycap-group {
+        margin-top: var(--space-1);
+    }
+}

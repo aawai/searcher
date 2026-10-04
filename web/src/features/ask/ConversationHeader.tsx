@@ -20,6 +20,11 @@ import {
 import type { AiConversationDto, AiMessageDto } from "./types.ts";
 import { RenameConversationDialog } from "./RenameConversationDialog.tsx";
 import { SystemInstructionDialog } from "./SystemInstructionDialog.tsx";
+import {
+    formatShortcut,
+    type ShortcutPlatform,
+    SHORTCUTS,
+} from "../shortcuts/shortcut-catalog.ts";
 
 interface ConversationHeaderProps {
     conversation: AiConversationDto | null;
@@ -33,6 +38,7 @@ interface ConversationHeaderProps {
     // New conversation draft options:
     isNewConversationTemporary?: boolean;
     newConversationInstruction?: string | null;
+    platform?: ShortcutPlatform;
 }
 
 export function ConversationHeader({
@@ -46,6 +52,7 @@ export function ConversationHeader({
     onOpenSearch,
     isNewConversationTemporary = false,
     newConversationInstruction = null,
+    platform,
 }: ConversationHeaderProps) {
     const [renameOpen, setRenameOpen] = useState(false);
     const [instructionOpen, setInstructionOpen] = useState(false);
@@ -55,6 +62,7 @@ export function ConversationHeader({
         ? !conversation.historyEnabled
         : isNewConversationTemporary;
 
+    const searchHint = formatShortcut(SHORTCUTS.askFind.binding, platform);
     function handleExport(format: "markdown" | "json") {
         if (!messages.length) return;
         if (format === "markdown") {
@@ -144,8 +152,8 @@ export function ConversationHeader({
                         size="icon"
                         className="ask-header__icon-btn"
                         onClick={onOpenSearch}
-                        aria-label="会话内搜索 (Cmd/Ctrl+F)"
-                        title="会话内搜索 (Cmd/Ctrl+F)"
+                        aria-label={`会话内搜索 (${searchHint})`}
+                        title={`会话内搜索 (${searchHint})`}
                     >
                         <Search size={16} />
                     </Button>
@@ -187,7 +195,7 @@ export function ConversationHeader({
                         {messages.length > 0 && (
                             <DropdownMenuItem onClick={onOpenSearch}>
                                 <Search size={14} className="mr-2" />
-                                <span>会话搜索 (Cmd+F)</span>
+                                <span>会话搜索 ({searchHint})</span>
                             </DropdownMenuItem>
                         )}
 

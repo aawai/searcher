@@ -18,6 +18,11 @@ import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
 import { Button } from "../ui/button.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import {
+    matchesShortcut,
+    type ShortcutPlatform,
+    SHORTCUTS,
+} from "../../features/shortcuts/shortcut-catalog.ts";
 import { COLOR_NAMES, NOTE_COLORS, type NoteItem } from "./NoteCard.tsx";
 
 type Draft = { body: string; title: string };
@@ -41,9 +46,10 @@ const markdown = (text: string) => (
     </div>
 );
 export function NoteEditor(
-    { note, onSaved }: {
+    { note, onSaved, platform }: {
         note: NoteItem;
         onSaved: (note: NoteItem) => void;
+        platform?: ShortcutPlatform;
     },
 ) {
     const editorId = useId();
@@ -175,25 +181,31 @@ export function NoteEditor(
             composingRef.current || event.nativeEvent.isComposing ||
             event.keyCode === 229
         ) return;
-        if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
-        const key = event.key.toLowerCase();
-        if (key === "s" && !event.shiftKey) {
+        if (matchesShortcut(event, SHORTCUTS.noteSave.binding)) {
             event.preventDefault();
             void save(undefined, "manual");
             return;
         }
-        const format: MarkdownCommand | undefined = event.shiftKey
-            ? (key === "x" ? "strike" : undefined)
-            : key === "b"
-            ? "bold"
-            : key === "i"
-            ? "italic"
-            : key === "k"
-            ? "link"
-            : undefined;
-        if (!format) return;
-        event.preventDefault();
-        command(format);
+        if (matchesShortcut(event, SHORTCUTS.noteBold.binding)) {
+            event.preventDefault();
+            command("bold");
+            return;
+        }
+        if (matchesShortcut(event, SHORTCUTS.noteItalic.binding)) {
+            event.preventDefault();
+            command("italic");
+            return;
+        }
+        if (matchesShortcut(event, SHORTCUTS.noteLink.binding)) {
+            event.preventDefault();
+            command("link");
+            return;
+        }
+        if (matchesShortcut(event, SHORTCUTS.noteStrike.binding)) {
+            event.preventDefault();
+            command("strike");
+            return;
+        }
     }
 
     function bodyEditor(id: string) {
@@ -206,7 +218,7 @@ export function NoteEditor(
                     }
                 }}
             >
-                <NoteMarkdownToolbar onCommand={command} />
+                <NoteMarkdownToolbar onCommand={command} platform={platform} />
                 <label className="sr-only" htmlFor={id}>Markdown 内容</label>
                 <Textarea
                     ref={textareaRef}

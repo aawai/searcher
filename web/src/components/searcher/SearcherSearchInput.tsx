@@ -6,6 +6,14 @@ import { type EngineId } from "@shared/engines.ts";
 import { Button } from "../ui/button.tsx";
 import { api } from "../../lib/api.ts";
 import { getLocal, setLocal } from "../../lib/local.ts";
+import {
+    formatShortcut,
+    isEditableShortcutTarget,
+    matchesShortcut,
+    parseCommandPrefix,
+    SEARCH_QUICK_COMMANDS,
+    SHORTCUTS,
+} from "../../features/shortcuts/shortcut-catalog.ts";
 
 export type Reachability = Record<
     string,
@@ -25,33 +33,6 @@ export interface SuggestionItem {
     description?: string;
 }
 
-export const SHORTCUT_COMMANDS = [
-    { prefix: "/g", name: "Google 搜索", engine: "google" as const },
-    { prefix: "/b", name: "Bing 搜索", engine: "bing" as const },
-    { prefix: "/ba", name: "百度搜索", engine: "baidu" as const },
-    { prefix: "/d", name: "DuckDuckGo 搜索", engine: "duckduckgo" as const },
-    { prefix: "/ai", name: "AI 问答", mode: "ai" as const },
-] as const;
-
-export function parseCommandPrefix(raw: string) {
-    const trimmedLead = raw.trimStart();
-    const match = /^\/(g|b|ba|d|ai)(?:\s+|$)/i.exec(trimmedLead);
-    if (!match) return null;
-    const command = match[1].toLowerCase();
-    const rest = trimmedLead.slice(match[0].length).trim();
-    const isAi = command === "ai";
-    const engineMap = {
-        g: "google",
-        b: "bing",
-        ba: "baidu",
-        d: "duckduckgo",
-    } as const;
-    const targetEngine = isAi
-        ? undefined
-        : engineMap[command as keyof typeof engineMap];
-    const hasSpace = /\s/.test(match[0]);
-    return { command, rest, isAi, targetEngine, hasSpace, prefix: match[0] };
-}
 type SuggestionSegment = {
     text: string;
     kind: "plain" | "match" | "completion";
@@ -134,19 +115,15 @@ export function SearcherSearchInput(
     const [isOpen, setIsOpen] = useState(false);
     const field = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const isMac = typeof navigator !== "undefined" &&
-        /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || "");
     const abortRef = useRef<AbortController | null>(null);
 
     // Global keyboard shortcut focus (/ and Cmd/Ctrl+K)
     useEffect(() => {
         const focus = (event: KeyboardEvent) => {
+            if (isEditableShortcutTarget(event.target)) return;
             if (
-                (event.key === "/" &&
-                    !(event.target instanceof HTMLInputElement ||
-                        event.target instanceof HTMLTextAreaElement)) ||
-                ((event.metaKey || event.ctrlKey) &&
-                    event.key.toLowerCase() === "k")
+                matchesShortcut(event, SHORTCUTS.focusSearchSlash.binding) ||
+                matchesShortcut(event, SHORTCUTS.focusSearch.binding)
             ) {
                 event.preventDefault();
                 field.current?.focus();
@@ -189,7 +166,7 @@ export function SearcherSearchInput(
         // 快捷命令触发（输入 / 提示 /g /b /ba 等，尚未输入空格分割）
         if (trimmed.startsWith("/") && (!cmd || !cmd.hasSpace)) {
             const firstToken = trimmed.split(/\s+/)[0].toLowerCase();
-            const matchedCommands = SHORTCUT_COMMANDS.filter((c) =>
+            const matchedCommands = SEARCH_QUICK_COMMANDS.filter((c) =>
                 c.prefix.toLowerCase().startsWith(firstToken)
             );
             if (matchedCommands.length > 0) {
@@ -197,8 +174,10 @@ export function SearcherSearchInput(
                     .map((c) => ({
                         text: c.prefix,
                         source: "command",
-                        engine: "engine" in c ? c.engine : undefined,
-                        description: `${c.prefix} · ${c.name}`,
+                        engine: c.target.type === "engine"
+                            ? c.target.engine
+                            : undefined,
+                        description: `${c.prefix} · ${c.action}`,
                     }));
                 setSuggestions(commandSuggestions);
                 setIsOpen(true);
@@ -406,7 +385,7 @@ export function SearcherSearchInput(
     }
 
     function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
-        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        if (matchesShortcut(event, SHORTCUTS.searchNewTab.binding)) {
             event.preventDefault();
             submit(event, true);
             return;
@@ -483,7 +462,7 @@ export function SearcherSearchInput(
                             className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs text-[var(--muted)] border border-[var(--border)] rounded-[var(--control-radius)] bg-[var(--surface-soft)] pointer-events-none select-none mr-1 font-mono"
                             aria-hidden="true"
                         >
-                            {isMac ? "⌘K" : "Ctrl+K"}
+                            {formatShortcut(SHORTCUTS.focusSearch.binding)}
                         </span>
                     )}
                     <Button
