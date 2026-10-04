@@ -176,6 +176,11 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         await rightClickBlankSurface(targetPage);
         const menu = targetPage.locator('[data-slot="context-menu-content"]');
         await menu.waitFor({ timeout: 5000 });
+        await targetPage.waitForFunction(() =>
+            document.querySelector(
+                '[data-slot="context-menu-content"]',
+            )?.contains(document.activeElement)
+        );
         return menu;
     }
 
@@ -193,8 +198,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         const item = menu.locator('[data-slot="context-menu-item"]', {
             hasText: "完成整理",
         });
-        await item.focus();
-        await item.press("Enter");
+        await item.click();
         await menu.waitFor({ state: "detached" });
     }
 
