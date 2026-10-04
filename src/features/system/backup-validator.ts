@@ -259,6 +259,57 @@ export function validateBackupConsistency(
                 }
             }
         }
+
+        // Check wallpaper_presentations column if present
+        const hasPresentationsCol = colCheck.some(
+            (c) => c.name === "wallpaper_presentations",
+        );
+        if (hasPresentationsCol) {
+            const presRows = db
+                .prepare(
+                    "SELECT user_id AS userId, wallpaper_presentations AS presentations FROM preferences WHERE wallpaper_presentations IS NOT NULL",
+                )
+                .all() as Array<
+                    { userId: string; presentations: string | null }
+                >;
+
+            for (const r of presRows) {
+                if (!r.presentations) continue;
+                try {
+                    const parsed = JSON.parse(r.presentations);
+                    if (typeof parsed === "object" && parsed !== null) {
+                        for (const key of Object.keys(parsed)) {
+                            if (key.startsWith("/api/wallpaper/")) {
+                                const refId = key.slice(
+                                    "/api/wallpaper/".length,
+                                );
+                                if (!UUID_REGEX.test(refId)) {
+                                    throw new BackupValidationError(
+                                        `偏好展示引用的壁纸 ID 格式非法: ${refId}`,
+                                    );
+                                }
+                                const wallpaper = wallpaperMap.get(refId);
+                                if (!wallpaper) {
+                                    throw new BackupValidationError(
+                                        `偏好展示引用的本地壁纸不存在: ${refId}`,
+                                    );
+                                }
+                                if (wallpaper.userId !== r.userId) {
+                                    throw new BackupValidationError(
+                                        `偏好展示引用的本地壁纸不属于该用户: ${refId}`,
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    if (e instanceof BackupValidationError) throw e;
+                    throw new BackupValidationError(
+                        "偏好展示配置不是合法的 JSON",
+                    );
+                }
+            }
+        }
     }
 
     // 8. Root manifest assets.wallpapersCount check

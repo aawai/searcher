@@ -316,36 +316,196 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
 
 ### Wallpaper canvas
 
-首页 canvas 固定在 app-shell 的隔离层级中，自身裁切并建立 stacking context。
-base gradient → wallpaper image（内部 z-index 0）→ readability mask（1）→ theme
-glow（2）→ ambient ripple（3）。图片由 `.wallpaper__image` 拥有， mask 由
-`.wallpaper::after` 拥有，glow 由 `.wallpaper::before` 拥有， 涟漪由真实 DOM
-`.wallpaper__ripple` 拥有。装饰层均为 pointer-events: none， 并由 aria-hidden
-容器排除可访问性树；不产生布局或可点击区域。 blur/grayscale
-仅作用于图片层；图片按三倍 blur 半径扩展裁切区域，保留 scale(1.06)。URL 图片及
-linear/radial gradient 仍可渲染，图片材质标记只匹配 URL。
+首页 canvas 固定在 app-shell 的隔离层级中，自身裁切并建立 stacking
+context。壁纸运行时由组件
+`WallpaperSurface`（`web/src/components/wallpaper/WallpaperSurface.tsx`）统一渲染，采用固定分层与受控
+CSS 变量架构：
 
-`wallpaperMask` 范围 0–0.8、canonical default 0.36，只控制图片可读性， 不控制
-glow/ripple；迁移不改写历史 mask（包括用户选择的 0）。 `wallpaperGlowStrength`
-范围 0–0.30、default 0.14，由单一 `--wallpaper-glow-strength` 控制 accent
-color-mix；light/dark 均为 14%。 主题原点仍由 `--wallpaper-glow-origin`
-拥有（light 50% 16%，dark 50% 18%）。
+- **容器 `.wallpaper-surface`**：`fixed`（`--embedded` 时为
+  `absolute`），`inset: 0`，`z-index: -1`（`--embedded` 时为
+  `0`）。默认拥有基底渐变（暗色主题为
+  `linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%, #18181b), #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b))`）；在
+  `data-tone="mono"` 时切换为纯中性纯色底色以杜绝彩色渐变泄漏。
+- **图像与溢出层 `.wallpaper-surface__overscan`（内部 z-index: 0）**：通过
+  `--wallpaper-overscan-x` 与 `--wallpaper-overscan-y`
+  负向内嵌裁切容器（`inset: var(--wallpaper-overscan-y) var(--wallpaper-overscan-x)`）；内含真实图像层
+  `.wallpaper-surface__image`，消费 `--wallpaper-image`、`--wallpaper-filter` 与
+  `--wallpaper-position`，且 `transform-origin: var(--wallpaper-position)`
+  严格锁定用户焦点构图坐标。
+- **氛围微光层 `.wallpaper__ambient`（内部 z-index: 1）**：仅在
+  `resolved.motion === "ambient"` 时按需挂载 DOM，内含双径向光场
+  `.wallpaper__ambient-field-a` 与 `.wallpaper__ambient-field-b`。
+- **可读性遮罩层 `.wallpaper-surface__mask`（内部 z-index: 2）**：默认
+  `background: var(--surface-l0)`，透明度消费 `--wallpaper-mask`；在
+  `data-tone="mono"` 下通过 `background: inherit` 严格继承中性纯色底色。
 
-`ambientMotionMode` 为 off / breathe / breathe_ripple（default
-breathe_ripple）： off 保留静态 glow，breathe 只启用 glow，breathe_ripple
-同时启用柔和 radial 涟漪（无高对比环或多环）。`ambientMotionStrength` 范围
-0–1、default 0.35， 只控制幅度；S=0 与静态 glow 视觉等价，off 时 Slider disabled
-且保留原值。 React 将 S 映射为 glow rest opacity = 1−0.18S、glow peak scale =
-1+0.05S、 ripple peak opacity = 0.18S、ripple peak scale = 1+0.20S。周期固定为
-8s， glow 使用 ease-in-out，ripple 使用 ease-out 并延迟 1.5s；只动画
-opacity/transform。 prefers-reduced-motion: reduce 优先关闭两类动画、隐藏
-ripple，保留静态 glow； 不改保存值，系统偏好关闭后自动恢复用户模式。
+装饰层均为 `pointer-events: none`，且容器通过 `aria-hidden={!children}`
+从可访问性树中排除；不产生外部布局或可点击区域。URL
+图片、所有者壁纸（`/api/wallpaper/{id}`）与 CSS
+渐变（linear/radial/conic）均可渲染。
 
-默认值由 `src/shared/contracts.ts` 导出，Appearance 初始态、Settings reset、
-PreferencesService 与 schema 同步引用；首次 partial PATCH 基于完整服务默认值
-叠加 patch，后续 PATCH 只修改提交字段。匿名设置仅持久化到独立设备缓存，
-账号设备缓存按用户隔离，云端保存共享设置；旧缓存/API 缺字段时 normalize
-到默认值。
+#### 1. 离散预设模型与 Canonical 默认值
+
+壁纸渲染意图由
+`WallpaperPresentation`（`src/shared/wallpaper-presentation.ts`）统一表达，全面收敛为离散档位预设（Preset
+Stages）：
+
+- **可读性遮罩（Readability，`WALLPAPER_READABILITY_STAGES`）**：
+  - `clear`（清透）：mask = `0.12`（12%）
+  - `balanced`（均衡）：mask = `0.24`（24%）——**系统默认值**
+  - `quiet`（沉静）：mask = `0.36`（36%）
+  - `focus`（专注）：mask = `0.48`（48%）
+- **清晰度/模糊（Softness，`WALLPAPER_SOFTNESS_STAGES`）**：
+  - `none`（无）：blur = `0px`——**系统默认值**
+  - `subtle`（轻柔）：blur = `2px`
+  - `soft`（柔和）：blur = `5px`
+  - `hazy`（朦胧）：blur = `9px`
+- **色调调整（Tone，`WALLPAPER_TONE_STAGES`）**：
+  - `natural`（原色）：无滤镜衰减——**系统默认值**
+  - `soft`（柔和）：降低饱和度与对比度
+  - `mono`（黑白）：完全去色（grayscale = 1）
+  - 各主题滤镜值映射表（`WALLPAPER_TONE_VALUES`）：
+    - 浅色（Light）：
+      - `natural`：brightness 1.00, saturate 1.00, contrast 1.00, grayscale 0
+      - `soft`：brightness 0.99, saturate 0.86, contrast 0.96, grayscale 0
+      - `mono`：brightness 0.98, saturate 0.00, contrast 0.96, grayscale 1
+    - 深色（Dark）：
+      - `natural`：brightness 1.00, saturate 1.00, contrast 1.00, grayscale 0
+      - `soft`：brightness 0.90, saturate 0.80, contrast 0.94, grayscale 0
+      - `mono`：brightness 0.86, saturate 0.00, contrast 0.92, grayscale 1
+- **动效模式（Motion，`WALLPAPER_MOTION_STAGES`）与强度（MotionLevel，`WALLPAPER_MOTION_LEVEL_STAGES`）**：
+  - 动效模式：`off`（关闭，默认）、`ambient`（环境光）、`drift`（漂移）、`zoom`（推近）
+  - 动效强度：`subtle`（轻微）、`soft`（柔和，默认）、`standard`（标准）、`pronounced`（明显）
+  - 空壁纸/画布动效（Canvas Motion）：`off`（默认）、`ambient`；强度默认为
+    `soft`
+- **默认 Presentation 状态（`DEFAULT_WALLPAPER_PRESENTATION`）**：
+  - `{ composition: { focalX: 0.5, focalY: 0.5 }, readability: "balanced", softness: "none", tone: "natural", motion: "off", motionLevel: "soft" }`
+
+#### 2. 全局动效预算与时序参数（Global Motion Budget）
+
+所有合法预设组合均严格受限于全局动效预算（`GLOBAL_MOTION_BUDGET`），防止过度渲染和视觉抢焦：
+
+- **最大强调色贡献（maxAccentContributionPercent）**：`8.0%`
+- **最大位移幅度（maxMovementPercent）**：`1.0%`
+- **最大缩放增量（maxZoomDeltaPercent）**：`4.0%`
+- **最短周期时长（minDurationSeconds）**：`28s`
+- **最大运动光场数（maxMovingAmbientFields）**：`2`
+
+具体动效时序（`WALLPAPER_MOTION_TIMING`）与几何参数：
+
+- **环境光动效（Ambient）**：
+  - 双光场设计：Field A（半径 `58vmax`，周期 `28s`，相位偏移
+    `-7s`，左上原点），Field B（半径 `42vmax`，周期 `37s`，右侧原点）。
+  - 缓动曲线：统一采用 `cubic-bezier(0.45, 0, 0.55, 1)`。
+  - 各强度参数（`mix` / `travel` / `scale`）：
+    - `subtle`：mix 3.5%, travel 1.2vmax, scale 1.010
+    - `soft`：mix 5.0%, travel 1.8vmax, scale 1.016
+    - `standard`：mix 6.5%, travel 2.4vmax, scale 1.022
+    - `pronounced`：mix 8.0%, travel 3.2vmax, scale 1.028
+- **漂移微动（Drift）**：
+  - 周期 `54s`，缓动 `cubic-bezier(0.45, 0, 0.55, 1)`。
+  - 范围（x, y, scale）：
+    - `subtle`：x 0.25%, y 0.18%, scale 1.012
+    - `soft`：x 0.45%, y 0.30%, scale 1.017
+    - `standard`：x 0.65%, y 0.45%, scale 1.023
+    - `pronounced`：x 0.90%, y 0.60%, scale 1.032（最大位移严格 <= 1.0%）
+- **缓动推近（Zoom）**：
+  - 周期 `58s`，缓动 `cubic-bezier(0.45, 0, 0.55, 1)`。
+  - 缩放比率：
+    - `subtle`：scale 1.012（增量 1.2%）
+    - `soft`：scale 1.020（增量 2.0%）
+    - `standard`：scale 1.028（增量 2.8%）
+    - `pronounced`：scale 1.040（增量 4.0%，严格 <= 4.0%）
+
+#### 3. 光场配比、中性光与色调衰减
+
+- **双光场等分贡献**：`ambientFieldMix = Number((ambientMix / 2).toFixed(3))`。即使在最高
+  `pronounced` 档位（mix 8.0%），单光场混色比仅为
+  `4.0%`，双光场合力不超过预算上限 `8.0%`。
+- **色调协同与黑白底色/遮罩纯中性化**：
+  - `natural`：混色比保持 `stage.mix`，颜色采用 `var(--accent)`。
+  - `soft`：混色比缩减为 `Number((stage.mix * 0.85).toFixed(3))`，颜色采用
+    `var(--accent)`。
+  - `mono`（黑白，`data-tone="mono"`）：
+    - **消除半透明渐变泄漏（Transparent-gradient leak）**：运行时将
+      `resolved.tone` 注入根容器 `data-tone`。容器底色切换为纯中性单色——浅色使用
+      `--wallpaper-neutral-light: #ffffff`，深色使用
+      `--wallpaper-neutral-dark: #222222`；遮罩层 `.wallpaper-surface__mask`
+      设置 `background: inherit` 继承根部纯中性底色，彻底杜绝底层 `--accent`
+      基底渐变透出破坏黑白纯粹性。
+    - **纯白中性微光（Ambient Mono Neutral
+      Luminance）**：环境光动效开启时，光场颜色严格绑定为
+      `var(--wallpaper-neutral-light)`（`#ffffff`），使**强调色贡献严格为
+      0%**；同时保留所选强度档位的亮度混色（`ambientMix = stage.mix`），为深色主题提供纯净通透的中性漫射光
+      opt-in 体验。
+
+#### 4. 3blur * scale Overscan 溢出几何计算
+
+为彻底消除模糊半径在视口边缘产生的白边/虚化裁切，以及动效位移或缩放引起的漏底穿帮，系统通过
+`calculateWallpaperOverscan` 精确计算负向内嵌值（`--wallpaper-overscan-x/y` =
+`calc(-${percentage}% - ${pixels}px)`）：
+
+- **Drift 模式**：
+  - 位移系数 $t_x = x / 100$，$t_y = y / 100$；分母补偿
+    $denom_x = 1 - 2t_x$，$denom_y = 1 - 2t_y$。
+  - 百分比补偿：$percentage_x = (100 \cdot t_x) / denom_x$，$percentage_y = (100 \cdot t_y) / denom_y$。
+  - 像素外扩：$pixels_x = (3 \cdot blur \cdot scale) / denom_x$，$pixels_y = (3 \cdot blur \cdot scale) / denom_y$。
+- **Zoom 模式**：
+  - 百分比补偿：$percentage = 100 \cdot \max(0, scale - 1)$。
+  - 像素外扩：$pixels = 3 \cdot blur \cdot scale$。
+- **Ambient / Off 模式**：
+  - 百分比补偿为 0；像素外扩严格为 $3 \cdot blur$。
+
+#### 5. 减弱动效与降级策略（Accessibility & Fallbacks）
+
+- **无壁纸底色（hasWallpaper === false）**：
+  - Drift 与 Zoom 自动降级为 `off`，禁止对空底色进行几何变换。
+  - Ambient 允许保留在纯色/渐变 Canvas 上，作为柔和环境光场渲染。
+- **减弱动态偏好（prefers-reduced-motion: reduce）**：
+  - Drift 与 Zoom 降级为 `off`。
+  - Ambient 保留模式为
+    `ambient`，但强制冻结位移与缩放（`travel: 0`，`scale: 1`），转为完全静态的柔和光晕；全局
+    CSS 设置
+    `.wallpaper-surface .wallpaper-surface__image, .wallpaper-surface .wallpaper__ambient-field-a, .wallpaper-surface .wallpaper__ambient-field-b { animation: none !important; transform: none; }`。
+  - 运行时不改写用户持久化偏好，系统偏好还原后动效无缝恢复。
+
+#### 6. 独立源持久化（Per-Source Retention）与数据库单向迁移
+
+- **每源独立配置**：通过
+  `wallpaperPresentations: Record<string, WallpaperPresentation>`
+  持久化，键为壁纸 canonical 标识（HTTPS URL、上传路径 `/api/wallpaper/{id}` 或
+  CSS 渐变文本）。切换壁纸时自动恢复该壁纸的历史专属构图与预设。
+- **配额与淘汰机制（LRU Eviction）**：
+  - 远端 URL 与 CSS 渐变最多保留 `24`
+    条记录（`MAX_REMOTE_OR_GRADIENT_PRESENTATIONS = 24`）；超额时按迭代顺序淘汰最旧项。
+  - 当前激活壁纸（`currentSource`）享有豁免保护，绝不被淘汰。
+  - 用户本地上传壁纸（`/api/wallpaper/{id}`）独立管理，不计入 24 条配额。
+  - 非当前壁纸的旧 `data:` 图片 URL 自动清理，防止数据膨胀。
+- **数据库仅用于迁移的历史字段（DB Migration-Only Legacy）**：
+  - SQLite `preferences`
+    表中的旧字段（`wallpaper_mask`、`wallpaper_blur`、`wallpaper_grayscale`、`wallpaper_glow_strength`、`ambient_motion_mode`、`ambient_motion_strength`）仅作为只读迁移来源，新业务逻辑严禁写入或暴露。
+  - 服务端在加载时通过 `migrateLegacyWallpaperPresentation` 进行单向离散映射：
+    - `wallpaperMask`：$\le 0.18 \to clear$，$\le 0.30 \to balanced$，$\le 0.42 \to quiet$，其余
+      $\to focus$。
+    - `wallpaperBlur`：$\le 1 \to none$，$\le 3.5 \to subtle$，$\le 7 \to soft$，其余
+      $\to hazy$。
+    - `wallpaperGrayscale`：$\le 0.15 \to natural$，$\le 0.70 \to soft$，其余
+      $\to mono$。
+    - `ambientMotionMode`：`off` 映射为 `off`；`breathe`/`breathe_ripple` 或
+      glow 强度 $> 0$ 映射为 `ambient`；其余映射为 `off`。
+    - 动效强度按 $\max(strength, glow \times 2.5)$
+      计算贡献：$\le 0.20 \to subtle$，$\le 0.40 \to soft$，$\le 0.65 \to standard$，其余
+      $\to pronounced$。
+
+#### 7. Phase 0 用户授权例外：极端材质可读性声明
+
+- 所有合法预设组合均通过数学与工程约束保证动效预算安全（`GLOBAL_MOTION_BUDGET`）。
+- **用户授权例外**：由于壁纸来源完全向用户开放，当用户选用任意高对比、复杂纹理或大面积极亮主体图片，且将预设调节至最弱干预档位——即**清透（clear
+  12%）+ 无模糊（none 0px）+
+  原色（natural）**时，系统无法从数学上绝对保证前景内容完全满足 Search-first
+  的极致可读性要求。
+- 架构遵循“保留用户自主选择自由”的设计宪章，不实施强制二次暗化或限制图片原貌，但**明确不作虚假的“全组合全图片绝对可读安全”承诺**；追求极致可读性的用户应选用
+  `balanced`（24%）及以上档位。
 
 ## Page Archetypes
 
@@ -564,12 +724,6 @@ focus-visible 的 canonical 规则仍是 `--ring`。旧
 `--accent`，`.note-action-btn` 使用 1px
 offset，尚未在本次页面迁移中统一；这是已知存量偏离，不是获批例外。修改这些控件时按
 Contract 收敛并实际验收，不能因 check:ui 通过宣称这些语义已被自动验证。
-
-Settings 壁纸输入目前提示“或 CSS 渐变”，但 preferences 的 BackgroundImage
-校验仅接受 HTTPS URL 或 owner 壁纸路径；登录用户的 CSS gradient
-持久化存在既有前后端契约不一致。Issue #33 明确不修改 backend、权限、安全与业务
-API contract，因此本次不扩展校验白名单，也不以 data URL
-或关闭同步提示绕过问题。真实图片壁纸验证不能作为 gradient 持久化通过的证据。
 
 ## Issue #52 presentation 迁移对照
 

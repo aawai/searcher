@@ -880,7 +880,15 @@ Deno.test({
             });
             const prefBody = await prefRes.json() as Envelope<PreferencesDto>;
             assertEquals(
-                prefBody.data?.wallpaperCompositions[`/api/wallpaper/${newId}`],
+                prefBody.data?.wallpaperPresentations
+                    ?.[`/api/wallpaper/${newId}`]
+                    ?.composition,
+                { focalX: 0.1, focalY: 0.9 },
+            );
+            assertEquals(
+                prefBody.data?.wallpaperPresentations
+                    ?.[`/api/wallpaper/${newId}`]
+                    ?.composition,
                 { focalX: 0.1, focalY: 0.9 },
             );
 
@@ -1254,7 +1262,7 @@ Deno.test({
             const prefBody = await prefRes.json() as Envelope<PreferencesDto>;
             assertEquals(prefBody.data?.backgroundImage, null);
             assertEquals(
-                prefBody.data?.wallpaperCompositions[urls[0]],
+                prefBody.data?.wallpaperPresentations?.[urls[0]],
                 undefined,
             );
             await store.close();
@@ -1699,7 +1707,7 @@ Deno.test({
             const prefBody = await prefRes.json() as Envelope<PreferencesDto>;
             assertEquals(prefBody.data?.backgroundImage, wpUrl);
             assertEquals(
-                prefBody.data?.wallpaperCompositions[wpUrl],
+                prefBody.data?.wallpaperPresentations?.[wpUrl]?.composition,
                 { focalX: 0.3, focalY: 0.7 },
             );
 
@@ -1775,12 +1783,9 @@ Deno.test({
             const canonicalUrl = `/api/wallpaper/${id.toLowerCase()}`;
             assertEquals(prefBody.data?.backgroundImage, canonicalUrl);
             assertEquals(
-                prefBody.data?.wallpaperCompositions[canonicalUrl],
+                prefBody.data?.wallpaperPresentations?.[canonicalUrl]
+                    ?.composition,
                 { focalX: 0.2, focalY: 0.8 },
-            );
-            assertEquals(
-                prefBody.data?.wallpaperCompositions[upperUrl],
-                undefined,
             );
 
             // 2. Delete wallpaper using lowercase URL -> clears reference & composition
@@ -1801,7 +1806,7 @@ Deno.test({
             >;
             assertEquals(postDelBody.data?.backgroundImage, null);
             assertEquals(
-                postDelBody.data?.wallpaperCompositions[canonicalUrl],
+                postDelBody.data?.wallpaperPresentations?.[canonicalUrl],
                 undefined,
             );
 

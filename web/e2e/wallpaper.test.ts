@@ -132,18 +132,6 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
     assertEquals(registration.status(), 200);
     await context.clearCookies();
     await signIn();
-    await page.evaluate(async () => {
-        const response = await fetch("/api/preferences", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                wallpaperMask: 0,
-                wallpaperGlowStrength: 0,
-                ambientMotionMode: "off",
-            }),
-        });
-        if (!response.ok) throw new Error(await response.text());
-    });
     await page.goto(origin + "/settings/appearance");
     await page.getByTestId("wallpaper-input").waitFor();
     let left = "";
@@ -267,12 +255,12 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     state: "hidden",
                 });
                 const composition =
-                    (await prefs()).wallpaperCompositions[source];
+                    (await prefs()).wallpaperPresentations[source].composition;
                 assert(Math.abs(composition.focalX - focalX) < 0.015);
                 await page.reload();
                 await page.getByTestId("wallpaper-current-badge").waitFor();
                 assertEquals(
-                    (await prefs()).wallpaperCompositions[source],
+                    (await prefs()).wallpaperPresentations[source].composition,
                     composition,
                 );
                 await page.goto(origin + "/");
@@ -282,21 +270,192 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     page,
                     '[data-testid="home-wallpaper-surface-image"]',
                 );
-                const render = await page.getByTestId(
-                    "home-wallpaper-surface-image",
-                ).evaluate((el) => {
-                    const style = getComputedStyle(el);
-                    return {
-                        transform: style.transform,
-                        size: style.backgroundSize,
-                    };
-                });
-                assertEquals(render.transform, "none");
-                assertEquals(render.size, "cover");
                 await page.setViewportSize({ width: 1440, height: 900 });
                 await page.goto(origin + "/settings/appearance");
                 await page.getByTestId("wallpaper-input").waitFor();
             }
+        },
+    );
+    await t.step(
+        "motion presets cover focal extremes without exposing canvas edges",
+        async () => {
+            const original = (await prefs()).wallpaperPresentations;
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+            for (const motion of ["drift", "zoom"] as const) {
+                for (const softness of ["none", "hazy"] as const) {
+                    for (const focalX of [0, 0.5, 1]) {
+                        for (const focalY of [0, 0.5, 1]) {
+                            const result = await page.evaluate(
+                                async (
+                                    {
+                                        source,
+                                        records,
+                                        motion,
+                                        softness,
+                                        focalX,
+                                        focalY,
+                                    },
+                                ) => {
+                                    const response = await fetch(
+                                        "/api/preferences",
+                                        {
+                                            method: "PATCH",
+                                            headers: {
+                                                "Content-Type":
+                                                    "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                wallpaperPresentations: {
+                                                    ...records,
+                                                    [source]: {
+                                                        ...records[source],
+                                                        composition: {
+                                                            focalX,
+                                                            focalY,
+                                                        },
+                                                        softness,
+                                                        motion,
+                                                        motionLevel:
+                                                            "pronounced",
+                                                    },
+                                                },
+                                            }),
+                                        },
+                                    );
+                                    return {
+                                        status: response.status,
+                                        body: await response.text(),
+                                    };
+                                },
+                                {
+                                    source: right,
+                                    records: original,
+                                    motion,
+                                    softness,
+                                    focalX,
+                                    focalY,
+                                },
+                            );
+                            assertEquals(result.status, 200, result.body);
+                            await page.goto(origin + "/");
+                            const surface = page.getByTestId(
+                                "home-wallpaper-surface",
+                            );
+                            await surface.waitFor();
+                            await page.waitForFunction(
+                                (expected) =>
+                                    document.querySelector(
+                                        '[data-testid="home-wallpaper-surface"]',
+                                    )?.getAttribute("data-motion") === expected,
+                                motion,
+                            );
+                            for (const width of [390, 768, 1440]) {
+                                await page.setViewportSize({
+                                    width,
+                                    height: width === 390
+                                        ? 844
+                                        : width === 768
+                                        ? 1024
+                                        : 900,
+                                });
+                                const coverage = await surface.evaluate(
+                                    async (element) => {
+                                        const image = element.querySelector(
+                                            ".wallpaper-surface__image",
+                                        )!;
+                                        const animation =
+                                            image.getAnimations()[0];
+                                        animation.pause();
+                                        const duration = Number(
+                                            animation.effect!.getTiming()
+                                                .duration,
+                                        );
+                                        const viewport = element
+                                            .getBoundingClientRect();
+                                        const failures = [];
+                                        for (
+                                            const phase of [
+                                                0,
+                                                0.25,
+                                                0.33,
+                                                0.5,
+                                                0.66,
+                                                0.75,
+                                                0.999,
+                                            ]
+                                        ) {
+                                            animation.currentTime = duration *
+                                                phase;
+                                            await new Promise<void>((resolve) =>
+                                                requestAnimationFrame(() =>
+                                                    resolve()
+                                                )
+                                            );
+                                            const box = image
+                                                .getBoundingClientRect();
+                                            const filter =
+                                                getComputedStyle(image).filter;
+                                            const blur = Number(
+                                                /blur\(([\d.]+)px\)/.exec(
+                                                    filter,
+                                                )?.[1] ?? 0,
+                                            );
+                                            const matrix = new DOMMatrix(
+                                                getComputedStyle(image)
+                                                    .transform,
+                                            );
+                                            const guard = 3 * blur * matrix.a;
+                                            if (
+                                                box.left + guard >
+                                                    viewport.left + 0.1 ||
+                                                box.top + guard >
+                                                    viewport.top + 0.1 ||
+                                                box.right - guard <
+                                                    viewport.right - 0.1 ||
+                                                box.bottom - guard <
+                                                    viewport.bottom - 0.1
+                                            ) {
+                                                failures.push({
+                                                    phase,
+                                                    guard,
+                                                    left: box.left,
+                                                    right: box.right,
+                                                    top: box.top,
+                                                    bottom: box.bottom,
+                                                });
+                                            }
+                                        }
+                                        return failures;
+                                    },
+                                );
+                                assertEquals(
+                                    coverage,
+                                    [],
+                                    JSON.stringify({
+                                        motion,
+                                        softness,
+                                        focalX,
+                                        focalY,
+                                        width,
+                                    }),
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            await page.evaluate(async (wallpaperPresentations) => {
+                const r = await fetch("/api/preferences", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ wallpaperPresentations }),
+                });
+                if (!r.ok) throw new Error(await r.text());
+            }, original);
+            await page.emulateMedia({ reducedMotion: "reduce" });
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-input").waitFor();
         },
     );
     await t.step(
@@ -311,7 +470,8 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await waitCurrent(right, mobile);
             assert(
                 Math.abs(
-                    (await prefs(mobile)).wallpaperCompositions[right].focalX -
+                    (await prefs(mobile)).wallpaperPresentations[right]
+                        .composition.focalX -
                         0.8,
                 ) < 0.015,
             );
@@ -334,7 +494,8 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await waitCurrent(left);
             assert(
                 Math.abs(
-                    (await prefs()).wallpaperCompositions[left].focalX - 0.2,
+                    (await prefs()).wallpaperPresentations[left].composition
+                        .focalX - 0.2,
                 ) < 0.015,
             );
             await page.getByTestId("wallpaper-clear-btn").click();
@@ -401,7 +562,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             });
             await waitCurrent(null);
             assertEquals(
-                (await prefs()).wallpaperCompositions[left],
+                (await prefs()).wallpaperPresentations[left],
                 undefined,
             );
             await page.goto(origin + "/");
@@ -480,17 +641,12 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
     await t.step("reduced-motion disables background animations", async () => {
         await page.goto(origin + "/");
         assertEquals(
-            await page.locator(".wallpaper__ripple").evaluate((el) =>
+            await page.locator(".wallpaper-surface__image").evaluate((el) =>
                 getComputedStyle(el).animationName
             ),
             "none",
         );
-        assertEquals(
-            await page.getByTestId("home-wallpaper-surface").evaluate((el) =>
-                getComputedStyle(el, "::before").animationName
-            ),
-            "none",
-        );
+        assertEquals(await page.locator(".wallpaper__ripple").count(), 0);
     });
     await t.step(
         "anonymous gradient and local upload survive reload without touching cloud preferences",
@@ -530,6 +686,993 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             );
             assertEquals(await prefs(), cloudBefore);
             await guestContext.close();
+        },
+    );
+    await t.step(
+        "preset sliders respond to keyboard Arrow, Home and End with semantic aria values and style updates",
+        async () => {
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-input").waitFor();
+
+            const readability = page.getByTestId(
+                "wallpaper-readability-slider",
+            );
+            const readabilityThumb = readability.getByRole("slider");
+            await readabilityThumb.focus();
+
+            // Test Home -> 0 ("清透 · 12%")
+            await readabilityThumb.press("Home");
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuenow"),
+                "0",
+            );
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuetext"),
+                "清透 · 12%",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").evaluate((
+                    el,
+                ) => el.style.getPropertyValue("--wallpaper-mask")),
+                "0.12",
+            );
+
+            // Test End -> 3 ("专注 · 48%")
+            await readabilityThumb.press("End");
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuenow"),
+                "3",
+            );
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuetext"),
+                "专注 · 48%",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").evaluate((
+                    el,
+                ) => el.style.getPropertyValue("--wallpaper-mask")),
+                "0.48",
+            );
+
+            // Test ArrowLeft -> 2 ("沉静 · 36%")
+            await readabilityThumb.press("ArrowLeft");
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuenow"),
+                "2",
+            );
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuetext"),
+                "沉静 · 36%",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").evaluate((
+                    el,
+                ) => el.style.getPropertyValue("--wallpaper-mask")),
+                "0.36",
+            );
+
+            // Test ArrowRight -> 3 ("专注 · 48%")
+            await readabilityThumb.press("ArrowRight");
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuenow"),
+                "3",
+            );
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuetext"),
+                "专注 · 48%",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").evaluate((
+                    el,
+                ) => el.style.getPropertyValue("--wallpaper-mask")),
+                "0.48",
+            );
+
+            // Softness slider keyboard tests
+            const softness = page.getByTestId("wallpaper-softness-slider");
+            const softnessThumb = softness.getByRole("slider");
+            await softnessThumb.focus();
+
+            await softnessThumb.press("Home");
+            assertEquals(
+                await softnessThumb.getAttribute("aria-valuenow"),
+                "0",
+            );
+            assertEquals(
+                await softnessThumb.getAttribute("aria-valuetext"),
+                "无 · 0px",
+            );
+            let filter = await page.getByTestId("wallpaper-current-preview")
+                .evaluate(
+                    (el) => el.style.getPropertyValue("--wallpaper-filter"),
+                );
+            assertStringIncludes(filter, "blur(0px)");
+
+            await softnessThumb.press("End");
+            assertEquals(
+                await softnessThumb.getAttribute("aria-valuenow"),
+                "3",
+            );
+            assertEquals(
+                await softnessThumb.getAttribute("aria-valuetext"),
+                "朦胧 · 9px",
+            );
+            filter = await page.getByTestId("wallpaper-current-preview")
+                .evaluate(
+                    (el) => el.style.getPropertyValue("--wallpaper-filter"),
+                );
+            assertStringIncludes(filter, "blur(9px)");
+
+            await softnessThumb.press("ArrowLeft");
+            assertEquals(
+                await softnessThumb.getAttribute("aria-valuenow"),
+                "2",
+            );
+            assertEquals(
+                await softnessThumb.getAttribute("aria-valuetext"),
+                "柔和 · 5px",
+            );
+            filter = await page.getByTestId("wallpaper-current-preview")
+                .evaluate(
+                    (el) => el.style.getPropertyValue("--wallpaper-filter"),
+                );
+            assertStringIncludes(filter, "blur(5px)");
+
+            // Enable ambient motion to test motion level slider keyboard navigation
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "环境光",
+                },
+            ).click();
+            const motionLevel = page.getByTestId(
+                "wallpaper-motion-level-slider",
+            );
+            const motionLevelThumb = motionLevel.getByRole("slider");
+            await motionLevelThumb.focus();
+
+            await motionLevelThumb.press("Home");
+            assertEquals(
+                await motionLevelThumb.getAttribute("aria-valuenow"),
+                "0",
+            );
+            assertEquals(
+                await motionLevelThumb.getAttribute("aria-valuetext"),
+                "轻微",
+            );
+
+            await motionLevelThumb.press("End");
+            assertEquals(
+                await motionLevelThumb.getAttribute("aria-valuenow"),
+                "3",
+            );
+            assertEquals(
+                await motionLevelThumb.getAttribute("aria-valuetext"),
+                "明显",
+            );
+
+            await motionLevelThumb.press("ArrowLeft");
+            assertEquals(
+                await motionLevelThumb.getAttribute("aria-valuenow"),
+                "2",
+            );
+            assertEquals(
+                await motionLevelThumb.getAttribute("aria-valuetext"),
+                "标准",
+            );
+        },
+    );
+    await t.step(
+        "real pointer move preview updates thumbnail filter and mask with zero PATCH, and pointer release commits exactly one sync",
+        async () => {
+            let patchCount = 0;
+            const patchHandler = (
+                req: { method: () => string; url: () => string },
+            ) => {
+                if (
+                    req.url().endsWith("/api/preferences") &&
+                    req.method() === "PATCH"
+                ) {
+                    patchCount++;
+                }
+            };
+            page.on("request", patchHandler);
+
+            // 1. Softness slider pointer drag
+            const softness = page.getByTestId("wallpaper-softness-slider");
+            const softnessThumb = softness.getByRole("slider");
+            const thumbBox = await softnessThumb.boundingBox();
+            const sliderBox = await softness.boundingBox();
+            assert(thumbBox && sliderBox);
+
+            // Mouse down on thumb
+            await page.mouse.move(
+                thumbBox.x + thumbBox.width / 2,
+                thumbBox.y + thumbBox.height / 2,
+            );
+            await page.mouse.down();
+
+            // Drag to the far right (hazy: 9px)
+            await page.mouse.move(
+                sliderBox.x + sliderBox.width - 5,
+                thumbBox.y + thumbBox.height / 2,
+                { steps: 5 },
+            );
+
+            // Verify 0 API PATCH occurred during drag
+            assertEquals(
+                patchCount,
+                0,
+                "Dragging slider thumb must not trigger preferences PATCH",
+            );
+
+            // Verify preview filter updated during drag
+            const filterWhileDragging = await page
+                .getByTestId("wallpaper-current-preview")
+                .evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-filter")
+                );
+            assertStringIncludes(
+                filterWhileDragging,
+                "blur(9px)",
+                "Preview filter must reflect dragged softness value in real-time",
+            );
+
+            // Release pointer -> exactly 1 sync
+            const patchPromise = page.waitForResponse(
+                (r) =>
+                    r.request().method() === "PATCH" &&
+                    r.url().endsWith("/api/preferences"),
+            );
+            await page.mouse.up();
+            const response = await patchPromise;
+            assertEquals(response.status(), 200);
+            assertEquals(
+                patchCount,
+                1,
+                "Releasing pointer must trigger exactly one preferences PATCH",
+            );
+
+            const currentSrc = (await prefs()).backgroundImage;
+            assert(currentSrc);
+            assertEquals(
+                (await prefs()).wallpaperPresentations[currentSrc].softness,
+                "hazy",
+            );
+
+            // 2. Readability slider pointer drag
+            patchCount = 0;
+            const readability = page.getByTestId(
+                "wallpaper-readability-slider",
+            );
+            const readabilityThumb = readability.getByRole("slider");
+            const rThumbBox = await readabilityThumb.boundingBox();
+            const rSliderBox = await readability.boundingBox();
+            assert(rThumbBox && rSliderBox);
+
+            await page.mouse.move(
+                rThumbBox.x + rThumbBox.width / 2,
+                rThumbBox.y + rThumbBox.height / 2,
+            );
+            await page.mouse.down();
+
+            // Drag to far left (clear: 0.12)
+            await page.mouse.move(
+                rSliderBox.x + 5,
+                rThumbBox.y + rThumbBox.height / 2,
+                { steps: 5 },
+            );
+
+            assertEquals(
+                patchCount,
+                0,
+                "Dragging readability slider must produce zero PATCH requests",
+            );
+            const maskWhileDragging = await page
+                .getByTestId("wallpaper-current-preview")
+                .evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-mask")
+                );
+            assertEquals(
+                maskWhileDragging,
+                "0.12",
+                "Preview mask must reflect dragged readability value in real-time",
+            );
+
+            const patchPromise2 = page.waitForResponse(
+                (r) =>
+                    r.request().method() === "PATCH" &&
+                    r.url().endsWith("/api/preferences"),
+            );
+            await page.mouse.up();
+            const response2 = await patchPromise2;
+            assertEquals(response2.status(), 200);
+            assertEquals(
+                patchCount,
+                1,
+                "Releasing pointer must commit exactly one sync",
+            );
+            assertEquals(
+                (await prefs()).wallpaperPresentations[currentSrc].readability,
+                "clear",
+            );
+
+            page.off("request", patchHandler);
+        },
+    );
+    let uploadedSource = "";
+    const remoteSource =
+        "https://images.unsplash.com/photo-presentation-restore";
+    const gradientSource = "linear-gradient(135deg, #223344, #556677)";
+
+    await t.step(
+        "per-wallpaper presentation restore across uploaded, remote, and gradient sources and reload",
+        async () => {
+            // 1. Upload fresh wallpaper and customize presentation
+            uploadedSource = await upload(0.3);
+            await waitCurrent(uploadedSource);
+
+            const readability = page.getByTestId(
+                "wallpaper-readability-slider",
+            );
+            const softness = page.getByTestId("wallpaper-softness-slider");
+            const rThumb = readability.getByRole("slider");
+            const sThumb = softness.getByRole("slider");
+
+            // Uploaded: tone="mono", readability="quiet"(2), softness="soft"(2), motion="drift", motionLevel="pronounced"(3)
+            await page.getByTestId("wallpaper-tone-group").getByRole("radio", {
+                name: "黑白",
+            }).click();
+            await readability.locator(".settings-preset-slider__mark").filter({
+                hasText: "沉静",
+            }).click();
+            await softness.locator(".settings-preset-slider__mark").filter({
+                hasText: "柔和",
+            }).click();
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "漂移",
+                },
+            ).click();
+            const motionLevel = page.getByTestId(
+                "wallpaper-motion-level-slider",
+            );
+            const mThumb = motionLevel.getByRole("slider");
+            await motionLevel.locator(".settings-preset-slider__mark").filter({
+                hasText: "明显",
+            }).click();
+
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                const p = res.data.wallpaperPresentations[src];
+                return p?.tone === "mono" && p?.readability === "quiet" &&
+                    p?.softness === "soft" && p?.motion === "drift" &&
+                    p?.motionLevel === "pronounced";
+            }, uploadedSource);
+
+            // 2. Set Remote wallpaper and customize presentation
+            const input = page.getByTestId("wallpaper-input");
+            await input.fill(remoteSource);
+            await page.getByTestId("wallpaper-apply-btn").click();
+            await waitCurrent(remoteSource);
+
+            // Remote: tone="soft", readability="clear"(0), softness="subtle"(1), motion="zoom", motionLevel="subtle"(0)
+            await page.getByTestId("wallpaper-tone-group").getByRole("radio", {
+                name: "柔和",
+            }).click();
+            await readability.locator(".settings-preset-slider__mark").filter({
+                hasText: "清透",
+            }).click();
+            await softness.locator(".settings-preset-slider__mark").filter({
+                hasText: "轻柔",
+            }).click();
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "推近",
+                },
+            ).click();
+            await motionLevel.locator(".settings-preset-slider__mark").filter({
+                hasText: "轻微",
+            }).click();
+
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                const p = res.data.wallpaperPresentations[src];
+                return p?.tone === "soft" && p?.readability === "clear" &&
+                    p?.softness === "subtle" && p?.motion === "zoom" &&
+                    p?.motionLevel === "subtle";
+            }, remoteSource);
+
+            // 3. Set Gradient wallpaper and customize presentation
+            await input.fill(gradientSource);
+            await page.getByTestId("wallpaper-apply-btn").click();
+            await waitCurrent(gradientSource);
+
+            // Gradient: tone="natural", readability="focus"(3), softness="none"(0), motion="ambient", motionLevel="standard"(2)
+            await page.getByTestId("wallpaper-tone-group").getByRole("radio", {
+                name: "原色",
+            }).click();
+            await readability.locator(".settings-preset-slider__mark").filter({
+                hasText: "专注",
+            }).click();
+            await softness.locator(".settings-preset-slider__mark").filter({
+                hasText: "无",
+            }).click();
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "环境光",
+                },
+            ).click();
+            await motionLevel.locator(".settings-preset-slider__mark").filter({
+                hasText: "标准",
+            }).click();
+
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                const p = res.data.wallpaperPresentations[src];
+                return p?.tone === "natural" && p?.readability === "focus" &&
+                    p?.softness === "none" && p?.motion === "ambient" &&
+                    p?.motionLevel === "standard";
+            }, gradientSource);
+
+            // 4. Switch back to uploaded and verify restored state
+            const uploadedId = uploadedSource.split("/").pop()!;
+            await page.getByTestId(`wallpaper-menu-trigger-${uploadedId}`)
+                .click();
+            await page.getByTestId("wallpaper-menu-set-current").click();
+            await waitCurrent(uploadedSource);
+
+            assertEquals(
+                await page.getByTestId("wallpaper-tone-group").getByRole(
+                    "radio",
+                    {
+                        name: "黑白",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "2");
+            assertEquals(await sThumb.getAttribute("aria-valuenow"), "2");
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-group").getByRole(
+                    "radio",
+                    {
+                        name: "漂移",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await mThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").evaluate(
+                    (el) => el.style.getPropertyValue("--wallpaper-mask"),
+                ),
+                "0.36",
+            );
+            const filter = await page.getByTestId("wallpaper-current-preview")
+                .evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-filter")
+                );
+            assertStringIncludes(filter, "blur(5px)");
+            assertStringIncludes(filter, "grayscale(1)");
+
+            // 5. Switch back to remote and verify restored state
+            await input.fill(remoteSource);
+            await page.getByTestId("wallpaper-apply-btn").click();
+            await waitCurrent(remoteSource);
+
+            assertEquals(
+                await page.getByTestId("wallpaper-tone-group").getByRole(
+                    "radio",
+                    {
+                        name: "柔和",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "0");
+            assertEquals(await sThumb.getAttribute("aria-valuenow"), "1");
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-group").getByRole(
+                    "radio",
+                    {
+                        name: "推近",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await mThumb.getAttribute("aria-valuenow"), "0");
+
+            // 6. Switch back to gradient and verify restored state
+            await input.fill(gradientSource);
+            await page.getByTestId("wallpaper-apply-btn").click();
+            await waitCurrent(gradientSource);
+
+            assertEquals(
+                await page.getByTestId("wallpaper-tone-group").getByRole(
+                    "radio",
+                    {
+                        name: "原色",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(await sThumb.getAttribute("aria-valuenow"), "0");
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-group").getByRole(
+                    "radio",
+                    {
+                        name: "环境光",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await mThumb.getAttribute("aria-valuenow"), "2");
+
+            // 7. Reload and verify persistence
+            await page.reload();
+            await page.getByTestId("wallpaper-input").waitFor();
+
+            assertEquals(
+                await page.getByTestId("wallpaper-tone-group").getByRole(
+                    "radio",
+                    {
+                        name: "原色",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(await sThumb.getAttribute("aria-valuenow"), "0");
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-group").getByRole(
+                    "radio",
+                    {
+                        name: "环境光",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(await mThumb.getAttribute("aria-valuenow"), "2");
+        },
+    );
+    await t.step(
+        "turning motion off preserves motion level, and clearing wallpaper restricts motion to off and ambient",
+        async () => {
+            // 1. Switch to uploaded wallpaper which has motion="drift", motionLevel="pronounced"(3)
+            const uploadedId = uploadedSource.split("/").pop()!;
+            await page.getByTestId(`wallpaper-menu-trigger-${uploadedId}`)
+                .click();
+            await page.getByTestId("wallpaper-menu-set-current").click();
+            await waitCurrent(uploadedSource);
+
+            // Turn motion off
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "关闭",
+                },
+            ).click();
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.wallpaperPresentations[src]?.motion === "off";
+            }, uploadedSource);
+
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-group").getByRole(
+                    "radio",
+                    {
+                        name: "关闭",
+                    },
+                ).getAttribute("aria-checked"),
+                "true",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-level-slider").count(),
+                0,
+                "Motion level slider must be detached when motion is off",
+            );
+            let p = await prefs();
+            assertEquals(
+                p.wallpaperPresentations[uploadedSource].motionLevel,
+                "pronounced",
+                "Turning motion off must preserve motion level in persisted preferences",
+            );
+
+            // Turn motion back to ambient
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "环境光",
+                },
+            ).click();
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.wallpaperPresentations[src]?.motion ===
+                    "ambient";
+            }, uploadedSource);
+
+            const mThumb = page
+                .getByTestId("wallpaper-motion-level-slider")
+                .getByRole("slider");
+            assertEquals(await mThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(await mThumb.getAttribute("aria-valuetext"), "明显");
+            p = await prefs();
+            assertEquals(
+                p.wallpaperPresentations[uploadedSource].motion,
+                "ambient",
+            );
+            assertEquals(
+                p.wallpaperPresentations[uploadedSource].motionLevel,
+                "pronounced",
+            );
+
+            // 2. Clear wallpaper -> no wallpaper state
+            await page.getByTestId("wallpaper-clear-btn").click();
+            await waitCurrent(null);
+
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").count(),
+                0,
+                "Current preview must be detached when wallpaper is cleared",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-current-adjust-focal-btn")
+                    .count(),
+                0,
+                "Adjust focal button must be detached when wallpaper is cleared",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-readability-slider")
+                    .getAttribute(
+                        "data-disabled",
+                    ),
+                "true",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-softness-slider")
+                    .getAttribute(
+                        "data-disabled",
+                    ),
+                "true",
+            );
+
+            // Motion group must only offer off and ambient
+            const motionGroup = page.getByTestId("wallpaper-motion-group");
+            assertEquals(
+                await motionGroup.getByRole("radio", { name: "关闭" }).count(),
+                1,
+            );
+            assertEquals(
+                await motionGroup.getByRole("radio", { name: "环境光" })
+                    .count(),
+                1,
+            );
+            assertEquals(
+                await motionGroup.getByRole("radio", { name: "漂移" }).count(),
+                0,
+                "Drift motion must not be available when no wallpaper is set",
+            );
+            assertEquals(
+                await motionGroup.getByRole("radio", { name: "推近" }).count(),
+                0,
+                "Zoom motion must not be available when no wallpaper is set",
+            );
+
+            // Canvas ambient motion
+            await motionGroup.getByRole("radio", { name: "环境光" }).click();
+            await page.waitForFunction(async () => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.canvasMotion === "ambient";
+            });
+
+            const canvasMotionSlider = page.getByTestId(
+                "wallpaper-motion-level-slider",
+            );
+            await canvasMotionSlider.locator(".settings-preset-slider__mark")
+                .filter({
+                    hasText: "轻微",
+                }).click();
+            await page.waitForFunction(async () => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.canvasMotionLevel === "subtle";
+            });
+            p = await prefs();
+            assertEquals(p.canvasMotion, "ambient");
+            assertEquals(p.canvasMotionLevel, "subtle");
+
+            // Turn canvas motion off and verify level is preserved
+            await motionGroup.getByRole("radio", { name: "关闭" }).click();
+            await page.waitForFunction(async () => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.canvasMotion === "off";
+            });
+            assertEquals(await canvasMotionSlider.count(), 0);
+            p = await prefs();
+            assertEquals(p.canvasMotion, "off");
+            assertEquals(p.canvasMotionLevel, "subtle");
+        },
+    );
+    await t.step(
+        "focal composition dialog forces runtime motion off while preserving persisted drift or zoom",
+        async () => {
+            // 1. Switch back to uploaded wallpaper
+            const uploadedId = uploadedSource.split("/").pop()!;
+            await page.getByTestId(`wallpaper-menu-trigger-${uploadedId}`)
+                .click();
+            await page.getByTestId("wallpaper-menu-set-current").click();
+            await waitCurrent(uploadedSource);
+
+            // 2. Set motion to drift
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "漂移",
+                },
+            ).click();
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.wallpaperPresentations[src]?.motion === "drift";
+            }, uploadedSource);
+
+            // Home page renders drift motion
+            await page.goto(origin + "/");
+            await page.waitForFunction(
+                () =>
+                    document
+                        .querySelector('[data-testid="home-wallpaper-surface"]')
+                        ?.getAttribute("data-motion") === "drift",
+            );
+            assertEquals(
+                await page.getByTestId("home-wallpaper-surface").getAttribute(
+                    "data-motion",
+                ),
+                "drift",
+            );
+
+            // Open focal composition dialog
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-current-adjust-focal-btn")
+                .waitFor();
+            await page.getByTestId("wallpaper-current-adjust-focal-btn")
+                .click();
+            await page.getByTestId("wallpaper-preview-dialog").waitFor();
+
+            // Desktop and mobile preview surfaces must have runtime data-motion="off"
+            const desktopSurface = page
+                .getByTestId("wallpaper-preview-desktop")
+                .locator(".wallpaper-surface");
+            assertEquals(
+                await desktopSurface.getAttribute("data-motion"),
+                "off",
+                "Desktop preview in focal dialog must force runtime motion to off",
+            );
+            const mobileSurface = page
+                .getByTestId("wallpaper-preview-mobile")
+                .locator(".wallpaper-surface");
+            assertEquals(
+                await mobileSurface.getAttribute("data-motion"),
+                "off",
+                "Mobile preview in focal dialog must force runtime motion to off",
+            );
+
+            // Adjust focal point and save
+            const desktop = page.getByTestId("wallpaper-preview-desktop");
+            const box = await desktop.boundingBox();
+            assert(box);
+            await desktop.click({
+                position: { x: box.width * 0.7, y: box.height * 0.4 },
+            });
+            const savedResponse = page.waitForResponse(
+                (r) =>
+                    r.request().method() === "PATCH" &&
+                    r.url().endsWith(uploadedSource),
+            );
+            await page.getByTestId("wallpaper-preview-save-btn").click();
+            await savedResponse;
+            await page.getByTestId("wallpaper-preview-dialog").waitFor({
+                state: "hidden",
+            });
+
+            // Persisted motion must remain drift
+            const pres = (await prefs()).wallpaperPresentations[uploadedSource];
+            assertEquals(
+                pres.motion,
+                "drift",
+                "Persisted motion must remain drift after saving focal adjustment",
+            );
+            assert(
+                Math.abs(pres.composition.focalX - 0.7) < 0.05,
+                "Updated focal point must be persisted",
+            );
+
+            // Home page continues rendering drift motion
+            await page.goto(origin + "/");
+            await page.waitForFunction(
+                () =>
+                    document
+                        .querySelector('[data-testid="home-wallpaper-surface"]')
+                        ?.getAttribute("data-motion") === "drift",
+            );
+            assertEquals(
+                await page.getByTestId("home-wallpaper-surface").getAttribute(
+                    "data-motion",
+                ),
+                "drift",
+            );
+        },
+    );
+    await t.step(
+        "real-page mono transparent-gradient regression verifies neutral sRGB channels and neutral ambient color",
+        async () => {
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-input").waitFor();
+
+            const transparentGradient =
+                "linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0))";
+            const input = page.getByTestId("wallpaper-input");
+            await input.fill(transparentGradient);
+            await page.getByTestId("wallpaper-apply-btn").click();
+            await waitCurrent(transparentGradient);
+
+            await page.getByTestId("wallpaper-tone-group").getByRole("radio", {
+                name: "黑白",
+            }).click();
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "关闭",
+                },
+            ).click();
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                const p = res.data.wallpaperPresentations[src];
+                return p?.tone === "mono" && p?.motion === "off";
+            }, transparentGradient);
+
+            await page.goto(origin + "/");
+            const surface = page.getByTestId("home-wallpaper-surface");
+            await page.waitForFunction(
+                () =>
+                    document
+                        .querySelector('[data-testid="home-wallpaper-surface"]')
+                        ?.getAttribute("data-tone") === "mono",
+            );
+            assertEquals(await surface.getAttribute("data-tone"), "mono");
+            assertEquals(await surface.getAttribute("data-motion"), "off");
+
+            const parseRgb = (color: string) => {
+                const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
+                assert(match, `Invalid rgb color string: ${color}`);
+                return {
+                    r: Number(match[1]),
+                    g: Number(match[2]),
+                    b: Number(match[3]),
+                };
+            };
+
+            // Light theme root background and mask
+            const lightBg = await surface.evaluate((el) =>
+                getComputedStyle(el).backgroundColor
+            );
+            const lRgb = parseRgb(lightBg);
+            assertEquals(
+                lRgb.r,
+                lRgb.g,
+                "Mono background red and green channels must be equal",
+            );
+            assertEquals(
+                lRgb.g,
+                lRgb.b,
+                "Mono background green and blue channels must be equal",
+            );
+
+            const lightBgImg = await surface.evaluate((el) =>
+                getComputedStyle(el).backgroundImage
+            );
+            assertEquals(
+                lightBgImg,
+                "none",
+                "Mono transparent-gradient root background-image must be none",
+            );
+
+            const lightMaskBg = await page.locator(".wallpaper-surface__mask")
+                .evaluate((el) => getComputedStyle(el).backgroundColor);
+            const lmRgb = parseRgb(lightMaskBg);
+            assertEquals(
+                lmRgb.r,
+                lmRgb.g,
+                "Mask red and green channels must be equal",
+            );
+            assertEquals(
+                lmRgb.g,
+                lmRgb.b,
+                "Mask green and blue channels must be equal",
+            );
+
+            // Dark theme
+            await page.evaluate(() =>
+                document.documentElement.setAttribute("data-theme", "dark")
+            );
+            const darkBg = await surface.evaluate((el) =>
+                getComputedStyle(el).backgroundColor
+            );
+            const dRgb = parseRgb(darkBg);
+            assertEquals(
+                dRgb.r,
+                dRgb.g,
+                "Dark mono background red and green channels must be equal",
+            );
+            assertEquals(
+                dRgb.g,
+                dRgb.b,
+                "Dark mono background green and blue channels must be equal",
+            );
+
+            const darkMaskBg = await page.locator(".wallpaper-surface__mask")
+                .evaluate((el) => getComputedStyle(el).backgroundColor);
+            const dmRgb = parseRgb(darkMaskBg);
+            assertEquals(
+                dmRgb.r,
+                dmRgb.g,
+                "Dark mask red and green channels must be equal",
+            );
+            assertEquals(
+                dmRgb.g,
+                dmRgb.b,
+                "Dark mask green and blue channels must be equal",
+            );
+            await page.evaluate(() =>
+                document.documentElement.removeAttribute("data-theme")
+            );
+
+            // Ambient motion with mono
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "环境光",
+                },
+            ).click();
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.wallpaperPresentations[src]?.motion ===
+                    "ambient";
+            }, transparentGradient);
+
+            await page.goto(origin + "/");
+            await page.waitForFunction(() => {
+                const el = document.querySelector(
+                    '[data-testid="home-wallpaper-surface"]',
+                );
+                return (
+                    el?.getAttribute("data-tone") === "mono" &&
+                    el?.getAttribute("data-motion") === "ambient"
+                );
+            });
+            assertEquals(await surface.getAttribute("data-motion"), "ambient");
+            assertEquals(await surface.getAttribute("data-tone"), "mono");
+            const ambBg = await surface.evaluate((el) =>
+                getComputedStyle(el).backgroundColor
+            );
+            const ambRgb = parseRgb(ambBg);
+            assertEquals(ambRgb.r, ambRgb.g);
+            assertEquals(ambRgb.g, ambRgb.b);
+            assertEquals(
+                await surface.evaluate((el) =>
+                    getComputedStyle(el).backgroundImage
+                ),
+                "none",
+            );
+            const ambColor = await surface.evaluate((el) =>
+                el.style.getPropertyValue("--wallpaper-ambient-color")
+            );
+            assertStringIncludes(ambColor, "neutral");
         },
     );
     assertEquals(errors, []);

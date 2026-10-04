@@ -11,13 +11,7 @@
  *    semantic spacing literals, arbitrary inline colors/borders).
  */
 
-const WALLPAPER_VARS: Record<string, true> = {
-    "--wallpaper-image": true,
-    "--wallpaper-blur": true,
-    "--wallpaper-grayscale": true,
-    "--wallpaper-mask": true,
-    "--search-opacity": true,
-};
+import { RUNTIME_CSS_VARIABLE_REGISTRY } from "./ownership.ts";
 
 const MASONRY_GEOMETRY_PROPS: Record<string, true> = {
     left: true,
@@ -75,12 +69,8 @@ function isDragOwner(file: string): boolean {
 
 function isWallpaperOwner(file: string): boolean {
     const p = normalizePath(file);
-    return (
-        p.endsWith("App.tsx") ||
-        p.endsWith("DesignLab.tsx") ||
-        p.endsWith("global.css") ||
-        p.includes("/fixtures/wallpaper/")
-    );
+    return p.endsWith("/components/wallpaper/WallpaperSurface.tsx") ||
+        p.endsWith("global.css");
 }
 
 function isSwatchOwner(file: string): boolean {
@@ -103,8 +93,11 @@ export function isWallpaperFilterException(
     prop: string,
     value: string,
 ): boolean {
-    if (WALLPAPER_VARS[prop]) {
-        return true;
+    if (prop === "--search-opacity") return true;
+    if (RUNTIME_CSS_VARIABLE_REGISTRY[prop]) {
+        return normalizePath(file).endsWith(
+            "/components/wallpaper/WallpaperSurface.tsx",
+        );
     }
 
     if (!isWallpaperOwner(file)) {

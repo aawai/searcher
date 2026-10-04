@@ -103,6 +103,13 @@ export const preferences = sqliteTable("preferences", {
         .notNull().default(true),
     aiGenerationDefaults: text("ai_generation_defaults"),
     wallpaperCompositions: text("wallpaper_compositions"),
+    wallpaperPresentations: text("wallpaper_presentations"),
+    canvasMotion: text("canvas_motion", {
+        enum: ["off", "ambient"],
+    }).notNull().default("off"),
+    canvasMotionLevel: text("canvas_motion_level", {
+        enum: ["subtle", "soft", "standard", "pronounced"],
+    }).notNull().default("soft"),
 }, (t) => [
     check(
         "preferences_engine_check",

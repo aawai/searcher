@@ -1,5 +1,10 @@
 export * from "./wallpaper.ts";
-import type { WallpaperComposition } from "./wallpaper.ts";
+import type {
+    CanvasMotion,
+    WallpaperMotionLevel,
+    WallpaperPresentation,
+} from "./wallpaper-presentation.ts";
+export type { CanvasMotion, WallpaperMotionLevel, WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
 
 export type ThemeId = "system" | "light" | "dark";
@@ -186,13 +191,9 @@ export interface PreferencesDto {
     /** 搜索框不透明度，取值范围 [0.1, 1.0] */
     searchOpacity: number;
     backgroundImage: string | null;
-    wallpaperBlur: number;
-    wallpaperGrayscale: number;
-    wallpaperMask: number;
-    wallpaperGlowStrength: number;
-    ambientMotionMode: AmbientMotionMode;
-    ambientMotionStrength: number;
-    wallpaperCompositions: Record<string, WallpaperComposition>;
+    wallpaperPresentations: Record<string, WallpaperPresentation>;
+    canvasMotion: CanvasMotion;
+    canvasMotionLevel: WallpaperMotionLevel;
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";

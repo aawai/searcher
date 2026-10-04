@@ -8,84 +8,59 @@ import {
     isWallpaperFilterException,
 } from "./exceptions.ts";
 
-Deno.test("runtime exceptions - wallpaper filter", () => {
-    // Wallpaper CSS variables on any element
-    assertEquals(
-        isWallpaperFilterException(
-            "web/src/App.tsx",
+Deno.test("wallpaper runtime variables are allowed only in WallpaperSurface", () => {
+    const owner = "web/src/components/wallpaper/WallpaperSurface.tsx";
+    for (
+        const variable of [
             "--wallpaper-image",
-            "url('/bg.png')",
-        ),
-        true,
+            "--wallpaper-filter",
+            "--wallpaper-overscan-x",
+            "--wallpaper-ambient-mix",
+        ]
+    ) {
+        assertEquals(
+            isWallpaperFilterException(owner, variable, "resolved"),
+            true,
+        );
+        for (
+            const file of [
+                "web/src/App.tsx",
+                "web/src/design-lab/DesignLab.tsx",
+                "web/src/app/AdminPage.tsx",
+            ]
+        ) {
+            assertEquals(
+                isWallpaperFilterException(file, variable, "resolved"),
+                false,
+            );
+        }
+    }
+    assertEquals(
+        isWallpaperFilterException(owner, "--wallpaper-blur", "12px"),
+        false,
     );
     assertEquals(
-        isWallpaperFilterException(
-            "web/src/App.tsx",
-            "--wallpaper-blur",
-            "12px",
-        ),
-        true,
+        isWallpaperFilterException(owner, "--wallpaper-grayscale", "0.5"),
+        false,
     );
     assertEquals(
-        isWallpaperFilterException(
-            "web/src/App.tsx",
-            "--wallpaper-grayscale",
-            "0.5",
-        ),
-        true,
+        isWallpaperFilterException(owner, "boxShadow", "0 4px 6px black"),
+        false,
     );
-    assertEquals(
-        isWallpaperFilterException(
-            "web/src/App.tsx",
-            "--wallpaper-mask",
-            "0.75",
-        ),
-        true,
-    );
-    assertEquals(
-        isWallpaperFilterException(
-            "web/src/App.tsx",
-            "--search-opacity",
-            "0.9",
-        ),
-        true,
-    );
-
-    // Dynamic filter on wallpaper owner
     assertEquals(
         isWallpaperFilterException(
             "web/src/styles/global.css",
             "filter",
-            "blur(var(--wallpaper-blur,0px))",
+            "var(--wallpaper-filter)",
         ),
         true,
     );
-
-    // Outside wallpaper owner, filter is denied
     assertEquals(
         isWallpaperFilterException(
             "web/src/app/AdminPage.tsx",
             "filter",
-            "blur(var(--wallpaper-blur,0px))",
+            "var(--wallpaper-filter)",
         ),
-        false,
-    );
-
-    // Hardcoded presentation styles are NOT wallpaper exceptions
-    assertEquals(
-        isWallpaperFilterException("web/src/App.tsx", "background", "#ffffff"),
-        false,
-    );
-    assertEquals(
-        isWallpaperFilterException(
-            "web/src/App.tsx",
-            "boxShadow",
-            "0 4px 6px rgba(0,0,0,0.1)",
-        ),
-        false,
-    );
-    assertEquals(
-        isWallpaperFilterException("web/src/App.tsx", "color", "red"),
         false,
     );
 });

@@ -47,6 +47,99 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #112 壁纸预设与动效系统重构验收（2026-10-04）
+
+- [x] Utility archetype（SettingsPage 外观页）与 Search Canvas（Home
+      Zen/Widgets）：
+  - SettingsPage 壁纸设置区集成离散档位滑动选择器（SettingsPresetSlider）与
+    WallpaperCompositionDialog，负责壁纸来源、构图焦点与呈现预设调整；
+  - 首页 Canvas 与设置页预览统一复用 WallpaperSurface 组件，建立隔离 stacking
+    context（全屏 fixed，z-index: -1；嵌入模式 absolute，z-index: 0）。
+- [x] 离散预设模型（WallpaperPresentation）与 Canonical 默认值：
+  - 遮罩预设四档（`WALLPAPER_READABILITY_STAGES`）：clear 12%、balanced
+    24%（默认）、quiet 36%、focus 48%；
+  - 模糊预设四档（`WALLPAPER_SOFTNESS_STAGES`）：none 0px（默认）、subtle
+    2px、soft 5px、hazy 9px；
+  - 色调预设三档（`WALLPAPER_TONE_STAGES`）：natural（默认）、soft、mono；
+  - 动效模式四档（`WALLPAPER_MOTION_STAGES`）：off（默认）、ambient、drift、zoom；
+  - 动效强度四档（`WALLPAPER_MOTION_LEVEL_STAGES`）：subtle、soft（默认）、standard、pronounced；
+  - 空壁纸/画布动效（`CANVAS_MOTION_STAGES`）：off（默认）、ambient；强度默认为
+    soft；
+  - 系统默认呈现状态：`{ composition: { focalX: 0.5, focalY: 0.5 }, readability: "balanced", softness: "none", tone: "natural", motion: "off", motionLevel: "soft" }`。
+- [x] DOM 层级架构与 CSS 变量绑定：
+  - `.wallpaper-surface` 拥有背景梯度与 CSS 变量；
+  - `.wallpaper-surface__overscan`（内部 z-index: 0）消费
+    `--wallpaper-overscan-x/y`；
+  - `.wallpaper-surface__image` 消费
+    `--wallpaper-image`、`--wallpaper-filter`、`--wallpaper-position`，`transform-origin`
+    锁定构图焦点；
+  - `.wallpaper__ambient`（内部 z-index: 1）仅在 `motion === "ambient"`
+    时挂载，拥有 `.wallpaper__ambient-field-a` 与
+    `.wallpaper__ambient-field-b`；
+  - `.wallpaper-surface__mask`（内部 z-index: 2）消费 `--wallpaper-mask`；
+  - 装饰层均为 `pointer-events: none` 且置于 `aria-hidden`。
+- [x] 全局动效预算（GLOBAL_MOTION_BUDGET）与时序参数：
+  - 双环境光场各分担一半混色（`ambientFieldMix = ambientMix / 2`），单场 <=
+    4.0%，总强调色贡献严格 <= 8.0%；
+  - 动效周期 >= 28s：ambient 双场分别为 28s（Field A，半径 58vmax，相位 -7s）与
+    37s（Field B，半径 42vmax）；drift 为 54s；zoom 为 58s；统一采用
+    `cubic-bezier(0.45, 0, 0.55, 1)` 缓动；
+  - 漂移最大位移 <= 1.0%（各档位 x: 0.25%, 0.45%, 0.65%, 0.90%；y: 0.18%, 0.30%,
+    0.45%, 0.60%）；
+  - 推近缩放增量 <= 4.0%（各档位 scale: 1.012, 1.020, 1.028, 1.040）；
+  - 色调协同：mono（黑白）模式下光场颜色强制切换为纯白中性光
+    `--wallpaper-neutral-light`（#ffffff），强调色贡献严格为 0%。
+- [x] Overscan 溢出几何计算（calculateWallpaperOverscan）：
+  - 严格采用 `3 * blur * scale` 结合位移比例计算外扩补偿，通过
+    `--wallpaper-overscan-x/y`（`calc(-${percentage}% - ${pixels}px)`）负向内嵌；彻底消除视口边缘模糊白边与动效位移露底。
+- [x] 减弱动效与空壁纸降级策略：
+  - 无壁纸（hasWallpaper === false）时 drift 与 zoom 降级为 off，canvas
+    允许保留静态/环境光；
+  - 减弱动态（prefers-reduced-motion: reduce）时 drift 与 zoom 降级为
+    off，ambient 保持模式但位移与缩放强制归零（travel: 0, scale: 1），全局 CSS
+    强制 `animation: none !important; transform: none;`；不修改用户持久化值。
+- [x] 每源独立呈现持久化与淘汰机制（Per-Source Retention）：
+  - `wallpaperPresentations` 记录每张壁纸的独立构图与呈现参数；
+  - 远端 URL 与 CSS 渐变壁纸实施 LRU 淘汰，上限 24
+    条（`MAX_REMOTE_OR_GRADIENT_PRESENTATIONS = 24`）；当前壁纸（currentSource）受保护不被淘汰；上传壁纸不计入
+    24 条配额；非当前 `data:` 图片 URL 自动清理。
+- [x] 数据库单向平滑迁移（DB Migration-Only Legacy）：
+  - SQLite `preferences` 表中 legacy
+    字段（wallpaper_mask/blur/grayscale/glow_strength/ambient_motion_mode/ambient_motion_strength）仅用于只读单向迁移映射（`migrateLegacyWallpaperPresentation`），新逻辑不再回写旧字段；新增
+    `wallpaper_presentations`、`canvas_motion` 与 `canvas_motion_level` 字段。
+- [x] 规范例外（Phase 0 授权）：
+  - 所有合法预设组合均通过数学与工程约束保证动效预算安全（GLOBAL_MOTION_BUDGET）；但用户自定义壁纸属于任意原始材质或高对比/高亮主体，在“清透（clear
+    12%）+ 无模糊（none 0px）+ 原色（natural）”最弱干预组合下，系统不保证
+    Search-first
+    绝对可读性；保留用户自由选择权，不作虚假的全图绝对可读安全声明。
+- [x] 实页与调色板：390×844 / 768×900 / 1440×900 × light/dark × Zen/Widgets 共
+      12 格，八类确定性素材（浅色、深色、高饱和、高频纹理、主体左/右/中央、CSS
+      gradient）；均无横向溢出。截图 `/tmp/omp-sshots-1599378e50a76a4a.webp` 至
+      `/tmp/omp-sshots-15993795b3676a54.webp`。
+- [x] 默认值、独立 readability/softness/tone stages、三类 motion
+      各四档及最高组合共 27 格真实首页截图；mono 透明渐变修复后 base/mask 均为
+      rgb(255,255,255)，不再透出 accent 色。
+- [x] ambient/drift/zoom 各连续观察 11 秒，周期分别保持 28/37、54、58 秒，只有
+      transform 缓慢变化；截图差异比例为
+      0.0117%、2.4371%、1.0842%，没有快速呼吸或环状涟漪。系统 reduced-motion 后
+      animation=none、transform=none，不改保存值。
+- [x] Settings 外观页 390/768/1440 × light/dark
+      六格均无横向溢出，当前值显示“均衡 · 24%”“轻柔 · 2px”；axe 0 confirmed
+      violations（2 项需人工判断），修复后浏览器无新增 runtime error。截图
+      `/tmp/omp-sshots-1599390040676a73.webp` 至
+      `/tmp/omp-sshots-15993902fda76a78.webp`。
+- [x] 自动化测试与质量门禁：
+  - `src/shared/wallpaper-presentation.test.ts`（13 tests）全通过；
+  - `src/features/preferences/preferences.test.ts` 与
+    `src/features/wallpaper/wallpaper.test.ts`（27 tests）全通过；
+  - `web/src/components/searcher/SettingsPresetSlider.test.tsx` 通过；
+  - `web/e2e/wallpaper.test.ts` 全 14 steps 通过，包括 pointer 草稿零 PATCH /
+    release 单次提交、键盘 stages、按来源恢复、focal 冻结和 mono 透明渐变。
+  - 全套单元测试通过；production build、入口 typecheck 与变更范围 lint/format
+    通过；check:ui ownership/visual 均为零违规，baseline 未变。全仓库 lint 另有
+    9 个不属于本次变更的 search/local/api 存量问题，全局 format check 的既有
+    baseline JSON 等文件未通过；未扩展范围修复。
+
 ## Issue #103 快捷键说明与上下文验收（2026-10-04）
 
 - [x] Utility archetype：设置 h1 → 快捷键 h2 → 五组 h3；复用

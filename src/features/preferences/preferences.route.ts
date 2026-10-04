@@ -9,9 +9,12 @@ import { parseCookie } from "../auth/middleware.ts";
 import { SESSION_COOKIE_NAME } from "../auth/service.ts";
 import {
     ACCENT_IDS,
-    AMBIENT_MOTION_MODES,
     CANONICAL_REASONING_EFFORTS,
 } from "../../shared/contracts.ts";
+import {
+    normalizeWallpaperPresentation,
+    type WallpaperPresentation,
+} from "../../shared/wallpaper-presentation.ts";
 import {
     parseWallpaperSource,
     type WallpaperComposition,
@@ -77,23 +80,59 @@ const WallpaperCompositions = v.optional(
         ),
     ),
 );
-const Blur = v.optional(
-    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(24)),
+const CanvasMotionValidator = v.optional(v.picklist(["off", "ambient"]));
+const CanvasMotionLevelValidator = v.optional(
+    v.picklist(["subtle", "soft", "standard", "pronounced"]),
 );
-const Grayscale = v.optional(
-    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(1)),
+const WallpaperPresentations = v.optional(
+    v.nullable(
+        v.record(
+            v.pipe(
+                v.string(),
+                v.maxLength(2048),
+                v.check(
+                    (val) =>
+                        val.startsWith("data:") ||
+                        parseWallpaperSource(val) !== null,
+                    "壁纸效果 source 格式非法",
+                ),
+            ),
+            v.object({
+                composition: v.optional(
+                    v.object({
+                        focalX: v.pipe(
+                            v.number("focalX 必须为数值"),
+                            v.finite("focalX 必须为有限数值"),
+                            v.minValue(0, "focalX 最小为 0"),
+                            v.maxValue(1, "focalX 最大为 1"),
+                        ),
+                        focalY: v.pipe(
+                            v.number("focalY 必须为数值"),
+                            v.finite("focalY 必须为有限数值"),
+                            v.minValue(0, "focalY 最小为 0"),
+                            v.maxValue(1, "focalY 最大为 1"),
+                        ),
+                    }),
+                ),
+                readability: v.optional(
+                    v.picklist(["clear", "balanced", "quiet", "focus"]),
+                ),
+                softness: v.optional(
+                    v.picklist(["none", "subtle", "soft", "hazy"]),
+                ),
+                tone: v.optional(
+                    v.picklist(["natural", "soft", "mono"]),
+                ),
+                motion: v.optional(
+                    v.picklist(["off", "ambient", "drift", "zoom"]),
+                ),
+                motionLevel: v.optional(
+                    v.picklist(["subtle", "soft", "standard", "pronounced"]),
+                ),
+            }),
+        ),
+    ),
 );
-const Mask = v.optional(
-    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(0.8)),
-);
-const GlowStrength = v.optional(
-    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(0.3)),
-);
-const MotionMode = v.optional(v.picklist(AMBIENT_MOTION_MODES));
-const MotionStrength = v.optional(
-    v.pipe(v.number(), v.finite(), v.minValue(0), v.maxValue(1)),
-);
-
 const GenerationConfig = v.object({
     temperature: v.optional(
         v.nullable(
@@ -175,12 +214,9 @@ export function registerPreferencesRoutes(
             webAppIconSize: json(WebAppIconSize),
             showAppLabels: json(ShowAppLabels),
             backgroundImage: json(BackgroundImage),
-            wallpaperBlur: json(Blur),
-            wallpaperGrayscale: json(Grayscale),
-            wallpaperMask: json(Mask),
-            wallpaperGlowStrength: json(GlowStrength),
-            ambientMotionMode: json(MotionMode),
-            ambientMotionStrength: json(MotionStrength),
+            wallpaperPresentations: json(WallpaperPresentations),
+            canvasMotion: json(CanvasMotionValidator),
+            canvasMotionLevel: json(CanvasMotionLevelValidator),
             aiGenerationDefaults: json(AiGenerationDefaults),
             wallpaperCompositions: json(WallpaperCompositions),
         }),
@@ -218,7 +254,58 @@ export function registerPreferencesRoutes(
                     focalX: number;
                     focalY: number;
                 }> = [];
-
+                if (
+                    data.wallpaperPresentations !== undefined &&
+                    data.wallpaperPresentations !== null
+                ) {
+                    const canonicalPresentations: Record<
+                        string,
+                        WallpaperPresentation
+                    > = {};
+                    for (
+                        const [key, pres] of Object.entries(
+                            data.wallpaperPresentations,
+                        )
+                    ) {
+                        if (key.startsWith("data:")) {
+                            if (pres) {
+                                canonicalPresentations[key] =
+                                    normalizeWallpaperPresentation(pres);
+                            }
+                            continue;
+                        }
+                        const source = parseWallpaperSource(key);
+                        if (!source) {
+                            return c.fail(
+                                STATUS_CODE.BadRequest,
+                                "壁纸效果 source 格式非法",
+                            );
+                        }
+                        if (source.type === "uploaded") {
+                            const id = source.value.slice(
+                                "/api/wallpaper/".length,
+                            );
+                            if (!await wallpaper.getWallpaper(id, user.id)) {
+                                return c.fail(
+                                    STATUS_CODE.NotFound,
+                                    "壁纸不存在或无权访问",
+                                );
+                            }
+                            if (pres?.composition) {
+                                uploadedFocalsToSync.push({
+                                    id,
+                                    focalX: pres.composition.focalX,
+                                    focalY: pres.composition.focalY,
+                                });
+                            }
+                        }
+                        if (pres) {
+                            canonicalPresentations[source.value] =
+                                normalizeWallpaperPresentation(pres);
+                        }
+                    }
+                    data.wallpaperPresentations = canonicalPresentations;
+                }
                 if (
                     data.wallpaperCompositions !== undefined &&
                     data.wallpaperCompositions !== null
@@ -227,7 +314,6 @@ export function registerPreferencesRoutes(
                         string,
                         WallpaperComposition
                     > = {};
-                    // Pass 1: Validate ALL keys and check ownership before any mutation
                     for (
                         const [key, comp] of Object.entries(
                             data.wallpaperCompositions,
@@ -270,7 +356,12 @@ export function registerPreferencesRoutes(
 
                 // Pass 2: Atomic DB update and manifest synchronization
                 const updated = await service.update(user.id, data);
-                for (const item of uploadedFocalsToSync) {
+                const syncedIds = new Set<string>();
+                // Process in reverse to use the latest focal coordinates if duplicated
+                for (let i = uploadedFocalsToSync.length - 1; i >= 0; i--) {
+                    const item = uploadedFocalsToSync[i];
+                    if (syncedIds.has(item.id)) continue;
+                    syncedIds.add(item.id);
                     await wallpaper.updateWallpaperComposition(
                         item.id,
                         user.id,

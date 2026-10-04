@@ -9,12 +9,6 @@ import {
 } from "react";
 import {
     type AccentId,
-    AMBIENT_MOTION_MODES,
-    type AmbientMotionMode,
-    DEFAULT_AMBIENT_MOTION_MODE,
-    DEFAULT_AMBIENT_MOTION_STRENGTH,
-    DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    DEFAULT_WALLPAPER_MASK,
     normalizeAccent,
     normalizeStylePreset,
     type PreferencesDto,
@@ -23,10 +17,18 @@ import {
 } from "@shared/contracts.ts";
 import type { EngineId } from "@shared/engines.ts";
 import {
-    normalizeWallpaperCompositions,
     parseWallpaperSource,
     type WallpaperComposition,
 } from "@shared/wallpaper.ts";
+import {
+    type CanvasMotion,
+    DEFAULT_CANVAS_MOTION,
+    DEFAULT_CANVAS_MOTION_LEVEL,
+    migrateLegacyWallpaperPresentation,
+    normalizeWallpaperPresentations,
+    type WallpaperMotionLevel,
+    type WallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import {
     deleteLocal,
@@ -45,13 +47,9 @@ export type Appearance = {
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
-    wallpaperCompositions: Record<string, WallpaperComposition>;
-    blur: number;
-    grayscale: number;
-    mask: number;
-    wallpaperGlowStrength: number;
-    ambientMotionMode: AmbientMotionMode;
-    ambientMotionStrength: number;
+    wallpaperPresentations: Record<string, WallpaperPresentation>;
+    canvasMotion: CanvasMotion;
+    canvasMotionLevel: WallpaperMotionLevel;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
@@ -67,13 +65,9 @@ const initial: Appearance = {
     engine: "bing",
     target: "current",
     wallpaper: "",
-    wallpaperCompositions: {},
-    blur: 0,
-    grayscale: 0,
-    mask: DEFAULT_WALLPAPER_MASK,
-    wallpaperGlowStrength: DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    ambientMotionMode: DEFAULT_AMBIENT_MOTION_MODE,
-    ambientMotionStrength: DEFAULT_AMBIENT_MOTION_STRENGTH,
+    wallpaperPresentations: {},
+    canvasMotion: DEFAULT_CANVAS_MOTION,
+    canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
     showAppLabels: true,
@@ -120,13 +114,40 @@ export function normalizeAppearance(raw: unknown): Appearance {
     } else {
         result.wallpaper = parseWallpaperSource(source)?.value ?? "";
     }
-    result.wallpaperCompositions = normalizeWallpaperCompositions(
-        saved.wallpaperCompositions,
+    result.wallpaperPresentations = normalizeWallpaperPresentations(
+        saved.wallpaperPresentations,
+        {
+            currentSource: result.wallpaper,
+            legacy: saved,
+            legacyCompositions: saved.wallpaperCompositions as
+                | Record<string, WallpaperComposition>
+                | undefined,
+        },
     );
-    for (const key of Object.keys(result.wallpaperCompositions)) {
-        if (key.startsWith("data:") && key !== result.wallpaper) {
-            delete result.wallpaperCompositions[key];
-        }
+    if (saved.canvasMotion === "off" || saved.canvasMotion === "ambient") {
+        result.canvasMotion = saved.canvasMotion;
+    } else if (
+        saved.ambientMotionMode !== undefined ||
+        saved.ambientMotionStrength !== undefined ||
+        saved.wallpaperGlowStrength !== undefined
+    ) {
+        const migrated = migrateLegacyWallpaperPresentation(saved);
+        result.canvasMotion = migrated.motion === "ambient" ? "ambient" : "off";
+    }
+    if (
+        saved.canvasMotionLevel === "subtle" ||
+        saved.canvasMotionLevel === "soft" ||
+        saved.canvasMotionLevel === "standard" ||
+        saved.canvasMotionLevel === "pronounced"
+    ) {
+        result.canvasMotionLevel = saved.canvasMotionLevel;
+    } else if (
+        saved.ambientMotionMode !== undefined ||
+        saved.ambientMotionStrength !== undefined ||
+        saved.wallpaperGlowStrength !== undefined
+    ) {
+        const migrated = migrateLegacyWallpaperPresentation(saved);
+        result.canvasMotionLevel = migrated.motionLevel;
     }
     if (typeof saved.showTitle === "boolean") {
         result.showTitle = saved.showTitle;
@@ -142,24 +163,12 @@ export function normalizeAppearance(raw: unknown): Appearance {
         saved.webAppIconSize === "compact" ||
         saved.webAppIconSize === "default" || saved.webAppIconSize === "large"
     ) result.webAppIconSize = saved.webAppIconSize;
-    for (
-        const [key, min, max] of [
-            ["searchOpacity", 0.1, 1],
-            ["blur", 0, 24],
-            ["grayscale", 0, 1],
-            ["mask", 0, 0.8],
-            ["wallpaperGlowStrength", 0, 0.3],
-            ["ambientMotionStrength", 0, 1],
-        ] as const
+    const searchOpacity = saved.searchOpacity;
+    if (
+        typeof searchOpacity === "number" && Number.isFinite(searchOpacity) &&
+        searchOpacity >= 0.1 && searchOpacity <= 1
     ) {
-        const value = saved[key];
-        if (
-            typeof value === "number" && Number.isFinite(value) &&
-            value >= min && value <= max
-        ) result[key] = value;
-    }
-    if (AMBIENT_MOTION_MODES.some((mode) => mode === saved.ambientMotionMode)) {
-        result.ambientMotionMode = saved.ambientMotionMode as AmbientMotionMode;
+        result.searchOpacity = searchOpacity;
     }
     return result;
 }
@@ -283,13 +292,9 @@ export function AppState({ children }: { children: ReactNode }) {
                         ? "new_tab"
                         : "current",
                     wallpaper: prefs.backgroundImage ?? "",
-                    wallpaperCompositions: prefs.wallpaperCompositions,
-                    blur: prefs.wallpaperBlur,
-                    grayscale: prefs.wallpaperGrayscale,
-                    mask: prefs.wallpaperMask,
-                    wallpaperGlowStrength: prefs.wallpaperGlowStrength,
-                    ambientMotionMode: prefs.ambientMotionMode,
-                    ambientMotionStrength: prefs.ambientMotionStrength,
+                    wallpaperPresentations: prefs.wallpaperPresentations,
+                    canvasMotion: prefs.canvasMotion,
+                    canvasMotionLevel: prefs.canvasMotionLevel,
                     webAppHomeLimit: prefs.webAppHomeLimit,
                     webAppIconSize: prefs.webAppIconSize,
                     showAppLabels: prefs.showAppLabels,
@@ -372,25 +377,17 @@ export function AppState({ children }: { children: ReactNode }) {
                     ? "new"
                     : "same";
             }
-            if (next.mask !== undefined) updates.wallpaperMask = next.mask;
-            if (next.wallpaperGlowStrength !== undefined) {
-                updates.wallpaperGlowStrength = next.wallpaperGlowStrength;
-            }
-            if (next.ambientMotionMode !== undefined) {
-                updates.ambientMotionMode = next.ambientMotionMode;
-            }
-            if (next.ambientMotionStrength !== undefined) {
-                updates.ambientMotionStrength = next.ambientMotionStrength;
-            }
-            if (next.blur !== undefined) updates.wallpaperBlur = next.blur;
-            if (next.grayscale !== undefined) {
-                updates.wallpaperGrayscale = next.grayscale;
-            }
             if (next.wallpaper !== undefined) {
                 updates.backgroundImage = next.wallpaper || null;
             }
-            if (next.wallpaperCompositions !== undefined) {
-                updates.wallpaperCompositions = next.wallpaperCompositions;
+            if (next.wallpaperPresentations !== undefined) {
+                updates.wallpaperPresentations = next.wallpaperPresentations;
+            }
+            if (next.canvasMotion !== undefined) {
+                updates.canvasMotion = next.canvasMotion;
+            }
+            if (next.canvasMotionLevel !== undefined) {
+                updates.canvasMotionLevel = next.canvasMotionLevel;
             }
             if (next.webAppHomeLimit !== undefined) {
                 updates.webAppHomeLimit = next.webAppHomeLimit;

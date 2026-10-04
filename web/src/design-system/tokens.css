@@ -26,18 +26,8 @@
     --desktop-window-gap: 16px;
     /* Material levels: canvas, content, primary search, temporary overlay. */
     --surface-l0: var(--background);
-    --wallpaper-glow-strength: 14%;
-    --wallpaper-glow: radial-gradient(
-        circle at 50% 16%,
-        color-mix(in srgb, var(--accent) var(--wallpaper-glow-strength), transparent),
-        transparent 68%
-    );
-    --wallpaper-glow-origin: 50% 16%;
-    --wallpaper-glow-duration: 8s;
-    --wallpaper-glow-rest-opacity: .937;
-    --wallpaper-glow-peak-scale: 1.0175;
-    --wallpaper-ripple-peak-opacity: .063;
-    --wallpaper-ripple-peak-scale: 1.07;
+    --wallpaper-neutral-light: #ffffff;
+    --wallpaper-neutral-dark: #222222;
     --wallpaper-overlay-contrast: #ffffff;
     --wallpaper-focal-marker-size: 24px;
     --wallpaper-focal-marker-dot-size: 4px;
@@ -219,12 +209,6 @@
     --surface-soft: #262C35;
     --surface-solid: #1D2128;
     --surface-l3: #222730;
-    --wallpaper-glow: radial-gradient(
-        circle at 50% 18%,
-        color-mix(in srgb, var(--accent) var(--wallpaper-glow-strength), transparent),
-        transparent 74%
-    );
-    --wallpaper-glow-origin: 50% 18%;
     --shadow-l1: 0 4px 16px -8px rgba(0, 0, 0, 0.28);
     --shadow-l2: 0 10px 28px -10px rgba(0, 0, 0, 0.55);
     --shadow-l3: 0 24px 64px -16px rgba(0, 0, 0, 0.70);

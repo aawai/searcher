@@ -3,6 +3,11 @@ import { cn } from "../../lib/utils.ts";
 
 export interface SliderProps extends SliderPrimitive.Root.Props {
     getAriaLabel?: (index: number) => string;
+    getAriaValueText?: (
+        formattedValue: string,
+        value: number,
+        index: number,
+    ) => string;
 }
 
 function Slider(
@@ -13,6 +18,7 @@ function Slider(
         min = 0,
         max = 100,
         getAriaLabel,
+        getAriaValueText,
         ...props
     }: SliderProps,
 ) {
@@ -69,6 +75,7 @@ function Slider(
                                 className="slider-thumb"
                                 aria-label={thumbLabel}
                                 aria-labelledby={ariaLabelledby}
+                                getAriaValueText={getAriaValueText}
                             />
                         );
                     },

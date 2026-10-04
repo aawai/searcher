@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
     BrowserRouter,
     Link,
@@ -18,17 +18,12 @@ import {
     UserRound,
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
-import {
-    DEFAULT_AMBIENT_MOTION_MODE,
-    DEFAULT_AMBIENT_MOTION_STRENGTH,
-    DEFAULT_WALLPAPER_GLOW_STRENGTH,
-    DEFAULT_WALLPAPER_MASK,
-} from "@shared/contracts.ts";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
+import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
-    type WallpaperComposition,
-    wallpaperComposition,
-} from "@shared/wallpaper.ts";
+    DEFAULT_WALLPAPER_PRESENTATION,
+    wallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
 import { DesignLab } from "./design-lab/DesignLab.tsx";
 import { AuthPage } from "./app/AuthPage.tsx";
@@ -73,95 +68,35 @@ function Layout() {
     const [error, setError] = useState("");
     // V-003：检测到未同步草稿时弹确认 Dialog，确认后 force 登出
     const [confirmLogout, setConfirmLogout] = useState(false);
-    const wallpaperCss = (() => {
-        const wp = (appearance.wallpaper || "").trim();
-        if (!wp) return "none";
-        if (
-            wp.startsWith("linear-gradient(") ||
-            wp.startsWith("radial-gradient(")
-        ) {
-            return wp;
-        }
-        if (
-            wp.startsWith("/api/wallpaper/") ||
-            /^https?:\/\//.test(wp) ||
-            wp.startsWith("data:image/") ||
-            wp.startsWith("blob:")
-        ) {
-            return `url(${JSON.stringify(wp)})`;
-        }
-        return "none";
-    })();
-    const glowStrength = appearance.wallpaperGlowStrength ??
-        DEFAULT_WALLPAPER_GLOW_STRENGTH;
-    const motionMode = appearance.ambientMotionMode ??
-        DEFAULT_AMBIENT_MOTION_MODE;
-    const motionStrength = appearance.ambientMotionStrength ??
-        DEFAULT_AMBIENT_MOTION_STRENGTH;
-    const wallpaperCompositions = "wallpaperCompositions" in appearance &&
-            typeof appearance.wallpaperCompositions === "object" &&
-            appearance.wallpaperCompositions !== null
-        ? appearance.wallpaperCompositions as Record<
-            string,
-            WallpaperComposition
-        >
-        : undefined;
-
-    const S = motionMode === "off" ? 0 : motionStrength;
-    const glowRestOpacity = 1 - 0.18 * S;
-    const glowPeakScale = 1 + 0.05 * S;
-    const ripplePeakOpacity = 0.18 * S;
-    const ripplePeakScale = 1 + 0.20 * S;
-    const shellRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const root = document.documentElement;
-        const shell = shellRef.current;
-        const setProp = (k: string, v: string) => {
-            root.style.setProperty(k, v);
-            shell?.style.setProperty(k, v);
+    const imageSource = appearance.wallpaper.startsWith("data:image/") ||
+        ["uploaded", "remote"].includes(
+            parseWallpaperSource(appearance.wallpaper)?.type ?? "",
+        );
+    const presentation = appearance.wallpaper
+        ? wallpaperPresentation(
+            appearance.wallpaper,
+            appearance.wallpaperPresentations,
+        )
+        : {
+            ...DEFAULT_WALLPAPER_PRESENTATION,
+            motion: appearance.canvasMotion,
+            motionLevel: appearance.canvasMotionLevel,
         };
-        setProp("--wallpaper-glow-strength", `${glowStrength * 100}%`);
-        setProp("--wallpaper-glow-duration", "8s");
-        setProp("--wallpaper-glow-rest-opacity", String(glowRestOpacity));
-        setProp("--wallpaper-glow-peak-scale", String(glowPeakScale));
-        setProp("--wallpaper-ripple-peak-opacity", String(ripplePeakOpacity));
-        setProp("--wallpaper-ripple-peak-scale", String(ripplePeakScale));
-    }, [
-        glowStrength,
-        glowRestOpacity,
-        glowPeakScale,
-        ripplePeakOpacity,
-        ripplePeakScale,
-    ]);
 
     return (
         <div
-            ref={shellRef}
             className="app-shell"
-            data-wallpaper-image={wallpaperCss.startsWith("url(")
+            data-wallpaper-image={isHomePage && imageSource
                 ? "true"
                 : undefined}
             style={{
-                "--wallpaper-image": wallpaperCss,
-                "--wallpaper-blur": appearance.blur + "px",
-                "--wallpaper-grayscale": appearance.grayscale,
-                "--wallpaper-mask": appearance.mask ?? DEFAULT_WALLPAPER_MASK,
                 "--search-opacity": appearance.searchOpacity ?? 1,
             } as React.CSSProperties}
         >
             {isHomePage && (
                 <WallpaperSurface
                     source={appearance.wallpaper}
-                    composition={wallpaperComposition(
-                        appearance.wallpaper,
-                        wallpaperCompositions,
-                    )}
-                    blur={appearance.blur}
-                    grayscale={appearance.grayscale}
-                    mask={appearance.mask ?? DEFAULT_WALLPAPER_MASK}
-                    glowStrength={glowStrength}
-                    ambientMotionMode={motionMode}
-                    ambientMotionStrength={motionStrength}
+                    presentation={presentation}
                     testId="home-wallpaper-surface"
                 />
             )}
