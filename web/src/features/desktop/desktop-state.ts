@@ -50,7 +50,10 @@ export type DesktopAction =
     | { type: "MOVE"; id: string; frame: Frame; rect: SafeRect }
     | { type: "RESIZE"; id: string; frame: Frame; rect: SafeRect }
     | { type: "CLAMP"; rect: SafeRect }
-    | { type: "NORMALIZE" };
+    | { type: "NORMALIZE" }
+    | { type: "HYDRATE"; state: DesktopState }
+    | { type: "RESET" }
+    | { type: "PRUNE_STALE_NOTES"; validNoteIds: Set<string> | string[] };
 
 /**
  * Returns the ID of the topmost visible (non-minimized) window.
@@ -447,6 +450,56 @@ export function desktopReducer(
             return {
                 ...state,
                 windows: normalizeZOrders(state.windows),
+            };
+        }
+
+        case "HYDRATE": {
+            const normalized = normalizeZOrders(action.state.windows);
+            let activeId = action.state.activeId;
+            if (
+                activeId &&
+                !normalized.some((w) =>
+                    w.id === activeId && w.mode !== "minimized"
+                )
+            ) {
+                activeId = getTopmostVisibleWindowId(normalized);
+            }
+            return {
+                windows: normalized,
+                activeId,
+            };
+        }
+
+        case "RESET": {
+            return initialDesktopState;
+        }
+
+        case "PRUNE_STALE_NOTES": {
+            const validSet = action.validNoteIds instanceof Set
+                ? action.validNoteIds
+                : new Set(action.validNoteIds);
+            const nextWindows = state.windows.filter((w) => {
+                if (w.kind !== "note") return true;
+                const noteId = w.entityId ??
+                    (w.id.startsWith("note:") ? w.id.slice(5) : w.id);
+                return validSet.has(noteId);
+            });
+            if (nextWindows.length === state.windows.length) {
+                return state;
+            }
+            const normalized = normalizeZOrders(nextWindows);
+            let nextActiveId = state.activeId;
+            if (
+                state.activeId &&
+                !normalized.some((w) =>
+                    w.id === state.activeId && w.mode !== "minimized"
+                )
+            ) {
+                nextActiveId = getTopmostVisibleWindowId(normalized);
+            }
+            return {
+                windows: normalized,
+                activeId: nextActiveId,
             };
         }
 

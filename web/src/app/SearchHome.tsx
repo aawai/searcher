@@ -48,12 +48,13 @@ import {
     initialWorkspaceHost,
     workspaceHostReducer,
 } from "../features/workspace/workspace-host.ts";
-import {
-    desktopReducer,
-    initialDesktopState,
-} from "../features/desktop/desktop-state.ts";
+import { isConstrainedViewport } from "../features/desktop/constrained-geometry.ts";
+import { useDesktopLayout } from "../features/desktop/useDesktopLayout.ts";
 import { useDesktopSafeRect } from "../features/desktop/DesktopCanvas.tsx";
-import { DesktopWorkspaces } from "../features/desktop/DesktopWorkspaces.tsx";
+import {
+    DesktopWorkspaces,
+    isWorkspaceKind,
+} from "../features/desktop/DesktopWorkspaces.tsx";
 
 export interface WebAppGroup {
     id: string;
@@ -79,6 +80,7 @@ const AppsWorkspaceView = AppsWorkspace as React.ComponentType<
 export function SearchHome() {
     const { user, appearance } = useAppState();
     const navigate = useNavigate();
+    const layoutStyle = appearance.style;
     const updatingNotesRef = useRef<Set<string>>(new Set());
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
     const [mode, setMode] = useState<"search" | "ai">("search");
@@ -87,6 +89,8 @@ export function SearchHome() {
     const [apps, setApps] = useState<ExtendedWebApp[]>([]);
     const [groups, setGroups] = useState<WebAppGroup[]>([]);
     const [notes, setNotes] = useState<NoteItem[]>([]);
+    const [notesLoading, setNotesLoading] = useState(true);
+    const [notesError, setNotesError] = useState("");
     const [appsStatus, setAppsStatus] = useState<
         "loading" | "ready" | "offline" | "error"
     >("loading");
@@ -97,12 +101,15 @@ export function SearchHome() {
         workspaceHostReducer,
         initialWorkspaceHost,
     );
-    const [desktop, dispatchDesktop] = useReducer(
-        desktopReducer,
-        initialDesktopState,
-    );
     const [dockElement, setDockElement] = useState<HTMLElement | null>(null);
     const safeRect = useDesktopSafeRect(dockElement);
+    const [desktop, dispatchDesktop] = useDesktopLayout({
+        userId: user?.id,
+        layoutStyle,
+        rect: safeRect,
+        notes,
+        notesLoaded: !notesLoading,
+    });
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
     );
@@ -114,11 +121,10 @@ export function SearchHome() {
     }, []);
     const [appsArranging, setAppsArranging] = useState(false);
     const dirtyForm = useRef(false);
+    const initialSyncDoneRef = useRef(false);
     const [pendingAction, setPendingAction] = useState<
         { kind: WorkspaceKind; action: WorkspaceAction } | null
     >(null);
-    const [notesLoading, setNotesLoading] = useState(true);
-    const [notesError, setNotesError] = useState("");
     function applyWorkspace(kind: WorkspaceKind, action: WorkspaceAction) {
         if (kind === "apps") {
             setAppsArranging(false);
@@ -212,11 +218,52 @@ export function SearchHome() {
         }
     }, [desktop.activeId, appearance.style, mobile]);
     useEffect(() => {
-        dirtyForm.current = false;
-        dispatchHost({ type: "reset" });
-        for (const id of ["apps", "notes"]) {
-            dispatchDesktop({ type: "CLOSE", id });
+        if (initialSyncDoneRef.current) return;
+        if (desktop.windows.length === 0) return;
+        initialSyncDoneRef.current = true;
+        for (const win of desktop.windows) {
+            if (isWorkspaceKind(win.kind)) {
+                if (host.models[win.kind].route.view === "closed") {
+                    dispatchHost({
+                        type: "domain",
+                        kind: win.kind,
+                        action: {
+                            type: "navigate",
+                            route: { view: `${win.kind}/root` },
+                        },
+                    });
+                }
+            }
         }
+    }, [desktop.windows]);
+    useEffect(() => {
+        if (
+            !mobile && typeof globalThis.window !== "undefined" &&
+            !isConstrainedViewport(globalThis.innerWidth)
+        ) {
+            if (host.models.notes.route.view === "notes/edit") {
+                const editingId = host.models.notes.route.id;
+                if (
+                    desktop.windows.some((w) =>
+                        w.id === `note:${editingId}` || w.entityId === editingId
+                    )
+                ) {
+                    dispatchHost({
+                        type: "domain",
+                        kind: "notes",
+                        action: {
+                            type: "navigate",
+                            route: { view: "notes/root" },
+                        },
+                    });
+                }
+            }
+        }
+    }, [desktop.windows, host.models.notes.route, mobile]);
+    useEffect(() => {
+        dirtyForm.current = false;
+        initialSyncDoneRef.current = false;
+        dispatchHost({ type: "reset" });
         setPendingAction(null);
         setAppsArranging(false);
         setActiveFolderId(null);
@@ -238,9 +285,11 @@ export function SearchHome() {
     const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
     useEffect(() => setEngine(appearance.engine), [appearance.engine]);
     useEffect(() => {
-        void getLocal<Reachability>("reachability").then((value) => {
-            if (value) setReachability(value);
-        });
+        void getLocal<Reachability>("reachability")
+            .then((value) => {
+                if (value) setReachability(value);
+            })
+            .catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -347,7 +396,7 @@ export function SearchHome() {
             }));
             const next = Object.fromEntries(pairs);
             setReachability(next);
-            await setLocal("reachability", next);
+            await setLocal("reachability", next).catch(() => {});
         } finally {
             setIsCheckingConnections(false);
         }
@@ -542,7 +591,27 @@ export function SearchHome() {
         }
     }
     // Note actions
-    async function createNote() {
+    function openNote(noteId: string) {
+        const constrained = typeof globalThis.window !== "undefined" &&
+            isConstrainedViewport(globalThis.innerWidth);
+        if (appearance.style === "zen" || mobile || constrained) {
+            navigateWorkspace({ view: "notes/edit", id: noteId });
+            if (appearance.style === "widgets" && !mobile) {
+                openWorkspace("notes");
+            }
+            return;
+        }
+
+        dispatchDesktop({
+            type: "OPEN",
+            id: `note:${noteId}`,
+            kind: "note",
+            entityId: noteId,
+            rect: safeRect,
+        });
+    }
+
+    async function createAndOpenNote() {
         setError("");
         try {
             const note = await api<NoteItem>(
@@ -550,14 +619,16 @@ export function SearchHome() {
                 json("POST", { title: null, body: "", isHomeFixed: false }),
             );
             setNotes((items) => [note, ...items]);
-            navigateWorkspace({ view: "notes/edit", id: note.id });
+            openNote(note.id);
         } catch (e) {
             setError(errorMessage(e));
         }
     }
 
+    const createNote = createAndOpenNote;
+
     function editNote(note: NoteItem) {
-        navigateWorkspace({ view: "notes/edit", id: note.id });
+        openNote(note.id);
     }
     async function updateNote(note: NoteItem, patch: Record<string, unknown>) {
         const lockKey = `${note.id}:${JSON.stringify(patch)}`;
@@ -617,6 +688,7 @@ export function SearchHome() {
                 { method: "DELETE" },
             );
             setNotes((items) => items.filter((item) => item.id !== note.id));
+            dispatchDesktop({ type: "CLOSE", id: `note:${note.id}` });
             if (noteUndo) clearTimeout(noteUndo.timer);
             const timer = setTimeout(() => setNoteUndo(null), 5000);
             setNoteUndo({ note, timer });
@@ -666,7 +738,6 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
-    const layoutStyle = appearance.style;
     const layoutProps: HomeLayoutProps = {
         user,
         appearance,
@@ -701,6 +772,8 @@ export function SearchHome() {
         deleteNote,
         updateNote,
         updateNoteLayout,
+        openNote,
+        createAndOpenNote,
         openWorkspace,
         error,
         setError,
@@ -824,6 +897,15 @@ export function SearchHome() {
                         onCreate={createWorkspaceItem}
                         onDockElement={setDockElement}
                         appsArranging={appsArranging}
+                        notes={notes}
+                        onSaveNote={(saved) => {
+                            setNotes((items) =>
+                                items.map((item) =>
+                                    item.id === saved.id ? saved : item
+                                )
+                            );
+                        }}
+                        userId={user.id}
                     />
                 )
                 : (

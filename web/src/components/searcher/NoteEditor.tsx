@@ -1,6 +1,7 @@
 import {
     type KeyboardEvent,
     useEffect,
+    useId,
     useLayoutEffect,
     useRef,
     useState,
@@ -45,6 +46,9 @@ export function NoteEditor(
         onSaved: (note: NoteItem) => void;
     },
 ) {
+    const editorId = useId();
+    const editBodyId = `note-body-textarea-edit-${editorId}`;
+    const splitBodyId = `note-body-textarea-split-${editorId}`;
     const [draft, setDraft] = useState<Draft>({
         body: note.body,
         title: note.title ?? "",
@@ -84,15 +88,24 @@ export function NoteEditor(
     }, [draft]);
 
     useEffect(() => {
-        void getLocal<StoredDraft>(key).then((stored) => {
-            if (stored && stored.version >= note.version) {
-                setDraft({ body: stored.body, title: stored.title });
-                setStatus("unsynced");
-            } else {
-                setDraft({ body: note.body, title: note.title ?? "" });
-                setStatus("saved");
-            }
-        });
+        let cancelled = false;
+        const initialDraft = draftRef.current;
+        void getLocal<StoredDraft>(key).catch(() => undefined).then(
+            (stored) => {
+                // Device recovery must not overwrite input entered while IndexedDB loads.
+                if (cancelled || draftRef.current !== initialDraft) return;
+                if (stored && stored.version >= note.version) {
+                    setDraft({ body: stored.body, title: stored.title });
+                    setStatus("unsynced");
+                } else {
+                    setDraft({ body: note.body, title: note.title ?? "" });
+                    setStatus("saved");
+                }
+            },
+        );
+        return () => {
+            cancelled = true;
+        };
     }, [note.id]);
     useEffect(() => {
         setColor(note.color || "paper");
@@ -134,6 +147,8 @@ export function NoteEditor(
             ...next,
             version: latestNoteRef.current.version,
             updatedAt: Date.now(),
+        }).catch(() => {
+            // IndexedDB failure leaves the draft in memory; cloud autosave remains available.
         });
         clearTimeout(timer.current);
         timer.current = globalThis.setTimeout(
@@ -238,7 +253,7 @@ export function NoteEditor(
                     }),
                 );
                 latestNoteRef.current = updated;
-                await deleteLocal(key);
+                await deleteLocal(key).catch(() => {});
                 onSaved(updated);
                 if (
                     draftRef.current.body === data.body &&
@@ -317,14 +332,21 @@ export function NoteEditor(
         setTimeout(() => setCopiedDraft(false), 2000);
     }
 
-    function useCloud() {
+    async function useCloud() {
         if (!conflict) return;
-        setDraft({ body: conflict.body, title: conflict.title ?? "" });
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        // A blur-triggered save may still return 409 after the click. Accept after it settles.
+        await mutationQueue.current;
+        latestNoteRef.current = conflict;
+        const accepted = { body: conflict.body, title: conflict.title ?? "" };
+        draftRef.current = accepted;
+        setDraft(accepted);
         if (conflict.color) {
             setColor(conflict.color);
         }
         onSaved(conflict);
-        void deleteLocal(key);
+        void deleteLocal(key).catch(() => {});
         setConflict(null);
         setStatus("saved");
     }
@@ -360,7 +382,7 @@ export function NoteEditor(
                     old.version + "/restore",
                 { method: "POST" },
             );
-            await deleteLocal(key);
+            await deleteLocal(key).catch(() => {});
             onSaved(restored);
             setDraft({ body: restored.body, title: restored.title ?? "" });
             setStatus("saved");
@@ -373,7 +395,7 @@ export function NoteEditor(
         <section className={"note-editor note-" + (color || "paper")}>
             <div className="note-title-wrap px-1 pt-1 pb-1">
                 <input
-                    id="note-title-input"
+                    id={`note-title-input-${editorId}`}
                     type="text"
                     className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
                     placeholder="便签标题…"
@@ -386,8 +408,8 @@ export function NoteEditor(
                         if (event.key === "Enter") {
                             event.preventDefault();
                             const targetId = view === "split"
-                                ? "note-body-textarea-split"
-                                : "note-body-textarea-edit";
+                                ? splitBodyId
+                                : editBodyId;
                             document.getElementById(targetId)?.focus();
                         }
                     }}
@@ -439,7 +461,7 @@ export function NoteEditor(
                     value="edit"
                     className="flex-1 flex flex-col mt-3 min-h-[300px]"
                 >
-                    {bodyEditor("note-body-textarea-edit")}
+                    {bodyEditor(editBodyId)}
                 </TabsContent>
 
                 <TabsContent
@@ -455,7 +477,7 @@ export function NoteEditor(
                     value="split"
                     className="flex-1 editor-view--split mt-3 min-h-[300px]"
                 >
-                    {bodyEditor("note-body-textarea-split")}
+                    {bodyEditor(splitBodyId)}
                     <div className="preview-pane flex-1 overflow-y-auto">
                         {markdown(draft.body)}
                     </div>

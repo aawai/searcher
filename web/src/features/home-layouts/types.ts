@@ -50,6 +50,8 @@ export interface HomeLayoutProps {
     ) => Promise<void>;
     // notes
     createNote: () => Promise<void>;
+    openNote?: (noteId: string) => void;
+    createAndOpenNote?: () => Promise<void>;
     editNote: (note: NoteItem) => void;
     deleteNote: (note: NoteItem) => Promise<void>;
     updateNote: (

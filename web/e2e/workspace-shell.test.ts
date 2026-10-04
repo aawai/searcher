@@ -64,8 +64,146 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     const appsTrigger =
         '.desktop-dock button[aria-label="应用工作区"], .workspace-mobile-navigation button[aria-label="应用工作区"]';
     const search = () => panel.locator("input[data-workspace-search]");
-    const close = () =>
-        panel.getByRole("button", { name: "收起工作区", exact: true }).click();
+    async function resetPersistedLayout(target: Page = page) {
+        await target.evaluate(async () => {
+            const auth = (await (await fetch("/api/auth/me")).json()).data;
+            if (!auth?.user) return;
+            const { promise, resolve, reject } = Promise.withResolvers<void>();
+            const request = indexedDB.open("searcher-client", 1);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                const db = request.result;
+                if (!db.objectStoreNames.contains("state")) {
+                    db.close();
+                    resolve();
+                    return;
+                }
+                const tx = db.transaction("state", "readwrite");
+                tx.objectStore("state").delete(
+                    `searcher:desktop-layout:v1:${auth.user.id}`,
+                );
+                tx.oncomplete = () => {
+                    db.close();
+                    resolve();
+                };
+                tx.onerror = () => {
+                    db.close();
+                    reject(tx.error);
+                };
+            };
+            await promise;
+        });
+    }
+    async function visit(path: string, target: Page = page) {
+        const response = await target.goto(origin + path);
+        assertEquals(response?.status(), 200, path);
+        await target.locator("main").waitFor();
+        if (path === "/" && (target.viewportSize()?.width ?? 0) >= 1024) {
+            const windowIds = await target.evaluate(async () => {
+                const auth = (await (await fetch("/api/auth/me")).json()).data;
+                if (!auth?.user) return [];
+                const preferences =
+                    (await (await fetch("/api/preferences")).json()).data;
+                if (preferences.style !== "widgets") return [];
+                const { promise, resolve, reject } = Promise.withResolvers<
+                    string[]
+                >();
+                const request = indexedDB.open("searcher-client", 1);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    const db = request.result;
+                    if (!db.objectStoreNames.contains("state")) {
+                        db.close();
+                        resolve([]);
+                        return;
+                    }
+                    const read = db.transaction("state", "readonly")
+                        .objectStore("state").get(
+                            `searcher:desktop-layout:v1:${auth.user.id}`,
+                        );
+                    read.onerror = () => {
+                        db.close();
+                        reject(read.error);
+                    };
+                    read.onsuccess = () => {
+                        const layout = read.result as {
+                            windows: Array<{ id: string }>;
+                        } | undefined;
+                        db.close();
+                        resolve(
+                            layout?.windows.map((window) => window.id) ??
+                                [],
+                        );
+                    };
+                };
+                return await promise;
+            });
+            for (const id of windowIds) {
+                await target.locator(`.desktop-window[data-window-id="${id}"]`)
+                    .waitFor({ state: "attached" });
+            }
+        }
+    }
+    async function closeAllWorkspaces(target: Page = page) {
+        const noteCloseBtns = target.locator(
+            '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+        );
+        const count = await noteCloseBtns.count();
+        for (let i = 0; i < count; i++) {
+            const btn = noteCloseBtns.first();
+            if (await btn.isVisible()) {
+                await btn.click();
+            }
+        }
+        const openWins = target.locator(".desktop-window");
+        const winCount = await openWins.count();
+        if (winCount > 0) {
+            const openIds = await openWins.evaluateAll((windows) =>
+                windows.sort((a, b) =>
+                    Number((b as HTMLElement).style.zIndex || 0) -
+                    Number((a as HTMLElement).style.zIndex || 0)
+                ).map((w) => (w as HTMLElement).dataset.windowId).filter(
+                    Boolean,
+                ) as string[]
+            );
+            for (const id of openIds) {
+                const win = target.locator(
+                    `.desktop-window[data-window-id="${id}"]`,
+                );
+                if (await win.isVisible()) {
+                    const btn = win.locator(
+                        'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                    ).first();
+                    if (await btn.isVisible()) {
+                        await btn.click();
+                        await win.waitFor({ state: "detached" });
+                    }
+                }
+            }
+        }
+        const panelOrSheet = target.locator(
+            '.workspace-panel, [data-slot="sheet-portal"] .workspace-panel',
+        );
+        if (await panelOrSheet.first().isVisible()) {
+            const closeBtn = panelOrSheet.locator(
+                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+            ).first();
+            if (await closeBtn.isVisible()) {
+                await closeBtn.click();
+                await panelOrSheet.first().waitFor({ state: "detached" });
+            }
+        }
+        await resetPersistedLayout(target);
+    }
+    const close = async () => {
+        const btn = panel.locator(
+            'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+        ).first();
+        if (await btn.isVisible()) {
+            await btn.click();
+            await panel.waitFor({ state: "detached" });
+        }
+    };
     async function openApps() {
         await page.locator(appsTrigger).click();
         await search().waitFor();
@@ -115,7 +253,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await route.fulfill(fail);
             });
             try {
-                await page.goto(origin + "/");
+                await visit("/");
                 await openApps();
                 await panel.getByText("正在加载", { exact: false }).waitFor();
                 await assertChromeInViewport(page);
@@ -344,6 +482,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 true,
             );
             await close();
+            await closeAllWorkspaces();
         },
     );
 
@@ -380,7 +519,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             width: viewport.width,
                             height: viewport.height,
                         });
-                        await page.goto(origin + "/");
+                        await visit("/");
                         await page.waitForFunction(
                             (expected) =>
                                 document.documentElement.dataset.theme ===
@@ -568,9 +707,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             await page.locator(".hero").boundingBox(),
                             hero,
                         );
+                        await closeAllWorkspaces();
                     }
                 }
             }
+            await closeAllWorkspaces();
         },
     );
 
@@ -579,7 +720,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         async () => {
             await request("/api/preferences", "PATCH", { style: "widgets" });
             await page.setViewportSize({ width: 1440, height: 900 });
-            await page.goto(origin + "/");
+            await visit("/");
             await page.locator(appsTrigger).focus();
             await page.keyboard.press("Enter");
             await search().waitFor();
@@ -597,7 +738,12 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await expand.focus();
             await page.keyboard.press("Enter");
             await panel.locator(".note-preview").waitFor();
-            assertEquals(await page.locator("#note-title-input").count(), 0);
+            assertEquals(
+                await page.locator(
+                    'input[aria-label="便签标题"], [id^="note-title-input"]',
+                ).count(),
+                0,
+            );
             await panel.getByRole("button", { name: "折叠", exact: true })
                 .focus();
             await page.keyboard.press("Enter");
@@ -651,6 +797,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 ),
                 true,
             );
+            await closeAllWorkspaces();
         },
     );
 
@@ -666,7 +813,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 ] as const
             ) {
                 await page.setViewportSize({ width, height });
-                await page.goto(origin + "/");
+                await visit("/");
 
                 // Opener: Apps edge trigger
                 const appsEdge = page.locator(
@@ -716,7 +863,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await appTile.focus();
                 await page.keyboard.press("Shift+F10");
                 await page.getByRole("menu").waitFor();
-
+                await page.waitForFunction(() =>
+                    document.querySelector(
+                        '[role="menu"]',
+                    )?.contains(document.activeElement)
+                );
                 // First Escape closes menu overlay, Zen surface remains visible
                 await page.keyboard.press("Escape");
                 await page.getByRole("menu").waitFor({ state: "detached" });
@@ -749,7 +900,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     ),
                     true,
                 );
+                await closeAllWorkspaces();
             }
+            await closeAllWorkspaces();
         },
     );
 
@@ -765,7 +918,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.emulateMedia({ colorScheme: theme });
                 for (const width of [375, 390, 768, 1024, 1440]) {
                     await page.setViewportSize({ width, height: 900 });
-                    await page.goto(origin + "/");
+                    await visit("/");
                     await page.locator(".hero").waitFor();
                     const hero = await page.locator(".hero").boundingBox();
                     await openApps();
@@ -798,22 +951,48 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             0,
                         );
                         assert(await page.locator(".desktop-dock").isVisible());
-                    } else {assertEquals(
+                    } else {
+                        assertEquals(
                             await page.locator(".desktop-dock").count(),
                             0,
-                        );}
+                        );
+                        const closeBtn = panel.getByRole("button", {
+                            name: "收起工作区",
+                            exact: true,
+                        });
+                        if (await closeBtn.isVisible()) {
+                            await closeBtn.click();
+                            await panel.waitFor({ state: "detached" });
+                        }
+                        const mobileApps = page.locator(
+                            '.workspace-mobile-navigation button[aria-label="应用工作区"]',
+                        );
+                        if (await mobileApps.isVisible()) {
+                            await mobileApps.click();
+                            await panel.waitFor();
+                            const appsCloseBtn = panel.getByRole("button", {
+                                name: "收起工作区",
+                                exact: true,
+                            });
+                            if (await appsCloseBtn.isVisible()) {
+                                await appsCloseBtn.click();
+                                await panel.waitFor({ state: "detached" });
+                            }
+                        }
+                    }
                     if (width >= 1024) {
                         assertEquals(
                             await page.locator(".desktop-window").count(),
                             2,
                         );
                     }
+                    await closeAllWorkspaces();
                 }
             }
 
             // Desktop viewport for interaction, focus/blur, arrange hierarchy, and chrome stability
             await page.setViewportSize({ width: 1440, height: 900 });
-            await page.goto(origin + "/");
+            await visit("/");
             await openApps();
             await search().waitFor();
             await page.waitForFunction(() =>
@@ -1086,7 +1265,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     body: "B".repeat(500),
                 },
             );
-            await page.goto(origin + "/");
+            await closeAllWorkspaces();
+            await visit("/");
             await openApps();
             await search().waitFor();
             await panel.getByRole("button", {
@@ -1108,13 +1288,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
             await request(`/api/webapps/${longApp.id}`, "DELETE");
             await request(`/api/notes/${longNote.id}`, "DELETE");
-            await close();
+            await closeAllWorkspaces();
         },
     );
     await t.step(
         "presentation changes preserve Core queries and nested Back; logout clears transient state",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
+            await visit("/");
             await openApps();
             await search().fill("State Alpha");
             await page.locator(
@@ -1173,7 +1354,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             )
                 .click();
             assertEquals(await search().inputValue(), "");
-            await close();
+            await closeAllWorkspaces();
         },
     );
 });

@@ -1,0 +1,107 @@
+/**
+ * Shared in-memory IndexedDB mock helper for tests.
+ * Reusable across local.test, desktop-persistence.test, and useDesktopLayout.test.
+ */
+
+export function setupMockIndexedDB(): void {
+    const memoryStores = new Map<string, Map<string, unknown>>();
+
+    const mockIDB = {
+        open(_dbName: string, _version?: number) {
+            const req = {
+                result: null as unknown,
+                error: null as unknown,
+                onupgradeneeded: null as (() => void) | null,
+                onsuccess: null as (() => void) | null,
+                onerror: null as (() => void) | null,
+            };
+
+            queueMicrotask(() => {
+                const db = {
+                    createObjectStore(storeName: string) {
+                        if (!memoryStores.has(storeName)) {
+                            memoryStores.set(storeName, new Map());
+                        }
+                    },
+                    transaction(storeName: string, _mode?: string) {
+                        let store = memoryStores.get(storeName);
+                        if (!store) {
+                            store = new Map();
+                            memoryStores.set(storeName, store);
+                        }
+                        const tx = {
+                            error: null as unknown,
+                            oncomplete: null as (() => void) | null,
+                            onerror: null as (() => void) | null,
+                            objectStore(_sName: string) {
+                                return {
+                                    get(key: string) {
+                                        const getReq = {
+                                            result: undefined as unknown,
+                                            error: null as unknown,
+                                            onsuccess: null as
+                                                | (() => void)
+                                                | null,
+                                            onerror: null as
+                                                | (() => void)
+                                                | null,
+                                        };
+                                        queueMicrotask(() => {
+                                            getReq.result = store!.get(key);
+                                            getReq.onsuccess?.();
+                                        });
+                                        return getReq;
+                                    },
+                                    put(val: unknown, key: string) {
+                                        const putReq = {
+                                            result: key,
+                                            error: null as unknown,
+                                            onsuccess: null as
+                                                | (() => void)
+                                                | null,
+                                            onerror: null as
+                                                | (() => void)
+                                                | null,
+                                        };
+                                        queueMicrotask(() => {
+                                            store!.set(key, val);
+                                            putReq.onsuccess?.();
+                                            tx.oncomplete?.();
+                                        });
+                                        return putReq;
+                                    },
+                                    delete(key: string) {
+                                        const delReq = {
+                                            result: undefined,
+                                            error: null as unknown,
+                                            onsuccess: null as
+                                                | (() => void)
+                                                | null,
+                                            onerror: null as
+                                                | (() => void)
+                                                | null,
+                                        };
+                                        queueMicrotask(() => {
+                                            store!.delete(key);
+                                            delReq.onsuccess?.();
+                                            tx.oncomplete?.();
+                                        });
+                                        return delReq;
+                                    },
+                                };
+                            },
+                        };
+                        return tx;
+                    },
+                };
+                req.result = db;
+                req.onsuccess?.();
+            });
+
+            return req;
+        },
+    };
+
+    const env = globalThis as Record<string, unknown>;
+    env.indexedDB = mockIDB;
+}

@@ -89,7 +89,17 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             `.desktop-dock button[aria-label="${label}"], .desktop-dock button[data-workspace="${type}"], .workspace-mobile-navigation button[aria-label="${label}"], .workspace-dock button[aria-label="${label}"], button[data-workspace="${type}"]`,
         );
         await dockBtn.first().waitFor({ state: "visible" });
-        await dockBtn.first().click();
+        // Reload may already have restored this workspace from the device layout.
+        const restored = await target.waitFor({
+            state: "visible",
+            timeout: 2500,
+        }).then(() => true, () => false);
+        if (
+            !restored ||
+            await target.getAttribute("data-window-active") === "false"
+        ) {
+            await dockBtn.first().click();
+        }
         await target.waitFor({ state: "visible" });
     }
     // 1. Heading hierarchy contract: h2 panel -> h3 subsection with accessible regions
