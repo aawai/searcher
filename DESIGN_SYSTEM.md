@@ -144,7 +144,7 @@ content 不叠加强 border/glow/highlight。
 Workspace 是常驻内容管理载体，与模态 L3 Overlay（破坏性 Dialog /
 AlertDialog）具有严格不同的交互与视觉语义：
 
-- **桌面端（>=768px）**：呈现为右侧固定非模态侧边栏（`<aside>`，宽度
+- **Zen 桌面端（>=768px）**：呈现为右侧固定非模态侧边栏（`<aside>`，宽度
   `--workspace-width: 400px`，边距
   `--workspace-inset: var(--space-4)`，顶栏安全避让
   `--workspace-top-inset: calc(var(--control-height) + var(--space-6))`）。采用
@@ -178,30 +178,44 @@ AlertDialog）具有严格不同的交互与视觉语义：
   nested navigation、close/reset。不得加入 window geometry、z-order、Dock 或
   viewport state；`SearchHome` 在 auth user change/logout 时 reset transient
   state。
-- `WorkspacePresentation = "panel" | "window" | "sheet"` 唯一定义于
-  `WorkspaceSurface.tsx`。Host `WorkspaceShell` 集中选择：<768 为 sheet，
-  > =768 时 Zen 为 panel、Widgets 为 window；Apps/Notes 不读取 breakpoint 或
-  > presentation。
-- `WorkspaceSurface` 统一拥有 title/header、back/close controls、footer slot、
-  accessible name 与唯一 `.workspace-body` scroll boundary，通过
-  `data-presentation` 暴露 presentation。Root 内容复用 WorkspaceSearch、
-  WorkspaceSection 与 canonical LoadingState/StatusBanner/EmptyState。
-- 同一 `children` content slot 承载唯一 Apps/Notes 实现，不复制 presenter
-  专属业务 JSX。 closed 时卸载 Surface/content；panel↔window 不因 presentation
-  改变重挂载， sheet 使用 shadcn Sheet portal，切换 sheet 可重挂载内容，但 Core
-  route/stack/query 保存在 Host 外不受影响。编辑草稿继续遵循既有 AppForm 与
-  NoteEditor 保存契约。
-- window 当前复用桌面非模态 aside 的视觉/尺寸/交互，不包含 drag/resize、Dock、
-  multi-window、minimize/maximize/snap 或新的 Desktop Window Manager。
+- `WorkspacePresentation = "panel" | "window" | "sheet"` 定义于
+  WorkspaceSurface。 Host 在 <768 选择 shared Sheet；Zen >=768 使用
+  WorkspaceShell/Panel； Widgets >=768 使用 DesktopWorkspaces。Apps/Notes
+  content 不读取 breakpoint 或 presentation。
+- `workspace-host.ts` 为 Apps/Notes 各保留一份 Core model；两者
+  route、stack、query 独立。SearchHome 统一接收 openWorkspace/openNote 与业务
+  action，负责选择 domain 和 presenter。
+- AppsWorkspace/NotesWorkspace 各只有一套 content JSX，复用
+  WorkspaceSearch、WorkspaceSection、 LoadingState/StatusBanner/EmptyState；各
+  presenter 的唯一 scroll boundary 为 .workspace-body。
+- Widgets >=1024 的 Apps/Notes 是 singleton
+  windows，可同时打开、重叠、focus、minimize/restore、 maximize；Apps
+  create/edit 和 Notes edit 仍是各自 window 的 nested route。
+- Widgets 768–1023 始终只有一个可见 active window，inactive content 保持 mounted
+  以保留表单草稿； 不允许自由 drag/resize。三档尺寸以 safe rect 为基准居中：
+  medium = min(680px, 78% safe-width) × min(720px, 72% safe-height)； large =
+  min(880px, safe-width - 2 × desktop-gap) × min(820px, 88%
+  safe-height)；fullscreen = safe rect。
+- Task Dock 仅负责 Apps/Notes root window navigation：closed → Open、visible →
+  Focus、 minimized → Restore + Focus；始终可见，无 CRUD、无 footer
+  switcher。Bento 只保留打开网站、 打开便签和新建便签等内容级动作，不加入重复
+  root workspace navigation。
+- Canvas safe rect 顶部避让 Topbar/connection banner，底部避让 Dock；打开 window
+  不推动 Search/Bento。 Pointer activation 不抢夺 input/textarea focus；Dock
+  键盘打开/恢复聚焦 root Close 或 nested Back。 Close/Escape 仅关闭 active
+  domain，弹出菜单/确认弹窗优先消费 Escape，关闭后聚焦对应 Dock item。
+- <768 无 DesktopDock；shared Sheet 保留 modal focus trap、swipe、实际 opener
+  restore。 Zen Panel/Sheet 与 FloatingNotes 不变；window geometry
+  仅存于当前页面，不持久化。
 
 #### Desktop Window Manager（#88 demo）
 
-- `/design-lab` 使用独立 `features/desktop` 引擎；此阶段不迁移业务、不接
-  Dock、不持久化。
+- /design-lab 保留独立非业务 demo；Widgets production 复用同一 features/desktop
+  引擎， 不实现独立 Note entity windows、Snap、Overview 或 window persistence。
 - `DesktopCanvas` 是 viewport-fixed、背景 pointer-events:none 的唯一坐标
   owner。frame x/y 相对 safe rect；顶边为可见 Topbar/connection banner 下边界加
   `--space-window-gap`， 左右为 viewport 加 gap，底边为 viewport 减 gap；可提供
-  bottomElement 供后续 Dock 使用。
+  bottomElement 在 Widgets 中避让 Task Dock。
 - window 使用 `--window-surface/border`、`--shadow-window`、`--radius-window`、
   `--window-elevation`、`--window-chrome-height` 与
   `--window-resize-hit`；不叠加 blur。
@@ -218,8 +232,8 @@ AlertDialog）具有严格不同的交互与视觉语义：
 
 #### Workspace Root layout contract
 
-Apps 与 Notes 是同一 Shell 内的两个工作区，共享 Root
-chrome，不统一内容列表的表现形式：
+Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 domain window
+中， Zen/Sheet 使用同一 Shell；内容列表表现形式由各 feature 拥有：
 
 - `.workspace-body` 是 page-level inline inset 的唯一 owner，使用 `--space-4`；
   Root 的 Search、status、empty state 与 content boundary 对齐，不再添加
@@ -239,9 +253,10 @@ chrome，不统一内容列表的表现形式：
   整理时禁用搜索， 进入整理时清空 query；Notes 标题/正文搜索与独立 query
   状态不变。
 - Footer Root create slot 统一使用 default primary Button（“添加应用” /
-  “新建便签”）， width、height、radius 和 typography 相同；切换 Apps / Notes
-  不移动 Footer 或 Switcher。 Apps 整理时隐藏 create action，仅“完成整理”为
-  primary；nested editor/form 不渲染 Root create action。
+  “新建便签”）与 canonical control token；固定在各自 surface 底部，只有 Body
+  滚动。 Widgets desktop 的 Apps/Notes 导航由 Dock 唯一拥有；Zen/Sheet 保留
+  Switcher。 Apps 整理时隐藏 create action，仅“完成整理”为 primary；nested
+  editor/form 不渲染 Root create action。
 
 ### Wallpaper canvas
 

@@ -799,9 +799,13 @@ Deno.test("production Bento contracts & empty expansion matrix (#44)", async (t)
                 !document.querySelector("main .widgets-bento-container")
             );
 
-            // In Zen mode, Widgets Bento is NOT rendered
+            // In Zen mode, Widgets Bento is NOT rendered and DesktopDock is NOT rendered
             assertEquals(
                 await page.locator(".widgets-bento-container").count(),
+                0,
+            );
+            assertEquals(
+                await page.locator(".desktop-dock").count(),
                 0,
             );
 

@@ -15,6 +15,15 @@
     --window-elevation: 30;
     --window-resize-hit: 12px;
     --window-chrome-height: 44px;
+    /* Window semantic tokens (Issue #89 / Workspace refactor) */
+    --surface-window: var(--surface-solid);
+    --surface-window-active: var(--surface-solid);
+    --border-window: var(--border);
+    --border-window-active: var(--accent);
+    --shadow-window-active: var(--shadow-l3);
+    --elevation-window-base: 30;
+    --elevation-desktop-dock: 40;
+    --desktop-window-gap: 16px;
     /* Material levels: canvas, content, primary search, temporary overlay. */
     --surface-l0: var(--background);
     --wallpaper-glow-strength: 14%;

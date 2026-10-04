@@ -923,3 +923,31 @@
       `/tmp/omp-sshots-1597fbd*.webp`。
 - [x] 全量 397 项测试、前端 typecheck、build、focused lint/format 通过； UI
       Guard 107 文件、0 violations、0 allowances、0 ownership drift。
+
+## Issue #89 Widgets Desktop Windows / Task Dock 验收
+
+- [x] Search archetype：Search/Bento 不因窗口打开推动；复用唯一 Apps/Notes
+      content、shadcn Button/Menu/Sheet 与既有 window semantic
+      tokens，无新增材质等级。
+- [x] =1024 两个 singleton domain window 可同时显示；Dock
+  >     Open/Focus/Minimize/Restore、maximize 实页验证；Dock 无 CRUD，Bento
+  >     无重复 root navigation。
+- [x] 768–1023 只有一个可见 active surface，inactive 保持 mounted；三档尺寸与
+      safe rect 的 min 公式逐项实测，禁止 drag/resize，Apps
+      表单切换后仍保留输入。
+- [x] 实页发现初始 constrained 实现误用 max 造成尺寸膨胀；改为 Issue 指定
+      min，回归测试修复前 3 项失败、修复后全部通过。
+- [x] Pointer 激活 inactive window 后 input 保持 focus；最小化保留 query；显式
+      Dock keyboard navigation 聚焦 Close/Back，关闭回对应 Dock item，overlay
+      Escape 优先。
+- [x] 390/768/1024/1440 × light/dark × wallpaper on/off 共 16
+      组实页通过；逐组确认实际 theme 与 wallpaper paint、无横向溢出、safe rect
+      内窗口与 Search geometry 无 shift。截图 `/tmp/omp-sshots-15986a*.webp`。
+- [x] 390 使用 shared Sheet，无 DesktopDock；Zen
+      Panel/Sheet、FloatingNotes、CRUD、错误恢复、cache、autosave、冲突与版本历史由既有
+      E2E 实跑覆盖；浏览器无 page errors。
+- [x] 全量 402 项测试、test:workspace 的 7 个 suite / 77 steps、前端
+      typecheck、build、受影响域 lint/format 通过；UI Guard 109 文件、0
+      violations、0 allowances、0 ownership drift。
+- [x] README、Design System 与 Unreleased changelog 同步最终行为；无 window
+      persistence、独立 Note entity window、Snap 或 Overview。

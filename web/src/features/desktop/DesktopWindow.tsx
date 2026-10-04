@@ -2,6 +2,7 @@ import {
     type Dispatch,
     type PointerEvent as ReactPointerEvent,
     type ReactNode,
+    type RefObject,
     useRef,
 } from "react";
 import type { SafeRect } from "./desktop-geometry.ts";
@@ -18,6 +19,18 @@ export interface DesktopWindowProps {
     children: ReactNode;
     title: string;
     className?: string;
+    disableDrag?: boolean;
+    disableResize?: boolean;
+    showMinimize?: boolean;
+    showMaximize?: boolean;
+    closeLabel?: string;
+    backLabel?: string;
+    onClose?: () => void;
+    onBack?: () => void;
+    leading?: ReactNode;
+    headerMenu?: ReactNode;
+    closeBtnRef?: RefObject<HTMLButtonElement | null>;
+    backBtnRef?: RefObject<HTMLButtonElement | null>;
 }
 
 export function DesktopWindow({
@@ -28,6 +41,18 @@ export function DesktopWindow({
     children,
     title,
     className,
+    disableDrag,
+    disableResize,
+    showMinimize,
+    showMaximize,
+    closeLabel,
+    backLabel,
+    onClose,
+    onBack,
+    leading,
+    headerMenu,
+    closeBtnRef,
+    backBtnRef,
 }: DesktopWindowProps) {
     const windowRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,6 +86,7 @@ export function DesktopWindow({
             data-window-kind={win.kind}
             data-window-active={active}
             data-window-mode={win.mode}
+            data-presentation="window"
             className={classNames}
             style={{
                 transform: `translate3d(${win.frame.x}px, ${win.frame.y}px, 0)`,
@@ -78,19 +104,31 @@ export function DesktopWindow({
                 active={active}
                 dispatch={dispatch}
                 windowRef={windowRef}
+                disableDrag={disableDrag}
+                showMinimize={showMinimize}
+                showMaximize={showMaximize}
+                closeLabel={closeLabel}
+                backLabel={backLabel}
+                onClose={onClose}
+                onBack={onBack}
+                leading={leading}
+                headerMenu={headerMenu}
+                closeBtnRef={closeBtnRef}
+                backBtnRef={backBtnRef}
             />
 
             <div className="desktop-window-content">
                 {children}
             </div>
 
-            {!isMaximized && !isMinimized && (
+            {!disableResize && !isMaximized && !isMinimized && (
                 <WindowResizeHandles
                     window={win}
                     rect={rect}
                     active={active}
                     dispatch={dispatch}
                     windowRef={windowRef}
+                    disabled={disableResize}
                 />
             )}
         </div>

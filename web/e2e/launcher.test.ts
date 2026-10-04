@@ -114,13 +114,20 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     async function getSurfaceBlankCoordinate(targetPage: Page = page) {
         return await targetPage.evaluate(() => {
             const panelEl = document.querySelector(
-                "aside.workspace-panel, .workspace-panel",
+                ".desktop-window[data-window-id='apps'], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel",
             );
             if (!panelEl) throw new Error("Workspace panel not found");
             const footerEl = panelEl.querySelector(".workspace-footer");
+            const panelRect = panelEl.getBoundingClientRect();
+            const bodyEl = panelEl.querySelector<HTMLElement>(
+                ".workspace-body",
+            );
+            const bottomLimit = bodyEl
+                ? bodyEl.getBoundingClientRect().bottom - 16
+                : panelRect.bottom - 16;
             const footerTop = footerEl
                 ? footerEl.getBoundingClientRect().top
-                : globalThis.innerHeight;
+                : Math.min(bottomLimit, globalThis.innerHeight);
 
             const contentElements = Array.from(
                 panelEl.querySelectorAll<HTMLElement>(
@@ -147,7 +154,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     : panelEl.getBoundingClientRect().top + 50;
             }
 
-            const panelRect = panelEl.getBoundingClientRect();
             const x = Math.round(panelRect.left + panelRect.width / 2);
             const gap = footerTop - contentBottom;
             const y = Math.round(
@@ -157,7 +163,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                         ? contentBottom + gap * 0.7
                         : contentBottom + 20),
             );
-
             return { x, y, contentBottom, footerTop };
         });
     }
@@ -196,13 +201,15 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         "0. Empty Launcher Root: blank surface menu available when zero apps or folders",
         async () => {
             await page.setViewportSize({ width: 1280, height: 800 });
-            const dock = page.locator(".workspace-dock");
+            const dock = page.locator(".desktop-dock");
             await dock.waitFor();
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             ).click();
 
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
             await panel.waitFor();
             await panel.locator(".launcher-empty, .empty-state").waitFor();
             assertEquals(
@@ -272,16 +279,22 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await page.setViewportSize({ width: 1280, height: 800 });
 
             // Open Apps Workspace
-            const dock = page.locator(".workspace-dock");
+            const dock = page.locator(".desktop-dock");
             await dock.waitFor();
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             ).click();
 
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
             await panel.waitFor();
+            // Dock stays visible while windows open; root nav Dock not footer
+            assertEquals(await dock.isVisible(), true);
             assertEquals(
-                await panel.locator(".workspace-title").textContent(),
+                await panel.locator(
+                    ".desktop-window-chrome-title, .workspace-title",
+                ).textContent(),
                 "应用",
             );
 
@@ -306,10 +319,10 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             // Single primary contract in normal state:
             // "添加应用" in footer is default primary (has class workspace-primary)
             const addAppBtn = panel.locator(
-                ".workspace-footer button.workspace-primary",
+                ".workspace-footer button.workspace-primary, .workspace-footer button:has-text('添加应用'), button:has-text('添加应用')",
             );
-            assertEquals(await addAppBtn.isVisible(), true);
-            assertEquals(await addAppBtn.textContent(), "添加应用");
+            assertEquals(await addAppBtn.first().isVisible(), true);
+            assertEquals(await addAppBtn.first().textContent(), "添加应用");
 
             // Top secondary toolbar buttons are removed per Issue #61
             assertEquals(
@@ -362,7 +375,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "2. Folder Inline Browse & Back scroll-focus restoration",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             // Click Dev Tools folder to open inline view
             const folderTile = panel.locator(
@@ -376,7 +391,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             );
             await inlineView.waitFor();
             assertEquals(
-                await panel.locator(".workspace-title").textContent(),
+                await panel.locator(
+                    ".desktop-window-chrome-title, .workspace-title",
+                ).textContent(),
                 "应用",
             ); // Route stays apps/root!
             assertEquals(
@@ -445,7 +462,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "3. Blank space context menu & Keyboard / Touch folder creation",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             // Right click on empty launcher surface below last grid row to open context menu
             const contextMenu = await openSurfaceMenu(page);
@@ -528,7 +547,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "4. Folder context actions: resize, rename, delete with confirmation and apps preserved",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             const folderTile = panel.locator(
                 '.launcher-folder-item:has(.launcher-folder-name:has-text("Productivity"))',
@@ -646,7 +667,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "5. Search deduplication, Folder result click & arrange mode search unbinding",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
             const searchInput = panel.locator(
                 'input[data-workspace-search=""]',
             );
@@ -727,7 +750,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             // In arrange mode: "添加应用" is hidden
             assertEquals(
                 await panel.locator(
-                    ".workspace-footer button.workspace-primary",
+                    ".workspace-footer button.workspace-primary, .workspace-footer button:has-text('添加应用'), button:has-text('添加应用')",
                 ).count(),
                 0,
             );
@@ -764,7 +787,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "6. App Context Menu ownership fallback (move in & out of folder)",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             // Move GitHub into "Dev Tools" via context menu
             const gitHubTile = panel.locator(
@@ -806,7 +831,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             // GitHub disappears from root
             await page.waitForFunction(() => {
-                const p = document.querySelector("aside.workspace-panel");
+                const p = document.querySelector(
+                    ".desktop-window[data-window-id='apps'], aside.workspace-panel",
+                );
                 if (!p) return false;
                 const names = Array.from(
                     p.querySelectorAll(".launcher-tile .webapp-name"),
@@ -860,7 +887,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "7. App -> Folder pointer DnD: drop-target feedback and move failure rollback",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             // Enter arrange mode via surface menu
             await enterArrangingViaSurface(page);
@@ -932,7 +961,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             // Rollback: Linear returns to root!
             await page.waitForFunction(() => {
-                const p = document.querySelector("aside.workspace-panel");
+                const p = document.querySelector(
+                    ".desktop-window[data-window-id='apps'], aside.workspace-panel",
+                );
                 if (!p) return false;
                 const names = Array.from(
                     p.querySelectorAll(".launcher-tile .webapp-name"),
@@ -951,10 +982,10 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             // Verify server state on reload: Linear is still loose, not in Dev Tools
             await page.reload();
             await page.locator("main").waitFor();
-            const dock = page.locator(".workspace-dock");
+            const dock = page.locator(".desktop-dock");
             await dock.waitFor();
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             )
                 .click();
             await panel.waitFor();
@@ -972,7 +1003,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "8. App -> Folder pointer DnD: successful move and server reload consistency",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             // Enter arrange mode via surface menu
             await enterArrangingViaSurface(page);
@@ -1015,7 +1048,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             // Linear disappears from root
             await page.waitForFunction(() => {
-                const p = document.querySelector("aside.workspace-panel");
+                const p = document.querySelector(
+                    ".desktop-window[data-window-id='apps'], aside.workspace-panel",
+                );
                 if (!p) return false;
                 const names = Array.from(
                     p.querySelectorAll(".launcher-tile .webapp-name"),
@@ -1029,10 +1064,10 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             // Verify server state on reload: Linear now has groupId === group1.id
             await page.reload();
             await page.locator("main").waitFor();
-            const dock = page.locator(".workspace-dock");
+            const dock = page.locator(".desktop-dock");
             await dock.waitFor();
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             )
                 .click();
             await panel.waitFor();
@@ -1050,7 +1085,9 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "9. Folder-internal App reorder, scope-local order, and pinnedOrder untouched",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             const beforeReorder = (await apiRequest("/api/webapps"))
                 .data as Array<
@@ -1162,11 +1199,13 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "10. Mixed Root Reorder via KeyboardSensor and atomic PUT persistence",
         async () => {
-            const panel = page.locator("aside.workspace-panel");
-            const dock = page.locator(".workspace-dock");
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
+            const dock = page.locator(".desktop-dock");
             await dock.waitFor();
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             )
                 .click();
             await panel.waitFor();
@@ -1208,7 +1247,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await page.reload();
             await dock.waitFor();
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             ).click();
             await panel.waitFor();
             assertEquals(await readRoot(), expected);
@@ -1247,11 +1286,16 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     await t.step(
         "11. 375px mobile viewport & real theme system (dataset.theme reactive)",
         async () => {
-            const panel = page.locator(".workspace-panel");
-
             // Mobile 375px
             await page.setViewportSize({ width: 375, height: 667 });
             await page.waitForFunction(() => globalThis.innerWidth === 375);
+
+            // DesktopDock absent below 768; Mobile uses shared Sheet .workspace-panel--mobile
+            assertEquals(await page.locator(".desktop-dock").count(), 0);
+            const panel = page.locator(
+                ".workspace-panel--mobile, .workspace-panel",
+            );
+            await panel.waitFor();
 
             // Check no horizontal overflow
             const scrollWidth = await panel.evaluate((el) => el.scrollWidth);
@@ -1305,11 +1349,15 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 });
             }
             await page.reload();
+            const dock = page.locator(".desktop-dock");
+            await dock.waitFor();
+            assertEquals(await dock.isVisible(), true);
             await page.locator(
-                '.workspace-dock button[aria-label="应用工作区"]',
+                '.desktop-dock button[aria-label="应用工作区"]',
             ).click();
-            const panel = page.locator("aside.workspace-panel");
-            await panel.waitFor();
+            const panel = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
 
             // Multi-row root: blank surface coordinate is below the lowest tile row and above footer
             const multiRowPoint = await getSurfaceBlankCoordinate(page);
@@ -1341,7 +1389,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             for (const sourceId of ["folder:" + group1.id, loose.id]) {
                 await page.reload();
                 await page.locator(
-                    '.workspace-dock button[aria-label="应用工作区"]',
+                    '.desktop-dock button[aria-label="应用工作区"]',
                 ).click();
                 await panel.waitFor();
                 await enterArrangingViaSurface(page);
@@ -1379,7 +1427,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 assertEquals(await readRoot(), expected);
                 await page.reload();
                 await page.locator(
-                    '.workspace-dock button[aria-label="应用工作区"]',
+                    '.desktop-dock button[aria-label="应用工作区"]',
                 ).click();
                 await panel.waitFor();
                 assertEquals(await readRoot(), expected);
@@ -1419,10 +1467,17 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             try {
                 const touchPage = await touchContext.newPage();
                 await visit("/", touchPage);
+                // On mobile (< 768), desktop dock is absent, host uses mobile navigation
+                assertEquals(
+                    await touchPage.locator(".desktop-dock").count(),
+                    0,
+                );
                 await touchPage.locator(
-                    '.workspace-dock button[aria-label="应用工作区"]',
-                ).click();
-                const panel = touchPage.locator(".workspace-panel");
+                    '.workspace-mobile-navigation button[aria-label="应用工作区"], button[data-workspace="apps"]',
+                ).first().click();
+                const panel = touchPage.locator(
+                    ".workspace-panel--mobile, .workspace-panel",
+                );
                 await panel.waitFor();
                 const cdp = await touchContext.newCDPSession(touchPage);
                 const blankPoint = await getSurfaceBlankCoordinate(touchPage);
@@ -1577,8 +1632,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     );
                     await touchPage.reload();
                     await touchPage.locator(
-                        '.workspace-dock button[aria-label="应用工作区"]',
-                    ).click();
+                        '.workspace-mobile-navigation button[aria-label="应用工作区"], button[data-workspace="apps"]',
+                    ).first().click();
                     await panel.locator(".launcher-grid").waitFor();
                 }
                 // A short viewport creates real overflow; a swipe on the blank
@@ -1637,7 +1692,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 });
                 await touchPage.waitForFunction((before) => {
                     const body = document.querySelector(
-                        ".workspace-panel .workspace-body",
+                        ".workspace-panel--mobile .workspace-body, .workspace-panel .workspace-body",
                     );
                     return body !== null && body.scrollTop < before;
                 }, scrollBefore);

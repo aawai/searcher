@@ -2,21 +2,25 @@ import { Folder, StickyNote } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import type { WorkspaceKind } from "./workspace-state.ts";
 
-export function WorkspaceNavigation({ selected, onSelect, dock = false }: {
-    selected?: WorkspaceKind;
-    onSelect: (workspace: WorkspaceKind) => void;
-    dock?: boolean;
-}) {
+export function WorkspaceNavigation(
+    { selected, onSelect, variant = "switcher" }: {
+        selected?: WorkspaceKind;
+        onSelect: (workspace: WorkspaceKind) => void;
+        variant?: "switcher" | "mobile";
+    },
+) {
     return (
         <nav
-            className={dock ? "workspace-dock" : "workspace-switcher"}
+            className={variant === "mobile"
+                ? "workspace-mobile-navigation"
+                : "workspace-switcher"}
             aria-label="工作区导航"
         >
             {(["apps", "notes"] as const).map((workspace) => (
                 <Button
                     key={workspace}
                     variant="ghost"
-                    data-workspace={dock ? workspace : undefined}
+                    data-workspace={workspace}
                     aria-label={workspace === "apps"
                         ? "应用工作区"
                         : "便签工作区"}
