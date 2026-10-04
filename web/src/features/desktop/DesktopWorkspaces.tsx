@@ -16,6 +16,7 @@ import {
 } from "../../components/ui/dropdown-menu.tsx";
 import { DesktopCanvas } from "./DesktopCanvas.tsx";
 import { DesktopDock } from "./DesktopDock.tsx";
+import { DesktopOverview, type WindowPreview } from "./DesktopOverview.tsx";
 import { DesktopWindow } from "./DesktopWindow.tsx";
 import {
     computeConstrainedFrame,
@@ -141,6 +142,8 @@ export function DesktopWorkspaces({
     const notesBackRef = useRef<HTMLButtonElement | null>(null);
 
     const [preset, setPreset] = useState<ConstrainedPreset>("medium");
+    const [overviewOpen, setOverviewOpen] = useState(false);
+    const overviewSelection = useRef<string | null>(null);
 
     const [isMobile, setIsMobile] = useState(() => {
         if (typeof globalThis.window === "undefined") return false;
@@ -265,7 +268,10 @@ export function DesktopWorkspaces({
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key !== "Escape" || event.defaultPrevented) return;
+            if (
+                !isConstrained || event.key !== "Escape" ||
+                event.defaultPrevented
+            ) return;
             // Avoid closing window if any popup, menu, or dialog is currently open
             if (
                 document.querySelector(
@@ -289,7 +295,17 @@ export function DesktopWorkspaces({
         };
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [activeKind, activeWinId, openWindows, onClose, dispatch]);
+    }, [
+        activeKind,
+        activeWinId,
+        openWindows,
+        onClose,
+        dispatch,
+        isConstrained,
+    ]);
+    useEffect(() => {
+        if (isMobile || isConstrained) setOverviewOpen(false);
+    }, [isMobile, isConstrained]);
 
     if (isMobile) {
         return null;
@@ -310,6 +326,39 @@ export function DesktopWorkspaces({
     const activeWindow =
         openWindows.find((w) => w.id === effectiveActiveWinId) ??
             openWindows[0];
+    const previews: WindowPreview[] = openWindows.map((win) => {
+        const note = win.kind === "note"
+            ? notes.find((n) => n.id === win.entityId)
+            : undefined;
+        return {
+            id: win.id,
+            kind: win.kind,
+            minimized: win.mode === "minimized",
+            title: isWorkspaceKind(win.kind)
+                ? getWorkspaceTitle(win.kind, models[win.kind].route)
+                : getNoteDisplayTitle(note?.title ?? "", note?.body ?? ""),
+            summary: note?.body ??
+                (win.kind === "apps"
+                    ? "浏览、打开与管理应用"
+                    : "浏览、编辑与管理便签"),
+        };
+    });
+    const selectWindow = (id: string) => {
+        const win = openWindows.find((w) => w.id === id);
+        if (!win) return;
+        dispatch(
+            win.mode === "minimized"
+                ? { type: "RESTORE", id, rect }
+                : { type: "FOCUS", id },
+        );
+        overviewSelection.current = id;
+        setOverviewOpen(false);
+        requestAnimationFrame(() =>
+            document.getElementById(`desktop-window-${id}`)?.focus({
+                preventScroll: true,
+            })
+        );
+    };
 
     return (
         <>
@@ -448,7 +497,30 @@ export function DesktopWorkspaces({
                 ref={handleDockRef}
                 state={state}
                 onOpen={onOpen}
+                runningNotes={isConstrained
+                    ? []
+                    : previews.filter((w) => w.kind === "note")}
+                onSelectWindow={selectWindow}
+                overviewOpen={overviewOpen}
+                onOverview={isConstrained ? undefined : () => {
+                    overviewSelection.current = null;
+                    setOverviewOpen(true);
+                }}
             />
+            {!isConstrained && (
+                <DesktopOverview
+                    open={overviewOpen}
+                    windows={previews}
+                    onOpenChange={setOverviewOpen}
+                    onSelect={selectWindow}
+                    returnFocus={() =>
+                        overviewSelection.current
+                            ? false
+                            : dockNavRef.current?.querySelector<HTMLElement>(
+                                '[aria-label="窗口总览"]',
+                            ) ?? null}
+                />
+            )}
         </>
     );
 }

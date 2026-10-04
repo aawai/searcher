@@ -975,5 +975,34 @@
 - [x] 自动保存、版本历史、409 冲突实页验收；修复接受云端版本与在途 blur
       保存的竞态，接受后继续编辑成功保存。
 - [x] README、Design System 与 Unreleased changelog 同步行为和故障回退边界。
-- [x] 便签数据加载期间可立即打开工作区；恢复完成后保留已打开窗口，不提前覆盖设备记录。Hook 回归修复前失败、修复后通过；核心测试 425 项、typecheck、lint、format 与 UI Guard 通过。
-- [x] `deno task test:workspace`：7 passed（77 steps）、0 failed，含生产构建；异步设备草稿恢复不覆盖即时输入，工具栏与后续自动保存通过。
+- [x] 便签数据加载期间可立即打开工作区；恢复完成后保留已打开窗口，不提前覆盖设备记录。Hook
+      回归修复前失败、修复后通过；核心测试 425 项、typecheck、lint、format 与 UI
+      Guard 通过。
+- [x] `deno task test:workspace`：7 passed（77 steps）、0
+      failed，含生产构建；异步设备草稿恢复不覆盖即时输入，工具栏与后续自动保存通过。
+
+## Issue #91 Snap / Overview / Window Menu 验收
+
+- [x] 复用 DesktopWindow、shadcn DropdownMenu/Dialog、现有视觉 tokens；仅
+      geometry 为 runtime inline exception。
+- [x] 七种 Snap/maximize 模式实页拖拽正确；preview 的 pointer-events 为
+      none。restoreFrame、拖拽解除 Snap、刷新语义由 state/geometry/persistence
+      与生产 E2E 覆盖。
+- [x] 1440→1024 的 top-left 分屏从 704×365 重算为 496×299，不保留旧 pixel
+      geometry。
+- [x] Overview 包含 normal/minimized 窗口；选择恢复并聚焦对应窗口，不修改
+      frame；Escape 返回 Dock 总览按钮。
+- [x] Running Note Dock item 支持恢复、聚焦、关闭后移除；长标题截断但保留完整
+      accessible label，不提供业务 CRUD。
+- [x] 窗口系统菜单可键盘触达，包含 Restore/Minimize/Maximize/Snap Left/Snap
+      Right/Close；普通 desktop Window 的 Escape 不关闭窗口，tablet 与 Zen
+      原有行为保留。
+- [x] 1024/1440 × light/dark × wallpaper on/off
+      的八种实页组合无横向溢出；390/768 × light/dark 不显示 Overview 或 running
+      note items。
+- [x] reduced-motion 下 Overview/preview 无位移动画；实页 axe 0 violations。截图
+      `/tmp/omp-sshots-1598aea79623def3.webp`、`/tmp/omp-sshots-1598b1fac9a3def5.webp`。
+- [x] `deno task test` 438 passed；typecheck、focused lint/format 与 UI Guard
+      通过；无新增 token、baseline allowance 或 ownership drift。
+- [x] 最终 `deno task test:workspace`：7 passed（78 steps）、0
+      failed，含生产构建；七种拖拽释放、restoreFrame、刷新持久化及既有业务交互通过。

@@ -4,6 +4,79 @@
  * --space-window-gap, --window-elevation, --window-resize-hit, --window-chrome-height
  */
 
+.desktop-overview[data-slot="dialog-content"] {
+    width: min(calc(100vw - var(--space-page-inline) * 2),
+        var(--layout-page-max));
+    max-width: var(--layout-page-max);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-section-gap);
+}
+.desktop-overview-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-control-gap);
+}
+.desktop-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-card-gap);
+    overflow: auto;
+}
+.desktop-overview-preview[data-slot="button"] {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: var(--space-control-gap);
+    height: auto;
+    padding: var(--space-card-padding);
+    min-width: 0;
+    text-align: left;
+    white-space: normal;
+}
+.desktop-overview-type {
+    color: var(--muted);
+}
+.desktop-overview-title {
+    font-weight: var(--font-title-weight);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.desktop-overview-summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.desktop-dock {
+    max-width: calc(100vw - var(--space-page-inline) * 2);
+}
+.desktop-dock-running {
+    display: flex;
+    min-width: 0;
+    overflow-x: auto;
+    gap: var(--space-control-gap);
+}
+.desktop-dock-note {
+    min-width: 0;
+    max-width: calc(var(--control-touch-target) * 4);
+}
+.desktop-dock-note svg,
+.desktop-dock-note .desktop-dock-indicator {
+    flex-shrink: 0;
+}
+.desktop-dock-note-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .desktop-canvas {
     position: fixed;
     pointer-events: none;
@@ -287,4 +360,26 @@
     .desktop-dock {
         display: none !important;
     }
+}
+
+.desktop-snap-preview {
+    position: absolute;
+    pointer-events: none;
+    box-sizing: border-box;
+    z-index: var(--elevation-desktop-dock);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-window);
+}
+@media (prefers-reduced-motion: reduce) {
+    .desktop-snap-preview,
+    .desktop-overview,
+    .desktop-overview-preview,
+    .desktop-dock-indicator {
+        animation: none;
+        transition: none;
+    }
+}
+.desktop-snap-preview--maximize {
+    border-radius: 0;
 }

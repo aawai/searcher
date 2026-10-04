@@ -199,14 +199,15 @@ AlertDialog）具有严格不同的交互与视觉语义：
   medium = min(680px, 78% safe-width) × min(720px, 72% safe-height)； large =
   min(880px, safe-width - 2 × desktop-gap) × min(820px, 88%
   safe-height)；fullscreen = safe rect。
-- Task Dock 仅负责 Apps/Notes root window navigation：closed → Open、visible →
-  Focus、 minimized → Restore + Focus；始终可见，无 CRUD、无 footer
-  switcher。Bento 只保留打开网站、 打开便签和新建便签等内容级动作，不加入重复
-  root workspace navigation。
+- Task Dock 负责窗口导航与空间管理：Apps/Notes root closed → Open、visible →
+  Focus、minimized → Restore + Focus；>=1024 增加 Overview 与 running note
+  item，始终可见，无 CRUD、无 footer switcher。Bento 只保留打开网站、
+  打开便签和新建便签等内容级动作，不加入重复 root workspace navigation。
 - Canvas safe rect 顶部避让 Topbar/connection banner，底部避让 Dock；打开 window
   不推动 Search/Bento。 Pointer activation 不抢夺 input/textarea focus；Dock
-  键盘打开/恢复聚焦 root Close 或 nested Back。 Close/Escape 仅关闭 active
-  domain，弹出菜单/确认弹窗优先消费 Escape，关闭后聚焦对应 Dock item。
+  键盘打开/恢复聚焦 root Close 或 nested Back。>=1024 普通窗口不因 Escape
+  关闭；优先级为 modal/AlertDialog → popover/menu → Overview → Zen Panel。
+  768–1023 保留 active workspace Escape 关闭；关闭后聚焦对应 Dock item。
 - <768 无 DesktopDock；shared Sheet 保留 modal focus trap、swipe、实际 opener
   restore。<1024 与 Zen 的 `openNote` 仍使用 Notes nested editor，不创建 entity
   window。
@@ -221,10 +222,10 @@ AlertDialog）具有严格不同的交互与视觉语义：
   record；用户切换严格隔离。Widgets→Zen 保存并卸载， Zen→Widgets 恢复；不转换
   Zen geometry、不写 `note_layouts`、不跨设备同步。
 
-#### Desktop Window Manager（#88 demo / #89–90 production）
+#### Desktop Window Manager（#88 demo / #89–91 production）
 
 - /design-lab 保留独立非业务 demo；Widgets production 复用同一 features/desktop
-  引擎，不实现 Snap 或 Overview UI。
+  引擎，>=1024 提供 Snap、Overview 与 transient running note Dock items。
 - `DesktopCanvas` 是 viewport-fixed、背景 pointer-events:none 的唯一坐标
   owner。frame x/y 相对 safe rect；顶边为可见 Topbar/connection banner 下边界加
   `--space-window-gap`， 左右为 viewport 加 gap，底边为 viewport 减 gap；可提供
@@ -239,9 +240,26 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - 仅标题栏拖动；>=1024 八向 resize；Pointer capture + rAF 只更新临时 DOM 几何，
   pointerup/cancel 才 commit frame，safe rect 变化也终止手势并 clamp。
   标题栏方向键移动、把手方向键 resize；reduce-motion 不参与几何正确性。
-- minimize 保留 mounted content；maximize 保存 restoreFrame；restore 与 viewport
-  resize 始终 clamp；每次提层 normalize 到 1..N。UI Guard 仅对两个 owner 的计算
-  frame 开放运行时例外，不允许任意视觉属性。
+- minimize 保留 mounted content；snap/maximize 首次保存 restoreFrame，切换模式
+  不覆写。七种 semantic：left/right、四角、maximize；按 safe rect
+  半宽/半高计算， 不用 normal minimum size 扩大分屏。viewport resize
+  与设备恢复重新按 semantic 算 geometry，restoreFrame 保持原 normal
+  frame（必要时 clamp）。
+- `WindowChrome` 拖拽边缘显示不捕获指针的 Canvas preview，release 用最终指针位置
+  commit；拖出 snap 恢复 normal 尺寸，点击不移动不改 geometry。 `desktop.css`
+  拥有 preview surface：accent 16% 混合透明底、accent 边框、window radius，无
+  blur/位移动画；runtime 例外仅允许 WindowChrome 的 snapPreviewFrame
+  transform/width/height，Canvas 与 Window 的 frame 例外保持精确范围。
+- `WindowMenu` 组合 DropdownMenu/Button：还原、最小化、最大化、左右分屏与关闭；
+  Tab/方向键/Enter 可操作，不依赖 reserved shortcut；关闭沿用业务 dirty
+  protection。
+- `DesktopOverview` 组合 Dialog、Button、EmptyState；Dock 显式入口，展示全部
+  open windows（含 minimized）的 title/type/content preview，不修改或重挂载 live
+  windows。 选择仅 restore minimized + focus，退出/Escape 返回
+  Dock；reduce-motion 禁用 必要性之外的动画/transition。
+- `DesktopDock` running note item 随 open/close 增删，click restore/focus；标题
+  ellipsis + 完整 accessible label，overflow 在 running group 内滚动，无 CRUD。
+  <1024 不显示 Overview 或 running items；每次提层 normalize 到 1..N。
 
 #### Workspace Root layout contract
 

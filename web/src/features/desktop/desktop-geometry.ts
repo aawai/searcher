@@ -19,6 +19,19 @@ export interface SafeRect {
 
 export type WindowKind = "apps" | "notes" | "note";
 
+export type SnapMode =
+    | "left"
+    | "right"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right"
+    | "maximize";
+
+export const SNAP_EDGE_THRESHOLD = 32;
+export const SNAP_CORNER_THRESHOLD = 80;
+export const SNAP_MAX_OUTER_MARGIN = 80;
+
 export type ResizeDirection =
     | "n"
     | "ne"
@@ -217,4 +230,96 @@ export function resizeFrame(
     const height = Math.max(minH, bottom - top);
 
     return clampFrame({ x: left, y: top, width, height }, rect, kind);
+}
+
+export function snapFrame(mode: SnapMode, rect: SafeRect): Frame {
+    const safeW = Math.max(0, rect.width);
+    const safeH = Math.max(0, rect.height);
+    const halfW = Math.floor(safeW / 2);
+    const halfH = Math.floor(safeH / 2);
+
+    switch (mode) {
+        case "maximize":
+            return { x: 0, y: 0, width: safeW, height: safeH };
+        case "left":
+            return { x: 0, y: 0, width: halfW, height: safeH };
+        case "right":
+            return { x: halfW, y: 0, width: safeW - halfW, height: safeH };
+        case "top-left":
+            return { x: 0, y: 0, width: halfW, height: halfH };
+        case "top-right":
+            return { x: halfW, y: 0, width: safeW - halfW, height: halfH };
+        case "bottom-left":
+            return { x: 0, y: halfH, width: halfW, height: safeH - halfH };
+        case "bottom-right":
+            return {
+                x: halfW,
+                y: halfH,
+                width: safeW - halfW,
+                height: safeH - halfH,
+            };
+    }
+}
+
+export function snapTarget(
+    clientX: number,
+    clientY: number,
+    rect: SafeRect,
+): SnapMode | null {
+    if (rect.width <= 0 || rect.height <= 0) {
+        return null;
+    }
+
+    const relX = clientX - rect.x;
+    const relY = clientY - rect.y;
+
+    if (
+        relX < -SNAP_MAX_OUTER_MARGIN ||
+        relX > rect.width + SNAP_MAX_OUTER_MARGIN ||
+        relY < -SNAP_MAX_OUTER_MARGIN ||
+        relY > rect.height + SNAP_MAX_OUTER_MARGIN
+    ) {
+        return null;
+    }
+
+    const edgeThreshold = SNAP_EDGE_THRESHOLD;
+    const cornerThreshold = Math.min(
+        SNAP_CORNER_THRESHOLD,
+        rect.width / 3,
+        rect.height / 3,
+    );
+
+    const isNearTop = relY <= edgeThreshold;
+    const isNearBottom = relY >= rect.height - edgeThreshold;
+    const isNearLeft = relX <= edgeThreshold;
+    const isNearRight = relX >= rect.width - edgeThreshold;
+
+    const isCornerLeft = relX <= cornerThreshold;
+    const isCornerRight = relX >= rect.width - cornerThreshold;
+    const isCornerTop = relY <= cornerThreshold;
+    const isCornerBottom = relY >= rect.height - cornerThreshold;
+
+    if ((isNearTop && isCornerLeft) || (isNearLeft && isCornerTop)) {
+        return "top-left";
+    }
+    if ((isNearTop && isCornerRight) || (isNearRight && isCornerTop)) {
+        return "top-right";
+    }
+    if ((isNearBottom && isCornerLeft) || (isNearLeft && isCornerBottom)) {
+        return "bottom-left";
+    }
+    if ((isNearBottom && isCornerRight) || (isNearRight && isCornerBottom)) {
+        return "bottom-right";
+    }
+    if (isNearTop) {
+        return "maximize";
+    }
+    if (isNearLeft) {
+        return "left";
+    }
+    if (isNearRight) {
+        return "right";
+    }
+
+    return null;
 }

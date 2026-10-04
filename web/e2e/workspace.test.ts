@@ -187,10 +187,14 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(bentoBoxAfter?.x, bentoBoxBefore?.x);
             assertEquals(bentoBoxAfter?.y, bentoBoxBefore?.y);
 
-            // Escape key closes non-modal desktop window and returns focus to dock opener
+            // Issue #91 contract: Ordinary Escape on desktop does not close window
             await page.keyboard.press("Escape");
+            assertEquals(await appsWindow.isVisible(), true);
+            // Explicit close button closes window and returns focus to dock opener
+            await appsWindow.locator(
+                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+            ).click();
             await appsWindow.waitFor({ state: "detached" });
-
             // Dock remains visible and focus returns to the Apps dock button
             await dock.waitFor();
             await page.waitForFunction(() =>
@@ -293,9 +297,12 @@ Deno.test("production workspace contracts", async (t) => {
             );
 
             // Clean up queries
-            await notesSearchInput.fill("");
+            await notesWindow.getByRole("button", { name: "清除搜索" }).click();
             await appsDockBtn.click();
-            await appsSearchInput.fill("");
+            await appsWindow.getByRole("button", { name: "清除搜索" }).click();
+            await appsWindow.getByRole("button", { name: "清除搜索" }).waitFor({
+                state: "detached",
+            });
         },
     );
 
@@ -419,7 +426,7 @@ Deno.test("production workspace contracts", async (t) => {
                 .click();
             const savedResponse = await saved;
             assertEquals(savedResponse.ok(), true, await savedResponse.text());
-
+            await appsWindow.locator(".apps-workspace").waitFor();
             // A saved loose app is immediately browsable at Unified Launcher root.
             await page.locator(".apps-workspace").getByRole("button", {
                 name: "打开 Hacker News",

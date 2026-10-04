@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useState } from "react";
-import { Folder, StickyNote } from "lucide-react";
+import { Folder, LayoutGrid, StickyNote } from "lucide-react";
+import type { WindowPreview } from "./DesktopOverview.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { DesktopState } from "./desktop-state.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
@@ -9,6 +10,10 @@ export interface DesktopDockProps {
     state: DesktopState;
     onOpen: (kind: WorkspaceKind) => void;
     className?: string;
+    runningNotes?: WindowPreview[];
+    onSelectWindow?: (id: string) => void;
+    onOverview?: () => void;
+    overviewOpen?: boolean;
 }
 
 const WORKSPACE_ITEMS: readonly {
@@ -21,7 +26,18 @@ const WORKSPACE_ITEMS: readonly {
 ];
 
 export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
-    function DesktopDock({ state, onOpen, className }, ref) {
+    function DesktopDock(
+        {
+            state,
+            onOpen,
+            className,
+            runningNotes = [],
+            onSelectWindow,
+            onOverview,
+            overviewOpen,
+        },
+        ref,
+    ) {
         const [isDesktopOrTablet, setIsDesktopOrTablet] = useState(() => {
             if (typeof globalThis.window === "undefined") return true;
             return globalThis.innerWidth >= 768;
@@ -105,6 +121,47 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                         </Button>
                     );
                 })}
+                {onOverview && (
+                    <Button
+                        variant="ghost"
+                        className="desktop-dock-item"
+                        aria-label="窗口总览"
+                        aria-pressed={overviewOpen}
+                        onClick={onOverview}
+                    >
+                        <LayoutGrid size={18} />
+                        <span>总览</span>
+                    </Button>
+                )}
+                {runningNotes.length > 0 && (
+                    <div
+                        className="desktop-dock-running"
+                        aria-label="打开的便签"
+                    >
+                        {runningNotes.map((note) => (
+                            <Button
+                                key={note.id}
+                                variant="ghost"
+                                className="desktop-dock-item desktop-dock-note"
+                                data-running-note={note.id}
+                                aria-label={`便签窗口：${note.title}`}
+                                title={note.title}
+                                aria-pressed={state.activeId === note.id &&
+                                    !note.minimized}
+                                onClick={() => onSelectWindow?.(note.id)}
+                            >
+                                <StickyNote size={18} />
+                                <span className="desktop-dock-note-title">
+                                    {note.title}
+                                </span>
+                                <span
+                                    className="desktop-dock-indicator"
+                                    aria-hidden="true"
+                                />
+                            </Button>
+                        ))}
+                    </div>
+                )}
             </nav>
         );
     },

@@ -1,5 +1,5 @@
 import { assertEquals, assertNotEquals } from "@std/assert";
-import type { SafeRect } from "./desktop-geometry.ts";
+import { type SafeRect, snapFrame } from "./desktop-geometry.ts";
 import {
     desktopReducer,
     type DesktopState,
@@ -548,4 +548,370 @@ Deno.test("desktop-state: PRUNE_STALE_NOTES closes deleted note windows and pres
     assertEquals(state.windows.length, 1);
     assertEquals(state.windows[0].id, "apps");
     assertEquals(state.activeId, "apps");
+});
+
+Deno.test("desktop-state: SNAP action handles 7 modes, captures restoreFrame from normal, and does not overwrite restoreFrame on snap change", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    const initialNormalFrame = state.windows[0].frame;
+    assertEquals(state.windows[0].snap, null);
+
+    // 1. Snap to left
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "left",
+        rect: sampleRect,
+    });
+    const leftWin = state.windows[0];
+    assertEquals(leftWin.mode, "snapped");
+    assertEquals(leftWin.snap, "left");
+    assertEquals(leftWin.frame, snapFrame("left", sampleRect));
+    assertEquals(leftWin.restoreFrame, initialNormalFrame);
+
+    // 2. Switch snap to top-right -> MUST NOT overwrite restoreFrame with the left snap frame
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "top-right",
+        rect: sampleRect,
+    });
+    const trWin = state.windows[0];
+    assertEquals(trWin.mode, "snapped");
+    assertEquals(trWin.snap, "top-right");
+    assertEquals(trWin.frame, snapFrame("top-right", sampleRect));
+    assertEquals(trWin.restoreFrame, initialNormalFrame);
+
+    // 3. Switch snap to maximize mode via SNAP action
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "maximize",
+        rect: sampleRect,
+    });
+    const maxWin = state.windows[0];
+    assertEquals(maxWin.mode, "maximized");
+    assertEquals(maxWin.snap, "maximize");
+    assertEquals(maxWin.frame, snapFrame("maximize", sampleRect));
+    assertEquals(maxWin.restoreFrame, initialNormalFrame);
+});
+
+Deno.test("desktop-state: MAXIMIZE sets snap='maximize' and preserves existing restoreFrame from snapped mode", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    const initialNormalFrame = state.windows[0].frame;
+
+    // Snap to bottom-left first
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "bottom-left",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].restoreFrame, initialNormalFrame);
+
+    // Dispatch MAXIMIZE action
+    state = desktopReducer(state, {
+        type: "MAXIMIZE",
+        id: "w1",
+        rect: sampleRect,
+    });
+    const maxWin = state.windows[0];
+    assertEquals(maxWin.mode, "maximized");
+    assertEquals(maxWin.snap, "maximize");
+    assertEquals(maxWin.restoreFrame, initialNormalFrame);
+    assertEquals(maxWin.frame, snapFrame("maximize", sampleRect));
+});
+
+Deno.test("desktop-state: RESTORE on snapped window restores to normal mode and clears snap and restoreFrame", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    const initialNormalFrame = state.windows[0].frame;
+
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "right",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+
+    // RESTORE on non-minimized snapped window
+    state = desktopReducer(state, {
+        type: "RESTORE",
+        id: "w1",
+        rect: sampleRect,
+    });
+    const restoredWin = state.windows[0];
+    assertEquals(restoredWin.mode, "normal");
+    assertEquals(restoredWin.snap, null);
+    assertEquals(restoredWin.restoreFrame, null);
+    assertEquals(restoredWin.frame, initialNormalFrame);
+});
+
+Deno.test("desktop-state: MINIMIZE on snapped window retains snap; RESTORE recovers original snapped semantic", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "w2",
+        kind: "notes",
+        rect: sampleRect,
+    });
+    const initialNormalFrame = state.windows.find((w) => w.id === "w2")!.frame;
+
+    // Snap w2 to bottom-right
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w2",
+        snap: "bottom-right",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows.find((w) => w.id === "w2")!.mode, "snapped");
+
+    // Minimize w2 -> focus transfers to w1
+    state = desktopReducer(state, { type: "MINIMIZE", id: "w2" });
+    assertEquals(state.windows.find((w) => w.id === "w2")!.mode, "minimized");
+    assertEquals(
+        state.windows.find((w) => w.id === "w2")!.snap,
+        "bottom-right",
+    );
+    assertEquals(
+        state.windows.find((w) => w.id === "w2")!.restoreFrame,
+        initialNormalFrame,
+    );
+    assertEquals(state.activeId, "w1");
+
+    // Restore w2 -> recovers original snapped semantic!
+    state = desktopReducer(state, {
+        type: "RESTORE",
+        id: "w2",
+        rect: sampleRect,
+    });
+    const restoredSnap = state.windows.find((w) => w.id === "w2")!;
+    assertEquals(restoredSnap.mode, "snapped");
+    assertEquals(restoredSnap.snap, "bottom-right");
+    assertEquals(restoredSnap.frame, snapFrame("bottom-right", sampleRect));
+    assertEquals(restoredSnap.restoreFrame, initialNormalFrame);
+    assertEquals(state.activeId, "w2");
+});
+
+Deno.test("desktop-state: RESTORE_FRAME on snapped window restores to normal mode and clears snap", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    const initialNormalFrame = state.windows[0].frame;
+
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "top-left",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+
+    state = desktopReducer(state, {
+        type: "RESTORE_FRAME",
+        id: "w1",
+        rect: sampleRect,
+    });
+    const restoredWin = state.windows[0];
+    assertEquals(restoredWin.mode, "normal");
+    assertEquals(restoredWin.snap, null);
+    assertEquals(restoredWin.restoreFrame, null);
+    assertEquals(restoredWin.frame, initialNormalFrame);
+});
+
+Deno.test("desktop-state: MOVE and RESIZE clear snap and restoreFrame, resetting to normal mode", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "left",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+    assertEquals(state.windows[0].snap, "left");
+
+    // Move window
+    const movedFrame = { x: 50, y: 50, width: 600, height: 400 };
+    state = desktopReducer(state, {
+        type: "MOVE",
+        id: "w1",
+        frame: movedFrame,
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "normal");
+    assertEquals(state.windows[0].snap, null);
+    assertEquals(state.windows[0].restoreFrame, null);
+
+    // Re-snap to right
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "right",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+
+    // Resize window
+    const resizedFrame = { x: 720, y: 0, width: 500, height: 600 };
+    state = desktopReducer(state, {
+        type: "RESIZE",
+        id: "w1",
+        frame: resizedFrame,
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "normal");
+    assertEquals(state.windows[0].snap, null);
+    assertEquals(state.windows[0].restoreFrame, null);
+});
+
+Deno.test("desktop-state: CLAMP recomputes frame according to snap semantic on viewport resize", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w-snapped",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "w-max",
+        kind: "notes",
+        rect: sampleRect,
+    });
+    const snappedNormalFrame =
+        state.windows.find((w) => w.id === "w-snapped")!.frame;
+
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w-snapped",
+        snap: "right",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "MAXIMIZE",
+        id: "w-max",
+        rect: sampleRect,
+    });
+
+    // Resize safeRect to 1200 x 800
+    const newRect: SafeRect = { x: 0, y: 0, width: 1200, height: 800 };
+    state = desktopReducer(state, {
+        type: "CLAMP",
+        rect: newRect,
+    });
+
+    const winSnapped = state.windows.find((w) => w.id === "w-snapped")!;
+    assertEquals(winSnapped.mode, "snapped");
+    assertEquals(winSnapped.snap, "right");
+    assertEquals(winSnapped.frame, snapFrame("right", newRect)); // (600, 0, 600, 800)
+    // restoreFrame was clamped to newRect
+    assertEquals(winSnapped.restoreFrame, { ...snappedNormalFrame, y: 98 });
+
+    const winMax = state.windows.find((w) => w.id === "w-max")!;
+    assertEquals(winMax.mode, "maximized");
+    assertEquals(winMax.snap, "maximize");
+    assertEquals(winMax.frame, snapFrame("maximize", newRect)); // (0, 0, 1200, 800)
+});
+
+Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> switch snap -> minimize -> resize -> restore -> un-snap -> maximize -> restore_frame)", () => {
+    const r1440: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
+    const r1024: SafeRect = { x: 0, y: 0, width: 1024, height: 768 };
+
+    // 1. Initial normal window
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: r1440,
+    });
+    const initialFrame = state.windows[0].frame;
+
+    // 2. Snap to "left"
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "left",
+        rect: r1440,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+    assertEquals(state.windows[0].snap, "left");
+    assertEquals(state.windows[0].restoreFrame, initialFrame);
+
+    // 3. Switch snap to "bottom-right" (MUST preserve initial normal restoreFrame)
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "bottom-right",
+        rect: r1440,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+    assertEquals(state.windows[0].snap, "bottom-right");
+    assertEquals(state.windows[0].restoreFrame, initialFrame);
+
+    // 4. Minimize
+    state = desktopReducer(state, { type: "MINIMIZE", id: "w1" });
+    assertEquals(state.windows[0].mode, "minimized");
+    assertEquals(state.windows[0].snap, "bottom-right");
+    assertEquals(state.windows[0].restoreFrame, initialFrame);
+
+    // 5. Viewport resize to 1024x768 while minimized
+    state = desktopReducer(state, { type: "CLAMP", rect: r1024 });
+    assertEquals(state.windows[0].mode, "minimized");
+    assertEquals(state.windows[0].snap, "bottom-right");
+    assertEquals(state.windows[0].frame, snapFrame("bottom-right", r1024));
+
+    // 6. Restore from minimized: recovers snapped semantic in new resolution!
+    state = desktopReducer(state, { type: "RESTORE", id: "w1", rect: r1024 });
+    assertEquals(state.windows[0].mode, "snapped");
+    assertEquals(state.windows[0].snap, "bottom-right");
+    assertEquals(state.windows[0].frame, snapFrame("bottom-right", r1024));
+    assertNotEquals(state.windows[0].restoreFrame, null);
+
+    // 7. Non-minimized RESTORE: restores to normal mode with restoreFrame
+    state = desktopReducer(state, { type: "RESTORE", id: "w1", rect: r1024 });
+    assertEquals(state.windows[0].mode, "normal");
+    assertEquals(state.windows[0].snap, null);
+    assertEquals(state.windows[0].restoreFrame, null);
+
+    // 8. Maximize window
+    state = desktopReducer(state, { type: "MAXIMIZE", id: "w1", rect: r1024 });
+    assertEquals(state.windows[0].mode, "maximized");
+    assertEquals(state.windows[0].snap, "maximize");
+
+    // 9. RESTORE_FRAME returns to normal mode
+    state = desktopReducer(state, {
+        type: "RESTORE_FRAME",
+        id: "w1",
+        rect: r1024,
+    });
+    assertEquals(state.windows[0].mode, "normal");
+    assertEquals(state.windows[0].snap, null);
+    assertEquals(state.windows[0].restoreFrame, null);
 });
