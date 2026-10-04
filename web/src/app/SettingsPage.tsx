@@ -58,6 +58,7 @@ import { Slider } from "../components/ui/slider.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
+import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
 import { api } from "../lib/api.ts";
 import { AiSettings } from "./AiSettings.tsx";
@@ -203,8 +204,12 @@ export function SettingsPage() {
         WallpaperHistoryRecord[]
     >([]);
     const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
+    const currentWallpaperSource = parseWallpaperSource(appearance.wallpaper);
     const [wallpaperDraft, setWallpaperDraft] = useState<string>(
-        appearance.wallpaper.startsWith("data:") ? "" : appearance.wallpaper,
+        currentWallpaperSource?.type === "uploaded" ||
+            appearance.wallpaper.startsWith("data:")
+            ? ""
+            : appearance.wallpaper,
     );
     const [draftError, setDraftError] = useState<string | null>(null);
     const [isApplyingDraft, setIsApplyingDraft] = useState(false);
@@ -236,7 +241,10 @@ export function SettingsPage() {
     }, []);
 
     useEffect(() => {
-        if (!appearance.wallpaper.startsWith("data:")) {
+        if (
+            !appearance.wallpaper.startsWith("data:") &&
+            parseWallpaperSource(appearance.wallpaper)?.type !== "uploaded"
+        ) {
             setWallpaperDraft(appearance.wallpaper);
         } else {
             setWallpaperDraft("");
@@ -328,15 +336,7 @@ export function SettingsPage() {
 
     async function handleApplyDraft() {
         const trimmed = wallpaperDraft.trim();
-        if (!trimmed) {
-            if (appearance.wallpaper) {
-                try {
-                    await setAppearance({ wallpaper: "" });
-                    showToast("已停止使用当前壁纸，恢复默认背景");
-                } catch {
-                    setDraftError("同步壁纸失败，请重试");
-                }
-            }
+        if (!trimmed || trimmed === appearance.wallpaper || isApplyingDraft) {
             return;
         }
         const parsed = parseWallpaperSource(trimmed);
@@ -847,8 +847,8 @@ export function SettingsPage() {
                                     }
                                 >
                                     <SettingsCard>
-                                        <div className="settings-row settings-row--stack-mobile wallpaper-settings-row">
-                                            <div className="settings-row-label">
+                                        <div className="wallpaper-settings-block">
+                                            <div className="wallpaper-settings-block__intro">
                                                 <span className="settings-row-title">
                                                     壁纸背景
                                                 </span>
@@ -866,156 +866,165 @@ export function SettingsPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <div className="settings-row-control w-full sm:w-auto flex-1 max-w-[480px] flex-col items-stretch">
-                                                <div className="wallpaper-input-container">
-                                                    <div className="wallpaper-input-row">
-                                                        <input
-                                                            type="file"
-                                                            ref={fileInputRef}
-                                                            className="hidden"
-                                                            accept="image/png,image/jpeg,image/webp,image/avif"
-                                                            data-testid="wallpaper-file-input"
-                                                            onChange={(e) => {
-                                                                const file = e
-                                                                    .target
-                                                                    .files?.[0];
-                                                                if (file) {
-                                                                    void handleWallpaperUpload(
-                                                                        file,
-                                                                    );
-                                                                }
-                                                                e.target.value =
-                                                                    "";
-                                                            }}
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={() =>
-                                                                fileInputRef
-                                                                    .current
-                                                                    ?.click()}
-                                                            disabled={uploadingWallpaper}
-                                                            title="上传本地图片"
-                                                            aria-label="上传本地图片"
-                                                            className="shrink-0"
-                                                            data-testid="wallpaper-upload-btn"
-                                                        >
-                                                            <Upload size={16} />
-                                                        </Button>
-                                                        <Input
-                                                            id="wallpaper-input"
-                                                            data-testid="wallpaper-input"
-                                                            placeholder={appearance
+                                            <div className="wallpaper-source-editor">
+                                                <input
+                                                    type="file"
+                                                    ref={fileInputRef}
+                                                    className="hidden"
+                                                    accept="image/png,image/jpeg,image/webp,image/avif"
+                                                    data-testid="wallpaper-file-input"
+                                                    onChange={(e) => {
+                                                        const file = e.target
+                                                            .files?.[0];
+                                                        if (file) {
+                                                            void handleWallpaperUpload(
+                                                                file,
+                                                            );
+                                                        }
+                                                        e.target.value = "";
+                                                    }}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        fileInputRef.current
+                                                            ?.click()}
+                                                    disabled={uploadingWallpaper}
+                                                    title="上传本地图片"
+                                                    aria-label="上传本地图片"
+                                                    data-testid="wallpaper-upload-btn"
+                                                >
+                                                    <Upload size={16} />
+                                                </Button>
+                                                <Input
+                                                    id="wallpaper-input"
+                                                    data-testid="wallpaper-input"
+                                                    aria-label="壁纸来源"
+                                                    aria-invalid={!!draftError}
+                                                    aria-describedby={draftError
+                                                        ? "wallpaper-source-error"
+                                                        : undefined}
+                                                    placeholder={currentWallpaperSource
+                                                                    ?.type ===
+                                                                "uploaded" ||
+                                                            appearance.wallpaper
+                                                                .startsWith(
+                                                                    "data:",
+                                                                )
+                                                        ? "输入 HTTPS 地址或 CSS 渐变以替换当前壁纸"
+                                                        : "输入 HTTPS 地址或 CSS 渐变"}
+                                                    value={wallpaperDraft}
+                                                    onChange={(e) => {
+                                                        setWallpaperDraft(
+                                                            e.target.value,
+                                                        );
+                                                        setDraftError(null);
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            void handleApplyDraft();
+                                                        }
+                                                    }}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        void handleApplyDraft()}
+                                                    disabled={isApplyingDraft ||
+                                                        !wallpaperDraft
+                                                            .trim() ||
+                                                        wallpaperDraft
+                                                                .trim() ===
+                                                            appearance
+                                                                .wallpaper}
+                                                    data-testid="wallpaper-apply-btn"
+                                                >
+                                                    应用
+                                                </Button>
+                                                {draftError && (
+                                                    <p
+                                                        id="wallpaper-source-error"
+                                                        className="wallpaper-input-error"
+                                                        role="alert"
+                                                    >
+                                                        {draftError}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            {appearance.wallpaper && (
+                                                <section
+                                                    className="wallpaper-current"
+                                                    aria-label="当前壁纸"
+                                                >
+                                                    <div className="wallpaper-current__preview">
+                                                        <WallpaperSurface
+                                                            source={appearance
+                                                                .wallpaper}
+                                                            composition={getAppearanceCompositions(
+                                                                appearance,
+                                                            )[
+                                                                appearance
                                                                     .wallpaper
-                                                                    .startsWith(
-                                                                        "data:",
-                                                                    )
-                                                                ? "当前已使用本地壁纸图片"
-                                                                : "输入图片 HTTPS 地址或 CSS 渐变"}
-                                                            value={wallpaperDraft}
-                                                            onChange={(e) => {
-                                                                setWallpaperDraft(
-                                                                    e.target
-                                                                        .value,
-                                                                );
-                                                                setDraftError(
-                                                                    null,
-                                                                );
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (
-                                                                    e.key ===
-                                                                        "Enter"
-                                                                ) {
-                                                                    e.preventDefault();
-                                                                    void handleApplyDraft();
-                                                                }
-                                                            }}
-                                                            className="flex-1 min-w-0"
+                                                            ]}
+                                                            embedded
+                                                            mask={0}
+                                                            glowStrength={0}
+                                                            ambientMotionMode="off"
+                                                            testId="wallpaper-current-preview"
                                                         />
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                void handleApplyDraft()}
-                                                            disabled={isApplyingDraft ||
-                                                                wallpaperDraft
-                                                                        .trim() ===
-                                                                    appearance
-                                                                        .wallpaper}
-                                                            data-testid="wallpaper-apply-btn"
-                                                        >
-                                                            应用
-                                                        </Button>
-                                                        {appearance.wallpaper &&
-                                                            (
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() =>
-                                                                        void handleClearCurrentWallpaper()}
-                                                                    title="停止使用当前壁纸"
-                                                                    aria-label="停止使用当前壁纸"
-                                                                    className="shrink-0 text-[var(--muted)] hover:text-[var(--foreground)] gap-1"
-                                                                    data-testid="wallpaper-clear-btn"
-                                                                >
-                                                                    <RotateCcw
-                                                                        size={14}
-                                                                    />
-                                                                    <span>
-                                                                        停止使用
-                                                                    </span>
-                                                                </Button>
-                                                            )}
                                                     </div>
-                                                    {draftError && (
-                                                        <p
-                                                            className="wallpaper-input-error"
-                                                            role="alert"
-                                                        >
-                                                            {draftError}
+                                                    <div className="wallpaper-current__details">
+                                                        <span className="settings-row-title">
+                                                            当前壁纸
+                                                        </span>
+                                                        <p className="settings-row-desc">
+                                                            {currentWallpaperSource
+                                                                            ?.type ===
+                                                                        "uploaded" ||
+                                                                    appearance
+                                                                        .wallpaper
+                                                                        .startsWith(
+                                                                            "data:",
+                                                                        )
+                                                                ? "已上传图片"
+                                                                : currentWallpaperSource
+                                                                        ?.type ===
+                                                                        "gradient"
+                                                                ? "CSS 渐变"
+                                                                : "HTTPS 图片"}
                                                         </p>
-                                                    )}
-                                                    {appearance.wallpaper && (
-                                                        <div className="wallpaper-top-actions">
+                                                        <div className="wallpaper-current__actions">
                                                             <Button
                                                                 type="button"
                                                                 variant="outline"
-                                                                size="sm"
                                                                 onClick={() => {
-                                                                    const currentComps =
+                                                                    const focal =
                                                                         getAppearanceCompositions(
                                                                             appearance,
-                                                                        );
-                                                                    const focal =
-                                                                        currentComps[
+                                                                        )[
                                                                             appearance
                                                                                 .wallpaper
-                                                                        ] ?? {
-                                                                            focalX:
-                                                                                0.5,
-                                                                            focalY:
-                                                                                0.5,
-                                                                        };
+                                                                        ] ??
+                                                                            {
+                                                                                focalX:
+                                                                                    0.5,
+                                                                                focalY:
+                                                                                    0.5,
+                                                                            };
                                                                     setCompositionTarget(
                                                                         {
                                                                             id: "current",
                                                                             url: appearance
                                                                                 .wallpaper,
-                                                                            focalX:
-                                                                                focal
-                                                                                    .focalX,
-                                                                            focalY:
-                                                                                focal
-                                                                                    .focalY,
+                                                                            ...focal,
                                                                         },
                                                                     );
                                                                 }}
                                                                 data-testid="wallpaper-current-adjust-focal-btn"
-                                                                className="gap-1.5"
                                                             >
                                                                 <SlidersHorizontal
                                                                     size={14}
@@ -1024,150 +1033,163 @@ export function SettingsPage() {
                                                                     调整当前壁纸构图
                                                                 </span>
                                                             </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                onClick={() =>
+                                                                    void handleClearCurrentWallpaper()}
+                                                                aria-label="停止使用当前壁纸"
+                                                                data-testid="wallpaper-clear-btn"
+                                                            >
+                                                                <RotateCcw
+                                                                    size={14}
+                                                                />
+                                                                <span>
+                                                                    停止使用
+                                                                </span>
+                                                            </Button>
                                                         </div>
-                                                    )}
-                                                </div>
-
-                                                {wallpaperHistory.length > 0 &&
-                                                    (
-                                                        <div
-                                                            className="wallpaper-history"
-                                                            data-testid="wallpaper-history"
-                                                            aria-label="最近上传的图片"
-                                                        >
-                                                            <span className="settings-row-desc">
-                                                                最近上传 · 保留
-                                                                5 张
-                                                            </span>
-                                                            <div className="wallpaper-history__grid">
-                                                                {wallpaperHistory
-                                                                    .map((
-                                                                        record,
-                                                                        index,
-                                                                    ) => {
-                                                                        const isCurrent =
-                                                                            appearance
-                                                                                .wallpaper ===
-                                                                                record
-                                                                                    .url;
-                                                                        return (
-                                                                            <div
-                                                                                key={record
-                                                                                    .id}
-                                                                                className="wallpaper-card"
-                                                                                data-current={isCurrent
-                                                                                    ? "true"
-                                                                                    : undefined}
-                                                                                data-testid={`wallpaper-history-item-${record.id}`}
+                                                    </div>
+                                                </section>
+                                            )}
+                                            {wallpaperHistory.length > 0 &&
+                                                (
+                                                    <div
+                                                        className="wallpaper-history"
+                                                        data-testid="wallpaper-history"
+                                                        aria-label="最近上传的图片"
+                                                    >
+                                                        <span className="settings-row-desc">
+                                                            最近上传 · 保留 5 张
+                                                        </span>
+                                                        <div className="wallpaper-history__grid">
+                                                            {wallpaperHistory
+                                                                .map((
+                                                                    record,
+                                                                    index,
+                                                                ) => {
+                                                                    const isCurrent =
+                                                                        appearance
+                                                                            .wallpaper ===
+                                                                            record
+                                                                                .url;
+                                                                    return (
+                                                                        <div
+                                                                            key={record
+                                                                                .id}
+                                                                            className="wallpaper-card"
+                                                                            data-current={isCurrent
+                                                                                ? "true"
+                                                                                : undefined}
+                                                                            data-testid={`wallpaper-history-item-${record.id}`}
+                                                                        >
+                                                                            <button
+                                                                                type="button"
+                                                                                className="wallpaper-card__main"
+                                                                                onClick={() =>
+                                                                                    setCompositionTarget(
+                                                                                        record,
+                                                                                    )}
+                                                                                aria-label={`预览与调整构图：壁纸 ${
+                                                                                    index +
+                                                                                    1
+                                                                                }${
+                                                                                    isCurrent
+                                                                                        ? "（当前壁纸）"
+                                                                                        : ""
+                                                                                }`}
+                                                                                data-testid={`wallpaper-card-preview-btn-${record.id}`}
                                                                             >
-                                                                                <button
-                                                                                    type="button"
-                                                                                    className="wallpaper-card__main"
-                                                                                    onClick={() =>
-                                                                                        setCompositionTarget(
-                                                                                            record,
-                                                                                        )}
-                                                                                    aria-label={`预览与调整构图：壁纸 ${
+                                                                                <img
+                                                                                    src={record
+                                                                                        .url}
+                                                                                    alt={`壁纸 ${
                                                                                         index +
                                                                                         1
-                                                                                    }${
-                                                                                        isCurrent
-                                                                                            ? "（当前壁纸）"
-                                                                                            : ""
                                                                                     }`}
-                                                                                    data-testid={`wallpaper-card-preview-btn-${record.id}`}
-                                                                                >
-                                                                                    <img
-                                                                                        src={record
-                                                                                            .url}
-                                                                                        alt={`壁纸 ${
+                                                                                    className="wallpaper-card__thumbnail"
+                                                                                    loading="lazy"
+                                                                                />
+                                                                                {isCurrent &&
+                                                                                    (
+                                                                                        <div
+                                                                                            className="wallpaper-card__current-badge"
+                                                                                            data-testid="wallpaper-current-badge"
+                                                                                        >
+                                                                                            <Check
+                                                                                                size={12}
+                                                                                                className="shrink-0"
+                                                                                            />
+                                                                                            <span>
+                                                                                                当前壁纸
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    )}
+                                                                            </button>
+                                                                            <div className="wallpaper-card__actions">
+                                                                                <DropdownMenu>
+                                                                                    <DropdownMenuTrigger
+                                                                                        className="wallpaper-card__menu-trigger"
+                                                                                        aria-label={`壁纸操作菜单：壁纸 ${
                                                                                             index +
                                                                                             1
                                                                                         }`}
-                                                                                        className="wallpaper-card__thumbnail"
-                                                                                        loading="lazy"
-                                                                                    />
-                                                                                    {isCurrent &&
-                                                                                        (
-                                                                                            <div
-                                                                                                className="wallpaper-card__current-badge"
-                                                                                                data-testid="wallpaper-current-badge"
-                                                                                            >
-                                                                                                <Check
-                                                                                                    size={12}
-                                                                                                    className="shrink-0"
-                                                                                                />
-                                                                                                <span>
-                                                                                                    当前壁纸
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        )}
-                                                                                </button>
-                                                                                <div className="wallpaper-card__actions">
-                                                                                    <DropdownMenu>
-                                                                                        <DropdownMenuTrigger
-                                                                                            className="wallpaper-card__menu-trigger"
-                                                                                            aria-label={`壁纸操作菜单：壁纸 ${
-                                                                                                index +
-                                                                                                1
-                                                                                            }`}
-                                                                                            data-testid={`wallpaper-menu-trigger-${record.id}`}
-                                                                                        >
-                                                                                            <MoreVertical
-                                                                                                size={16}
-                                                                                            />
-                                                                                        </DropdownMenuTrigger>
-                                                                                        <DropdownMenuContent>
-                                                                                            {!isCurrent
-                                                                                                ? (
-                                                                                                    <DropdownMenuItem
-                                                                                                        onClick={() =>
-                                                                                                            void handleSetCurrentFromHistory(
-                                                                                                                record,
-                                                                                                            )}
-                                                                                                        data-testid="wallpaper-menu-set-current"
-                                                                                                    >
-                                                                                                        设为当前壁纸
-                                                                                                    </DropdownMenuItem>
-                                                                                                )
-                                                                                                : (
-                                                                                                    <DropdownMenuItem
-                                                                                                        disabled
-                                                                                                        className="opacity-50 pointer-events-none"
-                                                                                                        data-testid="wallpaper-menu-set-current"
-                                                                                                    >
-                                                                                                        当前正在使用
-                                                                                                    </DropdownMenuItem>
+                                                                                        data-testid={`wallpaper-menu-trigger-${record.id}`}
+                                                                                    >
+                                                                                        <MoreVertical
+                                                                                            size={16}
+                                                                                        />
+                                                                                    </DropdownMenuTrigger>
+                                                                                    <DropdownMenuContent>
+                                                                                        {!isCurrent
+                                                                                            ? (
+                                                                                                <DropdownMenuItem
+                                                                                                    onClick={() =>
+                                                                                                        void handleSetCurrentFromHistory(
+                                                                                                            record,
+                                                                                                        )}
+                                                                                                    data-testid="wallpaper-menu-set-current"
+                                                                                                >
+                                                                                                    设为当前壁纸
+                                                                                                </DropdownMenuItem>
+                                                                                            )
+                                                                                            : (
+                                                                                                <DropdownMenuItem
+                                                                                                    disabled
+                                                                                                    className="opacity-50 pointer-events-none"
+                                                                                                    data-testid="wallpaper-menu-set-current"
+                                                                                                >
+                                                                                                    当前正在使用
+                                                                                                </DropdownMenuItem>
+                                                                                            )}
+                                                                                        <DropdownMenuItem
+                                                                                            onClick={() =>
+                                                                                                setCompositionTarget(
+                                                                                                    record,
                                                                                                 )}
-                                                                                            <DropdownMenuItem
-                                                                                                onClick={() =>
-                                                                                                    setCompositionTarget(
-                                                                                                        record,
-                                                                                                    )}
-                                                                                                data-testid="wallpaper-menu-adjust-focal"
-                                                                                            >
-                                                                                                调整构图
-                                                                                            </DropdownMenuItem>
-                                                                                            <DropdownMenuItem
-                                                                                                className="text-[var(--danger)]"
-                                                                                                onClick={() =>
-                                                                                                    setDeleteTarget(
-                                                                                                        record,
-                                                                                                    )}
-                                                                                                data-testid="wallpaper-menu-delete"
-                                                                                            >
-                                                                                                删除
-                                                                                            </DropdownMenuItem>
-                                                                                        </DropdownMenuContent>
-                                                                                    </DropdownMenu>
-                                                                                </div>
+                                                                                            data-testid="wallpaper-menu-adjust-focal"
+                                                                                        >
+                                                                                            调整构图
+                                                                                        </DropdownMenuItem>
+                                                                                        <DropdownMenuItem
+                                                                                            className="text-[var(--danger)]"
+                                                                                            onClick={() =>
+                                                                                                setDeleteTarget(
+                                                                                                    record,
+                                                                                                )}
+                                                                                            data-testid="wallpaper-menu-delete"
+                                                                                        >
+                                                                                            删除
+                                                                                        </DropdownMenuItem>
+                                                                                    </DropdownMenuContent>
+                                                                                </DropdownMenu>
                                                                             </div>
-                                                                        );
-                                                                    })}
-                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
                                                         </div>
-                                                    )}
-                                            </div>
+                                                    </div>
+                                                )}
                                         </div>
                                         <div className="settings-row settings-row--stack-mobile">
                                             <div className="settings-row-label">
