@@ -35,6 +35,11 @@ import type {
     WorkspaceModel,
     WorkspaceState,
 } from "../workspace/workspace-state.ts";
+import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
+import {
+    getNoteDisplayTitle,
+    type NoteItem,
+} from "../../components/searcher/NoteCard.tsx";
 import "./desktop.css";
 
 export interface DesktopWorkspacesProps {
@@ -49,6 +54,9 @@ export interface DesktopWorkspacesProps {
     onCreate: (kind: WorkspaceKind) => void;
     onDockElement: (el: HTMLElement | null) => void;
     appsArranging: boolean;
+    notes: NoteItem[];
+    onSaveNote: (note: NoteItem) => void;
+    userId: string;
 }
 
 export function isWorkspaceKind(kind: string): kind is WorkspaceKind {
@@ -121,6 +129,9 @@ export function DesktopWorkspaces({
     onCreate,
     onDockElement,
     appsArranging,
+    notes,
+    onSaveNote,
+    userId,
 }: DesktopWorkspacesProps) {
     const dockNavRef = useRef<HTMLElement | null>(null);
 
@@ -154,8 +165,13 @@ export function DesktopWorkspaces({
 
     // Filter to workspace windows that exist in state and whose model is not closed
     const openWindows = state.windows.filter((w) => {
-        if (!isWorkspaceKind(w.kind)) return false;
-        return models[w.kind]?.route.view !== "closed";
+        if (isWorkspaceKind(w.kind)) {
+            return models[w.kind]?.route.view !== "closed";
+        }
+        if (w.kind === "note") {
+            return !isConstrained;
+        }
+        return false;
     });
 
     const appsOpen = models.apps.route.view !== "closed" &&
@@ -253,18 +269,27 @@ export function DesktopWorkspaces({
             // Avoid closing window if any popup, menu, or dialog is currently open
             if (
                 document.querySelector(
-                    '[role="menu"], [data-slot="dropdown-menu-content"], [data-slot="popover-content"], [role="dialog"], [role="alertdialog"]',
+                    '[role="menu"], [data-slot="dropdown-menu-content"], [data-slot="context-menu-content"], [data-slot="popover-content"], [role="dialog"], [role="alertdialog"]',
                 )
             ) {
                 return;
             }
-            if (!activeKind) return;
-            event.preventDefault();
-            onClose(activeKind);
+            if (activeKind) {
+                event.preventDefault();
+                onClose(activeKind);
+            } else if (
+                activeWinId &&
+                openWindows.some((w) =>
+                    w.id === activeWinId && w.kind === "note"
+                )
+            ) {
+                event.preventDefault();
+                dispatch({ type: "CLOSE", id: activeWinId });
+            }
         };
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [activeKind, onClose]);
+    }, [activeKind, activeWinId, openWindows, onClose, dispatch]);
 
     if (isMobile) {
         return null;
@@ -277,15 +302,68 @@ export function DesktopWorkspaces({
 
     // In constrained mode (768..1023), keep all open windows mounted so drafts/forms are preserved;
     // visually hide the inactive one using desktop-window--constrained-hidden.
-    const activeWindow = openWindows.find((w) => w.id === activeWinId) ??
-        openWindows[0];
+    // If active window in state is a note window, fallback to notes workspace in constrained mode.
+    const effectiveActiveWinId =
+        isConstrained && activeWinId?.startsWith("note:")
+            ? "notes"
+            : activeWinId;
+    const activeWindow =
+        openWindows.find((w) => w.id === effectiveActiveWinId) ??
+            openWindows[0];
 
     return (
         <>
             <DesktopCanvas rect={rect} dispatch={dispatch}>
                 {openWindows.map((win) => {
+                    if (win.kind === "note") {
+                        if (isConstrained) {
+                            return null;
+                        }
+                        const noteId = win.entityId ??
+                            (win.id.startsWith("note:")
+                                ? win.id.slice(5)
+                                : win.id);
+                        const note = noteId
+                            ? notes.find((n) => n.id === noteId)
+                            : undefined;
+                        if (!note) {
+                            return null;
+                        }
+                        const title = getNoteDisplayTitle(
+                            note.title,
+                            note.body,
+                        );
+                        const isActive = state.activeId === win.id;
+
+                        return (
+                            <DesktopWindow
+                                key={win.id}
+                                window={win}
+                                rect={rect}
+                                active={isActive}
+                                dispatch={dispatch}
+                                title={title}
+                                disableDrag={isConstrained}
+                                disableResize={isConstrained}
+                                showMinimize={!isConstrained}
+                                showMaximize={!isConstrained}
+                                closeLabel="关闭便签"
+                                onClose={() =>
+                                    dispatch({ type: "CLOSE", id: win.id })}
+                            >
+                                <div className="notes-workspace-editor">
+                                    <NoteEditor
+                                        key={`${userId}:${note.id}`}
+                                        note={note}
+                                        onSaved={onSaveNote}
+                                    />
+                                </div>
+                            </DesktopWindow>
+                        );
+                    }
+
                     if (!isWorkspaceKind(win.kind)) return null;
-                    const kind = win.kind;
+                    const kind: WorkspaceKind = win.kind;
                     const model = models[kind];
                     if (!model) return null;
 
@@ -297,7 +375,6 @@ export function DesktopWorkspaces({
                     const isConstrainedHidden = isConstrained &&
                         win.id !== activeWindow?.id;
 
-                    // In constrained mode, compute derived frame without modifying win.frame in DesktopState
                     const effectiveWindow: DesktopWindowState = isConstrained
                         ? {
                             ...win,

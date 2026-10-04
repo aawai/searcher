@@ -460,3 +460,92 @@ Deno.test("desktop-state: regression - repeated elevations stay strictly bounded
         assertEquals(Math.min(z1, z3), 1);
     }
 });
+
+Deno.test("desktop-state: HYDRATE normalizes z-orders and validates activeId", () => {
+    const hydrated = desktopReducer(initialDesktopState, {
+        type: "HYDRATE",
+        state: {
+            windows: [
+                {
+                    id: "w1",
+                    kind: "apps",
+                    entityId: null,
+                    frame: { x: 0, y: 0, width: 600, height: 400 },
+                    restoreFrame: null,
+                    mode: "normal",
+                    zOrder: 10,
+                },
+                {
+                    id: "w2",
+                    kind: "notes",
+                    entityId: null,
+                    frame: { x: 50, y: 50, width: 600, height: 400 },
+                    restoreFrame: null,
+                    mode: "minimized",
+                    zOrder: 20,
+                },
+            ],
+            activeId: "w2", // minimized, should fall back to w1
+        },
+    });
+    assertEquals(hydrated.windows.length, 2);
+    assertEquals(hydrated.windows.find((w) => w.id === "w1")!.zOrder, 1);
+    assertEquals(hydrated.windows.find((w) => w.id === "w2")!.zOrder, 2);
+    assertEquals(hydrated.activeId, "w1");
+});
+
+Deno.test("desktop-state: RESET clears all windows and activeId", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "w1",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows.length, 1);
+    state = desktopReducer(state, { type: "RESET" });
+    assertEquals(state.windows.length, 0);
+    assertEquals(state.activeId, null);
+});
+
+Deno.test("desktop-state: PRUNE_STALE_NOTES closes deleted note windows and preserves other windows", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "apps",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "note:note-1",
+        kind: "note",
+        entityId: "note-1",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "note:note-2",
+        kind: "note",
+        entityId: "note-2",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows.length, 3);
+    assertEquals(state.activeId, "note:note-2");
+
+    // Prune stale notes: only note-1 is valid
+    state = desktopReducer(state, {
+        type: "PRUNE_STALE_NOTES",
+        validNoteIds: ["note-1"],
+    });
+    assertEquals(state.windows.length, 2);
+    assertEquals(state.windows.map((w) => w.id), ["apps", "note:note-1"]);
+    assertEquals(state.activeId, "note:note-1");
+
+    // Prune all notes
+    state = desktopReducer(state, {
+        type: "PRUNE_STALE_NOTES",
+        validNoteIds: [],
+    });
+    assertEquals(state.windows.length, 1);
+    assertEquals(state.windows[0].id, "apps");
+    assertEquals(state.activeId, "apps");
+});

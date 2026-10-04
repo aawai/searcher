@@ -49,7 +49,10 @@
     "npm:clsx@2.1.1": "2.1.1",
     "npm:drizzle-kit@0.31.4": "0.31.4",
     "npm:drizzle-orm@0.45.2": "0.45.2",
+    "npm:fake-indexeddb@*": "6.2.5",
+    "npm:fake-indexeddb@6.2.5": "6.2.5",
     "npm:fflate@0.8.2": "0.8.2",
+    "npm:happy-dom@15.11.7": "15.11.7",
     "npm:hono@4.7.4": "4.7.4",
     "npm:lucide-react@0.468.0": "0.468.0_react@19.1.1",
     "npm:openai@7.23.0": "7.23.0",
@@ -2759,6 +2762,9 @@
         "strip-ansi@6.0.1"
       ]
     },
+    "entities@4.5.0": {
+      "integrity": "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="
+    },
     "env-paths@2.2.1": {
       "integrity": "sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A=="
     },
@@ -2952,6 +2958,9 @@
     "extend@3.0.2": {
       "integrity": "sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g=="
     },
+    "fake-indexeddb@6.2.5": {
+      "integrity": "sha512-CGnyrvbhPlWYMngksqrSSUT1BAVP49dZocrHuK0SvtR0D5TMs5wP0o3j7jexDJW01KSadjBp1M/71o/KR3nD1w=="
+    },
     "fast-copy@4.0.4": {
       "integrity": "sha512-eVAiWVNPSEGIzDl5yPuLrx8fNMogScXvD9xp1Kzd41FjRIz2I3sSIcxsFeM5EzFfHAfobdvs8ZySffUopljvIA=="
     },
@@ -3112,6 +3121,14 @@
     },
     "graceful-fs@4.2.11": {
       "integrity": "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="
+    },
+    "happy-dom@15.11.7": {
+      "integrity": "sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg==",
+      "dependencies": [
+        "entities",
+        "webidl-conversions",
+        "whatwg-mimetype"
+      ]
     },
     "has-symbols@1.1.0": {
       "integrity": "sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ=="
@@ -5077,6 +5094,12 @@
         "@types/node"
       ],
       "bin": true
+    },
+    "webidl-conversions@7.0.0": {
+      "integrity": "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g=="
+    },
+    "whatwg-mimetype@3.0.0": {
+      "integrity": "sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q=="
     },
     "which@2.0.2": {
       "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",

@@ -951,3 +951,29 @@
       violations、0 allowances、0 ownership drift。
 - [x] README、Design System 与 Unreleased changelog 同步最终行为；无 window
       persistence、独立 Note entity window、Snap 或 Overview。
+
+## Issue #90 Note Entity Windows / Device-local Layout 验收
+
+- [x] Search archetype 复用既有 DesktopWindow、Notes browser、NoteEditor 与
+      window tokens；无新增材质等级、Snap 或 Overview UI。
+- [x] 两份不同便签可同时打开；同一 note 重复打开恢复/聚焦唯一实例，DOM id
+      无重复。
+- [x] 390×844、768×1024、1440×900 × light/dark 实页截图通过，无横向溢出；390/768
+      为一个 nested editor，1440 为两个 entity editor。
+- [x] Zen 使用 Notes nested editor，切回 Widgets 恢复 entity windows，不转换 Zen
+      geometry。
+- [x] 1440→1024、1920→1440 恢复所有窗口在 Canvas safe rect
+      内。拖动后立即刷新保持新
+      frame；maximize→minimize→refresh→restore→unmaximize 保留正常 frame。
+- [x] IndexedDB 实际 payload 按 `searcher:desktop-layout:v1:<userId>`
+      隔离；退出清 runtime，切换第二账号空桌面，切回原账号恢复。
+- [x] unsupported version、duplicate/corrupt payload 默认空桌面；不存在 note
+      丢弃；UI 删除便签立即关闭窗口，刷新不恢复 stale window。
+- [x] IndexedDB 不可用时 Home/Notes browser/entity editor
+      正常打开，云端保存成功，浏览器无 page errors。API 返回的 note layout
+      始终为 null，无 Widgets geometry 写入。
+- [x] 自动保存、版本历史、409 冲突实页验收；修复接受云端版本与在途 blur
+      保存的竞态，接受后继续编辑成功保存。
+- [x] README、Design System 与 Unreleased changelog 同步行为和故障回退边界。
+- [x] 便签数据加载期间可立即打开工作区；恢复完成后保留已打开窗口，不提前覆盖设备记录。Hook 回归修复前失败、修复后通过；核心测试 425 项、typecheck、lint、format 与 UI Guard 通过。
+- [x] `deno task test:workspace`：7 passed（77 steps）、0 failed，含生产构建；异步设备草稿恢复不覆盖即时输入，工具栏与后续自动保存通过。

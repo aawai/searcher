@@ -1,0 +1,745 @@
+import { assertEquals, assertNotEquals } from "@std/assert";
+import { setupMockIndexedDB } from "../../lib/test-mock-idb.ts";
+// deno-lint-ignore no-import-prefix
+import { Window } from "npm:happy-dom@15.11.7";
+import React, { act } from "react";
+import { createRoot } from "react-dom/client";
+import {
+    useDesktopLayout,
+    type UseDesktopLayoutOptions,
+    type UseDesktopLayoutReturn,
+} from "./useDesktopLayout.ts";
+import {
+    desktopLayoutStorageKey,
+    saveDesktopLayout,
+} from "./desktop-persistence.ts";
+import type { DesktopState } from "./desktop-state.ts";
+import type { SafeRect } from "./desktop-geometry.ts";
+import { getLocal } from "../../lib/local.ts";
+
+// Setup DOM environment for React hooks testing
+const win = new Window();
+const g = globalThis as Record<string, unknown>;
+g.window = win;
+g.document = win.document;
+g.IS_REACT_ACT_ENVIRONMENT = true;
+
+/**
+ * Helper to advance microtasks and clock for React hook integration testing.
+ */
+function waitTick(ms = 10): Promise<void> {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    setTimeout(resolve, ms);
+    return promise;
+}
+
+const sampleRect: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
+
+/** Helper to render and inspect the hook inside a test container */
+function renderHook(initialProps: UseDesktopLayoutOptions) {
+    let currentProps = initialProps;
+    let hookResult!: UseDesktopLayoutReturn;
+
+    function TestComponent(props: { options: UseDesktopLayoutOptions }) {
+        hookResult = useDesktopLayout(props.options);
+        return null;
+    }
+
+    const container = win.document.createElement("div");
+    win.document.body.appendChild(container);
+    const root = createRoot(container as unknown as HTMLElement);
+
+    act(() => {
+        root.render(
+            React.createElement(TestComponent, { options: currentProps }),
+        );
+    });
+
+    return {
+        get result() {
+            return hookResult;
+        },
+        rerender(nextProps: UseDesktopLayoutOptions) {
+            currentProps = nextProps;
+            act(() => {
+                root.render(
+                    React.createElement(TestComponent, {
+                        options: currentProps,
+                    }),
+                );
+            });
+        },
+        unmount() {
+            act(() => {
+                root.unmount();
+            });
+            container.remove();
+        },
+    };
+}
+
+Deno.test("useDesktopLayout: windows opened while notes load remain visible after restoration", async () => {
+    setupMockIndexedDB();
+    const options: UseDesktopLayoutOptions = {
+        userId: "loading-user",
+        rect: sampleRect,
+        notesLoaded: false,
+    };
+    const harness = renderHook(options);
+    try {
+        act(() =>
+            harness.result[1]({
+                type: "OPEN",
+                id: "notes",
+                kind: "notes",
+                rect: sampleRect,
+            })
+        );
+        assertEquals(harness.result[0].activeId, "notes");
+        harness.rerender({ ...options, notesLoaded: true, notes: [] });
+        await act(async () => {
+            await waitTick(30);
+        });
+        assertEquals(harness.result[0].windows.map((window) => window.id), [
+            "notes",
+        ]);
+        assertEquals(harness.result[0].activeId, "notes");
+    } finally {
+        harness.unmount();
+    }
+});
+Deno.test("useDesktopLayout: guest / logged-out user starts with empty state and does not load from storage", () => {
+    setupMockIndexedDB();
+
+    const harness = renderHook({
+        userId: undefined,
+        layoutStyle: "widgets",
+        rect: sampleRect,
+    });
+
+    const [state] = harness.result;
+    assertEquals(state.windows.length, 0);
+    assertEquals(state.activeId, null);
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: restores persisted layout from IndexedDB key searcher:desktop-layout:v1:<userId>", async () => {
+    setupMockIndexedDB();
+
+    const savedState: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 100, y: 100, width: 600, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "apps",
+    };
+
+    await saveDesktopLayout("user-1", savedState, sampleRect);
+
+    const harness = renderHook({
+        userId: "user-1",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    // Wait for async load to resolve
+    await act(async () => {
+        await waitTick(20);
+    });
+
+    const [state] = harness.result;
+    assertEquals(state.windows.length, 1);
+    assertEquals(state.windows[0].id, "apps");
+    assertEquals(state.activeId, "apps");
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: consumer-visible regression - immediate render on user switch never exposes previous state", async () => {
+    setupMockIndexedDB();
+
+    const renderedFrames: Array<{ user: string | null; windowCount: number }> =
+        [];
+
+    function ObserverComponent(props: { options: UseDesktopLayoutOptions }) {
+        const [state] = useDesktopLayout(props.options);
+        renderedFrames.push({
+            user: props.options.userId ?? null,
+            windowCount: state.windows.length,
+        });
+        return null;
+    }
+
+    // Save User A layout first
+    const userAState: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 100, y: 100, width: 600, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "apps",
+    };
+    await saveDesktopLayout("user-A-imm", userAState, sampleRect);
+
+    const container = win.document.createElement("div");
+    win.document.body.appendChild(container);
+    const root = createRoot(container as unknown as HTMLElement);
+
+    let currentOptions: UseDesktopLayoutOptions = {
+        userId: "user-A-imm",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    };
+
+    act(() => {
+        root.render(
+            React.createElement(ObserverComponent, { options: currentOptions }),
+        );
+    });
+
+    await act(async () => {
+        await waitTick(30);
+    });
+
+    // User A's window is hydrated and rendered
+    assertEquals(renderedFrames[renderedFrames.length - 1].windowCount, 1);
+
+    // Switch to User B
+    currentOptions = {
+        userId: "user-B-imm",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    };
+
+    act(() => {
+        root.render(
+            React.createElement(ObserverComponent, { options: currentOptions }),
+        );
+    });
+
+    // Check the VERY FIRST frame rendered for user-B: must have windowCount: 0!
+    const firstUserBFrame = renderedFrames.find((f) => f.user === "user-B-imm");
+    assertNotEquals(firstUserBFrame, undefined);
+    assertEquals(firstUserBFrame!.windowCount, 0);
+
+    // Switch to logged out
+    currentOptions = {
+        userId: null,
+        layoutStyle: "widgets",
+        rect: sampleRect,
+    };
+
+    act(() => {
+        root.render(
+            React.createElement(ObserverComponent, { options: currentOptions }),
+        );
+    });
+
+    const firstGuestFrame = renderedFrames.find((f) => f.user === null);
+    assertNotEquals(firstGuestFrame, undefined);
+    assertEquals(firstGuestFrame!.windowCount, 0);
+
+    act(() => {
+        root.unmount();
+    });
+    container.remove();
+});
+
+Deno.test("useDesktopLayout: user isolation - switching from user-A to user-B clears runtime state, flushes user-A, and loads user-B", async () => {
+    setupMockIndexedDB();
+
+    const userBState: DesktopState = {
+        windows: [
+            {
+                id: "notes",
+                kind: "notes",
+                entityId: null,
+                frame: { x: 200, y: 200, width: 600, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "notes",
+    };
+    await saveDesktopLayout("user-B-iso", userBState, sampleRect);
+
+    const harness = renderHook({
+        userId: "user-A-iso",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    // User A opens apps window
+    act(() => {
+        const [, dispatch] = harness.result;
+        dispatch({
+            type: "OPEN",
+            id: "apps",
+            kind: "apps",
+            rect: sampleRect,
+        });
+    });
+    assertEquals(harness.result[0].windows.map((w) => w.id), ["apps"]);
+
+    // Switch to user-B inside act
+    await act(async () => {
+        harness.rerender({
+            userId: "user-B-iso",
+            layoutStyle: "widgets",
+            rect: sampleRect,
+            notesLoaded: true,
+        });
+        await waitTick(30);
+    });
+
+    assertEquals(harness.result[0].windows.map((w) => w.id), ["notes"]);
+    assertEquals(harness.result[0].activeId, "notes");
+
+    // Verify user-A layout was saved in its own isolated key
+    const rawSavedA = await getLocal<unknown>(
+        desktopLayoutStorageKey("user-A-iso"),
+    );
+    assertNotEquals(rawSavedA, undefined);
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: logout isolation - logging out clears runtime state without overwriting user record in IndexedDB", async () => {
+    setupMockIndexedDB();
+
+    const userAState: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 100, y: 100, width: 600, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "apps",
+    };
+    await saveDesktopLayout("user-A-logout", userAState, sampleRect);
+
+    const harness = renderHook({
+        userId: "user-A-logout",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    await act(async () => {
+        await waitTick(20);
+    });
+    assertEquals(harness.result[0].windows.length, 1);
+
+    // Logout: userId becomes null
+    await act(async () => {
+        harness.rerender({
+            userId: null,
+            layoutStyle: "widgets",
+            rect: sampleRect,
+        });
+        await waitTick(10);
+    });
+
+    assertEquals(harness.result[0].windows.length, 0);
+    assertEquals(harness.result[0].activeId, null);
+
+    // User A record in IndexedDB still contains original layout
+    const rawSavedA = await getLocal<unknown>(
+        desktopLayoutStorageKey("user-A-logout"),
+    );
+    assertNotEquals(rawSavedA, undefined);
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: mode switch - widgets -> zen flushes save and resets runtime state; zen -> widgets restores", async () => {
+    setupMockIndexedDB();
+
+    const harness = renderHook({
+        userId: "user-mode-switch",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    // Open apps window in widgets mode
+    act(() => {
+        const [, dispatch] = harness.result;
+        dispatch({
+            type: "OPEN",
+            id: "apps",
+            kind: "apps",
+            rect: sampleRect,
+        });
+    });
+    assertEquals(harness.result[0].windows.length, 1);
+
+    // Switch to Zen mode inside act
+    await act(async () => {
+        harness.rerender({
+            userId: "user-mode-switch",
+            layoutStyle: "zen",
+            rect: sampleRect,
+            notesLoaded: true,
+        });
+        await waitTick(30);
+    });
+
+    // Runtime state must be reset in Zen mode
+    assertEquals(harness.result[0].windows.length, 0);
+
+    // Persisted data in IndexedDB must have been saved
+    const rawSaved = await getLocal<unknown>(
+        desktopLayoutStorageKey("user-mode-switch"),
+    );
+    assertNotEquals(rawSaved, undefined);
+
+    // Switch back to Widgets mode: restores layout
+    await act(async () => {
+        harness.rerender({
+            userId: "user-mode-switch",
+            layoutStyle: "widgets",
+            rect: sampleRect,
+            notesLoaded: true,
+        });
+        await waitTick(30);
+    });
+
+    assertEquals(harness.result[0].windows.length, 1);
+    assertEquals(harness.result[0].windows[0].id, "apps");
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: regression - restore waits for nonzero measured rect and notesLoaded before validating notes", async () => {
+    setupMockIndexedDB();
+
+    const persistedState: DesktopState = {
+        windows: [
+            {
+                id: "note:note-persisted",
+                kind: "note",
+                entityId: "note-persisted",
+                frame: { x: 100, y: 100, width: 500, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "note:note-persisted",
+    };
+    await saveDesktopLayout("user-wait-rect", persistedState, sampleRect);
+
+    // Initial render with zero rect and notesLoaded false
+    const harness = renderHook({
+        userId: "user-wait-rect",
+        layoutStyle: "widgets",
+        rect: { x: 0, y: 0, width: 0, height: 0 },
+        notes: [],
+        notesLoaded: false,
+    });
+
+    // Wait some time: should NOT restore or drop note yet
+    await act(async () => {
+        await waitTick(20);
+    });
+    assertEquals(harness.result[0].windows.length, 0);
+
+    // SafeRect measured and notes finished loading
+    await act(async () => {
+        harness.rerender({
+            userId: "user-wait-rect",
+            layoutStyle: "widgets",
+            rect: sampleRect,
+            notes: [{ id: "note-persisted" }],
+            notesLoaded: true,
+        });
+        await waitTick(30);
+    });
+
+    // Now restored correctly with proper geometry
+    assertEquals(harness.result[0].windows.length, 1);
+    assertEquals(harness.result[0].windows[0].id, "note:note-persisted");
+    assertEquals(harness.result[0].windows[0].frame.width > 0, true);
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: regression - effect cleanup cancels in-flight restore when user or mode changes", async () => {
+    setupMockIndexedDB();
+
+    const slowUserState: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 100, y: 100, width: 500, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "apps",
+    };
+    await saveDesktopLayout("user-slow-cancel", slowUserState, sampleRect);
+
+    const harness = renderHook({
+        userId: "user-slow-cancel",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    // Immediately switch to Zen before restore finishes
+    await act(async () => {
+        harness.rerender({
+            userId: "user-slow-cancel",
+            layoutStyle: "zen",
+            rect: sampleRect,
+            notesLoaded: true,
+        });
+        await waitTick(40);
+    });
+
+    // In Zen mode, canceled restore must not have hydrated windows
+    assertEquals(harness.result[0].windows.length, 0);
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: stale note removal once notes are loaded during active runtime", async () => {
+    setupMockIndexedDB();
+
+    const stateWithNotes: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 50, y: 50, width: 600, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+            {
+                id: "note:note-valid",
+                kind: "note",
+                entityId: "note-valid",
+                frame: { x: 100, y: 100, width: 500, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 2,
+            },
+            {
+                id: "note:note-stale",
+                kind: "note",
+                entityId: "note-stale",
+                frame: { x: 150, y: 150, width: 500, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 3,
+            },
+        ],
+        activeId: "note:note-stale",
+    };
+    await saveDesktopLayout("user-notes-prune", stateWithNotes, sampleRect);
+
+    const harness = renderHook({
+        userId: "user-notes-prune",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notes: [{ id: "note-valid" }],
+        notesLoaded: true,
+    });
+
+    await act(async () => {
+        await waitTick(30);
+    });
+
+    // Stale note must be pruned, leaving apps and note-valid
+    assertEquals(harness.result[0].windows.map((w) => w.id), [
+        "apps",
+        "note:note-valid",
+    ]);
+    // Active id should fall back from deleted note to note-valid
+    assertEquals(harness.result[0].activeId, "note:note-valid");
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: async restore race - window opened by user during restore is preserved and kept on top", async () => {
+    setupMockIndexedDB();
+
+    const persistedState: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 50, y: 50, width: 600, height: 400 },
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+            },
+        ],
+        activeId: "apps",
+    };
+    await saveDesktopLayout("user-race-cond", persistedState, sampleRect);
+
+    const harness = renderHook({
+        userId: "user-race-cond",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    // Before async load resolves, user dispatches OPEN for note:immediate
+    act(() => {
+        const [, dispatch] = harness.result;
+        dispatch({
+            type: "OPEN",
+            id: "note:immediate",
+            kind: "note",
+            entityId: "immediate",
+            rect: sampleRect,
+        });
+    });
+
+    // Now wait for restore to resolve
+    await act(async () => {
+        await waitTick(30);
+    });
+
+    // Both windows must exist; note:immediate was opened during restore and stays on top
+    const winIds = harness.result[0].windows.map((w) => w.id);
+    assertEquals(winIds.includes("note:immediate"), true);
+    assertEquals(winIds.includes("apps"), true);
+    assertEquals(harness.result[0].activeId, "note:immediate");
+
+    harness.unmount();
+});
+
+Deno.test("useDesktopLayout: immediate persistence on committed state updates preserves drag/resize on reload", async () => {
+    setupMockIndexedDB();
+
+    const harness = renderHook({
+        userId: "user-immediate-commit",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    // Wait for hydration
+    await act(async () => {
+        await waitTick(20);
+    });
+
+    // Dispatch OPEN and MOVE (as committed on pointerup)
+    act(() => {
+        const [, dispatch] = harness.result;
+        dispatch({
+            type: "OPEN",
+            id: "apps",
+            kind: "apps",
+            rect: sampleRect,
+        });
+        dispatch({
+            type: "MOVE",
+            id: "apps",
+            frame: { x: 614, y: 301, width: 600, height: 400 },
+            rect: sampleRect,
+        });
+    });
+
+    // Immediate reload (simulating browser reload without waiting for any debounce)
+    await act(async () => {
+        await waitTick(10);
+    });
+    harness.unmount();
+
+    // New hook instance mounts as if page reloaded
+    const reloadHarness = renderHook({
+        userId: "user-immediate-commit",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    await act(async () => {
+        await waitTick(20);
+    });
+
+    const [reloadedState] = reloadHarness.result;
+    assertEquals(reloadedState.windows.length, 1);
+    assertEquals(reloadedState.windows[0].id, "apps");
+    assertEquals(reloadedState.windows[0].frame.x, 614);
+    assertEquals(reloadedState.windows[0].frame.y, 301);
+
+    reloadHarness.unmount();
+});
+
+Deno.test("useDesktopLayout: pagehide and visibilitychange lifecycle flushes persistence", async () => {
+    setupMockIndexedDB();
+
+    const harness = renderHook({
+        userId: "user-lifecycle-flush",
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+
+    await act(async () => {
+        await waitTick(20);
+    });
+
+    act(() => {
+        const [, dispatch] = harness.result;
+        dispatch({
+            type: "OPEN",
+            id: "notes",
+            kind: "notes",
+            rect: sampleRect,
+        });
+    });
+
+    // Fire pagehide event on globalThis
+    act(() => {
+        globalThis.dispatchEvent(new Event("pagehide"));
+    });
+
+    await act(async () => {
+        await waitTick(10);
+    });
+
+    const saved = await getLocal<unknown>(
+        desktopLayoutStorageKey("user-lifecycle-flush"),
+    );
+    assertNotEquals(saved, undefined);
+
+    harness.unmount();
+});

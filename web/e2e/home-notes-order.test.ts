@@ -237,13 +237,13 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             );
             await cardBodyA.click();
             const panel = page.locator(
-                ".desktop-window[data-window-id='notes'], .workspace-panel",
+                ".desktop-window[data-window-id='notes'], .desktop-window[data-window-kind='note'], .workspace-panel",
             );
             await panel.waitFor({ state: "visible" });
 
-            // Close workspace panel back to home
+            // Close workspace panel or note window back to home
             const backOrClose = panel.locator(
-                'button[aria-label="收起工作区"], button[aria-label="关闭工作区"]',
+                'button[aria-label="关闭便签"], button[aria-label="收起工作区"], button[aria-label="关闭工作区"]',
             );
             if (await backOrClose.isVisible()) {
                 await backOrClose.click();

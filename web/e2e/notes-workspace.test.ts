@@ -73,6 +73,17 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     }
 
     async function ensureNotesRoot(p: Page = page) {
+        // Close any open note entity windows
+        const noteWindowCloseBtns = p.locator(
+            '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+        );
+        const count = await noteWindowCloseBtns.count();
+        for (let i = 0; i < count; i++) {
+            const btn = noteWindowCloseBtns.first();
+            if (await btn.isVisible()) {
+                await btn.click();
+            }
+        }
         const currentPanel = getNotesWorkspace(p);
         if (!(await currentPanel.isVisible())) {
             await openNotesRoot(p);
@@ -481,7 +492,12 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 ).textContent(),
                 "便签",
             );
-            assertEquals(await page.locator("#note-title-input").count(), 0);
+            assertEquals(
+                await page.locator(
+                    'input[aria-label="便签标题"], [id^="note-title-input"]',
+                ).count(),
+                0,
+            );
 
             // 2. Click expand button -> must NOT navigate to editor
             await firstCard.hover();
@@ -496,7 +512,12 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 ).textContent(),
                 "便签",
             );
-            assertEquals(await page.locator("#note-title-input").count(), 0);
+            assertEquals(
+                await page.locator(
+                    'input[aria-label="便签标题"], [id^="note-title-input"]',
+                ).count(),
+                0,
+            );
 
             // 3. Click collapse button -> must NOT navigate to editor
             await firstCard.hover();
@@ -511,7 +532,12 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 ).textContent(),
                 "便签",
             );
-            assertEquals(await page.locator("#note-title-input").count(), 0);
+            assertEquals(
+                await page.locator(
+                    'input[aria-label="便签标题"], [id^="note-title-input"]',
+                ).count(),
+                0,
+            );
 
             // 4. Click dropdown menu items -> must NOT navigate to editor
             await firstCard.hover();
@@ -534,28 +560,36 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 ).textContent(),
                 "便签",
             );
-            assertEquals(await page.locator("#note-title-input").count(), 0);
+            assertEquals(
+                await page.locator(
+                    'input[aria-label="便签标题"], [id^="note-title-input"]',
+                ).count(),
+                0,
+            );
 
-            // 5. Click card body (title) -> navigates to editor
+            // 5. Click card body (title) -> on desktop >=1024, opens entity window while Notes browser stays at "便签"
             await firstCard.locator(".note-title").click();
-            await page.locator("#note-title-input").waitFor({
-                state: "visible",
-            });
+            const titleInput = page.locator(
+                'input[aria-label="便签标题"], [id^="note-title-input"]',
+            );
+            await titleInput.waitFor({ state: "visible" });
             assertEquals(
                 await panel.locator(
                     ".desktop-window-chrome-title, .workspace-title",
                 ).textContent(),
-                "编辑便签",
+                "便签",
             );
+            const noteEntityWin = page.locator(
+                '.desktop-window[data-window-kind="note"]',
+            );
+            assertEquals(await noteEntityWin.count(), 1);
 
-            // Back button returns to root
-            const backBtn = panel.locator(
-                '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
+            // Close note window -> entity window closes, Notes browser remains intact
+            const closeBtn = noteEntityWin.locator(
+                'button[aria-label="关闭便签"]',
             );
-            await backBtn.click();
-            await page.locator(".notes-workspace-list").first().waitFor({
-                state: "visible",
-            });
+            await closeBtn.click();
+            await noteEntityWin.waitFor({ state: "detached" });
             assertEquals(
                 await panel.locator(
                     ".desktop-window-chrome-title, .workspace-title",
@@ -696,11 +730,10 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const card = page.locator(".notes-workspace-list .note-card")
                 .first();
             await card.locator(".note-title").click();
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("aria-label") ===
-                    "返回上一级"
-            );
-            const input = page.locator("#note-body-textarea-edit");
+            const input = page.locator(
+                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+            ).first();
+            await input.waitFor({ state: "visible" });
             const writes: Array<{ body: string; origin: string }> = [];
             const capture = (request: import("playwright").Request) => {
                 if (
@@ -724,14 +757,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 });
                 await page.getByRole("button", { name: "粗体", exact: true })
                     .click();
-                await page.waitForFunction(() => {
-                    const el = document.querySelector<HTMLTextAreaElement>(
-                        "#note-body-textarea-edit",
-                    );
-                    return el?.value === "**中文正文**" &&
-                        el.selectionStart === 2 && el.selectionEnd === 6 &&
-                        document.activeElement === el;
-                });
+                assertEquals(
+                    await input.evaluate((el: HTMLTextAreaElement) => ({
+                        value: el.value,
+                        selection: [el.selectionStart, el.selectionEnd],
+                        focused: document.activeElement === el,
+                    })),
+                    { value: "**中文正文**", selection: [2, 6], focused: true },
+                );
                 assertEquals(
                     writes,
                     [],
@@ -911,7 +944,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     ),
                     true,
                 );
-                await mobile.locator("#note-body-textarea-edit").fill(
+                await mobile.locator(
+                    '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+                ).first().fill(
                     "- [ ] 未完成\n- [x] 已完成\n\n[本地链接](" + origin + ")",
                 );
                 await mobile.getByRole("tab", { name: "分栏", exact: true })
@@ -990,14 +1025,11 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.locator(".note-title").click();
-            await page.locator("#note-title-input").waitFor({
+            await page.locator(
+                'input[aria-label="便签标题"], [id^="note-title-input"]',
+            ).first().waitFor({
                 state: "visible",
             });
-            // Wait for Workspace nested autofocus before typing can trigger onBlur saves.
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("aria-label") ===
-                    "返回上一级"
-            );
 
             // Initial status is "已保存"
             const saveState = page.locator(".save-state");
@@ -1005,7 +1037,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             assertStringIncludes(await saveState.textContent() ?? "", "已保存");
 
             // 1. Type in body -> transitions to "未同步至云端"
-            const bodyInput = page.locator("#note-body-textarea-edit");
+            const bodyInput = page.locator(
+                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+            ).first();
             await bodyInput.fill(
                 "Fresh edited body for autosave lifecycle test",
             );
@@ -1080,18 +1114,25 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 }
                 await page.waitForFunction(() =>
                     document.querySelector<HTMLTextAreaElement>(
-                        "#note-body-textarea-edit",
+                        "textarea.note-body-textarea",
                     )?.value === "**Trigger error state body content**"
                 );
-                // A recovered draft has no debounce timer: Preview must still flush it.
-                await page.getByRole("tab", { name: "预览", exact: true })
-                    .click();
-                await retryBtn.waitFor({ state: "visible" });
+                // A recovered draft has no debounce timer: trigger save via blur
+                const recoveredInput = page.locator(
+                    '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+                ).first();
+                await recoveredInput.focus();
+                await recoveredInput.blur();
+
+                const retry = page.locator(
+                    '.choice-row button:has-text("重试同步")',
+                ).first();
+                await retry.waitFor({ state: "visible" });
                 // Clear route intercept to restore healthy server
                 await page.unroute("**/api/notes/*");
 
                 // Click "重试同步"
-                await retryBtn.click();
+                await retry.evaluate((b) => (b as HTMLElement).click());
                 await page.waitForFunction(
                     () =>
                         document.querySelector(".save-state")?.textContent
@@ -1105,9 +1146,19 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             }
 
             // Return to root
-            await panel.locator(
+            const returnBack = panel.locator(
                 '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
-            ).click();
+            );
+            if (await returnBack.isVisible()) {
+                await returnBack.click();
+            } else {
+                const closeNoteBtn = page.locator(
+                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+                ).first();
+                if (await closeNoteBtn.isVisible()) {
+                    await closeNoteBtn.click();
+                }
+            }
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
@@ -1122,7 +1173,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.locator(".note-title").click();
-            await page.locator("#note-title-input").waitFor({
+            await page.locator(
+                'input[aria-label="便签标题"], [id^="note-title-input"]',
+            ).first().waitFor({
                 state: "visible",
             });
 
@@ -1154,7 +1207,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             });
 
             // 2. Local editor tries to save its changes (with old version -> 409 Conflict)
-            const bodyInput = page.locator("#note-body-textarea-edit");
+            const bodyInput = page.locator(
+                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+            ).first();
             await bodyInput.fill("Local conflicting edit body");
             await bodyInput.blur();
 
@@ -1195,6 +1250,19 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     "已保存",
                 )
             );
+
+            const afterCloudBody = "Edit after accepting the cloud version";
+            const afterCloudSave = page.waitForResponse((response) =>
+                response.request().method() === "PATCH" &&
+                response.url().endsWith(`/api/notes/${currentNote.id}`) &&
+                response.request().postDataJSON()?.body === afterCloudBody
+            );
+            await bodyInput.fill(afterCloudBody);
+            await bodyInput.blur();
+            const acceptedSave = await afterCloudSave;
+            assertEquals(acceptedSave.status(), 200);
+            assertEquals((await acceptedSave.json()).data.body, afterCloudBody);
+            assertEquals(await conflictDialog.count(), 0);
 
             // 5. Test "覆盖云端" resolution:
             // Get current version again
@@ -1244,9 +1312,19 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             assertEquals(noteV3.body, "Local override content will prevail");
 
             // Return to root
-            await panel.locator(
+            const returnBack2 = panel.locator(
                 '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
-            ).click();
+            );
+            if (await returnBack2.isVisible()) {
+                await returnBack2.click();
+            } else {
+                const closeNoteBtn = page.locator(
+                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+                ).first();
+                if (await closeNoteBtn.isVisible()) {
+                    await closeNoteBtn.click();
+                }
+            }
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
@@ -1261,7 +1339,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
             await firstCard.locator(".note-title").click();
-            await page.locator("#note-title-input").waitFor({
+            await page.locator(
+                'input[aria-label="便签标题"], [id^="note-title-input"]',
+            ).first().waitFor({
                 state: "visible",
             });
 
@@ -1317,7 +1397,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 }).first().click();
                 await versionsSection.waitFor({ state: "detached" });
                 assertEquals(
-                    await page.locator("#note-body-textarea-edit").inputValue(),
+                    await page.locator(
+                        '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+                    ).first().inputValue(),
                     historical.body,
                 );
                 const restoredBody = await page.evaluate(
@@ -1332,9 +1414,19 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             }
 
             // Return to root
-            await panel.locator(
+            const returnBack3 = panel.locator(
                 '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
-            ).click();
+            );
+            if (await returnBack3.isVisible()) {
+                await returnBack3.click();
+            } else {
+                const closeNoteBtn = page.locator(
+                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+                ).first();
+                if (await closeNoteBtn.isVisible()) {
+                    await closeNoteBtn.click();
+                }
+            }
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });

@@ -28,7 +28,11 @@ Zen 布局下，登录后首页搜索框下方显示固定网站：PC 从搜索�
 
 访客外观及当前本地图片（最大 5 MiB）保存在当前设备/浏览器，刷新后保留；访客上传历史只在当前设置页面有效，不上传服务器。访客与账户缓存隔离，登录不会自动迁移本地图片，只有登录后新上传的图片可以跨设备同步。
 
- Widgets Task Dock 的应用/便签项根据窗口状态执行 Open、Focus 或 Restore + Focus，不重置 nested route；窗口 Close 只收起对应 domain，关闭后聚焦对应 Dock item。Apps/Notes 的 route、Back stack 与搜索 query 独立；编辑暂时仍在各 domain window 内，未引入独立 Note entity windows 或窗口持久化。Zen 的边缘入口、Panel/Sheet Switcher 与实际 opener 焦点恢复保持原行为。所有 surface 只有 Body 滚动，Root Footer 固定；嵌套页 Back 返回上一级，应用表单保护未保存修改，便签保留本地草稿、自动保存、冲突处理和版本历史。Widgets 首页仍最多显示 5 张固定便签，不覆盖 Zen FloatingNotes 坐标。
+Widgets Task Dock 的应用/便签项根据窗口状态执行 Open、Focus 或 Restore + Focus，不重置 nested route；窗口 Close 只收起对应 domain，关闭后聚焦对应 Dock item。Apps/Notes 的 route、Back stack 与搜索 query 独立。所有 surface 只有 Body 滚动，Root Footer 固定；嵌套页 Back 返回上一级，应用表单保护未保存修改，便签保留本地草稿、自动保存、冲突处理和版本历史。Widgets 首页仍最多显示 5 张固定便签。
+
+Widgets >=1024 的便签按 `note:<id>` 打开独立窗口：同一便签重复打开只恢复并聚焦，多份便签可同时编辑；Notes browser 仍保留。窗口复用 NoteEditor 的自动保存、冲突处理和版本历史，删除便签会关闭对应窗口。768–1023、移动端 Sheet 和 Zen 仍在便签工作区内嵌套编辑。
+
+Widgets 窗口布局按登录用户保存在当前设备 IndexedDB（`searcher:desktop-layout:v1:<userId>`），包括打开的窗口、正常尺寸、模式和层级。刷新或切回 Widgets 时恢复并按当前安全区域约束，切换账号不继承布局；退出只清运行态。无记录、损坏或不支持的版本回到空桌面；IndexedDB 不可用时继续使用内存态。几何不写入服务端 `note_layouts`，不跨设备同步，也不转换 Zen FloatingNotes 坐标。
 
 首页「随手便签」有两张及以上固定便签时，可拖动把手调整顺序；键盘聚焦把手后按 Space 拿起，方向键移动，Space 放下，Escape 取消。排序立即显示并通过现有 `sortOrder` 同步，刷新或重新登录后保持；仅重排当前可见的固定便签，不改变普通便签与未展示固定便签的相对顺序，也不改变置顶、内容或 Zen 坐标。不能排序的便签展示不提供可操作拖拽把手。
 

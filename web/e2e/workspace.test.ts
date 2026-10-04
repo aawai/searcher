@@ -45,6 +45,49 @@ Deno.test("production workspace contracts", async (t) => {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
         await target.locator("main").waitFor();
+        if (path === "/" && (target.viewportSize()?.width ?? 0) >= 1024) {
+            const windowIds = await target.evaluate(async () => {
+                const auth = (await (await fetch("/api/auth/me")).json()).data;
+                if (!auth?.user) return [];
+                const preferences =
+                    (await (await fetch("/api/preferences")).json()).data;
+                if (preferences.style !== "widgets") return [];
+                return await new Promise<string[]>((resolve, reject) => {
+                    const request = indexedDB.open("searcher-client", 1);
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        const db = request.result;
+                        if (!db.objectStoreNames.contains("state")) {
+                            db.close();
+                            resolve([]);
+                            return;
+                        }
+                        const read = db.transaction("state", "readonly")
+                            .objectStore("state").get(
+                                `searcher:desktop-layout:v1:${auth.user.id}`,
+                            );
+                        read.onerror = () => {
+                            db.close();
+                            reject(read.error);
+                        };
+                        read.onsuccess = () => {
+                            const layout = read.result as {
+                                windows: Array<{ id: string }>;
+                            } | undefined;
+                            db.close();
+                            resolve(
+                                layout?.windows.map((window) => window.id) ??
+                                    [],
+                            );
+                        };
+                    };
+                });
+            });
+            for (const id of windowIds) {
+                await target.locator(`.desktop-window[data-window-id="${id}"]`)
+                    .waitFor({ state: "attached" });
+            }
+        }
     }
 
     // Register and set up user account
@@ -259,6 +302,19 @@ Deno.test("production workspace contracts", async (t) => {
     await t.step(
         "nested AppForm dirty Back/Close protection and save",
         async () => {
+            // This contract saves forms, not third-party website metadata.
+            await page.route(
+                "**/api/webapp-icons/fetch",
+                (route) =>
+                    route.fulfill({
+                        status: 502,
+                        contentType: "application/json",
+                        body: JSON.stringify({
+                            success: false,
+                            message: "Metadata unavailable in form contract",
+                        }),
+                    }),
+            );
             const appsWindow = page.locator(
                 '.desktop-window[data-window-id="apps"]',
             );
@@ -380,6 +436,12 @@ Deno.test("production workspace contracts", async (t) => {
                 serverApps.some((a) => a.name === "Hacker News"),
                 true,
             );
+
+            // Close apps window
+            await appsWindow.locator(
+                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+            ).click();
+            await appsWindow.waitFor({ state: "detached" });
         },
     );
 
@@ -406,12 +468,26 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Click "新建便签": note is created and editor opens immediately
             await createNoteBtn.click();
-            await page.locator("#note-title-input").waitFor();
-            assertEquals(
-                await notesWindow.locator(".desktop-window-chrome-title")
-                    .textContent(),
-                "编辑便签",
+            const titleInput = page.locator(
+                'input[aria-label="便签标题"], [id^="note-title-input"]',
             );
+            await titleInput.waitFor();
+            const noteEntityWin = page.locator(
+                '.desktop-window[data-window-kind="note"]',
+            );
+            if (await noteEntityWin.count() > 0) {
+                assertEquals(
+                    await notesWindow.locator(".desktop-window-chrome-title")
+                        .textContent(),
+                    "便签",
+                );
+            } else {
+                assertEquals(
+                    await notesWindow.locator(".desktop-window-chrome-title")
+                        .textContent(),
+                    "编辑便签",
+                );
+            }
 
             // Obtain note ID from server notes
             const initialNotes = await page.evaluate(async () => {
@@ -424,8 +500,11 @@ Deno.test("production workspace contracts", async (t) => {
             createdNoteId = initialNotes[0].id;
 
             // Type in title and body
-            await page.locator("#note-title-input").fill("Local Draft Title");
-            await page.locator("#note-body-textarea-edit").fill(
+            const bodyInput = page.locator(
+                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
+            ).first();
+            await titleInput.fill("Local Draft Title");
+            await bodyInput.fill(
                 "Local unpersisted draft content",
             );
             // Status is unsynced before debounce
@@ -435,32 +514,42 @@ Deno.test("production workspace contracts", async (t) => {
                 )
             );
 
-            // Immediately close workspace before 1500ms debounce fires
-            await notesWindow.locator(
-                'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
-            ).click();
-            await notesWindow.waitFor({ state: "detached" });
+            // Immediately close note window or workspace before 1500ms debounce fires
+            const noteCloseBtn = page.locator(
+                '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+            );
+            if (await noteCloseBtn.isVisible()) {
+                await noteCloseBtn.click();
+                await noteEntityWin.waitFor({ state: "detached" });
+            } else {
+                await notesWindow.locator(
+                    'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                ).click();
+                await notesWindow.waitFor({ state: "detached" });
+            }
 
-            // Reopen Notes workspace from Dock
-            await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"]',
-            ).click();
-            await notesWindow.waitFor();
+            // Reopen Notes workspace from Dock if closed
+            if (!(await notesWindow.isVisible())) {
+                await page.locator(
+                    '.desktop-dock button[aria-label="便签工作区"]',
+                ).click();
+                await notesWindow.waitFor();
+            }
 
-            // Close/reopen retains the current nested editor; root cards are only present after Back.
-            if (!(await page.locator("#note-body-textarea-edit").isVisible())) {
+            // Open note editor
+            if (!(await bodyInput.isVisible())) {
                 await page.locator(".notes-workspace-list .note-card").first()
                     .click();
             }
-            await page.locator("#note-title-input").waitFor();
+            await titleInput.waitFor();
 
             // Draft content was restored from local draft!
             assertEquals(
-                await page.locator("#note-title-input").inputValue(),
+                await titleInput.inputValue(),
                 "Local Draft Title",
             );
             assertEquals(
-                await page.locator("#note-body-textarea-edit").inputValue(),
+                await bodyInput.inputValue(),
                 "Local unpersisted draft content",
             );
 
@@ -474,7 +563,7 @@ Deno.test("production workspace contracts", async (t) => {
                     request.postDataJSON()?.body ===
                         "Persisted content after autosave";
             }, { timeout: 5000 });
-            await page.locator("#note-body-textarea-edit").fill(
+            await bodyInput.fill(
                 "Persisted content after autosave",
             );
             assertEquals((await autosave).status(), 200);
@@ -511,7 +600,7 @@ Deno.test("production workspace contracts", async (t) => {
                 },
             );
             try {
-                await page.locator("#note-body-textarea-edit").fill(
+                await bodyInput.fill(
                     "Observed in flight saving text",
                 );
                 await page.waitForFunction(() =>
@@ -560,11 +649,11 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(concurrentStatus, 200);
 
             // Client attempts to save with outdated version
-            await page.locator("#note-body-textarea-edit").fill(
+            await bodyInput.fill(
                 "Client conflicting edit",
             );
             // Trigger manual save
-            await page.locator("#note-body-textarea-edit").blur();
+            await bodyInput.blur();
             await page.keyboard.press("Control+s");
 
             // Conflict alert dialog appears
@@ -595,7 +684,7 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(resolved.version, baseVersion + 2);
 
             // After conflict resolution, user can edit and autosave persists
-            await page.locator("#note-body-textarea-edit").fill(
+            await bodyInput.fill(
                 "Post-conflict resolved content",
             );
             await page.waitForFunction(
@@ -630,7 +719,7 @@ Deno.test("production workspace contracts", async (t) => {
                 .click();
             await page.waitForFunction(() =>
                 document.querySelector<HTMLTextAreaElement>(
-                    "#note-body-textarea-edit",
+                    "textarea.note-body-textarea",
                 )?.value === "Client conflicting edit"
             );
             const restored = await page.evaluate(async (id) => {
@@ -686,10 +775,10 @@ Deno.test("production workspace contracts", async (t) => {
                         return route.continue();
                     },
                 );
-                await page.locator("#note-body-textarea-edit").fill(
+                await bodyInput.fill(
                     "Error triggering content",
                 );
-                await page.locator("#note-body-textarea-edit").blur();
+                await bodyInput.blur();
                 await page.keyboard.press("Control+s");
                 await page.waitForFunction(() =>
                     document.querySelector(".save-state")?.textContent
@@ -707,11 +796,20 @@ Deno.test("production workspace contracts", async (t) => {
                 ).catch(() => {});
             }
 
-            // Test Back button navigation from editor to notes root
+            // Close editor: Back button if nested, or close note window if desktop entity
             const backBtn = notesWindow.locator(
                 'header .desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
             );
-            await backBtn.click();
+            if (await backBtn.isVisible()) {
+                await backBtn.click();
+            } else {
+                const noteCloseBtn = page.locator(
+                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
+                );
+                if (await noteCloseBtn.isVisible()) {
+                    await noteCloseBtn.click();
+                }
+            }
             await notesWindow.locator(".notes-workspace-list").waitFor();
             assertEquals(
                 await notesWindow.locator(".desktop-window-chrome-title")
@@ -722,12 +820,29 @@ Deno.test("production workspace contracts", async (t) => {
             await notesWindow.locator(".notes-workspace-list .note-card")
                 .first()
                 .click();
-            await page.locator("#note-title-input").waitFor();
-            assertEquals(
-                await notesWindow.locator(".desktop-window-chrome-title")
-                    .textContent(),
-                "编辑便签",
+            await page.locator(
+                'input[aria-label="便签标题"], [id^="note-title-input"]',
+            ).first().waitFor();
+            const noteEntityWin2 = page.locator(
+                '.desktop-window[data-window-kind="note"]',
             );
+            if (await noteEntityWin2.count() > 0) {
+                assertEquals(
+                    await notesWindow.locator(".desktop-window-chrome-title")
+                        .textContent(),
+                    "便签",
+                );
+                // Close note entity window
+                await noteEntityWin2.locator('button[aria-label="关闭便签"]')
+                    .first().click();
+                await noteEntityWin2.waitFor({ state: "detached" });
+            } else {
+                assertEquals(
+                    await notesWindow.locator(".desktop-window-chrome-title")
+                        .textContent(),
+                    "编辑便签",
+                );
+            }
 
             // Close workspace
             await notesWindow.locator(
@@ -1107,6 +1222,17 @@ Deno.test("production workspace contracts", async (t) => {
                 assertEquals(status, 200);
             }
             await visit("/");
+            for (const id of ["apps", "notes"]) {
+                const win = page.locator(
+                    `.desktop-window[data-window-id="${id}"]`,
+                );
+                if (await win.isVisible()) {
+                    await win.locator(
+                        'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                    ).click();
+                    await win.waitFor({ state: "detached" });
+                }
+            }
             const widths: number[] = [];
             const expectedPins = await page.evaluate(async () => {
                 const { data } = await (await fetch("/api/webapps")).json();
@@ -1185,6 +1311,13 @@ Deno.test("production workspace contracts", async (t) => {
                         ).count(),
                         0,
                     );
+                    const appsWindow = page.locator(
+                        '.desktop-window[data-window-id="apps"]',
+                    );
+                    await appsWindow.locator(
+                        'header button[aria-label="收起工作区"]',
+                    ).click();
+                    await appsWindow.waitFor({ state: "detached" });
                 }
             }
             assertEquals(widths[0] < widths[1] && widths[1] < widths[2], true);
@@ -1311,6 +1444,25 @@ Deno.test("production workspace contracts", async (t) => {
                 hasText: "空间轻桌面",
             }).waitFor();
             await visit("/");
+            const openIds = await page.locator(".desktop-window").evaluateAll((
+                windows,
+            ) => windows.sort((a, b) =>
+                Number((b as HTMLElement).style.zIndex) -
+                Number((a as HTMLElement).style.zIndex)
+            )
+                .map((window) => (window as HTMLElement).dataset.windowId!)
+            );
+            for (const id of openIds) {
+                const win = page.locator(
+                    `.desktop-window[data-window-id="${id}"]`,
+                );
+                if (await win.isVisible()) {
+                    await win.locator(
+                        'header .desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                    ).click();
+                    await win.waitFor({ state: "detached" });
+                }
+            }
 
             // Set mobile viewport (< 768px)
             await page.setViewportSize({ width: 375, height: 667 });

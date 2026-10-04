@@ -188,9 +188,12 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - AppsWorkspace/NotesWorkspace 各只有一套 content JSX，复用
   WorkspaceSearch、WorkspaceSection、 LoadingState/StatusBanner/EmptyState；各
   presenter 的唯一 scroll boundary 为 .workspace-body。
-- Widgets >=1024 的 Apps/Notes 是 singleton
-  windows，可同时打开、重叠、focus、minimize/restore、 maximize；Apps
-  create/edit 和 Notes edit 仍是各自 window 的 nested route。
+- Widgets >=1024 的 Apps/Notes browser 是 singleton windows，可同时打开、重叠、
+  focus、minimize/restore、maximize；Apps create/edit 保持 nested route。Notes
+  通过 Host `openNote` / `createAndOpenNote` 打开 `note:<id>` entity window，
+  同一 note 只保留一个实例，重复打开恢复并聚焦。Notes browser 不被编辑器替换；
+  多个 note 复用同一 NoteEditor 业务实现，删除或加载后不存在的 note
+  自动关闭窗口。
 - Widgets 768–1023 始终只有一个可见 active window，inactive content 保持 mounted
   以保留表单草稿； 不允许自由 drag/resize。三档尺寸以 safe rect 为基准居中：
   medium = min(680px, 78% safe-width) × min(720px, 72% safe-height)； large =
@@ -205,13 +208,23 @@ AlertDialog）具有严格不同的交互与视觉语义：
   键盘打开/恢复聚焦 root Close 或 nested Back。 Close/Escape 仅关闭 active
   domain，弹出菜单/确认弹窗优先消费 Escape，关闭后聚焦对应 Dock item。
 - <768 无 DesktopDock；shared Sheet 保留 modal focus trap、swipe、实际 opener
-  restore。 Zen Panel/Sheet 与 FloatingNotes 不变；window geometry
-  仅存于当前页面，不持久化。
+  restore。<1024 与 Zen 的 `openNote` 仍使用 Notes nested editor，不创建 entity
+  window。
+- Widgets geometry 通过 `local.ts` 的 IndexedDB IO 保存于
+  `searcher:desktop-layout:v1:<userId>`：schema version、open
+  identity、normalized normal frame、mode、snap semantic、z-order、active
+  id。恢复转换为 px 后必须 clamp； pointermove/resize 期间不写入，稳定 reducer
+  commit 与 lifecycle 时保存。
+- 无记录、unsupported version 或 corrupt payload 默认空桌面；stale note
+  自动丢弃。 IndexedDB read/write 失败不得阻塞窗口或回滚 runtime state，本
+  session 使用内存态。 logout 清 runtime，保留用户
+  record；用户切换严格隔离。Widgets→Zen 保存并卸载， Zen→Widgets 恢复；不转换
+  Zen geometry、不写 `note_layouts`、不跨设备同步。
 
-#### Desktop Window Manager（#88 demo）
+#### Desktop Window Manager（#88 demo / #89–90 production）
 
 - /design-lab 保留独立非业务 demo；Widgets production 复用同一 features/desktop
-  引擎， 不实现独立 Note entity windows、Snap、Overview 或 window persistence。
+  引擎，不实现 Snap 或 Overview UI。
 - `DesktopCanvas` 是 viewport-fixed、背景 pointer-events:none 的唯一坐标
   owner。frame x/y 相对 safe rect；顶边为可见 Topbar/connection banner 下边界加
   `--space-window-gap`， 左右为 viewport 加 gap，底边为 viewport 减 gap；可提供

@@ -176,6 +176,11 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         await rightClickBlankSurface(targetPage);
         const menu = targetPage.locator('[data-slot="context-menu-content"]');
         await menu.waitFor({ timeout: 5000 });
+        await targetPage.waitForFunction(() =>
+            document.querySelector(
+                '[data-slot="context-menu-content"]',
+            )?.contains(document.activeElement)
+        );
         return menu;
     }
 
@@ -1043,8 +1048,14 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 return el !== null;
             });
 
+            const saved = page.waitForResponse((response) =>
+                new URL(response.url()).pathname ===
+                    "/api/webapps/" + appLinear.id &&
+                response.request().method() === "PATCH"
+            );
             // Drop
             await page.mouse.up();
+            assertEquals((await saved).status(), 200);
 
             // Linear disappears from root
             await page.waitForFunction(() => {
@@ -1472,13 +1483,23 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     await touchPage.locator(".desktop-dock").count(),
                     0,
                 );
-                await touchPage.locator(
-                    '.workspace-mobile-navigation button[aria-label="应用工作区"], button[data-workspace="apps"]',
-                ).first().click();
                 const panel = touchPage.locator(
                     ".workspace-panel--mobile, .workspace-panel",
                 );
-                await panel.waitFor();
+                const ensureMobileAppsSheetOpen = async () => {
+                    const grid = panel.locator(".launcher-grid");
+                    const restored = await grid.waitFor({
+                        state: "visible",
+                        timeout: 2500,
+                    }).then(() => true).catch(() => false);
+                    if (!restored) {
+                        await touchPage.locator(
+                            '.workspace-mobile-navigation button[aria-label="应用工作区"], button[data-workspace="apps"]',
+                        ).first().click();
+                        await grid.waitFor({ state: "visible" });
+                    }
+                };
+                await ensureMobileAppsSheetOpen();
                 const cdp = await touchContext.newCDPSession(touchPage);
                 const blankPoint = await getSurfaceBlankCoordinate(touchPage);
                 assertEquals(blankPoint.y > blankPoint.contentBottom, true);
@@ -1631,10 +1652,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                         true,
                     );
                     await touchPage.reload();
-                    await touchPage.locator(
-                        '.workspace-mobile-navigation button[aria-label="应用工作区"], button[data-workspace="apps"]',
-                    ).first().click();
-                    await panel.locator(".launcher-grid").waitFor();
+                    await ensureMobileAppsSheetOpen();
                 }
                 // A short viewport creates real overflow; a swipe on the blank
                 // surface must move the body, not merely avoid opening a menu.
