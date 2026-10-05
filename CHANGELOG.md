@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+- Route CSS Cascade 稳定性治理、RadioGroup Canonical Variants 与 Ask
+  大屏响应式几何（Issue #120）：
+  - 建立明确的 Primitive / Feature CSS 所有权规范：新增 UI Guard 规则
+    M（`primitive-feature-cascade-order`），硬门禁阻断裸 feature class 竞争
+    primitive 基础属性，确保样式结果与 lazy CSS chunk 加载顺序完全无关；
+  - RadioGroup 引入 Canonical Variants：支持 `default`、`swatch` 与 `segmented`
+    变体；Settings 外观页强调色选项切换为 `variant="swatch"`，1440px 下稳定呈现
+    2 列且中文标签保持单行不换行；动态背景程度切换为
+    `variant="segmented"`，四档等宽呈现分段单选交互，消除独立 radio 卡片；
+  - 消除 NativeSelect 宽度冲突：采用 `.settings-choice-select`
+    外层容器管理宽度，内层 NativeSelect 保持 100% 撑满，消除 utility 与 feature
+    class 冲突；
+  - Ask 大屏工作区响应式几何重标：引入
+    `--layout-ask-workbench-max`（`clamp(1280px, 82vw, 1760px)`）、`--layout-ask-message-max`（`clamp(900px, 55vw, 1040px)`）与
+    `--layout-ask-composer-max`（`clamp(760px, 50vw, 920px)`），PageShell
+    通过局部 token override 解除 1280px 硬编码限制；在 2048px (2K)
+    视口下工作区宽度自然扩展至约 1679px、消息列扩展至
+    1040px，充分利用宽屏水平空间；
+  - 收敛 Markdown 与代码块几何：移除 `.ask-assistant-body pre` 的负边距与独立
+    900px
+    限制，代码块和表格严格约束在阅读列内（`max-width: 100%; margin-inline: 0;`）；Markdown
+    排版通过复合选择器 `.ask-assistant-body.markdown` 消除加载顺序风险；
+  - 发送按钮与输入框契约对齐：严格约束发送与停止按钮在输入框容器内弹性对齐，满足
+    44×44px 触控要求，消除绝对定位偏移与横向溢出；
+  - 生产环境路由样式稳定性 E2E 门禁：新增
+    `web/e2e/route-style-stability.test.ts`，覆盖 1440×900、2048×1152 与 390×844
+    视口及同 document SPA 路由序列导航，并在 CI 中留存全量可视证据截图与指标
+    JSON。
 - 路由级动态切分、首屏 JS 瘦身与 Bundle Guard 门禁（Issue #117）：
   - 路由级全量动态懒加载：首页以外所有路由（Ask、Settings、Admin、DesignLab、Auth、Account、Trash、NotFound）转换为动态切分
     chunk，消除初始静态依赖；

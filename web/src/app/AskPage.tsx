@@ -435,7 +435,7 @@ export function AskPage() {
 
     if (!user) {
         return (
-            <PageShell archetype="workbench">
+            <PageShell archetype="workbench" className="ask-page-shell">
                 <PageHeader
                     items={[
                         { label: "首页", to: routes.home },
@@ -464,7 +464,7 @@ export function AskPage() {
     }));
 
     return (
-        <PageShell archetype="workbench">
+        <PageShell archetype="workbench" className="ask-page-shell">
             <div className="ask-workspace-layout">
                 <ConversationSidebar
                     history={history}

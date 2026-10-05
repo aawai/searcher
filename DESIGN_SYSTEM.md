@@ -132,6 +132,8 @@ role，不把 muted 文字色当作 surface。
 | workspace geometry / layout              | --workspace-width / --workspace-inset / --workspace-top-inset / --workspace-mobile-height     |
 | workspace surface / shadow / elevation   | --surface-workspace / --shadow-workspace / --elevation-workspace                              |
 | notes board step / tilt / bento max      | --notes-board-step / --notes-board-tilt / --layout-bento-max                                  |
+| ask responsive workbench / lane / input  | --layout-ask-workbench-max / --layout-ask-message-max / --layout-ask-composer-max             |
+| workbench page shell override            | --page-shell-workbench-max (fallback: --layout-workbench-max)                                 |
 
 每页最多一个 h1；section 使用 h2；component title 不抬高到 page
 层级。caption/muted 不承载唯一关键提示。code 使用 code role/monospace。

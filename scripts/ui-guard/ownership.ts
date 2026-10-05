@@ -28,7 +28,8 @@ export type OwnershipRuleId =
     | "canvas-coordinate-owner"
     | "home-document-token"
     | "widgets-no-adhoc-window"
-    | "forbidden-legacy-path";
+    | "forbidden-legacy-path"
+    | "primitive-feature-cascade-order";
 
 export interface OwnershipViolation {
     rule: OwnershipRuleId;
@@ -1523,7 +1524,319 @@ export function checkRuleL_ForbiddenLegacyPaths(
 }
 
 /**
- * Recursively scans target directory and enforces all P3 & Issue #92 ownership rules (A-L).
+ * Primitive component to data-slot mapping for Rule M.
+ */
+export const PRIMITIVE_COMPONENT_SLOTS: Record<string, string> = {
+    RadioGroup: "radio-group",
+    RadioGroupItem: "radio-group-item",
+    Button: "button",
+    NativeSelect: "native-select-wrapper",
+    Slider: "slider",
+    Tabs: "tabs",
+    TabsList: "tabs-list",
+    TabsTrigger: "tabs-trigger",
+};
+
+/**
+ * Hard-gate properties for primitive-feature-cascade-order (Issue #120 / Spec Hardening v2).
+ */
+export function isHardGateProperty(prop: string): boolean {
+    const p = prop.trim().toLowerCase();
+    if (
+        p.startsWith("font") ||
+        p === "line-height" ||
+        p === "letter-spacing" ||
+        p.startsWith("text") ||
+        p === "white-space" ||
+        p === "cursor" ||
+        p.startsWith("transition") ||
+        p.startsWith("animation") ||
+        p.startsWith("transform")
+    ) {
+        return false;
+    }
+
+    if (
+        p === "display" ||
+        p === "position" ||
+        p === "inset" ||
+        p === "top" ||
+        p === "right" ||
+        p === "bottom" ||
+        p === "left" ||
+        p === "float" ||
+        p === "clear" ||
+        p === "order" ||
+        p.startsWith("flex") ||
+        p.startsWith("align-") ||
+        p.startsWith("justify-") ||
+        p.startsWith("grid") ||
+        p.startsWith("place-") ||
+        p === "gap" ||
+        p === "row-gap" ||
+        p === "column-gap" ||
+        p === "width" ||
+        p === "height" ||
+        p === "min-width" ||
+        p === "min-height" ||
+        p === "max-width" ||
+        p === "max-height" ||
+        p.startsWith("padding") ||
+        p.startsWith("margin") ||
+        p === "overflow" ||
+        p === "overflow-x" ||
+        p === "overflow-y"
+    ) {
+        return true;
+    }
+
+    if (
+        p.startsWith("border") ||
+        p.startsWith("background") ||
+        p === "box-shadow" ||
+        p === "color" ||
+        p === "opacity"
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+interface CssRuleBlock {
+    selector: string;
+    body: string;
+    startIndex: number;
+}
+
+function extractCssRules(cssText: string): CssRuleBlock[] {
+    const rules: CssRuleBlock[] = [];
+    let i = 0;
+    while (i < cssText.length) {
+        const openBrace = cssText.indexOf("{", i);
+        if (openBrace === -1) break;
+        const selector = cssText.slice(i, openBrace).trim();
+
+        let depth = 1;
+        let j = openBrace + 1;
+        while (j < cssText.length && depth > 0) {
+            if (cssText[j] === "{") depth++;
+            else if (cssText[j] === "}") depth--;
+            j++;
+        }
+        const inner = cssText.slice(openBrace + 1, j - 1);
+
+        if (
+            selector.startsWith("@media") ||
+            selector.startsWith("@container") ||
+            selector.startsWith("@supports")
+        ) {
+            const nested = extractCssRules(inner);
+            for (const r of nested) {
+                rules.push({
+                    selector: r.selector,
+                    body: r.body,
+                    startIndex: openBrace + 1 + r.startIndex,
+                });
+            }
+        } else if (!selector.startsWith("@") && selector.length > 0) {
+            rules.push({
+                selector,
+                body: inner,
+                startIndex: i,
+            });
+        }
+        i = j;
+    }
+    return rules;
+}
+
+function isCascadeScopeFile(file: string, isCss: boolean): boolean {
+    const norm = file.replaceAll("\\", "/");
+    if (norm.includes("fixture")) return true;
+    if (isCss) {
+        return (
+            norm.endsWith("web/src/app/settings.css") ||
+            norm.endsWith("web/src/components/searcher/markdown.css") ||
+            norm.includes("web/src/features/ask/")
+        );
+    } else {
+        return (
+            norm.endsWith("web/src/app/SettingsPage.tsx") ||
+            norm.endsWith("web/src/app/AskPage.tsx") ||
+            norm.includes("web/src/features/ask/")
+        );
+    }
+}
+
+/**
+ * Rule M: primitive-feature-cascade-order (Issue #120)
+ * Feature class directly applied to primitive root overriding structural/visual properties
+ * must use slot-aware compound selector or data-variant.
+ */
+export function checkRuleM_PrimitiveFeatureCascadeOrder(
+    tsxFiles: { file: string; content: string }[],
+    cssFiles: { file: string; content: string }[],
+): OwnershipViolation[] {
+    const violations: OwnershipViolation[] = [];
+
+    // 1. Gather all class names attached to primitive components in scoped TSX files
+    const primitiveClasses = new Map<
+        string,
+        { component: string; slot: string; file: string }
+    >();
+
+    for (const tsx of tsxFiles) {
+        if (!isCascadeScopeFile(tsx.file, false)) continue;
+
+        const source = ts.createSourceFile(
+            tsx.file,
+            tsx.content,
+            ts.ScriptTarget.Latest,
+            true,
+            ts.ScriptKind.TSX,
+        );
+
+        visitNodes(source, (node) => {
+            if (
+                ts.isJsxOpeningElement(node) ||
+                ts.isJsxSelfClosingElement(node)
+            ) {
+                const tagName = node.tagName.getText(source);
+                if (tagName in PRIMITIVE_COMPONENT_SLOTS) {
+                    const slot = PRIMITIVE_COMPONENT_SLOTS[tagName];
+                    for (const prop of node.attributes.properties) {
+                        if (
+                            ts.isJsxAttribute(prop) &&
+                            (prop.name.getText(source) === "className" ||
+                                prop.name.getText(source) === "class")
+                        ) {
+                            const init = prop.initializer;
+                            const classNames: string[] = [];
+                            if (init && ts.isStringLiteral(init)) {
+                                classNames.push(
+                                    ...init.text.split(/\s+/).filter(Boolean),
+                                );
+                            } else if (
+                                init &&
+                                ts.isJsxExpression(init) &&
+                                init.expression
+                            ) {
+                                const expr = init.expression;
+                                if (
+                                    ts.isNoSubstitutionTemplateLiteral(expr)
+                                ) {
+                                    classNames.push(
+                                        ...expr.text.split(/\s+/).filter(
+                                            Boolean,
+                                        ),
+                                    );
+                                } else if (ts.isTemplateExpression(expr)) {
+                                    classNames.push(
+                                        ...expr.head.text.split(/\s+/).filter(
+                                            Boolean,
+                                        ),
+                                    );
+                                    for (const span of expr.templateSpans) {
+                                        classNames.push(
+                                            ...span.literal.text.split(/\s+/)
+                                                .filter(Boolean),
+                                        );
+                                    }
+                                } else {
+                                    const text = expr.getText(source);
+                                    const strMatches = text.matchAll(
+                                        /["']([a-zA-Z0-9_-]+)["']/g,
+                                    );
+                                    for (const m of strMatches) {
+                                        classNames.push(m[1]);
+                                    }
+                                }
+                            }
+                            for (const cls of classNames) {
+                                primitiveClasses.set(cls, {
+                                    component: tagName,
+                                    slot,
+                                    file: tsx.file,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Check scoped CSS files for rules targeting these classes without slot-aware compound selector
+    for (const css of cssFiles) {
+        if (!isCascadeScopeFile(css.file, true)) continue;
+
+        const clean = stripCssComments(css.content);
+        const rules = extractCssRules(clean);
+
+        for (const rule of rules) {
+            // Check if rule body contains hard-gated properties
+            const decls = rule.body.split(";");
+            let hasHardGate = false;
+            let triggeredProp = "";
+            for (const decl of decls) {
+                const colonIdx = decl.indexOf(":");
+                if (colonIdx > 0) {
+                    const prop = decl.slice(0, colonIdx).trim();
+                    if (isHardGateProperty(prop)) {
+                        hasHardGate = true;
+                        triggeredProp = prop;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasHardGate) continue;
+
+            // Check if any selector targets a primitive class without slot awareness
+            const selectorList = rule.selector.split(",").map((s) => s.trim());
+            for (const sel of selectorList) {
+                // If selector is slot-aware or variant-aware, it passes
+                if (
+                    sel.includes("[data-slot=") ||
+                    sel.includes("[data-variant=")
+                ) {
+                    continue;
+                }
+
+                // Extract all class names in this selector
+                const matches = sel.matchAll(/\.([a-zA-Z0-9_-]+)/g);
+                for (const m of matches) {
+                    const cls = m[1];
+                    if (primitiveClasses.has(cls)) {
+                        const target = primitiveClasses.get(cls)!;
+                        // Calculate line & column
+                        const line =
+                            css.content.slice(0, rule.startIndex).split(
+                                "\n",
+                            ).length;
+                        const column = 1;
+                        violations.push({
+                            rule: "primitive-feature-cascade-order",
+                            file: css.file.replaceAll("\\", "/"),
+                            line,
+                            column,
+                            message:
+                                `Feature class '.${cls}' applied directly to <${target.component}> root overrides structural/visual property '${triggeredProp}' without slot-aware compound selector (e.g. [data-slot="${target.slot}"].${cls}) or variant`,
+                            snippet: sel,
+                        });
+                        break; // one violation per rule is enough
+                    }
+                }
+            }
+        }
+    }
+
+    return violations;
+}
+
+/**
+ * Recursively scans target directory and enforces all P3 & Issue #92 & #120 ownership rules (A-M).
  * Ownership violations are absolute: NOT subject to baseline, allowances, or exceptions.
  */
 export async function scanOwnership(
@@ -1532,6 +1845,7 @@ export async function scanOwnership(
 ): Promise<OwnershipCheckResult> {
     const violations: OwnershipViolation[] = [];
     const cssFiles: { file: string; content: string }[] = [];
+    const tsxFiles: { file: string; content: string }[] = [];
     let totalFilesScanned = 0;
 
     // Locate tokens.css content
@@ -1595,6 +1909,7 @@ export async function scanOwnership(
                 ...checkRuleJ_HomeDocumentTokenPollution(relPath, content),
             );
         } else if (normPath.endsWith(".tsx")) {
+            tsxFiles.push({ file: relPath, content });
             violations.push(...checkRuleB_PageLayout(relPath, content));
             violations.push(...checkRuleD_NativeConfirm(relPath, content));
             violations.push(
@@ -1639,6 +1954,10 @@ export async function scanOwnership(
         );
     }
 
+    // Rule M: primitive-feature-cascade-order across scoped TSX and CSS
+    violations.push(
+        ...checkRuleM_PrimitiveFeatureCascadeOrder(tsxFiles, cssFiles),
+    );
     // Sort violations deterministically by file, line, column
     violations.sort((a, b) => {
         const fileCmp = a.file.localeCompare(b.file);
@@ -1660,6 +1979,7 @@ export async function scanOwnership(
         "home-document-token": [],
         "widgets-no-adhoc-window": [],
         "forbidden-legacy-path": [],
+        "primitive-feature-cascade-order": [],
     };
 
     for (const v of violations) {
@@ -1744,6 +2064,11 @@ export function formatOwnershipReport(result: OwnershipCheckResult): string {
     lines.push(
         `  Rule L (forbidden-legacy-path):         ${
             result.byRule["forbidden-legacy-path"].length
+        }`,
+    );
+    lines.push(
+        `  Rule M (primitive-feature-cascade-order): ${
+            result.byRule["primitive-feature-cascade-order"].length
         }`,
     );
     lines.push("------------------------------------------------------------");

@@ -13,7 +13,7 @@
     max-width: var(--layout-management-max);
 }
 .page-shell[data-archetype="workbench"] {
-    max-width: var(--layout-workbench-max);
+    max-width: var(--page-shell-workbench-max, var(--layout-workbench-max));
 }
 .app-shell:has(> .page-shell[data-archetype="workbench"]) {
     height: 100dvh;
