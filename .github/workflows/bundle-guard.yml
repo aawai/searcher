@@ -1,0 +1,68 @@
+name: Bundle Guard & Route Loading Contracts
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "deno.jsonc"
+            - "deno.lock"
+            - "web/**"
+            - "src/**"
+            - "scripts/check-bundle.ts"
+            - "scripts/bundle-budget.json"
+            - "scripts/bundle/**"
+            - ".github/workflows/bundle-guard.yml"
+    pull_request:
+        branches: [main]
+        paths:
+            - "deno.jsonc"
+            - "deno.lock"
+            - "web/**"
+            - "src/**"
+            - "scripts/check-bundle.ts"
+            - "scripts/bundle-budget.json"
+            - "scripts/bundle/**"
+            - ".github/workflows/bundle-guard.yml"
+
+permissions:
+    contents: read
+
+jobs:
+    bundle-audit:
+        name: Production Bundle Audit & Budget Gate
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Deno
+              uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.9.7
+
+            - name: Install dependencies
+              run: deno install
+
+            - name: Check bundle budget and forbidden dependencies (deno task check:bundle)
+              run: deno task check:bundle
+
+    bundle-loading-e2e:
+        name: Production E2E Bundle Loading & Route Isolation
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Deno
+              uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.9.7
+
+            - name: Install dependencies
+              run: deno install
+
+            - name: Install Chromium
+              run: npx --yes playwright@1.56.1 install --with-deps chromium
+
+            - name: Run bundle loading production E2E suite (deno task test:bundle)
+              run: deno task test:bundle

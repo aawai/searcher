@@ -27,27 +27,74 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
+        manifest: "manifest.json",
         rollupOptions: {
             output: {
-                manualChunks: {
-                    "react-vendor": [
-                        "react",
-                        "react-dom",
-                        "react-dom/client",
-                        "react-router-dom",
-                    ],
-                    "assistant-vendor": ["@assistant-ui/react"],
-                    "markdown-vendor": [
-                        "react-markdown",
-                        "remark-gfm",
-                        "rehype-sanitize",
-                    ],
-                    "ui-vendor": [
-                        "@base-ui/react",
-                        "@dnd-kit/core",
-                        "@dnd-kit/sortable",
-                        "lucide-react",
-                    ],
+                manualChunks(id) {
+                    if (!id.includes("/node_modules/")) return;
+                    const m = id.match(/\/node_modules\/(?:\.deno\/)?([^\/]+)/);
+                    if (!m) return;
+                    let pkg = m[1];
+                    if (pkg.startsWith("@") && pkg.includes("+")) {
+                        pkg = pkg.replace("+", "/");
+                    }
+                    const atIdx = pkg.indexOf("@", 1);
+                    if (atIdx !== -1) {
+                        pkg = pkg.slice(0, atIdx);
+                    }
+
+                    if (
+                        pkg === "react" ||
+                        pkg === "react-dom" ||
+                        pkg === "react-router" ||
+                        pkg === "react-router-dom"
+                    ) {
+                        return "react-vendor";
+                    }
+                    if (
+                        pkg.startsWith("@assistant-ui/") ||
+                        pkg === "assistant-stream" ||
+                        pkg === "assistant-cloud"
+                    ) {
+                        return "assistant-vendor";
+                    }
+                    if (
+                        pkg === "react-markdown" ||
+                        pkg.startsWith("remark-") ||
+                        pkg.startsWith("rehype-") ||
+                        pkg.startsWith("micromark") ||
+                        pkg.startsWith("mdast-") ||
+                        pkg.startsWith("unist-") ||
+                        pkg.startsWith("hast-") ||
+                        pkg.startsWith("vfile") ||
+                        pkg === "devlop" ||
+                        pkg === "trim-lines" ||
+                        pkg === "trough" ||
+                        pkg === "unified" ||
+                        pkg === "bail" ||
+                        pkg === "is-plain-obj" ||
+                        pkg === "extend" ||
+                        pkg === "ccount" ||
+                        pkg === "escape-string-regexp" ||
+                        pkg === "markdown-table" ||
+                        pkg === "longest-streak" ||
+                        pkg === "zwitch" ||
+                        pkg === "decode-named-character-reference" ||
+                        pkg === "character-entities" ||
+                        pkg === "comma-separated-tokens" ||
+                        pkg === "space-separated-tokens" ||
+                        pkg === "property-information" ||
+                        pkg === "html-url-attributes"
+                    ) {
+                        return "markdown-vendor";
+                    }
+                    if (
+                        pkg === "@base-ui/react" ||
+                        pkg.startsWith("@dnd-kit/") ||
+                        pkg === "lucide-react"
+                    ) {
+                        return "ui-vendor";
+                    }
                 },
             },
         },

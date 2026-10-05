@@ -1,0 +1,10 @@
+{
+    "baselineSha": "1d30c92b61676f5447d06e9e0cdbfb0f033399d9",
+    "baselineInitialRawBytes": 1463817,
+    "baselineInitialGzipBytes": 439373,
+    "maxInitialRawBytes": 1024000,
+    "maxInitialGzipBytes": 307200,
+    "maxEntryChunkRawBytes": 350000,
+    "maxEntryChunkGzipBytes": 105000,
+    "minGzipReductionRatio": 0.30
+}

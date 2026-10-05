@@ -6,7 +6,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { NoteMarkdown } from "./NoteMarkdown.tsx";
+import { NoteMarkdownView } from "./NoteMarkdownLoader.tsx";
 import { NoteMarkdownToolbar } from "./NoteMarkdownToolbar.tsx";
 import {
     applyMarkdownCommand,
@@ -42,7 +42,7 @@ type Version = {
 };
 const markdown = (text: string) => (
     <div className="markdown">
-        <NoteMarkdown body={text} />
+        <NoteMarkdownView body={text} />
     </div>
 );
 export function NoteEditor(

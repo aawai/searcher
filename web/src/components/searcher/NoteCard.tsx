@@ -8,7 +8,12 @@ import {
     Trash2,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { NoteMarkdown } from "./NoteMarkdown.tsx";
+import {
+    NoteMarkdownView,
+    preloadNoteMarkdown,
+} from "./NoteMarkdownLoader.tsx";
+
+export { preloadNoteMarkdown };
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -249,7 +254,7 @@ export function NoteCard(
             {!isCompact && (
                 <div className="note-preview markdown">
                     {note.body?.trim()
-                        ? <NoteMarkdown body={note.body} />
+                        ? <NoteMarkdownView body={note.body} />
                         : (
                             <span className="note-placeholder">
                                 写下你的想法…

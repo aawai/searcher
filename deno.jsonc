@@ -14,7 +14,9 @@
         "test:routing": "deno task build && NODE_ENV=test deno test -A web/e2e/navigation.test.ts",
         "test:workspace": "deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/notes-workspace.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts web/e2e/workspace-contract.test.ts web/e2e/workspace-matrix.test.ts",
         "test:wallpaper": "deno task build && NODE_ENV=test deno test -A web/e2e/wallpaper.test.ts",
-        "check:ui": "deno run -A scripts/check-ui.ts"
+        "test:bundle": "deno task build && NODE_ENV=test deno test -A web/e2e/bundle-loading.test.ts",
+        "check:ui": "deno run -A scripts/check-ui.ts",
+        "check:bundle": "deno task build && deno run --allow-read --allow-env scripts/check-bundle.ts"
     },
     "imports": {
         "@internal/": "./src/internal/",

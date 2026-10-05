@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+- 路由级动态切分、首屏 JS 瘦身与 Bundle Guard 门禁（Issue #117）：
+  - 路由级全量动态懒加载：首页以外所有路由（Ask、Settings、Admin、DesignLab、Auth、Account、Trash、NotFound）转换为动态切分
+    chunk，消除初始静态依赖；
+  - 首页初始静态 JS 大幅缩减：初始 JS 由 1463.8 kB raw / 439.4 kB gzip 下降至
+    778.5 kB raw (760.3 KiB) / 242.7 kB (237.0 KiB) gzip，gzip 相对基线降幅达
+    44.8%（优于门禁要求的 30% 目标）；
+  - 隔离 Ask 业务与 Markdown 运行时：`@assistant-ui/react` 与 Markdown runtime
+    移出首页初始加载链，便签卡片与编辑器采用动态按需加载；
+  - Motion Inspector 诊断隔离：WallpaperMotionInspector 移出生产初始闭包，仅在
+    `?motion_inspector` 或诊断标记启用时按需动态注入；
+  - 路由容错与加载体验：新增 RouteErrorBoundary 与轻量无障碍
+    RouteLoadingFallback，动态 chunk 404 或网络故障时保留 App Shell
+    并提供明确可恢复操作；
+  - CI 与本地构建门禁：新增 `scripts/check-bundle.ts` 与
+    `scripts/bundle-budget.json`，增加 `deno task check:bundle` 与
+    `bundle-guard.yml` 工作流，引入生产环境 E2E bundle
+    加载与路由隔离回归测试套件。
 - 壁纸 Temporal Motion System 与设置页外观重构（Issue #116）：
   - 外观设置页升级为 Preview-first 的 Wallpaper Stage 视觉效果工作区，大屏采用
     16:9 响应式比例（最大 640px），移动端采用 16:10
