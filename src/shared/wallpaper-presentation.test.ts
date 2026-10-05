@@ -31,6 +31,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
     // 1. Readability stages -> exact effective mask
     for (
         const [id, expectedMask] of [
+            ["none", 0],
             ["clear", 0.12],
             ["balanced", 0.24],
             ["quiet", 0.36],
@@ -373,7 +374,14 @@ Deno.test("wallpaper-presentation: migrateLegacyWallpaperPresentation nearest vi
         migrateLegacyWallpaperPresentation({ mask: 0.15 }).readability,
         "clear",
     );
-
+    assertEquals(
+        migrateLegacyWallpaperPresentation({ mask: 0 }).readability,
+        "clear",
+    );
+    assertEquals(
+        migrateLegacyWallpaperPresentation({ readability: "none" }).readability,
+        "none",
+    );
     // 2. blur -> softness: <=1 none, <=3.5 subtle, <=7 soft, >7 hazy
     assertEquals(
         migrateLegacyWallpaperPresentation({ wallpaperBlur: 0 }).softness,
@@ -1027,6 +1035,7 @@ Deno.test("wallpaper-presentation: calculateWallpaperOverscan drift and zoom der
 
 Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Budget v2 invariants", () => {
     const readabilities: WallpaperReadability[] = [
+        "none",
         "clear",
         "balanced",
         "quiet",
@@ -1190,8 +1199,18 @@ Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Bud
                                         true,
                                     );
                                 }
-
-                                // - Canvas (no mask) also <= composite limit
+                                if (
+                                    readability === "none" &&
+                                    substrate !== "canvas"
+                                ) {
+                                    assertEquals(
+                                        contrib.afterMask <=
+                                            GLOBAL_MOTION_BUDGET
+                                                    .maxAmbientCompositeContribution +
+                                                0.0001,
+                                        true,
+                                    );
+                                }
                                 if (substrate === "canvas") {
                                     assertEquals(
                                         contrib.composited <=
@@ -1208,8 +1227,8 @@ Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Bud
             }
         }
     }
-    // 4 * 4 * 3 * 4 * 4 * 3 * 2 = 4608 permutations checked
-    assertEquals(count, 4608);
+    // 5 * 4 * 3 * 4 * 4 * 3 * 2 = 5760 permutations checked
+    assertEquals(count, 5760);
 
     // Timing invariants
     assertEquals(

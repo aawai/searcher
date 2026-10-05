@@ -120,7 +120,11 @@ export function SettingsPresetSlider<T extends string = string>({
                 onValueCommitted={handleValueCommitted}
                 className="settings-preset-slider__slider w-full"
             />
-            <div className="settings-preset-slider__marks" aria-hidden="true">
+            <div
+                className="settings-preset-slider__marks"
+                data-stage-count={stages.length}
+                aria-hidden="true"
+            >
                 {stages.map((stage, idx) => (
                     <button
                         key={stage.id}

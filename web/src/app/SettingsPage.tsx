@@ -85,6 +85,7 @@ import {
     useWallpaperEnvironment,
     WallpaperSurface,
 } from "../components/wallpaper/WallpaperSurface.tsx";
+import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
@@ -1134,7 +1135,10 @@ export function SettingsPage() {
                                                     className="wallpaper-current"
                                                     aria-label="当前壁纸"
                                                 >
-                                                    <div className="wallpaper-current__preview">
+                                                    <div
+                                                        className="wallpaper-stage wallpaper-current__preview"
+                                                        data-testid="wallpaper-stage"
+                                                    >
                                                         <WallpaperSurface
                                                             source={appearance
                                                                 .wallpaper}
@@ -1142,6 +1146,7 @@ export function SettingsPage() {
                                                             embedded
                                                             testId="wallpaper-current-preview"
                                                         />
+                                                        <WallpaperStageContextPreview />
                                                     </div>
                                                     <div className="wallpaper-current__details">
                                                         <span className="settings-row-title">
@@ -1501,7 +1506,15 @@ export function SettingsPage() {
                                                     动态背景
                                                 </span>
                                                 <p className="settings-row-desc">
-                                                    平缓微动效果，采用符合视觉舒适预算的缓动轨迹
+                                                    {activeMotion === "ambient"
+                                                        ? "柔和光影在壁纸上缓慢流动"
+                                                        : activeMotion ===
+                                                                "drift"
+                                                        ? "壁纸沿画面缓慢移动"
+                                                        : activeMotion ===
+                                                                "zoom"
+                                                        ? "壁纸以镜头感缓慢推进"
+                                                        : "选择背景动态模式，为桌面增添适度生命力"}
                                                 </p>
                                                 {reducedMotion &&
                                                     isMotionActive && (
@@ -1573,33 +1586,15 @@ export function SettingsPage() {
                                                         </span>
                                                     </div>
                                                     <p className="settings-row-desc">
-                                                        控制动态效果的视觉幅度
+                                                        调整背景运动的视觉幅度
                                                     </p>
                                                 </div>
-                                                <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                    <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                        {motionLevelText}
-                                                    </div>
-                                                    <SettingsPresetSlider
-                                                        stages={WALLPAPER_MOTION_LEVEL_STAGES}
+                                                <div className="settings-row-control">
+                                                    <RadioGroup
                                                         value={activeMotionLevel}
-                                                        onChange={(v) => {
-                                                            if (hasWallpaper) {
-                                                                setDraftPresentation(
-                                                                    (prev) => ({
-                                                                        ...(prev ??
-                                                                            currentPresentation),
-                                                                        motionLevel:
-                                                                            v as WallpaperMotionLevel,
-                                                                    }),
-                                                                );
-                                                            } else {
-                                                                setDraftCanvasMotionLevel(
-                                                                    v as WallpaperMotionLevel,
-                                                                );
-                                                            }
-                                                        }}
-                                                        onCommit={(v) => {
+                                                        onValueChange={(v) => {
+                                                            const nextLevel =
+                                                                v as WallpaperMotionLevel;
                                                             if (hasWallpaper) {
                                                                 setDraftPresentation(
                                                                     null,
@@ -1607,7 +1602,7 @@ export function SettingsPage() {
                                                                 updatePresentation(
                                                                     {
                                                                         motionLevel:
-                                                                            v as WallpaperMotionLevel,
+                                                                            nextLevel,
                                                                     },
                                                                 );
                                                             } else {
@@ -1617,14 +1612,29 @@ export function SettingsPage() {
                                                                 void setAppearance(
                                                                     {
                                                                         canvasMotionLevel:
-                                                                            v as WallpaperMotionLevel,
+                                                                            nextLevel,
                                                                     },
                                                                 );
                                                             }
                                                         }}
                                                         aria-label="动态程度"
-                                                        testId="wallpaper-motion-level-slider"
-                                                    />
+                                                        data-testid="wallpaper-motion-level-group"
+                                                    >
+                                                        {WALLPAPER_MOTION_LEVEL_STAGES
+                                                            .map((stage) => (
+                                                                <RadioGroupItem
+                                                                    key={stage
+                                                                        .id}
+                                                                    value={stage
+                                                                        .id}
+                                                                    aria-label={stage
+                                                                        .label}
+                                                                >
+                                                                    {stage
+                                                                        .label}
+                                                                </RadioGroupItem>
+                                                            ))}
+                                                    </RadioGroup>
                                                 </div>
                                             </div>
                                         )}

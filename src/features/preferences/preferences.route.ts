@@ -115,7 +115,7 @@ const WallpaperPresentations = v.optional(
                     }),
                 ),
                 readability: v.optional(
-                    v.picklist(["clear", "balanced", "quiet", "focus"]),
+                    v.picklist(["none", "clear", "balanced", "quiet", "focus"]),
                 ),
                 softness: v.optional(
                     v.picklist(["none", "subtle", "soft", "hazy"]),

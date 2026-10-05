@@ -133,14 +133,6 @@ a {
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask);
 }
-.wallpaper-surface[data-motion="drift"] .wallpaper-surface__image {
-    animation: wallpaper-drift var(--wallpaper-drift-duration)
-        var(--wallpaper-drift-easing) infinite;
-}
-.wallpaper-surface[data-motion="zoom"] .wallpaper-surface__image {
-    animation: wallpaper-zoom var(--wallpaper-zoom-duration)
-        var(--wallpaper-zoom-easing) infinite;
-}
 @keyframes wallpaper-ambient-a {
     0%,
     100% {
@@ -177,28 +169,6 @@ a {
             (1 - var(--wallpaper-ambient-opacity-floor)) * 0.35);
         transform: translate(var(--wallpaper-ambient-travel), calc(-0.5 *
             var(--wallpaper-ambient-travel))) scale(1);
-    }
-}
-@keyframes wallpaper-drift {
-    0%,
-    100% {
-        transform: translate(calc(-1 * var(--wallpaper-drift-x)),
-            var(--wallpaper-drift-y));
-    }
-    33% {
-        transform: translate(var(--wallpaper-drift-x), 0);
-    }
-    66% {
-        transform: translate(0, calc(-1 * var(--wallpaper-drift-y)));
-    }
-}
-@keyframes wallpaper-zoom {
-    0%,
-    100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(var(--wallpaper-motion-scale));
     }
 }
 .topbar {

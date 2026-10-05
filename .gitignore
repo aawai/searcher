@@ -7,3 +7,4 @@ web/.vite/
 coverage/
 *.tmp
 .DS_Store
+artifacts/

@@ -6,6 +6,7 @@ import {
 } from "./SettingsPresetSlider.tsx";
 
 const TEST_STAGES: readonly PresetSliderStage<string>[] = [
+    { id: "none", label: "无", detail: "0%" },
     { id: "clear", label: "清透", detail: "12%" },
     { id: "balanced", label: "均衡", detail: "24%" },
     { id: "quiet", label: "沉静", detail: "36%" },
@@ -28,12 +29,16 @@ Deno.test("SettingsPresetSlider: renders range input with semantic snap points a
     assertEquals(inputs.length, 1);
     const input = inputs[0];
     assertEquals(input.includes('min="0"'), true);
-    assertEquals(input.includes('max="3"'), true);
+    assertEquals(input.includes('max="4"'), true);
     assertEquals(input.includes('step="1"'), true);
-    assertEquals(input.includes('aria-valuenow="1"'), true);
+    assertEquals(input.includes('aria-valuenow="2"'), true);
     assertEquals(input.includes('aria-valuetext="均衡 · 24%"'), true);
+    assertEquals(html.includes('data-stage-count="5"'), true);
+    assertEquals(
+        html.includes('class="settings-preset-slider__mark" style='),
+        false,
+    );
 });
-
 Deno.test("SettingsPresetSlider: stages without detail format aria-valuetext with label only", () => {
     const motionStages: readonly PresetSliderStage<string>[] = [
         { id: "subtle", label: "轻微" },
