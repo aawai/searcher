@@ -130,18 +130,19 @@ function Choices<T extends string>(
     let input: ReactNode;
     if (control === "select") {
         input = (
-            <NativeSelect
-                value={value}
-                onChange={(e) => select(e.target.value as T)}
-                className="settings-choice-select"
-                aria-label={title}
-            >
-                {values.map(([id, label]) => (
-                    <NativeSelectOption key={id} value={id}>
-                        {label}
-                    </NativeSelectOption>
-                ))}
-            </NativeSelect>
+            <div className="settings-choice-select">
+                <NativeSelect
+                    value={value}
+                    onChange={(e) => select(e.target.value as T)}
+                    aria-label={title}
+                >
+                    {values.map(([id, label]) => (
+                        <NativeSelectOption key={id} value={id}>
+                            {label}
+                        </NativeSelectOption>
+                    ))}
+                </NativeSelect>
+            </div>
         );
     } else if (control === "segmented") {
         input = (
@@ -156,9 +157,9 @@ function Choices<T extends string>(
     } else {
         input = (
             <RadioGroup
+                variant="swatch"
                 value={value}
                 onValueChange={(next) => select(next as T)}
-                className="settings-swatch-grid"
                 aria-label={title}
             >
                 {values.map(([id, label]) => (
@@ -166,7 +167,6 @@ function Choices<T extends string>(
                         key={id}
                         value={id}
                         aria-label={label}
-                        className="settings-swatch-option"
                     >
                         <span
                             className="settings-swatch-color"
@@ -1591,6 +1591,7 @@ export function SettingsPage() {
                                                 </div>
                                                 <div className="settings-row-control">
                                                     <RadioGroup
+                                                        variant="segmented"
                                                         value={activeMotionLevel}
                                                         onValueChange={(v) => {
                                                             const nextLevel =

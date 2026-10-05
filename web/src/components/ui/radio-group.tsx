@@ -1,19 +1,27 @@
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { cn } from "../../lib/utils.ts";
+export type RadioGroupVariant =
+    | "default"
+    | "swatch"
+    | "segmented";
+
+export interface RadioGroupProps extends RadioGroupPrimitive.Props {
+    variant?: RadioGroupVariant;
+}
 
 function RadioGroup(
-    { className, ...props }: RadioGroupPrimitive.Props,
+    { className, variant = "default", ...props }: RadioGroupProps,
 ) {
     return (
         <RadioGroupPrimitive
             data-slot="radio-group"
+            data-variant={variant}
             className={cn("radio-group", className)}
             {...props}
         />
     );
 }
-
 function RadioGroupItem(
     { className, children, ...props }: RadioPrimitive.Root.Props,
 ) {

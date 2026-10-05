@@ -13,6 +13,7 @@ import {
     checkRuleJ_HomeDocumentTokenPollution,
     checkRuleK_WidgetsNoAdhocWindow,
     checkRuleL_ForbiddenLegacyPaths,
+    checkRuleM_PrimitiveFeatureCascadeOrder,
     formatOwnershipReport,
     scanOwnership,
 } from "./ownership.ts";
@@ -1551,4 +1552,108 @@ Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 vi
     } finally {
         await Deno.remove(cleanDir, { recursive: true });
     }
+});
+
+Deno.test("Rule M: primitive-feature-cascade-order - denies bare class overriding structural property on RadioGroup", () => {
+    const tsx = [{
+        file: "web/src/app/SettingsPage.tsx",
+        content: `
+export function Settings() {
+    return <RadioGroup className="settings-example" />;
+}
+`,
+    }];
+    const css = [{
+        file: "web/src/app/settings.css",
+        content: `
+.settings-example {
+    display: grid;
+}
+`,
+    }];
+
+    const violations = checkRuleM_PrimitiveFeatureCascadeOrder(tsx, css);
+    assertEquals(violations.length, 1);
+    assertEquals(violations[0].rule, "primitive-feature-cascade-order");
+    assertEquals(violations[0].snippet, ".settings-example");
+});
+
+Deno.test("Rule M: primitive-feature-cascade-order - allows slot-aware compound selector on RadioGroup", () => {
+    const tsx = [{
+        file: "web/src/app/SettingsPage.tsx",
+        content: `
+export function Settings() {
+    return <RadioGroup className="settings-example" />;
+}
+`,
+    }];
+    const css = [{
+        file: "web/src/app/settings.css",
+        content: `
+[data-slot="radio-group"].settings-example {
+    display: grid;
+}
+`,
+    }];
+
+    const violations = checkRuleM_PrimitiveFeatureCascadeOrder(tsx, css);
+    assertEquals(violations.length, 0);
+});
+
+Deno.test("Rule M: primitive-feature-cascade-order - denies bare class overriding button styles and allows slot-aware", () => {
+    const tsx = [{
+        file: "web/src/features/ask/SearcherComposer.tsx",
+        content: `
+export function Composer() {
+    return (
+        <div>
+            <Button className="ask-btn-invalid" />
+            <Button className="ask-btn-valid" />
+        </div>
+    );
+}
+`,
+    }];
+    const css = [{
+        file: "web/src/features/ask/ask-workspace.css",
+        content: `
+.ask-btn-invalid {
+    background: var(--surface);
+    padding: 8px;
+}
+[data-slot="button"].ask-btn-valid {
+    background: var(--surface);
+    padding: 8px;
+}
+`,
+    }];
+
+    const violations = checkRuleM_PrimitiveFeatureCascadeOrder(tsx, css);
+    assertEquals(violations.length, 1);
+    assertEquals(violations[0].rule, "primitive-feature-cascade-order");
+    assertEquals(violations[0].snippet, ".ask-btn-invalid");
+});
+
+Deno.test("Rule M: primitive-feature-cascade-order - ignores non-hard-gate properties like text/line-height/cursor", () => {
+    const tsx = [{
+        file: "web/src/features/ask/SearcherComposer.tsx",
+        content: `
+export function Composer() {
+    return <Button className="ask-btn-typography" />;
+}
+`,
+    }];
+    const css = [{
+        file: "web/src/features/ask/ask-workspace.css",
+        content: `
+.ask-btn-typography {
+    cursor: pointer;
+    line-height: 1.5;
+    text-align: left;
+}
+`,
+    }];
+
+    const violations = checkRuleM_PrimitiveFeatureCascadeOrder(tsx, css);
+    assertEquals(violations.length, 0);
 });

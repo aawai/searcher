@@ -39,13 +39,54 @@
 - [ ] 组合覆盖与重跑策略遵循
       [仓库指南](AGENTS.md#验证范围与重复执行)，不替代既有验证阶梯及测试、typecheck、lint、format
       和 UI 门禁；full suite 按风险和仓库要求执行。
-- [ ] check:ui 的 A–L ownership rules 全部通过，无 baseline allowance 或 prefix
+- [ ] check:ui 的 A–M ownership rules 全部通过，无 baseline allowance 或 prefix
       通配放宽。
 - [ ] deno task check:ui；baseline 只删除迁移旧项，不增加 allowlist 债务。
 - [ ] deno task build 与 affected focused tests；路由变更用 deno task
       test:routing。
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
+
+## Issue #120 Route CSS Cascade 稳定性与 Ask 大屏响应式几何重标验收（2026-10-06）
+
+- [x] RadioGroup Canonical Variants 与结构所有权规范：
+  - `web/src/components/ui/radio-group.tsx` 引入
+    `RadioGroupVariant`（`default`、`swatch`、`segmented`）；
+  - Settings 外观页强调色使用 `variant="swatch"`，1440px 桌面端稳定呈现 2
+    列且中文标签保持单行不折行（`white-space: nowrap`）；
+  - Settings 动态背景程度使用 `variant="segmented"`，四档等宽单选控件，隐藏
+    radio circle 并保留原生无障碍键盘行为；
+  - 移除 `settings.css` 中冗余的 `settings-swatch-grid` 与
+    `settings-swatch-option` 结构层重写；
+  - `NativeSelect` 采用 `.settings-choice-select` 包装层决定宽度，内层
+    NativeSelect 保持 100% 撑满，消除样式冲突。
+- [x] Ask 大屏工作区响应式几何重标：
+  - 新增设计系统 layout
+    tokens：`--layout-ask-workbench-max: clamp(1280px, 82vw, 1760px)`、`--layout-ask-message-max: clamp(900px, 55vw, 1040px)`、`--layout-ask-composer-max: clamp(760px, 50vw, 920px)`；
+  - 共享 `PageShell` 引入 `--page-shell-workbench-max` 局部 override
+    机制，AskPage 挂载 `.ask-page-shell` 局部注入；
+  - 1440×900 视口：workbench 1280px，sidebar 260px，reading lane
+    900px，assistant lane 900px，user lane 760px，composer 760px；
+  - 2048×1152 视口：workbench 1679px，reading lane 1040px，assistant lane
+    1040px，user lane 920px，composer 920px；
+  - 移除 `.ask-assistant-body pre` 负外边距，代码块与表格严格约束于 100%
+    阅读列内；
+  - 输入框发送按钮完全包含于 surface
+    容器内部（`tools-right flex-shrink: 0`），触控尺寸 >= 44×44px。
+- [x] UI Guard 规则 M（`primitive-feature-cascade-order`）：
+  - 硬门禁覆盖
+    `SettingsPage.tsx`、`settings.css`、`AskPage.tsx`、`web/src/features/ask/**`
+    及 `markdown.css`；
+  - 阻断裸 feature class 竞争 primitive 基础属性，要求显式 variant 或 slot-aware
+    compound selector；
+  - 0 violations 全量通过，包含正反 fixture 自动化单元测试。
+- [x] 生产环境 E2E 稳定性与可视证据：
+  - `web/e2e/route-style-stability.test.ts` 验证 1440×900、2048×1152 与 390×844
+    视口；
+  - 同 document SPA 路由序列导航断言 `performance.timeOrigin` 恒定，验证
+    computed style 与加载顺序无关；
+  - 生成 CI 可视证据至 `artifacts/route-style/`（含全部 7 张截图与
+    `route-style-metrics.json`）。
 
 ## Issue #112 壁纸预设与动效系统重构验收（2026-10-04）
 

@@ -66,3 +66,11 @@ jobs:
 
             - name: Run bundle loading production E2E suite (deno task test:bundle)
               run: deno task test:bundle
+
+            - name: Upload route style visual artifacts
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: route-style-artifacts
+                  path: artifacts/route-style/
+                  retention-days: 14
