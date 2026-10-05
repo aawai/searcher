@@ -8,6 +8,13 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import type { PreferencesDto } from "../../src/shared/contracts.ts";
+import {
+    GLOBAL_MOTION_BUDGET,
+    WALLPAPER_DRIFT_PARAMS,
+    WALLPAPER_READABILITY_MASKS,
+    WALLPAPER_ZOOM_PARAMS,
+    type WallpaperMotionLevel,
+} from "../../src/shared/wallpaper-presentation.ts";
 
 Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -91,9 +98,157 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         assert(source.startsWith("/api/wallpaper/"));
         return source;
     }
+    function toBase64(bytes: Uint8Array): string {
+        let binary = "";
+        const chunkSize = 8192;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode(
+                ...bytes.subarray(i, Math.min(i + chunkSize, bytes.length)),
+            );
+        }
+        return btoa(binary);
+    }
+    async function stableScreenshot(
+        selector = '[data-testid="home-wallpaper-surface"]',
+    ): Promise<Uint8Array> {
+        return await page.locator(selector).screenshot();
+    }
+    async function ambientPhase(
+        phase: number,
+        selector = "home-wallpaper-surface",
+    ) {
+        const progress = await page.getByTestId(selector).evaluate(
+            async (el, phase) => {
+                const progress: number[] = [];
+                for (const name of ["a", "b"]) {
+                    const field = el.querySelector(
+                        ".wallpaper__ambient-field-" + name,
+                    )!;
+                    const animation = field.getAnimations()[0];
+                    if (!animation?.effect) {
+                        throw new Error("Missing ambient animation");
+                    }
+                    const timing = animation.effect.getTiming();
+                    animation.pause();
+                    // Use the second iteration to avoid negative local time for B's delay.
+                    animation.currentTime =
+                        (1 + phase) * Number(timing.duration) +
+                        Number(timing.delay);
+                    await animation.ready;
+                    progress.push(
+                        animation.effect.getComputedTiming().progress!,
+                    );
+                }
+                const { promise, resolve } = Promise.withResolvers<void>();
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => resolve())
+                );
+                await promise;
+                return progress;
+            },
+            phase,
+        );
+        for (const actual of progress) {
+            assert(
+                Math.abs(actual - phase) < 1e-6,
+                `Expected phase ${phase}, got ${actual}`,
+            );
+        }
+    }
+    async function framePixels(bytes: Uint8Array) {
+        return await page.evaluate(async (encoded) => {
+            const image = new Image();
+            image.src = "data:image/png;base64," + encoded;
+            await image.decode();
+            const canvas = document.createElement("canvas");
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const ctx = canvas.getContext("2d")!;
+            ctx.drawImage(image, 0, 0);
+            const { data } = ctx.getImageData(0, 0, image.width, image.height);
+            let luminance = 0;
+            let maximum = 0;
+            const roi: number[] = [];
+            // Frozen Phase 0B ROI: top edge, x=0.42 (21/50), w=1/18, h=4/45.
+            const left = Math.round(image.width * 21 / 50);
+            const right = Math.round(image.width * (21 / 50 + 1 / 18));
+            const bottom = Math.round(image.height * 4 / 45);
+            for (let y = 0; y < image.height; y++) {
+                for (let x = 0; x < image.width; x++) {
+                    const i = (y * image.width + x) * 4;
+                    luminance += .2126 * data[i] + .7152 * data[i + 1] +
+                        .0722 * data[i + 2];
+                    maximum = Math.max(maximum, data[i] / 255);
+                    if (y < bottom && x >= left && x < right) {
+                        roi.push(data[i], data[i + 1], data[i + 2]);
+                    }
+                }
+            }
+            return {
+                luminance: luminance / (image.width * image.height),
+                maximum,
+                roi,
+            };
+        }, toBase64(bytes));
+    }
+    async function renderMotion(
+        level: WallpaperMotionLevel,
+        readability: "clear" | "balanced" = "balanced",
+        targetSource?: string,
+    ) {
+        const current = await prefs();
+        const source = targetSource ?? current.backgroundImage;
+        assert(source);
+        const response = await context.request.patch(
+            origin + "/api/preferences",
+            {
+                headers: { Origin: origin },
+                data: {
+                    theme: "light",
+                    style: "zen",
+                    accent: "blue",
+                    backgroundImage: source,
+                    wallpaperPresentations: {
+                        ...current.wallpaperPresentations,
+                        [source]: {
+                            ...current.wallpaperPresentations[source],
+                            motion: "ambient",
+                            motionLevel: level,
+                            readability,
+                            softness: "none",
+                            tone: "natural",
+                        },
+                    },
+                },
+            },
+        );
+        assertEquals(response.status(), 200);
+        await page.goto(origin + "/");
+        await page.waitForFunction(({ level, source }) => {
+            const root = document.querySelector(
+                '[data-testid="home-wallpaper-surface"]',
+            );
+            const image = root?.querySelector(".wallpaper-surface__image");
+            return root?.getAttribute("data-motion-level") === level && image &&
+                getComputedStyle(image).backgroundImage.includes(source);
+        }, { level, source });
+        await page.evaluate(async () => {
+            await Promise.all(
+                document.getAnimations().filter((a) =>
+                    a instanceof CSSTransition
+                ).map((a) => a.finished),
+            );
+            const image = new Image();
+            const css = getComputedStyle(
+                document.querySelector(".wallpaper-surface__image")!,
+            ).backgroundImage;
+            image.src = css.slice(5, -2);
+            await image.decode();
+        });
+    }
     async function subjectVisible(target: Page, selector: string) {
         const bytes = await target.locator(selector).screenshot();
-        const base64 = btoa(String.fromCharCode(...bytes));
+        const base64 = toBase64(bytes);
         const count = await target.evaluate(async (encoded) => {
             const image = new Image();
             image.src = "data:image/png;base64," + encoded;
@@ -638,16 +793,39 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await page.unroute("**/api/preferences");
         },
     );
-    await t.step("reduced-motion disables background animations", async () => {
-        await page.goto(origin + "/");
-        assertEquals(
-            await page.locator(".wallpaper-surface__image").evaluate((el) =>
-                getComputedStyle(el).animationName
-            ),
-            "none",
-        );
-        assertEquals(await page.locator(".wallpaper__ripple").count(), 0);
-    });
+    await t.step(
+        "reduced-motion disables background animations and displays settings notice",
+        async () => {
+            await page.goto(origin + "/");
+            assertEquals(
+                await page.locator(".wallpaper-surface__image").evaluate((el) =>
+                    getComputedStyle(el).animationName
+                ),
+                "none",
+            );
+            // Navigate to Settings while motion is non-off and verify reduced motion notice
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "环境光",
+                },
+            ).click();
+            const notice = page.getByTestId("wallpaper-reduced-motion-notice");
+            await notice.waitFor();
+            const text = await notice.textContent();
+            assert(
+                text?.includes("系统已启用“减少动态效果”，动态预览已静止。"),
+                `Expected notice to explain reduced motion, got: ${text}`,
+            );
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "关闭",
+                },
+            ).click();
+        },
+    );
     await t.step(
         "anonymous gradient and local upload survive reload without touching cloud preferences",
         async () => {
@@ -1673,6 +1851,872 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 el.style.getPropertyValue("--wallpaper-ambient-color")
             );
             assertStringIncludes(ambColor, "neutral");
+        },
+    );
+    await t.step(
+        "Settings live preview plays motion, immediately updates CSS variables without reload, and prevents PATCH flooding during drag",
+        async () => {
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+            await page.goto(origin + "/settings/appearance");
+            const testSource = await upload(0.5);
+            await waitCurrent(testSource);
+            const preview = page.getByTestId("wallpaper-current-preview");
+            await preview.waitFor();
+
+            // Set motion to ambient
+            await page.getByTestId("wallpaper-motion-group").getByRole(
+                "radio",
+                {
+                    name: "环境光",
+                },
+            ).click();
+
+            // Verify live preview attributes and active animation
+            assertEquals(
+                await preview.getAttribute("data-motion"),
+                "ambient",
+                "Current preview must have data-motion='ambient'",
+            );
+            assertEquals(
+                await preview.getAttribute("data-substrate"),
+                "image",
+                "Uploaded wallpaper must have data-substrate='image'",
+            );
+
+            // Verify animation is actually present and not disabled by motionOverride='off'
+            const hasActiveAnimation = await preview.evaluate((el) => {
+                const fieldA = el.querySelector(".wallpaper__ambient-field-a");
+                if (!fieldA) return false;
+                const style = getComputedStyle(fieldA);
+                return style.animationName !== "none" &&
+                    style.animationName !== "";
+            });
+            assert(
+                hasActiveAnimation,
+                "Current preview ambient field must have active animation running",
+            );
+
+            // Focus motion level slider and test immediate live preview CSS updates
+            const motionLevelSlider = page.getByTestId(
+                "wallpaper-motion-level-slider",
+            );
+            const sliderThumb = motionLevelSlider.getByRole("slider");
+            await sliderThumb.focus();
+
+            // Press End -> pronounced (level 3)
+            await sliderThumb.press("End");
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[data-testid="wallpaper-current-preview"]',
+                )?.getAttribute("data-motion-level") === "pronounced"
+            );
+            const high = await preview.evaluate((el) => ({
+                mix: parseFloat(
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-a"),
+                ),
+                travel: parseFloat(
+                    el.style.getPropertyValue("--wallpaper-ambient-travel"),
+                ),
+                floor: parseFloat(
+                    el.style.getPropertyValue(
+                        "--wallpaper-ambient-opacity-floor",
+                    ),
+                ),
+            }));
+            await sliderThumb.press("Home");
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[data-testid="wallpaper-current-preview"]',
+                )?.getAttribute("data-motion-level") === "subtle"
+            );
+            const low = await preview.evaluate((el) => ({
+                mix: parseFloat(
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-a"),
+                ),
+                travel: parseFloat(
+                    el.style.getPropertyValue("--wallpaper-ambient-travel"),
+                ),
+                floor: parseFloat(
+                    el.style.getPropertyValue(
+                        "--wallpaper-ambient-opacity-floor",
+                    ),
+                ),
+            }));
+            assert(
+                high.mix > low.mix && high.travel > low.travel &&
+                    high.floor < low.floor,
+                "Live preview must change intensity without reload",
+            );
+
+            // Verify no PATCH flood during slider pointer drag
+            let patchCalls = 0;
+            const patchListener = (
+                req: { method: () => string; url: () => string },
+            ) => {
+                if (
+                    req.method() === "PATCH" &&
+                    req.url().includes("/api/preferences")
+                ) {
+                    patchCalls++;
+                }
+            };
+            page.on("request", patchListener);
+
+            // Drag slider thumb across track
+            const trackBox = await motionLevelSlider.boundingBox();
+            assert(trackBox, "Slider bounding box must exist");
+            const thumb = motionLevelSlider.getByRole("slider");
+            const thumbBox = await thumb.boundingBox();
+            assert(thumbBox, "Slider thumb bounding box must exist");
+
+            await page.mouse.move(
+                thumbBox.x + thumbBox.width / 2,
+                thumbBox.y + thumbBox.height / 2,
+            );
+            await page.mouse.down();
+            await page.mouse.move(
+                trackBox.x + trackBox.width - 5,
+                thumbBox.y + thumbBox.height / 2,
+                { steps: 5 },
+            );
+            // During drag movement, ZERO PATCH requests should be emitted
+            assertEquals(
+                patchCalls,
+                0,
+                "Dragging motion level slider must not trigger PATCH flood",
+            );
+
+            // Release pointer -> exactly one commit
+            const patchPromise = page.waitForResponse(
+                (res) =>
+                    res.request().method() === "PATCH" &&
+                    res.url().includes("/api/preferences"),
+            );
+            await page.mouse.up();
+            await patchPromise;
+            page.off("request", patchListener);
+            assertEquals(
+                patchCalls,
+                1,
+                "Releasing slider must commit exactly one PATCH sync",
+            );
+
+            const currentPrefs = await prefs();
+            assertEquals(
+                currentPrefs.wallpaperPresentations[testSource]?.motion,
+                "ambient",
+            );
+        },
+    );
+
+    await t.step(
+        "substrate contract validates canvas, gradient, and image ambient calibration and layering",
+        async () => {
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+
+            // 1. Image substrate (uploaded wallpaper)
+            await page.goto(origin + "/settings/appearance");
+            const imgSource = await upload(0.5);
+            await waitCurrent(imgSource);
+            await page.evaluate(
+                async ({ source, records }) => {
+                    await fetch("/api/preferences", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            wallpaperPresentations: {
+                                ...records,
+                                [source]: {
+                                    ...records[source],
+                                    motion: "ambient",
+                                    motionLevel: "pronounced",
+                                    readability: "balanced",
+                                    softness: "none",
+                                    tone: "natural",
+                                },
+                            },
+                        }),
+                    });
+                },
+                {
+                    source: imgSource,
+                    records: (await prefs()).wallpaperPresentations,
+                },
+            );
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.wallpaperPresentations[src]?.motion ===
+                    "ambient";
+            }, imgSource);
+
+            await page.goto(origin + "/");
+            const surface = page.getByTestId("home-wallpaper-surface");
+            await surface.waitFor();
+            await page.waitForFunction(
+                () =>
+                    document.querySelector(
+                        '[data-testid="home-wallpaper-surface"]',
+                    )?.getAttribute("data-motion") === "ambient",
+            );
+            assertEquals(
+                await surface.getAttribute("data-substrate"),
+                "image",
+                "Surface with uploaded wallpaper must report data-substrate='image'",
+            );
+            assertEquals(
+                await surface.getAttribute("data-motion"),
+                "ambient",
+            );
+            assertEquals(
+                await surface.locator(".wallpaper__ambient-field-a").count(),
+                1,
+            );
+            assertEquals(
+                await surface.locator(".wallpaper__ambient-field-b").count(),
+                1,
+            );
+
+            // Check image substrate canonical mix values (pronounced: 12% / 9.6%)
+            assertEquals(
+                await surface.evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-a")
+                ),
+                "12%",
+            );
+            assertEquals(
+                await surface.evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-b")
+                ),
+                "9.6%",
+            );
+
+            // Mask z-index must be strictly higher than ambient z-index
+            const { maskZ, ambientZ } = await surface.evaluate((el) => {
+                const mask = el.querySelector(".wallpaper-surface__mask")!;
+                const ambient = el.querySelector(".wallpaper__ambient")!;
+                return {
+                    maskZ: Number(getComputedStyle(mask).zIndex),
+                    ambientZ: Number(getComputedStyle(ambient).zIndex),
+                };
+            });
+            assert(
+                maskZ > ambientZ,
+                `Readability mask z-index (${maskZ}) must be higher than ambient z-index (${ambientZ})`,
+            );
+
+            // 2. Gradient substrate
+            const gradientSource = "linear-gradient(135deg, #102030, #204060)";
+            await page.evaluate(
+                async ({ gradient, records }) => {
+                    await fetch("/api/preferences", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            backgroundImage: gradient,
+                            wallpaperPresentations: {
+                                ...records,
+                                [gradient]: {
+                                    composition: { focalX: 0.5, focalY: 0.5 },
+                                    motion: "ambient",
+                                    motionLevel: "pronounced",
+                                    readability: "balanced",
+                                    softness: "none",
+                                    tone: "natural",
+                                },
+                            },
+                        }),
+                    });
+                },
+                {
+                    gradient: gradientSource,
+                    records: (await prefs()).wallpaperPresentations,
+                },
+            );
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.backgroundImage === src &&
+                    res.data.wallpaperPresentations[src]?.motion === "ambient";
+            }, gradientSource);
+
+            await page.goto(origin + "/");
+            await surface.waitFor();
+            await page.waitForFunction(
+                () =>
+                    document.querySelector(
+                            '[data-testid="home-wallpaper-surface"]',
+                        )?.getAttribute("data-substrate") === "gradient" &&
+                    document.querySelector(
+                            '[data-testid="home-wallpaper-surface"]',
+                        )?.getAttribute("data-motion") === "ambient",
+            );
+            assertEquals(
+                await surface.getAttribute("data-substrate"),
+                "gradient",
+                "Surface with CSS gradient wallpaper must report data-substrate='gradient'",
+            );
+
+            // Gradient must use canvas/low-noise table (pronounced: 8.5% / 6.8%), NOT image table (12% / 9.6%)
+            assertEquals(
+                await surface.evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-a")
+                ),
+                "8.5%",
+                "Gradient substrate must not use image compensation mix values",
+            );
+            assertEquals(
+                await surface.evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-b")
+                ),
+                "6.8%",
+                "Gradient substrate must not use image compensation mix values",
+            );
+
+            // Test soft tone on gradient: mix multiplied by 0.9 (8.5 * 0.9 = 7.65%, 6.8 * 0.9 = 6.12%)
+            await page.evaluate(
+                async ({ gradient, records }) => {
+                    await fetch("/api/preferences", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            wallpaperPresentations: {
+                                ...records,
+                                [gradient]: {
+                                    ...records[gradient],
+                                    tone: "soft",
+                                },
+                            },
+                        }),
+                    });
+                },
+                {
+                    gradient: gradientSource,
+                    records: (await prefs()).wallpaperPresentations,
+                },
+            );
+            await page.waitForFunction(async (src) => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.wallpaperPresentations[src]?.tone === "soft";
+            }, gradientSource);
+            await page.goto(origin + "/");
+            await surface.waitFor();
+            await page.waitForFunction(
+                () =>
+                    document.querySelector(
+                        '[data-testid="home-wallpaper-surface"]',
+                    )?.getAttribute("data-tone") === "soft",
+            );
+            const softMixA = await surface.evaluate((el) =>
+                parseFloat(
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-a"),
+                )
+            );
+            assert(
+                Math.abs(softMixA - 7.65) < 0.05,
+                `Soft tone on gradient must scale mix by 0.9 (expected ~7.65%, got ${softMixA}%)`,
+            );
+
+            // 3. Canvas substrate (cleared wallpaper)
+            await page.evaluate(async () => {
+                await fetch("/api/preferences", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        backgroundImage: null,
+                        canvasMotion: "ambient",
+                        canvasMotionLevel: "pronounced",
+                    }),
+                });
+            });
+            await page.waitForFunction(async () => {
+                const res = await (await fetch("/api/preferences")).json();
+                return res.data.backgroundImage === null &&
+                    res.data.canvasMotion === "ambient";
+            });
+
+            await page.goto(origin + "/");
+            await surface.waitFor();
+            await page.waitForFunction(
+                () =>
+                    document.querySelector(
+                            '[data-testid="home-wallpaper-surface"]',
+                        )?.getAttribute("data-substrate") === "canvas" &&
+                    document.querySelector(
+                            '[data-testid="home-wallpaper-surface"]',
+                        )?.getAttribute("data-motion") === "ambient",
+            );
+            assertEquals(
+                await surface.getAttribute("data-substrate"),
+                "canvas",
+                "Cleared wallpaper must report data-substrate='canvas'",
+            );
+            assertEquals(
+                await surface.getAttribute("data-motion"),
+                "ambient",
+            );
+            assertEquals(
+                await surface.evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-a")
+                ),
+                "8.5%",
+            );
+            assertEquals(
+                await surface.evaluate((el) =>
+                    el.style.getPropertyValue("--wallpaper-ambient-mix-b")
+                ),
+                "6.8%",
+            );
+        },
+    );
+
+    await t.step(
+        "embedded and fullscreen ambient motion use their own container geometry",
+        async () => {
+            await page.goto(origin + "/settings/appearance");
+            if (!(await prefs()).backgroundImage) await upload(.5);
+            await renderMotion("pronounced");
+            await ambientPhase(.35);
+            const home = await page.getByTestId("home-wallpaper-surface")
+                .evaluate((el) => {
+                    const field = el.querySelector(
+                        ".wallpaper__ambient-field-a",
+                    )!;
+                    const matrix = new DOMMatrix(
+                        getComputedStyle(field).transform,
+                    );
+                    const rect = el.getBoundingClientRect();
+                    return {
+                        extent: Math.max(rect.width, rect.height),
+                        movement: matrix.e,
+                    };
+                });
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-current-preview").waitFor();
+            await ambientPhase(.35, "wallpaper-current-preview");
+            const embedded = await page.getByTestId("wallpaper-current-preview")
+                .evaluate((el) => {
+                    const field = el.querySelector(
+                        ".wallpaper__ambient-field-a",
+                    )!;
+                    const matrix = new DOMMatrix(
+                        getComputedStyle(field).transform,
+                    );
+                    const rect = el.getBoundingClientRect();
+                    return {
+                        extent: Math.max(rect.width, rect.height),
+                        movement: matrix.e,
+                    };
+                });
+            assert(embedded.extent < home.extent * .5);
+            assert(
+                Math.abs(
+                    home.movement / home.extent -
+                        embedded.movement / embedded.extent,
+                ) < .001,
+            );
+            assert(
+                embedded.movement < home.movement * .5,
+                "Embedded motion must not retain viewport-sized travel",
+            );
+        },
+    );
+
+    await t.step(
+        "drift and zoom satisfy deterministic onset deadlines with at least 10% geometric progress",
+        async () => {
+            await page.goto(origin + "/settings/appearance");
+            const source = (await prefs()).backgroundImage ??
+                (await upload(0.5));
+            assert(source);
+
+            const stages =
+                (["subtle", "soft", "standard", "pronounced"] as const).map(
+                    (level) => ({
+                        level,
+                        deadlineSec:
+                            GLOBAL_MOTION_BUDGET.minOnsetDeadlines[level],
+                        zoomPeak: WALLPAPER_ZOOM_PARAMS[level].scale,
+                        driftX: WALLPAPER_DRIFT_PARAMS[level].x,
+                        driftY: WALLPAPER_DRIFT_PARAMS[level].y,
+                    }),
+                );
+
+            // 1. Verify Zoom onset progress by deadline
+            for (const { level, deadlineSec, zoomPeak } of stages) {
+                await page.evaluate(
+                    async ({ source, level, records }) => {
+                        await fetch("/api/preferences", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                wallpaperPresentations: {
+                                    ...records,
+                                    [source]: {
+                                        ...records[source],
+                                        motion: "zoom",
+                                        motionLevel: level,
+                                        readability: "balanced",
+                                        softness: "none",
+                                    },
+                                },
+                            }),
+                        });
+                    },
+                    {
+                        source,
+                        level,
+                        records: (await prefs()).wallpaperPresentations,
+                    },
+                );
+
+                await page.goto(origin + "/");
+                const surface = page.getByTestId("home-wallpaper-surface");
+                await surface.waitFor();
+
+                const zoomProgress = await surface.evaluate(
+                    async (el, { deadlineSec, zoomPeak }) => {
+                        const img = el.querySelector(
+                            ".wallpaper-surface__image",
+                        ) as HTMLElement;
+                        const anim = img.getAnimations()[0];
+                        if (!anim) throw new Error("Zoom animation not found");
+                        anim.pause();
+                        anim.currentTime = deadlineSec * 1000;
+                        const { promise, resolve } = Promise.withResolvers<
+                            void
+                        >();
+                        requestAnimationFrame(() => resolve());
+                        await promise;
+
+                        const style = getComputedStyle(img);
+                        const matrix = new DOMMatrix(style.transform);
+                        const currentScale = matrix.a;
+                        const fullDelta = zoomPeak - 1;
+                        const currentDelta = currentScale - 1;
+                        return currentDelta / fullDelta;
+                    },
+                    { deadlineSec, zoomPeak },
+                );
+
+                assert(
+                    zoomProgress >=
+                        GLOBAL_MOTION_BUDGET.minOnsetEffectiveProgress,
+                    `Zoom stage '${level}' at deadline ${deadlineSec}s must achieve >= 10% progress, got ${
+                        (zoomProgress * 100).toFixed(2)
+                    }%`,
+                );
+            }
+
+            // 2. Verify Drift onset progress by deadline
+            for (const { level, deadlineSec, driftX } of stages) {
+                await page.evaluate(
+                    async ({ source, level, records }) => {
+                        await fetch("/api/preferences", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                wallpaperPresentations: {
+                                    ...records,
+                                    [source]: {
+                                        ...records[source],
+                                        motion: "drift",
+                                        motionLevel: level,
+                                        readability: "balanced",
+                                        softness: "none",
+                                    },
+                                },
+                            }),
+                        });
+                    },
+                    {
+                        source,
+                        level,
+                        records: (await prefs()).wallpaperPresentations,
+                    },
+                );
+
+                await page.goto(origin + "/");
+                const surface = page.getByTestId("home-wallpaper-surface");
+                await surface.waitFor();
+
+                const driftProgress = await surface.evaluate(
+                    async (el, { deadlineSec, driftX }) => {
+                        const img = el.querySelector(
+                            ".wallpaper-surface__image",
+                        ) as HTMLElement;
+                        const anim = img.getAnimations()[0];
+                        if (!anim) throw new Error("Drift animation not found");
+                        anim.pause();
+
+                        // Read starting transform at t = 0
+                        anim.currentTime = 0;
+                        const r1 = Promise.withResolvers<void>();
+                        requestAnimationFrame(() => r1.resolve());
+                        await r1.promise;
+                        const startMatrix = new DOMMatrix(
+                            getComputedStyle(img).transform,
+                        );
+
+                        // Read transform at deadline
+                        anim.currentTime = deadlineSec * 1000;
+                        const r2 = Promise.withResolvers<void>();
+                        requestAnimationFrame(() => r2.resolve());
+                        await r2.promise;
+                        const deadlineMatrix = new DOMMatrix(
+                            getComputedStyle(img).transform,
+                        );
+
+                        const dx = deadlineMatrix.e - startMatrix.e;
+                        const imageWidth = img.getBoundingClientRect().width;
+                        const fullAmplitude = imageWidth * (2 * (driftX / 100));
+
+                        return Math.abs(dx) / fullAmplitude;
+                    },
+                    { deadlineSec, driftX },
+                );
+
+                assert(
+                    driftProgress >=
+                        GLOBAL_MOTION_BUDGET.minOnsetEffectiveProgress,
+                    `Drift stage '${level}' at deadline ${deadlineSec}s must achieve >= 10% amplitude, got ${
+                        (driftProgress * 100).toFixed(2)
+                    }%`,
+                );
+            }
+        },
+    );
+
+    await t.step(
+        "fixed gray texture: frozen ROI lower bounds and adjacent stage separation",
+        async () => {
+            const textureData = await page.evaluate(() => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 800;
+                canvas.height = 600;
+                const ctx = canvas.getContext("2d")!;
+                const data = ctx.createImageData(800, 600);
+                for (let y = 0; y < 600; y++) {
+                    for (let x = 0; x < 800; x++) {
+                        const i = (y * 800 + x) * 4;
+                        const noise = Math.sin(x * .08) * Math.cos(y * .08) * 2;
+                        data.data[i] = Math.round(122 + noise);
+                        data.data[i + 1] = Math.round(130 + noise);
+                        data.data[i + 2] = Math.round(122 + noise);
+                        data.data[i + 3] = 255;
+                    }
+                }
+                ctx.putImageData(data, 0, 0);
+                return canvas.toDataURL("image/png").split(",")[1];
+            });
+            const path = files + "/texture-gray.png";
+            await Deno.writeFile(
+                path,
+                Uint8Array.from(atob(textureData), (c) => c.charCodeAt(0)),
+            );
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-file-input").setInputFiles(path);
+            await page.getByTestId("wallpaper-toast").filter({
+                hasText: "已上传",
+            }).waitFor();
+            await page.waitForFunction(async () => {
+                const res = await (await fetch("/api/preferences")).json();
+                return typeof res.data.backgroundImage === "string" &&
+                    res.data.backgroundImage.startsWith("/api/wallpaper/");
+            });
+            const textureSource = (await prefs()).backgroundImage;
+            assert(textureSource);
+            await waitCurrent(textureSource);
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+            let previous = 0;
+            for (
+                const level of [
+                    "subtle",
+                    "soft",
+                    "standard",
+                    "pronounced",
+                ] as const
+            ) {
+                const lowerBound =
+                    GLOBAL_MOTION_BUDGET.minAmbientHotspotDelta[level];
+                let maxDelta = 0;
+                for (let attempt = 0; attempt < 5; attempt++) {
+                    await renderMotion(level, "balanced", textureSource);
+                    await ambientPhase(0);
+                    const before = await framePixels(await stableScreenshot());
+                    await ambientPhase(.35);
+                    const after = await framePixels(await stableScreenshot());
+                    assertEquals(before.roi.length, after.roi.length);
+                    const delta = after.roi.reduce((sum, value, i) =>
+                        sum + Math.abs(value - before.roi[i]), 0) /
+                        after.roi.length;
+                    if (delta > maxDelta) {
+                        maxDelta = delta;
+                    }
+                    if (maxDelta >= lowerBound) {
+                        break;
+                    }
+                }
+                console.log("[PERCEPTIBILITY]", level, maxDelta);
+                assert(
+                    maxDelta >= lowerBound,
+                    `Stage ${level}: delta ${maxDelta} below calibrated lower bound`,
+                );
+                assert(
+                    maxDelta > previous,
+                    "Adjacent stages must have increasing local color change",
+                );
+                previous = maxDelta;
+            }
+        },
+    );
+    await t.step(
+        "ambient peaks are separated and actual full-frame luminance does not breathe",
+        async () => {
+            await renderMotion("pronounced");
+            const peaks = await page.getByTestId("home-wallpaper-surface")
+                .evaluate((el) =>
+                    ["a", "b"].map((name) => {
+                        const animation = el.querySelector(
+                            ".wallpaper__ambient-field-" + name,
+                        )!.getAnimations()[0];
+                        const frames = (animation.effect as KeyframeEffect)
+                            .getKeyframes();
+                        const peak = frames.find((frame) =>
+                            Number(frame.opacity) === 1
+                        );
+                        if (
+                            peak?.computedOffset === undefined
+                        ) throw new Error("Missing opacity peak");
+                        return peak.computedOffset;
+                    })
+                );
+            assert(
+                Math.abs(peaks[0] - peaks[1]) >=
+                    GLOBAL_MOTION_BUDGET.minPhaseSeparation,
+            );
+            const means: number[] = [];
+            for (const phase of [0, .15, .35, .55, .70, .85]) {
+                await ambientPhase(phase);
+                means.push(
+                    (await framePixels(
+                        await page.getByTestId("home-wallpaper-surface")
+                            .screenshot(),
+                    )).luminance,
+                );
+            }
+            const swing = Math.max(...means) - Math.min(...means);
+            console.log("[LUMINANCE]", { peaks, means, swing });
+            assert(
+                swing <= GLOBAL_MOTION_BUDGET.maxAmbientAggregateLuminanceSwing,
+            );
+        },
+    );
+    await t.step(
+        "actual raster composite: all stages, clear/balanced, fixed cycle phases",
+        async () => {
+            const phases = [0, .15, .35, .55, .70, .85];
+            const quantization = 1 / 255;
+            for (const readability of ["clear", "balanced"] as const) {
+                for (
+                    const level of [
+                        "subtle",
+                        "soft",
+                        "standard",
+                        "pronounced",
+                    ] as const
+                ) {
+                    await renderMotion(level, readability);
+                    const surface = page.getByTestId("home-wallpaper-surface");
+                    const maskOpacity = await surface.evaluate((el) => {
+                        // White field over black preserves the product's radial alpha,
+                        // opacity, geometry and transforms; every pixel is its contribution.
+                        el.style.zIndex = "2147483647";
+                        el.style.background = "#000";
+                        el.style.setProperty(
+                            "--wallpaper-ambient-color",
+                            "#fff",
+                        );
+                        const image = el.querySelector(
+                            ".wallpaper-surface__image",
+                        ) as HTMLElement;
+                        image.style.backgroundImage = "none";
+                        image.style.backgroundColor = "#000";
+                        image.style.filter = "none";
+                        const mask = el.querySelector(
+                            ".wallpaper-surface__mask",
+                        ) as HTMLElement;
+                        mask.style.background = "#000";
+                        return Number(getComputedStyle(mask).opacity);
+                    });
+                    assertEquals(
+                        maskOpacity,
+                        WALLPAPER_READABILITY_MASKS[readability],
+                    );
+                    let compositeMaximum = 0, afterMaskMaximum = 0;
+                    for (const phase of phases) {
+                        await ambientPhase(phase);
+                        await surface.evaluate((el) =>
+                            (el.querySelector(
+                                ".wallpaper-surface__mask",
+                            ) as HTMLElement).style.visibility = "hidden"
+                        );
+                        compositeMaximum = Math.max(
+                            compositeMaximum,
+                            (await framePixels(await surface.screenshot()))
+                                .maximum,
+                        );
+                        await surface.evaluate((el) =>
+                            (el.querySelector(
+                                ".wallpaper-surface__mask",
+                            ) as HTMLElement).style.visibility = "visible"
+                        );
+                        afterMaskMaximum = Math.max(
+                            afterMaskMaximum,
+                            (await framePixels(await surface.screenshot()))
+                                .maximum,
+                        );
+                    }
+                    console.log("[RASTER]", {
+                        level,
+                        readability,
+                        compositeMaximum,
+                        afterMaskMaximum,
+                    });
+                    assert(
+                        compositeMaximum <=
+                            GLOBAL_MOTION_BUDGET
+                                    .maxAmbientCompositeContribution +
+                                quantization,
+                    );
+                    assert(
+                        afterMaskMaximum <=
+                            GLOBAL_MOTION_BUDGET
+                                    .maxAmbientCompositeContributionAfterClear +
+                                quantization,
+                    );
+                    assert(
+                        afterMaskMaximum <=
+                            compositeMaximum * (1 - maskOpacity) + quantization,
+                    );
+                }
+            }
+        },
+    );
+
+    await t.step(
+        "capture visual evidence for Main verification",
+        async () => {
+            await page.goto(origin + "/");
+            await page.getByTestId("home-wallpaper-surface").waitFor();
+            const homeProof = `${files}/visual-home-ambient-pronounced.png`;
+            await page.screenshot({ path: homeProof });
+            assert(await Deno.stat(homeProof));
+
+            await page.goto(origin + "/settings/appearance");
+            await page.getByTestId("wallpaper-current-preview").waitFor();
+            const settingsProof = `${files}/visual-settings-live-preview.png`;
+            await page.screenshot({ path: settingsProof });
+            assert(await Deno.stat(settingsProof));
         },
     );
     assertEquals(errors, []);

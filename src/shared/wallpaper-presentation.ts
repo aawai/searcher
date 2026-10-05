@@ -161,37 +161,107 @@ export const WALLPAPER_TONE_VALUES: Record<
     },
 };
 
+export type WallpaperSubstrate = "canvas" | "gradient" | "image";
+
 export interface WallpaperAmbientStageParams {
-    readonly mix: number;
+    readonly fieldAMix: number;
+    readonly fieldBMix: number;
     readonly travel: number;
     readonly scale: number;
+    readonly opacityFloor: number;
 }
 
-export const WALLPAPER_AMBIENT_PARAMS: Record<
+export const WALLPAPER_AMBIENT_CANVAS_PARAMS: Record<
     WallpaperMotionLevel,
     WallpaperAmbientStageParams
-> = {
-    subtle: { mix: 3.5, travel: 1.2, scale: 1.010 },
-    soft: { mix: 5.0, travel: 1.8, scale: 1.016 },
-    standard: { mix: 6.5, travel: 2.4, scale: 1.022 },
-    pronounced: { mix: 8.0, travel: 3.2, scale: 1.028 },
-};
+> = Object.freeze({
+    subtle: Object.freeze({
+        fieldAMix: 4.0,
+        fieldBMix: 3.2,
+        travel: 3.0,
+        scale: 1.012,
+        opacityFloor: 0.92,
+    }),
+    soft: Object.freeze({
+        fieldAMix: 5.5,
+        fieldBMix: 4.4,
+        travel: 4.8,
+        scale: 1.020,
+        opacityFloor: 0.89,
+    }),
+    standard: Object.freeze({
+        fieldAMix: 7.0,
+        fieldBMix: 5.6,
+        travel: 7.0,
+        scale: 1.030,
+        opacityFloor: 0.86,
+    }),
+    pronounced: Object.freeze({
+        fieldAMix: 8.5,
+        fieldBMix: 6.8,
+        travel: 9.5,
+        scale: 1.040,
+        opacityFloor: 0.82,
+    }),
+});
+
+export const WALLPAPER_AMBIENT_IMAGE_PARAMS: Record<
+    WallpaperMotionLevel,
+    WallpaperAmbientStageParams
+> = Object.freeze({
+    subtle: Object.freeze({
+        fieldAMix: 6.0,
+        fieldBMix: 4.8,
+        travel: 4.0,
+        scale: 1.015,
+        opacityFloor: 0.92,
+    }),
+    soft: Object.freeze({
+        fieldAMix: 8.0,
+        fieldBMix: 6.4,
+        travel: 6.5,
+        scale: 1.024,
+        opacityFloor: 0.88,
+    }),
+    standard: Object.freeze({
+        fieldAMix: 10.0,
+        fieldBMix: 8.0,
+        travel: 9.0,
+        scale: 1.034,
+        opacityFloor: 0.84,
+    }),
+    pronounced: Object.freeze({
+        fieldAMix: 12.0,
+        fieldBMix: 9.6,
+        travel: 14.0,
+        scale: 1.045,
+        opacityFloor: 0.80,
+    }),
+});
+
+export const WALLPAPER_AMBIENT_PARAMS: Record<
+    WallpaperSubstrate,
+    Record<WallpaperMotionLevel, WallpaperAmbientStageParams>
+> = Object.freeze({
+    canvas: WALLPAPER_AMBIENT_CANVAS_PARAMS,
+    gradient: WALLPAPER_AMBIENT_CANVAS_PARAMS,
+    image: WALLPAPER_AMBIENT_IMAGE_PARAMS,
+});
 
 export interface WallpaperDriftStageParams {
     readonly x: number;
     readonly y: number;
-    readonly scale: number;
 }
 
 export const WALLPAPER_DRIFT_PARAMS: Record<
     WallpaperMotionLevel,
     WallpaperDriftStageParams
-> = {
-    subtle: { x: 0.25, y: 0.18, scale: 1.012 },
-    soft: { x: 0.45, y: 0.30, scale: 1.017 },
-    standard: { x: 0.65, y: 0.45, scale: 1.023 },
-    pronounced: { x: 0.90, y: 0.60, scale: 1.032 },
-};
+> = Object.freeze({
+    subtle: Object.freeze({ x: 0.40, y: 0.28 }),
+    soft: Object.freeze({ x: 0.75, y: 0.50 }),
+    standard: Object.freeze({ x: 1.15, y: 0.78 }),
+    pronounced: Object.freeze({ x: 1.60, y: 1.05 }),
+});
 
 export interface WallpaperZoomStageParams {
     readonly scale: number;
@@ -200,40 +270,95 @@ export interface WallpaperZoomStageParams {
 export const WALLPAPER_ZOOM_PARAMS: Record<
     WallpaperMotionLevel,
     WallpaperZoomStageParams
-> = {
-    subtle: { scale: 1.012 },
-    soft: { scale: 1.020 },
-    standard: { scale: 1.028 },
-    pronounced: { scale: 1.040 },
-};
+> = Object.freeze({
+    subtle: Object.freeze({ scale: 1.018 }),
+    soft: Object.freeze({ scale: 1.030 }),
+    standard: Object.freeze({ scale: 1.045 }),
+    pronounced: Object.freeze({ scale: 1.060 }),
+});
 
 export const WALLPAPER_MOTION_TIMING = Object.freeze({
     ambient: Object.freeze({
         layerCount: 2,
-        radiusA: "58vmax",
-        radiusB: "42vmax",
+        radiusA: "32cqmax",
+        radiusB: "26cqmax",
+        leftA: "-14cqmax",
+        topA: "-18cqmax",
+        rightB: "-12cqmax",
+        topB: "18%",
         durationA: 28,
         durationB: 37,
         phaseOffset: 7,
         easing: "cubic-bezier(0.45, 0, 0.55, 1)",
     }),
     drift: Object.freeze({
-        duration: 54,
-        easing: "cubic-bezier(0.45, 0, 0.55, 1)",
+        duration: 46,
+        easing: "linear",
     }),
     zoom: Object.freeze({
-        duration: 58,
-        easing: "cubic-bezier(0.45, 0, 0.55, 1)",
+        duration: 44,
+        easing: "linear",
     }),
 });
 
 export const GLOBAL_MOTION_BUDGET = Object.freeze({
-    maxAccentContributionPercent: 8.0,
-    maxMovementPercent: 1.0,
-    maxZoomDeltaPercent: 4.0,
-    minDurationSeconds: 28,
+    maxZoomDeltaPercent: 6.0,
     maxMovingAmbientFields: 2,
+
+    maxAmbientFieldARawMixPercent: 12.0,
+    maxAmbientFieldBRawMixPercent: 10.0,
+    maxAmbientCompositeContribution: 0.205,
+    maxAmbientCompositeContributionAfterClear: 0.1804,
+    maxDriftMovementXPercent: 1.6,
+    maxDriftMovementYPercent: 1.1,
+    minAmbientDurationSeconds: 24,
+    minDriftZoomDurationSeconds: 40,
+    minPhaseSeparation: 0.15,
+    minOnsetDeadlines: Object.freeze({
+        subtle: 12,
+        soft: 8,
+        standard: 5,
+        pronounced: 3,
+    }),
+    minOnsetEffectiveProgress: 0.10,
+    minAmbientHotspotDelta: Object.freeze({
+        subtle: 0.8,
+        soft: 1.5,
+        standard: 2.5,
+        pronounced: 4.0,
+    }),
+    maxAmbientAggregateLuminanceSwing: 3.0,
 });
+
+export function calculateAmbientCompositeContribution(options: {
+    fieldAMix: number;
+    fieldBMix: number;
+    opacityA?: number;
+    opacityB?: number;
+    radialWeightA?: number;
+    radialWeightB?: number;
+    mask?: number;
+}): {
+    readonly composited: number;
+    readonly afterMask: number;
+} {
+    const opacityA = options.opacityA ?? 1;
+    const opacityB = options.opacityB ?? 1;
+    const radialWeightA = options.radialWeightA ?? 1;
+    const radialWeightB = options.radialWeightB ?? 1;
+    const mask = options.mask ?? 0;
+
+    const a = (options.fieldAMix / 100) * opacityA * radialWeightA;
+    const b = (options.fieldBMix / 100) * opacityB * radialWeightB;
+
+    const composited = 1 - (1 - a) * (1 - b);
+    const afterMask = composited * (1 - mask);
+
+    return {
+        composited: Number(composited.toFixed(6)),
+        afterMask: Number(afterMask.toFixed(6)),
+    };
+}
 
 export const MAX_REMOTE_OR_GRADIENT_PRESENTATIONS = 24;
 const VALID_DATA_IMAGE_REGEX =
@@ -654,15 +779,16 @@ export function calculateWallpaperOverscan(options?: {
 
         const percentageX = (100 * tx) / denomX;
         const percentageY = (100 * ty) / denomY;
-        const pixelsX = (3 * blur * stage.scale) / denomX;
-        const pixelsY = (3 * blur * stage.scale) / denomY;
+        const pixelsX = (3 * blur) / denomX;
+        const pixelsY = (3 * blur) / denomY;
+        const scale = Math.max(1 / denomX, 1 / denomY);
 
         return {
             percentageX,
             percentageY,
             pixelsX,
             pixelsY,
-            scale: stage.scale,
+            scale,
         };
     }
 
@@ -693,7 +819,7 @@ export function calculateWallpaperOverscan(options?: {
 
 export interface ResolveWallpaperPresentationOptions {
     theme: "light" | "dark";
-    hasWallpaper?: boolean;
+    substrate: WallpaperSubstrate;
     reducedMotion?: boolean;
 }
 
@@ -706,16 +832,16 @@ export interface ResolvedWallpaperPresentation {
     readonly motionLevel: WallpaperMotionLevel;
     readonly composition: WallpaperComposition;
     readonly ambient: {
-        readonly mix: number;
-        readonly fieldMix: number;
+        readonly fieldAMix: number;
+        readonly fieldBMix: number;
         readonly travel: number;
         readonly scale: number;
+        readonly opacityFloor: number;
         readonly neutral: boolean;
     };
     readonly drift: {
         readonly x: number;
         readonly y: number;
-        readonly scale: number;
     };
     readonly zoom: {
         readonly scale: number;
@@ -728,7 +854,8 @@ export function resolveWallpaperPresentation(
     presentation: WallpaperPresentation,
     options: ResolveWallpaperPresentationOptions,
 ): ResolvedWallpaperPresentation {
-    const hasWallpaper = options.hasWallpaper !== false;
+    const substrate: WallpaperSubstrate = options.substrate;
+    const hasWallpaper = substrate !== "canvas";
     const reducedMotion = options.reducedMotion === true;
     const theme = options.theme === "dark" ? "dark" : "light";
 
@@ -747,10 +874,10 @@ export function resolveWallpaperPresentation(
         `blur(${blur}px) brightness(${toneValues.brightness}) saturate(${toneValues.saturate}) contrast(${toneValues.contrast}) grayscale(${toneValues.grayscale})`;
 
     // 2. Motion resolution
-    // hasWallpaper === false: drift and zoom downgrade to "off", ambient is allowed.
+    // substrate === "canvas": drift and zoom downgrade to "off", ambient is allowed.
     // reducedMotion === true: drift and zoom downgrade to "off", ambient stays "ambient" with static field (travel: 0, scale: 1).
     let resolvedMotion: WallpaperMotion = presentation.motion;
-    if (!hasWallpaper) {
+    if (substrate === "canvas") {
         if (resolvedMotion === "drift" || resolvedMotion === "zoom") {
             resolvedMotion = "off";
         }
@@ -762,24 +889,24 @@ export function resolveWallpaperPresentation(
     }
 
     // 3. Ambient resolution
-    let ambientMix = 0;
+    let ambientFieldAMix = 0;
+    let ambientFieldBMix = 0;
     let ambientTravel = 0;
     let ambientScale = 1;
+    let ambientOpacityFloor = 1;
     let ambientNeutral = false;
 
     if (resolvedMotion === "ambient") {
-        const stage = WALLPAPER_AMBIENT_PARAMS[presentation.motionLevel];
-        if (presentation.tone === "natural") {
-            ambientMix = stage.mix;
-            ambientNeutral = false;
-        } else if (presentation.tone === "soft") {
-            ambientMix = Number((stage.mix * 0.85).toFixed(3));
-            ambientNeutral = false;
-        } else {
-            // mono: retain stage luminance mix so neutral field is visible, neutral: true ensures 0 accent contribution
-            ambientMix = stage.mix;
-            ambientNeutral = true;
-        }
+        const table = substrate === "image"
+            ? WALLPAPER_AMBIENT_IMAGE_PARAMS
+            : WALLPAPER_AMBIENT_CANVAS_PARAMS;
+        const stage = table[presentation.motionLevel];
+
+        const toneFactor = presentation.tone === "soft" ? 0.9 : 1.0;
+        ambientFieldAMix = Number((stage.fieldAMix * toneFactor).toFixed(3));
+        ambientFieldBMix = Number((stage.fieldBMix * toneFactor).toFixed(3));
+        ambientOpacityFloor = stage.opacityFloor;
+        ambientNeutral = presentation.tone === "mono";
 
         if (reducedMotion) {
             ambientTravel = 0;
@@ -790,18 +917,14 @@ export function resolveWallpaperPresentation(
         }
     }
 
-    const ambientFieldMix = Number((ambientMix / 2).toFixed(3));
-
     // 4. Drift resolution
     let driftX = 0;
     let driftY = 0;
-    let driftScale = 1;
 
     if (resolvedMotion === "drift") {
         const stage = WALLPAPER_DRIFT_PARAMS[presentation.motionLevel];
         driftX = stage.x;
         driftY = stage.y;
-        driftScale = stage.scale;
     }
 
     // 5. Zoom resolution
@@ -823,7 +946,7 @@ export function resolveWallpaperPresentation(
     });
 
     return {
-        tone: hasWallpaper ? presentation.tone : "natural",
+        tone: presentation.tone,
         mask,
         blur,
         filter,
@@ -831,16 +954,16 @@ export function resolveWallpaperPresentation(
         motionLevel: presentation.motionLevel,
         composition,
         ambient: {
-            mix: ambientMix,
-            fieldMix: ambientFieldMix,
+            fieldAMix: ambientFieldAMix,
+            fieldBMix: ambientFieldBMix,
             travel: ambientTravel,
             scale: ambientScale,
+            opacityFloor: ambientOpacityFloor,
             neutral: ambientNeutral,
         },
         drift: {
             x: driftX,
             y: driftY,
-            scale: driftScale,
         },
         zoom: {
             scale: zoomScale,

@@ -81,7 +81,10 @@ import { Slider } from "../components/ui/slider.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
-import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
+import {
+    useWallpaperEnvironment,
+    WallpaperSurface,
+} from "../components/wallpaper/WallpaperSurface.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
@@ -206,6 +209,7 @@ export interface WallpaperHistoryRecord {
 export function SettingsPage() {
     const { appearance, setAppearance, user, settleAppearanceSync } =
         useAppState();
+    const { reducedMotion } = useWallpaperEnvironment();
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [wallpaperHistory, setWallpaperHistory] = useState<
@@ -316,13 +320,44 @@ export function SettingsPage() {
     const [draftPresentation, setDraftPresentation] = useState<
         WallpaperPresentation | null
     >(null);
+    const [draftCanvasMotion, setDraftCanvasMotion] = useState<
+        CanvasMotion | null
+    >(null);
     const [draftCanvasMotionLevel, setDraftCanvasMotionLevel] = useState<
         WallpaperMotionLevel | null
     >(null);
 
-    const effectivePresentation = draftPresentation ?? currentPresentation;
+    const effectiveCanvasMotion = draftCanvasMotion ?? appearance.canvasMotion;
     const effectiveCanvasMotionLevel = draftCanvasMotionLevel ??
         appearance.canvasMotionLevel;
+
+    const effectivePresentation = useMemo<WallpaperPresentation>(() => {
+        if (hasWallpaper) {
+            return draftPresentation ?? currentPresentation;
+        }
+        return {
+            ...currentPresentation,
+            motion: effectiveCanvasMotion,
+            motionLevel: effectiveCanvasMotionLevel,
+        };
+    }, [
+        hasWallpaper,
+        draftPresentation,
+        currentPresentation,
+        effectiveCanvasMotion,
+        effectiveCanvasMotionLevel,
+    ]);
+
+    useEffect(() => {
+        setDraftPresentation(null);
+        setDraftCanvasMotion(null);
+        setDraftCanvasMotionLevel(null);
+    }, [
+        appearance.wallpaper,
+        appearance.wallpaperPresentations,
+        appearance.canvasMotion,
+        appearance.canvasMotionLevel,
+    ]);
 
     const readabilityStage = WALLPAPER_READABILITY_STAGES.find(
         (s) => s.id === effectivePresentation.readability,
@@ -340,8 +375,7 @@ export function SettingsPage() {
 
     const activeMotion = hasWallpaper
         ? effectivePresentation.motion
-        : appearance.canvasMotion;
-
+        : effectiveCanvasMotion;
     const activeMotionLevel = hasWallpaper
         ? effectivePresentation.motionLevel
         : effectiveCanvasMotionLevel;
@@ -1106,7 +1140,6 @@ export function SettingsPage() {
                                                                 .wallpaper}
                                                             presentation={effectivePresentation}
                                                             embedded
-                                                            motionOverride="off"
                                                             testId="wallpaper-current-preview"
                                                         />
                                                     </div>
@@ -1470,20 +1503,37 @@ export function SettingsPage() {
                                                 <p className="settings-row-desc">
                                                     平缓微动效果，采用符合视觉舒适预算的缓动轨迹
                                                 </p>
+                                                {reducedMotion &&
+                                                    isMotionActive && (
+                                                    <p
+                                                        className="settings-row-desc settings-row-desc--notice"
+                                                        data-testid="wallpaper-reduced-motion-notice"
+                                                    >
+                                                        系统已启用“减少动态效果”，动态预览已静止。
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className="settings-row-control">
                                                 <RadioGroup
                                                     value={activeMotion}
                                                     onValueChange={(v) => {
-                                                        setDraftPresentation(
-                                                            null,
-                                                        );
                                                         if (hasWallpaper) {
+                                                            setDraftPresentation(
+                                                                (prev) => ({
+                                                                    ...(prev ??
+                                                                        currentPresentation),
+                                                                    motion:
+                                                                        v as WallpaperMotion,
+                                                                }),
+                                                            );
                                                             updatePresentation({
                                                                 motion:
                                                                     v as WallpaperMotion,
                                                             });
                                                         } else {
+                                                            setDraftCanvasMotion(
+                                                                v as CanvasMotion,
+                                                            );
                                                             void setAppearance({
                                                                 canvasMotion:
                                                                     v as CanvasMotion,

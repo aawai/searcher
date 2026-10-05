@@ -91,18 +91,30 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "WallpaperSurface runtime owner: Center expansion covering blur and XY movement on horizontal axis",
     "--wallpaper-overscan-y":
         "WallpaperSurface runtime owner: Center expansion covering blur and XY movement on vertical axis",
-    "--wallpaper-ambient-mix":
-        "WallpaperSurface runtime owner: Per-field shared tone-aware contribution within total budget",
+    "--wallpaper-ambient-mix-a":
+        "WallpaperSurface runtime owner: Shared substrate/tone-aware field A contribution",
+    "--wallpaper-ambient-mix-b":
+        "WallpaperSurface runtime owner: Shared substrate/tone-aware weaker field B contribution",
+    "--wallpaper-ambient-opacity-floor":
+        "WallpaperSurface runtime owner: Shared stage floor for nonzero low-frequency envelope",
     "--wallpaper-ambient-color":
         "WallpaperSurface runtime owner: Accent or neutral luminance selected by shared tone resolver",
     "--wallpaper-ambient-travel":
-        "WallpaperSurface runtime owner: Preset slow field travel in vmax",
+        "WallpaperSurface runtime owner: Preset slow field travel in container-relative cqmax",
     "--wallpaper-ambient-scale":
         "WallpaperSurface runtime owner: Preset field scale",
     "--wallpaper-radius-a":
         "WallpaperSurface runtime owner: Shared canonical ambient field A radius",
     "--wallpaper-radius-b":
         "WallpaperSurface runtime owner: Shared canonical ambient field B radius",
+    "--wallpaper-left-a":
+        "WallpaperSurface runtime owner: Shared container-relative field A horizontal origin",
+    "--wallpaper-top-a":
+        "WallpaperSurface runtime owner: Shared container-relative field A vertical origin",
+    "--wallpaper-right-b":
+        "WallpaperSurface runtime owner: Shared container-relative field B horizontal origin",
+    "--wallpaper-top-b":
+        "WallpaperSurface runtime owner: Shared container-relative field B vertical origin",
     "--wallpaper-duration-a":
         "WallpaperSurface runtime owner: Shared fixed ambient period A",
     "--wallpaper-duration-b":
@@ -113,14 +125,18 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "WallpaperSurface runtime owner: Shared fixed drift period",
     "--wallpaper-zoom-duration":
         "WallpaperSurface runtime owner: Shared fixed zoom period",
-    "--wallpaper-easing":
-        "WallpaperSurface runtime owner: Shared fixed compositor motion easing",
+    "--wallpaper-ambient-easing":
+        "WallpaperSurface runtime owner: Shared fixed ambient easing",
+    "--wallpaper-drift-easing":
+        "WallpaperSurface runtime owner: Shared fixed drift onset easing",
+    "--wallpaper-zoom-easing":
+        "WallpaperSurface runtime owner: Shared fixed zoom onset easing",
     "--wallpaper-drift-x":
         "WallpaperSurface runtime owner: Preset XY horizontal amplitude",
     "--wallpaper-drift-y":
         "WallpaperSurface runtime owner: Preset XY vertical amplitude",
     "--wallpaper-motion-scale":
-        "WallpaperSurface runtime owner: Shared drift or zoom scale",
+        "WallpaperSurface runtime owner: Shared zoom stage peak scale",
 };
 
 /**
