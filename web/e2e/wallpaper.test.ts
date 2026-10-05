@@ -15,11 +15,17 @@ import {
     WALLPAPER_ZOOM_PARAMS,
     type WallpaperMotionLevel,
 } from "../../src/shared/wallpaper-presentation.ts";
+import {
+    analyzeAmbientRecurrence,
+    WALLPAPER_TEMPORAL_BUDGET,
+} from "../../src/shared/wallpaper-temporal.ts";
 
 Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher_wallpaper_e2e_" });
     cleanup.defer(() => Deno.remove(files, { recursive: true }));
+    const evidenceDir = "artifacts/wallpaper-motion";
+    await Deno.mkdir(evidenceDir, { recursive: true });
     const store = openDatabase(":memory:");
     cleanup.defer(() => store.close());
     await migrateDatabase(store);
@@ -51,6 +57,16 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
     const context = await browser.newContext({
         viewport: { width: 1440, height: 900 },
         reducedMotion: "reduce",
+    });
+    await context.tracing.start({ screenshots: true, snapshots: true });
+    cleanup.defer(async () => {
+        try {
+            await context.tracing.stop({
+                path: `${evidenceDir}/trace.zip`,
+            });
+        } catch {
+            // Context may be already closed
+        }
     });
     const page = await context.newPage();
     const username = "wallpaper_tester";
@@ -879,11 +895,28 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             const readabilityThumb = readability.getByRole("slider");
             await readabilityThumb.focus();
 
-            // Test Home -> 0 ("清透 · 12%")
+            // Test Home -> 0 ("无 · 0%")
             await readabilityThumb.press("Home");
             assertEquals(
                 await readabilityThumb.getAttribute("aria-valuenow"),
                 "0",
+            );
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuetext"),
+                "无 · 0%",
+            );
+            assertEquals(
+                await page.getByTestId("wallpaper-current-preview").evaluate((
+                    el,
+                ) => el.style.getPropertyValue("--wallpaper-mask")),
+                "0",
+            );
+
+            // Test ArrowRight -> 1 ("清透 · 12%")
+            await readabilityThumb.press("ArrowRight");
+            assertEquals(
+                await readabilityThumb.getAttribute("aria-valuenow"),
+                "1",
             );
             assertEquals(
                 await readabilityThumb.getAttribute("aria-valuetext"),
@@ -896,11 +929,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "0.12",
             );
 
-            // Test End -> 3 ("专注 · 48%")
+            // Test End -> 4 ("专注 · 48%")
             await readabilityThumb.press("End");
             assertEquals(
                 await readabilityThumb.getAttribute("aria-valuenow"),
-                "3",
+                "4",
             );
             assertEquals(
                 await readabilityThumb.getAttribute("aria-valuetext"),
@@ -913,11 +946,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "0.48",
             );
 
-            // Test ArrowLeft -> 2 ("沉静 · 36%")
+            // Test ArrowLeft -> 3 ("沉静 · 36%")
             await readabilityThumb.press("ArrowLeft");
             assertEquals(
                 await readabilityThumb.getAttribute("aria-valuenow"),
-                "2",
+                "3",
             );
             assertEquals(
                 await readabilityThumb.getAttribute("aria-valuetext"),
@@ -930,22 +963,37 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "0.36",
             );
 
-            // Test ArrowRight -> 3 ("专注 · 48%")
-            await readabilityThumb.press("ArrowRight");
-            assertEquals(
-                await readabilityThumb.getAttribute("aria-valuenow"),
-                "3",
-            );
-            assertEquals(
-                await readabilityThumb.getAttribute("aria-valuetext"),
-                "专注 · 48%",
-            );
-            assertEquals(
-                await page.getByTestId("wallpaper-current-preview").evaluate((
-                    el,
-                ) => el.style.getPropertyValue("--wallpaper-mask")),
-                "0.48",
-            );
+            // Verify canonical mark-to-thumb center geometry (<= 1.0 CSS px)
+            const sliderGeometries = await page.evaluate(() => {
+                const sliders = Array.from(
+                    document.querySelectorAll(".settings-preset-slider"),
+                );
+                return sliders.map((slider) => {
+                    const thumb = slider.querySelector(".slider-thumb")!;
+                    const thumbRect = thumb.getBoundingClientRect();
+                    const thumbCenter = thumbRect.left + thumbRect.width / 2;
+                    const marks = Array.from(
+                        slider.querySelectorAll(
+                            ".settings-preset-slider__mark",
+                        ),
+                    );
+                    const activeMark = slider.querySelector(
+                        ".settings-preset-slider__mark--active",
+                    )!;
+                    const markRect = activeMark.getBoundingClientRect();
+                    const markCenter = markRect.left + markRect.width / 2;
+                    return {
+                        markCount: marks.length,
+                        diff: Math.abs(markCenter - thumbCenter),
+                    };
+                });
+            });
+            for (const geo of sliderGeometries) {
+                assert(
+                    geo.diff <= 1.0,
+                    `Slider mark-to-thumb center offset (${geo.diff}px) must be <= 1.0 CSS px for ${geo.markCount}-stage slider`,
+                );
+            }
 
             // Softness slider keyboard tests
             const softness = page.getByTestId("wallpaper-softness-slider");
@@ -1005,39 +1053,34 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 },
             ).click();
             const motionLevel = page.getByTestId(
-                "wallpaper-motion-level-slider",
+                "wallpaper-motion-level-group",
             );
-            const motionLevelThumb = motionLevel.getByRole("slider");
-            await motionLevelThumb.focus();
+            const subtleRadio = motionLevel.getByRole("radio", {
+                name: "轻微",
+            });
+            const pronouncedRadio = motionLevel.getByRole("radio", {
+                name: "明显",
+            });
+            const standardRadio = motionLevel.getByRole("radio", {
+                name: "标准",
+            });
 
-            await motionLevelThumb.press("Home");
+            await subtleRadio.click();
             assertEquals(
-                await motionLevelThumb.getAttribute("aria-valuenow"),
-                "0",
-            );
-            assertEquals(
-                await motionLevelThumb.getAttribute("aria-valuetext"),
-                "轻微",
-            );
-
-            await motionLevelThumb.press("End");
-            assertEquals(
-                await motionLevelThumb.getAttribute("aria-valuenow"),
-                "3",
-            );
-            assertEquals(
-                await motionLevelThumb.getAttribute("aria-valuetext"),
-                "明显",
+                await subtleRadio.getAttribute("aria-checked"),
+                "true",
             );
 
-            await motionLevelThumb.press("ArrowLeft");
+            await pronouncedRadio.click();
             assertEquals(
-                await motionLevelThumb.getAttribute("aria-valuenow"),
-                "2",
+                await pronouncedRadio.getAttribute("aria-checked"),
+                "true",
             );
+
+            await standardRadio.click();
             assertEquals(
-                await motionLevelThumb.getAttribute("aria-valuetext"),
-                "标准",
+                await standardRadio.getAttribute("aria-checked"),
+                "true",
             );
         },
     );
@@ -1154,7 +1197,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 );
             assertEquals(
                 maskWhileDragging,
-                "0.12",
+                "0",
                 "Preview mask must reflect dragged readability value in real-time",
             );
 
@@ -1173,7 +1216,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             );
             assertEquals(
                 (await prefs()).wallpaperPresentations[currentSrc].readability,
-                "clear",
+                "none",
             );
 
             page.off("request", patchHandler);
@@ -1215,12 +1258,9 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 },
             ).click();
             const motionLevel = page.getByTestId(
-                "wallpaper-motion-level-slider",
+                "wallpaper-motion-level-group",
             );
-            const mThumb = motionLevel.getByRole("slider");
-            await motionLevel.locator(".settings-preset-slider__mark").filter({
-                hasText: "明显",
-            }).click();
+            await motionLevel.getByRole("radio", { name: "明显" }).click();
 
             await page.waitForFunction(async (src) => {
                 const res = await (await fetch("/api/preferences")).json();
@@ -1252,9 +1292,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     name: "推近",
                 },
             ).click();
-            await motionLevel.locator(".settings-preset-slider__mark").filter({
-                hasText: "轻微",
-            }).click();
+            await motionLevel.getByRole("radio", { name: "轻微" }).click();
 
             await page.waitForFunction(async (src) => {
                 const res = await (await fetch("/api/preferences")).json();
@@ -1285,9 +1323,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     name: "环境光",
                 },
             ).click();
-            await motionLevel.locator(".settings-preset-slider__mark").filter({
-                hasText: "标准",
-            }).click();
+            await motionLevel.getByRole("radio", { name: "标准" }).click();
 
             await page.waitForFunction(async (src) => {
                 const res = await (await fetch("/api/preferences")).json();
@@ -1313,7 +1349,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await rThumb.getAttribute("aria-valuenow"), "2");
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "3");
             assertEquals(await sThumb.getAttribute("aria-valuenow"), "2");
             assertEquals(
                 await page.getByTestId("wallpaper-motion-group").getByRole(
@@ -1324,7 +1360,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await mThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(
+                await motionLevel.getByRole("radio", { name: "明显" })
+                    .getAttribute("aria-checked"),
+                "true",
+            );
             assertEquals(
                 await page.getByTestId("wallpaper-current-preview").evaluate(
                     (el) => el.style.getPropertyValue("--wallpaper-mask"),
@@ -1352,7 +1392,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await rThumb.getAttribute("aria-valuenow"), "0");
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "1");
             assertEquals(await sThumb.getAttribute("aria-valuenow"), "1");
             assertEquals(
                 await page.getByTestId("wallpaper-motion-group").getByRole(
@@ -1363,7 +1403,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await mThumb.getAttribute("aria-valuenow"), "0");
+            assertEquals(
+                await motionLevel.getByRole("radio", { name: "轻微" })
+                    .getAttribute("aria-checked"),
+                "true",
+            );
 
             // 6. Switch back to gradient and verify restored state
             await input.fill(gradientSource);
@@ -1379,7 +1423,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await rThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "4");
             assertEquals(await sThumb.getAttribute("aria-valuenow"), "0");
             assertEquals(
                 await page.getByTestId("wallpaper-motion-group").getByRole(
@@ -1390,7 +1434,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await mThumb.getAttribute("aria-valuenow"), "2");
+            assertEquals(
+                await motionLevel.getByRole("radio", { name: "标准" })
+                    .getAttribute("aria-checked"),
+                "true",
+            );
 
             // 7. Reload and verify persistence
             await page.reload();
@@ -1405,7 +1453,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await rThumb.getAttribute("aria-valuenow"), "3");
+            assertEquals(await rThumb.getAttribute("aria-valuenow"), "4");
             assertEquals(await sThumb.getAttribute("aria-valuenow"), "0");
             assertEquals(
                 await page.getByTestId("wallpaper-motion-group").getByRole(
@@ -1416,7 +1464,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 ).getAttribute("aria-checked"),
                 "true",
             );
-            assertEquals(await mThumb.getAttribute("aria-valuenow"), "2");
+            assertEquals(
+                await motionLevel.getByRole("radio", { name: "标准" })
+                    .getAttribute("aria-checked"),
+                "true",
+            );
         },
     );
     await t.step(
@@ -1451,9 +1503,9 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "true",
             );
             assertEquals(
-                await page.getByTestId("wallpaper-motion-level-slider").count(),
+                await page.getByTestId("wallpaper-motion-level-group").count(),
                 0,
-                "Motion level slider must be detached when motion is off",
+                "Motion level group must be detached when motion is off",
             );
             let p = await prefs();
             assertEquals(
@@ -1475,11 +1527,13 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     "ambient";
             }, uploadedSource);
 
-            const mThumb = page
-                .getByTestId("wallpaper-motion-level-slider")
-                .getByRole("slider");
-            assertEquals(await mThumb.getAttribute("aria-valuenow"), "3");
-            assertEquals(await mThumb.getAttribute("aria-valuetext"), "明显");
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-level-group")
+                    .getByRole("radio", { name: "明显" }).getAttribute(
+                        "aria-checked",
+                    ),
+                "true",
+            );
             p = await prefs();
             assertEquals(
                 p.wallpaperPresentations[uploadedSource].motion,
@@ -1549,13 +1603,12 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 return res.data.canvasMotion === "ambient";
             });
 
-            const canvasMotionSlider = page.getByTestId(
-                "wallpaper-motion-level-slider",
-            );
-            await canvasMotionSlider.locator(".settings-preset-slider__mark")
-                .filter({
-                    hasText: "轻微",
-                }).click();
+            await page.getByTestId("wallpaper-motion-level-group").getByRole(
+                "radio",
+                {
+                    name: "轻微",
+                },
+            ).click();
             await page.waitForFunction(async () => {
                 const res = await (await fetch("/api/preferences")).json();
                 return res.data.canvasMotionLevel === "subtle";
@@ -1570,7 +1623,10 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 const res = await (await fetch("/api/preferences")).json();
                 return res.data.canvasMotion === "off";
             });
-            assertEquals(await canvasMotionSlider.count(), 0);
+            assertEquals(
+                await page.getByTestId("wallpaper-motion-level-group").count(),
+                0,
+            );
             p = await prefs();
             assertEquals(p.canvasMotion, "off");
             assertEquals(p.canvasMotionLevel, "subtle");
@@ -1896,15 +1952,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "Current preview ambient field must have active animation running",
             );
 
-            // Focus motion level slider and test immediate live preview CSS updates
-            const motionLevelSlider = page.getByTestId(
-                "wallpaper-motion-level-slider",
+            // Test immediate live preview CSS updates via segmented selector
+            const motionLevelGroup = page.getByTestId(
+                "wallpaper-motion-level-group",
             );
-            const sliderThumb = motionLevelSlider.getByRole("slider");
-            await sliderThumb.focus();
-
-            // Press End -> pronounced (level 3)
-            await sliderThumb.press("End");
+            await motionLevelGroup.getByRole("radio", { name: "明显" }).click();
             await page.waitForFunction(() =>
                 document.querySelector(
                     '[data-testid="wallpaper-current-preview"]',
@@ -1923,7 +1975,8 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     ),
                 ),
             }));
-            await sliderThumb.press("Home");
+
+            await motionLevelGroup.getByRole("radio", { name: "轻微" }).click();
             await page.waitForFunction(() =>
                 document.querySelector(
                     '[data-testid="wallpaper-current-preview"]',
@@ -1948,7 +2001,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "Live preview must change intensity without reload",
             );
 
-            // Verify no PATCH flood during slider pointer drag
+            // Verify segmented selector persistence contract (1 commit per click, latest intent wins)
             let patchCalls = 0;
             const patchListener = (
                 req: { method: () => string; url: () => string },
@@ -1962,43 +2015,18 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             };
             page.on("request", patchListener);
 
-            // Drag slider thumb across track
-            const trackBox = await motionLevelSlider.boundingBox();
-            assert(trackBox, "Slider bounding box must exist");
-            const thumb = motionLevelSlider.getByRole("slider");
-            const thumbBox = await thumb.boundingBox();
-            assert(thumbBox, "Slider thumb bounding box must exist");
-
-            await page.mouse.move(
-                thumbBox.x + thumbBox.width / 2,
-                thumbBox.y + thumbBox.height / 2,
-            );
-            await page.mouse.down();
-            await page.mouse.move(
-                trackBox.x + trackBox.width - 5,
-                thumbBox.y + thumbBox.height / 2,
-                { steps: 5 },
-            );
-            // During drag movement, ZERO PATCH requests should be emitted
-            assertEquals(
-                patchCalls,
-                0,
-                "Dragging motion level slider must not trigger PATCH flood",
-            );
-
-            // Release pointer -> exactly one commit
             const patchPromise = page.waitForResponse(
                 (res) =>
                     res.request().method() === "PATCH" &&
                     res.url().includes("/api/preferences"),
             );
-            await page.mouse.up();
+            await motionLevelGroup.getByRole("radio", { name: "明显" }).click();
             await patchPromise;
             page.off("request", patchListener);
             assertEquals(
                 patchCalls,
                 1,
-                "Releasing slider must commit exactly one PATCH sync",
+                "Each semantic segmented selection must emit exactly one sync",
             );
 
             const currentPrefs = await prefs();
@@ -2538,9 +2566,18 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             ) {
                 const lowerBound =
                     GLOBAL_MOTION_BUDGET.minAmbientHotspotDelta[level];
-                let maxDelta = 0;
-                for (let attempt = 0; attempt < 5; attempt++) {
-                    await renderMotion(level, "balanced", textureSource);
+                await renderMotion(level, "balanced", textureSource);
+                await ambientPhase(0);
+                await ambientPhase(0.35);
+                await ambientPhase(0);
+                await stableScreenshot();
+                const samples: number[] = [];
+                for (
+                    let attempt = 0;
+                    attempt <
+                        WALLPAPER_TEMPORAL_BUDGET.perceptibilitySampleCount;
+                    attempt++
+                ) {
                     await ambientPhase(0);
                     const before = await framePixels(await stableScreenshot());
                     await ambientPhase(.35);
@@ -2549,23 +2586,41 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     const delta = after.roi.reduce((sum, value, i) =>
                         sum + Math.abs(value - before.roi[i]), 0) /
                         after.roi.length;
-                    if (delta > maxDelta) {
-                        maxDelta = delta;
-                    }
-                    if (maxDelta >= lowerBound) {
-                        break;
-                    }
+                    samples.push(delta);
                 }
-                console.log("[PERCEPTIBILITY]", level, maxDelta);
-                assert(
-                    maxDelta >= lowerBound,
-                    `Stage ${level}: delta ${maxDelta} below calibrated lower bound`,
+                samples.sort((a, b) => a - b);
+                const median = samples[Math.floor(samples.length / 2)];
+                const min = samples[0];
+                console.log(
+                    "[PERCEPTIBILITY]",
+                    level,
+                    "median:",
+                    median,
+                    "min:",
+                    min,
+                    "samples:",
+                    samples,
                 );
                 assert(
-                    maxDelta > previous,
+                    median >= lowerBound,
+                    `Stage ${level}: median ${median} below calibrated lower bound ${lowerBound}`,
+                );
+                assert(
+                    min >=
+                        lowerBound -
+                            WALLPAPER_TEMPORAL_BUDGET
+                                .perceptibilityQuantizationTolerance,
+                    `Stage ${level}: min ${min} below bound - tolerance (${
+                        lowerBound -
+                        WALLPAPER_TEMPORAL_BUDGET
+                            .perceptibilityQuantizationTolerance
+                    })`,
+                );
+                assert(
+                    median > previous,
                     "Adjacent stages must have increasing local color change",
                 );
-                previous = maxDelta;
+                previous = median;
             }
         },
     );
@@ -2608,6 +2663,67 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             console.log("[LUMINANCE]", { peaks, means, swing });
             assert(
                 swing <= GLOBAL_MOTION_BUDGET.maxAmbientAggregateLuminanceSwing,
+            );
+        },
+    );
+    await t.step(
+        "wall-clock ambient recurrence: top-6 worst overlap windows aggregate luminance swing <= budget",
+        async () => {
+            const { worstOverlapWindows } = analyzeAmbientRecurrence(
+                28,
+                37,
+                7,
+                0.25,
+            );
+            const worstMeans: number[] = [];
+
+            for (const win of worstOverlapWindows) {
+                await page.getByTestId("home-wallpaper-surface").evaluate(
+                    async (el, tSec) => {
+                        for (const name of ["a", "b"]) {
+                            const field = el.querySelector(
+                                ".wallpaper__ambient-field-" + name,
+                            )!;
+                            const anim = field.getAnimations()[0];
+                            if (!anim?.effect) {
+                                throw new Error("Missing ambient animation");
+                            }
+                            const timing = anim.effect.getTiming();
+                            anim.pause();
+                            const dur = Number(timing.duration);
+                            const del = Number(timing.delay);
+                            anim.currentTime = ((tSec % dur) + dur) % dur +
+                                del + 2 * dur;
+                            await anim.ready;
+                        }
+                        const { promise, resolve } = Promise.withResolvers<
+                            void
+                        >();
+                        requestAnimationFrame(() =>
+                            requestAnimationFrame(() => resolve())
+                        );
+                        await promise;
+                    },
+                    win.timeSeconds,
+                );
+
+                const pixels = await framePixels(
+                    await page.getByTestId("home-wallpaper-surface")
+                        .screenshot(),
+                );
+                worstMeans.push(pixels.luminance);
+            }
+
+            const worstSwing = Math.max(...worstMeans) -
+                Math.min(...worstMeans);
+            console.log("[RECURRENCE WORST-CASE SWING]", {
+                worstMeans,
+                worstSwing,
+            });
+            assert(
+                worstSwing <=
+                    WALLPAPER_TEMPORAL_BUDGET.maxAmbientLuminanceSwing,
+                `Worst-case wall-clock recurrence swing ${worstSwing} exceeds budget ${WALLPAPER_TEMPORAL_BUDGET.maxAmbientLuminanceSwing}`,
             );
         },
     );
@@ -2708,13 +2824,13 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         async () => {
             await page.goto(origin + "/");
             await page.getByTestId("home-wallpaper-surface").waitFor();
-            const homeProof = `${files}/visual-home-ambient-pronounced.png`;
+            const homeProof = `${evidenceDir}/home-pronounced-ambient.png`;
             await page.screenshot({ path: homeProof });
             assert(await Deno.stat(homeProof));
 
             await page.goto(origin + "/settings/appearance");
             await page.getByTestId("wallpaper-current-preview").waitFor();
-            const settingsProof = `${files}/visual-settings-live-preview.png`;
+            const settingsProof = `${evidenceDir}/settings-live-preview.png`;
             await page.screenshot({ path: settingsProof });
             assert(await Deno.stat(settingsProof));
         },

@@ -351,6 +351,7 @@ CSS 变量架构：
 Stages）：
 
 - **可读性遮罩（Readability，`WALLPAPER_READABILITY_STAGES`）**：
+  - `none`（无）：mask = `0`（0%）
   - `clear`（清透）：mask = `0.12`（12%）
   - `balanced`（均衡）：mask = `0.24`（24%）——**系统默认值**
   - `quiet`（沉静）：mask = `0.36`（36%）
@@ -375,7 +376,8 @@ Stages）：
       - `mono`：brightness 0.86, saturate 0.00, contrast 0.92, grayscale 1
 - **动效模式（Motion，`WALLPAPER_MOTION_STAGES`）与强度（MotionLevel，`WALLPAPER_MOTION_LEVEL_STAGES`）**：
   - 动效模式：`off`（关闭，默认）、`ambient`（环境光）、`drift`（漂移）、`zoom`（推近）
-  - 动效强度：`subtle`（轻微）、`soft`（柔和，默认）、`standard`（标准）、`pronounced`（明显）
+  - 动效强度：`subtle`（轻微）、`soft`（柔和，默认）、`standard`（标准）、`pronounced`（明显）；设置页使用四档离散
+    Segmented Stage Selector 控制
   - 空壁纸/画布动效（Canvas Motion）：`off`（默认）、`ambient`；强度默认为
     `soft`
 - **默认 Presentation 状态（`DEFAULT_WALLPAPER_PRESENTATION`）**：
@@ -435,10 +437,59 @@ resolver，以容器而非 browser viewport 为几何基准。
   强度，外扩独立解决裁切。
 - Zoom 各档 peak scale 为 1.018/1.030/1.045/1.060，0/50/100% = 1/peak/1。
 
-Settings 普通当前壁纸预览实时播放所选 motion/level；Focal editor 冻结 motion。
-系统 reduced-motion 时预览静止并显示说明，但不改变保存的 motion intent。
+#### 4. Wallpaper Stage 与 Preview-first 交互规范
 
-#### 4. 3blur * scale Overscan 溢出几何计算
+- **Stage 视口响应式几何**：
+  - `>= 768px`：`width: min(100%, 640px)`，`aspect-ratio: 16 / 9`，沿 Settings
+    content axis 居中对齐；
+  - `< 768px`：`width: 100%`，`aspect-ratio: 16 / 10`；
+  - 不使用固定高度，面积显著大于 Recent wallpapers
+    缩略图，杜绝小尺寸无法辨识效果。
+- **Search Context Preview（`WallpaperStageContextPreview`）**：
+  - 专用静态视觉占位，帮助用户实时判断壁纸与搜索框/文字对比度；
+  - 强制 `pointer-events: none` 与
+    `aria-hidden="true"`，不持有业务状态，无输入/表单/快捷键冲突。
+- **离散 Slider 严格几何对齐**：
+  - Readability（5档）与 Softness（4档）离散 Slider 采用
+    `position(i) = i / (count - 1)` 纯 CSS `data-stage-count` 定位；
+  - 保证每个 stage mark 中心与 thumb 中心偏差严格 $\le 1.0\text{ CSS px}$。
+
+#### 5. Phase 0C v2 Temporal Motion System 与 WAAPI 运行时
+
+动效渲染层全面收敛至 Web Animations
+API（WAAPI）控制器（`WallpaperMotionController`），CSS
+仅负责静态图层尺寸与背景，不再拥有 drift/zoom 动画 keyframes。
+
+- **统一时序预算（`WALLPAPER_TEMPORAL_BUDGET`）**：
+  - Drift 采样点 64，相近航向角偏差 $\le 30^\circ$（标定实测
+    16.55°），速度极差比 $\le 1.6$，接缝连续度 $\le 0.001$。
+  - Zoom 采样点 64，平滑折返速度比 $\le 20\%$（标定实测
+    7.7%），首尾平滑接地，无加速度尖刺。
+  - 3s / 46s / 44s deterministic onset 几何进度均 $\ge 10\%$。
+  - 模式切换交接时间 300ms，同模式重定向 300ms。
+- **Overscan 协调时序（Envelope Safety）**：
+  - **幅度增大**：先计算目标 overscan，立即扩大 overscan 容器，再启动 motion
+    retarget；严禁先动后补。
+  - **幅度减小**：先保持宽 overscan 运行，在 300ms retarget 收敛窗口完成后再收缩
+    overscan。
+  - **模式交接**：交接窗口内 overscan 覆盖
+    $\max(\text{outgoing}, \text{incoming})$，新模式建立后才回收。
+- **状态机冲突优先级**：
+  - 严格优先级：`reduced > paused-hidden > handing-off > retargeting > running > idle`。
+  - `reduced`：无论处于何种状态立即 cancel active motion，不播放回中
+    handoff，保持 neutral 静态；
+  - `paused-hidden`：标签页隐藏时暂停 WAAPI 动画并保留精确当前相，visible
+    后同相恢复，不丢相、不快速补帧；
+  - `latest-intent-wins`：快速多次选择时丢弃陈旧中间过渡，始终以最后一次意图为准。
+- **单写入者契约（One-Writer Invariant）**：
+  - 同一图层在任意时刻最多只有一个活动的变换动画写入者，杜绝 CSS 与 WAAPI
+    或多重交接动画并发竞争。
+- **环境光墙钟防呼吸契约（Wall-clock Recurrence Contract）**：
+  - 共同最小公倍数循环周期 $\text{LCM}(28, 37) = 1036\text{s}$；在全部 1036
+    秒内，任何时间戳两场绝不发生同时到达 1.0
+    的全局脉冲，最坏重叠窗口全画幅亮度摆幅严格 $\le 3.0$。
+
+#### 6. 3blur * scale Overscan 溢出几何计算
 
 为彻底消除模糊半径在视口边缘产生的白边/虚化裁切，以及动效位移或缩放引起的漏底穿帮，系统通过
 `calculateWallpaperOverscan` 精确计算负向内嵌值（`--wallpaper-overscan-x/y` =

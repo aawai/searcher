@@ -5,6 +5,7 @@ import {
 } from "./wallpaper.ts";
 
 export type WallpaperReadability =
+    | "none"
     | "clear"
     | "balanced"
     | "quiet"
@@ -55,6 +56,7 @@ export interface WallpaperPresentation {
 export const WALLPAPER_READABILITY_STAGES: readonly PresetStage<
     WallpaperReadability
 >[] = Object.freeze([
+    { id: "none", label: "无", detail: "0%" },
     { id: "clear", label: "清透", detail: "12%" },
     { id: "balanced", label: "均衡", detail: "24%" },
     { id: "quiet", label: "沉静", detail: "36%" },
@@ -115,6 +117,7 @@ export const DEFAULT_CANVAS_MOTION_LEVEL: WallpaperMotionLevel = "soft";
 
 export const WALLPAPER_READABILITY_MASKS: Record<WallpaperReadability, number> =
     {
+        none: 0,
         clear: 0.12,
         balanced: 0.24,
         quiet: 0.36,
@@ -369,6 +372,7 @@ function isValidDataImageUrl(source: string): boolean {
 }
 
 const VALID_READABILITY: Record<WallpaperReadability, true> = {
+    none: true,
     clear: true,
     balanced: true,
     quiet: true,
@@ -486,13 +490,16 @@ export function migrateLegacyWallpaperPresentation(
 
     return {
         composition: normalizeComposition(raw.composition),
-        readability: maskRaw <= 0.18
-            ? "clear"
-            : maskRaw <= 0.30
-            ? "balanced"
-            : maskRaw <= 0.42
-            ? "quiet"
-            : "focus",
+        readability:
+            raw.readability === "none" || raw.wallpaperReadability === "none"
+                ? "none"
+                : maskRaw <= 0.18
+                ? "clear"
+                : maskRaw <= 0.30
+                ? "balanced"
+                : maskRaw <= 0.42
+                ? "quiet"
+                : "focus",
         softness: blurRaw <= 1
             ? "none"
             : blurRaw <= 3.5
@@ -815,6 +822,25 @@ export function calculateWallpaperOverscan(options?: {
         pixelsY: 3 * blur,
         scale: 1,
     };
+}
+export function maxWallpaperOverscan(
+    a: WallpaperOverscan,
+    b: WallpaperOverscan,
+): WallpaperOverscan {
+    return {
+        percentageX: Math.max(a.percentageX, b.percentageX),
+        percentageY: Math.max(a.percentageY, b.percentageY),
+        pixelsX: Math.max(a.pixelsX, b.pixelsX),
+        pixelsY: Math.max(a.pixelsY, b.pixelsY),
+        scale: Math.max(a.scale, b.scale),
+    };
+}
+
+export function formatOverscanInset(
+    percentage: number,
+    pixels: number,
+): string {
+    return `calc(-${percentage}% - ${pixels}px)`;
 }
 
 export interface ResolveWallpaperPresentationOptions {

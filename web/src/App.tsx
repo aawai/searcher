@@ -34,6 +34,7 @@ import { AdminPage } from "./app/AdminPage.tsx";
 import { TrashPage } from "./app/TrashPage.tsx";
 import { authPath, routes } from "./app/routes.ts";
 import { NotFoundPage } from "./app/NotFoundPage.tsx";
+import { WallpaperMotionInspector } from "./dev/WallpaperMotionInspector.tsx";
 import { Button } from "./components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -323,6 +324,7 @@ function Layout() {
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             )}
+            <WallpaperMotionInspector />
         </div>
     );
 }

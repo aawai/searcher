@@ -1270,3 +1270,49 @@
       0.15）；pronounced afterMask 0.102 （<= 0.1804）；drift / zoom onset
       progress 各档在 deadline 均 >= 10%； UI Guard 0 violations / 0 allowances
       / 0 drift；build、typecheck、lint 通过。
+
+## Issue #116 Phase 0C v2 - 壁纸 Temporal Motion System 与 Settings 外观重构（2026-10-05）
+
+- [x] Settings Stage 与 Preview-first 架构：
+  - Stage 响应式视口：>= 768px 为 `min(100%, 640px)`（16:9），< 768px 为
+    100%（16:10），面积远大于任一历史壁纸；
+  - 静态 `WallpaperStageContextPreview`（Searcher 搜索占位）严格
+    `pointer-events: none` 与 `aria-hidden="true"`，零交互、零业务状态冲突；
+  - DOM 唯一顺序：1. Stage -> 2. Actions -> 3. Recent wallpapers -> 4.
+    Appearance -> 5. Motion，视觉主次与键盘焦点顺序完全一致。
+- [x] Readability 与 Slider 几何：
+  - Readability 扩展 `none`（0% mask），默认仍为 `balanced`（24%），无隐式补偿；
+  - 纯 CSS `data-stage-count` 与 `nth-child` 坐标系统，实测 5 档 Readability 与
+    4 档 Softness 的 mark 中心与 thumb 中心偏差严格 <= 1.0 CSS px（实测
+    0.0px）。
+- [x] Recent Wallpapers 降权：
+  - 缩略图紧凑排布，选中项使用轮廓/环状光晕与角落小型“当前”badge，彻底移除整行深绿横条；操作菜单保持
+    44px 点击区域。
+- [x] Motion Level 离散段选择器：
+  - 由 Slider 升级为四档离散 Segmented Stage Selector（`RadioGroup`），44px
+    touch target；
+  - 单次提交仅发 1 次 PATCH，快速连续点击遵循 latest-intent-wins；
+  - 文案更新为结果导向，移除内部工程术语。
+- [x] Temporal Motion System 与 WAAPI 运行时：
+  - `WallpaperMotionController` 作为唯一变换渲染层，CSS 移除 drift/zoom
+    keyframes；
+  - 单写入者契约：图像元素活动变换动画数严格 <= 1；
+  - Drift C1
+    闭环曲线（$x = \sin(2\pi t), y = 0.7\sin(4\pi t)$）：相近航向角偏差实测
+    16.55°（<= 30° 门禁），速度极差比 1.50，循环接缝无跳变；
+  - Zoom 平滑折返（$\sin^{1.45}(\pi t)$）：峰值折返速度比实测 7.7%（<= 20%
+    门禁），3s onset 达 10.6%（>= 10%）；
+  - Overscan 时序安全：幅度增大先扩容器再启动运动，幅度减小保持宽包络至 300ms
+    收敛后再收缩；交接窗口覆盖最大包络；
+  - 状态机优先级：`reduced > paused-hidden > handing-off > retargeting > running > idle`，后台标签页同相暂停与恢复，reduced
+    立即安全回中；
+  - 环境光墙钟循环分析：LCM(28, 37) = 1036s，全周期 6 个最坏重叠窗口实测摆幅
+    0.0004（<= 3.0 预算）。
+- [x] Dev-only Motion Inspector：
+  - 支持 `?motion_inspector` 激活，提供实时 phase、state、writer 监测与 0.25x /
+    1x / 4x 调速。
+- [x] 验证与产出物：
+  - 305 项单元测试通过；壁纸 E2E 全部 23 步通过；UI Guard 0 violations / 0
+    allowances / 0 drift；
+  - 完整 visual evidence 与 trace 落地 `artifacts/wallpaper-motion/`，已接入
+    GitHub Actions 自动上传。

@@ -1,4 +1,10 @@
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import {
+    type CSSProperties,
+    type ReactNode,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { cn } from "../../lib/utils.ts";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
@@ -7,6 +13,7 @@ import {
     type WallpaperMotion,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
+import { WallpaperMotionController } from "./wallpaper-motion-controller.ts";
 
 export interface WallpaperSurfaceProps {
     source?: string | null;
@@ -96,10 +103,51 @@ export function WallpaperSurface({
         motionOverride ? { ...intent, motion: motionOverride } : intent,
         { ...environment, substrate },
     );
+    const surfaceRef = useRef<HTMLDivElement>(null);
+    const imageRef = useRef<HTMLDivElement>(null);
+    const fieldARef = useRef<HTMLDivElement>(null);
+    const fieldBRef = useRef<HTMLDivElement>(null);
+    const controllerRef = useRef<WallpaperMotionController | null>(null);
+
+    if (!controllerRef.current && typeof document !== "undefined") {
+        controllerRef.current = new WallpaperMotionController();
+    }
+
+    useEffect(() => {
+        const controller = controllerRef.current;
+        if (!controller) return;
+        controller.setElements({
+            image: imageRef.current,
+            overscan: surfaceRef.current,
+            fieldA: fieldARef.current,
+            fieldB: fieldBRef.current,
+        });
+        controller.update({
+            motion: resolved.motion,
+            motionLevel: resolved.motionLevel,
+            substrate,
+            reducedMotion: environment.reducedMotion,
+            blur: resolved.blur,
+        });
+    }, [
+        resolved.motion,
+        resolved.motionLevel,
+        resolved.blur,
+        substrate,
+        environment.reducedMotion,
+    ]);
+
+    useEffect(() => {
+        return () => {
+            controllerRef.current?.destroy();
+            controllerRef.current = null;
+        };
+    }, []);
     const inset = (percentage: number, pixels: number) =>
         `calc(-${percentage}% - ${pixels}px)`;
     return (
         <div
+            ref={surfaceRef}
             className={cn(
                 "wallpaper-surface",
                 embedded && "wallpaper-surface--embedded",
@@ -167,13 +215,20 @@ export function WallpaperSurface({
                     <div
                         className="wallpaper-surface__image"
                         data-testid={testId ? `${testId}-image` : undefined}
+                        ref={imageRef}
                     />
                 </div>
             )}
             {resolved.motion === "ambient" && (
                 <div className="wallpaper__ambient">
-                    <div className="wallpaper__ambient-field-a" />
-                    <div className="wallpaper__ambient-field-b" />
+                    <div
+                        className="wallpaper__ambient-field-a"
+                        ref={fieldARef}
+                    />
+                    <div
+                        className="wallpaper__ambient-field-b"
+                        ref={fieldBRef}
+                    />
                 </div>
             )}
             <div className="wallpaper-surface__mask" />
