@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-05-004",
+  "captured": "2026-10-05",
+  "packet_version": "1.0",
+  "title": "https://motion.dev/magazine/web-animation-performance-tier-list",
+  "url": "https://motion.dev/magazine/web-animation-performance-tier-list",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

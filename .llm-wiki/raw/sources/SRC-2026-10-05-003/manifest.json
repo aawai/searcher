@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-05-003",
+  "captured": "2026-10-05",
+  "packet_version": "1.0",
+  "title": "The Web Animations API vs. CSS",
+  "url": "https://blog.logrocket.com/the-web-animations-api-vs-css/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

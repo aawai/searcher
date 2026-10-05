@@ -13,6 +13,7 @@
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
+- [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
@@ -20,6 +21,7 @@
 - [[concepts/sqlite-fts5-fulltext-search]] — SQLite FTS5 Fulltext Search *(created: 2026-09-25)*
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
+- [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
 
 ## Entitys
 
@@ -32,6 +34,7 @@
 - [[entities/searcher-项目]] — Searcher 项目 *(created: 2026-09-25)*
 - [[entities/shadcn-ui-system]] — shadcn UI System *(created: 2026-09-25)*
 - [[entities/valibot-schema-validator]] — Valibot Schema Validator *(created: 2026-09-25)*
+- [[entities/vite-bundler]] — Vite Bundler *(created: 2026-10-05)*
 
 ## Sources
 
@@ -70,7 +73,12 @@
 - [[sources/obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and]] — Observation: Wallpaper subsystem refactor: backend contracts, lifecycle, and recoverable rollback *(created: 2026-10-03)*
 - [[sources/obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg]] — Observation: Zen workspace panel/sheet presenter migration and PR #95 merged *(created: 2026-10-03)*
 - [[sources/obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89]] — Observation: Desktop workspace E2E contract migration for Issue #89 *(created: 2026-10-04)*
+- [[sources/obs-2026-10-04-issue-103-shortcut-catalog-and-settings-reference-merged-via]] — Observation: Issue 103 shortcut catalog and Settings reference merged via PR 111 *(created: 2026-10-04)*
+- [[sources/obs-2026-10-04-issue-91-window-snap-geometry-state-and-persistence-contract]] — Observation: Issue 91 Window Snap Geometry, State, and Persistence Contract Implementation *(created: 2026-10-04)*
 - [[sources/obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont]] — Observation: Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration *(created: 2026-10-04)*
+- [[sources/obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-]] — Observation: Issue #114 wallpaper motion perceptibility calibrated and PR #115 merged *(created: 2026-10-05)*
+- [[sources/obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge]] — Observation: Issue 116 Phase 0C v2 Wallpaper Temporal Motion System merged *(created: 2026-10-05)*
+- [[sources/obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged]] — Observation: Issue #117: Route dynamic splitting and bundle guard merged *(created: 2026-10-05)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -117,10 +125,14 @@
 - [[sources/SRC-2026-09-27-003]] — Deno HTTP Server: Server-Sent Events with WHATWG ReadableStream *(created: unknown)*
 - [[sources/SRC-2026-09-27-004]] — React 19 useActionState Reference *(created: unknown)*
 - [[sources/SRC-2026-09-27-005]] — Deno 2 Hono HTTP Server Guide *(created: unknown)*
+- [[sources/SRC-2026-10-05-001]] — Vite - Code Splitting Strategy *(created: unknown)*
+- [[sources/SRC-2026-10-05-002]] — Taming 'Large Chunks' in Vite + React *(created: unknown)*
+- [[sources/SRC-2026-10-05-003]] — The Web Animations API vs. CSS *(created: unknown)*
+- [[sources/SRC-2026-10-05-004]] — The Web Animation Performance Tier List *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-04T00:40:42.597Z* | *Total pages: 108*
+*Last updated: 2026-10-05T13:09:54.658Z* | *Total pages: 120*

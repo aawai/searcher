@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-04T00:40:42.597Z",
+  "last_updated": "2026-10-05T13:09:54.658Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -67,6 +67,13 @@
       "created": "2026-09-27",
       "updated": "2026-09-27"
     },
+    "concepts/route-level-code-splitting-dynamic-bundling": {
+      "type": "concept",
+      "title": "Route-Level Code Splitting & Dynamic Bundling",
+      "domain": "engineering",
+      "created": "2026-10-05",
+      "updated": "2026-10-05"
+    },
     "concepts/server-sent-events-sse-与实时事件流": {
       "type": "concept",
       "title": "Server-Sent Events (SSE) 与实时事件流",
@@ -116,6 +123,13 @@
       ],
       "created": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    "concepts/web-animations-api-runtime-architecture": {
+      "type": "concept",
+      "title": "Web Animations API Runtime Architecture",
+      "domain": "engineering",
+      "created": "2026-10-05",
+      "updated": "2026-10-05"
     },
     "entities/deno-runtime": {
       "type": "entity",
@@ -176,6 +190,13 @@
       "title": "Valibot Schema Validator",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "entities/vite-bundler": {
+      "type": "entity",
+      "title": "Vite Bundler",
+      "category": "tool",
+      "created": "2026-10-05",
+      "updated": "2026-10-05"
     },
     "sources/SRC-2026-09-25-001": {
       "type": "source",
@@ -640,6 +661,42 @@
       "source_id": "SRC-2026-09-27-005",
       "format": "web",
       "captured": "2026-09-27"
+    },
+    "sources/SRC-2026-10-05-001": {
+      "type": "source",
+      "title": "Vite - Code Splitting Strategy",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-05-001/extracted.md",
+      "source_id": "SRC-2026-10-05-001",
+      "format": "web",
+      "captured": "2026-10-05"
+    },
+    "sources/SRC-2026-10-05-002": {
+      "type": "source",
+      "title": "Taming 'Large Chunks' in Vite + React",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-05-002/extracted.md",
+      "source_id": "SRC-2026-10-05-002",
+      "format": "web",
+      "captured": "2026-10-05"
+    },
+    "sources/SRC-2026-10-05-003": {
+      "type": "source",
+      "title": "The Web Animations API vs. CSS",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-05-003/extracted.md",
+      "source_id": "SRC-2026-10-05-003",
+      "format": "web",
+      "captured": "2026-10-05"
+    },
+    "sources/SRC-2026-10-05-004": {
+      "type": "source",
+      "title": "The Web Animation Performance Tier List",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-05-004/extracted.md",
+      "source_id": "SRC-2026-10-05-004",
+      "format": "web",
+      "captured": "2026-10-05"
     },
     "sources/obs-2026-09-25-ui-app": {
       "type": "source",
@@ -1225,6 +1282,37 @@
       "created": "2026-10-04",
       "updated": "2026-10-04"
     },
+    "sources/obs-2026-10-04-issue-103-shortcut-catalog-and-settings-reference-merged-via": {
+      "type": "source",
+      "title": "Observation: Issue 103 shortcut catalog and Settings reference merged via PR 111",
+      "tags": [
+        "shortcuts,settings,issue-103,pr-111,keyboard,precedence"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-04-issue-103-shortcut-catalog-and-settings-reference-merged-via",
+      "relevance": "high",
+      "observed_at": "2026-10-04T14:15:35.160Z",
+      "created": "2026-10-04",
+      "updated": "2026-10-04"
+    },
+    "sources/obs-2026-10-04-issue-91-window-snap-geometry-state-and-persistence-contract": {
+      "type": "source",
+      "title": "Observation: Issue 91 Window Snap Geometry, State, and Persistence Contract Implementation",
+      "tags": [
+        "desktop",
+        "snap",
+        "window-manager",
+        "persistence",
+        "issue-91"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-04-issue-91-window-snap-geometry-state-and-persistence-contract",
+      "relevance": "high",
+      "observed_at": "2026-10-04T05:22:21.875Z",
+      "source_context": "Issue #91 window management snap contracts",
+      "created": "2026-10-04",
+      "updated": "2026-10-04"
+    },
     "sources/obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont": {
       "type": "source",
       "title": "Observation: Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration",
@@ -1242,6 +1330,59 @@
       "source_context": "Issue #89 migration of Notes workspace e2e tests",
       "created": "2026-10-04",
       "updated": "2026-10-04"
+    },
+    "sources/obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-": {
+      "type": "source",
+      "title": "Observation: Issue #114 wallpaper motion perceptibility calibrated and PR #115 merged",
+      "tags": [
+        "wallpaper",
+        "motion",
+        "perceptibility",
+        "e2e",
+        "pr-115",
+        "issue-114"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-",
+      "relevance": "high",
+      "observed_at": "2026-10-05T04:05:48.496Z",
+      "source_context": "Issue #114 wallpaper motion perceptibility calibration and PR #115 merge",
+      "created": "2026-10-05",
+      "updated": "2026-10-05"
+    },
+    "sources/obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge": {
+      "type": "source",
+      "title": "Observation: Issue 116 Phase 0C v2 Wallpaper Temporal Motion System merged",
+      "tags": [
+        "appearance",
+        "wallpaper",
+        "motion",
+        "settings"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge",
+      "relevance": "high",
+      "observed_at": "2026-10-05T08:33:17.191Z",
+      "source_context": "Implementing Issue #116 Phase 0C v2",
+      "created": "2026-10-05",
+      "updated": "2026-10-05"
+    },
+    "sources/obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged": {
+      "type": "source",
+      "title": "Observation: Issue #117: Route dynamic splitting and bundle guard merged",
+      "tags": [
+        "performance",
+        "bundle-splitting",
+        "bundle-guard",
+        "e2e"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged",
+      "relevance": "high",
+      "observed_at": "2026-10-05T12:56:22.741Z",
+      "source_context": "Resolving Issue #117",
+      "created": "2026-10-05",
+      "updated": "2026-10-05"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

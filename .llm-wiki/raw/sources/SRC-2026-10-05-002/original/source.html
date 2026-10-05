@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Taming 'Large Chunks' in Vite + React: Why It Happens and How I Shrunk My Main Bundle - Mykola Aleksandrov</title>
+  <meta name="description" content="Practical guide to fixing Vite's 'Some chunks are larger than 500 kB' warning. Learn how to use manualChunks, React.lazy, and route-level code splitting to shrink your main bundle and boost performance." />
+  <meta name="keywords" content="vite, react, code-splitting, performance, rollup, manualChunks, react-lazy, suspense, javascript, frontend, bundle-optimization" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="canonical" href="https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
+  
+  <!-- Open Graph (OGP) -->
+  <meta property="og:title" content="Taming 'Large Chunks' in Vite + React: Why It Happens and How I Shrunk My Main Bundle" />
+  <meta property="og:description" content="Practical guide to fixing Vite's 'Some chunks are larger than 500 kB' warning. Learn how to use manualChunks, React.lazy, and route-level code splitting to shrink your main bundle and boost performance." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/" />
+  <meta property="og:image" content="https://mykolaaleksandrov.dev/assets/img/og-default.jpg" />
+  <meta property="og:site_name" content="Mykola Aleksandrov" />
+  <meta property="article:author" content="Mykola Aleksandrov" />
+  <meta property="article:published_time" content="2025-11-30" />
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Taming 'Large Chunks' in Vite + React" />
+  <meta name="twitter:description" content="Practical guide to fixing Vite's 'Some chunks are larger than 500 kB' warning. Learn how to use manualChunks, React.lazy, and route-level code splitting to shrink your main bundle and boost performance." />
+  <meta name="twitter:image" content="https://mykolaaleksandrov.dev/assets/img/og-default.jpg" />
+  
+  <!-- JSON-LD BlogPosting -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Taming 'Large Chunks' in Vite + React: Why It Happens and How I Shrunk My Main Bundle",
+    "datePublished": "2025-11-30",
+    "dateModified": "2025-11-30",
+    "keywords": ["Vite", "React", "Performance", "Code-Splitting", "Rollup", "manualChunks", "React.lazy", "Suspense", "JavaScript", "Frontend", "Bundle Optimization"],
+    "articleSection": "Frontend Performance",
+    "inLanguage": "en-US",
+    "isAccessibleForFree": true,
+    "author": {
+      "@type": "Person",
+      "name": "Mykola Aleksandrov",
+      "url": "https://mykolaaleksandrov.dev/about/",
+      "sameAs": [
+        "https://github.com/NickolaiA",
+        "https://www.linkedin.com/in/mykola-aleksandrov-10a3596/"
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Mykola Aleksandrov Developer Blog",
+      "url": "https://mykolaaleksandrov.dev",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://mykolaaleksandrov.dev/assets/img/og-default.jpg",
+        "width": 1200,
+        "height": 630
+      }
+    },
+    "image": "https://mykolaaleksandrov.dev/assets/img/og-default.jpg",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/"
+    },
+    "description": "Practical guide to fixing Vite's 'Some chunks are larger than 500 kB' warning. Learn how to use manualChunks, React.lazy, and route-level code splitting to shrink your main bundle and boost performance.",
+    "wordCount": "1600",
+    "timeRequired": "PT8M"
+  }
+  </script>
+
+  <!-- Breadcrumb Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://mykolaaleksandrov.dev/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog Archive",
+      "item": "https://mykolaaleksandrov.dev/archive/"
+    },{
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Taming 'Large Chunks' in Vite + React",
+      "item": "https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/"
+    }]
+  }
+  </script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/assets/css/site.min.css?v=20251206" />
+  
+  <style>
+    .ukraine-support-banner {
+      background: linear-gradient(90deg, #005BBB 50%, #FFD500 50%);
+      color: #ffffff;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 14px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .ukraine-support-banner a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .ukraine-support-banner a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+    
+    .ukraine-flag {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+    
+    .ukraine-text {
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .callout {
+      background: #f8f9fa;
+      border-left: 4px solid #007acc;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .callout strong {
+      color: #2c3e50;
+    }
+    
+    .callout-warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .metrics-box {
+      background: #e8f4f8;
+      border: 1px solid #b8dce8;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 8px;
+    }
+    
+    .metrics-box h3 {
+      margin-top: 0;
+      color: #1a5f7a;
+    }
+    
+    .metrics-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .metrics-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #d0e8f0;
+    }
+    
+    .metrics-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .metric-improvement {
+      color: #28a745;
+      font-weight: 600;
+    }
+    
+    .warning-box {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-left: 4px solid #ffc107;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .warning-box code {
+      background: rgba(255, 193, 7, 0.2);
+    }
+  </style>
+  <!-- Analytics (GA + Clarity) -->
+  <script src="/assets/js/analytics.js"></script>
+</head>
+
+<body>
+  <!-- Ukraine Support Banner -->
+  <div class="ukraine-support-banner" role="banner" aria-label="Support Ukraine">
+    <span class="ukraine-flag" aria-hidden="true">🇺🇦</span>
+    <span class="ukraine-text">Stand with Ukraine - <a href="https://www.comebackalive.in.ua/donate" target="_blank" rel="noopener" aria-label="Donate to support Ukrainian defenders">Support Ukrainian Heroes</a></span>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">Mykola Aleksandrov</a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/archive/">Archive</a>
+        <a href="/tips/">Tips</a>
+        <a href="/about/">About</a>
+        <a href="/contact/">Contact</a>
+        <a href="https://coff.ee/nick_a" target="_blank" rel="noopener" class="buy-me-coffee">
+          <span class="coffee-icon">☕</span>
+          Buy me a coffee
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <article>
+      <header class="post-header">
+        <h1>Taming 'Large Chunks' in Vite + React: Why It Happens and How I Shrunk My Main Bundle</h1>
+        <div class="post-meta">
+          <time datetime="2025-11-30">November 30, 2025</time>
+          <span class="reading-time">8 min read</span>
+        </div>
+      </header>
+      
+      <div class="post-content">
+        <p class="lead">
+          If you've seen Vite's warning about <strong>"Some chunks are larger than 500 kB after minification"</strong>, you're not alone. This article explains what causes that warning in a React + Vite project and walks through the exact steps I took to shrink my main bundle—using <code>manualChunks</code>, <code>React.lazy</code>, and route-level code splitting.
+        </p>
+
+        <h2>The Symptoms</h2>
+        
+        <p>During a production build, Vite (Rollup under the hood) printed something like this:</p>
+
+        <pre><code class="language-plaintext">vite v5.x.x building for production...
+✓ 6321 modules transformed.
+dist/assets/index-abc123.js   1,245.67 kB │ gzip: 345.12 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit</code></pre>
+
+        <p>My main bundle exceeded 1 MB—even after minification. That's a lot of JavaScript to ship on first paint.</p>
+
+        <h2>Why Large Chunks Are Bad</h2>
+
+        <div class="metrics-box">
+          <h3>⚠️ Performance Impact</h3>
+          <ul class="metrics-list">
+            <li><strong>Longer download times</strong> — especially painful on 3G or emerging markets</li>
+            <li><strong>Heavier parse & compile</strong> — low-end mobiles struggle with large scripts</li>
+            <li><strong>Cache invalidation</strong> — one small edit re-downloads the entire monolith</li>
+            <li><strong>Poor Core Web Vitals</strong> — FCP / LCP / INP all suffer from blocking scripts</li>
+          </ul>
+        </div>
+
+        <h2>What Causes Giant Bundles?</h2>
+
+        <p>
+          By default, Vite produces a single <code>index.js</code> containing your application code <em>plus</em> every <code>node_modules</code> dependency it touches. That includes React, ReactDOM, date-fns, a charting library, icon packs—whatever you imported, eagerly or not.
+        </p>
+
+        <ul>
+          <li><strong>Eager imports at the top of files</strong>: <code>import { Chart } from 'chart.js';</code></li>
+          <li><strong>Large transitive dependencies</strong>: one package pulls in 10 others</li>
+          <li><strong>Not using lazy routes</strong>: every page ships in one go</li>
+        </ul>
+
+        <h2>The Fix: <code>manualChunks</code> + Lazy Loading</h2>
+
+        <p>The solution has two parts:</p>
+
+        <ol>
+          <li><strong>Split heavy vendor libraries</strong> into separate, cacheable files using Vite's <code>manualChunks</code></li>
+          <li><strong>Lazy-load routes or heavy features</strong> with <code>React.lazy()</code> + <code>&lt;Suspense&gt;</code></li>
+        </ol>
+
+        <h3>1. Configure <code>manualChunks</code></h3>
+
+        <p>Add or update your <code>vite.config.ts</code>:</p>
+
+        <pre><code class="language-ts">// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // React core
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            // Common utils
+            if (id.includes('lodash') || id.includes('date-fns') || id.includes('axios')) {
+              return 'utils-vendor';
+            }
+            // Heavy charting
+            if (id.includes('chart.js') || id.includes('recharts') || id.includes('d3')) {
+              return 'chart-vendor';
+            }
+            // Icons
+            if (id.includes('lucide') || id.includes('react-icons') || id.includes('@iconify')) {
+              return 'icons-vendor';
+            }
+            // Everything else in node_modules
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
+});</code></pre>
+
+        <p>
+          This tells Rollup to put React, charts, icons, and other vendors in their own files. Because the <strong>React core rarely changes</strong>, browsers can cache <code>react-vendor-[hash].js</code> across many deploys.
+        </p>
+
+        <h3>2. Lazy-load Routes</h3>
+
+        <p>Move page-level imports from the module top to dynamic imports:</p>
+
+        <pre><code class="language-tsx">// Before — eager
+import DashboardPage from './pages/DashboardPage';
+import ReportsPage   from './pages/ReportsPage';
+
+// After — lazy
+const DashboardPage = React.lazy(() =&gt; import('./pages/DashboardPage'));
+const ReportsPage   = React.lazy(() =&gt; import('./pages/ReportsPage'));</code></pre>
+
+        <p>Then wrap each route element in <code>&lt;Suspense&gt;</code>:</p>
+
+        <pre><code class="language-tsx">import { Suspense } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;Suspense fallback={&lt;div&gt;Loading…&lt;/div&gt;}&gt;
+        &lt;Routes&gt;
+          &lt;Route path="/" element={&lt;HomePage /&gt;} /&gt;
+          &lt;Route path="/dashboard" element={&lt;DashboardPage /&gt;} /&gt;
+          &lt;Route path="/reports" element={&lt;ReportsPage /&gt;} /&gt;
+        &lt;/Routes&gt;
+      &lt;/Suspense&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+
+        <p>
+          The result: <strong>each page becomes its own chunk</strong>, downloaded only when the user navigates there.
+        </p>
+
+        <h2>After the Changes</h2>
+
+        <p>Rebuild and compare:</p>
+
+        <pre><code class="language-plaintext">dist/assets/index-d1f2e3.js           42.35 kB │ gzip:  14.21 kB
+dist/assets/react-vendor-a9b8c7.js   142.18 kB │ gzip:  46.52 kB
+dist/assets/chart-vendor-e4f5g6.js   324.72 kB │ gzip: 102.31 kB
+dist/assets/icons-vendor-h7i8j9.js   186.44 kB │ gzip:  58.19 kB
+dist/assets/vendor-k0l1m2.js          98.63 kB │ gzip:  32.07 kB
+dist/assets/Dashboard-n3o4p5.js       28.19 kB │ gzip:   9.44 kB
+dist/assets/Reports-q6r7s8.js         35.62 kB │ gzip:  11.87 kB</code></pre>
+
+        <div class="metrics-box">
+          <h3>📊 What Changed</h3>
+          <ul class="metrics-list">
+            <li>Main entry: <span class="metric-improvement">~42 kB</span> (was &gt;1 MB)</li>
+            <li>Vendor libraries split into cacheable, parallel-downloadable chunks</li>
+            <li>Each route is now its own chunk, fetched on demand</li>
+            <li>No more "chunks are larger than 500 kB" warning 🎉</li>
+          </ul>
+        </div>
+
+        <h2>Optional: Use a Bundle Visualizer</h2>
+
+        <p>Install <a href="https://github.com/btd/rollup-plugin-visualizer" target="_blank" rel="noopener"><code>rollup-plugin-visualizer</code></a> to see exactly where the bytes come from:</p>
+
+        <pre><code class="language-bash">npm i -D rollup-plugin-visualizer</code></pre>
+
+        <pre><code class="language-ts">// vite.config.ts
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    visualizer({ open: true, filename: 'dist/stats.html' }),
+  ],
+  // ...
+});</code></pre>
+
+        <p>Open <code>dist/stats.html</code> after a build and trim the big blocks.</p>
+
+        <h2>Caching and Loading Strategy Tips</h2>
+
+        <ul>
+          <li><strong>Hashed filenames</strong> (Vite default) ensure cache-busting when content changes, and long-term caching when it doesn't.</li>
+          <li><strong>Split by stability</strong>: put "rarely-changing" vendor stacks (React, router) in their own chunk to maximize browser re-use across releases.</li>
+          <li><strong>Use <code>rel="preload"</code>/<code>prefetch</code></strong> for near-future routes (e.g., prefetch the chunk for the page users often open next).</li>
+          <li><strong>Brotli on CDN</strong>: ship brotli if possible (most CDNs handle this automatically). Vite's build report shows gzip by default, but your CDN can serve brotli.</li>
+        </ul>
+
+        <h2>A Pragmatic Optimization Checklist</h2>
+
+        <ol>
+          <li><strong>Vendor splits</strong> via <code>manualChunks</code> (React core, charts, markdown, utils).</li>
+          <li><strong>Route-level lazy loading</strong> with <code>React.lazy</code> + <code>Suspense</code>.</li>
+          <li><strong>Feature-level lazy imports</strong> for rarely used heavy widgets.</li>
+          <li><strong>Cherry-pick imports</strong> and prefer ESM builds.</li>
+          <li><strong>Swap heavy deps</strong> (Moment → Day.js, reduce icon sets, reconsider giant UI kits).</li>
+          <li><strong>Analyze with visualizer</strong> and remove accidental bloat.</li>
+          <li><strong>Use prefetch/preload</strong> for predictable navigation.</li>
+          <li><strong>Keep CSS lean</strong>; large CSS can also delay rendering.</li>
+          <li><strong>Set caching headers</strong> on your CDN; hashed assets can be cached for a year.</li>
+          <li><strong>Measure</strong>: run Lighthouse and watch <strong>FCP/LCP/INP</strong> as you iterate.</li>
+        </ol>
+
+        <h2>Final Thoughts</h2>
+
+        <p>
+          The "500 kB after minification" warning isn't fatal, but it's a <strong>performance smell</strong>. By <strong>splitting stable vendor code</strong> and <strong>lazy-loading routes/features</strong>, you'll shrink your boot bundle, improve caching, and create a snappier experience on both desktop and mobile. The configuration above is a low-effort, high-impact baseline you can build on—then use the visualizer to keep shaving off what users don't need on first paint.
+        </p>
+
+        <h2>References &amp; Further Reading</h2>
+        <ul>
+          <li><a href="https://vitejs.dev/config/build-options.html" target="_blank" rel="noopener">Vite "Build Options" (Rollup config, chunking)</a></li>
+          <li><a href="https://rollupjs.org/configuration-options/#output-manualchunks" target="_blank" rel="noopener">Rollup <code>manualChunks</code> docs</a></li>
+          <li><a href="https://react.dev/reference/react/lazy" target="_blank" rel="noopener">React code splitting / <code>React.lazy</code> and <code>Suspense</code></a></li>
+          <li><a href="https://reactrouter.com/en/main/route/route#lazy" target="_blank" rel="noopener">Route-level splitting with React Router</a></li>
+        </ul>
+
+        <!-- Related Articles Section -->
+        <aside class="related-articles callout-info">
+          <h3 class="mb-1">📚 Related Articles</h3>
+          <div class="grid-auto-fit">
+            <div class="card">
+              <h4 class="mb-1"><a href="/posts/2025/10/react-lazy-suspense-vite-manualchunks/">Making My React App Feel Instant: Route‑Level Code‑Splitting</a></h4>
+              <p class="text-muted">Deep dive into React.lazy, Suspense, vendor-aware manualChunks, prefetch on intent, and error boundaries.</p>
+            </div>
+            <div class="card">
+              <h4 class="mb-1"><a href="/posts/2025/10/vite-docker-react-environment-variables/">Managing Environment Variables in Vite, Docker, and React</a></h4>
+              <p class="text-muted">Comprehensive guide to managing environment variables across Vite, React, and Docker with TypeScript integration.</p>
+            </div>
+            <div class="card">
+              <h4 class="mb-1"><a href="/posts/2025/09/react-hooks-experience-part2/">React Hooks &amp; Patterns From My Experience – Part 2</a></h4>
+              <p class="text-muted">Deep dive into React side effects, performance optimization, and structured state management.</p>
+            </div>
+            <div class="card">
+              <h4 class="mb-1"><a href="/posts/2025/09/react-hooks-experience-part1/">React Hooks &amp; Patterns From My Experience – Part 1</a></h4>
+              <p class="text-muted">Practical patterns for useState, useEffect, custom hooks, and composition in React applications.</p>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Comments & Reactions Section -->
+        <section class="comments-section">
+          <h2 class="comments-heading">💬 Comments &amp; Reactions</h2>
+          
+          <!-- Add this to your HTML page -->
+          <div id="komentas-widget"></div>
+
+          <!-- Load Komentas Widget -->
+          <script src="https://cdn.komentas.com/komentas-widget.umd.js?v=202510121800"></script>
+          <script>
+            // Initialize the widget
+            window.KomentasWidget.init({
+              apiUrl: 'https://api.komentas.com',
+              portalUrl: 'https://portal.komentas.com',
+              projectId: 'a3418149-51e0-435c-bc55-c19890e60d93',
+              articleUrl: window.location.href,
+              articleTitle: document.title,
+              showArticleReactions: true,
+              theme: {
+                primaryColor: '#3b82f6',
+                backgroundColor: '#ffffff',
+                borderRadius: '8px'
+              },
+              allowAnonymous: false,
+              enableReactions: true,
+              oauthProviders: ['google', 'github', 'microsoft-entra-id'],
+              availableEmotions: ["like","dislike","love","laugh"],
+              sortBy: 'newest',
+              showLogoutButton: true
+            });
+          </script>
+        </section>
+      </div>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Recent Posts</h4>
+        <ul id="recent-posts"></ul>
+      </div>
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <a href="/">Home</a>
+        <a href="/archive/">Archive</a>
+        <a href="/tips/">Tips</a>
+        <a href="/about/">About</a>
+        <a href="/contact/">Contact</a>
+      </div>
+      <div class="footer-section">
+        <h3>Resources</h3>
+        <a href="/rss.xml">RSS Feed</a>
+        <a href="https://coff.ee/nick_a" target="_blank" rel="noopener">Buy me a coffee</a>
+      </div>
+      <div class="footer-section">
+        <h3>Social</h3>
+        <a href="https://github.com/NickolaiA" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/mykola-aleksandrov-10a3596/" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 Mykola Aleksandrov. All rights reserved.
+    </div>
+  </footer>
+  <!-- Scripts -->
+  <script src="/assets/js/site.min.js?v=20250730005546"></script>
+  <script src="/assets/js/site.footer.js?v=20251123"></script>
+</body>
+</html>

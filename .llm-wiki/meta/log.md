@@ -335,3 +335,39 @@
 ## [2026-10-04T00:40:42.566Z] observe
 - slug: "obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont", title: "Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration", relevance: "high"
 
+## [2026-10-04T05:22:21.878Z] observe
+- slug: "obs-2026-10-04-issue-91-window-snap-geometry-state-and-persistence-contract", title: "Issue 91 Window Snap Geometry, State, and Persistence Contract Implementation", relevance: "high"
+
+## [2026-10-04T14:15:35.164Z] observe
+- slug: "obs-2026-10-04-issue-103-shortcut-catalog-and-settings-reference-merged-via", title: "Issue 103 shortcut catalog and Settings reference merged via PR 111", relevance: "high"
+
+## [2026-10-05T04:05:48.500Z] observe
+- slug: "obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-", title: "Issue #114 wallpaper motion perceptibility calibrated and PR #115 merged", relevance: "high"
+
+## [2026-10-05T08:33:17.193Z] observe
+- slug: "obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge", title: "Issue 116 Phase 0C v2 Wallpaper Temporal Motion System merged", relevance: "high"
+
+## [2026-10-05T12:56:22.743Z] observe
+- slug: "obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged", title: "Issue #117: Route dynamic splitting and bundle guard merged", relevance: "high"
+
+## [2026-10-05T13:01:33.625Z] capture
+- source_id: "SRC-2026-10-05-001", url: "https://dev.to/markliu2013/vite-code-splitting-strategy-5a69", format: "web"
+
+## [2026-10-05T13:01:54.348Z] capture
+- source_id: "SRC-2026-10-05-002", url: "https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/", format: "web"
+
+## [2026-10-05T13:02:12.158Z] capture
+- source_id: "SRC-2026-10-05-003", url: "https://blog.logrocket.com/the-web-animations-api-vs-css/", format: "web"
+
+## [2026-10-05T13:02:26.376Z] capture
+- source_id: "SRC-2026-10-05-004", url: "https://motion.dev/magazine/web-animation-performance-tier-list", format: "web"
+
+## [2026-10-05T13:04:39.963Z] ensure_page
+- page_type: "concept", title: "Route-Level Code Splitting & Dynamic Bundling", path: "concepts/route-level-code-splitting-dynamic-bundling"
+
+## [2026-10-05T13:04:49.770Z] ensure_page
+- page_type: "concept", title: "Web Animations API Runtime Architecture", path: "concepts/web-animations-api-runtime-architecture"
+
+## [2026-10-05T13:05:00.142Z] ensure_page
+- page_type: "entity", title: "Vite Bundler", path: "entities/vite-bundler"
+

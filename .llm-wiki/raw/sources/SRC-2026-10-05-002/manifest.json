@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-05-002",
+  "captured": "2026-10-05",
+  "packet_version": "1.0",
+  "title": "Taming 'Large Chunks' in Vite + React: Why It Happens and How I Shrunk My Main Bundle",
+  "url": "https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

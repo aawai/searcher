@@ -77,6 +77,11 @@
   "concepts/react-19-actions-and-transitions": [
     "sources/SRC-2026-09-27-004"
   ],
+  "concepts/route-level-code-splitting-dynamic-bundling": [
+    "entities/vite-bundler",
+    "sources/SRC-2026-10-05-001",
+    "sources/SRC-2026-10-05-002"
+  ],
   "concepts/server-sent-events-sse-与实时事件流": [
     "entities/deno-runtime",
     "entities/searcher-项目",
@@ -151,6 +156,10 @@
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-09-27-002"
+  ],
+  "concepts/web-animations-api-runtime-architecture": [
+    "sources/SRC-2026-10-05-003",
+    "sources/SRC-2026-10-05-004"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -248,7 +257,11 @@
     "sources/SRC-2026-09-25-037"
   ],
   "entities/react-19-framework": [
-    "sources/SRC-2026-09-27-004"
+    "concepts/route-level-code-splitting-dynamic-bundling",
+    "entities/vite-bundler",
+    "sources/SRC-2026-09-27-004",
+    "sources/SRC-2026-10-05-001",
+    "sources/SRC-2026-10-05-002"
   ],
   "entities/searcher-项目": [
     "concepts/contract-first-testing",
@@ -257,6 +270,7 @@
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/offline-first-与-local-draft-持久化架构",
+    "concepts/route-level-code-splitting-dynamic-bundling",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/session-security-and-isolation",
     "concepts/shortest-column-masonry-layout",
@@ -264,6 +278,7 @@
     "concepts/sqlite-fts5-fulltext-search",
     "concepts/sqlite-table-recreation-migration",
     "concepts/tailwind-v4-css-first-architecture",
+    "concepts/web-animations-api-runtime-architecture",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
@@ -271,6 +286,7 @@
     "entities/indexeddb-本地存储引擎",
     "entities/shadcn-ui-system",
     "entities/valibot-schema-validator",
+    "entities/vite-bundler",
     "sources/SRC-2026-09-25-001",
     "sources/SRC-2026-09-25-002",
     "sources/SRC-2026-09-25-003",
@@ -329,6 +345,11 @@
   ],
   "entities/valibot-schema-validator": [
     "sources/SRC-2026-09-25-036"
+  ],
+  "entities/vite-bundler": [
+    "concepts/route-level-code-splitting-dynamic-bundling",
+    "sources/SRC-2026-10-05-001",
+    "sources/SRC-2026-10-05-002"
   ],
   "sources/SRC-2026-09-25-001": [
     "concepts/contract-first-testing",
@@ -484,6 +505,20 @@
   "sources/SRC-2026-09-27-005": [
     "concepts/deno-native-serve-architecture"
   ],
+  "sources/SRC-2026-10-05-001": [
+    "concepts/route-level-code-splitting-dynamic-bundling",
+    "entities/vite-bundler"
+  ],
+  "sources/SRC-2026-10-05-002": [
+    "concepts/route-level-code-splitting-dynamic-bundling",
+    "entities/vite-bundler"
+  ],
+  "sources/SRC-2026-10-05-003": [
+    "concepts/web-animations-api-runtime-architecture"
+  ],
+  "sources/SRC-2026-10-05-004": [
+    "concepts/web-animations-api-runtime-architecture"
+  ],
   "sources/obs-2026-09-25-ui-app": [],
   "sources/obs-2026-09-25-ui-ux": [],
   "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [
@@ -521,7 +556,12 @@
   "sources/obs-2026-10-03-wallpaper-subsystem-refactor-backend-contracts-lifecycle-and": [],
   "sources/obs-2026-10-03-zen-workspace-panel-sheet-presenter-migration-and-pr-95-merg": [],
   "sources/obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89": [],
+  "sources/obs-2026-10-04-issue-103-shortcut-catalog-and-settings-reference-merged-via": [],
+  "sources/obs-2026-10-04-issue-91-window-snap-geometry-state-and-persistence-contract": [],
   "sources/obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont": [],
+  "sources/obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-": [],
+  "sources/obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge": [],
+  "sources/obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

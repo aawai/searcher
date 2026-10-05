@@ -1,7 +1,22 @@
 # Wiki Update Log
 
+## 2026-10-05
+
+- **ensure\_page**: {"page_type":"entity","path":"entities/vite-bundler","title":"Vite Bundler"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/web-animations-api-runtime-architecture","title":"Web Animations API Runtime Architecture"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/route-level-code-splitting-dynamic-bundling","title":"Route-Level Code Splitting & Dynamic Bundling"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-05-004","url":"https://motion.dev/magazine/web-animation-performance-tier-list"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-05-003","url":"https://blog.logrocket.com/the-web-animations-api-vs-css/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-05-002","url":"https://mykolaaleksandrov.dev/posts/2025/11/taming-large-chunks-vite-react/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-05-001","url":"https://dev.to/markliu2013/vite-code-splitting-strategy-5a69"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged","title":"Issue #117: Route dynamic splitting and bundle guard merged"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge","title":"Issue 116 Phase 0C v2 Wallpaper Temporal Motion System merged"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-","title":"Issue #114 wallpaper motion perceptibility calibrated and PR #115 merged"}
+
 ## 2026-10-04
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-04-issue-103-shortcut-catalog-and-settings-reference-merged-via","title":"Issue 103 shortcut catalog and Settings reference merged via PR 111"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-04-issue-91-window-snap-geometry-state-and-persistence-contract","title":"Issue 91 Window Snap Geometry, State, and Persistence Contract Implementation"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-04-notes-workspace-issue-89-desktopwindows-and-desktopdock-cont","title":"Notes workspace Issue #89 DesktopWindows and DesktopDock contract migration"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-04-desktop-workspace-e2e-contract-migration-for-issue-89","title":"Desktop workspace E2E contract migration for Issue #89"}
 

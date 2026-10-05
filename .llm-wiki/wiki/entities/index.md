@@ -11,3 +11,4 @@
 - [Searcher 项目](searcher-%E9%A1%B9%E7%9B%AE.md)
 - [shadcn UI System](shadcn-ui-system.md)
 - [Valibot Schema Validator](valibot-schema-validator.md)
+- [Vite Bundler](vite-bundler.md)
