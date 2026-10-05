@@ -49,6 +49,9 @@
 
 ## Issue #112 壁纸预设与动效系统重构验收（2026-10-04）
 
+历史验收记录：以下旧 motion budget 与数值由 Issue #114 的 Motion Budget v2
+取代， 不能作为当前最低可感知性通过依据。
+
 - [x] Utility archetype（SettingsPage 外观页）与 Search Canvas（Home
       Zen/Widgets）：
   - SettingsPage 壁纸设置区集成离散档位滑动选择器（SettingsPresetSlider）与
@@ -1225,3 +1228,45 @@
       errors 为 0。
 - [x] 443 项单元测试、build、前后端入口 typecheck、修改文件
       lint/format、check:ui 通过；ownership 与 visual 违规均为 0。
+
+## Issue #114 动效可感知性与实时预览验收（2026-10-05）
+
+- [x] 复用 Settings utility / Home Search Canvas archetype、WallpaperSurface、
+      SettingsPresetSlider；未新增控件、surface 或自由 speed。
+- [x] Runtime substrate = canvas / gradient / image；gradient 不用图片补偿；
+      mono 光场/根层不注入 accent，偏好 schema 与数据库迁移不变。
+- [x] Motion Budget v2 的 raw/composite/final 上限与 minimum lower bound
+      同时定义于 shared；A/B floor 单一、peak 35%/55%，不恢复 breathe/ripple。
+- [x] Phase 0B 初始候选不满足 pronounced 热点下限；改为半径 A/B 32/26cqmax，原点
+      A -14/-18cqmax、B right -12cqmax/top 18%。 canvas/gradient travel =
+      3/4.8/7/9.5cqmax，image = 4/6.5/9/14cqmax；raw mix、scale、floor 保留
+      candidate table。参数已回写 shared 与 DESIGN_SYSTEM。
+- [x] 固定 phase 的实页标定冻结 ROI 为 x=21/50 (0.42)、y=0、w=1/18、h=4/45；A/B
+      按实际 delay 换算后验证 computed
+      progress。废弃早期探索的错误相位与逐档最大 ROI 数值，不把它们当作 CI
+      结果。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      十二格真实首页，无横向溢出；mask z-index 2 始终高于 ambient 1。 截图
+      `/tmp/omp-sshots-1599bb93f70dd3f0.webp` 至
+      `/tmp/omp-sshots-1599bb986d4dd3fb.webp`。
+- [x] 浅色、深色、高饱和、高频纹理、左/右/中央主体、gradient 素材实页检查；
+      Search 仍为主区域，未提高壁纸自身可读性保证。八类为代表场景，
+      不宣称覆盖所有任意原始图片的可读性。
+- [x] ambient/drift/zoom × 四档真实播放；分别连续观察 12/8/5/3 秒，
+      动效模式互斥，未见光球硬边缘、同步呼吸或快速闪烁。
+- [x] Settings 390/768/1440 × light/dark 六格真实预览；播放 ambient， field A
+      直径/容器最大边为 .64（测得 .63995–.63999），与首页等比例。 截图
+      `/tmp/omp-sshots-1599bc539e0dd3fd.webp` 至
+      `/tmp/omp-sshots-1599bc55f8cdd402.webp`。
+- [x] reduced-motion 实页：显示“系统已启用‘减少动态效果’，动态预览已静止。”
+      说明，光场动画数量 0；不更改用户 intent。Focal editor 保持 off。
+- [x] Settings axe：0 confirmed violations、2 项需人工判断；干净 reload 后
+      无新增 runtime error。
+- [x] 最终 deterministic fixture、raster safety、aggregate luminance、onset
+      与完整质量门禁结果：480 passed 单元测试；壁纸 E2E 全部 22 步通过； fixed
+      gray texture 四档 hotspot delta 实测为 1.056 / 1.769 / 2.512 / 4.023
+      （严格单调且满足 >= 0.8 / 1.5 / 2.5 / 4.0 下限）；aggregate luminance
+      swing 0.380 （<= 3.0）；浏览器 phase separation 0.20（>=
+      0.15）；pronounced afterMask 0.102 （<= 0.1804）；drift / zoom onset
+      progress 各档在 deadline 均 >= 10%； UI Guard 0 violations / 0 allowances
+      / 0 drift；build、typecheck、lint 通过。

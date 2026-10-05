@@ -1,5 +1,6 @@
 import { assertEquals, assertNotEquals } from "@std/assert";
 import {
+    calculateAmbientCompositeContribution,
     calculateWallpaperOverscan,
     DEFAULT_WALLPAPER_PRESENTATION,
     GLOBAL_MOTION_BUDGET,
@@ -10,13 +11,19 @@ import {
     purgeWallpaperPresentation,
     resolveWallpaperPresentation,
     touchWallpaperPresentation,
+    WALLPAPER_AMBIENT_CANVAS_PARAMS,
+    WALLPAPER_AMBIENT_IMAGE_PARAMS,
+    WALLPAPER_AMBIENT_PARAMS,
+    WALLPAPER_DRIFT_PARAMS,
     WALLPAPER_MOTION_TIMING,
+    WALLPAPER_ZOOM_PARAMS,
     type WallpaperMotion,
     type WallpaperMotionLevel,
     type WallpaperPresentation,
     wallpaperPresentation,
     type WallpaperReadability,
     type WallpaperSoftness,
+    type WallpaperSubstrate,
     type WallpaperTone,
 } from "./wallpaper-presentation.ts";
 
@@ -33,7 +40,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
         assertEquals(
             resolveWallpaperPresentation(
                 { ...DEFAULT_WALLPAPER_PRESENTATION, readability: id },
-                { theme: "light" },
+                { theme: "light", substrate: "image" },
             ).mask,
             expectedMask,
         );
@@ -51,7 +58,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
         assertEquals(
             resolveWallpaperPresentation(
                 { ...DEFAULT_WALLPAPER_PRESENTATION, softness: id },
-                { theme: "light" },
+                { theme: "light", substrate: "image" },
             ).blur,
             expectedBlur,
         );
@@ -61,53 +68,77 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
     assertEquals(
         resolveWallpaperPresentation(
             { ...DEFAULT_WALLPAPER_PRESENTATION, tone: "natural" },
-            { theme: "light" },
+            { theme: "light", substrate: "image" },
         ).filter,
         "blur(0px) brightness(1) saturate(1) contrast(1) grayscale(0)",
     );
     assertEquals(
         resolveWallpaperPresentation(
             { ...DEFAULT_WALLPAPER_PRESENTATION, tone: "natural" },
-            { theme: "dark" },
+            { theme: "dark", substrate: "image" },
         ).filter,
         "blur(0px) brightness(1) saturate(1) contrast(1) grayscale(0)",
     );
     assertEquals(
         resolveWallpaperPresentation(
             { ...DEFAULT_WALLPAPER_PRESENTATION, tone: "soft" },
-            { theme: "light" },
+            { theme: "light", substrate: "image" },
         ).filter,
         "blur(0px) brightness(0.99) saturate(0.86) contrast(0.96) grayscale(0)",
     );
     assertEquals(
         resolveWallpaperPresentation(
             { ...DEFAULT_WALLPAPER_PRESENTATION, tone: "soft" },
-            { theme: "dark" },
+            { theme: "dark", substrate: "image" },
         ).filter,
         "blur(0px) brightness(0.9) saturate(0.8) contrast(0.94) grayscale(0)",
     );
     assertEquals(
         resolveWallpaperPresentation(
             { ...DEFAULT_WALLPAPER_PRESENTATION, tone: "mono" },
-            { theme: "light" },
+            { theme: "light", substrate: "image" },
         ).filter,
         "blur(0px) brightness(0.98) saturate(0) contrast(0.96) grayscale(1)",
     );
     assertEquals(
         resolveWallpaperPresentation(
             { ...DEFAULT_WALLPAPER_PRESENTATION, tone: "mono" },
-            { theme: "dark" },
+            { theme: "dark", substrate: "image" },
         ).filter,
         "blur(0px) brightness(0.86) saturate(0) contrast(0.92) grayscale(1)",
     );
 
-    // 4. Ambient motion levels -> exact mix, travel, scale
+    // 4. Ambient motion levels -> exact fieldAMix, fieldBMix, travel, scale, opacityFloor for canvas substrate
     for (
         const [level, exp] of [
-            ["subtle", { mix: 3.5, travel: 1.2, scale: 1.010 }],
-            ["soft", { mix: 5.0, travel: 1.8, scale: 1.016 }],
-            ["standard", { mix: 6.5, travel: 2.4, scale: 1.022 }],
-            ["pronounced", { mix: 8.0, travel: 3.2, scale: 1.028 }],
+            ["subtle", {
+                fieldAMix: 4.0,
+                fieldBMix: 3.2,
+                travel: 3.0,
+                scale: 1.012,
+                opacityFloor: 0.92,
+            }],
+            ["soft", {
+                fieldAMix: 5.5,
+                fieldBMix: 4.4,
+                travel: 4.8,
+                scale: 1.020,
+                opacityFloor: 0.89,
+            }],
+            ["standard", {
+                fieldAMix: 7.0,
+                fieldBMix: 5.6,
+                travel: 7.0,
+                scale: 1.030,
+                opacityFloor: 0.86,
+            }],
+            ["pronounced", {
+                fieldAMix: 8.5,
+                fieldBMix: 6.8,
+                travel: 9.5,
+                scale: 1.040,
+                opacityFloor: 0.82,
+            }],
         ] as const
     ) {
         const res = resolveWallpaperPresentation(
@@ -116,21 +147,113 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
                 motion: "ambient",
                 motionLevel: level,
             },
-            { theme: "light" },
+            { theme: "light", substrate: "canvas" },
         );
-        assertEquals(res.ambient.mix, exp.mix);
+        assertEquals(res.ambient.fieldAMix, exp.fieldAMix);
+        assertEquals(res.ambient.fieldBMix, exp.fieldBMix);
         assertEquals(res.ambient.travel, exp.travel);
         assertEquals(res.ambient.scale, exp.scale);
-        assertEquals(res.ambient.fieldMix, Number((exp.mix / 2).toFixed(3)));
+        assertEquals(res.ambient.opacityFloor, exp.opacityFloor);
+        assertEquals(res.ambient.neutral, false);
     }
 
-    // 5. Drift motion levels -> exact x, y, scale
+    // 4b. Ambient motion levels -> exact fieldAMix, fieldBMix, travel, scale, opacityFloor for image substrate
     for (
         const [level, exp] of [
-            ["subtle", { x: 0.25, y: 0.18, scale: 1.012 }],
-            ["soft", { x: 0.45, y: 0.30, scale: 1.017 }],
-            ["standard", { x: 0.65, y: 0.45, scale: 1.023 }],
-            ["pronounced", { x: 0.90, y: 0.60, scale: 1.032 }],
+            ["subtle", {
+                fieldAMix: 6.0,
+                fieldBMix: 4.8,
+                travel: 4.0,
+                scale: 1.015,
+                opacityFloor: 0.92,
+            }],
+            ["soft", {
+                fieldAMix: 8.0,
+                fieldBMix: 6.4,
+                travel: 6.5,
+                scale: 1.024,
+                opacityFloor: 0.88,
+            }],
+            ["standard", {
+                fieldAMix: 10.0,
+                fieldBMix: 8.0,
+                travel: 9.0,
+                scale: 1.034,
+                opacityFloor: 0.84,
+            }],
+            ["pronounced", {
+                fieldAMix: 12.0,
+                fieldBMix: 9.6,
+                travel: 14.0,
+                scale: 1.045,
+                opacityFloor: 0.80,
+            }],
+        ] as const
+    ) {
+        const res = resolveWallpaperPresentation(
+            {
+                ...DEFAULT_WALLPAPER_PRESENTATION,
+                motion: "ambient",
+                motionLevel: level,
+            },
+            { theme: "light", substrate: "image" },
+        );
+        assertEquals(res.ambient.fieldAMix, exp.fieldAMix);
+        assertEquals(res.ambient.fieldBMix, exp.fieldBMix);
+        assertEquals(res.ambient.travel, exp.travel);
+        assertEquals(res.ambient.scale, exp.scale);
+        assertEquals(res.ambient.opacityFloor, exp.opacityFloor);
+        assertEquals(res.ambient.neutral, false);
+    }
+
+    // 4c. Gradient substrate ambient mapping uses same low-noise table as canvas
+    for (const level of ["subtle", "soft", "standard", "pronounced"] as const) {
+        const gradRes = resolveWallpaperPresentation(
+            {
+                ...DEFAULT_WALLPAPER_PRESENTATION,
+                motion: "ambient",
+                motionLevel: level,
+            },
+            { theme: "light", substrate: "gradient" },
+        );
+        const canvasRes = resolveWallpaperPresentation(
+            {
+                ...DEFAULT_WALLPAPER_PRESENTATION,
+                motion: "ambient",
+                motionLevel: level,
+            },
+            { theme: "light", substrate: "canvas" },
+        );
+        assertEquals(gradRes.ambient.fieldAMix, canvasRes.ambient.fieldAMix);
+        assertEquals(gradRes.ambient.fieldBMix, canvasRes.ambient.fieldBMix);
+        assertEquals(gradRes.ambient.travel, canvasRes.ambient.travel);
+        assertEquals(gradRes.ambient.scale, canvasRes.ambient.scale);
+        assertEquals(
+            gradRes.ambient.opacityFloor,
+            canvasRes.ambient.opacityFloor,
+        );
+    }
+    // 4d. Verify substrate dictionary mappings
+    assertEquals(
+        WALLPAPER_AMBIENT_PARAMS.canvas,
+        WALLPAPER_AMBIENT_CANVAS_PARAMS,
+    );
+    assertEquals(
+        WALLPAPER_AMBIENT_PARAMS.gradient,
+        WALLPAPER_AMBIENT_CANVAS_PARAMS,
+    );
+    assertEquals(
+        WALLPAPER_AMBIENT_PARAMS.image,
+        WALLPAPER_AMBIENT_IMAGE_PARAMS,
+    );
+
+    // 5. Drift motion levels -> exact x, y (stage scale removed)
+    for (
+        const [level, exp] of [
+            ["subtle", { x: 0.40, y: 0.28 }],
+            ["soft", { x: 0.75, y: 0.50 }],
+            ["standard", { x: 1.15, y: 0.78 }],
+            ["pronounced", { x: 1.60, y: 1.05 }],
         ] as const
     ) {
         const res = resolveWallpaperPresentation(
@@ -139,20 +262,19 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
                 motion: "drift",
                 motionLevel: level,
             },
-            { theme: "light" },
+            { theme: "light", substrate: "image" },
         );
         assertEquals(res.drift.x, exp.x);
         assertEquals(res.drift.y, exp.y);
-        assertEquals(res.drift.scale, exp.scale);
     }
 
     // 6. Zoom motion levels -> exact scale
     for (
         const [level, expScale] of [
-            ["subtle", 1.012],
-            ["soft", 1.020],
-            ["standard", 1.028],
-            ["pronounced", 1.040],
+            ["subtle", 1.018],
+            ["soft", 1.030],
+            ["standard", 1.045],
+            ["pronounced", 1.060],
         ] as const
     ) {
         const res = resolveWallpaperPresentation(
@@ -161,7 +283,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation resolves exact n
                 motion: "zoom",
                 motionLevel: level,
             },
-            { theme: "light" },
+            { theme: "light", substrate: "image" },
         );
         assertEquals(res.zoom.scale, expScale);
     }
@@ -634,7 +756,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation output and theme
             motion: "off",
             motionLevel: "soft",
         },
-        { theme: "light" },
+        { theme: "light", substrate: "image" },
     );
     assertEquals(lightResolved.blur, 2);
     assertEquals(lightResolved.mask, 0.24);
@@ -652,7 +774,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation output and theme
             motion: "off",
             motionLevel: "soft",
         },
-        { theme: "dark" },
+        { theme: "dark", substrate: "image" },
     );
     assertEquals(
         darkResolved.filter,
@@ -669,7 +791,7 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation output and theme
             motion: "off",
             motionLevel: "soft",
         },
-        { theme: "light" },
+        { theme: "light", substrate: "image" },
     );
     assertEquals(
         monoResolved.filter,
@@ -678,7 +800,8 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation output and theme
 });
 
 Deno.test("wallpaper-presentation: resolveWallpaperPresentation Tone x Ambient composition rules", () => {
-    // tone = natural: full accent mix
+    // 1. Image substrate:
+    // tone = natural: full mix
     const naturalAmbient = resolveWallpaperPresentation(
         {
             ...DEFAULT_WALLPAPER_PRESENTATION,
@@ -686,13 +809,13 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation Tone x Ambient c
             motion: "ambient",
             motionLevel: "pronounced",
         },
-        { theme: "light" },
+        { theme: "light", substrate: "image" },
     );
-    assertEquals(naturalAmbient.ambient.mix, 8.0);
-    assertEquals(naturalAmbient.ambient.fieldMix, 4.0);
+    assertEquals(naturalAmbient.ambient.fieldAMix, 12.0);
+    assertEquals(naturalAmbient.ambient.fieldBMix, 9.6);
     assertEquals(naturalAmbient.ambient.neutral, false);
 
-    // tone = soft: 85% accent mix
+    // tone = soft: 90% factor
     const softAmbient = resolveWallpaperPresentation(
         {
             ...DEFAULT_WALLPAPER_PRESENTATION,
@@ -700,13 +823,10 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation Tone x Ambient c
             motion: "ambient",
             motionLevel: "pronounced",
         },
-        { theme: "light" },
+        { theme: "light", substrate: "image" },
     );
-    assertEquals(softAmbient.ambient.mix, Number((8.0 * 0.85).toFixed(3)));
-    assertEquals(
-        softAmbient.ambient.fieldMix,
-        Number((softAmbient.ambient.mix / 2).toFixed(3)),
-    );
+    assertEquals(softAmbient.ambient.fieldAMix, 10.8);
+    assertEquals(softAmbient.ambient.fieldBMix, 8.64);
     assertEquals(softAmbient.ambient.neutral, false);
 
     // tone = mono: retains stage luminance mix so neutral field is visible, neutral = true
@@ -717,54 +837,115 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation Tone x Ambient c
             motion: "ambient",
             motionLevel: "pronounced",
         },
-        { theme: "light" },
+        { theme: "light", substrate: "image" },
     );
-    assertEquals(monoAmbient.ambient.mix, 8.0);
-    assertEquals(monoAmbient.ambient.fieldMix, 4.0);
+    assertEquals(monoAmbient.ambient.fieldAMix, 12.0);
+    assertEquals(monoAmbient.ambient.fieldBMix, 9.6);
     assertEquals(monoAmbient.ambient.neutral, true);
+
+    // 2. Canvas substrate with soft tone (90% factor on canvas table)
+    const softCanvas = resolveWallpaperPresentation(
+        {
+            ...DEFAULT_WALLPAPER_PRESENTATION,
+            tone: "soft",
+            motion: "ambient",
+            motionLevel: "pronounced",
+        },
+        { theme: "light", substrate: "canvas" },
+    );
+    assertEquals(softCanvas.ambient.fieldAMix, Number((8.5 * 0.9).toFixed(3)));
+    assertEquals(softCanvas.ambient.fieldBMix, Number((6.8 * 0.9).toFixed(3)));
+    assertEquals(softCanvas.ambient.neutral, false);
 });
 
-Deno.test("wallpaper-presentation: resolveWallpaperPresentation hasWallpaper=false behavior", () => {
-    // Ambient is allowed when hasWallpaper is false
-    const noWallpaperAmbient = resolveWallpaperPresentation(
+Deno.test("wallpaper-presentation: resolveWallpaperPresentation substrate behavior", () => {
+    // 1. Canvas substrate:
+    // Ambient is allowed on canvas
+    const canvasAmbient = resolveWallpaperPresentation(
         {
             ...DEFAULT_WALLPAPER_PRESENTATION,
             motion: "ambient",
             motionLevel: "standard",
         },
-        { theme: "light", hasWallpaper: false },
+        { theme: "light", substrate: "canvas" },
     );
-    assertEquals(noWallpaperAmbient.motion, "ambient");
-    assertEquals(noWallpaperAmbient.ambient.mix, 6.5);
-    assertEquals(noWallpaperAmbient.mask, 0);
-    assertEquals(noWallpaperAmbient.blur, 0);
+    assertEquals(canvasAmbient.motion, "ambient");
+    assertEquals(canvasAmbient.ambient.fieldAMix, 7.0);
+    assertEquals(canvasAmbient.ambient.fieldBMix, 5.6);
+    assertEquals(canvasAmbient.mask, 0);
+    assertEquals(canvasAmbient.blur, 0);
     assertEquals(
-        noWallpaperAmbient.filter,
+        canvasAmbient.filter,
         "blur(0px) brightness(1) saturate(1) contrast(1) grayscale(0)",
     );
-    assertEquals(noWallpaperAmbient.composition, { focalX: 0.5, focalY: 0.5 });
+    assertEquals(canvasAmbient.composition, { focalX: 0.5, focalY: 0.5 });
 
-    // Drift downgrades to "off" when hasWallpaper is false
-    const noWallpaperDrift = resolveWallpaperPresentation(
+    // Drift downgrades to "off" on canvas
+    const canvasDrift = resolveWallpaperPresentation(
         {
             ...DEFAULT_WALLPAPER_PRESENTATION,
             motion: "drift",
             motionLevel: "standard",
         },
-        { theme: "light", hasWallpaper: false },
+        { theme: "light", substrate: "canvas" },
     );
-    assertEquals(noWallpaperDrift.motion, "off");
+    assertEquals(canvasDrift.motion, "off");
+    assertEquals(canvasDrift.drift.x, 0);
+    assertEquals(canvasDrift.drift.y, 0);
 
-    // Zoom downgrades to "off" when hasWallpaper is false
-    const noWallpaperZoom = resolveWallpaperPresentation(
+    // Zoom downgrades to "off" on canvas
+    const canvasZoom = resolveWallpaperPresentation(
         {
             ...DEFAULT_WALLPAPER_PRESENTATION,
             motion: "zoom",
             motionLevel: "standard",
         },
-        { theme: "light", hasWallpaper: false },
+        { theme: "light", substrate: "canvas" },
     );
-    assertEquals(noWallpaperZoom.motion, "off");
+    assertEquals(canvasZoom.motion, "off");
+    assertEquals(canvasZoom.zoom.scale, 1);
+
+    // 2. Gradient substrate:
+    // Ambient uses low-noise table (same as canvas)
+    const gradientAmbient = resolveWallpaperPresentation(
+        {
+            ...DEFAULT_WALLPAPER_PRESENTATION,
+            motion: "ambient",
+            motionLevel: "standard",
+            readability: "balanced",
+            softness: "subtle",
+        },
+        { theme: "light", substrate: "gradient" },
+    );
+    assertEquals(gradientAmbient.ambient.fieldAMix, 7.0);
+    assertEquals(gradientAmbient.ambient.fieldBMix, 5.6);
+    assertEquals(gradientAmbient.mask, 0.24);
+    assertEquals(gradientAmbient.blur, 2);
+
+    // Drift is allowed on gradient
+    const gradientDrift = resolveWallpaperPresentation(
+        {
+            ...DEFAULT_WALLPAPER_PRESENTATION,
+            motion: "drift",
+            motionLevel: "standard",
+        },
+        { theme: "light", substrate: "gradient" },
+    );
+    assertEquals(gradientDrift.motion, "drift");
+    assertEquals(gradientDrift.drift.x, 1.15);
+    assertEquals(gradientDrift.drift.y, 0.78);
+
+    // Zoom is allowed on gradient
+    const gradientZoom = resolveWallpaperPresentation(
+        {
+            ...DEFAULT_WALLPAPER_PRESENTATION,
+            motion: "zoom",
+            motionLevel: "standard",
+        },
+        { theme: "light", substrate: "gradient" },
+    );
+    assertEquals(gradientZoom.motion, "zoom");
+    assertEquals(gradientZoom.zoom.scale, 1.045);
 });
 
 Deno.test("wallpaper-presentation: resolveWallpaperPresentation reducedMotion behavior", () => {
@@ -775,9 +956,11 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation reducedMotion be
             motion: "drift",
             motionLevel: "pronounced",
         },
-        { theme: "light", reducedMotion: true },
+        { theme: "light", substrate: "image", reducedMotion: true },
     );
     assertEquals(reducedDrift.motion, "off");
+    assertEquals(reducedDrift.drift.x, 0);
+    assertEquals(reducedDrift.drift.y, 0);
 
     // Zoom downgrades to "off"
     const reducedZoom = resolveWallpaperPresentation(
@@ -786,46 +969,54 @@ Deno.test("wallpaper-presentation: resolveWallpaperPresentation reducedMotion be
             motion: "zoom",
             motionLevel: "pronounced",
         },
-        { theme: "light", reducedMotion: true },
+        { theme: "light", substrate: "image", reducedMotion: true },
     );
     assertEquals(reducedZoom.motion, "off");
+    assertEquals(reducedZoom.zoom.scale, 1);
 
-    // Ambient retains static field (travel: 0, scale: 1)
+    // Ambient retains static field (travel: 0, scale: 1, floor preserved)
     const reducedAmbient = resolveWallpaperPresentation(
         {
             ...DEFAULT_WALLPAPER_PRESENTATION,
             motion: "ambient",
             motionLevel: "pronounced",
         },
-        { theme: "light", reducedMotion: true },
+        { theme: "light", substrate: "image", reducedMotion: true },
     );
     assertEquals(reducedAmbient.motion, "ambient");
     assertEquals(reducedAmbient.ambient.travel, 0);
     assertEquals(reducedAmbient.ambient.scale, 1);
-    assertEquals(reducedAmbient.ambient.mix, 8.0);
+    assertEquals(reducedAmbient.ambient.opacityFloor, 0.80);
+    assertEquals(reducedAmbient.ambient.fieldAMix, 12.0);
+    assertEquals(reducedAmbient.ambient.fieldBMix, 9.6);
 });
 
 Deno.test("wallpaper-presentation: calculateWallpaperOverscan drift and zoom derivations", () => {
-    // Drift: tx = 0.009, ty = 0.006 at pronounced
+    // Drift: tx = 0.016, ty = 0.0105 at pronounced
     const driftOverscan = calculateWallpaperOverscan({
         blur: 5,
         motion: "drift",
         motionLevel: "pronounced",
     });
-    const tx = 0.90 / 100;
-    assertEquals(driftOverscan.percentageX, (100 * tx) / (1 - 2 * tx));
-    assertEquals(driftOverscan.pixelsX, (3 * 5 * 1.032) / (1 - 2 * tx));
-    assertEquals(driftOverscan.scale, 1.032);
+    const tx = 1.60 / 100;
+    const ty = 1.05 / 100;
+    const denomX = 1 - 2 * tx;
+    const denomY = 1 - 2 * ty;
+    assertEquals(driftOverscan.percentageX, (100 * tx) / denomX);
+    assertEquals(driftOverscan.percentageY, (100 * ty) / denomY);
+    assertEquals(driftOverscan.pixelsX, (3 * 5) / denomX);
+    assertEquals(driftOverscan.pixelsY, (3 * 5) / denomY);
+    assertEquals(driftOverscan.scale, Math.max(1 / denomX, 1 / denomY));
 
-    // Zoom: peak scale 1.040 at pronounced
+    // Zoom: peak scale 1.060 at pronounced
     const zoomOverscan = calculateWallpaperOverscan({
         blur: 9,
         motion: "zoom",
         motionLevel: "pronounced",
     });
-    assertEquals(zoomOverscan.percentageX, 100 * (1.040 - 1));
-    assertEquals(zoomOverscan.pixelsX, 3 * 9 * 1.04);
-    assertEquals(zoomOverscan.scale, 1.040);
+    assertEquals(zoomOverscan.percentageX, 100 * (1.060 - 1));
+    assertEquals(zoomOverscan.pixelsX, 3 * 9 * 1.060);
+    assertEquals(zoomOverscan.scale, 1.060);
 
     // Off: 0 percentage, 3 * blur pixels
     const offOverscan = calculateWallpaperOverscan({ blur: 2, motion: "off" });
@@ -834,7 +1025,7 @@ Deno.test("wallpaper-presentation: calculateWallpaperOverscan drift and zoom der
     assertEquals(offOverscan.scale, 1);
 });
 
-Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Budget invariants", () => {
+Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Budget v2 invariants", () => {
     const readabilities: WallpaperReadability[] = [
         "clear",
         "balanced",
@@ -850,6 +1041,7 @@ Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Bud
         "standard",
         "pronounced",
     ];
+    const substrates: WallpaperSubstrate[] = ["canvas", "gradient", "image"];
     const themes: ("light" | "dark")[] = ["light", "dark"];
 
     let count = 0;
@@ -858,129 +1050,186 @@ Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Bud
             for (const tone of tones) {
                 for (const motion of motions) {
                     for (const motionLevel of motionLevels) {
-                        for (const theme of themes) {
-                            count++;
-                            const presentation: WallpaperPresentation = {
-                                composition: { focalX: 0.5, focalY: 0.5 },
-                                readability,
-                                softness,
-                                tone,
-                                motion,
-                                motionLevel,
-                            };
-                            const resolved = resolveWallpaperPresentation(
-                                presentation,
-                                {
-                                    theme,
-                                },
-                            );
+                        for (const substrate of substrates) {
+                            for (const theme of themes) {
+                                count++;
+                                const presentation: WallpaperPresentation = {
+                                    composition: { focalX: 0.5, focalY: 0.5 },
+                                    readability,
+                                    softness,
+                                    tone,
+                                    motion,
+                                    motionLevel,
+                                };
+                                const resolved = resolveWallpaperPresentation(
+                                    presentation,
+                                    {
+                                        theme,
+                                        substrate,
+                                    },
+                                );
 
-                            // 1. Invariant: Finite numbers, no NaN
-                            assertEquals(Number.isFinite(resolved.mask), true);
-                            assertEquals(Number.isFinite(resolved.blur), true);
-                            assertEquals(
-                                Number.isFinite(resolved.ambient.mix),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.ambient.fieldMix),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.ambient.travel),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.ambient.scale),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.drift.x),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.drift.y),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.drift.scale),
-                                true,
-                            );
-                            assertEquals(
-                                Number.isFinite(resolved.zoom.scale),
-                                true,
-                            );
+                                // 1. Invariant: Finite numbers, no NaN
+                                assertEquals(
+                                    Number.isFinite(resolved.mask),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.blur),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.ambient.fieldAMix),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.ambient.fieldBMix),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.ambient.travel),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.ambient.scale),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(
+                                        resolved.ambient.opacityFloor,
+                                    ),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.drift.x),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.drift.y),
+                                    true,
+                                );
+                                assertEquals(
+                                    Number.isFinite(resolved.zoom.scale),
+                                    true,
+                                );
 
-                            // 2. Invariant: Valid CSS filter syntax
-                            assertNotEquals(resolved.filter.length, 0);
-                            assertEquals(
-                                resolved.filter.includes("NaN"),
-                                false,
-                            );
-                            assertEquals(
-                                resolved.filter.includes("undefined"),
-                                false,
-                            );
+                                // 2. Invariant: Valid CSS filter syntax
+                                assertNotEquals(resolved.filter.length, 0);
+                                assertEquals(
+                                    resolved.filter.includes("NaN"),
+                                    false,
+                                );
+                                assertEquals(
+                                    resolved.filter.includes("undefined"),
+                                    false,
+                                );
 
-                            // 3. Motion budget invariants:
-                            // - Accent contribution <= 8%
-                            assertEquals(
-                                resolved.ambient.mix <=
-                                    GLOBAL_MOTION_BUDGET
-                                        .maxAccentContributionPercent,
-                                true,
-                            );
-                            // - Two overlapping fields: each field <= mix/2 <= 4%
-                            assertEquals(
-                                resolved.ambient.fieldMix <= 4.0,
-                                true,
-                            );
-                            // - Drift movement <= 1%
-                            assertEquals(
-                                resolved.drift.x <=
-                                    GLOBAL_MOTION_BUDGET.maxMovementPercent,
-                                true,
-                            );
-                            assertEquals(
-                                resolved.drift.y <=
-                                    GLOBAL_MOTION_BUDGET.maxMovementPercent,
-                                true,
-                            );
-                            // - Zoom delta <= 4%
-                            assertEquals(
-                                resolved.zoom.scale - 1 <=
-                                    GLOBAL_MOTION_BUDGET.maxZoomDeltaPercent /
-                                                100 + 0.0001,
-                                true,
-                            );
+                                // 3. Motion budget v2 invariants:
+                                // - Field raw mix upper bounds
+                                assertEquals(
+                                    resolved.ambient.fieldAMix <=
+                                        GLOBAL_MOTION_BUDGET
+                                            .maxAmbientFieldARawMixPercent,
+                                    true,
+                                );
+                                assertEquals(
+                                    resolved.ambient.fieldBMix <=
+                                        GLOBAL_MOTION_BUDGET
+                                            .maxAmbientFieldBRawMixPercent,
+                                    true,
+                                );
+
+                                // - Drift movement bounds
+                                assertEquals(
+                                    resolved.drift.x <=
+                                        GLOBAL_MOTION_BUDGET
+                                            .maxDriftMovementXPercent,
+                                    true,
+                                );
+                                assertEquals(
+                                    resolved.drift.y <=
+                                        GLOBAL_MOTION_BUDGET
+                                            .maxDriftMovementYPercent,
+                                    true,
+                                );
+
+                                // - Zoom delta <= 6%
+                                assertEquals(
+                                    resolved.zoom.scale - 1 <=
+                                        GLOBAL_MOTION_BUDGET
+                                                        .maxZoomDeltaPercent /
+                                                    100 + 0.0001,
+                                    true,
+                                );
+
+                                // - Conservative composite peak calculation
+                                const contrib =
+                                    calculateAmbientCompositeContribution({
+                                        fieldAMix: resolved.ambient.fieldAMix,
+                                        fieldBMix: resolved.ambient.fieldBMix,
+                                        mask: resolved.mask,
+                                    });
+                                assertEquals(
+                                    contrib.composited <=
+                                        GLOBAL_MOTION_BUDGET
+                                                .maxAmbientCompositeContribution +
+                                            0.0001,
+                                    true,
+                                );
+
+                                // - After clear mask (mask = 0.12) contribution upper bound
+                                if (
+                                    readability === "clear" &&
+                                    substrate !== "canvas"
+                                ) {
+                                    assertEquals(
+                                        contrib.afterMask <=
+                                            GLOBAL_MOTION_BUDGET
+                                                    .maxAmbientCompositeContributionAfterClear +
+                                                0.0001,
+                                        true,
+                                    );
+                                }
+
+                                // - Canvas (no mask) also <= composite limit
+                                if (substrate === "canvas") {
+                                    assertEquals(
+                                        contrib.composited <=
+                                            GLOBAL_MOTION_BUDGET
+                                                    .maxAmbientCompositeContribution +
+                                                0.0001,
+                                        true,
+                                    );
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
-    // 4 * 4 * 3 * 4 * 4 * 2 = 1536 permutations checked
-    assertEquals(count, 1536);
+    // 4 * 4 * 3 * 4 * 4 * 3 * 2 = 4608 permutations checked
+    assertEquals(count, 4608);
 
     // Timing invariants
     assertEquals(
         WALLPAPER_MOTION_TIMING.ambient.durationA >=
-            GLOBAL_MOTION_BUDGET.minDurationSeconds,
+            GLOBAL_MOTION_BUDGET.minAmbientDurationSeconds,
         true,
     );
     assertEquals(
         WALLPAPER_MOTION_TIMING.ambient.durationB >=
-            GLOBAL_MOTION_BUDGET.minDurationSeconds,
+            GLOBAL_MOTION_BUDGET.minAmbientDurationSeconds,
         true,
     );
     assertEquals(
         WALLPAPER_MOTION_TIMING.drift.duration >=
-            GLOBAL_MOTION_BUDGET.minDurationSeconds,
+            GLOBAL_MOTION_BUDGET.minDriftZoomDurationSeconds,
         true,
     );
     assertEquals(
         WALLPAPER_MOTION_TIMING.zoom.duration >=
-            GLOBAL_MOTION_BUDGET.minDurationSeconds,
+            GLOBAL_MOTION_BUDGET.minDriftZoomDurationSeconds,
         true,
     );
     assertEquals(
@@ -988,4 +1237,59 @@ Deno.test("wallpaper-presentation: exhaustive matrix satisfies Global Motion Bud
             GLOBAL_MOTION_BUDGET.maxMovingAmbientFields,
         true,
     );
+});
+
+Deno.test("wallpaper-presentation: stage monotonicity across all stages", () => {
+    const levels: WallpaperMotionLevel[] = [
+        "subtle",
+        "soft",
+        "standard",
+        "pronounced",
+    ];
+    for (let i = 0; i < levels.length - 1; i++) {
+        const curr = levels[i];
+        const next = levels[i + 1];
+
+        // Canvas ambient monotonicity
+        const cCurr = WALLPAPER_AMBIENT_CANVAS_PARAMS[curr];
+        const cNext = WALLPAPER_AMBIENT_CANVAS_PARAMS[next];
+        assertEquals(cNext.fieldAMix > cCurr.fieldAMix, true);
+        assertEquals(cNext.fieldBMix > cCurr.fieldBMix, true);
+        assertEquals(cNext.travel > cCurr.travel, true);
+        assertEquals(cNext.scale > cCurr.scale, true);
+        assertEquals(cNext.opacityFloor <= cCurr.opacityFloor, true);
+
+        // Image ambient monotonicity
+        const iCurr = WALLPAPER_AMBIENT_IMAGE_PARAMS[curr];
+        const iNext = WALLPAPER_AMBIENT_IMAGE_PARAMS[next];
+        assertEquals(iNext.fieldAMix > iCurr.fieldAMix, true);
+        assertEquals(iNext.fieldBMix > iCurr.fieldBMix, true);
+        assertEquals(iNext.travel > iCurr.travel, true);
+        assertEquals(iNext.scale > iCurr.scale, true);
+        assertEquals(iNext.opacityFloor <= iCurr.opacityFloor, true);
+
+        // Drift monotonicity
+        const dCurr = WALLPAPER_DRIFT_PARAMS[curr];
+        const dNext = WALLPAPER_DRIFT_PARAMS[next];
+        assertEquals(dNext.x > dCurr.x, true);
+        assertEquals(dNext.y > dCurr.y, true);
+
+        // Zoom monotonicity
+        const zCurr = WALLPAPER_ZOOM_PARAMS[curr];
+        const zNext = WALLPAPER_ZOOM_PARAMS[next];
+        assertEquals(zNext.scale > zCurr.scale, true);
+    }
+});
+
+Deno.test("wallpaper-presentation: ambient envelopes never extinguish a field", () => {
+    for (const level of ["subtle", "soft", "standard", "pronounced"] as const) {
+        assertEquals(
+            WALLPAPER_AMBIENT_CANVAS_PARAMS[level].opacityFloor >= 0.80,
+            true,
+        );
+        assertEquals(
+            WALLPAPER_AMBIENT_IMAGE_PARAMS[level].opacityFloor >= 0.80,
+            true,
+        );
+    }
 });

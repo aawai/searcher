@@ -37,7 +37,7 @@ export function formatWallpaperCss(source: string | null | undefined): string {
         : `url(${JSON.stringify(parsed.value)})`;
 }
 
-function useWallpaperEnvironment() {
+export function useWallpaperEnvironment() {
     const [theme, setTheme] = useState<"light" | "dark">(() =>
         typeof document !== "undefined" &&
             document.documentElement.dataset.theme === "dark"
@@ -86,10 +86,15 @@ export function WallpaperSurface({
 }: WallpaperSurfaceProps) {
     const environment = useWallpaperEnvironment();
     const wallpaperCss = formatWallpaperCss(source);
+    const substrate = wallpaperCss === "none"
+        ? "canvas"
+        : wallpaperCss.startsWith("url(")
+        ? "image"
+        : "gradient";
     const intent = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
     const resolved = resolveWallpaperPresentation(
         motionOverride ? { ...intent, motion: motionOverride } : intent,
-        { ...environment, hasWallpaper: wallpaperCss !== "none" },
+        { ...environment, substrate },
     );
     const inset = (percentage: number, pixels: number) =>
         `calc(-${percentage}% - ${pixels}px)`;
@@ -101,6 +106,7 @@ export function WallpaperSurface({
                 className,
             )}
             data-motion={resolved.motion}
+            data-substrate={substrate}
             data-tone={resolved.tone}
             data-motion-level={resolved.motionLevel}
             data-wallpaper-image={wallpaperCss.startsWith("url(")
@@ -123,8 +129,15 @@ export function WallpaperSurface({
                     resolved.overscan.percentageY,
                     resolved.overscan.pixelsY,
                 ),
-                "--wallpaper-ambient-mix": `${resolved.ambient.fieldMix}%`,
+                "--wallpaper-ambient-mix-a": `${resolved.ambient.fieldAMix}%`,
+                "--wallpaper-ambient-mix-b": `${resolved.ambient.fieldBMix}%`,
+                "--wallpaper-ambient-opacity-floor":
+                    resolved.ambient.opacityFloor,
                 "--wallpaper-radius-a": resolved.timing.ambient.radiusA,
+                "--wallpaper-left-a": resolved.timing.ambient.leftA,
+                "--wallpaper-top-a": resolved.timing.ambient.topA,
+                "--wallpaper-right-b": resolved.timing.ambient.rightB,
+                "--wallpaper-top-b": resolved.timing.ambient.topB,
                 "--wallpaper-radius-b": resolved.timing.ambient.radiusB,
                 "--wallpaper-duration-a":
                     `${resolved.timing.ambient.durationA}s`,
@@ -135,17 +148,17 @@ export function WallpaperSurface({
                     `${resolved.timing.drift.duration}s`,
                 "--wallpaper-zoom-duration":
                     `${resolved.timing.zoom.duration}s`,
-                "--wallpaper-easing": resolved.timing.ambient.easing,
+                "--wallpaper-ambient-easing": resolved.timing.ambient.easing,
+                "--wallpaper-drift-easing": resolved.timing.drift.easing,
+                "--wallpaper-zoom-easing": resolved.timing.zoom.easing,
                 "--wallpaper-ambient-color": resolved.ambient.neutral
                     ? "var(--wallpaper-neutral-light)"
                     : "var(--accent)",
-                "--wallpaper-ambient-travel": `${resolved.ambient.travel}vmax`,
+                "--wallpaper-ambient-travel": `${resolved.ambient.travel}cqmax`,
                 "--wallpaper-ambient-scale": resolved.ambient.scale,
                 "--wallpaper-drift-x": `${resolved.drift.x}%`,
                 "--wallpaper-drift-y": `${resolved.drift.y}%`,
-                "--wallpaper-motion-scale": resolved.motion === "zoom"
-                    ? resolved.zoom.scale
-                    : resolved.drift.scale,
+                "--wallpaper-motion-scale": resolved.zoom.scale,
             } as CSSProperties}
             aria-hidden={!children}
         >

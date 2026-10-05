@@ -15,7 +15,8 @@ Deno.test("wallpaper runtime variables are allowed only in WallpaperSurface", ()
             "--wallpaper-image",
             "--wallpaper-filter",
             "--wallpaper-overscan-x",
-            "--wallpaper-ambient-mix",
+            "--wallpaper-ambient-mix-a",
+            "--wallpaper-ambient-mix-b",
         ]
     ) {
         assertEquals(

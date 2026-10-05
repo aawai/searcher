@@ -175,6 +175,10 @@
     color: var(--danger);
     margin: 0;
 }
+.settings-row-desc--notice {
+    color: var(--muted);
+    margin-top: var(--space-1);
+}
 .wallpaper-current {
     display: flex;
     flex-direction: row;

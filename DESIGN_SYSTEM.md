@@ -381,63 +381,62 @@ Stages）：
 - **默认 Presentation 状态（`DEFAULT_WALLPAPER_PRESENTATION`）**：
   - `{ composition: { focalX: 0.5, focalY: 0.5 }, readability: "balanced", softness: "none", tone: "natural", motion: "off", motionLevel: "soft" }`
 
-#### 2. 全局动效预算与时序参数（Global Motion Budget）
+#### 2. Motion Budget v2：安全上限与最低有效性
 
-所有合法预设组合均严格受限于全局动效预算（`GLOBAL_MOTION_BUDGET`），防止过度渲染和视觉抢焦：
+Canonical 数值仅由 `src/shared/wallpaper-presentation.ts` 定义。每次只能运行一个
+motion mode，ambient 最多两个移动光场；不动画 filter/blur，不允许高频 flashing。
 
-- **最大强调色贡献（maxAccentContributionPercent）**：`8.0%`
-- **最大位移幅度（maxMovementPercent）**：`1.0%`
-- **最大缩放增量（maxZoomDeltaPercent）**：`4.0%`
-- **最短周期时长（minDurationSeconds）**：`28s`
-- **最大运动光场数（maxMovingAmbientFields）**：`2`
+- Ambient raw mix：A <= 12%，B <= 10%。任意局部/phase 的贡献
+  `a = mixA × opacityA × radialWeightA`、`b = mixB × opacityB × radialWeightB`，
+  合成 `1 - (1-a)(1-b)` <= 20.5%；不假设 hotspot 永不重叠。
+- 图片/渐变经 mask 后贡献 = 合成贡献 × `(1-mask)`；clear 12% 时 <= 18.04%，
+  balanced 24% 时 <= 15.58%。Canvas 无 mask，仍受 20.5% 合成上限约束。
+- Drift：X <= 1.6%，Y <= 1.1%；Zoom 增量 <= 6%。
+- Ambient 周期 >= 24s；Drift/Zoom >= 40s。用户不能调 speed/easing，level 不改变
+  timing。
+- 四档可感知时间：subtle 8–12s、soft 5–8s、standard 2–5s、pronounced 1–3s；
+  相邻档必须可辨识，pronounced 仍保持 Search-first。安全上限不能替代最低有效性。
+- Drift/Zoom deterministic onset：在 12/8/5/3s deadline，位移/scale delta
+  至少达到该档完整几何幅度的 10%；此 lower bound 不替代真实页面感知检查。
+- 固定中灰纹理图片 fixture，暂停动画后采样 hotspot：平均 RGB absolute delta
+  四档至少 0.8/1.5/2.5/4.0；full-frame aggregate luminance swing（0–255 channel
+  scale）<=3.0，禁止全背景周期性呼吸。 固定 ROI 为 surface 左侧
+  21/50（0.42）、顶部 0、宽 1/18、高 4/45；采样 normalized phase 0 与 .35。按
+  `currentTime = (1 + phase) * duration + delay` 定位并验证 browser computed
+  progress，等待两帧与图片 decode；禁止按每档寻找最大 ROI。
 
-具体动效时序（`WALLPAPER_MOTION_TIMING`）与几何参数：
+#### 3. Substrate、独立光场与固定参数
 
-- **环境光动效（Ambient）**：
-  - 双光场设计：Field A（半径 `58vmax`，周期 `28s`，相位偏移
-    `-7s`，左上原点），Field B（半径 `42vmax`，周期 `37s`，右侧原点）。
-  - 缓动曲线：统一采用 `cubic-bezier(0.45, 0, 0.55, 1)`。
-  - 各强度参数（`mix` / `travel` / `scale`）：
-    - `subtle`：mix 3.5%, travel 1.2vmax, scale 1.010
-    - `soft`：mix 5.0%, travel 1.8vmax, scale 1.016
-    - `standard`：mix 6.5%, travel 2.4vmax, scale 1.022
-    - `pronounced`：mix 8.0%, travel 3.2vmax, scale 1.028
-- **漂移微动（Drift）**：
-  - 周期 `54s`，缓动 `cubic-bezier(0.45, 0, 0.55, 1)`。
-  - 范围（x, y, scale）：
-    - `subtle`：x 0.25%, y 0.18%, scale 1.012
-    - `soft`：x 0.45%, y 0.30%, scale 1.017
-    - `standard`：x 0.65%, y 0.45%, scale 1.023
-    - `pronounced`：x 0.90%, y 0.60%, scale 1.032（最大位移严格 <= 1.0%）
-- **缓动推近（Zoom）**：
-  - 周期 `58s`，缓动 `cubic-bezier(0.45, 0, 0.55, 1)`。
-  - 缩放比率：
-    - `subtle`：scale 1.012（增量 1.2%）
-    - `soft`：scale 1.020（增量 2.0%）
-    - `standard`：scale 1.028（增量 2.8%）
-    - `pronounced`：scale 1.040（增量 4.0%，严格 <= 4.0%）
+`WallpaperSubstrate = canvas | gradient | image` 仅属 runtime，不改 preference
+schema。 Canvas/合法 CSS gradient 使用低噪声 table，uploaded/data/HTTPS 图片使用
+image table。
 
-#### 3. 光场配比、中性光与色调衰减
+| Stage      | Canvas/gradient A/B mix | travel   | scale | opacityFloor | Image A/B mix | travel    | scale | opacityFloor |
+| ---------- | ----------------------- | -------- | ----- | ------------ | ------------- | --------- | ----- | ------------ |
+| subtle     | 4.0% / 3.2%             | 3.0cqmax | 1.012 | .92          | 6.0% / 4.8%   | 4.0cqmax  | 1.015 | .92          |
+| soft       | 5.5% / 4.4%             | 4.8cqmax | 1.020 | .89          | 8.0% / 6.4%   | 6.5cqmax  | 1.024 | .88          |
+| standard   | 7.0% / 5.6%             | 7.0cqmax | 1.030 | .86          | 10.0% / 8.0%  | 9.0cqmax  | 1.034 | .84          |
+| pronounced | 8.5% / 6.8%             | 9.5cqmax | 1.040 | .82          | 12.0% / 9.6%  | 14.0cqmax | 1.045 | .80          |
 
-- **双光场等分贡献**：`ambientFieldMix = Number((ambientMix / 2).toFixed(3))`。即使在最高
-  `pronounced` 档位（mix 8.0%），单光场混色比仅为
-  `4.0%`，双光场合力不超过预算上限 `8.0%`。
-- **色调协同与黑白底色/遮罩纯中性化**：
-  - `natural`：混色比保持 `stage.mix`，颜色采用 `var(--accent)`。
-  - `soft`：混色比缩减为 `Number((stage.mix * 0.85).toFixed(3))`，颜色采用
-    `var(--accent)`。
-  - `mono`（黑白，`data-tone="mono"`）：
-    - **消除半透明渐变泄漏（Transparent-gradient leak）**：运行时将
-      `resolved.tone` 注入根容器 `data-tone`。容器底色切换为纯中性单色——浅色使用
-      `--wallpaper-neutral-light: #ffffff`，深色使用
-      `--wallpaper-neutral-dark: #222222`；遮罩层 `.wallpaper-surface__mask`
-      设置 `background: inherit` 继承根部纯中性底色，彻底杜绝底层 `--accent`
-      基底渐变透出破坏黑白纯粹性。
-    - **纯白中性微光（Ambient Mono Neutral
-      Luminance）**：环境光动效开启时，光场颜色严格绑定为
-      `var(--wallpaper-neutral-light)`（`#ffffff`），使**强调色贡献严格为
-      0%**；同时保留所选强度档位的亮度混色（`ambientMix = stage.mix`），为深色主题提供纯净通透的中性漫射光
-      opt-in 体验。
+`.wallpaper-surface` 建立 size query container；A/B 半径 32/26cqmax， 原点 A
+left -14cqmax/top -18cqmax，B right -12cqmax/top 18%。Embedded 与首页 共用
+resolver，以容器而非 browser viewport 为几何基准。
+
+- A/B 使用同一 stage `opacityFloor`，不为 A/B 添加独立用户参数，不机械
+  `mix / 2`。
+- A opacity peak 在 35%，B 在 55%，normalized phase separation 20%； floor
+  永不为 0。各场低频 transform/opacity 共用 timing，不恢复 breathe/ripple。 周期
+  A/B 为 28/37s，初始 offset -7s，共用 canonical cubic-bezier(0.45, 0, 0.55,
+  1)；不同周期和路径不形成同步峰。
+- `natural` 使用 accent；`soft` 将 A/B mix 各乘 .9；`mono` 使用纯白中性光，
+  不注入 accent，根底色/遮罩也使用中性色。
+- Drift 固定 46s、Zoom 固定 44s，统一 linear easing 保证 onset。 Drift 各档 X/Y
+  为 .40/.28、.75/.50、1.15/.78、1.60/1.05（%）， scale 不再表达 stage
+  强度，外扩独立解决裁切。
+- Zoom 各档 peak scale 为 1.018/1.030/1.045/1.060，0/50/100% = 1/peak/1。
+
+Settings 普通当前壁纸预览实时播放所选 motion/level；Focal editor 冻结 motion。
+系统 reduced-motion 时预览静止并显示说明，但不改变保存的 motion intent。
 
 #### 4. 3blur * scale Overscan 溢出几何计算
 
@@ -449,7 +448,8 @@ Stages）：
   - 位移系数 $t_x = x / 100$，$t_y = y / 100$；分母补偿
     $denom_x = 1 - 2t_x$，$denom_y = 1 - 2t_y$。
   - 百分比补偿：$percentage_x = (100 \cdot t_x) / denom_x$，$percentage_y = (100 \cdot t_y) / denom_y$。
-  - 像素外扩：$pixels_x = (3 \cdot blur \cdot scale) / denom_x$，$pixels_y = (3 \cdot blur \cdot scale) / denom_y$。
+  - 像素外扩：$pixels_x = (3 \cdot blur) / denom_x$，$pixels_y = (3 \cdot blur) / denom_y$；不再使用
+    stage scale。
 - **Zoom 模式**：
   - 百分比补偿：$percentage = 100 \cdot \max(0, scale - 1)$。
   - 像素外扩：$pixels = 3 \cdot blur \cdot scale$。
@@ -458,7 +458,7 @@ Stages）：
 
 #### 5. 减弱动效与降级策略（Accessibility & Fallbacks）
 
-- **无壁纸底色（hasWallpaper === false）**：
+- **无壁纸底色（substrate === "canvas"）**：
   - Drift 与 Zoom 自动降级为 `off`，禁止对空底色进行几何变换。
   - Ambient 允许保留在纯色/渐变 Canvas 上，作为柔和环境光场渲染。
 - **减弱动态偏好（prefers-reduced-motion: reduce）**：
