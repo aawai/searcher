@@ -1,7 +1,12 @@
 import { assertEquals } from "@std/assert";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
-import { getNoteDisplayTitle, isNoteCompact, NoteCard } from "./NoteCard.tsx";
+import {
+    getNoteDisplayTitle,
+    isNoteCompact,
+    NoteCard,
+    preloadNoteMarkdown,
+} from "./NoteCard.tsx";
 
 Deno.test("isNoteCompact logic handles explicit mode and layout expanded fallback for 展开 and 折叠", () => {
     assertEquals(isNoteCompact("compact", true), true);
@@ -41,7 +46,8 @@ Deno.test("getNoteDisplayTitle extracts stripped first line when title is empty"
     );
 });
 
-Deno.test("NoteCard renders NoteMarkdown preview with shared breaks and markdown in full mode", () => {
+Deno.test("NoteCard renders NoteMarkdown preview with shared breaks and markdown in full mode", async () => {
+    await preloadNoteMarkdown();
     const html = ReactDOMServer.renderToStaticMarkup(
         React.createElement(NoteCard, {
             note: {

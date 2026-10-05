@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
     BrowserRouter,
     Link,
@@ -25,16 +25,11 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
-import { DesignLab } from "./design-lab/DesignLab.tsx";
-import { AuthPage } from "./app/AuthPage.tsx";
-import { SettingsPage } from "./app/SettingsPage.tsx";
-import { AskPage } from "./app/AskPage.tsx";
-import { AccountPage } from "./app/AccountPage.tsx";
-import { AdminPage } from "./app/AdminPage.tsx";
-import { TrashPage } from "./app/TrashPage.tsx";
 import { authPath, routes } from "./app/routes.ts";
-import { NotFoundPage } from "./app/NotFoundPage.tsx";
-import { WallpaperMotionInspector } from "./dev/WallpaperMotionInspector.tsx";
+import {
+    RouteErrorBoundary,
+    RouteLoadingFallback,
+} from "./app/RouteErrorBoundary.tsx";
 import { Button } from "./components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -49,6 +44,69 @@ import {
     DialogFooter,
     DialogTitle,
 } from "./components/ui/dialog.tsx";
+
+const DesignLab = lazy(() =>
+    import("./design-lab/DesignLab.tsx").then((m) => ({ default: m.DesignLab }))
+);
+const AuthPage = lazy(() =>
+    import("./app/AuthPage.tsx").then((m) => ({ default: m.AuthPage }))
+);
+const SettingsPage = lazy(() =>
+    import("./app/SettingsPage.tsx").then((m) => ({ default: m.SettingsPage }))
+);
+const AskPage = lazy(() =>
+    import("./app/AskPage.tsx").then((m) => ({ default: m.AskPage }))
+);
+const AccountPage = lazy(() =>
+    import("./app/AccountPage.tsx").then((m) => ({ default: m.AccountPage }))
+);
+const AdminPage = lazy(() =>
+    import("./app/AdminPage.tsx").then((m) => ({ default: m.AdminPage }))
+);
+const TrashPage = lazy(() =>
+    import("./app/TrashPage.tsx").then((m) => ({ default: m.TrashPage }))
+);
+const NotFoundPage = lazy(() =>
+    import("./app/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage }))
+);
+
+const LazyWallpaperMotionInspector = lazy(() =>
+    import("./dev/WallpaperMotionInspector.tsx").then((m) => ({
+        default: m.WallpaperMotionInspector,
+    }))
+);
+
+function isMotionInspectorRequested(): boolean {
+    if (typeof globalThis.location === "undefined") return false;
+    try {
+        const search = globalThis.location.search;
+        const params = new URLSearchParams(search);
+        if (params.has("motion_inspector")) return true;
+        return (
+            globalThis.localStorage?.getItem("searcher:motion_inspector") ===
+                "true"
+        );
+    } catch {
+        return false;
+    }
+}
+
+function DiagnosticWallpaperMotionInspector() {
+    const location = useLocation();
+    const [enabled, setEnabled] = useState(isMotionInspectorRequested);
+
+    useEffect(() => {
+        setEnabled(isMotionInspectorRequested());
+    }, [location.search]);
+
+    if (!enabled) return null;
+
+    return (
+        <Suspense fallback={null}>
+            <LazyWallpaperMotionInspector />
+        </Suspense>
+    );
+}
 function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -298,33 +356,54 @@ function Layout() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            {!ready ? <p className="page muted">正在加载…</p> : (
-                <Routes>
-                    <Route path={routes.home} element={<SearchHome />} />
-                    <Route path={routes.designLab} element={<DesignLab />} />
-                    <Route
-                        path={routes.login}
-                        element={<AuthPage kind="login" />}
-                    />
-                    <Route
-                        path={routes.register}
-                        element={<AuthPage kind="register" />}
-                    />
-                    <Route
-                        path={`${routes.settings()}/*`}
-                        element={<SettingsPage />}
-                    />
-                    <Route path={routes.ask} element={<AskPage />} />
-                    <Route path={routes.account} element={<AccountPage />} />
-                    <Route
-                        path={`${routes.admin()}/*`}
-                        element={<AdminPage />}
-                    />
-                    <Route path={routes.trash} element={<TrashPage />} />
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-            )}
-            <WallpaperMotionInspector />
+            {!ready
+                ? <p className="page muted">正在加载…</p>
+                : (
+                    <RouteErrorBoundary locationKey={location.pathname}>
+                        <Suspense fallback={<RouteLoadingFallback />}>
+                            <Routes>
+                                <Route
+                                    path={routes.home}
+                                    element={<SearchHome />}
+                                />
+                                <Route
+                                    path={routes.designLab}
+                                    element={<DesignLab />}
+                                />
+                                <Route
+                                    path={routes.login}
+                                    element={<AuthPage kind="login" />}
+                                />
+                                <Route
+                                    path={routes.register}
+                                    element={<AuthPage kind="register" />}
+                                />
+                                <Route
+                                    path={`${routes.settings()}/*`}
+                                    element={<SettingsPage />}
+                                />
+                                <Route
+                                    path={routes.ask}
+                                    element={<AskPage />}
+                                />
+                                <Route
+                                    path={routes.account}
+                                    element={<AccountPage />}
+                                />
+                                <Route
+                                    path={`${routes.admin()}/*`}
+                                    element={<AdminPage />}
+                                />
+                                <Route
+                                    path={routes.trash}
+                                    element={<TrashPage />}
+                                />
+                                <Route path="*" element={<NotFoundPage />} />
+                            </Routes>
+                        </Suspense>
+                    </RouteErrorBoundary>
+                )}
+            <DiagnosticWallpaperMotionInspector />
         </div>
     );
 }
