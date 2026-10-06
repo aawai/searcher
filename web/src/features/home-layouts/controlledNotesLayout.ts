@@ -8,3 +8,21 @@ export function selectHomeNotes(notes: NoteItem[]): NoteItem[] {
         )
         .slice(0, 5);
 }
+
+export function buildToggledNoteLayout(
+    layout?: NoteItem["layout"] | null,
+    nextExpanded?: boolean,
+): NonNullable<NoteItem["layout"]> {
+    const currentExpanded = layout?.expanded ?? true;
+    const targetExpanded = nextExpanded !== undefined
+        ? nextExpanded
+        : !currentExpanded;
+    return {
+        ...(layout ?? {
+            deviceClass: "desktop" as const,
+            zIndex: 1,
+            expanded: true,
+        }),
+        expanded: targetExpanded,
+    };
+}

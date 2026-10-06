@@ -21,6 +21,18 @@ import {
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 
+export interface NoteLayoutDto {
+    deviceClass: "desktop" | "tablet" | "mobile";
+    x?: number | null;
+    y?: number | null;
+    width?: number | null;
+    zIndex: number;
+    expanded: boolean;
+    sortOrder?: number | null;
+    updatedAt?: number;
+}
+export type NoteLayout = NoteLayoutDto;
+
 export interface NoteItem {
     id: string;
     title?: string | null;
@@ -31,14 +43,7 @@ export interface NoteItem {
     isHomeFixed?: boolean;
     sortOrder?: number | null;
     updatedAt?: number;
-    layout?: {
-        deviceClass: "desktop" | "tablet" | "mobile";
-        x?: number | null;
-        y?: number | null;
-        zIndex: number;
-        expanded: boolean;
-        sortOrder?: number | null;
-    };
+    layout?: NoteLayoutDto;
 }
 
 export const NOTE_COLORS = ["paper", "amber", "rose", "sage", "sky"] as const;
@@ -79,6 +84,7 @@ export function NoteCard(
         status,
         mode,
         isHome: _isHome,
+        toggleDisabled,
         onToggleMode,
         onTogglePin,
         onToggleHomeFixed,
@@ -91,6 +97,7 @@ export function NoteCard(
         status?: "saved" | "saving" | "unsynced" | "error";
         mode?: "full" | "compact";
         isHome?: boolean;
+        toggleDisabled?: boolean;
         onToggleMode?: () => void;
         onTogglePin?: () => void;
         onToggleHomeFixed?: () => void;
@@ -118,7 +125,7 @@ export function NoteCard(
                         "button, select, input, a",
                     )
                 ) return;
-                if (onToggleMode) onToggleMode();
+                if (onToggleMode && !toggleDisabled) onToggleMode();
                 else onOpen?.();
             }}
         >
@@ -151,9 +158,11 @@ export function NoteCard(
                         <button
                             type="button"
                             className="note-action-btn"
+                            disabled={toggleDisabled}
+                            aria-busy={toggleDisabled || undefined}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onToggleMode();
+                                if (!toggleDisabled) onToggleMode();
                             }}
                             aria-label={isCompact ? "展开" : "折叠"}
                             title={isCompact ? "展开" : "折叠"}

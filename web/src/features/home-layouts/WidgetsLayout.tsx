@@ -36,6 +36,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
         editNote,
         deleteNote,
         updateNote,
+        updateNoteLayout,
     } = props;
 
     const hasApps = (appsStatus === "ready" || appsStatus === "offline")
@@ -229,6 +230,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                         notes={fixedNotes}
                                         onReorder={reorderNotes}
                                         onOpen={editNote}
+                                        onUpdateLayout={updateNoteLayout}
                                         onTogglePin={(n) =>
                                             void updateNote(n, {
                                                 isPinned: !n.isPinned,

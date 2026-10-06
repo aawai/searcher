@@ -23,11 +23,18 @@ import {
     NoteCard,
     type NoteItem,
 } from "../../components/searcher/NoteCard.tsx";
-import { selectHomeNotes } from "./controlledNotesLayout.ts";
+import {
+    buildToggledNoteLayout,
+    selectHomeNotes,
+} from "./controlledNotesLayout.ts";
 
 export interface ControlledNotesProps {
     notes: NoteItem[];
     onOpen: (note: NoteItem) => void;
+    onUpdateLayout: (
+        note: NoteItem,
+        layout: NonNullable<NoteItem["layout"]>,
+    ) => Promise<void>;
     onReorder?: (notes: NoteItem[]) => Promise<void>;
     onTogglePin?: (note: NoteItem) => Promise<void> | void;
     onToggleHomeFixed?: (note: NoteItem) => Promise<void> | void;
@@ -41,6 +48,7 @@ function HomeNote({
     mode,
     sortable,
     saving,
+    toggleDisabled,
     onToggleMode,
     ...actions
 }: Omit<ControlledNotesProps, "notes" | "onReorder"> & {
@@ -49,6 +57,7 @@ function HomeNote({
     mode: "compact" | "full";
     sortable: boolean;
     saving: boolean;
+    toggleDisabled: boolean;
     onToggleMode: () => void;
 }) {
     const {
@@ -75,6 +84,7 @@ function HomeNote({
                 <NoteCard
                     note={note}
                     mode={mode}
+                    toggleDisabled={toggleDisabled}
                     dragHandle={sortable
                         ? (
                             <Button
@@ -119,9 +129,12 @@ function HomeNote({
 export function ControlledNotes({
     notes,
     onReorder,
+    onUpdateLayout,
     ...actions
 }: ControlledNotesProps) {
-    const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
+    const [pendingToggleIds, setPendingToggleIds] = useState<Set<string>>(
+        () => new Set(),
+    );
     const [saving, setSaving] = useState(false);
     const homeNotes = useMemo(() => selectHomeNotes(notes), [notes]);
     const sensors = useSensors(
@@ -145,8 +158,22 @@ export function ControlledNotes({
             setSaving(false)
         );
     }
-
     if (homeNotes.length === 0) return null;
+
+    async function handleToggle(note: NoteItem) {
+        if (pendingToggleIds.has(note.id)) return;
+        setPendingToggleIds((prev) => new Set(prev).add(note.id));
+        const nextLayout = buildToggledNoteLayout(note.layout);
+        try {
+            await onUpdateLayout(note, nextLayout);
+        } finally {
+            setPendingToggleIds((prev) => {
+                const next = new Set(prev);
+                next.delete(note.id);
+                return next;
+            });
+        }
+    }
 
     return (
         <DndContext
@@ -163,8 +190,7 @@ export function ControlledNotes({
                     data-note-count={homeNotes.length}
                 >
                     {homeNotes.map((note, index) => {
-                        const expanded = expandedMap[note.id] ??
-                            note.layout?.expanded ?? true;
+                        const expanded = note.layout?.expanded ?? true;
                         return (
                             <HomeNote
                                 key={note.id}
@@ -173,11 +199,9 @@ export function ControlledNotes({
                                 mode={expanded ? "full" : "compact"}
                                 sortable={sortable}
                                 saving={saving}
-                                onToggleMode={() =>
-                                    setExpandedMap((prev) => ({
-                                        ...prev,
-                                        [note.id]: !expanded,
-                                    }))}
+                                toggleDisabled={pendingToggleIds.has(note.id)}
+                                onToggleMode={() => void handleToggle(note)}
+                                onUpdateLayout={onUpdateLayout}
                                 {...actions}
                             />
                         );
