@@ -9,6 +9,7 @@ import { createApp } from "../../app.ts";
 import type { Envelope } from "@shared/contracts.ts";
 import type {
     NoteDto,
+    NoteLayoutDto,
     NoteVersionDto,
     SearchNotesResultDto,
 } from "./service.ts";
@@ -758,6 +759,128 @@ Deno.test({
                 trashAfterPermData.some((n) => n.id === noteAlpha.id),
                 false,
             );
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "notes contract: layout expanded toggle and preservation contract (#122)",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            const token = await registerUser(app, "layout_user");
+
+            // 1. Create note with initial layout, expanded=false, and preserve fields
+            const createRes = await app.request("/api/notes", {
+                method: "POST",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({
+                    title: "Layout Test Note",
+                    body: "Testing expanded toggle preservation",
+                    layout: {
+                        deviceClass: "desktop",
+                        x: 120,
+                        y: 240,
+                        width: 350,
+                        zIndex: 5,
+                        expanded: false,
+                        sortOrder: 3,
+                    },
+                }),
+            });
+            assertEquals(createRes.status, STATUS_CODE.OK);
+            const created = (await createRes.json() as Envelope<NoteDto>).data!;
+            const noteId = created.id;
+
+            // 2. GET returns expanded=false with preserved fields
+            const getRes1 = await app.request(`/api/notes/${noteId}`, {
+                method: "GET",
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(getRes1.status, STATUS_CODE.OK);
+            const get1 = (await getRes1.json() as Envelope<NoteDto>).data!;
+            assertEquals(get1.layout?.expanded, false);
+            assertEquals(get1.layout?.x, 120);
+            assertEquals(get1.layout?.y, 240);
+            assertEquals(get1.layout?.width, 350);
+            assertEquals(get1.layout?.zIndex, 5);
+            assertEquals(get1.layout?.sortOrder, 3);
+
+            // 3. PUT /api/notes/:id/layout with expanded=true
+            const putRes1 = await app.request(`/api/notes/${noteId}/layout`, {
+                method: "PUT",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ expanded: true }),
+            });
+            assertEquals(putRes1.status, STATUS_CODE.OK);
+            const put1 = (await putRes1.json() as Envelope<NoteLayoutDto>)
+                .data!;
+            assertEquals(put1.expanded, true);
+            assertEquals(put1.x, 120);
+            assertEquals(put1.y, 240);
+            assertEquals(put1.width, 350);
+            assertEquals(put1.zIndex, 5);
+            assertEquals(put1.sortOrder, 3);
+
+            // 4. GET returns expanded=true
+            const getRes2 = await app.request(`/api/notes/${noteId}`, {
+                method: "GET",
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(getRes2.status, STATUS_CODE.OK);
+            const get2 = (await getRes2.json() as Envelope<NoteDto>).data!;
+            assertEquals(get2.layout?.expanded, true);
+            assertEquals(get2.layout?.x, 120);
+            assertEquals(get2.layout?.y, 240);
+            assertEquals(get2.layout?.width, 350);
+            assertEquals(get2.layout?.zIndex, 5);
+            assertEquals(get2.layout?.sortOrder, 3);
+
+            // 5. PUT /api/notes/:id/layout with expanded=false
+            const putRes2 = await app.request(`/api/notes/${noteId}/layout`, {
+                method: "PUT",
+                headers: {
+                    "origin": ORIGIN,
+                    "content-type": "application/json",
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+                body: JSON.stringify({ expanded: false }),
+            });
+            assertEquals(putRes2.status, STATUS_CODE.OK);
+            const put2 = (await putRes2.json() as Envelope<NoteLayoutDto>)
+                .data!;
+            assertEquals(put2.expanded, false);
+            assertEquals(put2.x, 120);
+            assertEquals(put2.y, 240);
+            assertEquals(put2.width, 350);
+            assertEquals(put2.zIndex, 5);
+            assertEquals(put2.sortOrder, 3);
+
+            // 6. GET returns expanded=false
+            // 7. Only expanded changed; existing x/y/width/zIndex/sortOrder strictly preserved
+            const getRes3 = await app.request(`/api/notes/${noteId}`, {
+                method: "GET",
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(getRes3.status, STATUS_CODE.OK);
+            const get3 = (await getRes3.json() as Envelope<NoteDto>).data!;
+            assertEquals(get3.layout?.expanded, false);
+            assertEquals(get3.layout?.x, 120);
+            assertEquals(get3.layout?.y, 240);
+            assertEquals(get3.layout?.width, 350);
+            assertEquals(get3.layout?.zIndex, 5);
+            assertEquals(get3.layout?.sortOrder, 3);
         } finally {
             await store.close();
         }

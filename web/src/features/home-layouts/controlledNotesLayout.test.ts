@@ -1,6 +1,13 @@
 import { assertEquals } from "@std/assert";
-import type { NoteItem } from "../../components/searcher/NoteCard.tsx";
-import { selectHomeNotes } from "./controlledNotesLayout.ts";
+import {
+    isNoteCompact,
+    type NoteItem,
+    type NoteLayoutDto,
+} from "../../components/searcher/NoteCard.tsx";
+import {
+    buildToggledNoteLayout,
+    selectHomeNotes,
+} from "./controlledNotesLayout.ts";
 
 function note(id: string, sortOrder = 0, isHomeFixed?: boolean): NoteItem {
     return {
@@ -48,4 +55,74 @@ Deno.test("Home notes: five slots use sort order and id tie-break without mutati
         "d",
         "e",
     ]);
+});
+
+Deno.test("buildToggledNoteLayout: undefined layout yields desktop skeleton with expanded=false and zIndex=1 (compact)", () => {
+    const nextLayout = buildToggledNoteLayout(undefined);
+    assertEquals(nextLayout, {
+        deviceClass: "desktop",
+        zIndex: 1,
+        expanded: false,
+    });
+    assertEquals(isNoteCompact(undefined, nextLayout.expanded), true);
+});
+
+Deno.test("buildToggledNoteLayout: existing layout strictly preserves x, y, width, zIndex, sortOrder, deviceClass, and updatedAt", () => {
+    const existingLayout: NoteLayoutDto = {
+        deviceClass: "desktop",
+        x: 123,
+        y: 456,
+        width: 360,
+        zIndex: 7,
+        expanded: true,
+        sortOrder: 2,
+        updatedAt: 1728000000,
+    };
+    const nextLayout = buildToggledNoteLayout(existingLayout);
+    assertEquals(nextLayout, {
+        deviceClass: "desktop",
+        x: 123,
+        y: 456,
+        width: 360,
+        zIndex: 7,
+        expanded: false,
+        sortOrder: 2,
+        updatedAt: 1728000000,
+    });
+    assertEquals(isNoteCompact(undefined, nextLayout.expanded), true);
+
+    // Toggle back from compact to expanded
+    const expandedAgain = buildToggledNoteLayout(nextLayout);
+    assertEquals(expandedAgain, {
+        deviceClass: "desktop",
+        x: 123,
+        y: 456,
+        width: 360,
+        zIndex: 7,
+        expanded: true,
+        sortOrder: 2,
+        updatedAt: 1728000000,
+    });
+    assertEquals(isNoteCompact(undefined, expandedAgain.expanded), false);
+});
+
+Deno.test("buildToggledNoteLayout: explicit nextExpanded override is honored while preserving existing attributes", () => {
+    const existingLayout: NoteLayoutDto = {
+        deviceClass: "tablet",
+        x: 10,
+        y: 20,
+        width: 280,
+        zIndex: 3,
+        expanded: true,
+        sortOrder: 1,
+    };
+    const forcedCompact = buildToggledNoteLayout(existingLayout, false);
+    assertEquals(forcedCompact.expanded, false);
+    assertEquals(forcedCompact.deviceClass, "tablet");
+    assertEquals(forcedCompact.width, 280);
+
+    const forcedFull = buildToggledNoteLayout(forcedCompact, true);
+    assertEquals(forcedFull.expanded, true);
+    assertEquals(forcedFull.deviceClass, "tablet");
+    assertEquals(forcedFull.width, 280);
 });

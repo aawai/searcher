@@ -14,7 +14,10 @@ import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
 import { mergeVisibleOrder } from "../components/searcher/launcherTiles.ts";
 import { mergeNoteOrder } from "../features/home-layouts/noteOrder.ts";
-import type { NoteItem } from "../components/searcher/NoteCard.tsx";
+import type {
+    NoteItem,
+    NoteLayoutDto,
+} from "../components/searcher/NoteCard.tsx";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import type { WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
@@ -84,6 +87,11 @@ export function SearchHome() {
     const navigate = useNavigate();
     const layoutStyle = appearance.style;
     const updatingNotesRef = useRef<Set<string>>(new Set());
+    const noteLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
+    const noteLayoutQueuesRef = useRef<Map<string, Promise<void>>>(new Map());
+    const noteLayoutPrevCanonicalRef = useRef<Map<string, NoteItem["layout"]>>(
+        new Map(),
+    );
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
     const [mode, setMode] = useState<"search" | "ai">("search");
     const [reachability, setReachability] = useState<Reachability>({});
@@ -699,25 +707,73 @@ export function SearchHome() {
         note: NoteItem,
         layout: NonNullable<NoteItem["layout"]>,
     ) {
-        setNotes((items) =>
-            items.map((item) =>
-                item.id === note.id ? { ...item, layout } : item
-            )
-        );
-        try {
-            await api(
-                "/api/notes/" + encodeURIComponent(note.id) + "/layout",
-                json("PUT", {
-                    deviceClass: layout.deviceClass || "desktop",
-                    x: layout.x,
-                    y: layout.y,
-                    zIndex: layout.zIndex,
-                    expanded: layout.expanded,
-                }),
-            );
-        } catch (e) {
-            setError(errorMessage(e));
+        const noteId = note.id;
+        const nextGen = (noteLayoutLatestGenRef.current.get(noteId) ?? 0) + 1;
+        noteLayoutLatestGenRef.current.set(noteId, nextGen);
+
+        if (!noteLayoutPrevCanonicalRef.current.has(noteId)) {
+            noteLayoutPrevCanonicalRef.current.set(noteId, note.layout);
         }
+
+        setNotes((items) =>
+            items.map((item) => item.id === noteId ? { ...item, layout } : item)
+        );
+
+        const currentPromise = noteLayoutQueuesRef.current.get(noteId) ??
+            Promise.resolve();
+
+        const runTask = async () => {
+            try {
+                const persistedLayout = await api<NoteLayoutDto>(
+                    "/api/notes/" + encodeURIComponent(noteId) + "/layout",
+                    json("PUT", {
+                        deviceClass: layout.deviceClass || "desktop",
+                        x: layout.x,
+                        y: layout.y,
+                        width: layout.width,
+                        zIndex: layout.zIndex,
+                        expanded: layout.expanded,
+                        sortOrder: layout.sortOrder,
+                    }),
+                );
+                noteLayoutPrevCanonicalRef.current.set(noteId, persistedLayout);
+                if (noteLayoutLatestGenRef.current.get(noteId) === nextGen) {
+                    setNotes((items) =>
+                        items.map((item) =>
+                            item.id === noteId
+                                ? { ...item, layout: persistedLayout }
+                                : item
+                        )
+                    );
+                    noteLayoutPrevCanonicalRef.current.delete(noteId);
+                }
+            } catch (e) {
+                setError(errorMessage(e));
+                if (noteLayoutLatestGenRef.current.get(noteId) === nextGen) {
+                    const rollbackLayout = noteLayoutPrevCanonicalRef.current
+                        .get(noteId);
+                    setNotes((items) =>
+                        items.map((item) =>
+                            item.id === noteId
+                                ? { ...item, layout: rollbackLayout }
+                                : item
+                        )
+                    );
+                    noteLayoutPrevCanonicalRef.current.delete(noteId);
+                }
+            }
+        };
+
+        const taskPromise = currentPromise.then(runTask, runTask);
+        noteLayoutQueuesRef.current.set(noteId, taskPromise);
+
+        taskPromise.finally(() => {
+            if (noteLayoutQueuesRef.current.get(noteId) === taskPromise) {
+                noteLayoutQueuesRef.current.delete(noteId);
+            }
+        });
+
+        await taskPromise;
     }
     async function deleteNote(note: NoteItem) {
         setError("");

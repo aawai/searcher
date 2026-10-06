@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+- Home 便签折叠/展开持久化与跨会话恢复（Issue #122）：
+  - 修复空间轻桌面（Widgets）下便签折叠/展开仅保留在前端组件内存、刷新或重新登录后丢失的问题；
+  - 统一前端便签 NoteLayoutDto 类型契约：补齐 `width` 与 `updatedAt`
+    字段，确保后端回传的完整布局快照无损写回前端 state；
+  - 确立 `note.layout.expanded` 为唯一 canonical state，彻底移除 ControlledNotes
+    内部 `expandedMap` shadow state；
+  - 统一布局更新流并消除双写：FloatingNotes 移除内部 direct `persistLayout` HTTP
+    写入，所有布局变更统一收拢至 `SearchHome.updateNoteLayout`；
+  - 增强网络并发与容错能力：SearchHome 为便签分配递增 generation 并建立 per-note
+    串行任务队列，支持失败自动回滚旧布局、防止陈旧响应覆盖乐观状态；
+  - 便签折叠按钮增加防抖与重复提交保护（toggleDisabled 禁用与 handler 拒重）；
+  - 新增后端布局字段保持契约测试与前端布局纯函数测试；
+  - 新增生产 E2E 回归套件
+    `web/e2e/home-notes-persistence.test.ts`，覆盖折叠/展开持久化、跨会话重新登录、无布局旧便签兼容、失败回滚及
+    Zen 模式单写验证；
+  - 新增 `deno task test:home-notes` 及 GitHub Actions `notes-regression.yml`
+    门禁。
 - Route CSS Cascade 稳定性治理、RadioGroup Canonical Variants 与 Ask
   大屏响应式几何（Issue #120）：
   - 建立明确的 Primitive / Feature CSS 所有权规范：新增 UI Guard 规则

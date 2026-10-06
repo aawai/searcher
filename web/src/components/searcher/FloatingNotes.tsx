@@ -9,7 +9,6 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { type CSSProperties, useState } from "react";
-import { api, json } from "../../lib/api.ts";
 import { NoteCard, type NoteItem } from "./NoteCard.tsx";
 
 type Point = { x: number; y: number; z: number };
@@ -76,7 +75,14 @@ function Floating(
         <div
             className="note-position"
             ref={setNodeRef}
-            onPointerDown={() => onBringToFront()}
+            onPointerDown={(e) => {
+                if (
+                    (e.target as HTMLElement).closest(
+                        "button, select, input, a, [role='button'], [data-slot='dropdown-menu-trigger']",
+                    )
+                ) return;
+                onBringToFront();
+            }}
             style={{
                 left: point.x,
                 top: point.y,
@@ -125,7 +131,7 @@ export function FloatingNotes(
         onUpdateLayout?: (
             note: NoteItem,
             layout: NonNullable<NoteItem["layout"]>,
-        ) => void;
+        ) => Promise<void> | void;
         onTogglePin?: (note: NoteItem) => void;
         onToggleHomeFixed?: (note: NoteItem) => void;
         onChangeColor?: (note: NoteItem, color: string) => void;
@@ -134,29 +140,10 @@ export function FloatingNotes(
     },
 ) {
     const [points, setPoints] = useState<Record<string, Point>>({});
-    const [error, setError] = useState("");
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor),
     );
-
-    async function persistLayout(id: string, point: Point, expanded?: boolean) {
-        try {
-            await api(
-                "/api/notes/" + encodeURIComponent(id) + "/layout",
-                json("PUT", {
-                    deviceClass: "desktop",
-                    x: point.x,
-                    y: point.y,
-                    zIndex: point.z,
-                    ...(expanded !== undefined ? { expanded } : {}),
-                }),
-            );
-            setError("");
-        } catch {
-            setError("便签位置未同步，请刷新后重试拖动");
-        }
-    }
 
     function bringToFront(note: NoteItem, index: number) {
         const allZ = notes.map((item, i) =>
@@ -171,7 +158,18 @@ export function FloatingNotes(
             typeof globalThis.window !== "undefined" &&
             globalThis.innerWidth > 960
         ) {
-            void persistLayout(note.id, nextPoint, note.layout?.expanded);
+            const updatedLayout = {
+                ...(note.layout ??
+                    {
+                        deviceClass: "desktop" as const,
+                        zIndex: 1,
+                        expanded: true,
+                    }),
+                x: nextPoint.x,
+                y: nextPoint.y,
+                zIndex: top,
+            };
+            onUpdateLayout?.(note, updatedLayout);
         }
     }
 
@@ -187,7 +185,6 @@ export function FloatingNotes(
             zIndex: current.z,
         };
         onUpdateLayout?.(note, updatedLayout);
-        void persistLayout(note.id, current, nextExpanded);
     }
 
     function moved(event: DragEndEvent) {
@@ -235,7 +232,6 @@ export function FloatingNotes(
             zIndex: top,
         };
         onUpdateLayout?.(note, updatedLayout);
-        void persistLayout(note.id, point, note.layout?.expanded);
     }
 
     if (!notes.length) return null;
@@ -283,11 +279,6 @@ export function FloatingNotes(
                     />
                 ))}
             </div>
-            {error && (
-                <p role="alert" className="error floating-notes-error">
-                    {error}
-                </p>
-            )}
         </DndContext>
     );
 }
