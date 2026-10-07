@@ -66,6 +66,17 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   可键盘聚焦并局部滚动；任务状态有可访问名称且保持只读。Markdown
   string、API、数据库与版本模型不变。
 
+### M0A Markdown editor spike
+
+`/design-lab/markdown-editor` 是独立技术验证入口，不代表 Documents 产品页面。
+consumer presentation owner 为 `web/src/spikes/markdown-editor/spike.css`， 复用
+utility PageShell、Section、ActionGroup、Button、Textarea 与 canonical
+`markdown.css`。framework 不加载默认 theme；`.ProseMirror`、task checked
+attribute、PageBreak 与 decoration class 是 consumer styling hooks。 正文
+heading 表达文档语义，不改页面 chrome 层级。PageBreak 是 semantic node， page
+gap 是 aria-hidden decoration，后者不写入 Markdown。 该 spike 不建立生产 shared
+foundation，也不拥有 Documents/Notes 业务状态。
+
 ### Shortcut catalog 与可发现性
 
 - `/settings/shortcuts` 是完整用户说明入口，沿用 Settings utility archetype 的

@@ -47,6 +47,24 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #102 M0A editor spike 视觉验收（2026-10-07）
+
+- [x] 独立技术验证入口 `/design-lab/markdown-editor`；复用 utility
+      PageShell、PageHeader、Section、ActionGroup、Button、Textarea，不是
+      Documents 业务页面。
+- [x] consumer presentation 由 `spikes/markdown-editor/spike.css`
+      拥有；typography 复用 canonical `markdown.css`，不引入 Milkdown/Crepe
+      theme。
+- [x] 390×844、768×1024、1440×900 × light/dark 六组合实页截图；scrollWidth 等于
+      viewport width，H1/H2/H3 computed size 为 18.9/16.8/15.4px。
+- [x] editor surface 跟随 token：light rgb(255,255,255)，dark
+      rgb(29,33,40)。任务状态标记可区分；table/code 不造成页面横向溢出。
+- [x] 批量前校准 theme 与 reduced-motion；axe WCAG 2A/2AA 0
+      violations。Zen/Widgets host、wallpaper、账号业务属于 M2–M7，不由 spike
+      验收。
+- [x] 初态 dirty 实页问题修正后，打开显示正文变化 0 次；source replace
+      的事务来源另由 focused production E2E 门禁保护。
+
 ## Issue #120 Route CSS Cascade 稳定性与 Ask 大屏响应式几何重标验收（2026-10-06）
 
 - [x] RadioGroup Canonical Variants 与结构所有权规范：
