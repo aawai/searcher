@@ -9,7 +9,17 @@ import {
     useState,
     useSyncExternalStore,
 } from "react";
-import type { DocumentAssetDto } from "@shared/documents.ts";
+import type {
+    DocumentAssetDto,
+    DocumentSettingsDto,
+} from "@shared/documents.ts";
+import { documentDisplayTitle } from "../../../../src/features/documents/markdown.ts";
+import {
+    createDocumentPagination,
+    type DocumentPagination,
+} from "./document-pagination.ts";
+import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
+import { prepareDocumentPrint } from "./document-print.ts";
 import { api } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
@@ -29,8 +39,11 @@ import {
     Copy,
     Download,
     Eye,
+    File,
     History,
+    Printer,
     RefreshCw,
+    Settings,
 } from "lucide-react";
 
 import type {
@@ -94,18 +107,23 @@ export function DocumentEditor({
         };
     }, [session]);
 
-    // 2. View Mode (continuous vs source) persisted per-user and per-document
+    // View choice is local to this user, device and document.
     const viewStorageKey = `document:view:${userId}:${documentId}`;
-    const [viewMode, setViewMode] = useState<"continuous" | "source">(() => {
-        try {
-            const saved = localStorage.getItem(viewStorageKey);
-            return saved === "source" ? "source" : "continuous";
-        } catch {
-            return "continuous";
-        }
-    });
+    const [viewMode, setViewMode] = useState<"continuous" | "page" | "source">(
+        () => {
+            try {
+                const saved = localStorage.getItem(viewStorageKey);
+                return saved === "source" || saved === "page"
+                    ? saved
+                    : "continuous";
+            } catch {
+                return "continuous";
+            }
+        },
+    );
+    const richMode = viewMode !== "source";
 
-    const handleViewChange = (nextMode: "continuous" | "source") => {
+    const handleViewChange = (nextMode: "continuous" | "page" | "source") => {
         if (nextMode === viewMode) return;
         // View switch flush: save current edits via autosave
         void session.save("autosave");
@@ -127,6 +145,34 @@ export function DocumentEditor({
     const [initError, setInitError] = useState<string | null>(null);
     const [initKey, setInitKey] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [paperSettings, setPaperSettings] = useState<
+        DocumentSettingsDto | null
+    >(null);
+    const [paperError, setPaperError] = useState<string | null>(null);
+    const [paperOpen, setPaperOpen] = useState(false);
+    const [pageCount, setPageCount] = useState(1);
+    const [printRequested, setPrintRequested] = useState(false);
+    const [editorReady, setEditorReady] = useState(0);
+    const paperSettingsRef = useRef(paperSettings);
+    paperSettingsRef.current = paperSettings;
+    const paginationRef = useRef<DocumentPagination | null>(null);
+    const paginationViewportRef = useRef<HTMLDivElement>(null);
+    const loadPaper = useCallback(async () => {
+        try {
+            const settings = await api<DocumentSettingsDto>(
+                `/api/documents/${encodeURIComponent(documentId)}/settings`,
+            );
+            setPaperSettings(settings);
+            setPaperError(null);
+        } catch (error) {
+            setPaperError(
+                error instanceof Error ? error.message : "加载纸张设置失败",
+            );
+        }
+    }, [documentId]);
+    useEffect(() => {
+        void loadPaper();
+    }, [loadPaper]);
 
     // 4. Refs for editor DOM and instances
     const editorRootRef = useRef<HTMLDivElement>(null);
@@ -207,11 +253,12 @@ export function DocumentEditor({
 
     // 7. Dynamic import and mount of Milkdown (#110 createMarkdownEditor) in continuous mode
     // Gated on isDocumentReady so it reliably mounts after initial loading finishes
-    const isDocumentReady = !snapshot.loading && Boolean(snapshot.document);
+    const isDocumentReady = !snapshot.loading && Boolean(snapshot.document) &&
+        Boolean(paperSettings);
 
     useEffect(() => {
         if (
-            viewMode !== "continuous" || !isDocumentReady ||
+            !richMode || !isDocumentReady ||
             !editorRootRef.current
         ) {
             return;
@@ -235,7 +282,22 @@ export function DocumentEditor({
                     onUpload: handleUpload,
                     onError: handleUploadError,
                 });
-
+                const paper = paperSettingsRef.current;
+                if (paper && paginationViewportRef.current) {
+                    const pagination = createDocumentPagination(
+                        editorRootRef.current,
+                        paginationViewportRef.current,
+                        {
+                            paper,
+                            scrollViewport:
+                                paginationViewportRef.current.parentElement ??
+                                    undefined,
+                            onLayout: (layout) => setPageCount(layout.pages),
+                        },
+                    );
+                    paginationRef.current = pagination;
+                    plugins.push(pagination.plugin);
+                }
                 const initialBody = session.getSnapshot().body;
                 lastEditorBodyRef.current = initialBody;
                 createdHandle = await createMarkdownEditor(
@@ -261,6 +323,8 @@ export function DocumentEditor({
                     void createdHandle.destroy();
                 } else {
                     editorHandleRef.current = createdHandle;
+                    paginationRef.current?.attach(createdHandle);
+                    setEditorReady((value) => value + 1);
                 }
             } catch (err) {
                 if (isMounted) {
@@ -277,6 +341,8 @@ export function DocumentEditor({
 
         return () => {
             isMounted = false;
+            paginationRef.current?.destroy();
+            paginationRef.current = null;
             if (editorHandleRef.current) {
                 const h = editorHandleRef.current;
                 editorHandleRef.current = null;
@@ -289,30 +355,64 @@ export function DocumentEditor({
         handleUploadError,
         isDocumentReady,
         session,
-        viewMode,
+        richMode,
         initKey,
     ]);
 
     // 8. Programmatic synchronization into rich editor (draft apply, restore, source switch)
     useEffect(() => {
         if (
-            viewMode === "continuous" &&
+            richMode &&
             editorHandleRef.current &&
             snapshot.body !== lastEditorBodyRef.current
         ) {
             lastEditorBodyRef.current = snapshot.body;
             editorHandleRef.current.replaceMarkdown(snapshot.body);
         }
-    }, [snapshot.body, viewMode]);
+    }, [snapshot.body, richMode]);
 
     // 9. Document analysis: word count, reading minutes, outline
     const analysis = useMemo(() => {
         return analyzeDocumentMarkdown(snapshot.body);
     }, [snapshot.body]);
 
+    useEffect(() => {
+        if (paperSettings) paginationRef.current?.setPaper(paperSettings);
+        if (richMode) paginationRef.current?.setMode(viewMode);
+    }, [paperSettings, richMode, viewMode, editorReady]);
+
+    useEffect(() => {
+        if (
+            !printRequested || !richMode || !paperSettings ||
+            !editorHandleRef.current
+        ) return;
+        setPrintRequested(false);
+        const body = editorRootRef.current?.querySelector<HTMLElement>(
+            ".ProseMirror",
+        );
+        if (!body) return;
+        void prepareDocumentPrint(
+            body,
+            documentDisplayTitle(snapshot.title, snapshot.body),
+            paperSettings,
+        )
+            .then((prepared) => prepared.print())
+            .catch((error: unknown) =>
+                setUploadError(
+                    error instanceof Error ? error.message : "打印失败",
+                )
+            );
+    }, [
+        printRequested,
+        richMode,
+        paperSettings,
+        editorReady,
+        snapshot.title,
+        snapshot.document,
+    ]);
     // 10. Toolbar action handlers
     const handleToolbarCommand = (command: MarkdownEditorCommand) => {
-        if (viewMode === "continuous" && editorHandleRef.current) {
+        if (richMode && editorHandleRef.current) {
             if (command === "link") {
                 setLinkHref("");
                 setLinkOpen(true);
@@ -321,7 +421,7 @@ export function DocumentEditor({
     };
 
     const handleInsertPageBreak = () => {
-        if (viewMode === "continuous" && editorHandleRef.current) {
+        if (richMode && editorHandleRef.current) {
             insertDocumentPageBreak(editorHandleRef.current);
         } else if (viewMode === "source") {
             const textarea = sourceTextareaRef.current;
@@ -354,7 +454,7 @@ export function DocumentEditor({
         try {
             setIsUploading(true);
             setUploadError(null);
-            if (viewMode === "continuous" && editorHandleRef.current) {
+            if (richMode && editorHandleRef.current) {
                 await uploadAndInsertDocumentImage(
                     editorHandleRef.current,
                     file,
@@ -407,10 +507,11 @@ export function DocumentEditor({
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        const filename = (snapshot.title || "未命名文档").replace(
-            /[\\/:*?"<>|]/g,
-            "_",
-        );
+        const filename = documentDisplayTitle(snapshot.title, snapshot.body)
+            .replace(
+                /[\\/:*?"<>|]/g,
+                "_",
+            );
         a.download = `${filename}.md`;
         a.click();
         URL.revokeObjectURL(url);
@@ -429,7 +530,7 @@ export function DocumentEditor({
 
     // 13. Outline click focus
     const handleOutlineSelectHeading = (index: number) => {
-        if (viewMode === "continuous") {
+        if (richMode) {
             const headings = editorRootRef.current?.querySelectorAll(
                 "h1, h2, h3, h4, h5, h6",
             );
@@ -468,7 +569,7 @@ export function DocumentEditor({
         }
 
         // Fresh Issue 102 §32 rich shortcuts: Ctrl+K (link), Ctrl+Shift+X (strike)
-        if (viewMode === "continuous" && editorHandleRef.current) {
+        if (richMode && editorHandleRef.current) {
             if (e.key === "k" || e.key === "K") {
                 e.preventDefault();
                 handleToolbarCommand("link");
@@ -618,10 +719,23 @@ export function DocumentEditor({
                 </div>
             )}
 
+            {paperError && (
+                <div role="alert" className="document-draft-offer-banner">
+                    <span>{paperError}</span>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                            void loadPaper()}
+                    >
+                        重试纸张设置
+                    </Button>
+                </div>
+            )}
             {/* Header & Controls */}
             <header className="document-editor-header">
                 <div className="document-editor-header-main">
-                    {/* View Switcher: Continuous vs Source */}
+                    {/* One document, three presentations. */}
                     <div
                         className="inline-flex rounded-md border border-[var(--border-subtle)] p-0.5 bg-[var(--surface-soft)]"
                         role="group"
@@ -637,7 +751,16 @@ export function DocumentEditor({
                             onClick={() => handleViewChange("continuous")}
                         >
                             <Eye size={13} className="mr-1" />
-                            实时预览
+                            连续
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={viewMode === "page" ? "default" : "ghost"}
+                            size="sm"
+                            disabled={!paperSettings}
+                            onClick={() => handleViewChange("page")}
+                        >
+                            <File size={13} className="mr-1" />页面
                         </Button>
                         <Button
                             type="button"
@@ -645,16 +768,14 @@ export function DocumentEditor({
                                 ? "default"
                                 : "ghost"}
                             size="sm"
-                            className="h-7 text-xs px-2.5"
                             onClick={() => handleViewChange("source")}
                         >
-                            <Code size={13} className="mr-1" />
-                            源码
+                            <Code size={13} className="mr-1" />源码
                         </Button>
                     </div>
-
                     {/* Metadata & Word Count */}
                     <div className="document-metadata-bar">
+                        {viewMode === "page" && <span>{pageCount} 页</span>}
                         <span>
                             {analysis.wordCount > 0
                                 ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟`
@@ -675,8 +796,30 @@ export function DocumentEditor({
                         </span>
                     </div>
 
-                    {/* Header Action Buttons */}
                     <div className="document-editor-header-actions">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={!paperSettings}
+                            onClick={() => setPaperOpen(true)}
+                            title="纸张设置"
+                        >
+                            <Settings size={13} />纸张
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={!paperSettings}
+                            onClick={() => {
+                                if (!richMode) handleViewChange("continuous");
+                                setPrintRequested(true);
+                            }}
+                            title="打印或另存为 PDF"
+                        >
+                            <Printer size={13} />打印
+                        </Button>
                         <Button
                             type="button"
                             variant="ghost"
@@ -740,11 +883,7 @@ export function DocumentEditor({
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 e.preventDefault();
-                                if (viewMode === "continuous") {
-                                    editorHandleRef.current?.focus();
-                                } else {
-                                    sourceTextareaRef.current?.focus();
-                                }
+                                if (richMode) editorHandleRef.current?.focus();
                             }
                         }}
                     />
@@ -755,12 +894,12 @@ export function DocumentEditor({
             <DocumentToolbar
                 disabled={viewMode === "source" || isUploading}
                 onUndo={() => {
-                    if (viewMode === "continuous" && editorHandleRef.current) {
+                    if (richMode && editorHandleRef.current) {
                         editorHandleRef.current.undo();
                     }
                 }}
                 onRedo={() => {
-                    if (viewMode === "continuous" && editorHandleRef.current) {
+                    if (richMode && editorHandleRef.current) {
                         editorHandleRef.current.redo();
                     }
                 }}
@@ -772,12 +911,15 @@ export function DocumentEditor({
             {/* Workspace Content Area: Editor + Outline */}
             <div className="document-editor-content-layout">
                 <div className="document-editor-scroll-area">
-                    <div className="document-editor-readable-wrapper">
+                    <div
+                        ref={paginationViewportRef}
+                        className="document-editor-readable-wrapper"
+                    >
                         {/* Continuous Mode Container */}
                         <div
                             ref={editorRootRef}
                             className={`document-continuous-editor ${
-                                viewMode === "continuous" ? "block" : "hidden"
+                                richMode ? "block" : "hidden"
                             }`}
                         />
 
@@ -803,7 +945,7 @@ export function DocumentEditor({
                 </div>
 
                 {/* Outline Panel */}
-                {showOutline && viewMode === "continuous" && (
+                {showOutline && richMode && (
                     <DocumentOutline
                         outline={analysis.outline}
                         onSelectHeading={handleOutlineSelectHeading}
@@ -812,6 +954,13 @@ export function DocumentEditor({
                 )}
             </div>
 
+            <DocumentPaperSettingsDialog
+                documentId={documentId}
+                settings={paperSettings}
+                open={paperOpen}
+                onOpenChange={setPaperOpen}
+                onSaved={setPaperSettings}
+            />
             <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
                 <DialogContent aria-describedby={undefined}>
                     <DialogHeader>
