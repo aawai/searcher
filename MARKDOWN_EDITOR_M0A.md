@@ -10,11 +10,11 @@ Contract，并读取 #110、#108、#67 / PR #76 的相关约束。
 CodeMirror。现有 Notes 的 textarea、API、autosave、draft、conflict、history
 保持不变。本 spike 不是 #110 生产 foundation，也不是 Documents 产品功能。
 
-**尚不能声称全部 M0A Exit Criteria 已通过**：§36 的 M0A Exit Criteria 包含正式
-Documents root/library 的网络加载验收，但正式 library 在 M1/M2/M3 才交付。
-当前仓库没有该 surface；本次只能验证独立 spike 的 pre-open shell。 用户要求 M0A
-全部通过后才进入后续阶段，因此需要在 #102 明确该阶段门槛的验证口径，
-不能把尚不存在的 library 写成已经验收。
+M0A 已完成当前存在的 surface 与 isolated spike 的技术验证。§36 的 Documents
+root/library 网络不加载 editor runtime 仍是硬性 Contract；该正式 surface 在
+M1/M2/M3 才交付，本次没有声称实际验收了不存在的 library。当前证据是 pre-open
+shell、manifest 与 module ownership；真实 library 网络复验必须随其交付补齐。
+这个验收时点问题已记录到 #102；PR 合并不等于跳过后续阶段的门槛。
 
 ## 可复现证据
 
@@ -163,6 +163,6 @@ Rollup module ID；没有所监控 runtime package 的多版本打包。
 - M0B 的自动分页、caret/IME reflow、oversized blocks 和 paper metrics 尚未由 M0A
   证明。
 
-阶段顺序与逐 PR gate 已记录到 #102。正式 Documents library network gate
-的前置条件 冲突必须先在 Issue 中澄清；在此之前，不把 M0A
-标记为全部完成，也不启动 #110。
+阶段顺序与逐 PR gate 已记录到 #102。本次仅交付 M0A，未启动 #110、M0B 或
+Documents 生产实现。后续按单独阶段读取最新 Contract、实现、验收及提交 PR；正式
+library 交付时必须增加网络隔离验收，不能只引用本 spike 的结果。
