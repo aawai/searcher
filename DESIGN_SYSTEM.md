@@ -8,18 +8,19 @@
 同一种视觉或交互行为只有一个 owner；feature 组合共享
 primitives，不另造基础反馈或重新定义普通控件的 surface / radius / shadow。
 
-| 视觉或交互职责                                                                                                    | 唯一 owner                                                                                                    |
-| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 值、theme、accent、shape、surface / elevation taxonomy                                                            | `web/src/design-system/tokens.css`                                                                            |
-| Button / Input / Badge / Dialog / AlertDialog / Tabs / Card / Table / Menu                                        | `components/ui/`，共享基础 CSS 为 `primitives.css`                                                            |
-| PageShell / PageHeader / Section / Status / Loading / Empty / Undo / ManagementTable                              | `components/searcher/semantic.tsx` 与 `semantic.css`（PageShell / PageHeader 使用现有独立入口）               |
-| Settings / Admin / Account / Trash 场景布局                                                                       | `app/settings.css` / `admin.css` / `account.css` / `trash.css`                                                |
-| Ask 消息、Composer 与侧栏布局                                                                                     | `features/ask/ask-workspace.css`                                                                              |
-| Workspace Shell / Apps / Notes / Documents 布局                                                                   | `features/workspace/workspace.css` / `apps-workspace.css` / `notes-workspace.css` / `documents-workspace.css` |
-| Launcher 与 WebApp tile geometry                                                                                  | `components/searcher/launcher.css`                                                                            |
-| 搜索控件 / 应用表单与图标选择 / 便签与 Markdown                                                                   | `components/searcher/search.css` / `apps.css` / `notes.css` 与 `markdown.css`                                 |
-| Home Zen / Widgets / Bento                                                                                        | `features/home-layouts/home-layouts.css`                                                                      |
-| reset、html/body、AppShell、Topbar / account entry、connection banner、全局 typography / accessibility 与壁纸画布 | `styles/global.css`                                                                                           |
+| 视觉或交互职责                                                                                                    | 唯一 owner                                                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 值、theme、accent、shape、surface / elevation taxonomy                                                            | `web/src/design-system/tokens.css`                                                                                                     |
+| Button / Input / Badge / Dialog / AlertDialog / Tabs / Card / Table / Menu                                        | `components/ui/`，共享基础 CSS 为 `primitives.css`                                                                                     |
+| PageShell / PageHeader / Section / Status / Loading / Empty / Undo / ManagementTable                              | `components/searcher/semantic.tsx` 与 `semantic.css`（PageShell / PageHeader 使用现有独立入口）                                        |
+| Settings / Admin / Account / Trash 场景布局                                                                       | `app/settings.css` / `admin.css` / `account.css` / `trash.css`                                                                         |
+| Ask 消息、Composer 与侧栏布局                                                                                     | `features/ask/ask-workspace.css`                                                                                                       |
+| Workspace Shell / Apps / Notes / Documents 布局                                                                   | `features/workspace/workspace.css` / `apps-workspace.css` / `notes-workspace.css` / `documents-workspace.css`                          |
+| DocumentEditor 连续/源码、工具栏、大纲与语义分页符                                                                | `features/documents/document-editor.css`；复用 `components/ui` 控件与全局 typography tokens，900px 非模态展开仅由 Workspace owner 控制 |
+| Launcher 与 WebApp tile geometry                                                                                  | `components/searcher/launcher.css`                                                                                                     |
+| 搜索控件 / 应用表单与图标选择 / 便签与 Markdown                                                                   | `components/searcher/search.css` / `apps.css` / `notes.css` 与 `markdown.css`                                                          |
+| Home Zen / Widgets / Bento                                                                                        | `features/home-layouts/home-layouts.css`                                                                                               |
+| reset、html/body、AppShell、Topbar / account entry、connection banner、全局 typography / accessibility 与壁纸画布 | `styles/global.css`                                                                                                                    |
 
 Feature class 只表达场景布局与 domain presentation；不同密度由 canonical
 primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlist。Domain CSS

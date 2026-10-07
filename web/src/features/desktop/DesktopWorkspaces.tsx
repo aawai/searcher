@@ -156,6 +156,7 @@ export function DesktopWorkspaces({
     }).current;
 
     const [preset, setPreset] = useState<ConstrainedPreset>("medium");
+    const [presetChosen, setPresetChosen] = useState(false);
     const [overviewOpen, setOverviewOpen] = useState(false);
     const overviewSelection = useRef<string | null>(null);
 
@@ -399,11 +400,15 @@ export function DesktopWorkspaces({
                     const isConstrainedHidden = isConstrained &&
                         win.id !== activeWindow?.id;
 
+                    const effectivePreset =
+                        kind === "documents" && isNested && !presetChosen
+                            ? "large"
+                            : preset;
                     const effectiveWindow: DesktopWindowState = isConstrained
                         ? {
                             ...win,
                             frame: computeConstrainedFrame({
-                                preset,
+                                preset: effectivePreset,
                                 rect,
                             }),
                         }
@@ -435,8 +440,11 @@ export function DesktopWorkspaces({
                             headerMenu={isConstrained
                                 ? (
                                     <ConstrainedSizeMenu
-                                        preset={preset}
-                                        onPresetChange={setPreset}
+                                        preset={effectivePreset}
+                                        onPresetChange={(value) => {
+                                            setPresetChosen(true);
+                                            setPreset(value);
+                                        }}
                                     />
                                 )
                                 : undefined}

@@ -1,0 +1,492 @@
+/* Document Editor Styling (Issue #102 M4) */
+
+.document-editor-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    background-color: transparent;
+    container-type: inline-size;
+    color: var(--foreground);
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Header & Top Bar */
+.document-editor-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-control-gap);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background-color: var(--surface);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.document-editor-header-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.document-editor-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+/* Document Title Input (Separate from Markdown body, no implicit H1) */
+.document-title-wrapper {
+    width: 100%;
+    max-width: var(--document-readable-width);
+    margin: 0 auto;
+    padding-top: var(--space-2);
+}
+
+.document-title-input {
+    width: 100%;
+    font-size: var(--font-page-title-size);
+    line-height: var(--font-page-title-line-height);
+    font-weight: 700;
+    color: var(--foreground);
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: var(--space-1) 0;
+    transition: color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.document-title-input::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
+}
+
+.document-title-input:focus-visible {
+    outline: none;
+}
+
+/* Save Status Indicator */
+.document-save-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--control-radius);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.document-save-status[data-status="saved"] {
+    color: var(--muted);
+}
+
+.document-save-status[data-status="dirty"] {
+    color: var(--warning);
+    background-color: var(--warning-soft);
+}
+
+.document-save-status[data-status="saving"] {
+    color: var(--accent);
+}
+
+.document-save-status[data-status="error"] {
+    color: var(--danger);
+    background-color: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.document-save-status[data-status="conflict"] {
+    color: var(--danger);
+    background-color: color-mix(in srgb, var(--danger) 15%, transparent);
+    font-weight: 600;
+}
+
+/* Metadata Bar (Word count, reading time) */
+.document-metadata-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-metadata-size);
+    color: var(--muted);
+    user-select: none;
+}
+
+/* Toolbar */
+.document-editor-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    z-index: 5;
+}
+
+.document-editor-toolbar-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.document-editor-toolbar-divider {
+    width: 1px;
+    height: 18px;
+    background-color: var(--border-subtle);
+    margin: 0 var(--space-1);
+}
+
+/* Mobile / Narrow Wrapping & Semantic Touch44 */
+@media (pointer: coarse), (max-width: 640px) {
+    .document-editor-toolbar button,
+    .document-editor-toolbar [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+        padding: var(--space-2);
+    }
+    .document-editor-toolbar {
+        padding: var(--space-2);
+        gap: var(--space-1);
+    }
+}
+
+/* Main Content Workspace Layout (Editor + Outline) */
+.document-editor-content-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Editor Scroll & Readable Container */
+.document-editor-scroll-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-page-inline);
+    scroll-behavior: smooth;
+}
+
+@media (max-width: 640px) {
+    .document-editor-scroll-area {
+        padding: var(--space-3);
+    }
+}
+
+.document-editor-readable-wrapper {
+    width: 100%;
+    max-width: var(--document-readable-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Live Preview Continuous Mode (ProseMirror & Milkdown) */
+.document-continuous-editor {
+    flex: 1;
+    min-height: 400px;
+    cursor: text;
+}
+
+.document-continuous-editor .ProseMirror {
+    outline: none;
+    min-height: 380px;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    color: var(--foreground);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.document-continuous-editor .ProseMirror p {
+    margin: var(--space-control-gap) 0;
+}
+
+.document-continuous-editor .ProseMirror h1 {
+    font-size: var(--font-markdown-title-size);
+    line-height: 1.25;
+    font-weight: 700;
+    margin: var(--space-markdown-heading-before) 0
+        var(--space-markdown-heading-after);
+    color: var(--foreground);
+    scroll-margin-top: 80px;
+}
+
+.document-continuous-editor .ProseMirror h2 {
+    font-size: var(--font-markdown-section-size);
+    line-height: 1.3;
+    font-weight: 600;
+    margin: var(--space-markdown-heading-before) 0
+        var(--space-markdown-heading-after);
+    color: var(--foreground);
+    scroll-margin-top: 80px;
+}
+
+.document-continuous-editor .ProseMirror h3 {
+    font-size: var(--font-markdown-subsection-size);
+    line-height: 1.35;
+    font-weight: 600;
+    margin: var(--space-markdown-heading-before) 0
+        var(--space-markdown-heading-after);
+    color: var(--foreground);
+    scroll-margin-top: 80px;
+}
+
+.document-continuous-editor .ProseMirror h4,
+.document-continuous-editor .ProseMirror h5,
+.document-continuous-editor .ProseMirror h6 {
+    font-size: 1em;
+    line-height: 1.4;
+    font-weight: 600;
+    margin: var(--space-markdown-heading-before) 0
+        var(--space-markdown-heading-after);
+    color: var(--foreground);
+    scroll-margin-top: 80px;
+}
+
+.document-continuous-editor .ProseMirror blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: var(--space-control-gap);
+    margin: var(--space-1) 0;
+    color: var(--muted);
+    font-style: italic;
+}
+
+.document-continuous-editor .ProseMirror ul,
+.document-continuous-editor .ProseMirror ol {
+    margin: var(--space-1) 0;
+    padding-left: var(--space-markdown-list-indent);
+}
+
+.document-continuous-editor .ProseMirror li {
+    margin: calc(var(--space-1) / 2) 0;
+}
+
+.document-continuous-editor .ProseMirror hr {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: var(--space-section) 0;
+}
+
+.document-continuous-editor .ProseMirror code {
+    background-color: var(--surface-soft);
+    color: var(--foreground);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        monospace;
+    font-size: var(--font-inline-code-size);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-inline-code);
+}
+
+.document-continuous-editor .ProseMirror pre {
+    background-color: var(--surface-soft);
+    padding: var(--space-row-gap);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: var(--space-3) 0;
+}
+
+.document-continuous-editor .ProseMirror pre code {
+    background: transparent;
+    padding: 0;
+    font-size: var(--font-inline-code-size);
+}
+
+.document-continuous-editor .ProseMirror table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: var(--space-3) 0;
+    font-size: var(--font-body-size);
+}
+
+.document-continuous-editor .ProseMirror th,
+.document-continuous-editor .ProseMirror td {
+    border: 1px solid var(--border);
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+}
+
+.document-continuous-editor .ProseMirror th {
+    background-color: var(--surface-soft);
+    font-weight: 600;
+}
+
+.document-continuous-editor .ProseMirror a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Light Continuous Page Break Separator */
+.document-continuous-editor .document-pagebreak-node,
+.document-continuous-editor .pagebreak-node {
+    margin: var(--space-6) 0;
+    border-top: 1px dashed var(--muted);
+    position: relative;
+    text-align: center;
+    user-select: none;
+    opacity: 0.6;
+}
+
+.document-continuous-editor .milkdown-pagebreak-separator {
+    display: inline-block;
+    background: var(--surface-soft);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+}
+.document-continuous-editor li[data-item-type="task"] {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-control-gap);
+}
+.document-continuous-editor .markdown-list-item-content {
+    min-width: 0;
+    flex: 1;
+}
+
+/* Source View (Plain text Markdown textarea) */
+.document-source-editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 400px;
+    width: 100%;
+}
+
+.document-source-textarea {
+    width: 100%;
+    flex: 1;
+    min-height: 400px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", monospace;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    padding: var(--space-3);
+    background-color: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    outline: none;
+    resize: none;
+    box-sizing: border-box;
+    tab-size: 2;
+}
+
+.document-source-textarea:focus {
+    border-color: var(--accent);
+}
+
+/* Outline Panel (Headings tree) */
+.document-outline-sidebar {
+    width: var(--document-outline-width);
+    flex-shrink: 0;
+    border-left: 1px solid var(--border-subtle);
+    background-color: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: var(--space-3);
+    gap: var(--space-control-gap);
+}
+
+.document-outline-title {
+    font-size: var(--font-component-title-size);
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.document-outline-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.document-outline-item-btn {
+    width: 100%;
+    height: auto;
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+@container (max-width: 640px) {
+    .document-editor-content-layout {
+        flex-direction: column;
+        overflow: auto;
+    }
+    .document-outline-sidebar {
+        width: 100%;
+        max-height: var(--document-outline-compact-height);
+        border-left: 0;
+        border-top: 1px solid var(--border-subtle);
+    }
+    .document-draft-offer-banner {
+        flex-wrap: wrap;
+    }
+}
+
+.document-outline-item-btn[data-level="1"] {
+    padding-left: var(--space-2);
+}
+
+.document-outline-item-btn[data-level="2"] {
+    padding-left: var(--space-4);
+}
+
+.document-outline-item-btn[data-level="3"] {
+    padding-left: var(--space-6);
+}
+
+.document-outline-item-btn[data-level="4"] {
+    padding-left: calc(var(--space-6) + var(--space-2));
+}
+
+.document-outline-item-btn[data-level="5"] {
+    padding-left: calc(var(--space-6) + var(--space-4));
+}
+
+.document-outline-item-btn[data-level="6"] {
+    padding-left: calc(var(--space-6) + var(--space-6));
+}
+
+/* Local Draft Banner */
+.document-draft-offer-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--warning-soft);
+    border-bottom: 1px solid var(--warning-border);
+    color: var(--foreground);
+    font-size: var(--font-caption-size);
+    flex-shrink: 0;
+}
+
+.document-draft-offer-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+    flex-shrink: 0;
+}

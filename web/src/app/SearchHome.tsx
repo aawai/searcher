@@ -215,7 +215,9 @@ export function SearchHome() {
             | { type: "close" },
     ) {
         if (
-            dirtyForm.current && (kind === "apps" || appearance.style === "zen")
+            dirtyForm.current &&
+            (kind === "apps" || kind === "documents" ||
+                appearance.style === "zen")
         ) {
             setPendingAction({ kind, action });
             return;
@@ -957,6 +959,11 @@ export function SearchHome() {
                     key={user.id}
                     userId={user.id}
                     state={model.route}
+                    onDirtyChange={(dirty) => {
+                        dirtyForm.current = dirty;
+                    }}
+                    onOpenDocument={(id) =>
+                        navigateWorkspace({ view: "documents/edit", id })}
                     scope={model.scope}
                     onScopeChange={(scope) =>
                         dispatchHost({

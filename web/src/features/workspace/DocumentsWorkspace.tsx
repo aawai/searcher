@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import type {
     DocumentNotebookDto,
@@ -21,6 +21,7 @@ import {
     DocumentLibraryActions,
 } from "./DocumentLibraryActions.tsx";
 
+const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
     userId: string;
@@ -28,14 +29,17 @@ export interface DocumentsWorkspaceProps {
     onQueryChange: (query: string) => void;
     scope: DocumentsScope;
     onScopeChange: (scope: DocumentsScope) => void;
+    onOpenDocument: (id: string) => void;
+    onDirtyChange?: (dirty: boolean) => void;
 }
 
 function DocumentSummaryRow(
-    { item, notebooks, scope, onChanged }: {
+    { item, notebooks, scope, onChanged, onOpenDocument }: {
         item: DocumentSummaryDto;
         notebooks: DocumentNotebookDto[];
         scope: DocumentsScope;
         onChanged: () => void;
+        onOpenDocument: (id: string) => void;
     },
 ) {
     const displayTitle = item.displayTitle;
@@ -51,7 +55,16 @@ function DocumentSummaryRow(
     return (
         <article className="documents-summary-row" data-document-id={item.id}>
             <div className="documents-summary-header">
-                <h4 className="documents-summary-title">{displayTitle}</h4>
+                <h4 className="documents-summary-title">
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            onOpenDocument(item.id)}
+                        aria-label={`打开笔记：${displayTitle}`}
+                    >
+                        {displayTitle}
+                    </Button>
+                </h4>
                 <div className="documents-summary-badges">
                     {item.isFavorite && <Badge variant="secondary">收藏</Badge>}
                     {item.notebookName && scope.type !== "notebook" && (
@@ -83,13 +96,36 @@ function DocumentSummaryRow(
     );
 }
 
-export function DocumentsWorkspace({
+export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
+    if (props.state.view === "documents/edit") {
+        return (
+            <Suspense
+                fallback={
+                    <LoadingState density="compact">
+                        正在加载编辑器…
+                    </LoadingState>
+                }
+            >
+                <DocumentEditor
+                    key={props.state.id}
+                    documentId={props.state.id}
+                    userId={props.userId}
+                    onOpenDocument={props.onOpenDocument}
+                    onDirtyChange={props.onDirtyChange}
+                />
+            </Suspense>
+        );
+    }
+    return <DocumentsLibrary {...props} />;
+}
+function DocumentsLibrary({
     state,
     userId,
     query,
     onQueryChange,
     scope,
     onScopeChange,
+    onOpenDocument,
 }: DocumentsWorkspaceProps) {
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
@@ -293,6 +329,8 @@ export function DocumentsWorkspace({
                                 notebooks={notebooks}
                                 scope={scope}
                                 onChanged={refresh}
+                                onCreated={(document) =>
+                                    onOpenDocument(document.id)}
                             />
                         }
                     >
@@ -342,6 +380,7 @@ export function DocumentsWorkspace({
                                             ? { type: "all" }
                                             : scope}
                                         onChanged={refresh}
+                                        onOpenDocument={onOpenDocument}
                                     />
                                 ))}
                             </div>

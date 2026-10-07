@@ -92,11 +92,13 @@ export function WorkspaceShell(
     const root = state.view === "apps/root" || state.view === "notes/root" ||
         state.view === "documents/root";
     const editing = state.view === "apps/create" ||
-        state.view === "apps/edit" || state.view === "notes/edit";
+        state.view === "apps/edit" || state.view === "notes/edit" ||
+        state.view === "documents/edit" || state.view === "documents/create";
     return (
         <WorkspaceSurface
             presentation={presentation}
             title={title}
+            expanded={state.view === "documents/edit"}
             routeKey={JSON.stringify(state)}
             nested={!root}
             onBack={onBack}
