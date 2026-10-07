@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- 新增 #102 M1 笔记后端：独立 Documents/Notebooks、summary cursor
+  列表与跨笔记本搜索、版本冲突与快照保留、回收站和恢复、纸张设置，以及
+  owner-authenticated PNG/JPEG/WebP 资产。笔记资产 bytes 随 SQLite
+  备份恢复，并在永久删除时级联清理；现有便签保持独立。
 - 新增 #102 M0B 可编辑分页实验 `/design-lab/editable-pagination`：共享编辑状态
   下切换连续/页面展示，验证 A4/Letter、手动空白页、中文 IME 和超长内容
   的流式分片；仅技术实验，不上线 Documents 或打印功能。

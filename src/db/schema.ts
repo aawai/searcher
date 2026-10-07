@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
+    type AnySQLiteColumn,
+    blob,
     check,
     index,
     integer,
@@ -367,5 +369,150 @@ export const searchHistory = sqliteTable("search_history", {
     check(
         "search_history_engine_check",
         sql`${t.engineId} in ('google','bing','baidu','duckduckgo')`,
+    ),
+]);
+
+export const documentNotebooks = sqliteTable("document_notebooks", {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    parentId: text("parent_id").references(
+        (): AnySQLiteColumn => documentNotebooks.id,
+        { onDelete: "set null" },
+    ),
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+}, (t) => [
+    index("document_notebooks_user_idx").on(t.userId),
+    index("document_notebooks_parent_idx").on(t.parentId),
+    index("document_notebooks_user_parent_sort_idx").on(
+        t.userId,
+        t.parentId,
+        t.sortOrder,
+    ),
+]);
+
+export const documents = sqliteTable("documents", {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    notebookId: text("notebook_id").references(() => documentNotebooks.id, {
+        onDelete: "set null",
+    }),
+    title: text("title").notNull().default(""),
+    currentBody: text("current_body").notNull().default(""),
+    currentVersion: integer("current_version").notNull().default(1),
+    isFavorite: integer("is_favorite", { mode: "boolean" }).notNull().default(
+        false,
+    ),
+    deletedAt: integer("deleted_at"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+}, (t) => [
+    index("documents_user_idx").on(t.userId),
+    index("documents_notebook_idx").on(t.notebookId),
+    index("documents_deleted_at_idx").on(t.deletedAt),
+    index("documents_user_updated_idx").on(t.userId, t.updatedAt),
+]);
+
+export const documentVersions = sqliteTable("document_versions", {
+    id: text("id").primaryKey(),
+    documentId: text("document_id").notNull().references(() => documents.id, {
+        onDelete: "cascade",
+    }),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    version: integer("version").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    reason: text("reason", {
+        enum: [
+            "snapshot",
+            "manual",
+            "conflict_resolution",
+            "restore",
+            "system",
+        ],
+    }).notNull(),
+    createdAt: integer("created_at").notNull(),
+}, (t) => [
+    index("document_versions_document_idx").on(t.documentId),
+    index("document_versions_user_idx").on(t.userId),
+    uniqueIndex("document_versions_document_version_unique").on(
+        t.documentId,
+        t.version,
+    ),
+    check(
+        "document_versions_reason_check",
+        sql`${t.reason} in ('snapshot','manual','conflict_resolution','restore','system')`,
+    ),
+]);
+
+export const documentSettings = sqliteTable("document_settings", {
+    documentId: text("document_id").primaryKey().references(
+        () => documents.id,
+        { onDelete: "cascade" },
+    ),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    paperSize: text("paper_size", { enum: ["a4", "letter"] }).notNull().default(
+        "a4",
+    ),
+    orientation: text("orientation", { enum: ["portrait", "landscape"] })
+        .notNull().default("portrait"),
+    marginTopMm: real("margin_top_mm").notNull().default(20),
+    marginRightMm: real("margin_right_mm").notNull().default(20),
+    marginBottomMm: real("margin_bottom_mm").notNull().default(20),
+    marginLeftMm: real("margin_left_mm").notNull().default(20),
+    updatedAt: integer("updated_at").notNull(),
+}, (t) => [
+    check(
+        "document_settings_paper_check",
+        sql`${t.paperSize} in ('a4','letter')`,
+    ),
+    check(
+        "document_settings_orientation_check",
+        sql`${t.orientation} in ('portrait','landscape')`,
+    ),
+    check(
+        "document_settings_margins_check",
+        sql`${t.marginTopMm} between 5 and 50 and ${t.marginRightMm} between 5 and 50 and ${t.marginBottomMm} between 5 and 50 and ${t.marginLeftMm} between 5 and 50`,
+    ),
+]);
+
+export const documentAssets = sqliteTable("document_assets", {
+    id: text("id").primaryKey(),
+    documentId: text("document_id").notNull().references(() => documents.id, {
+        onDelete: "cascade",
+    }),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    mimeType: text("mime_type", {
+        enum: ["image/png", "image/jpeg", "image/webp"],
+    }).notNull(),
+    byteSize: integer("byte_size").notNull(),
+    sha256: text("sha256").notNull(),
+    originalName: text("original_name").notNull(),
+    storageRef: text("storage_ref").notNull(),
+    // SQLite-owned payload: backup and FK deletion include bytes atomically.
+    data: blob("data", { mode: "buffer" }).notNull(),
+    createdAt: integer("created_at").notNull(),
+}, (t) => [
+    index("document_assets_document_idx").on(t.documentId),
+    index("document_assets_user_idx").on(t.userId),
+    check(
+        "document_assets_mime_check",
+        sql`${t.mimeType} in ('image/png','image/jpeg','image/webp')`,
+    ),
+    check(
+        "document_assets_size_check",
+        sql`${t.byteSize} between 1 and 10485760`,
     ),
 ]);

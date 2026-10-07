@@ -47,6 +47,7 @@
     "npm:@milkdown/prose@7.22.2": "7.22.2",
     "npm:@milkdown/utils@7.22.2": "7.22.2",
     "npm:@tailwindcss/vite@4.1.13": "4.1.13_vite@7.1.7",
+    "npm:@types/mdast@*": "4.0.4",
     "npm:@types/node@26.6.2": "26.6.2",
     "npm:@types/react-dom@19.3.0": "19.3.0_@types+react@19.3.0",
     "npm:@types/react@19.3.0": "19.3.0",

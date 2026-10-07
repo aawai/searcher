@@ -46,6 +46,18 @@ Widgets 窗口布局按登录用户保存在当前设备 IndexedDB（`searcher:d
 
 快捷键与搜索快捷命令的完整说明统一在 **设置 → 快捷键**（`/settings/shortcuts`），无需登录即可查阅，按当前平台展示键位与生效上下文。编辑器本地操作优先于首页聚焦搜索，不提供快捷键自定义或同步。开发时在 `web/src/features/shortcuts/shortcut-catalog.ts` 维护逻辑 binding 和命令 target；业务组件保留事件处理归属，页面和上下文提示消费同一 catalog。
 
+### 笔记 API（#102 M1）
+
+`documents`（笔记）与 `notes`（便签）是独立实体；当前阶段提供后端 API，尚未接入生产 Workspace UI。所有 `/api/documents*`、`/api/document-notebooks*` 请求需要登录，跨 owner 与不存在均返回 404。
+
+- 列表：`GET /api/documents?scope=all|recent|favorite|notebook&notebookId=...&limit=50&cursor=...`；搜索：`GET /api/documents/search?q=...`；回收站：`GET /api/documents/trash`。三者返回 `{ items, nextCursor }`，每项仅包含 summary，不返回完整 body；limit 为 1–100，cursor 绑定 user/scope 或 query。空搜索返回空列表。
+- 实体：`POST /api/documents`、`GET/PATCH /api/documents/:id`；PATCH 必须提交当前 `version`，冲突返回 409 与 `data.currentDocument`。title 最大 200 characters，Markdown body 最大 1,000,000 characters，create/update JSON 请求最大 8 MiB；超限拒绝、不截断。
+- 生命周期：`DELETE /api/documents/:id?version=N` 软删除；`POST /api/documents/:id/restore` 恢复；`DELETE /api/documents/:id/permanent` 永久删除。历史：`GET /api/documents/:id/versions`、`POST /api/documents/:id/versions/:version/restore`（body 提交当前 version），恢复创建新版本、不回滚计数。
+- 内容变化的 autosave snapshot 间隔为 10 分钟，每笔记仅保留最近 100 个 snapshot；manual/conflict_resolution/restore/system 不参与清理。未改变 title/body 不生成内容快照。
+- 笔记本：`GET/POST /api/document-notebooks`、`PATCH/DELETE /api/document-notebooks/:id`、`POST /api/document-notebooks/:id/move`、`PUT /api/document-notebooks/reorder`。最多两层，允许同名；删除不会删除笔记，直接笔记转为未分类，子笔记本提升为 root。排序提交目标 parent scope 的完整 ids。
+- 图片：`POST /api/documents/:id/assets`（multipart file）、`GET/DELETE /api/documents/:id/assets/:assetId`。仅 PNG/JPEG/WebP，校验 MIME 与 magic bytes，最大 10 MiB。Markdown 保存 `asset://<assetId>`；读取同时校验 document/asset/owner，正文引用中的资产不能直接删除。实际 bytes 存于 SQLite BLOB，storage_ref 不公开；软删除保留，永久删除级联清理。
+- 纸张：`GET/PUT /api/documents/:id/settings`；仅同步 a4/letter、portrait/landscape 与四边 5–50 mm margins（默认 20 mm），不保存 view/sidebar/outline 等设备 UI 状态。
+
 ### AI 应用图标
 
 添加或编辑网站时，在“图标 → AI 生成”选择图片模型及“图片生成协议”：默认 OpenAI Images（`/images/generations`），仅当服务商支持 Gemini 原生接口时选择 Gemini 原生（`v1beta/models/:model:generateContent`）。协议仅用于本次图片请求，不修改 Provider、文本模型配置、模型发现或聊天 SSE。风格包括极简、几何、符号、线性、双色、柔和渐变、柔和 3D 和图形角色。
