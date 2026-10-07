@@ -183,6 +183,7 @@ export function evaluateM0ABundle(
     // 4. Editor Async Closure & Cold Download Payload
     const editorSeeds = Object.keys(manifest).filter((k) =>
         k.includes("spikes/markdown-editor") ||
+        k.includes("features/markdown-editor") ||
         manifest[k].name === "editor-vendor"
     );
     const editorClosure = staticClosure(manifest, editorSeeds);

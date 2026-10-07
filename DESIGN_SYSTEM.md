@@ -74,8 +74,18 @@ utility PageShell、Section、ActionGroup、Button、Textarea 与 canonical
 `markdown.css`。framework 不加载默认 theme；`.ProseMirror`、task checked
 attribute、PageBreak 与 decoration class 是 consumer styling hooks。 正文
 heading 表达文档语义，不改页面 chrome 层级。PageBreak 是 semantic node， page
-gap 是 aria-hidden decoration，后者不写入 Markdown。 该 spike 不建立生产 shared
-foundation，也不拥有 Documents/Notes 业务状态。
+gap 是 aria-hidden decoration，后者不写入 Markdown。该 spike 消费 #110 的 共享
+foundation，不拥有 Documents/Notes 业务状态。
+
+### Shared Markdown Editor Foundation
+
+`features/markdown-editor/structural.css` 唯一拥有
+`.markdown-editor .ProseMirror` 的 whitespace、selection/caret 和 node selection
+结构 bridge；不定义产品字号、 surface 或 readable width。Host class 在实例
+create/destroy 时维护，consumer 既有 class 不会被移除。Notes/Documents 的
+typography 和业务交互仍由各自 presentation owner
+定义；PageBreak/pagination/print 不进入 shared core。 框架默认 theme
+不导入；runtime 仅在实际打开编辑器时 dynamic import。
 
 ### Shortcut catalog 与可发现性
 

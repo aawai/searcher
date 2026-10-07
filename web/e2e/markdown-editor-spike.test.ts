@@ -122,6 +122,30 @@ Deno.test("M0A production React editor lifecycle, source, IME and isolation", as
         baseline,
     );
 
+    await page.keyboard.press("Control+End");
+    for (let i = 0; i < 4; i++) {
+        await page.keyboard.press("Shift+ArrowLeft");
+    }
+    assertEquals(
+        await page.evaluate(() => getSelection()?.toString()),
+        "中文输入",
+    );
+    await a.getByRole("button", { name: "加粗选区", exact: true }).click();
+    await rich.locator("strong").filter({ hasText: "中文输入" }).waitFor();
+    assertStringIncludes(await canonical.textContent() ?? "", "**中文输入**");
+    await a.getByRole("button", { name: "撤销", exact: true }).click();
+    await page.waitForFunction(() =>
+        !document.querySelector(
+            '[data-testid="实例 A-canonical"]',
+        )?.textContent?.includes("**中文输入**")
+    );
+    await a.getByRole("button", { name: "重做", exact: true }).click();
+    await rich.locator("strong").filter({ hasText: "中文输入" }).waitFor();
+    assertEquals(
+        await page.getByTestId("实例 B-canonical").textContent(),
+        baseline,
+    );
+
     for (let i = 0; i < 3; i++) {
         await page.getByRole("button", { name: "卸载编辑器", exact: true })
             .click();

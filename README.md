@@ -5,6 +5,7 @@
 问答、壁纸和跨设备偏好。管理员由交互式 CLI 创建，不存在默认管理员。
 M0A 编辑技术验证入口：`/design-lab/markdown-editor`，仅本地演示，不保存或替换便签。
 验证结论、bundle 口径和 #110 输入约束见 [M0A 报告](MARKDOWN_EDITOR_M0A.md)。
+共享编辑接口与 consumer/lazy/styling 契约见报告的 [Shared Foundation](MARKDOWN_EDITOR_M0A.md#110-shared-foundation)；当前便签仍使用原有 textarea 产品体验。
 
 
 ## 主页外观

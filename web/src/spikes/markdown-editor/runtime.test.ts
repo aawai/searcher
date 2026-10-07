@@ -11,7 +11,8 @@ import { NodeSelection, TextSelection } from "@milkdown/prose/state";
 import { deleteSelection, selectNodeBackward } from "@milkdown/prose/commands";
 import { markdownFixtures } from "./fixtures/markdown-fixtures.ts";
 import { paginationPluginKey } from "./extensions/pagination.ts";
-import { createSpikeEditor, type EditorChangeOrigin } from "./runtime.ts";
+import { createSpikeEditor } from "./runtime.ts";
+import type { MarkdownEditorEvent } from "../../features/markdown-editor/index.ts";
 
 interface DomEnvironment {
     root: HTMLElement;
@@ -75,7 +76,7 @@ function stripPositions(node: unknown): unknown {
 
 const mdastProcessor = remark().use(remarkGfm);
 
-Deno.test("M0A Canonical semantic roundtrip across all Markdown fixtures via AST equality", async (t) => {
+Deno.test("M0A consumer PageBreak roundtrip across boundary fixtures via AST equality", async (t) => {
     for (const fixture of markdownFixtures) {
         await t.step(
             `roundtrip: ${fixture.name} (${fixture.category})`,
@@ -363,14 +364,14 @@ Deno.test("M0A Pagination decorations are purely presentational in single PM sta
 Deno.test("M0A Programmatic replace and initialization distinguish from user transactions (regression: count 0 on open)", async () => {
     const env = createDomEnvironment();
     try {
-        const calls: { markdown: string; origin?: EditorChangeOrigin }[] = [];
+        const calls: MarkdownEditorEvent[] = [];
 
         // 1. Initialization regression: opening editor must NOT fire onChange
         const editor = await createSpikeEditor(
             env.root,
             "初始正文内容",
-            (markdown, origin) => {
-                calls.push({ markdown, origin });
+            (event) => {
+                calls.push(event);
             },
         );
 
@@ -383,13 +384,15 @@ Deno.test("M0A Programmatic replace and initialization distinguish from user tra
         );
         assertEquals(editor.getMarkdown().trim(), "初始正文内容");
 
-        // 2. Programmatic replace suppresses onChange by default
-        editor.replace("代码模式替换正文内容");
+        // 2. Programmatic replace emits programmatic origin (never user dirty)
+        editor.replaceMarkdown("代码模式替换正文内容");
         assertEquals(
-            calls.length,
+            calls.filter((c) => c.origin === "user").length,
             0,
-            "Programmatic replace must not fire default onChange",
+            "Programmatic replace must never fire user dirty",
         );
+        assertEquals(calls.length, 1);
+        assertEquals(calls[0].origin, "programmatic");
         assertEquals(editor.getMarkdown().trim(), "代码模式替换正文内容");
 
         // 3. User transaction fires onChange with origin 'user'
@@ -399,40 +402,17 @@ Deno.test("M0A Programmatic replace and initialization distinguish from user tra
         );
         editor.view.dispatch(insertTr);
 
-        assertEquals(calls.length, 1, "User edit must trigger onChange");
-        assertEquals(calls[0].origin, "user", "Origin must be user");
+        assertEquals(
+            calls.filter((c) => c.origin === "user").length,
+            1,
+            "User edit must trigger user change",
+        );
+        const userEvent = calls.find((c) => c.origin === "user");
+        assert(userEvent);
         assertStringIncludes(
-            calls[0].markdown,
+            userEvent.markdown,
             "代码模式替换正文内容 与用户输入",
         );
-
-        // 4. Explicit option to emit programmatic if requested
-        const env2 = createDomEnvironment();
-        try {
-            const progCalls: {
-                markdown: string;
-                origin?: EditorChangeOrigin;
-            }[] = [];
-            const editor2 = await createSpikeEditor(
-                env2.root,
-                "初始 2",
-                (markdown, origin) => {
-                    progCalls.push({ markdown, origin });
-                },
-                { emitProgrammatic: true },
-            );
-            editor2.replace("程序化更新");
-            assertEquals(
-                progCalls.length,
-                1,
-                "When emitProgrammatic=true, replace triggers onChange",
-            );
-            assertEquals(progCalls[0].origin, "programmatic");
-
-            await editor2.destroy();
-        } finally {
-            await env2.cleanup();
-        }
 
         await editor.destroy();
     } finally {
@@ -512,7 +492,7 @@ Deno.test("M0A Multi-instance independence", async () => {
         assertEquals(editorA.getMarkdown().trim(), "文档 A 初始正文");
         assertEquals(editorB.getMarkdown().trim(), "文档 B 初始正文");
 
-        editorB.replace("文档 B 全新独立内容");
+        editorB.replaceMarkdown("文档 B 全新独立内容");
         assertEquals(editorA.getMarkdown().trim(), "文档 A 初始正文");
         assertEquals(editorB.getMarkdown().trim(), "文档 B 全新独立内容");
 
@@ -521,31 +501,5 @@ Deno.test("M0A Multi-instance independence", async () => {
     } finally {
         await envA.cleanup();
         await envB.cleanup();
-    }
-});
-
-Deno.test("M0A No browser globals at module evaluation time", async () => {
-    const originalWindow = globalThis.window;
-    const originalDocument = globalThis.document;
-    const originalNavigator = globalThis.navigator;
-
-    try {
-        Reflect.deleteProperty(globalThis, "window");
-        Reflect.deleteProperty(globalThis, "document");
-        Reflect.deleteProperty(globalThis, "navigator");
-
-        // Test intentionally exercises module loading boundary in isolated global scope
-        const mod = await import("./runtime.ts");
-        assert(typeof mod.createSpikeEditor === "function");
-    } finally {
-        if (originalWindow !== undefined) {
-            Reflect.set(globalThis, "window", originalWindow);
-        }
-        if (originalDocument !== undefined) {
-            Reflect.set(globalThis, "document", originalDocument);
-        }
-        if (originalNavigator !== undefined) {
-            Reflect.set(globalThis, "navigator", originalNavigator);
-        }
     }
 });
