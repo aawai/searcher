@@ -138,6 +138,22 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "WallpaperSurface runtime owner: Preset XY vertical amplitude",
     "--wallpaper-motion-scale":
         "WallpaperSurface runtime owner: Shared zoom stage peak scale",
+    "--page-width":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--page-height":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--page-content-width":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--page-content-height":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--space-document-print-top":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--space-document-print-left":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--space-document-column-gap":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+    "--strip-width":
+        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
 };
 
 /**

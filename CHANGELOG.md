@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- 新增 #102 M0B 可编辑分页实验 `/design-lab/editable-pagination`：共享编辑状态
+  下切换连续/页面展示，验证 A4/Letter、手动空白页、中文 IME 和超长内容
+  的流式分片；仅技术实验，不上线 Documents 或打印功能。
+
 - 新增 #102 M0A 独立 Markdown editor 技术验证入口
   `/design-lab/markdown-editor`：按需加载最小 Milkdown
   组合，验证源码切换、双实例与语义分页符；不改变现有便签或上线 Documents

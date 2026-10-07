@@ -77,6 +77,17 @@ heading 表达文档语义，不改页面 chrome 层级。PageBreak 是 semantic
 gap 是 aria-hidden decoration，后者不写入 Markdown。该 spike 消费 #110 的 共享
 foundation，不拥有 Documents/Notes 业务状态。
 
+### M0B Editable Pagination spike
+
+`/design-lab/editable-pagination` 消费 #110 foundation；pagination owner 位于
+`spikes/editable-pagination/runtime.ts`，presentation 由同目录 `spike.css`
+负责。水平纸张带不进入 semantic tree；物理纸张/版心与打印边距仅作为 runtime
+geometry，不写入全局视觉 token。纸张 surface、gap、shadow 使用
+`--surface-document-paper`、`--space-document-page-gap`、`--shadow-document-paper`。
+正文复用 `.markdown`，单一 EditorView 保持 selection/history；页间 gap 不接受
+caret，不进入 screen reader/clipboard。此实验不定义正式 Documents Host 或
+print。
+
 ### Shared Markdown Editor Foundation
 
 `features/markdown-editor/structural.css` 唯一拥有

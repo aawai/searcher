@@ -220,3 +220,51 @@ cipher 尾部直接替换为 ff，不能保证内容实际改变；本次未保�
 断言失败的精确随机输入。最终实现后的完整回归通过不代表修复了该无关测试，
 本阶段未改 crypto 代码或测试。正式 Documents library 的网络验收仍留在其交付
 阶段与 M7，不将 spike shell 证据冒充正式 library。
+
+## #102 M0B Editable Pagination Feasibility Spike
+
+入口 `/design-lab/editable-pagination` 仅在打开编辑器时加载 runtime，消费 #110
+的 shared core 和 M0A semantic PageBreak，不创建第二套 editor core。
+连续/页面模式保持同一 EditorView、EditorState、selection 和 undo history。
+页面采用原生 CSS multicol 的水平纸张带；纸张背景是 editable DOM 外的
+aria-hidden、pointer-inert sibling，不进入 Markdown 或 clipboard。
+
+唯一 layout owner 读取 A4/Letter、orientation 与 5–50mm margins，按 96 CSS px/in
+换算物理版心；requestAnimationFrame 合并文档、尺寸、图片、字体
+触发的测量。composition 期间延后几何写入，compositionend 的 PM handler
+完成后提交重排。列位置以 round 处理浏览器的子像素舍入，不用 manual-break-count
+floor 掩盖布局失败。PageBreak 使用非零结构尺寸触发列断裂； 末尾仅补空
+paragraph（normalization / no-history），不增加 canonical 字节。
+
+验证命令：
+
+```sh
+deno test -A web/src/spikes/editable-pagination/runtime.test.ts
+deno task build
+NODE_ENV=test deno test -A web/e2e/editable-pagination-spike.test.ts
+deno task check:ui
+```
+
+- focused：6 tests / 3 steps；production：1 test / 5 steps，均通过。
+- 完整回归：532 tests / 28 steps；UI Guard ownership/visual 均为 0；未放宽
+  baseline。
+- production 证明 DOM identity、选区文字、undo/redo、exact semantic PageBreak
+  clipboard、首/连续/末尾共 5 页、间隙点击不变 selection、CDP 中文提交后
+  重排、Letter landscape 与 5/50mm 边界不改正文。
+- 超高 paragraph/pre/table 均产生多个 native fragments；2000×3000 PNG
+  不超出版心且保持比例；纸张横向 overflow 仅在局部 viewport。
+- 390×844、768×1024、1440×900 × light/dark：实页截图、无全局横向 overflow、axe 0
+  violations。主题批量脚本先前未等待 transition，出现瞬态 contrast
+  结果；等待浏览器 animation.finished 后重新验收了完整固定矩阵。
+
+已知限制与 M5 路径：
+
+- 本 spike 使用水平纸张带，不承诺正式产品纸张排列、zoom 或移动 Sheet。 M5 须在
+  M4 的 DocumentEditor 生命周期内接入此 owner，并完成 Host 交互。
+- 原生 table fragmentation 不承诺 repeating header；widow/orphan、heading
+  keep-with-next 仍为 #102 定义的 best-effort，不改 semantic tree。
+- 没有 PDF/Print、真实 document assets resolver、服务器 settings 或
+  persistence； 这些不是 M0B 交付。M5 需基于 M1/M4 接入并单独验收同一物理
+  geometry 的 print。
+- 验收使用真实 Chromium CDP composition，不声称 OS 候选窗人工验收。
+- M0B 仅作为 M5 前置，不阻塞 M1/M2/M3/M4、#110 或 #108。
