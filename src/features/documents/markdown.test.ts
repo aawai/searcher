@@ -1,9 +1,26 @@
 import { assertEquals } from "@std/assert";
 import {
     documentAssetReferences,
+    documentDisplayTitle,
     documentPlainText,
     documentSnippet,
 } from "./markdown.ts";
+
+Deno.test("documentDisplayTitle preserves explicit title precedence and first-block fallback boundary", () => {
+    assertEquals(documentDisplayTitle(" Explicit ", "# Heading"), "Explicit");
+    assertEquals(
+        documentDisplayTitle("", "First **paragraph**.\n\nSecond paragraph."),
+        "First paragraph.",
+    );
+    assertEquals(
+        documentDisplayTitle("", "# " + "字".repeat(101)),
+        "字".repeat(100),
+    );
+    assertEquals(
+        documentDisplayTitle("", "```\nOnly code\n```\n\n<!-- pagebreak -->"),
+        "无标题笔记",
+    );
+});
 
 Deno.test("documentPlainText - extracts text from headers, paragraphs, and formatting", () => {
     const md = `# Title

@@ -78,6 +78,30 @@ async function setupTestContext() {
     return { store, service, now, setTime, advanceTime };
 }
 
+Deno.test("Documents summaries derive untitled display title from first readable block without changing canonical title", async () => {
+    const { service, store } = await setupTestContext();
+    try {
+        const body = "```text\n" + "ignored code\n".repeat(100) +
+            "```\n\n# **Readable** heading\n\nSecond paragraph";
+        const title = " \t\n\u3000";
+        const doc = await service.create("user-1", { title, body });
+        for (
+            const page of [
+                await service.list("user-1"),
+                await service.search("user-1", "Readable"),
+            ]
+        ) {
+            const item = page.items.find((item) => item.id === doc.id);
+            assertEquals(item?.title, title);
+            assertEquals(item?.displayTitle, "Readable heading");
+            assertEquals(item && "body" in item, false);
+        }
+        assertEquals((await service.get("user-1", doc.id)).title, title);
+    } finally {
+        store.close();
+    }
+});
+
 Deno.test("DocumentsService - create: establishes version 1, isFavorite false, and initial snapshot", async () => {
     const { service } = await setupTestContext();
 

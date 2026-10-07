@@ -13,6 +13,7 @@ export type DocumentScope =
 export interface DocumentSummaryDto {
     id: string;
     title: string;
+    displayTitle: string;
     snippet: string;
     notebookId: string | null;
     notebookName?: string;

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- 修复无标题笔记的展示标题：按首个非空 heading/paragraph 的纯文本前 100
+  字回退，不再把代码块或后续段落拼进标题；canonical title 保持不变。
 - 新增 #102 M2 笔记工作区入口：Zen Panel、移动端 Sheet 与 Widgets 窗口复用现有
   Host；应用、便签、笔记各自保留路由、搜索与导航状态。笔记根视图读取摘要与游标分页，不加载
   editor runtime；此阶段不提供生产编辑器。
