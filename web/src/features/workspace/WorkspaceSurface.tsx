@@ -3,7 +3,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
 
-export type WorkspacePresentation = "panel" | "sheet";
+export type WorkspacePresentation = "panel" | "window" | "sheet";
 
 export function WorkspaceSurface(
     {
@@ -16,7 +16,7 @@ export function WorkspaceSurface(
         children,
         footer,
     }: {
-        presentation: WorkspacePresentation;
+        presentation: Exclude<WorkspacePresentation, "window">;
         title: string;
         routeKey: string;
         nested: boolean;

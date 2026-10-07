@@ -13,6 +13,7 @@ import {
 import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 import {
     isAppsWorkspaceView,
+    isNotesWorkspaceView,
     type WorkspaceKind,
     type WorkspaceRoute,
 } from "./workspace-state.ts";
@@ -55,7 +56,9 @@ export function WorkspaceShell(
     const presentation: WorkspacePresentation = mobile ? "sheet" : "panel";
     const workspace: WorkspaceKind = isAppsWorkspaceView(state)
         ? "apps"
-        : "notes";
+        : isNotesWorkspaceView(state)
+        ? "notes"
+        : "documents";
     const opener = useRef<HTMLElement | null>(null);
     const openingWorkspace = useRef<WorkspaceKind>(workspace);
     const wasOpen = useRef(false);
@@ -84,10 +87,10 @@ export function WorkspaceShell(
         }
         wasOpen.current = open;
     }, [open, workspace]);
-    const select = (kind: WorkspaceKind) =>
-        navigate({ view: kind === "apps" ? "apps/root" : "notes/root" });
+    const select = (kind: WorkspaceKind) => navigate({ view: `${kind}/root` });
     if (!open || (style === "widgets" && !mobile)) return null;
-    const root = state.view === "apps/root" || state.view === "notes/root";
+    const root = state.view === "apps/root" || state.view === "notes/root" ||
+        state.view === "documents/root";
     const editing = state.view === "apps/create" ||
         state.view === "apps/edit" || state.view === "notes/edit";
     return (
@@ -100,13 +103,18 @@ export function WorkspaceShell(
             onClose={onClose}
             footer={
                 <footer className="workspace-footer">
-                    {root && !(workspace === "apps" && appsArranging) && (
+                    {root && onCreate &&
+                        !(workspace === "apps" && appsArranging) && (
                         <Button
                             className="workspace-primary"
                             variant="default"
                             onClick={onCreate}
                         >
-                            {workspace === "apps" ? "添加应用" : "新建便签"}
+                            {workspace === "apps"
+                                ? "添加应用"
+                                : workspace === "notes"
+                                ? "新建便签"
+                                : "新建笔记"}
                         </Button>
                     )}
                     {!editing && (

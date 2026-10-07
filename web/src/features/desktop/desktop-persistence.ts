@@ -1,6 +1,6 @@
 /**
  * Desktop Window Manager Persistence Engine
- * Issue #90: IndexedDB persistence for desktop layout, schema v1,
+ * Issue #90 / #102 M2: IndexedDB desktop payload v2, readable legacy v1,
  * normalized frame geometry, strict validation fallbacks, and user isolation.
  */
 
@@ -21,7 +21,7 @@ import {
 } from "./desktop-state.ts";
 import { getLocal, setLocal } from "../../lib/local.ts";
 
-export const DESKTOP_LAYOUT_SCHEMA_VERSION = 1 as const;
+export const DESKTOP_LAYOUT_SCHEMA_VERSION = 2 as const;
 
 const VALID_SNAP_MODES: Record<string, true> = {
     "left": true,
@@ -52,7 +52,7 @@ export interface PersistedWindowLayout {
 }
 
 export interface PersistedDesktopLayout {
-    version: typeof DESKTOP_LAYOUT_SCHEMA_VERSION;
+    version: 1 | typeof DESKTOP_LAYOUT_SCHEMA_VERSION;
     windows: PersistedWindowLayout[];
     activeId: string | null;
 }
@@ -138,8 +138,8 @@ export function decodeDesktopLayout(
 
     const raw = payload as Record<string, unknown>;
 
-    // Schema version check: must strictly match version 1
-    if (raw.version !== DESKTOP_LAYOUT_SCHEMA_VERSION) {
+    // v1 remains readable; new root kind is encoded only in v2 payloads.
+    if (raw.version !== 1 && raw.version !== DESKTOP_LAYOUT_SCHEMA_VERSION) {
         return null;
     }
 
@@ -175,6 +175,9 @@ export function decodeDesktopLayout(
             if (w.entityId !== null && w.entityId !== undefined) return null;
         } else if (kind === "notes") {
             if (w.id !== "notes") return null;
+            if (w.entityId !== null && w.entityId !== undefined) return null;
+        } else if (kind === "documents") {
+            if (raw.version === 1 || w.id !== "documents") return null;
             if (w.entityId !== null && w.entityId !== undefined) return null;
         } else if (kind === "note") {
             if (typeof w.entityId !== "string" || w.entityId.length === 0) {

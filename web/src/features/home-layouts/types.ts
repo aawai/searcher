@@ -5,7 +5,7 @@ import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import type { NoteItem } from "../../components/searcher/NoteCard.tsx";
 import type { Appearance } from "../../app/state.tsx";
 import type { UserDto } from "@shared/contracts.ts";
-
+import type { WorkspaceKind } from "../workspace/workspace-state.ts";
 export interface HomeLayoutProps {
     user: UserDto | null;
     appearance: Appearance;
@@ -63,7 +63,7 @@ export interface HomeLayoutProps {
         layout: NonNullable<NoteItem["layout"]>,
     ) => Promise<void>;
     // sheet controls
-    openWorkspace: (workspace: "apps" | "notes") => void;
+    openWorkspace: (workspace: WorkspaceKind) => void;
     // error
     error: string;
     setError: (err: string) => void;

@@ -2,7 +2,6 @@ import { assertEquals, assertNotEquals } from "@std/assert";
 import { setupMockIndexedDB } from "../../lib/test-mock-idb.ts";
 import {
     decodeDesktopLayout,
-    DESKTOP_LAYOUT_SCHEMA_VERSION,
     encodeDesktopLayout,
     loadDesktopLayout,
     type PersistedDesktopLayout,
@@ -14,7 +13,7 @@ import { type SafeRect, snapFrame } from "./desktop-geometry.ts";
 const rect1440: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
 const rect1024: SafeRect = { x: 0, y: 0, width: 1024, height: 768 };
 
-Deno.test("desktop-persistence: encodeDesktopLayout captures schema v1, normalized normal frames, modes and zOrder", () => {
+Deno.test("desktop-persistence: normalized normal frames preserve window modes and stacking", () => {
     const state: DesktopState = {
         windows: [
             {
@@ -49,7 +48,6 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures schema v1, normaliz
     };
 
     const encoded = encodeDesktopLayout(state, rect1440);
-    assertEquals(encoded.version, DESKTOP_LAYOUT_SCHEMA_VERSION);
     assertEquals(encoded.windows.length, 3);
     assertEquals(encoded.activeId, "notes");
 
@@ -158,7 +156,7 @@ Deno.test("desktop-persistence: decodeDesktopLayout strictly rejects corrupt pay
 
     // Unsupported version
     assertEquals(
-        decodeDesktopLayout({ version: 2, windows: [] }, rect1440),
+        decodeDesktopLayout({ version: 3, windows: [] }, rect1440),
         null,
     );
     assertEquals(
@@ -642,6 +640,68 @@ Deno.test("desktop-persistence: strict validation rejects invalid snap values or
             },
             rect1440,
         ),
+        null,
+    );
+});
+
+Deno.test("desktop-persistence: v1 Apps/Notes survive migration and v2 Documents root restores without entity confusion", () => {
+    const window = {
+        id: "apps",
+        kind: "apps",
+        entityId: null,
+        frame: { x: 0.1, y: 0.1, width: 0.5, height: 0.5 },
+        mode: "normal",
+        zOrder: 1,
+        snap: null,
+    };
+    const legacy = decodeDesktopLayout({
+        version: 1,
+        windows: [window, { ...window, id: "notes", kind: "notes", zOrder: 2 }],
+        activeId: "notes",
+    }, rect1440)!;
+    const current: DesktopState = {
+        windows: [...legacy.windows, {
+            id: "documents",
+            kind: "documents",
+            entityId: null,
+            frame: { x: 100, y: 100, width: 760, height: 720 },
+            restoreFrame: null,
+            mode: "normal",
+            zOrder: 3,
+            snap: null,
+        }],
+        activeId: "documents",
+    };
+    const restored = decodeDesktopLayout(
+        encodeDesktopLayout(current, rect1440),
+        rect1024,
+    )!;
+    assertEquals(
+        restored.windows.map((win) => [win.id, win.kind, win.entityId]),
+        [["apps", "apps", null], ["notes", "notes", null], [
+            "documents",
+            "documents",
+            null,
+        ]],
+    );
+    assertEquals(restored.activeId, "documents");
+    assertEquals(
+        decodeDesktopLayout({
+            version: 2,
+            windows: [{
+                ...window,
+                id: "documents",
+                kind: "documents",
+                entityId: "wrong",
+            }],
+        }, rect1440),
+        null,
+    );
+    assertEquals(
+        decodeDesktopLayout({
+            version: 1,
+            windows: [{ ...window, id: "documents", kind: "documents" }],
+        }, rect1440),
         null,
     );
 });

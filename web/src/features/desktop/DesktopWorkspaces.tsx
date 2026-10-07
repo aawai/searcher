@@ -1,6 +1,7 @@
 import {
     type Dispatch,
     type ReactNode,
+    type RefObject,
     useEffect,
     useLayoutEffect,
     useRef,
@@ -52,7 +53,7 @@ export interface DesktopWorkspacesProps {
     onOpen: (kind: WorkspaceKind) => void;
     onClose: (kind: WorkspaceKind) => void;
     onBack: (kind: WorkspaceKind) => void;
-    onCreate: (kind: WorkspaceKind) => void;
+    onCreate: (kind: "apps" | "notes") => void;
     onDockElement: (el: HTMLElement | null) => void;
     appsArranging: boolean;
     notes: NoteItem[];
@@ -61,7 +62,7 @@ export interface DesktopWorkspacesProps {
 }
 
 export function isWorkspaceKind(kind: string): kind is WorkspaceKind {
-    return kind === "apps" || kind === "notes";
+    return kind === "apps" || kind === "notes" || kind === "documents";
 }
 
 export function getWorkspaceTitle(
@@ -76,7 +77,11 @@ export function getWorkspaceTitle(
         case "notes/edit":
             return "编辑便签";
         default:
-            return kind === "apps" ? "应用" : "便签";
+            return kind === "apps"
+                ? "应用"
+                : kind === "notes"
+                ? "便签"
+                : "笔记";
     }
 }
 
@@ -136,10 +141,19 @@ export function DesktopWorkspaces({
 }: DesktopWorkspacesProps) {
     const dockNavRef = useRef<HTMLElement | null>(null);
 
-    const appsCloseRef = useRef<HTMLButtonElement | null>(null);
-    const appsBackRef = useRef<HTMLButtonElement | null>(null);
-    const notesCloseRef = useRef<HTMLButtonElement | null>(null);
-    const notesBackRef = useRef<HTMLButtonElement | null>(null);
+    const chromeRefs = useRef<
+        Record<
+            WorkspaceKind,
+            {
+                close: RefObject<HTMLButtonElement | null>;
+                back: RefObject<HTMLButtonElement | null>;
+            }
+        >
+    >({
+        apps: { close: { current: null }, back: { current: null } },
+        notes: { close: { current: null }, back: { current: null } },
+        documents: { close: { current: null }, back: { current: null } },
+    }).current;
 
     const [preset, setPreset] = useState<ConstrainedPreset>("medium");
     const [overviewOpen, setOverviewOpen] = useState(false);
@@ -177,93 +191,50 @@ export function DesktopWorkspaces({
         return false;
     });
 
-    const appsOpen = state.windows.some((w) =>
-        w.kind === "apps" || w.id === "apps"
-    );
-    const notesOpen = state.windows.some((w) =>
-        w.kind === "notes" || w.id === "notes"
-    );
-    // Focus restoration to Dock on close: update refs unconditionally to prevent stale restoration
-    const wasAppsOpen = useRef(appsOpen);
-    const wasNotesOpen = useRef(notesOpen);
-
+    const previous = useRef<
+        Record<WorkspaceKind, { open: boolean; view: string }>
+    >({
+        apps: { open: false, view: "apps/root" },
+        notes: { open: false, view: "notes/root" },
+        documents: { open: false, view: "documents/root" },
+    });
     useLayoutEffect(() => {
-        if (wasAppsOpen.current && !appsOpen) {
-            const frame = requestAnimationFrame(() => {
-                dockNavRef.current?.querySelector<HTMLButtonElement>(
-                    '[data-workspace="apps"]',
-                )?.focus({ preventScroll: true });
-            });
-            wasAppsOpen.current = appsOpen;
-            return () => cancelAnimationFrame(frame);
+        const frames: number[] = [];
+        for (const kind of ["apps", "notes", "documents"] as const) {
+            const open = state.windows.some((win) => win.kind === kind);
+            const view = models[kind].route.view;
+            const before = previous.current[kind];
+            if (before.open && !open) {
+                frames.push(
+                    requestAnimationFrame(() =>
+                        dockNavRef.current?.querySelector<HTMLButtonElement>(
+                            `[data-workspace="${kind}"]`,
+                        )?.focus({ preventScroll: true })
+                    ),
+                );
+            } else if (open && (!before.open || before.view !== view)) {
+                frames.push(requestAnimationFrame(() => {
+                    const control = view === `${kind}/root`
+                        ? chromeRefs[kind].close
+                        : chromeRefs[kind].back;
+                    control.current?.focus({ preventScroll: true });
+                }));
+            }
+            previous.current[kind] = { open, view };
         }
-        wasAppsOpen.current = appsOpen;
-    }, [appsOpen]);
-
-    useLayoutEffect(() => {
-        if (wasNotesOpen.current && !notesOpen) {
-            const frame = requestAnimationFrame(() => {
-                dockNavRef.current?.querySelector<HTMLButtonElement>(
-                    '[data-workspace="notes"]',
-                )?.focus({ preventScroll: true });
-            });
-            wasNotesOpen.current = notesOpen;
-            return () => cancelAnimationFrame(frame);
-        }
-        wasNotesOpen.current = notesOpen;
-    }, [notesOpen]);
-
-    // Focus management on route change or initial open: root focuses close button, nested focuses back button.
-    // Exclude state.activeId so pointer activation does not steal internal focus from inputs/textareas.
-    const prevAppsRoute = useRef<WorkspaceRoute>(models.apps.route);
-    const prevNotesRoute = useRef<WorkspaceRoute>(models.notes.route);
-    const wasAppsOpenForFocus = useRef(appsOpen);
-    const wasNotesOpenForFocus = useRef(notesOpen);
-
-    useLayoutEffect(() => {
-        const routeChanged =
-            prevAppsRoute.current.view !== models.apps.route.view;
-        const newlyOpened = !wasAppsOpenForFocus.current && appsOpen;
-
-        if (appsOpen && (routeChanged || newlyOpened)) {
-            const isNested = models.apps.route.view !== "apps/root";
-            const frame = requestAnimationFrame(() => {
-                (isNested ? appsBackRef.current : appsCloseRef.current)?.focus({
-                    preventScroll: true,
-                });
-            });
-            prevAppsRoute.current = models.apps.route;
-            wasAppsOpenForFocus.current = appsOpen;
-            return () => cancelAnimationFrame(frame);
-        }
-        prevAppsRoute.current = models.apps.route;
-        wasAppsOpenForFocus.current = appsOpen;
-    }, [appsOpen, models.apps.route.view]);
-
-    useLayoutEffect(() => {
-        const routeChanged =
-            prevNotesRoute.current.view !== models.notes.route.view;
-        const newlyOpened = !wasNotesOpenForFocus.current && notesOpen;
-
-        if (notesOpen && (routeChanged || newlyOpened)) {
-            const isNested = models.notes.route.view !== "notes/root";
-            const frame = requestAnimationFrame(() => {
-                (isNested ? notesBackRef.current : notesCloseRef.current)
-                    ?.focus({
-                        preventScroll: true,
-                    });
-            });
-            prevNotesRoute.current = models.notes.route;
-            wasNotesOpenForFocus.current = notesOpen;
-            return () => cancelAnimationFrame(frame);
-        }
-        prevNotesRoute.current = models.notes.route;
-        wasNotesOpenForFocus.current = notesOpen;
-    }, [notesOpen, models.notes.route.view]);
+        return () => frames.forEach(cancelAnimationFrame);
+        // Pointer activation must not steal focus from domain inputs.
+    }, [
+        state.windows.length,
+        models.apps.route.view,
+        models.notes.route.view,
+        models.documents.route.view,
+        chromeRefs,
+    ]);
     // Active workspace kind determination for Escape key
     const activeWinId = state.activeId ??
         getTopmostVisibleWindowId(openWindows);
-    const activeKind = activeWinId === "apps" || activeWinId === "notes"
+    const activeKind = activeWinId && isWorkspaceKind(activeWinId)
         ? activeWinId
         : null;
 
@@ -340,8 +311,10 @@ export function DesktopWorkspaces({
                 : getNoteDisplayTitle(note?.title ?? "", note?.body ?? ""),
             summary: note?.body ??
                 (win.kind === "apps"
-                    ? "浏览、打开与管理应用"
-                    : "浏览、编辑与管理便签"),
+                    ? "应用列表"
+                    : win.kind === "notes"
+                    ? "便签列表"
+                    : "笔记列表"),
         };
     });
     const selectWindow = (id: string) => {
@@ -418,7 +391,8 @@ export function DesktopWorkspaces({
                     if (!model) return null;
 
                     const isRoot = model.route.view === "apps/root" ||
-                        model.route.view === "notes/root";
+                        model.route.view === "notes/root" ||
+                        model.route.view === "documents/root";
                     const isNested = !isRoot;
                     const title = getWorkspaceTitle(kind, model.route);
                     const isActive = state.activeId === win.id;
@@ -436,7 +410,8 @@ export function DesktopWorkspaces({
                         : win;
 
                     const showCreate = isRoot &&
-                        !(kind === "apps" && appsArranging);
+                        !(kind === "apps" && appsArranging) &&
+                        kind !== "documents";
 
                     return (
                         <DesktopWindow
@@ -465,12 +440,8 @@ export function DesktopWorkspaces({
                                     />
                                 )
                                 : undefined}
-                            closeBtnRef={kind === "apps"
-                                ? appsCloseRef
-                                : notesCloseRef}
-                            backBtnRef={kind === "apps"
-                                ? appsBackRef
-                                : notesBackRef}
+                            closeBtnRef={chromeRefs[kind].close}
+                            backBtnRef={chromeRefs[kind].back}
                         >
                             <div className="workspace-body">
                                 {renderContent(kind)}
@@ -481,7 +452,12 @@ export function DesktopWorkspaces({
                                     <Button
                                         className="workspace-primary"
                                         variant="default"
-                                        onClick={() => onCreate(kind)}
+                                        onClick={() =>
+                                            onCreate(
+                                                kind === "apps"
+                                                    ? "apps"
+                                                    : "notes",
+                                            )}
                                     >
                                         {kind === "apps"
                                             ? "添加应用"

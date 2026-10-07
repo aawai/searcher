@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useState } from "react";
-import { Folder, LayoutGrid, StickyNote } from "lucide-react";
+import { Folder, LayoutGrid, NotebookPen, StickyNote } from "lucide-react";
 import type { WindowPreview } from "./DesktopOverview.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { DesktopState } from "./desktop-state.ts";
@@ -23,6 +23,7 @@ const WORKSPACE_ITEMS: readonly {
 }[] = [
     { kind: "apps", label: "应用", ariaLabel: "应用工作区" },
     { kind: "notes", label: "便签", ariaLabel: "便签工作区" },
+    { kind: "documents", label: "笔记", ariaLabel: "笔记工作区" },
 ];
 
 export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
@@ -110,7 +111,9 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                         >
                             {item.kind === "apps"
                                 ? <Folder size={18} />
-                                : <StickyNote size={18} />}
+                                : item.kind === "notes"
+                                ? <StickyNote size={18} />
+                                : <NotebookPen size={18} />}
                             <span>{item.label}</span>
                             {isOpen && (
                                 <span

@@ -47,6 +47,20 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #102 M2 Workspace Core / Host 验收（2026-10-07）
+
+- [x] 三域独立 route/stack/query；Documents scope 不随 Back 或清空搜索重置，认证
+      reset 清空所有域。
+- [x] 复用 WorkspaceShell、WorkspaceSurface、DesktopWindow、Sheet；无
+      DocumentsPage、第二套 window chrome 或 editor core。
+- [x] 实页 390×844、768×1024、1440×900 × light/dark × Zen/Widgets 共 12
+      组：根摘要展示、正确 presenter、无 viewport 横向溢出，浏览器无错误。
+- [x] 真实 API 55 条摘要：首批 50 条，加载更多后 55 条。
+- [x] 原有 production workspace layered matrix 全部通过；全套 594 tests / 28
+      steps 通过；UI Guard 0 violations，不调整 baseline。
+- [x] 构建通过；本阶段只交付根 Host 与摘要入口，Library 管理和生产编辑器保持
+      M3/M4 依赖边界。
+
 ## Issue #110 Shared Markdown Editor Foundation 验收（2026-10-07）
 
 - [x] Shared owner `features/markdown-editor`，structural CSS 不定义产品

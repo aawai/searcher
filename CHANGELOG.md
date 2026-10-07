@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- 新增 #102 M2 笔记工作区入口：Zen Panel、移动端 Sheet 与 Widgets 窗口复用现有
+  Host；应用、便签、笔记各自保留路由、搜索与导航状态。笔记根视图读取摘要与游标分页，不加载
+  editor runtime；此阶段不提供生产编辑器。
 - 新增 #102 M1 笔记后端：独立 Documents/Notebooks、summary cursor
   列表与跨笔记本搜索、版本冲突与快照保留、回收站和恢复、纸张设置，以及
   owner-authenticated PNG/JPEG/WebP 资产。笔记资产 bytes 随 SQLite

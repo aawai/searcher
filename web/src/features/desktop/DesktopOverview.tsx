@@ -20,6 +20,7 @@ const TYPE_LABELS: Record<WindowKind, string> = {
     apps: "应用工作区",
     notes: "便签工作区",
     note: "便签",
+    documents: "笔记工作区",
 };
 
 /** A separate preview surface: never moves or remounts the live editors. */

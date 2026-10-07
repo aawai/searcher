@@ -17,7 +17,7 @@ export interface SafeRect {
     height: number;
 }
 
-export type WindowKind = "apps" | "notes" | "note";
+export type WindowKind = "apps" | "notes" | "note" | "documents";
 
 export type SnapMode =
     | "left"
@@ -62,6 +62,7 @@ export function minimumSize(kind: WindowKind, rect?: SafeRect): WindowSize {
 
     switch (kind) {
         case "apps":
+        case "documents":
             baseW = 480;
             baseH = 360;
             break;
@@ -146,6 +147,7 @@ export function defaultFrame(
 
     switch (kind) {
         case "apps":
+        case "documents":
             targetW = Math.min(760, Math.round(safeW * 0.72));
             targetH = Math.min(720, Math.round(safeH * 0.78));
             break;
