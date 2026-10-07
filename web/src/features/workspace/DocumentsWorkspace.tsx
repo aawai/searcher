@@ -21,8 +21,7 @@ export interface DocumentsWorkspaceProps {
 }
 
 function DocumentSummaryRow({ item }: { item: DocumentSummaryDto }) {
-    const displayTitle = item.title.trim() ||
-        item.snippet.trim().slice(0, 100) || "无标题笔记";
+    const displayTitle = item.displayTitle;
     const timestamp = item.updatedAt || item.createdAt;
     const formattedDate = timestamp && !isNaN(timestamp)
         ? new Date(timestamp).toLocaleDateString("zh-CN", {

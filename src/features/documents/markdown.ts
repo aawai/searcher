@@ -86,6 +86,25 @@ export function documentSnippet(body: string, maxLength = 160): string {
     return singleLine.slice(0, maxLength).trim();
 }
 
+export function documentDisplayTitle(title: string, body: string): string {
+    const explicit = title.trim();
+    if (explicit) return explicit;
+    const firstReadable = (node: MdastNode): string => {
+        if (node.type === "heading" || node.type === "paragraph") {
+            return extractNodeText(node).replace(/\s+/g, " ").trim().slice(
+                0,
+                100,
+            );
+        }
+        for (const child of node.children ?? []) {
+            const text = firstReadable(child);
+            if (text) return text;
+        }
+        return "";
+    };
+    return firstReadable(processor.parse(body) as MdastNode) || "无标题笔记";
+}
+
 function walkAstForAssets(
     node: MdastNode,
     definitions: Map<string, string>,

@@ -27,7 +27,11 @@ import {
     DocumentNotFoundError,
     DocumentValidationError,
 } from "./errors.ts";
-import { documentSnippet } from "./markdown.ts";
+import { documentDisplayTitle, documentSnippet } from "./markdown.ts";
+
+// SQLite trim defaults to ASCII space; match ECMAScript String.trim for titles.
+const TITLE_WHITESPACE =
+    "\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
 
 interface ListCursorPayload {
     readonly u: string;
@@ -154,6 +158,7 @@ export class DocumentsService {
         return {
             id: row.id,
             title: row.title,
+            displayTitle: documentDisplayTitle(row.title, row.bodyPreview),
             snippet: documentSnippet(row.bodyPreview),
             notebookId: row.notebookId,
             ...(row.notebookName ? { notebookName: row.notebookName } : {}),
@@ -170,6 +175,7 @@ export class DocumentsService {
         return {
             id: doc.id,
             title: doc.title,
+            displayTitle: documentDisplayTitle(doc.title, doc.currentBody),
             snippet: documentSnippet(doc.currentBody),
             body: doc.currentBody,
             version: doc.currentVersion,
@@ -927,9 +933,10 @@ export class DocumentsService {
                     updatedAt: documents.updatedAt,
                     bodyPreview: sql<
                         string
-                    >`substr(${documents.currentBody}, 1, 300)`.as(
-                        "body_preview",
-                    ),
+                    >`CASE WHEN length(trim(${documents.title}, ${TITLE_WHITESPACE})) = 0 THEN ${documents.currentBody} ELSE substr(${documents.currentBody}, 1, 300) END`
+                        .as(
+                            "body_preview",
+                        ),
                 })
                 .from(documents)
                 .leftJoin(
@@ -1030,9 +1037,10 @@ export class DocumentsService {
                     updatedAt: documents.updatedAt,
                     bodyPreview: sql<
                         string
-                    >`substr(${documents.currentBody}, 1, 300)`.as(
-                        "body_preview",
-                    ),
+                    >`CASE WHEN length(trim(${documents.title}, ${TITLE_WHITESPACE})) = 0 THEN ${documents.currentBody} ELSE substr(${documents.currentBody}, 1, 300) END`
+                        .as(
+                            "body_preview",
+                        ),
                 })
                 .from(documents)
                 .leftJoin(
@@ -1117,7 +1125,7 @@ export class DocumentsService {
                     d.is_favorite,
                     d.created_at,
                     d.updated_at,
-                    substr(d.current_body, 1, 300) AS body_preview,
+                    CASE WHEN length(trim(d.title, ${TITLE_WHITESPACE})) = 0 THEN d.current_body ELSE substr(d.current_body, 1, 300) END AS body_preview,
                     nb.name AS notebook_name,
                     documents_fts.rank AS rank
                 FROM documents_fts
