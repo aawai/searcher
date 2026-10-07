@@ -1,0 +1,181 @@
+.pagination-spike {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-section-gap);
+    min-width: 0;
+    width: 100%;
+}
+.pagination-spike-toolbar,
+.pagination-diagnostic-bar,
+.pagination-diagnostic-items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-control-gap);
+}
+.pagination-spike-control-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+}
+.pagination-spike-control-item label {
+    font-weight: var(--font-label-weight);
+    white-space: nowrap;
+}
+.pagination-diagnostic-bar {
+    padding: var(--space-row-block) var(--space-card-padding);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: var(--font-caption-size);
+}
+.pagination-diagnostic-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+}
+.pagination-diagnostic-badge {
+    padding: var(--space-1) var(--space-2);
+    background: var(--surface-solid);
+    border-radius: var(--control-radius);
+}
+.pagination-viewport {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-sizing: border-box;
+}
+.pagination-viewport[data-mode="continuous"] {
+    overflow: auto;
+    max-height: var(--page-height);
+    background: var(--surface-solid);
+    padding: var(--space-card-padding);
+}
+.pagination-viewport[data-mode="continuous"] .pagination-root {
+    max-width: var(--page-width);
+    margin: auto;
+}
+.pagination-viewport .ProseMirror {
+    outline: none;
+    color: var(--foreground);
+}
+.pagination-viewport[data-mode="page"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: calc(var(--page-height) + 2 * var(--space-card-padding));
+    background: var(--surface-soft);
+    padding: var(--space-card-padding);
+}
+.pagination-sheets {
+    position: absolute;
+    top: var(--space-card-padding);
+    left: var(--space-card-padding);
+    height: var(--page-height);
+    pointer-events: none;
+    user-select: none;
+}
+.pagination-sheet {
+    position: absolute;
+    top: 0;
+    width: var(--page-width);
+    height: var(--page-height);
+    background: var(--surface-document-paper);
+    box-shadow: var(--shadow-document-paper);
+    border: 1px solid var(--border);
+    box-sizing: border-box;
+}
+.pagination-viewport[data-mode="page"] .pagination-root {
+    position: relative;
+    width: var(--strip-width);
+    height: var(--page-height);
+    padding-top: var(--space-document-print-top);
+}
+.pagination-viewport[data-mode="page"] .ProseMirror {
+    width: var(--page-content-width);
+    height: var(--page-content-height);
+    max-height: var(--page-content-height);
+    margin-left: var(--space-document-print-left);
+    column-width: var(--page-content-width);
+    column-gap: var(--space-document-column-gap);
+    column-fill: auto;
+    box-sizing: content-box;
+    padding: 0;
+}
+.pagination-viewport[data-mode="page"] :is(h1,h2,h3,h4,h5,h6) {
+    break-after: avoid;
+    break-inside: avoid;
+}
+.pagination-viewport[data-mode="page"] :is(p,li,blockquote) {
+    break-inside: avoid;
+}
+.pagination-viewport[data-mode="page"] pre {
+    break-inside: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: visible;
+}
+.pagination-viewport[data-mode="page"] table {
+    break-inside: auto;
+    width: 100%;
+    display: table;
+    overflow: visible;
+}
+.pagination-viewport[data-mode="page"] tr {
+    break-inside: avoid;
+}
+.pagination-viewport[data-mode="page"] img {
+    max-width: var(--page-content-width);
+    max-height: var(--page-content-height);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    break-inside: avoid;
+}
+.pagination-viewport[data-mode="continuous"] img {
+    max-width: 100%;
+    height: auto;
+}
+.pagination-viewport[data-mode="continuous"] .milkdown-pagebreak {
+    user-select: none;
+    margin-block: var(--space-row-gap);
+    padding: var(--space-control-gap);
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+    border-block: 1px dashed var(--border);
+    background: var(--surface-soft);
+}
+.pagination-viewport[data-mode="page"] .milkdown-pagebreak {
+    break-after: column;
+    height: 1px;
+    min-height: 1px;
+    max-height: 1px;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+}
+.pagination-canonical-preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-control-gap);
+}
+.pagination-canonical-preview pre {
+    margin: 0;
+    padding: var(--space-card-padding);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font: var(--font-code-size)/var(--font-code-line-height)
+        var(--font-code-family);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: var(--page-content-height);
+    overflow: auto;
+}

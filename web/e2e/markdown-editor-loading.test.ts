@@ -73,7 +73,8 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
     assert(editorVendorChunk, "Manifest must contain editor-vendor chunk.");
 
     const runtimeChunk = Object.entries(manifest).find(([k, c]) =>
-        k.includes("runtime.ts") || (c.src && c.src.includes("runtime.ts"))
+        k.endsWith("spikes/markdown-editor/runtime.ts") ||
+        c.src?.endsWith("spikes/markdown-editor/runtime.ts")
     )?.[1]?.file;
     assert(runtimeChunk, "Manifest must contain runtime chunk.");
 

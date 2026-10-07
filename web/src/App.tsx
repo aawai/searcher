@@ -51,6 +51,9 @@ const DesignLab = lazy(() =>
 const MarkdownEditorSpike = lazy(() =>
     import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
 );
+const EditablePaginationSpike = lazy(() =>
+    import("./spikes/editable-pagination/EditablePaginationSpike.tsx")
+);
 const AuthPage = lazy(() =>
     import("./app/AuthPage.tsx").then((m) => ({ default: m.AuthPage }))
 );
@@ -405,6 +408,10 @@ function Layout() {
                                 <Route
                                     path="/design-lab/markdown-editor"
                                     element={<MarkdownEditorSpike />}
+                                />
+                                <Route
+                                    path="/design-lab/editable-pagination"
+                                    element={<EditablePaginationSpike />}
                                 />
                             </Routes>
                         </Suspense>

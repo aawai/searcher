@@ -40,6 +40,10 @@
     --shadow-l2: 0 10px 28px -10px rgba(0, 0, 0, 0.18);
     --shadow-l3: 0 24px 64px -16px rgba(0, 0, 0, 0.24);
     --shadow-navigation: 0 2px 8px -4px rgba(0, 0, 0, 0.08);
+    /* Document paper presentation; physical metrics remain runtime geometry. */
+    --surface-document-paper: var(--surface-solid);
+    --space-document-page-gap: var(--space-section-gap);
+    --shadow-document-paper: var(--shadow-l1);
     --material-blur-content: 12px;
     --material-blur-search: 16px;
     --material-blur-navigation: 8px;

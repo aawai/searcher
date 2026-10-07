@@ -1403,3 +1403,26 @@
     allowances / 0 drift；
   - 完整 visual evidence 与 trace 落地 `artifacts/wallpaper-motion/`，已接入
     GitHub Actions 自动上传。
+
+## #102 M0B Editable Pagination Spike
+
+- [x] Archetype utility；PageHeader/Section/ActionGroup/shadcn
+      Button/Input/NativeSelect。
+- [x] 仅实验路由，shared core 不包含分页 presentation；纸张为独立 aria-hidden
+      sibling。
+- [x] 物理 geometry 由唯一 runtime owner 注入；视觉复用纸张 semantic tokens 与
+      Markdown。
+- [x] 390×844、768×1024、1440×900 × light/dark 实页截图完成；6 组均无整页横向
+      overflow、axe 0。
+- [x] 先校准 theme transition；初轮瞬态 contrast 报告后等待
+      animation.finished，完整矩阵复查通过。
+- [x] 同实例选区/undo-redo、起始/连续/尾部空白页、gap 点击、copy/paste、CDP 中文
+      composition、超长块与 PNG 等比缩放：production 1 test / 5 steps 通过。
+- [x] UI Guard 0 ownership / 0 visual；baseline 和规则未放宽，runtime registry
+      仅登记实际物理几何变量。
+- [x] focused 6 tests / 3 steps；全量 532 tests / 28 steps；typecheck/lint
+      通过。
+- [x] authenticated Documents / Zen/Widgets Host / wallpaper / server assets /
+      Print 不适用本阶段；留至对应阶段而非宣称已经覆盖。
+- [x] 已知限制与 M5 接入路径记录于
+      MARKDOWN_EDITOR_M0A.md；本报告不冒充正式业务页面验收。
