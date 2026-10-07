@@ -48,6 +48,9 @@ import {
 const DesignLab = lazy(() =>
     import("./design-lab/DesignLab.tsx").then((m) => ({ default: m.DesignLab }))
 );
+const MarkdownEditorSpike = lazy(() =>
+    import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
+);
 const AuthPage = lazy(() =>
     import("./app/AuthPage.tsx").then((m) => ({ default: m.AuthPage }))
 );
@@ -399,6 +402,10 @@ function Layout() {
                                     element={<TrashPage />}
                                 />
                                 <Route path="*" element={<NotFoundPage />} />
+                                <Route
+                                    path="/design-lab/markdown-editor"
+                                    element={<MarkdownEditorSpike />}
+                                />
                             </Routes>
                         </Suspense>
                     </RouteErrorBoundary>

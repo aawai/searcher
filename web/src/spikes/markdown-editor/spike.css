@@ -1,0 +1,75 @@
+.markdown-spike {
+    display: grid;
+    gap: var(--space-section-gap);
+}
+
+.markdown-spike-editor {
+    min-width: 0;
+}
+
+.markdown-spike-rich {
+    overflow-wrap: anywhere;
+}
+
+.markdown-spike-rich .ProseMirror {
+    padding: var(--space-card-padding);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-solid);
+    color: var(--foreground);
+    white-space: pre-wrap;
+}
+
+.markdown-spike-rich .ProseMirror:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.markdown-spike-rich ul {
+    list-style: disc;
+}
+
+.markdown-spike-rich ol {
+    list-style: decimal;
+}
+
+.markdown-spike-rich li[data-item-type="task"] {
+    list-style: none;
+}
+
+.markdown-spike-rich li[data-item-type="task"]::before {
+    content: "☐";
+    float: left;
+    margin-inline-end: var(--space-inline-gap);
+}
+
+.markdown-spike-rich li[data-checked="true"]::before {
+    content: "☑";
+}
+
+.markdown-spike-editor details pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.markdown-spike-rich .milkdown-pagebreak,
+.markdown-spike-rich .spike-pagination-gap {
+    user-select: none;
+    margin-block: var(--space-row-gap);
+    padding: var(--space-control-gap);
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+}
+
+.markdown-spike-rich .milkdown-pagebreak {
+    border-block: 1px dashed var(--border);
+}
+
+.markdown-spike-rich .spike-pagination-gap {
+    background: var(--surface-soft);
+}
+
+.markdown-spike-rich .ProseMirror-selectednode {
+    outline: 2px solid var(--ring);
+}

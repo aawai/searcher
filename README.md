@@ -3,6 +3,9 @@
 基于 Deno、Hono、React、SQLite
 的单进程搜索主页。首页以普通搜索为主；登录后可管理 APP、Markdown 便签、AI
 问答、壁纸和跨设备偏好。管理员由交互式 CLI 创建，不存在默认管理员。
+M0A 编辑技术验证入口：`/design-lab/markdown-editor`，仅本地演示，不保存或替换便签。
+验证结论、bundle 口径和 #110 输入约束见 [M0A 报告](MARKDOWN_EDITOR_M0A.md)。
+
 
 ## 主页外观
 

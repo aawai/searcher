@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- 新增 #102 M0A 独立 Markdown editor 技术验证入口
+  `/design-lab/markdown-editor`：按需加载最小 Milkdown
+  组合，验证源码切换、双实例与语义分页符；不改变现有便签或上线 Documents
+  业务功能。
+
 - Home 便签折叠/展开持久化与跨会话恢复（Issue #122）：
   - 修复空间轻桌面（Widgets）下便签折叠/展开仅保留在前端组件内存、刷新或重新登录后丢失的问题；
   - 统一前端便签 NoteLayoutDto 类型契约：补齐 `width` 与 `updatedAt`
