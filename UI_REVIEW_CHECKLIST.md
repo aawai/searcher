@@ -47,6 +47,26 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #102 M3 Documents Library / Notebooks 验收（2026-10-07）
+
+- [x] 真实页面覆盖 0、1、101 条笔记：50→100→101 游标加载，无 list body 或 editor
+      runtime 请求。
+- [x] 全部/最近/收藏与笔记本 scope
+      独立于搜索；跨笔记本结果保留归属标签，清除搜索恢复原
+      scope；延迟旧搜索不会覆盖新结果。
+- [x] 创建、重命名、收藏、移动、移入废纸篓及 API 状态验收；409
+      错误保留输入，不默默重试。
+- [x] 笔记本创建/重命名/移动/排序/删除实页验证；child 无创建子级入口，含 child
+      的 root 禁止降级；删除保留笔记并提升 child。
+- [x] 390×844、768×1024、1440×900 × light/dark × Zen/Widgets 共 12
+      组：无横向溢出，窄 Zen 单栏，宽 Widgets 内部侧栏。
+- [x] Loading/error/retry/empty；延迟失败时 Escape
+      不关闭提交中表单，失败后输入保留；axe WCAG A/AA 0 violations。
+- [x] 全套 596 tests / 28 steps、现有 production workspace matrix 7
+      steps、build/typecheck/affected lint/UI Guard 0 drift；不放宽 baseline。
+- [x] 无 DocumentsPage、额外 editor core 或 fake entity；完整 editor/entity
+      intents 依用户确认保留 M4/M6 边界。
+
 ## Issue #102 M2 Workspace Core / Host 验收（2026-10-07）
 
 - [x] 三域独立 route/stack/query；Documents scope 不随 Back 或清空搜索重置，认证

@@ -204,6 +204,7 @@
     --workspace-inset: var(--space-4);
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
     --workspace-mobile-height: 820px;
+    --workspace-library-navigation-width: 200px;
     --surface-workspace: var(--surface-solid);
     --shadow-workspace: var(--shadow-l2);
     --elevation-workspace: 45;

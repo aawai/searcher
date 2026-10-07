@@ -1,34 +1,61 @@
+.documents-workspace {
+    container: documents-library / inline-size;
+}
+.documents-library-layout,
+.documents-library-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-section-gap);
+    min-width: 0;
+}
+.documents-notebook-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-control-gap);
+    min-width: 0;
+}
+.documents-notebook-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-control-gap);
+    min-width: 0;
+}
+.documents-notebook-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    max-width: 100%;
+}
+.documents-notebook-row > button:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.documents-notebook-row[data-notebook-depth="1"] {
+    padding-inline-start: var(--space-3);
+}
 .documents-workspace-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
     width: 100%;
     min-width: 0;
-    box-sizing: border-box;
 }
-
 .documents-summary-row {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    background: var(--surface);
-    width: 100%;
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
     min-width: 0;
-    box-sizing: border-box;
 }
-
 .documents-summary-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-2);
-    width: 100%;
+    align-items: center;
+    gap: var(--space-control-gap);
     min-width: 0;
 }
-
 .documents-summary-title {
     margin: 0;
     font-size: var(--font-body-size);
@@ -39,49 +66,57 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
-    flex: 1 1 auto;
+    flex: 1;
 }
-
 .documents-summary-badges {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-1);
-    flex-shrink: 0;
+    min-width: 0;
+    max-width: 50%;
 }
-
+.documents-summary-badges > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
 .documents-summary-snippet {
     margin: 0;
     font-size: var(--font-caption-size);
     line-height: var(--font-caption-line-height);
     color: var(--muted);
     overflow: hidden;
-    text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    word-break: break-word;
+    overflow-wrap: anywhere;
 }
-
 .documents-summary-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
 }
-
-.documents-summary-date {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-    white-space: nowrap;
-}
-
 .documents-workspace-more {
     display: flex;
     justify-content: center;
     padding-top: var(--space-2);
-    width: 100%;
+}
+/* Content-width boundary: the narrow Zen panel never becomes two columns. */
+@container documents-library (min-width: 640px) {
+    .documents-library-layout {
+        display: grid;
+        grid-template-columns: var(--workspace-library-navigation-width)
+            minmax(0, 1fr);
+    }
+    .documents-notebook-list {
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+    .documents-notebook-row {
+        width: 100%;
+    }
+    .documents-notebook-row > button:first-child {
+        flex: 1;
+        justify-content: flex-start;
+    }
 }

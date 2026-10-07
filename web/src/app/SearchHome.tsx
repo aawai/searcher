@@ -958,6 +958,12 @@ export function SearchHome() {
                     userId={user.id}
                     state={model.route}
                     scope={model.scope}
+                    onScopeChange={(scope) =>
+                        dispatchHost({
+                            type: "domain",
+                            kind: "documents",
+                            action: { type: "scope", scope },
+                        })}
                     query={model.query}
                     onQueryChange={(value) =>
                         dispatchHost({
