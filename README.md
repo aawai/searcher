@@ -12,7 +12,7 @@ M0A 编辑技术验证入口：`/design-lab/markdown-editor`，仅本地演示�
 
 在“设置 → 外观 → 主页工作区风格”切换 Zen（极简呼吸）与 Widgets（空间轻桌面）。Zen 不显示品牌大标题；“显示 Searcher 标题”仅控制 Widgets 的大标题。切换工作区或标题开关不会改变搜索框的纵向锚点，匿名与登录状态保持一致；个人内容仍须登录。
 
-登录后的“笔记”入口复用 Workspace Host：Zen 使用右侧 Panel，移动端使用 Sheet，Widgets 使用现有桌面或 constrained 窗口。应用、便签、笔记的路由与搜索独立；笔记目前提供只读摘要和搜索、加载更多，完整 Library 和编辑器分别按 #102 M3/M4 交付。Desktop layout 的 payload 升级为 version 2，继续读取 version 1 的应用与便签记录，storage key 不变。
+登录后的“笔记”入口复用 Workspace Host：Zen 使用右侧 Panel，移动端使用 Sheet，Widgets 使用现有桌面或 constrained 窗口。应用、便签、笔记的路由与搜索独立。Library 支持全部/最近/收藏、笔记本筛选、跨笔记本搜索与加载更多，以及新建、重命名、收藏、移动和移入废纸篓。笔记本最多两层，可创建、重命名、移动、同级上移/下移；删除笔记本保留笔记并将子笔记本提升为根。生产编辑器按 #102 M4 交付，完整 entity/editor Host intents 按用户确认归 M4/M6。Desktop layout payload version 2 继续读取 version 1 的应用与便签记录，storage key 不变。
 
 Documents DTO 的 `displayTitle` 是服务端派生展示值：依次取 trimmed title、首个非空 heading/paragraph 的纯文本前 100 字、“无标题笔记”。`title` 仍为 canonical 字段，不回写 fallback；列表和搜索只返回摘要，不返回正文。无标题记录的派生在服务端读取正文，已有标题的列表记录继续只读取正文前 300 字以生成 snippet。
 

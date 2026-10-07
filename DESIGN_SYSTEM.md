@@ -8,18 +8,18 @@
 同一种视觉或交互行为只有一个 owner；feature 组合共享
 primitives，不另造基础反馈或重新定义普通控件的 surface / radius / shadow。
 
-| 视觉或交互职责                                                                                                    | 唯一 owner                                                                                      |
-| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 值、theme、accent、shape、surface / elevation taxonomy                                                            | `web/src/design-system/tokens.css`                                                              |
-| Button / Input / Badge / Dialog / AlertDialog / Tabs / Card / Table / Menu                                        | `components/ui/`，共享基础 CSS 为 `primitives.css`                                              |
-| PageShell / PageHeader / Section / Status / Loading / Empty / Undo / ManagementTable                              | `components/searcher/semantic.tsx` 与 `semantic.css`（PageShell / PageHeader 使用现有独立入口） |
-| Settings / Admin / Account / Trash 场景布局                                                                       | `app/settings.css` / `admin.css` / `account.css` / `trash.css`                                  |
-| Ask 消息、Composer 与侧栏布局                                                                                     | `features/ask/ask-workspace.css`                                                                |
-| Workspace Shell / Apps / Notes 布局                                                                               | `features/workspace/workspace.css` / `apps-workspace.css` / `notes-workspace.css`               |
-| Launcher 与 WebApp tile geometry                                                                                  | `components/searcher/launcher.css`                                                              |
-| 搜索控件 / 应用表单与图标选择 / 便签与 Markdown                                                                   | `components/searcher/search.css` / `apps.css` / `notes.css` 与 `markdown.css`                   |
-| Home Zen / Widgets / Bento                                                                                        | `features/home-layouts/home-layouts.css`                                                        |
-| reset、html/body、AppShell、Topbar / account entry、connection banner、全局 typography / accessibility 与壁纸画布 | `styles/global.css`                                                                             |
+| 视觉或交互职责                                                                                                    | 唯一 owner                                                                                                    |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 值、theme、accent、shape、surface / elevation taxonomy                                                            | `web/src/design-system/tokens.css`                                                                            |
+| Button / Input / Badge / Dialog / AlertDialog / Tabs / Card / Table / Menu                                        | `components/ui/`，共享基础 CSS 为 `primitives.css`                                                            |
+| PageShell / PageHeader / Section / Status / Loading / Empty / Undo / ManagementTable                              | `components/searcher/semantic.tsx` 与 `semantic.css`（PageShell / PageHeader 使用现有独立入口）               |
+| Settings / Admin / Account / Trash 场景布局                                                                       | `app/settings.css` / `admin.css` / `account.css` / `trash.css`                                                |
+| Ask 消息、Composer 与侧栏布局                                                                                     | `features/ask/ask-workspace.css`                                                                              |
+| Workspace Shell / Apps / Notes / Documents 布局                                                                   | `features/workspace/workspace.css` / `apps-workspace.css` / `notes-workspace.css` / `documents-workspace.css` |
+| Launcher 与 WebApp tile geometry                                                                                  | `components/searcher/launcher.css`                                                                            |
+| 搜索控件 / 应用表单与图标选择 / 便签与 Markdown                                                                   | `components/searcher/search.css` / `apps.css` / `notes.css` 与 `markdown.css`                                 |
+| Home Zen / Widgets / Bento                                                                                        | `features/home-layouts/home-layouts.css`                                                                      |
+| reset、html/body、AppShell、Topbar / account entry、connection banner、全局 typography / accessibility 与壁纸画布 | `styles/global.css`                                                                                           |
 
 Feature class 只表达场景布局与 domain presentation；不同密度由 canonical
 primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlist。Domain CSS
@@ -49,6 +49,13 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 - 新 UI 先复用 `components/ui`；跨页面语义进入 shared semantic；Workspace
   信息架构进入 Workspace layer；Apps / Notes domain presentation 留在对应
   feature owner。
+- Documents Library 使用同一 WorkspaceSection、状态组件和 canonical
+  dialog/menu，不建立第二层 window chrome。内容区域宽度小于 640px
+  时导航与列表单栏排列；达到 640px 后采用内部侧栏，宽度由系统 Token
+  `--workspace-library-navigation-width`（200px）拥有。此边界依据实际内容宽度，不由
+  feature 判断 viewport 或修改 Host geometry；400px Zen Panel
+  永远保持单栏。摘要使用平面列表，不新增卡片墙；唯一 primary action
+  为“新建笔记”，笔记本创建与行操作为 secondary/ghost。
 
 ### Notes Markdown editor
 

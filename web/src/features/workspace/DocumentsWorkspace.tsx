@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
-import type { DocumentPageDto, DocumentSummaryDto } from "@shared/documents.ts";
+import type {
+    DocumentNotebookDto,
+    DocumentPageDto,
+    DocumentSummaryDto,
+} from "@shared/documents.ts";
 import { api } from "../../lib/api.ts";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import { WorkspaceSection } from "./WorkspaceSection.tsx";
@@ -11,6 +15,11 @@ import {
 } from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { Badge } from "../../components/ui/badge.tsx";
+import { DocumentNotebookNavigation } from "./DocumentNotebookNavigation.tsx";
+import {
+    CreateLibraryDocument,
+    DocumentLibraryActions,
+} from "./DocumentLibraryActions.tsx";
 
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
@@ -18,9 +27,17 @@ export interface DocumentsWorkspaceProps {
     query: string;
     onQueryChange: (query: string) => void;
     scope: DocumentsScope;
+    onScopeChange: (scope: DocumentsScope) => void;
 }
 
-function DocumentSummaryRow({ item }: { item: DocumentSummaryDto }) {
+function DocumentSummaryRow(
+    { item, notebooks, scope, onChanged }: {
+        item: DocumentSummaryDto;
+        notebooks: DocumentNotebookDto[];
+        scope: DocumentsScope;
+        onChanged: () => void;
+    },
+) {
     const displayTitle = item.displayTitle;
     const timestamp = item.updatedAt || item.createdAt;
     const formattedDate = timestamp && !isNaN(timestamp)
@@ -37,10 +54,15 @@ function DocumentSummaryRow({ item }: { item: DocumentSummaryDto }) {
                 <h4 className="documents-summary-title">{displayTitle}</h4>
                 <div className="documents-summary-badges">
                     {item.isFavorite && <Badge variant="secondary">收藏</Badge>}
-                    {item.notebookName && (
+                    {item.notebookName && scope.type !== "notebook" && (
                         <Badge variant="outline">{item.notebookName}</Badge>
                     )}
                 </div>
+                <DocumentLibraryActions
+                    item={item}
+                    notebooks={notebooks}
+                    onChanged={onChanged}
+                />
             </div>
             {item.snippet
                 ? <p className="documents-summary-snippet">{item.snippet}</p>
@@ -67,6 +89,7 @@ export function DocumentsWorkspace({
     query,
     onQueryChange,
     scope,
+    onScopeChange,
 }: DocumentsWorkspaceProps) {
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
@@ -81,6 +104,29 @@ export function DocumentsWorkspace({
     const [error, setError] = useState<string | null>(null);
     const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
     const [retryCount, setRetryCount] = useState(0);
+    const [notebooks, setNotebooks] = useState<DocumentNotebookDto[]>([]);
+    const [notebookError, setNotebookError] = useState<string | null>(null);
+    const refresh = () => setRetryCount((count) => count + 1);
+    useEffect(() => {
+        const controller = new AbortController();
+        setNotebookError(null);
+        api<DocumentNotebookDto[]>("/api/document-notebooks", {
+            signal: controller.signal,
+        })
+            .then((data) => {
+                if (!controller.signal.aborted) setNotebooks(data);
+            })
+            .catch((error: unknown) => {
+                if (!controller.signal.aborted) {
+                    setNotebookError(
+                        error instanceof Error
+                            ? error.message
+                            : "加载笔记本失败",
+                    );
+                }
+            });
+        return () => controller.abort();
+    }, [userId, retryCount]);
 
     const activeRequestRef = useRef<AbortController | null>(null);
 
@@ -190,113 +236,149 @@ export function DocumentsWorkspace({
             className="workspace-root documents-workspace"
             data-workspace-content="documents"
         >
-            <WorkspaceSearch
-                ariaLabel="搜索笔记"
-                placeholder="搜索笔记标题或内容"
-                value={query}
-                onChange={onQueryChange}
-            />
-            {loading && (
-                <LoadingState density="compact">正在加载笔记…</LoadingState>
-            )}
-            {error && (
+            {notebookError && (
                 <StatusBanner tone="error" density="compact">
-                    <div className="flex items-center justify-between gap-3 w-full">
-                        <span>{error}</span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setRetryCount((c) => c + 1)}
-                        >
-                            重试
-                        </Button>
-                    </div>
+                    <span>{notebookError}</span>
+                    <Button variant="outline" size="sm" onClick={refresh}>
+                        重试
+                    </Button>
                 </StatusBanner>
             )}
-            <WorkspaceSection
-                title={isSearching
-                    ? "搜索结果"
-                    : scope.type === "recent"
-                    ? "最近笔记"
-                    : scope.type === "favorite"
-                    ? "收藏笔记"
-                    : scope.type === "notebook"
-                    ? "笔记本内容"
-                    : "全部笔记"}
-                count={items.length}
-            >
-                {!loading && !error && items.length === 0 && (
-                    isSearching
-                        ? (
-                            <EmptyState
-                                headingLevel={3}
-                                density="compact"
-                                title="没有匹配的笔记"
-                                description="清空搜索可查看全部。"
-                                action={
+            <div className="documents-library-layout">
+                <DocumentNotebookNavigation
+                    notebooks={notebooks}
+                    scope={scope}
+                    onScopeChange={onScopeChange}
+                    onChanged={refresh}
+                />
+                <div className="documents-library-content">
+                    <WorkspaceSearch
+                        ariaLabel="搜索笔记"
+                        placeholder="搜索笔记标题或内容"
+                        value={query}
+                        onChange={onQueryChange}
+                    />
+                    {loading && (
+                        <LoadingState density="compact">
+                            正在加载笔记…
+                        </LoadingState>
+                    )}
+                    {error && (
+                        <StatusBanner tone="error" density="compact">
+                            <div className="flex items-center justify-between gap-3 w-full">
+                                <span>{error}</span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setRetryCount((c) => c + 1)}
+                                >
+                                    重试
+                                </Button>
+                            </div>
+                        </StatusBanner>
+                    )}
+                    <WorkspaceSection
+                        title={isSearching
+                            ? "搜索结果"
+                            : scope.type === "recent"
+                            ? "最近笔记"
+                            : scope.type === "favorite"
+                            ? "收藏笔记"
+                            : scope.type === "notebook"
+                            ? "笔记本内容"
+                            : "全部笔记"}
+                        count={items.length}
+                        actions={
+                            <CreateLibraryDocument
+                                notebooks={notebooks}
+                                scope={scope}
+                                onChanged={refresh}
+                            />
+                        }
+                    >
+                        {!loading && !error && items.length === 0 && (
+                            isSearching
+                                ? (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        density="compact"
+                                        title="没有匹配的笔记"
+                                        description="清空搜索可查看全部。"
+                                        action={
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    onQueryChange("")}
+                                            >
+                                                清空搜索
+                                            </Button>
+                                        }
+                                    />
+                                )
+                                : (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        density="compact"
+                                        title="暂无笔记"
+                                        description={scope.type === "recent"
+                                            ? "暂无最近查看或编辑的笔记。"
+                                            : scope.type === "favorite"
+                                            ? "暂无收藏笔记。"
+                                            : scope.type === "notebook"
+                                            ? "该笔记本下暂无笔记。"
+                                            : "还没有创建任何笔记。"}
+                                    />
+                                )
+                        )}
+                        {items.length > 0 && (
+                            <div className="documents-workspace-list">
+                                {items.map((item) => (
+                                    <DocumentSummaryRow
+                                        key={item.id}
+                                        item={item}
+                                        notebooks={notebooks}
+                                        scope={isSearching
+                                            ? { type: "all" }
+                                            : scope}
+                                        onChanged={refresh}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        {loadMoreError && (
+                            <StatusBanner tone="error" density="compact">
+                                <div className="flex items-center justify-between gap-3 w-full">
+                                    <span>{loadMoreError}</span>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => onQueryChange("")}
+                                        onClick={handleLoadMore}
                                     >
-                                        清空搜索
+                                        重试
                                     </Button>
-                                }
-                            />
-                        )
-                        : (
-                            <EmptyState
-                                headingLevel={3}
-                                density="compact"
-                                title="暂无笔记"
-                                description={scope.type === "recent"
-                                    ? "暂无最近查看或编辑的笔记。"
-                                    : scope.type === "favorite"
-                                    ? "暂无收藏笔记。"
-                                    : scope.type === "notebook"
-                                    ? "该笔记本下暂无笔记。"
-                                    : "还没有创建任何笔记。"}
-                            />
-                        )
-                )}
-                {items.length > 0 && (
-                    <div className="documents-workspace-list">
-                        {items.map((item) => (
-                            <DocumentSummaryRow key={item.id} item={item} />
-                        ))}
-                    </div>
-                )}
-                {loadMoreError && (
-                    <StatusBanner tone="error" density="compact">
-                        <div className="flex items-center justify-between gap-3 w-full">
-                            <span>{loadMoreError}</span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleLoadMore}
-                            >
-                                重试
-                            </Button>
-                        </div>
-                    </StatusBanner>
-                )}
-                {loadingMore && (
-                    <LoadingState density="compact">
-                        正在加载更多笔记…
-                    </LoadingState>
-                )}
-                {!loading && !loadingMore && nextCursor && (
-                    <div className="documents-workspace-more">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleLoadMore}
-                        >
-                            加载更多
-                        </Button>
-                    </div>
-                )}
-            </WorkspaceSection>
+                                </div>
+                            </StatusBanner>
+                        )}
+                        {loadingMore && (
+                            <LoadingState density="compact">
+                                正在加载更多笔记…
+                            </LoadingState>
+                        )}
+                        {!loading && !loadingMore && nextCursor && (
+                            <div className="documents-workspace-more">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleLoadMore}
+                                >
+                                    加载更多
+                                </Button>
+                            </div>
+                        )}
+                    </WorkspaceSection>
+                </div>
+            </div>
         </div>
     );
 }
