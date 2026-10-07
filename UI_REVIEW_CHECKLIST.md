@@ -47,6 +47,34 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #110 Shared Markdown Editor Foundation 验收（2026-10-07）
+
+- [x] Shared owner `features/markdown-editor`，structural CSS 不定义产品
+      typography 或 surface；spike 保留 utility archetype 和自身
+      presentation，复用现有
+      PageShell/Section/ActionGroup/Button/Textarea。没有迁移便签或上线
+      Documents。
+- [x] 实页新增共享加粗选区、任务列表与表格命令；source/rich、双实例、卸载重建、
+      selection/history 与 Chinese CDP composition 的 production E2E 通过。
+- [x] 390×844、768×1024、1440×900 × light/dark 六组截图；无页面横向 overflow，
+      H1/H2/H3 18.9/16.8/15.4px。Surface light rgb(255,255,255)、dark
+      rgb(29,33,40)；批量前通过主题按钮和 reduced-motion
+      校准，原页面标题层级保留。
+- [x] axe WCAG 2A/2AA 0 violations；Console 无新增 pageerror。真实 CDP hook
+      probe 捕获 focus/blur 与 composition start/update/end，正文保留
+      “中文验收”；临时 probe 已移除。不是 OS 输入法候选窗人工验收。
+- [x] Home/Apps/Notes 现存 surface 的 production network 验收通过；真正
+      Documents root/library 尚不存在，须在其交付阶段补充，不用 Design Lab
+      代替。 Zen/Widgets host、wallpaper 与账号业务未改，不由本 editor
+      阶段重复验收。
+- [x] focused 28 tests/25 steps；全量 526 tests/25 steps；production editor +
+      network + existing bundle-loading 3 tests/9 steps。typecheck/lint/format、
+      UI Guard 0 violations；baseline 无放宽。初次未修改基线的一次 CryptoVault
+      测试失败已单独记录到 #110，本阶段没有修改该测试。
+- [x] 冷异步闭包 157.85 KiB gzip，150–200 KiB 依赖分析见
+      `MARKDOWN_EDITOR_M0A.md`；initial graph 无 editor runtime，没有 Crepe、
+      CodeMirror、Documents pagination/print 或 Notes 业务进入 shared core。
+
 ## Issue #102 M0A editor spike 视觉验收（2026-10-07）
 
 - [x] 独立技术验证入口 `/design-lab/markdown-editor`；复用 utility

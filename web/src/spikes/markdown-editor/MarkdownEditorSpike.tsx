@@ -4,8 +4,9 @@ import { PageHeader } from "../../components/searcher/PageHeader.tsx";
 import { ActionGroup, Section } from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { Textarea } from "../../components/ui/textarea.tsx";
-import type { SpikeEditor } from "./runtime.ts";
+import type { MarkdownEditorHandle } from "../../features/markdown-editor/types.ts";
 import "../../components/searcher/markdown.css";
+import "../../features/markdown-editor/structural.css";
 import "./spike.css";
 
 const initialMarkdown = `# Markdown 编辑验证
@@ -36,7 +37,7 @@ const document = "Markdown";
 
 function EditorSurface({ name }: { name: string }) {
     const root = useRef<HTMLDivElement>(null);
-    const editor = useRef<SpikeEditor | null>(null);
+    const editor = useRef<MarkdownEditorHandle | null>(null);
     const [markdown, setMarkdown] = useState(initialMarkdown);
     const [source, setSource] = useState(false);
     const [ready, setReady] = useState(false);
@@ -45,7 +46,7 @@ function EditorSurface({ name }: { name: string }) {
 
     useEffect(() => {
         let cancelled = false;
-        let instance: SpikeEditor | null = null;
+        let instance: MarkdownEditorHandle | null = null;
         const host = document.createElement("div");
         root.current!.append(host);
         import("./runtime.ts").then(async ({ createSpikeEditor }) => {
@@ -53,10 +54,12 @@ function EditorSurface({ name }: { name: string }) {
             instance = await createSpikeEditor(
                 host,
                 initialMarkdown,
-                (value) => {
+                (event) => {
                     if (cancelled) return;
-                    setMarkdown(value);
-                    setChanges((count) => count + 1);
+                    setMarkdown(event.markdown);
+                    if (event.origin === "user") {
+                        setChanges((count) => count + 1);
+                    }
                 },
             );
             if (cancelled) {
@@ -83,7 +86,7 @@ function EditorSurface({ name }: { name: string }) {
     function toggleSource() {
         if (!editor.current || editor.current.view.composing) return;
         try {
-            if (source) editor.current.replace(markdown);
+            if (source) editor.current.replaceMarkdown(markdown);
             else setMarkdown(editor.current.getMarkdown());
             setError("");
             setSource(!source);
@@ -117,6 +120,32 @@ function EditorSurface({ name }: { name: string }) {
                     重做
                 </Button>
             </ActionGroup>
+            <ActionGroup>
+                <Button
+                    variant="outline"
+                    disabled={!ready || source}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={() => editor.current?.executeCommand("bold")}
+                >
+                    加粗选区
+                </Button>
+                <Button
+                    variant="outline"
+                    disabled={!ready || source}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={() => editor.current?.executeCommand("taskList")}
+                >
+                    任务列表
+                </Button>
+                <Button
+                    variant="outline"
+                    disabled={!ready || source}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={() => editor.current?.executeCommand("table")}
+                >
+                    插入表格
+                </Button>
+            </ActionGroup>
             <p role="status">
                 {ready
                     ? `编辑器就绪；正文变化 ${changes} 次`
@@ -126,7 +155,7 @@ function EditorSurface({ name }: { name: string }) {
             <div
                 ref={root}
                 hidden={source}
-                className="markdown markdown-spike-rich"
+                className="markdown markdown-editor markdown-spike-rich"
             />
             {source && (
                 <Textarea

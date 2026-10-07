@@ -17,7 +17,6 @@
     border-radius: var(--radius);
     background: var(--surface-solid);
     color: var(--foreground);
-    white-space: pre-wrap;
 }
 
 .markdown-spike-rich .ProseMirror:focus-visible {
@@ -68,8 +67,4 @@
 
 .markdown-spike-rich .spike-pagination-gap {
     background: var(--surface-soft);
-}
-
-.markdown-spike-rich .ProseMirror-selectednode {
-    outline: 2px solid var(--ring);
 }

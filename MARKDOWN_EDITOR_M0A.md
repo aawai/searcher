@@ -163,6 +163,60 @@ Rollup module ID；没有所监控 runtime package 的多版本打包。
 - M0B 的自动分页、caret/IME reflow、oversized blocks 和 paper metrics 尚未由 M0A
   证明。
 
-阶段顺序与逐 PR gate 已记录到 #102。本次仅交付 M0A，未启动 #110、M0B 或
-Documents 生产实现。后续按单独阶段读取最新 Contract、实现、验收及提交 PR；正式
-library 交付时必须增加网络隔离验收，不能只引用本 spike 的结果。
+阶段顺序与逐 PR gate 已记录到 #102。M0A PR #124 仅交付 spike；#110 由独立
+阶段实施。后续按单独阶段读取最新 Contract、实现、验收及提交 PR；正式 library
+交付时必须增加网络隔离验收，不能只引用本 spike 的结果。
+
+## #110 Shared Foundation
+
+共享 owner 为 `web/src/features/markdown-editor/`。上面的 M0A 数字是 PR #124
+的历史构建快照；本节记录独立 #110 阶段。便签产品未迁移，Documents 尚未上线。
+
+- `runtime.ts` 的 `createMarkdownEditor(root, markdown, onChange?, options?)`
+  创建独立实例，返回 `getMarkdown`、`replaceMarkdown`、`focus`、`undo`、`redo`、
+  `executeCommand`、异步 `destroy` 和只属于该实例的 `view`。
+- `types.ts` 可被 consumer 用 type-only import 引用；真正打开编辑 surface 时才
+  dynamic import `runtime.ts`。不要把 runtime 的 barrel 静态导入 Workspace
+  shell。
+- change event 为 `{ markdown, origin }`。初始化不发送 dirty event；replace 及其
+  appended transactions 标为 `programmatic`。只有 `origin === "user"` 进入
+  consumer 的 dirty/autosave 流。extension 可用 `originMetaKey` 显式标记
+  `normalization`；用户编辑触发的修正继承该次编辑的来源。
+- `options.onFocus/onBlur/onComposition` 提供实例级事件；composition 包含
+  start/update/end 与 data。普通格式 command 在 composition 中返回 false。
+- command union 与当前便签 toolbar 同名：bold/italic/strike/inlineCode、
+  heading1/2/3、bulletList/orderedList/taskList、blockquote、link、codeBlock、
+  horizontalRule、table。link 参数为 `{ href, title? }`，codeBlock 为
+  `{ language? }`，table 为 `{ rows?, cols? }`；没有第二种 positional 参数格式。
+- source 由 consumer textarea 持有本地值，在返回 rich 时显式 replace，不能每字符
+  重建 rich state。API、autosave、draft、conflict、版本与资产 resolver 均由
+  consumer 拥有，core 不导入 Notes/Documents/Workspace 业务。
+- `options.plugins` 是 Milkdown extension seam。PageBreak 与 pagination 只位于
+  spike consumer；`spikes/markdown-editor/runtime.ts` 仅组合插件，已删除原型
+  adapter 的重复实现与过渡 alias。共享 fixtures 不包含 Documents PageBreak。
+- `structural.css` 只提供 `.markdown-editor .ProseMirror` 的 whitespace、
+  selection 与 node selection bridge。consumer 独立定义 typography、surface、
+  task presentation；没有 framework 默认产品 theme。
+
+最终 production build：initial 779742 raw / 245500 gzip bytes；相对 M0A 前基线
+增加 292 raw / 115 gzip bytes。冷打开异步闭包 516057 raw / 161636 gzip bytes
+（157.85 KiB），新增代码 344980 raw / 109155 gzip bytes。150–200 KiB 的依赖
+依据仍是必需的 CommonMark/GFM、PM view/model/transform/tables/history；
+`prosemirror-commands` 提供成熟格式命令。Shared Markdown chunk 保持 171077 raw /
+52481 gzip bytes，没有增加第二份 parser。完整 module/version breakdown 可运行
+`scripts/m0a-editor-bundle.ts` 重现，所有 bundle gates 通过。
+
+验收：focused 28 tests / 25 steps；全量 526 tests / 25 steps；production
+editor、 网络隔离与既有 bundle-loading 合计 3 tests / 9
+steps，全部通过。typecheck、lint、 format、UI Guard 通过，baseline
+未放宽。实页六组 390/768/1440 × light/dark 无横向 overflow，H1/H2/H3 仍为
+18.9/16.8/15.4px，axe WCAG 2A/2AA 0 violations。 真实 CDP 验证
+focus/blur、composition start/update/end 与“中文验收”内容保留；
+跨粗体文本的整段链接更新/移除已通过 failing-before/passing-after regression
+和实页 consumer 调用验证，邻接链接与粗体保留。没有 OS 输入法候选窗人工验收。
+
+未修改基线首次运行曾有 1 个 CryptoVault 篡改测试失败，已记录到 #110。测试把 随机
+cipher 尾部直接替换为 ff，不能保证内容实际改变；本次未保存 cipher，不能
+断言失败的精确随机输入。最终实现后的完整回归通过不代表修复了该无关测试，
+本阶段未改 crypto 代码或测试。正式 Documents library 的网络验收仍留在其交付
+阶段与 M7，不将 spike shell 证据冒充正式 library。

@@ -1,0 +1,16 @@
+.markdown-editor .ProseMirror {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.markdown-editor .ProseMirror-selectednode {
+    outline: 2px solid var(--ring);
+}
+
+.markdown-editor .ProseMirror-hideselection ::selection {
+    background: transparent;
+}
+
+.markdown-editor .ProseMirror-hideselection {
+    caret-color: transparent;
+}
