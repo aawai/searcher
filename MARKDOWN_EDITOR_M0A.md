@@ -126,7 +126,7 @@ Rollup module report 的主要构成（rendered bytes 是 minify
 | prosemirror-tables          |          81635 |
 | @milkdown/preset-commonmark |          60244 |
 | prosemirror-state           |          36005 |
-| @milkdown/preset-gfm        |          30909 |
+| @milkdown/preset-gfm        |          30090 |
 | prosemirror-history         |          17149 |
 
 Manifest 中 initial closure 只有 application、react-vendor、ui-vendor；
