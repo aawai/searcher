@@ -515,7 +515,7 @@ export function DocumentNotebookNavigation({
                                             setDeleteError(null);
                                         }}
                                         disabled={isPending}
-                                        className="text-[var(--destructive)]"
+                                        className="text-[var(--danger)] focus:text-[var(--danger)]"
                                     >
                                         <Trash2 size={14} />
                                         <span>删除</span>

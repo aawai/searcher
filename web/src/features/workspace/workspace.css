@@ -16,6 +16,10 @@
     color: var(--foreground);
     animation: workspace-enter .16s ease-out;
 }
+.workspace-panel[data-workspace-expanded="true"] {
+    width: min(var(--workspace-document-editor-width), calc(100vw - 2 *
+        var(--workspace-inset)));
+}
 .workspace-header {
     position: relative;
     display: flex;

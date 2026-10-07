@@ -47,6 +47,34 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #102 M4 Continuous / Source Editor 验收（2026-10-07）
+
+- [x] 生产 DocumentEditor 消费 #110，Library 创建取得真实 ID
+      后打开；空文档打开等待 1800ms 无 PATCH，首屏与根 Library 无
+      editor/runtime/full-body 请求。
+- [x] Markdown canonical、连续/源码切换、任务 checkbox 与
+      undo、链接参数输入、大纲光标定位、字数边界回归；不复制 editor core。
+- [x] 真实 HTTP 保存与历史恢复生成递增版本；真实 409 三种选择、历史 UI
+      恢复、离线失败后 IndexedDB 草稿重开恢复。
+- [x] Chromium CDP 中文 IME：组合期间等待 1700ms
+      版本不变，提交后正文保存；两个生产 editor 实例分别保存不同正文。
+- [x] 图片工具栏上传、paste、drop 实页成功，canonical asset refs 与 owner URL
+      字节加载；复制与磁盘 `.md` 导出保留正文和 internal asset refs。
+- [x] 118380 characters / 200 headings / 50 images / 20 tables / 30 manual
+      pagebreaks 实页加载、输入、源码切换与末尾大纲定位；输入不重建 editor DOM。
+- [x] 390×844、768×1024、1440×900 × light/dark × Zen/Widgets 12 组实页截图，无
+      viewport/editor 横向溢出；手机工具栏触摸目标 44px，窄屏大纲改为纵向组合。
+- [x] 加载失败/retry 与草稿失败保留；axe WCAG A/AA 0
+      violations；普通操作无浏览器错误。验收时重建产物导致旧页面请求过期
+      chunk，刷新后重新覆盖错误/retry 场景，不作为产品缺陷。
+- [x] 638 tests / 28 steps、现有 production Host matrix 7
+      steps、typecheck/lint/format/build、UI Guard 0 drift，未修改 baseline。
+- [x] 编辑器 async JS graph 约 166 KiB gzip，落在 #102 150–200 KiB
+      需说明区间：共享 editor vendor 约 100 KiB、既有 Markdown parser/vendor 约
+      51 KiB、adapter/UI 约 15 KiB；不加载完整 Crepe theme，首屏隔离保持。
+- [x] M5 分页/打印与 M6 Desktop entity integration 未提前交付；正文图片不冒充
+      portable export。
+
 ## Issue #102 M3 Documents Library / Notebooks 验收（2026-10-07）
 
 - [x] 真实页面覆盖 0、1、101 条笔记：50→100→101 游标加载，无 list body 或 editor

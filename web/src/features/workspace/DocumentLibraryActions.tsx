@@ -229,7 +229,7 @@ export function DocumentLibraryActions({
                             className={cn(
                                 "size-4 mr-2",
                                 item.isFavorite &&
-                                    "fill-current text-amber-500",
+                                    "fill-current text-[var(--warning)]",
                             )}
                         />
                         <span>{item.isFavorite ? "取消收藏" : "收藏"}</span>
@@ -478,12 +478,14 @@ export interface CreateLibraryDocumentProps {
     notebooks: DocumentNotebookDto[];
     scope: DocumentsScope;
     onChanged: () => void;
+    onCreated?: (document: DocumentDto) => void;
 }
 
 export function CreateLibraryDocument({
     notebooks,
     scope,
     onChanged,
+    onCreated,
 }: CreateLibraryDocumentProps) {
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState("");
@@ -522,10 +524,14 @@ export function CreateLibraryDocument({
                 ...(trimmed ? { title: trimmed } : {}),
                 notebookId: selectedNotebookId || null,
             };
-            await api<DocumentDto>("/api/documents", json("POST", payload));
+            const document = await api<DocumentDto>(
+                "/api/documents",
+                json("POST", payload),
+            );
             setOpen(false);
             setTitle("");
             onChanged();
+            onCreated?.(document);
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {

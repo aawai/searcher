@@ -12,9 +12,17 @@ M0A 编辑技术验证入口：`/design-lab/markdown-editor`，仅本地演示�
 
 在“设置 → 外观 → 主页工作区风格”切换 Zen（极简呼吸）与 Widgets（空间轻桌面）。Zen 不显示品牌大标题；“显示 Searcher 标题”仅控制 Widgets 的大标题。切换工作区或标题开关不会改变搜索框的纵向锚点，匿名与登录状态保持一致；个人内容仍须登录。
 
-登录后的“笔记”入口复用 Workspace Host：Zen 使用右侧 Panel，移动端使用 Sheet，Widgets 使用现有桌面或 constrained 窗口。应用、便签、笔记的路由与搜索独立。Library 支持全部/最近/收藏、笔记本筛选、跨笔记本搜索与加载更多，以及新建、重命名、收藏、移动和移入废纸篓。笔记本最多两层，可创建、重命名、移动、同级上移/下移；删除笔记本保留笔记并将子笔记本提升为根。生产编辑器按 #102 M4 交付，完整 entity/editor Host intents 按用户确认归 M4/M6。Desktop layout payload version 2 继续读取 version 1 的应用与便签记录，storage key 不变。
+登录后的“笔记”入口复用 Workspace Host：Zen 使用右侧 Panel，移动端使用 Sheet，Widgets 使用现有桌面或 constrained 窗口。应用、便签、笔记的路由与搜索独立。Library 支持全部/最近/收藏、笔记本筛选、跨笔记本搜索与加载更多，以及新建、重命名、收藏、移动和移入废纸篓。笔记本最多两层，可创建、重命名、移动、同级上移/下移；删除笔记本保留笔记并将子笔记本提升为根。点击标题或创建笔记后打开连续/源码编辑器；Desktop entity 多窗口集成保留 #102 M6 边界。Desktop layout payload version 2 继续读取 version 1 的应用与便签记录，storage key 不变。
 
 Documents DTO 的 `displayTitle` 是服务端派生展示值：依次取 trimmed title、首个非空 heading/paragraph 的纯文本前 100 字、“无标题笔记”。`title` 仍为 canonical 字段，不回写 fallback；列表和搜索只返回摘要，不返回正文。无标题记录的派生在服务端读取正文，已有标题的列表记录继续只读取正文前 300 字以生成 snippet。
+
+### 编辑笔记
+
+实时预览和源码共用一份 Markdown 正文；标题单独保存，不自动插入 H1。视图偏好仅在当前设备按账号与笔记隔离。格式工具栏支持标题、强调、列表/任务、引用、链接、代码、表格、分隔线、分页符与图片；大纲只在实时预览显示，点击定位正文光标。字数按 CJK 字符和英文/数字单词统计，排除 Markdown 语法，阅读时间按每分钟 300 字/词向上取整。
+
+输入后 1500ms 自动保存，中文组合输入结束后才保存；离开编辑区域、切换视图或关闭工作区时提交待保存内容。Ctrl/Cmd+S 手动保存。网络失败时保留 IndexedDB 本地草稿，重开可恢复或放弃；旧版本草稿须显式解决冲突。409 对话框可对比本地与服务器正文，选择保留服务器、覆盖为本地或另存为新文档。历史恢复创建新版本，不倒退版本号。
+
+图片支持 PNG/JPEG/WebP、最大 10 MiB，上传成功后才插入 `asset://<assetId>`。复制与 `.md` 导出保留正文原文及 internal asset ref，不附加标题，也不声称是独立可移植的图片包；备份完整资产仍须使用数据库备份。分页符目前仅作为连续视图的语义分隔；分页编辑与打印归 #102 M5。
 
 匿名外观偏好保存在当前设备的 IndexedDB，刷新后恢复；不上传服务器，也不与账号缓存混用。登录后的设备外观缓存按用户 ID 隔离，共享偏好由云端同步；退出登录或会话失效后恢复该设备的匿名外观。升级时删除旧的未关联账号外观缓存，新增光晕与动态字段缺失时使用 canonical defaults。
 
@@ -52,7 +60,7 @@ Widgets 窗口布局按登录用户保存在当前设备 IndexedDB（`searcher:d
 
 ### 笔记 API（#102 M1）
 
-`documents`（笔记）与 `notes`（便签）是独立实体；当前阶段提供后端 API，尚未接入生产 Workspace UI。所有 `/api/documents*`、`/api/document-notebooks*` 请求需要登录，跨 owner 与不存在均返回 404。
+`documents`（笔记）与 `notes`（便签）是独立实体。所有 `/api/documents*`、`/api/document-notebooks*` 请求需要登录，跨 owner 与不存在均返回 404。
 
 - 列表：`GET /api/documents?scope=all|recent|favorite|notebook&notebookId=...&limit=50&cursor=...`；搜索：`GET /api/documents/search?q=...`；回收站：`GET /api/documents/trash`。三者返回 `{ items, nextCursor }`，每项仅包含 summary，不返回完整 body；limit 为 1–100，cursor 绑定 user/scope 或 query。空搜索返回空列表。
 - 实体：`POST /api/documents`、`GET/PATCH /api/documents/:id`；PATCH 必须提交当前 `version`，冲突返回 409 与 `data.currentDocument`。title 最大 200 characters，Markdown body 最大 1,000,000 characters，create/update JSON 请求最大 8 MiB；超限拒绝、不截断。

@@ -15,6 +15,7 @@ export function WorkspaceSurface(
         onClose,
         children,
         footer,
+        expanded = false,
     }: {
         presentation: Exclude<WorkspacePresentation, "window">;
         title: string;
@@ -24,6 +25,7 @@ export function WorkspaceSurface(
         onClose: () => void;
         children: ReactNode;
         footer: ReactNode;
+        expanded?: boolean;
     },
 ) {
     const mobile = presentation === "sheet";
@@ -135,6 +137,7 @@ export function WorkspaceSurface(
             <aside
                 className="workspace-panel"
                 data-presentation={presentation}
+                data-workspace-expanded={expanded || undefined}
                 aria-label={title + "工作区"}
             >
                 {content}

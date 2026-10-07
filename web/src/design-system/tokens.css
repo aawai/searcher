@@ -201,6 +201,10 @@
     --elevation-drag: 60;
     --elevation-suggestions: 90;
     --workspace-width: 400px;
+    --workspace-document-editor-width: 900px;
+    --document-readable-width: 720px;
+    --document-outline-width: 260px;
+    --document-outline-compact-height: 240px;
     --workspace-inset: var(--space-4);
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
     --workspace-mobile-height: 820px;
