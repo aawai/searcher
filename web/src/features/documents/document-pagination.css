@@ -1,0 +1,166 @@
+/* Production Document Pagination Styling (Issue #102 M5) */
+
+.pagination-viewport {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Continuous scroll mode: respects document readable width, no paper width override */
+.pagination-viewport[data-mode="continuous"] {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100%;
+    background: var(--surface-solid);
+    padding: var(--space-card-padding);
+}
+
+.pagination-viewport .ProseMirror {
+    outline: none;
+    color: var(--foreground);
+}
+
+/* Page mode: horizontal strip of paper surfaces with vertical scroll access on short screens */
+.pagination-viewport[data-mode="page"] {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 100%;
+    min-height: min-content;
+    background: var(--surface-soft);
+    padding: var(--space-card-padding);
+}
+
+/* Outer scroll compatibility when integrated inside DocumentEditor (.document-editor-scroll-area) */
+.document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="continuous"] {
+    overflow: visible;
+    max-height: none;
+    background: transparent;
+    padding: 0;
+}
+
+.document-editor-scroll-area:has([data-mode="page"]) {
+    overflow: auto;
+}
+
+.document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="page"] {
+    max-width: none;
+    width: max-content;
+    min-width: 100%;
+}
+
+.document-editor-readable-wrapper.pagination-viewport[data-mode="page"] .document-continuous-editor.pagination-root {
+    flex: none;
+    min-height: var(--page-height);
+    width: var(--strip-width);
+    height: var(--page-height);
+}
+
+/* Paper canvas background layer (aria-hidden, pointer-inert) */
+.pagination-sheets {
+    position: absolute;
+    top: var(--space-card-padding);
+    left: var(--space-card-padding);
+    height: var(--page-height);
+    pointer-events: none;
+    user-select: none;
+}
+
+.pagination-sheet {
+    position: absolute;
+    top: 0;
+    width: var(--page-width);
+    height: var(--page-height);
+    background: var(--surface-document-paper, var(--surface-solid));
+    box-shadow: var(--shadow-document-paper, var(--shadow-l1));
+    border: 1px solid var(--border);
+    box-sizing: border-box;
+}
+
+.pagination-viewport[data-mode="page"] .pagination-root {
+    position: relative;
+    width: var(--strip-width);
+    height: var(--page-height);
+    padding-top: var(--space-document-print-top);
+}
+
+.pagination-viewport[data-mode="page"] .ProseMirror {
+    width: var(--page-content-width);
+    height: var(--page-content-height);
+    max-height: var(--page-content-height);
+    margin-left: var(--space-document-print-left);
+    column-width: var(--page-content-width);
+    column-gap: var(--space-document-column-gap);
+    column-fill: auto;
+    box-sizing: content-box;
+    padding: 0;
+}
+
+/* Layout break discipline */
+.pagination-viewport[data-mode="page"] :is(h1, h2, h3, h4, h5, h6) {
+    break-after: avoid;
+    break-inside: avoid;
+}
+
+.pagination-viewport[data-mode="page"] :is(p, li, blockquote) {
+    break-inside: avoid;
+}
+
+.pagination-viewport[data-mode="page"] pre {
+    break-inside: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: visible;
+}
+
+.pagination-viewport[data-mode="page"] table {
+    break-inside: auto;
+    width: 100%;
+    display: table;
+    overflow: visible;
+}
+
+.pagination-viewport[data-mode="page"] tr {
+    break-inside: avoid;
+}
+
+.pagination-viewport[data-mode="page"] img {
+    max-width: var(--page-content-width);
+    max-height: var(--page-content-height);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    break-inside: avoid;
+}
+
+.pagination-viewport[data-mode="continuous"] img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* PageBreak visual node styling */
+.pagination-viewport[data-mode="continuous"] :is(.milkdown-pagebreak, .document-pagebreak-node, .pagebreak-node) {
+    user-select: none;
+    margin-block: var(--space-row-gap);
+    padding: var(--space-control-gap);
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+    border-block: 1px dashed var(--border);
+    background: var(--surface-soft);
+}
+
+.pagination-viewport[data-mode="page"] :is(.milkdown-pagebreak, .document-pagebreak-node, .pagebreak-node) {
+    break-after: column;
+    height: 1px;
+    min-height: 1px;
+    max-height: 1px;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+}

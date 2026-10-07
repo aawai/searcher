@@ -1,0 +1,116 @@
+.document-print-root {
+    display: none;
+}
+
+@media print {
+    html:has(.document-print-root[data-print-active]),
+    body:has(.document-print-root[data-print-active]) {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        background: var(--surface-document-print);
+        color: var(--foreground-document-print);
+        print-color-adjust: exact;
+    }
+
+    body:has(.document-print-root[data-print-active]) > :not(.document-print-root[data-print-active]) {
+        display: none;
+    }
+
+    .document-print-root[data-print-active] {
+        display: block;
+        position: static;
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        background: var(--surface-document-print);
+        color: var(--foreground-document-print);
+        font-size: var(--font-body-size);
+        line-height: var(--font-body-line-height);
+    }
+
+    .document-print-header {
+        margin-bottom: var(--space-6);
+        break-after: avoid;
+    }
+
+    .document-print-title {
+        font-size: var(--font-page-title-size);
+        line-height: var(--font-page-title-line-height);
+        font-weight: var(--font-title-weight);
+        margin: 0;
+    }
+
+    .document-print-body :is(h1, h2, h3, h4, h5, h6) {
+        break-after: avoid;
+        margin-block: var(--space-4) var(--space-2);
+    }
+
+    .document-print-body h1 {
+        font-size: var(--font-markdown-title-size);
+    }
+    .document-print-body h2 {
+        font-size: var(--font-markdown-section-size);
+    }
+    .document-print-body :is(h3, h4, h5, h6) {
+        font-size: var(--font-markdown-subsection-size);
+    }
+    .document-print-body p {
+        margin-block: var(--space-2);
+    }
+    .document-print-body table {
+        width: 100%;
+        display: table;
+        border-collapse: collapse;
+        break-inside: auto;
+    }
+    .document-print-body :is(th, td) {
+        border: 1px solid var(--border-document-print);
+        padding: var(--space-2) var(--space-3);
+        text-align: left;
+    }
+    .document-print-body tr {
+        break-inside: avoid;
+    }
+    .document-print-body img {
+        max-width: 100%;
+        max-height: var(--page-content-height);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        break-inside: avoid;
+    }
+    .document-print-body pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        overflow: visible;
+        break-inside: auto;
+        padding: var(--space-2) var(--space-3);
+        background: var(--surface-document-print-soft);
+        border: 1px solid var(--border-document-print);
+    }
+    .document-print-body code {
+        font-size: var(--font-inline-code-size);
+    }
+    .document-print-body :is(ul, ol, blockquote) {
+        padding-inline-start: var(--space-6);
+    }
+    .document-print-pagebreak {
+        break-before: page;
+        height: 1px;
+        line-height: 0;
+        overflow: hidden;
+        color: transparent;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+    .document-print-pagebreak-leading {
+        break-before: auto;
+        break-after: page;
+    }
+}

@@ -47,6 +47,29 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #102 M5 Editable Pagination / Print 验收（2026-10-08）
+
+- [x] 基于 M0B 与 M4，生产与 spike 消费同一分页 owner；连续/页面共享 editor
+      DOM、选区、undo history，不写入自动分页。既有分页浏览器测试 5 steps
+      通过，覆盖中文 IME、纸张切换、复制粘贴、gap、超高段落/代码/表格/图片；修复
+      compositionend 后重排被 PM composing flag 丢弃的回归。
+- [x] 生产纸张弹窗保存 Letter 横向及 5/50/12.7/25.4 mm 四边边距，真实 GET
+      返回一致值；390×844 弹窗完整可用，Tab 进入方向选择，axe 0 violations。
+- [x] 原生打印入口与浏览器 PDF 验证：首部/连续/末尾手动分页为 5
+      页，正文依次为空、标题与 PAGE TWO、空、PAGE FOUR、空；A4/Letter
+      横纵向尺寸及边距已验证。超高正文、末尾代码/表格内容与 2000×3000
+      图片完整输出；选中的真实图片不被当作 decoration 删除，lazy
+      图片打印前等待加载。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      十二组生产实页截图与页面级 overflow 检查通过；页面横向滚动在 editor
+      内，不扩张 document。
+- [x] 全套 638 tests / 28 steps；focused 17 tests / 3 steps；UI ownership/visual
+      guard 0，新 baseline allowance 0；affected lint/format 与 bundle gate
+      通过。全仓库 lint 有 9 项既有问题，均不在改动文件中，未放宽规则。
+- [x] 验收脚本校准：原生 textarea 输入代替未触发 React state 的 fill；等待分页
+      mode 与动画稳定后断言；Widgets 使用工作区导航入口；PDF 使用
+      preferCSSPageSize，避免工具默认 Letter 覆盖 A4。
+
 ## Issue #102 M4 Continuous / Source Editor 验收（2026-10-07）
 
 - [x] 生产 DocumentEditor 消费 #110，Library 创建取得真实 ID

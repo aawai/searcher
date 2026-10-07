@@ -44,6 +44,11 @@
     --surface-document-paper: var(--surface-solid);
     --space-document-page-gap: var(--space-section-gap);
     --shadow-document-paper: var(--shadow-l1);
+    /* Physical printing is achromatic and independent of the screen theme. */
+    --surface-document-print: #ffffff;
+    --foreground-document-print: #111111;
+    --border-document-print: #cccccc;
+    --surface-document-print-soft: #f5f5f5;
     --material-blur-content: 12px;
     --material-blur-search: 16px;
     --material-blur-navigation: 8px;

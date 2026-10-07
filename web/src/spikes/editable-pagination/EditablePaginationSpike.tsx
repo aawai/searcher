@@ -19,19 +19,17 @@ import {
     NORMAL_FIXTURE_MARKDOWN,
 } from "./fixtures.ts";
 import {
-    DEFAULT_PAPER,
-    type PaperConfig,
+    DEFAULT_PAPER_SETTINGS,
     paperMetrics,
-    type PaperOrientation,
-    type PaperSize,
-} from "./paper.ts";
+    type UpdateDocumentSettingsInput,
+} from "../../features/documents/paper.ts";
 import "./spike.css";
 
+import type { PaginationEditor } from "./runtime.ts";
 import type {
-    PaginationEditor,
     PaginationMode,
     PaginationSnapshot,
-} from "./runtime.ts";
+} from "../../features/documents/document-pagination.ts";
 
 export function EditablePaginationSpike() {
     // -------------------------------------------------------------------------
@@ -39,7 +37,9 @@ export function EditablePaginationSpike() {
     // -------------------------------------------------------------------------
     const [isOpen, setIsOpen] = useState(false);
     const [mode, setMode] = useState<PaginationMode>("continuous");
-    const [paper, setPaper] = useState<PaperConfig>(DEFAULT_PAPER);
+    const [paper, setPaper] = useState<UpdateDocumentSettingsInput>(
+        DEFAULT_PAPER_SETTINGS,
+    );
     const [marginInput, setMarginInput] = useState("20");
     const [marginError, setMarginError] = useState<string | null>(null);
     const [selectedFixture, setSelectedFixture] = useState<FixtureKey>(
@@ -52,7 +52,7 @@ export function EditablePaginationSpike() {
     const [snapshot, setSnapshot] = useState<PaginationSnapshot>(() => ({
         mode: "continuous",
         pages: 1,
-        metrics: paperMetrics(DEFAULT_PAPER, 0),
+        metrics: paperMetrics(DEFAULT_PAPER_SETTINGS, 0),
         measurements: 0,
         durationMs: 0,
     }));
@@ -64,7 +64,7 @@ export function EditablePaginationSpike() {
     const editorRef = useRef<PaginationEditor | null>(null);
     const modeRef = useRef<PaginationMode>(mode);
     modeRef.current = mode;
-    const paperRef = useRef<PaperConfig>(paper);
+    const paperRef = useRef<UpdateDocumentSettingsInput>(paper);
     paperRef.current = paper;
     const markdownRef = useRef<string>(markdown);
     markdownRef.current = markdown;
@@ -176,16 +176,16 @@ export function EditablePaginationSpike() {
     // -------------------------------------------------------------------------
     // Paper Config Controls (Reactive without editor remount)
     // -------------------------------------------------------------------------
-    const applyPaper = useCallback((next: PaperConfig) => {
+    const applyPaper = useCallback((next: UpdateDocumentSettingsInput) => {
         paperRef.current = next;
         setPaper(next);
         editorRef.current?.setPaper(next);
     }, []);
-    const handlePaperSize = useCallback((size: PaperSize) => {
-        applyPaper({ ...paperRef.current, size });
+    const handlePaperSize = useCallback((paperSize: "a4" | "letter") => {
+        applyPaper({ ...paperRef.current, paperSize });
     }, [applyPaper]);
     const handlePaperOrientation = useCallback(
-        (orientation: PaperOrientation) => {
+        (orientation: "portrait" | "landscape") => {
             applyPaper({ ...paperRef.current, orientation });
         },
         [applyPaper],
@@ -200,12 +200,10 @@ export function EditablePaginationSpike() {
         setMarginError(null);
         applyPaper({
             ...paperRef.current,
-            margins: {
-                top: parsed,
-                right: parsed,
-                bottom: parsed,
-                left: parsed,
-            },
+            marginTopMm: parsed,
+            marginRightMm: parsed,
+            marginBottomMm: parsed,
+            marginLeftMm: parsed,
         });
     }, [applyPaper]);
 
@@ -311,16 +309,16 @@ export function EditablePaginationSpike() {
                             <NativeSelect
                                 id="paper-size-select"
                                 aria-label="纸张"
-                                value={paper.size}
+                                value={paper.paperSize}
                                 onChange={(e) => handlePaperSize(
-                                    e.target.value as PaperSize,
+                                    e.target.value as "a4" | "letter",
                                 )}
                                 disabled={!isOpen}
                             >
-                                <NativeSelectOption value="A4">
+                                <NativeSelectOption value="a4">
                                     A4
                                 </NativeSelectOption>
-                                <NativeSelectOption value="Letter">
+                                <NativeSelectOption value="letter">
                                     Letter
                                 </NativeSelectOption>
                             </NativeSelect>
@@ -336,7 +334,9 @@ export function EditablePaginationSpike() {
                                 value={paper.orientation}
                                 onChange={(e) =>
                                     handlePaperOrientation(
-                                        e.target.value as PaperOrientation,
+                                        e.target.value as
+                                            | "portrait"
+                                            | "landscape",
                                     )}
                                 disabled={!isOpen}
                             >
@@ -431,11 +431,12 @@ export function EditablePaginationSpike() {
                                 : "0ms"}
                         </span>
                         <span className="pagination-diagnostic-tag">
-                            <strong>纸张:</strong> {paper.size}{" "}
+                            <strong>纸张:</strong>{" "}
+                            {paper.paperSize.toUpperCase()}{" "}
                             ({paper.orientation})
                         </span>
                         <span className="pagination-diagnostic-tag">
-                            <strong>边距:</strong> {paper.margins.top}mm
+                            <strong>边距:</strong> {paper.marginTopMm}mm
                         </span>
                         <span className="pagination-diagnostic-tag">
                             <strong>版心尺寸:</strong>{" "}

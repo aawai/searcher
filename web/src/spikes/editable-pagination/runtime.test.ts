@@ -5,8 +5,13 @@ import remarkGfm from "remark-gfm";
 import { TextSelection } from "@milkdown/prose/state";
 
 import type { MarkdownEditorEvent } from "../../features/markdown-editor/index.ts";
-import { DEFAULT_PAPER, type PaperConfig, paperMetrics } from "./paper.ts";
-import { createPaginationEditor, type PaginationSnapshot } from "./runtime.ts";
+import {
+    DEFAULT_PAPER_SETTINGS,
+    paperMetrics,
+    type UpdateDocumentSettingsInput,
+} from "../../features/documents/paper.ts";
+import { createPaginationEditor } from "./runtime.ts";
+import type { PaginationSnapshot } from "../../features/documents/document-pagination.ts";
 
 interface TestDomEnvironment {
     window: Window;
@@ -143,7 +148,7 @@ Deno.test("M0B semantic boundary: trailing PageBreak normalization ensures edita
         const pagination = await createPaginationEditor(
             env.root,
             env.viewport,
-            DEFAULT_PAPER,
+            DEFAULT_PAPER_SETTINGS,
             (e) => events.push(e),
             waiter.onLayout,
             inputMarkdown,
@@ -235,7 +240,7 @@ Deno.test("M0B semantic boundary: start, consecutive, and end manual PageBreak b
                 const pagination = await createPaginationEditor(
                     env.root,
                     env.viewport,
-                    DEFAULT_PAPER,
+                    DEFAULT_PAPER_SETTINGS,
                     () => {},
                     waiter.onLayout,
                     fixture.input,
@@ -270,7 +275,7 @@ Deno.test("M0B mode toggling: single PM state, view, and selection preserved wit
         const pagination = await createPaginationEditor(
             env.root,
             env.viewport,
-            DEFAULT_PAPER,
+            DEFAULT_PAPER_SETTINGS,
             () => {},
             waiter.onLayout,
             "段落 1\n\n<!-- pagebreak -->\n\n段落 2",
@@ -348,7 +353,7 @@ Deno.test("M0B live IME composition queue: defer paper geometry updates until co
         const pagination = await createPaginationEditor(
             env.root,
             env.viewport,
-            DEFAULT_PAPER,
+            DEFAULT_PAPER_SETTINGS,
             () => {},
             waiter.onLayout,
             "中文字符输入测试",
@@ -366,13 +371,15 @@ Deno.test("M0B live IME composition queue: defer paper geometry updates until co
         env.root.dispatchEvent(compStartEvent);
 
         // 2. Programmatically alter paper margins during active composition
-        const updatedPaper: PaperConfig = {
-            size: "A4",
+        const updatedPaper: UpdateDocumentSettingsInput = {
+            paperSize: "a4",
             orientation: "portrait",
-            margins: { top: 5, right: 5, bottom: 5, left: 5 },
+            marginTopMm: 5,
+            marginRightMm: 5,
+            marginBottomMm: 5,
+            marginLeftMm: 5,
         };
         pagination.setPaper(updatedPaper);
-
         // 3. Verify CSS geometry variables did NOT change during composition
         assertEquals(
             env.root.style.getPropertyValue("--space-document-print-top"),
@@ -414,9 +421,12 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
     // 1. A4 Portrait
     const a4p = paperMetrics(
         {
-            size: "A4",
+            paperSize: "a4",
             orientation: "portrait",
-            margins: { top: 20, right: 20, bottom: 20, left: 20 },
+            marginTopMm: 20,
+            marginRightMm: 20,
+            marginBottomMm: 20,
+            marginLeftMm: 20,
         },
         gap,
     );
@@ -430,9 +440,12 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
     // 2. A4 Landscape
     const a4l = paperMetrics(
         {
-            size: "A4",
+            paperSize: "a4",
             orientation: "landscape",
-            margins: { top: 20, right: 20, bottom: 20, left: 20 },
+            marginTopMm: 20,
+            marginRightMm: 20,
+            marginBottomMm: 20,
+            marginLeftMm: 20,
         },
         gap,
     );
@@ -442,9 +455,12 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
     // 3. US Letter Portrait
     const letterP = paperMetrics(
         {
-            size: "Letter",
+            paperSize: "letter",
             orientation: "portrait",
-            margins: { top: 20, right: 20, bottom: 20, left: 20 },
+            marginTopMm: 20,
+            marginRightMm: 20,
+            marginBottomMm: 20,
+            marginLeftMm: 20,
         },
         gap,
     );
@@ -454,9 +470,12 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
     // 4. US Letter Landscape
     const letterL = paperMetrics(
         {
-            size: "Letter",
+            paperSize: "letter",
             orientation: "landscape",
-            margins: { top: 20, right: 20, bottom: 20, left: 20 },
+            marginTopMm: 20,
+            marginRightMm: 20,
+            marginBottomMm: 20,
+            marginLeftMm: 20,
         },
         gap,
     );
@@ -466,9 +485,12 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
     // 5. Margin Extreme Bounds (5mm min, 50mm max)
     const minMargin = paperMetrics(
         {
-            size: "A4",
+            paperSize: "a4",
             orientation: "portrait",
-            margins: { top: 5, right: 5, bottom: 5, left: 5 },
+            marginTopMm: 5,
+            marginRightMm: 5,
+            marginBottomMm: 5,
+            marginLeftMm: 5,
         },
         gap,
     );
@@ -483,9 +505,12 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
 
     const maxMargin = paperMetrics(
         {
-            size: "A4",
+            paperSize: "a4",
             orientation: "portrait",
-            margins: { top: 50, right: 50, bottom: 50, left: 50 },
+            marginTopMm: 50,
+            marginRightMm: 50,
+            marginBottomMm: 50,
+            marginLeftMm: 50,
         },
         gap,
     );
@@ -509,7 +534,7 @@ Deno.test("M0B insertPageBreak: manual break insertion and teardown lifecycle", 
         const pagination = await createPaginationEditor(
             env.root,
             env.viewport,
-            DEFAULT_PAPER,
+            DEFAULT_PAPER_SETTINGS,
             () => {},
             () => {},
             "第一部分内容",

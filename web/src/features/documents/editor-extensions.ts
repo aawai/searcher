@@ -120,6 +120,19 @@ export const pagebreakNode = $node("pagebreak", () => ({
 export const trailingPageBreakNormalizerPlugin = $prose(() => {
     return new Plugin({
         key: new PluginKey("trailingPageBreakNormalizer"),
+        view(view) {
+            queueMicrotask(() => {
+                if (
+                    view.isDestroyed ||
+                    view.state.doc.lastChild?.type.name !== "pagebreak"
+                ) return;
+                view.dispatch(
+                    view.state.tr.setMeta(originMetaKey, "normalization")
+                        .setMeta("addToHistory", false),
+                );
+            });
+            return {};
+        },
         appendTransaction(
             _trs: readonly Transaction[],
             _oldState: EditorState,
