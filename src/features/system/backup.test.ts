@@ -7,6 +7,8 @@ import { SystemService } from "./service.ts";
 import { SystemSettingsStore } from "./settings-store.ts";
 import { WallpaperService } from "../wallpaper/service.ts";
 import { WebAppIconService } from "../webapp-icons/service.ts";
+import { DocumentsService } from "../documents/service.ts";
+import { DocumentAssetsService } from "../documents/assets.ts";
 
 const PNG_HEADER = new Uint8Array([
     0x89,
@@ -702,6 +704,22 @@ Deno.test("backup smoke: roundtrip full backup and restore preserves wallpaper f
             now: () => now,
         });
 
+        const documentsService = new DocumentsService(store);
+        const assetsService = new DocumentAssetsService(store);
+        const document = await documentsService.create(userId, {
+            title: "Backup document",
+            body: "Original body",
+        });
+        const asset = await assetsService.upload(userId, document.id, {
+            bytes: PNG_HEADER,
+            mimeType: "image/png",
+            originalName: "backup.png",
+        });
+        const saved = await documentsService.update(userId, document.id, {
+            version: document.version,
+            body: `![backup](asset://${asset.assetId})`,
+            origin: "manual",
+        });
         // 1. Create full backup
         const zipBytes = await systemService.createFullBackupZip();
 
@@ -717,6 +735,11 @@ Deno.test("backup smoke: roundtrip full backup and restore preserves wallpaper f
                 .set({ backgroundImage: null })
                 .where(users ? undefined : undefined);
         });
+        await documentsService.permanentDelete(
+            userId,
+            document.id,
+            saved.version,
+        );
 
         // Verify wallpaper was deleted
         const deletedCheck = await wallpaperService.getWallpaper(
@@ -747,6 +770,21 @@ Deno.test("backup smoke: roundtrip full backup and restore preserves wallpaper f
                 .all()
         );
         assertEquals(restoredPrefs[0]?.bg, `/api/wallpaper/${wallpaperId}`);
+        assertEquals(
+            (await documentsService.get(userId, document.id)).body,
+            saved.body,
+        );
+        assertEquals(
+            (await assetsService.read(userId, document.id, asset.assetId))
+                .bytes,
+            PNG_HEADER,
+        );
+        assertEquals(
+            (await documentsService.versions(userId, document.id)).map(
+                (version) => version.reason,
+            ),
+            ["manual", "snapshot"],
+        );
     } finally {
         await store.close();
         await Deno.remove(dir, { recursive: true });

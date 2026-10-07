@@ -11,6 +11,7 @@ import { registerAuthRoutes } from "./features/auth/auth.route.ts";
 import { registerUserRoutes } from "./features/users/users.route.ts";
 import { registerBookmarksRoutes } from "./features/bookmarks/bookmarks.route.ts";
 import { registerNotesRoutes } from "./features/notes/notes.route.ts";
+import { registerDocumentsRoutes } from "./features/documents/documents.route.ts";
 import { registerPreferencesRoutes } from "./features/preferences/preferences.route.ts";
 import { registerWallpaperRoutes } from "./features/wallpaper/wallpaper.route.ts";
 import { registerAiRoutes } from "./features/ai/ai.route.ts";
@@ -76,6 +77,7 @@ export function createApp(
     registerUserRoutes(routes, sharedDeps);
     registerBookmarksRoutes(routes, deps);
     registerNotesRoutes(routes, deps);
+    registerDocumentsRoutes(routes, deps);
     registerPreferencesRoutes(routes, sharedDeps);
     registerWallpaperRoutes(routes, sharedDeps);
     registerAiRoutes(routes, deps);

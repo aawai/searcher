@@ -1,6 +1,10 @@
 import type { MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { failResponse } from "./middleware/response.ts";
+import {
+    DOCUMENT_ASSET_MAX_BYTES,
+    DOCUMENT_JSON_MAX_BYTES,
+} from "../../shared/documents.ts";
 
 export type BodyType = "json" | "multipart";
 
@@ -43,6 +47,17 @@ export const LARGE_UPLOAD_POLICY: BodyPolicy = {
     bodyType: "multipart",
 };
 
+export const DOCUMENT_JSON_POLICY: BodyPolicy = {
+    maxSize: DOCUMENT_JSON_MAX_BYTES,
+    limitMessage: "文档请求体超过 8 MiB 上限",
+    bodyType: "json",
+};
+export const DOCUMENT_ASSET_UPLOAD_POLICY: BodyPolicy = {
+    maxSize: DOCUMENT_ASSET_MAX_BYTES + JSON_DEFAULT_MAX_SIZE,
+    limitMessage: "文档图片超过 10 MiB 上限",
+    bodyType: "multipart",
+};
+
 /**
  * Resolve the body policy for a given HTTP request.
  */
@@ -52,6 +67,17 @@ export function resolveBodyPolicy(method: string, path: string): BodyPolicy {
         ? path.slice(0, -1)
         : path;
 
+    if (
+        (normalizedMethod === "POST" && cleanPath === "/api/documents") ||
+        (normalizedMethod === "PATCH" &&
+            /^\/api\/documents\/[^/]+$/.test(cleanPath))
+    ) return DOCUMENT_JSON_POLICY;
+    if (
+        normalizedMethod === "POST" &&
+        /^\/api\/documents\/[^/]+\/assets$/.test(cleanPath)
+    ) {
+        return DOCUMENT_ASSET_UPLOAD_POLICY;
+    }
     if (normalizedMethod === "POST") {
         if (cleanPath === "/api/ai/chat/stream") {
             return AI_CHAT_STREAM_POLICY;
