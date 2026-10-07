@@ -1,7 +1,10 @@
 import {
     type AppsRoute,
+    type DocumentsRoute,
+    type DocumentsScope,
     type DomainWorkspaceAction,
     domainWorkspaceReducer,
+    initialDocumentsWorkspaceState,
     initialWorkspaceCoreState,
     type NotesRoute,
     type WorkspaceCoreState,
@@ -16,11 +19,17 @@ export interface WorkspaceHostState {
 
 export const initialWorkspaceHost: WorkspaceHostState = {
     models: initialWorkspaceCoreState,
-    open: { apps: false, notes: false },
+    open: { apps: false, notes: false, documents: false },
     activeKind: null,
 };
 
+export type DocumentsWorkspaceAction = DomainWorkspaceAction<DocumentsRoute> | {
+    type: "scope";
+    scope: DocumentsScope;
+};
+
 export type WorkspaceHostAction =
+    | { type: "domain"; kind: "documents"; action: DocumentsWorkspaceAction }
     | {
         type: "domain";
         kind: "apps";
@@ -110,6 +119,31 @@ export function workspaceHostReducer(
         }
 
         case "domain": {
+            if (action.kind === "documents") {
+                const current = state.models.documents;
+                const model = action.action.type === "scope"
+                    ? { ...current, scope: action.action.scope }
+                    : action.action.type === "reset"
+                    ? initialDocumentsWorkspaceState
+                    : {
+                        ...current,
+                        ...domainWorkspaceReducer(current, action.action),
+                    };
+                const models = { ...state.models, documents: model };
+                if (
+                    action.action.type === "query" ||
+                    action.action.type === "scope" ||
+                    action.action.type === "reset"
+                ) {
+                    return { ...state, models };
+                }
+                return {
+                    ...state,
+                    models,
+                    open: { ...state.open, documents: true },
+                    activeKind: "documents",
+                };
+            }
             if (action.kind === "apps") {
                 const model = domainWorkspaceReducer(
                     state.models.apps,

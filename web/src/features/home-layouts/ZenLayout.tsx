@@ -1,4 +1,10 @@
-import { ArrowUpDown, Check, Folder, StickyNote } from "lucide-react";
+import {
+    ArrowUpDown,
+    Check,
+    Folder,
+    NotebookPen,
+    StickyNote,
+} from "lucide-react";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
@@ -214,6 +220,16 @@ export function ZenLayout(props: HomeLayoutProps) {
                         <StickyNote size={13} />
                         <span>便签 · {notes.length}</span>
                     </button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="zen-edge-btn"
+                        data-workspace="documents"
+                        onClick={() => openWorkspace("documents")}
+                    >
+                        <NotebookPen size={13} />
+                        <span>笔记</span>
+                    </Button>
                 </aside>
             )}
         </>

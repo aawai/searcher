@@ -41,10 +41,14 @@ import {
     type AppsWorkspaceProps,
 } from "../features/workspace/AppsWorkspace.tsx";
 import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
+import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
+import "../features/workspace/documents-workspace.css";
 import {
     type AppsRoute,
+    type DocumentsRoute,
     type DomainWorkspaceAction,
     isAppsWorkspaceView,
+    isNotesWorkspaceView,
     type NotesRoute,
     type WorkspaceKind,
     type WorkspaceRoute,
@@ -138,6 +142,7 @@ export function SearchHome() {
             action:
                 | DomainWorkspaceAction<AppsRoute>
                 | DomainWorkspaceAction<NotesRoute>
+                | DomainWorkspaceAction<DocumentsRoute>
                 | { type: "close" };
         }
         | null
@@ -147,6 +152,7 @@ export function SearchHome() {
         action:
             | DomainWorkspaceAction<AppsRoute>
             | DomainWorkspaceAction<NotesRoute>
+            | DomainWorkspaceAction<DocumentsRoute>
             | { type: "close" },
     ) {
         if (kind === "apps") {
@@ -164,9 +170,10 @@ export function SearchHome() {
             return;
         }
         if (mobile || appearance.style === "zen") {
-            const other: WorkspaceKind = kind === "apps" ? "notes" : "apps";
-            if (host.open[other]) {
-                dispatchHost({ type: "close", kind: other });
+            for (const other of ["apps", "notes", "documents"] as const) {
+                if (other !== kind && host.open[other]) {
+                    dispatchHost({ type: "close", kind: other });
+                }
             }
         }
         if (kind === "apps") {
@@ -175,11 +182,17 @@ export function SearchHome() {
                 kind: "apps",
                 action: action as DomainWorkspaceAction<AppsRoute>,
             });
-        } else {
+        } else if (kind === "notes") {
             dispatchHost({
                 type: "domain",
                 kind: "notes",
                 action: action as DomainWorkspaceAction<NotesRoute>,
+            });
+        } else {
+            dispatchHost({
+                type: "domain",
+                kind: "documents",
+                action: action as DomainWorkspaceAction<DocumentsRoute>,
             });
         }
         if (appearance.style === "widgets") {
@@ -198,6 +211,7 @@ export function SearchHome() {
         action:
             | DomainWorkspaceAction<AppsRoute>
             | DomainWorkspaceAction<NotesRoute>
+            | DomainWorkspaceAction<DocumentsRoute>
             | { type: "close" },
     ) {
         if (
@@ -211,9 +225,9 @@ export function SearchHome() {
     function navigateWorkspace(route: WorkspaceRoute) {
         if (isAppsWorkspaceView(route)) {
             requestWorkspace("apps", { type: "navigate", route });
-        } else {
+        } else if (isNotesWorkspaceView(route)) {
             requestWorkspace("notes", { type: "navigate", route });
-        }
+        } else requestWorkspace("documents", { type: "navigate", route });
     }
     function backWorkspace(kind = host.activeKind) {
         if (kind) requestWorkspace(kind, { type: "back" });
@@ -267,10 +281,9 @@ export function SearchHome() {
         if (appearance.style === "widgets" && !mobile) {
             dispatchHost({
                 type: "activate",
-                kind:
-                    desktop.activeId === "apps" || desktop.activeId === "notes"
-                        ? desktop.activeId
-                        : null,
+                kind: desktop.activeId && isWorkspaceKind(desktop.activeId)
+                    ? desktop.activeId
+                    : null,
             });
         }
     }, [desktop.activeId, appearance.style, mobile]);
@@ -885,8 +898,10 @@ export function SearchHome() {
         ? "编辑便签"
         : isApps
         ? "应用"
+        : currentWorkspace === "documents"
+        ? "笔记"
         : "便签";
-    function createWorkspaceItem(kind: WorkspaceKind) {
+    function createWorkspaceItem(kind: "apps" | "notes") {
         if (kind === "apps") {
             navigateWorkspace({
                 view: "apps/create",
@@ -932,6 +947,24 @@ export function SearchHome() {
                     onDirtyChange={(dirty) => {
                         dirtyForm.current = dirty;
                     }}
+                />
+            );
+        }
+        if (kind === "documents") {
+            const model = host.models.documents;
+            return (
+                <DocumentsWorkspace
+                    key={user.id}
+                    userId={user.id}
+                    state={model.route}
+                    scope={model.scope}
+                    query={model.query}
+                    onQueryChange={(value) =>
+                        dispatchHost({
+                            type: "domain",
+                            kind: "documents",
+                            action: { type: "query", value },
+                        })}
                 />
             );
         }
@@ -1020,9 +1053,13 @@ export function SearchHome() {
                             navigate={navigateWorkspace}
                             onBack={() => backWorkspace()}
                             onClose={() => closeWorkspace()}
-                            onCreate={() =>
-                                host.activeKind &&
-                                createWorkspaceItem(host.activeKind)}
+                            onCreate={host.activeKind &&
+                                    host.activeKind !== "documents"
+                                ? () =>
+                                    createWorkspaceItem(
+                                        host.activeKind as "apps" | "notes",
+                                    )
+                                : undefined}
                         >
                             {host.activeKind &&
                                 renderWorkspaceContent(host.activeKind)}
