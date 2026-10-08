@@ -156,7 +156,7 @@ Deno.test("desktop-persistence: decodeDesktopLayout strictly rejects corrupt pay
 
     // Unsupported version
     assertEquals(
-        decodeDesktopLayout({ version: 3, windows: [] }, rect1440),
+        decodeDesktopLayout({ version: 4, windows: [] }, rect1440),
         null,
     );
     assertEquals(
@@ -702,6 +702,77 @@ Deno.test("desktop-persistence: v1 Apps/Notes survive migration and v2 Documents
             version: 1,
             windows: [{ ...window, id: "documents", kind: "documents" }],
         }, rect1440),
+        null,
+    );
+});
+
+Deno.test("desktop-persistence: document entity windows survive refresh without losing legacy workspaces", () => {
+    const frame = { x: 0.1, y: 0.1, width: 0.5, height: 0.5 };
+    const restored = decodeDesktopLayout({
+        version: 3,
+        activeId: "document:one",
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame,
+                mode: "normal",
+                zOrder: 1,
+                snap: null,
+            },
+            {
+                id: "document:one",
+                kind: "document",
+                entityId: "one",
+                frame,
+                mode: "minimized",
+                zOrder: 2,
+                snap: null,
+            },
+            {
+                id: "document:two",
+                kind: "document",
+                entityId: "two",
+                frame,
+                mode: "normal",
+                zOrder: 3,
+                snap: null,
+            },
+        ],
+    }, rect1024);
+    assertEquals(restored?.windows.map((w) => [w.id, w.entityId, w.mode]), [
+        ["apps", null, "normal"],
+        ["document:one", "one", "minimized"],
+        ["document:two", "two", "normal"],
+    ]);
+    const v2 = decodeDesktopLayout({
+        version: 2,
+        activeId: "documents",
+        windows: [{
+            id: "documents",
+            kind: "documents",
+            entityId: null,
+            frame,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+    }, rect1024);
+    assertEquals(v2?.windows[0].id, "documents");
+    assertEquals(
+        decodeDesktopLayout({
+            version: 3,
+            windows: [{
+                id: "document:wrong",
+                kind: "document",
+                entityId: "one",
+                frame,
+                mode: "normal",
+                zOrder: 1,
+                snap: null,
+            }],
+        }, rect1024),
         null,
     );
 });

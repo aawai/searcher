@@ -21,6 +21,7 @@ const TYPE_LABELS: Record<WindowKind, string> = {
     notes: "便签工作区",
     note: "便签",
     documents: "笔记工作区",
+    document: "笔记",
 };
 
 /** A separate preview surface: never moves or remounts the live editors. */
@@ -54,7 +55,7 @@ export function DesktopOverview(
                     ? (
                         <EmptyState
                             title="没有打开的窗口"
-                            description="从 Dock 打开应用或便签工作区。"
+                            description="从 Dock 打开应用、便签或笔记工作区。"
                         />
                     )
                     : (

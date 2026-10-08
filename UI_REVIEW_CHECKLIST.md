@@ -47,6 +47,30 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #102 M6 Widgets Entity Windows / Persistence 验收（2026-10-08）
+
+- [x] 复用 DesktopWindow、geometry、Dock、Overview 与 Snap；Library singleton
+      与多个真实 document entity 同时打开，不创建另一套 editor core/chrome。
+- [x] 两笔记窗口独立保存标题与正文；最小化后重复打开保留同一 editor
+      DOM；Dock/Overview 标题同步。Library
+      删除确认后只关闭对应实体；独立窗口保存同步当前列表摘要。
+- [x] 真实刷新恢复多窗口；左分屏刷新保留相同 frame。schema v3 回归保护两个实体与
+      v1/v2 向后兼容，corrupt payload 回退为空桌面；最小化失效实体真实 GET 404
+      后清理，其余窗口保留。
+- [x] 390×844 / 768×1024 / 1024×900 / 1440×900 × light/dark 八组 Widgets
+      实页截图与 viewport overflow 通过：前两种无 entity window，仅一个 nested
+      editor，后两种保留多实例。固定 390/768/1440 双主题修复后 axe WCAG A/AA 0
+      violations。
+- [x] 窄桌面窗口实际发现滚动区域缺少键盘入口，增加 focusable region；原生 End
+      将内容 scrollTop 从 0 移至 165，未改变 editor selection/history。
+- [x] 全套 639 tests / 28 steps；既有
+      workspace/shell/launcher/notes/order/bento/contract/matrix/bundle 9 tests
+      / 90 steps，Apps/Notes 无回归；build/typecheck 与 UI Guard 0 drift，不放宽
+      baseline。
+- [x] 验收脚本校准：输入按 entity ID 定位，避免误输入其他窗口；注入损坏/失效
+      IndexedDB 记录前退出 Home，避免 pagehide flush 覆盖夹具；主题断言
+      data-theme，等待偏好与 Host 提交。
+
 ## Issue #102 M5 Editable Pagination / Print 验收（2026-10-08）
 
 - [x] 基于 M0B 与 M4，生产与 spike 消费同一分页 owner；连续/页面共享 editor

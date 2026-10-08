@@ -53,12 +53,16 @@ export interface DocumentLibraryActionsProps {
     item: DocumentSummaryDto;
     notebooks: DocumentNotebookDto[];
     onChanged: () => void;
+    onDocumentChanged?: (document: DocumentDto) => void;
+    onDocumentDeleted?: (id: string) => void;
 }
 
 export function DocumentLibraryActions({
     item,
     notebooks,
     onChanged,
+    onDocumentChanged,
+    onDocumentDeleted,
 }: DocumentLibraryActionsProps) {
     const [renameOpen, setRenameOpen] = useState(false);
     const [titleInput, setTitleInput] = useState(item.title);
@@ -118,7 +122,7 @@ export function DocumentLibraryActions({
         setRenameError(null);
         try {
             const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            await api<DocumentDto>(
+            const saved = await api<DocumentDto>(
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
@@ -126,6 +130,7 @@ export function DocumentLibraryActions({
                 }),
             );
             setRenameOpen(false);
+            onDocumentChanged?.(saved);
             onChanged();
         } catch (err) {
             setRenameError(err instanceof Error ? err.message : String(err));
@@ -141,7 +146,7 @@ export function DocumentLibraryActions({
         setMoveError(null);
         try {
             const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            await api<DocumentDto>(
+            const saved = await api<DocumentDto>(
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
@@ -149,6 +154,7 @@ export function DocumentLibraryActions({
                 }),
             );
             setMoveOpen(false);
+            onDocumentChanged?.(saved);
             onChanged();
         } catch (err) {
             setMoveError(err instanceof Error ? err.message : String(err));
@@ -168,6 +174,7 @@ export function DocumentLibraryActions({
                 { method: "DELETE" },
             );
             setTrashOpen(false);
+            onDocumentDeleted?.(item.id);
             onChanged();
         } catch (err) {
             setTrashError(err instanceof Error ? err.message : String(err));
@@ -182,13 +189,14 @@ export function DocumentLibraryActions({
         setFavoriteError(null);
         try {
             const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            await api<DocumentDto>(
+            const saved = await api<DocumentDto>(
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
                     isFavorite: !item.isFavorite,
                 }),
             );
+            onDocumentChanged?.(saved);
             onChanged();
         } catch (err) {
             setFavoriteError(err instanceof Error ? err.message : String(err));

@@ -43,6 +43,8 @@ import {
     type NoteItem,
 } from "../../components/searcher/NoteCard.tsx";
 import "./desktop.css";
+import type { DocumentDto } from "@shared/documents.ts";
+import { DocumentEntityWindow } from "./DocumentEntityWindow.tsx";
 
 export interface DesktopWorkspacesProps {
     state: DesktopState;
@@ -59,6 +61,10 @@ export interface DesktopWorkspacesProps {
     notes: NoteItem[];
     onSaveNote: (note: NoteItem) => void;
     userId: string;
+    documents: Record<string, { title: string; summary: string }>;
+    onOpenDocument: (id: string) => void;
+    onDocumentChanged: (document: DocumentDto) => void;
+    onDocumentsChanged: () => void;
 }
 
 export function isWorkspaceKind(kind: string): kind is WorkspaceKind {
@@ -138,6 +144,10 @@ export function DesktopWorkspaces({
     notes,
     onSaveNote,
     userId,
+    documents,
+    onOpenDocument,
+    onDocumentChanged,
+    onDocumentsChanged,
 }: DesktopWorkspacesProps) {
     const dockNavRef = useRef<HTMLElement | null>(null);
 
@@ -186,7 +196,7 @@ export function DesktopWorkspaces({
         if (isWorkspaceKind(w.kind)) {
             return true;
         }
-        if (w.kind === "note") {
+        if (w.kind === "note" || w.kind === "document") {
             return !isConstrained;
         }
         return false;
@@ -293,7 +303,9 @@ export function DesktopWorkspaces({
     // visually hide the inactive one using desktop-window--constrained-hidden.
     // If active window in state is a note window, fallback to notes workspace in constrained mode.
     const effectiveActiveWinId =
-        isConstrained && activeWinId?.startsWith("note:")
+        isConstrained && activeWinId?.startsWith("document:")
+            ? "documents"
+            : isConstrained && activeWinId?.startsWith("note:")
             ? "notes"
             : activeWinId;
     const activeWindow =
@@ -303,14 +315,19 @@ export function DesktopWorkspaces({
         const note = win.kind === "note"
             ? notes.find((n) => n.id === win.entityId)
             : undefined;
+        const document = win.kind === "document" && win.entityId
+            ? documents[win.entityId]
+            : undefined;
         return {
             id: win.id,
             kind: win.kind,
             minimized: win.mode === "minimized",
             title: isWorkspaceKind(win.kind)
                 ? getWorkspaceTitle(win.kind, models[win.kind].route)
+                : win.kind === "document"
+                ? document?.title ?? "笔记"
                 : getNoteDisplayTitle(note?.title ?? "", note?.body ?? ""),
-            summary: note?.body ??
+            summary: document?.summary ?? note?.body ??
                 (win.kind === "apps"
                     ? "应用列表"
                     : win.kind === "notes"
@@ -386,6 +403,23 @@ export function DesktopWorkspaces({
                         );
                     }
 
+                    if (win.kind === "document") {
+                        return (
+                            <DocumentEntityWindow
+                                key={`${userId}:${win.id}`}
+                                window={win}
+                                rect={rect}
+                                active={state.activeId === win.id}
+                                dispatch={dispatch}
+                                userId={userId}
+                                title={previews.find((p) => p.id === win.id)
+                                    ?.title ?? "笔记"}
+                                onOpenDocument={onOpenDocument}
+                                onDocumentChanged={onDocumentChanged}
+                                onDocumentsChanged={onDocumentsChanged}
+                            />
+                        );
+                    }
                     if (!isWorkspaceKind(win.kind)) return null;
                     const kind: WorkspaceKind = win.kind;
                     const model = models[kind];
@@ -482,9 +516,11 @@ export function DesktopWorkspaces({
                 ref={handleDockRef}
                 state={state}
                 onOpen={onOpen}
-                runningNotes={isConstrained
+                runningEntities={isConstrained
                     ? []
-                    : previews.filter((w) => w.kind === "note")}
+                    : previews.filter((w) =>
+                        w.kind === "note" || w.kind === "document"
+                    )}
                 onSelectWindow={selectWindow}
                 overviewOpen={overviewOpen}
                 onOverview={isConstrained ? undefined : () => {

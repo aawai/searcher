@@ -10,7 +10,7 @@ export interface DesktopDockProps {
     state: DesktopState;
     onOpen: (kind: WorkspaceKind) => void;
     className?: string;
-    runningNotes?: WindowPreview[];
+    runningEntities?: WindowPreview[];
     onSelectWindow?: (id: string) => void;
     onOverview?: () => void;
     overviewOpen?: boolean;
@@ -32,7 +32,7 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
             state,
             onOpen,
             className,
-            runningNotes = [],
+            runningEntities = [],
             onSelectWindow,
             onOverview,
             overviewOpen,
@@ -136,24 +136,33 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                         <span>总览</span>
                     </Button>
                 )}
-                {runningNotes.length > 0 && (
+                {runningEntities.length > 0 && (
                     <div
                         className="desktop-dock-running"
-                        aria-label="打开的便签"
+                        aria-label="打开的便签与笔记"
                     >
-                        {runningNotes.map((note) => (
+                        {runningEntities.map((note) => (
                             <Button
                                 key={note.id}
                                 variant="ghost"
                                 className="desktop-dock-item desktop-dock-note"
-                                data-running-note={note.id}
-                                aria-label={`便签窗口：${note.title}`}
+                                data-running-note={note.kind === "note"
+                                    ? note.id
+                                    : undefined}
+                                data-running-document={note.kind === "document"
+                                    ? note.id
+                                    : undefined}
+                                aria-label={`${
+                                    note.kind === "document" ? "笔记" : "便签"
+                                }窗口：${note.title}`}
                                 title={note.title}
                                 aria-pressed={state.activeId === note.id &&
                                     !note.minimized}
                                 onClick={() => onSelectWindow?.(note.id)}
                             >
-                                <StickyNote size={18} />
+                                {note.kind === "document"
+                                    ? <NotebookPen size={18} />
+                                    : <StickyNote size={18} />}
                                 <span className="desktop-dock-note-title">
                                     {note.title}
                                 </span>

@@ -1,7 +1,15 @@
 import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
+} from "react";
+import type { DocumentDto } from "@shared/documents.ts";
 import { routes } from "./routes.ts";
 import {
     buildSearchUrl,
@@ -133,6 +141,23 @@ export function SearchHome() {
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);
     }, []);
+    const [documentPreviews, setDocumentPreviews] = useState<
+        Record<string, { title: string; summary: string }>
+    >({});
+    useEffect(() => setDocumentPreviews({}), [user?.id]);
+    const [documentLibraryRevision, setDocumentLibraryRevision] = useState(0);
+    const onDocumentsChanged = useCallback(() => {
+        setDocumentLibraryRevision((revision) => revision + 1);
+    }, []);
+    const onDocumentChanged = useCallback((document: DocumentDto) => {
+        setDocumentPreviews((current) => ({
+            ...current,
+            [document.id]: {
+                title: document.displayTitle,
+                summary: document.body.slice(0, 160),
+            },
+        }));
+    }, []);
     const [appsArranging, setAppsArranging] = useState(false);
     const dirtyForm = useRef(false);
     const initialSyncDoneRef = useRef(false);
@@ -230,6 +255,25 @@ export function SearchHome() {
         } else if (isNotesWorkspaceView(route)) {
             requestWorkspace("notes", { type: "navigate", route });
         } else requestWorkspace("documents", { type: "navigate", route });
+    }
+    function openDocument(id: string) {
+        if (appearance.style === "widgets" && globalThis.innerWidth >= 1024) {
+            dispatchDesktop({
+                type: "OPEN",
+                id: `document:${id}`,
+                kind: "document",
+                entityId: id,
+                rect: safeRect,
+            });
+        } else navigateWorkspace({ view: "documents/edit", id });
+    }
+    function onDocumentDeleted(id: string) {
+        dispatchDesktop({ type: "CLOSE", id: `document:${id}` });
+        setDocumentPreviews((current) => {
+            const next = { ...current };
+            delete next[id];
+            return next;
+        });
     }
     function backWorkspace(kind = host.activeKind) {
         if (kind) requestWorkspace(kind, { type: "back" });
@@ -962,8 +1006,10 @@ export function SearchHome() {
                     onDirtyChange={(dirty) => {
                         dirtyForm.current = dirty;
                     }}
-                    onOpenDocument={(id) =>
-                        navigateWorkspace({ view: "documents/edit", id })}
+                    onOpenDocument={openDocument}
+                    onDocumentChanged={onDocumentChanged}
+                    onDocumentDeleted={onDocumentDeleted}
+                    revision={documentLibraryRevision}
                     scope={model.scope}
                     onScopeChange={(scope) =>
                         dispatchHost({
@@ -1047,6 +1093,10 @@ export function SearchHome() {
                             );
                         }}
                         userId={user.id}
+                        documents={documentPreviews}
+                        onOpenDocument={openDocument}
+                        onDocumentChanged={onDocumentChanged}
+                        onDocumentsChanged={onDocumentsChanged}
                     />
                 )
                 : (
