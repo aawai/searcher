@@ -127,12 +127,23 @@ export default defineConfig({
                     }
                     if (
                         pkg === "react-markdown" ||
-                        pkg.startsWith("remark-") ||
+                        pkg === "remark-rehype" ||
+                        pkg === "remark-breaks" ||
                         pkg.startsWith("rehype-") ||
+                        pkg.startsWith("hast-") ||
+                        pkg === "mdast-util-to-hast" ||
+                        pkg === "property-information" ||
+                        pkg === "html-url-attributes" ||
+                        pkg === "comma-separated-tokens" ||
+                        pkg === "space-separated-tokens"
+                    ) {
+                        return "markdown-renderer-vendor";
+                    }
+                    if (
+                        pkg.startsWith("remark-") ||
                         pkg.startsWith("micromark") ||
                         pkg.startsWith("mdast-") ||
                         pkg.startsWith("unist-") ||
-                        pkg.startsWith("hast-") ||
                         pkg.startsWith("vfile") ||
                         pkg === "devlop" ||
                         pkg === "trim-lines" ||
@@ -147,11 +158,7 @@ export default defineConfig({
                         pkg === "longest-streak" ||
                         pkg === "zwitch" ||
                         pkg === "decode-named-character-reference" ||
-                        pkg === "character-entities" ||
-                        pkg === "comma-separated-tokens" ||
-                        pkg === "space-separated-tokens" ||
-                        pkg === "property-information" ||
-                        pkg === "html-url-attributes"
+                        pkg === "character-entities"
                     ) {
                         return "markdown-vendor";
                     }

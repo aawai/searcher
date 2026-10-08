@@ -38,6 +38,14 @@
         var(--space-markdown-heading-after);
 }
 
+.markdown ul {
+    list-style-type: disc;
+}
+
+.markdown ol {
+    list-style-type: decimal;
+}
+
 .markdown ul,
 .markdown ol {
     margin: var(--space-1) 0;

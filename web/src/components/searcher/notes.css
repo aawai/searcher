@@ -468,36 +468,63 @@
     background: color-mix(in srgb, var(--surface-solid) 50%, transparent);
 }
 
-.editor-view {
+.note-editor-body {
     display: flex;
+    flex-direction: column;
     flex: 1;
-    min-height: 360px;
-    gap: var(--space-row-gap);
+    min-width: 0;
+    margin-top: var(--space-row-gap);
 }
 
-.editor-view--split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-row-gap);
-}
-
-@media (max-width: 767px) {
-    .editor-view--split {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-row-gap);
-    }
-}
-
-.preview-pane {
-    background: color-mix(in srgb, var(--surface-soft) 40%, transparent);
-    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-    border-radius: var(--radius);
-    padding: var(--space-row-gap);
-    overflow-y: auto;
+.note-live-editor {
+    flex: 1;
+    min-width: 0;
     color: var(--foreground);
     font-size: var(--font-body-size);
-    line-height: 1.6;
+    line-height: var(--font-body-line-height);
+}
+
+.note-live-editor .ProseMirror {
+    min-height: calc(var(--control-touch-target) * 6);
+    padding: var(--space-row-gap);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--surface-soft) 40%, transparent);
+    outline: none;
+}
+
+.note-live-editor .ProseMirror:focus-visible {
+    border-color: var(--accent);
+    outline: 2px solid var(--ring);
+    outline-offset: var(--space-1);
+}
+
+.note-live-editor .ProseMirror > p:only-child:has(> br:only-child)::before {
+    content: "输入 Markdown 内容…";
+    color: var(--muted);
+    pointer-events: none;
+    position: absolute;
+}
+
+.note-live-editor li[data-item-type="task"] {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    list-style: none;
+}
+
+.note-live-editor li[data-item-type="task"] > input {
+    flex: none;
+    accent-color: var(--accent);
+}
+
+.note-live-editor .markdown-list-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.note-live-editor li > .markdown-list-item-content > p {
+    margin: 0;
 }
 
 .note-placeholder {
@@ -696,7 +723,4 @@
     min-width: 0;
     min-height: calc(var(--control-touch-target) * 6);
     resize: vertical;
-}
-.editor-view--split > * {
-    min-width: 0;
 }

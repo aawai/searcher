@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";
@@ -7,6 +7,11 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+
+async function sourceEditor(page: Page) {
+    await page.getByRole("tab", { name: "源码", exact: true }).first().click();
+    return page.locator("textarea.note-body-textarea").first();
+}
 
 Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -105,9 +110,7 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
             await createBtn.waitFor({ state: "visible" });
             await createBtn.click();
 
-            const bodyInput = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const bodyInput = await sourceEditor(page);
             await bodyInput.waitFor({ state: "visible" });
 
             // Check toolbar button titles
@@ -153,9 +156,7 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
     await t.step(
         "Note K inserts link and does not steal focus to global search",
         async () => {
-            const bodyInput = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const bodyInput = await sourceEditor(page);
             await bodyInput.waitFor({ state: "visible" });
 
             await bodyInput.fill("Check out omp documentation today");
@@ -205,9 +206,7 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
     await t.step(
         "Note B, I, strike (Shift+X), and S shortcuts execute correctly in editor",
         async () => {
-            const bodyInput = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const bodyInput = await sourceEditor(page);
             await bodyInput.waitFor({ state: "visible" });
 
             // 1. Bold (Control+B)

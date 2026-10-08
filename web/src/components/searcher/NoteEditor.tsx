@@ -1,5 +1,7 @@
 import {
     type KeyboardEvent,
+    lazy,
+    Suspense,
     useEffect,
     useId,
     useLayoutEffect,
@@ -24,6 +26,9 @@ import {
     SHORTCUTS,
 } from "../../features/shortcuts/shortcut-catalog.ts";
 import { COLOR_NAMES, NOTE_COLORS, type NoteItem } from "./NoteCard.tsx";
+import type { MarkdownEditorHandle } from "../../features/markdown-editor/types.ts";
+
+const NoteLivePreviewEditor = lazy(() => import("./NoteLivePreviewEditor.tsx"));
 
 type Draft = { body: string; title: string };
 type StoredDraft = {
@@ -53,15 +58,17 @@ export function NoteEditor(
     },
 ) {
     const editorId = useId();
-    const editBodyId = `note-body-textarea-edit-${editorId}`;
-    const splitBodyId = `note-body-textarea-split-${editorId}`;
+    const sourceBodyId = `note-body-source-${editorId}`;
     const [draft, setDraft] = useState<Draft>({
         body: note.body,
         title: note.title ?? "",
     });
     const [color, setColor] = useState<string>(note.color || "paper");
     const [status, setStatus] = useState<Status>("saved");
-    const [view, setView] = useState<"edit" | "preview" | "split">("edit");
+    const [view, setView] = useState<"live" | "source">("live");
+    const [draftReady, setDraftReady] = useState(false);
+    const [liveReady, setLiveReady] = useState(false);
+    const [editorError, setEditorError] = useState("");
     const [versions, setVersions] = useState<Version[] | null>(null);
     const [versionError, setVersionError] = useState("");
     const [conflict, setConflict] = useState<NoteItem | null>(null);
@@ -70,6 +77,7 @@ export function NoteEditor(
     const latestNoteRef = useRef(note);
     const draftRef = useRef(draft);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const liveEditorRef = useRef<MarkdownEditorHandle | null>(null);
     const composingRef = useRef(false);
     const pendingSelection = useRef<TextEditResult | null>(null);
     // Accepted conflict/save versions must not regress to a stale parent prop.
@@ -78,7 +86,7 @@ export function NoteEditor(
     }
     draftRef.current = draft;
     const mutationQueue = useRef<Promise<void>>(Promise.resolve());
-    // Preview may follow the composite blur in the same event; enqueue that draft only once.
+    // Composite blur and explicit save can submit the same draft in one event.
     const submittedDraftRef = useRef<Draft | undefined>(undefined);
 
     const key = "note:draft:" + note.id;
@@ -95,11 +103,16 @@ export function NoteEditor(
 
     useEffect(() => {
         let cancelled = false;
+        setDraftReady(false);
         const initialDraft = draftRef.current;
         void getLocal<StoredDraft>(key).catch(() => undefined).then(
             (stored) => {
                 // Device recovery must not overwrite input entered while IndexedDB loads.
-                if (cancelled || draftRef.current !== initialDraft) return;
+                if (cancelled) return;
+                if (draftRef.current !== initialDraft) {
+                    setDraftReady(true);
+                    return;
+                }
                 if (stored && stored.version >= note.version) {
                     setDraft({ body: stored.body, title: stored.title });
                     setStatus("unsynced");
@@ -107,6 +120,7 @@ export function NoteEditor(
                     setDraft({ body: note.body, title: note.title ?? "" });
                     setStatus("saved");
                 }
+                setDraftReady(true);
             },
         );
         return () => {
@@ -146,6 +160,10 @@ export function NoteEditor(
     }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function change(next: Draft) {
+        if (
+            next.body === draftRef.current.body &&
+            next.title === draftRef.current.title
+        ) return;
         draftRef.current = next;
         setDraft(next);
         setStatus("unsynced");
@@ -156,6 +174,10 @@ export function NoteEditor(
         }).catch(() => {
             // IndexedDB failure leaves the draft in memory; cloud autosave remains available.
         });
+        if (!composingRef.current) scheduleAutosave(next);
+    }
+
+    function scheduleAutosave(next: Draft) {
         clearTimeout(timer.current);
         timer.current = globalThis.setTimeout(
             () => void save(next, "autosave"),
@@ -163,7 +185,19 @@ export function NoteEditor(
         );
     }
 
+    function composition(composing: boolean) {
+        composingRef.current = composing;
+        if (composing) clearTimeout(timer.current);
+        else if (status === "unsynced") scheduleAutosave(draftRef.current);
+    }
+
     function command(command: MarkdownCommand) {
+        if (composingRef.current) return;
+        if (view === "live") {
+            liveEditorRef.current?.executeCommand(command);
+            liveEditorRef.current?.focus();
+            return;
+        }
         const textarea = textareaRef.current;
         if (!textarea || composingRef.current) return;
         const result = applyMarkdownCommand(
@@ -176,69 +210,130 @@ export function NoteEditor(
         change({ ...draftRef.current, body: result.value });
     }
 
-    function bodyKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    function bodyKeyDown(event: KeyboardEvent<HTMLElement>) {
         if (
             composingRef.current || event.nativeEvent.isComposing ||
             event.keyCode === 229
         ) return;
         if (matchesShortcut(event, SHORTCUTS.noteSave.binding)) {
             event.preventDefault();
+            event.stopPropagation();
             void save(undefined, "manual");
             return;
         }
         if (matchesShortcut(event, SHORTCUTS.noteBold.binding)) {
             event.preventDefault();
+            event.stopPropagation();
             command("bold");
             return;
         }
         if (matchesShortcut(event, SHORTCUTS.noteItalic.binding)) {
             event.preventDefault();
+            event.stopPropagation();
             command("italic");
             return;
         }
         if (matchesShortcut(event, SHORTCUTS.noteLink.binding)) {
             event.preventDefault();
+            event.stopPropagation();
             command("link");
             return;
         }
         if (matchesShortcut(event, SHORTCUTS.noteStrike.binding)) {
             event.preventDefault();
+            event.stopPropagation();
             command("strike");
             return;
         }
     }
 
-    function bodyEditor(id: string) {
+    function bodyEditor() {
         return (
             <div
                 className="note-body-composite"
+                onKeyDownCapture={bodyKeyDown}
                 onBlur={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                    const composite = event.currentTarget;
+                    // Node commands can detach the focused paragraph before restoring focus.
+                    // Resolve the composite boundary after the command's DOM changes settle.
+                    globalThis.setTimeout(() => {
+                        const target = document.activeElement;
+                        const modeSwitch = target?.closest(
+                            "[data-note-mode-switch]",
+                        );
+                        if (
+                            submittedDraftRef.current === draftRef.current ||
+                            !composite.isConnected ||
+                            (draftRef.current.body ===
+                                    latestNoteRef.current.body &&
+                                draftRef.current.title ===
+                                    (latestNoteRef.current.title ?? "")) ||
+                            composite.contains(target)
+                        ) return;
+                        if (
+                            modeSwitch &&
+                            composite.closest(".note-editor")?.contains(
+                                modeSwitch,
+                            )
+                        ) return;
                         void save(undefined, "manual");
-                    }
+                    });
                 }}
             >
-                <NoteMarkdownToolbar onCommand={command} platform={platform} />
-                <label className="sr-only" htmlFor={id}>Markdown 内容</label>
-                <Textarea
-                    ref={textareaRef}
-                    id={id}
-                    placeholder="输入 Markdown 内容…"
-                    value={draft.body}
-                    onChange={(event) =>
-                        change({
-                            ...draftRef.current,
-                            body: event.target.value,
-                        })}
-                    onCompositionStart={() => {
-                        composingRef.current = true;
-                    }}
-                    onCompositionEnd={() => {
-                        composingRef.current = false;
-                    }}
-                    onKeyDown={bodyKeyDown}
-                    className="note-body-textarea"
+                <NoteMarkdownToolbar
+                    onCommand={command}
+                    platform={platform}
+                    disabled={!draftReady || (view === "live" && !liveReady)}
                 />
+                {view === "live"
+                    ? (draftReady
+                        ? (
+                            <Suspense
+                                fallback={<p role="status">正在加载编辑器…</p>}
+                            >
+                                <NoteLivePreviewEditor
+                                    body={draft.body}
+                                    editorRef={liveEditorRef}
+                                    onChange={(body) =>
+                                        change({ ...draftRef.current, body })}
+                                    onComposition={composition}
+                                    onReady={setLiveReady}
+                                    onError={() => {
+                                        setEditorError(
+                                            "所见即所得编辑器加载或解析失败；正文已保留，请使用源码编辑。",
+                                        );
+                                        setView("source");
+                                    }}
+                                />
+                            </Suspense>
+                        )
+                        : <p role="status">正在恢复本地草稿…</p>)
+                    : (
+                        <>
+                            <label className="sr-only" htmlFor={sourceBodyId}>
+                                Markdown 内容
+                            </label>
+                            <Textarea
+                                ref={textareaRef}
+                                id={sourceBodyId}
+                                disabled={!draftReady}
+                                placeholder="输入 Markdown 内容…"
+                                value={draft.body}
+                                onChange={(event) =>
+                                    change({
+                                        ...draftRef.current,
+                                        body: event.target.value,
+                                    })}
+                                onCompositionStart={() => {
+                                    composition(true);
+                                }}
+                                onCompositionEnd={() => {
+                                    composition(false);
+                                }}
+                                className="note-body-textarea"
+                            />
+                        </>
+                    )}
             </div>
         );
     }
@@ -247,6 +342,7 @@ export function NoteEditor(
         next?: Draft,
         origin: "autosave" | "manual" | "conflict_resolution" = "autosave",
     ) {
+        if (composingRef.current) return mutationQueue.current;
         clearTimeout(timer.current);
         timer.current = undefined;
         const data = next ?? draftRef.current;
@@ -265,7 +361,18 @@ export function NoteEditor(
                     }),
                 );
                 latestNoteRef.current = updated;
-                await deleteLocal(key).catch(() => {});
+                if (
+                    draftRef.current.body === data.body &&
+                    draftRef.current.title === data.title
+                ) {
+                    await deleteLocal(key).catch(() => {});
+                } else {
+                    await setLocal(key, {
+                        ...draftRef.current,
+                        version: updated.version,
+                        updatedAt: Date.now(),
+                    }).catch(() => {});
+                }
                 onSaved(updated);
                 if (
                     draftRef.current.body === data.body &&
@@ -419,10 +526,8 @@ export function NoteEditor(
                     onKeyDown={(event) => {
                         if (event.key === "Enter") {
                             event.preventDefault();
-                            const targetId = view === "split"
-                                ? splitBodyId
-                                : editBodyId;
-                            document.getElementById(targetId)?.focus();
+                            if (view === "live") liveEditorRef.current?.focus();
+                            else textareaRef.current?.focus();
                         }
                     }}
                 />
@@ -430,20 +535,20 @@ export function NoteEditor(
             <Tabs
                 value={view}
                 onValueChange={(id) => {
-                    const next = id as "edit" | "preview" | "split";
-                    if (
-                        next === "preview" &&
-                        submittedDraftRef.current !== draftRef.current
-                    ) void save(undefined, "manual");
-                    setView(next);
+                    if (composingRef.current) return;
+                    setEditorError("");
+                    setView(id as "live" | "source");
                 }}
                 className="flex-1 flex flex-col min-h-0"
             >
                 <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
                     <TabsList>
-                        <TabsTrigger value="edit">编辑</TabsTrigger>
-                        <TabsTrigger value="preview">预览</TabsTrigger>
-                        <TabsTrigger value="split">分栏</TabsTrigger>
+                        <TabsTrigger value="live" data-note-mode-switch>
+                            所见即所得
+                        </TabsTrigger>
+                        <TabsTrigger value="source" data-note-mode-switch>
+                            源码
+                        </TabsTrigger>
                     </TabsList>
                     <div className="flex items-center gap-3">
                         <p
@@ -469,30 +574,14 @@ export function NoteEditor(
                     </div>
                 </div>
 
-                <TabsContent
-                    value="edit"
-                    className="flex-1 flex flex-col mt-3 min-h-[300px]"
-                >
-                    {bodyEditor(editBodyId)}
+                {editorError && (
+                    <p role="alert" className="error">{editorError}</p>
+                )}
+                <TabsContent value="live" className="note-editor-body">
+                    {view === "live" && bodyEditor()}
                 </TabsContent>
-
-                <TabsContent
-                    value="preview"
-                    className="flex-1 mt-3 min-h-[300px] overflow-y-auto"
-                >
-                    <div className="preview-pane h-full">
-                        {markdown(draft.body)}
-                    </div>
-                </TabsContent>
-
-                <TabsContent
-                    value="split"
-                    className="flex-1 editor-view--split mt-3 min-h-[300px]"
-                >
-                    {bodyEditor(splitBodyId)}
-                    <div className="preview-pane flex-1 overflow-y-auto">
-                        {markdown(draft.body)}
-                    </div>
+                <TabsContent value="source" className="note-editor-body">
+                    {view === "source" && bodyEditor()}
                 </TabsContent>
             </Tabs>
             <div className="note-editor-footer">

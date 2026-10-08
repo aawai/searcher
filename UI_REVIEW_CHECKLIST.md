@@ -47,6 +47,44 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #108 Notes Live Preview 验收（2026-10-08）
+
+- [x] 默认 Live + Source；消费 #110 单一 foundation，无第二套
+      parser/serializer/framework theme；Notes schema/API/version contract
+      不变。README、DESIGN_SYSTEM、MARKDOWN_EDITOR 与 CHANGELOG 已更新。
+- [x] 390×844 / 768×1024 / 1024×768 / 1440×900 × light/dark × Zen/Widgets 共 16
+      组实页截图；实际 data-theme 与 Home layout 校验，viewport/editor 横向
+      overflow 均为 0。H1/H2/H3/body computed font-size 为
+      18.9/16.8/15.4/14px，正文行高 21.98px。
+- [x] 同一 NoteEditor surface 的 Live 与真实冲突 NoteMarkdown 使用相同
+      fixture，对 18 种 Markdown element 比较
+      font/line-height/weight/color/margin/padding/list
+      marker/background/radius；light/dark × 五种便签颜色共 10 组无差异。任务
+      checkbox 的编辑/只读区别是交互 contract。
+- [x] axe-core 实页 NoteEditor light/dark 0 violations；标题、工具栏、任务
+      checkbox、模式 Tab 与焦点边界验收通过。
+- [x] Chromium CDP Input.imeSetComposition → Input.insertText：组合期间等待
+      1800ms 无 PATCH，提交后仅一个
+      autosave，正文为“起点中文组合”。不是人工物理输入法验收。
+- [x] 两个实体实例同时存在；关闭其一后另一实例的正文、选区与 undo
+      继续有效，无串稿。20 次打开/关闭后无 ProseMirror DOM 留存；排除自动化
+      ElementHandle 留存后 GC 样本第 5/10/15/20 次均为 353 nodes / 198 listeners
+      / 3 documents，未线性增长。
+- [x] 640 tests / 51 steps 通过；完整 test:workspace 通过；额外
+      bundle-loading、route-style-stability、Notes/Ask shortcuts 通过。Live E2E
+      包含 9500 字保存与 10001
+      字拒绝后草稿仍完整。build/typecheck、lint/format、check:ui、check:bundle
+      通过。
+- [x] Home initial gzip 251076 bytes；shared editor async 141117 bytes（<150
+      KiB），Notes-only 1529 bytes（<40 KiB）；Notes graph 无 Documents-only
+      module、initial graph 无 editor、framework 无重复版本。
+- [x] 脚本校准记录：模式/冲突 locator 改为最终语义；Source 等待 IndexedDB
+      recovery 的 enabled 状态。真实回归暴露并修复云端替换后的延迟 blur
+      重复提交、旧标题请求删除新正文草稿；排版比较发现 Tabs 行高继承，改用
+      canonical body Token。首次 workspace Snap resize timeout
+      在未修改其代码的完整重跑中通过。React Doctor 扫描为 71/100，39
+      项均不位于本次编辑器变更；未扩大范围修改存量问题。
+
 ## Issue #102 M6 Widgets Entity Windows / Persistence 验收（2026-10-08）
 
 - [x] 复用 DesktopWindow、geometry、Dock、Overview 与 Snap；Library singleton

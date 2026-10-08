@@ -112,6 +112,18 @@ function createChangeOriginPlugin(
     };
 }
 
+const softBreakPresentation = $prose(() =>
+    new Plugin({
+        props: {
+            nodeViews: {
+                // CommonMark displays soft breaks as spaces; Notes renders both kinds as breaks.
+                // Keep the schema attributes intact so serialization retains the original semantics.
+                hardbreak: () => ({ dom: document.createElement("br") }),
+            },
+        },
+    })
+);
+
 function createDomEventsPlugin(options?: MarkdownEditorOptions) {
     return $prose(() => {
         return new Plugin({
@@ -194,6 +206,8 @@ export async function createMarkdownEditor(
             .use(remarkImageSanitizer)
             .use(originController.plugin)
             .use(domEvents);
+
+        if (options?.preserveSoftBreaks) builder.use(softBreakPresentation);
 
         if (options?.plugins && options.plugins.length > 0) {
             builder.use(options.plugins);

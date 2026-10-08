@@ -6,5 +6,7 @@
     "maxInitialGzipBytes": 307200,
     "maxEntryChunkRawBytes": 350000,
     "maxEntryChunkGzipBytes": 105000,
-    "minGzipReductionRatio": 0.30
+    "minGzipReductionRatio": 0.30,
+    "maxSharedEditorGzipBytes": 153600,
+    "maxNotesEditorGzipBytes": 40960
 }

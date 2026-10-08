@@ -7,6 +7,7 @@ import {
 import { Window } from "happy-dom";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 import { markdownFixtures } from "./fixtures/markdown-fixtures.ts";
 import {
@@ -76,6 +77,68 @@ function stripPositions(node: unknown): unknown {
 }
 
 const mdastProcessor = remark().use(remarkGfm);
+
+Deno.test("Notes-compatible foundation preserves soft/hard breaks and supported Markdown", async (t) => {
+    const env = createDomEnvironment();
+    const processor = remark().use(remarkGfm).use(remarkBreaks);
+    try {
+        const fixtures = [...markdownFixtures, {
+            name: "soft-newlines",
+            category: "breaks",
+            input: "A\nB\nC",
+        }, {
+            name: "notes-9500-characters",
+            category: "stress",
+            input: "中文 😀\n".repeat(1600).slice(0, 9500),
+        }];
+        for (const fixture of fixtures) {
+            await t.step(fixture.name, async () => {
+                const events: MarkdownEditorEvent[] = [];
+                const editor = await createMarkdownEditor(
+                    env.root,
+                    fixture.input,
+                    (event) => events.push(event),
+                    { preserveSoftBreaks: true },
+                );
+                try {
+                    const expected = fixture.expectedCanonical ?? fixture.input;
+                    if (fixture.name === "soft-newlines") {
+                        assertEquals(
+                            env.root.querySelectorAll(
+                                "br:not(.ProseMirror-trailingBreak)",
+                            ).length,
+                            2,
+                            "Both soft and hard breaks must render as line breaks",
+                        );
+                    }
+                    assertEquals(
+                        stripPositions(
+                            processor.runSync(
+                                processor.parse(editor.getMarkdown()),
+                            ),
+                        ),
+                        stripPositions(
+                            processor.runSync(processor.parse(expected)),
+                        ),
+                    );
+                    assertEquals(events, []);
+                    editor.view.dispatch(
+                        editor.view.state.tr.insertText(
+                            "追加",
+                            editor.view.state.doc.content.size - 1,
+                        ),
+                    );
+                    assertEquals(events.at(-1)?.origin, "user");
+                    assertStringIncludes(events.at(-1)?.markdown ?? "", "追加");
+                } finally {
+                    await editor.destroy();
+                }
+            });
+        }
+    } finally {
+        await env.cleanup();
+    }
+});
 
 Deno.test("Phase 1: Event origins, no user dirty on init, and replace appended origin preserved", async () => {
     const env = createDomEnvironment();
