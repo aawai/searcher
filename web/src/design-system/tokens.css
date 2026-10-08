@@ -210,6 +210,7 @@
     --document-readable-width: 720px;
     --document-outline-width: 260px;
     --document-outline-compact-height: 240px;
+    --document-editor-min-content-height: 240px;
     --workspace-inset: var(--space-4);
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
     --workspace-mobile-height: 820px;
