@@ -9,6 +9,19 @@ import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 
 // Run with deno task test:workspace; the task builds the real production frontend.
+
+async function sourceEditor(page: Page) {
+    await page.getByRole("tab", { name: "源码", exact: true }).first().click();
+    const source = page.locator("textarea.note-body-textarea").first();
+    await page.waitForFunction(() => {
+        const field = document.querySelector<HTMLTextAreaElement>(
+            "textarea.note-body-textarea",
+        );
+        return field && !field.disabled;
+    });
+    return source;
+}
+
 Deno.test("production workspace contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher_workspace_" });
@@ -507,9 +520,7 @@ Deno.test("production workspace contracts", async (t) => {
             createdNoteId = initialNotes[0].id;
 
             // Type in title and body
-            const bodyInput = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const bodyInput = await sourceEditor(page);
             await titleInput.fill("Local Draft Title");
             await bodyInput.fill(
                 "Local unpersisted draft content",
@@ -549,6 +560,7 @@ Deno.test("production workspace contracts", async (t) => {
                     .click();
             }
             await titleInput.waitFor();
+            await sourceEditor(page);
 
             // Draft content was restored from local draft!
             assertEquals(

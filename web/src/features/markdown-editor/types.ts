@@ -73,6 +73,8 @@ export interface MarkdownEditorHandle {
 }
 
 export interface MarkdownEditorOptions {
+    /** Display soft newlines as line breaks, without changing their serialized Markdown. */
+    preserveSoftBreaks?: boolean;
     /** Additional Milkdown plugins to register during editor initialization */
     plugins?: MilkdownPlugin[];
     /** Callback fired when editor view receives focus */

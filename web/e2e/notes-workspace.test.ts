@@ -10,6 +10,12 @@ import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 
 // Independent regression test suite for Issue #44 & #43 Notes contracts
 // Run with: NODE_ENV=test deno test -A web/e2e/notes-workspace.test.ts
+
+async function sourceEditor(page: Page) {
+    await page.getByRole("tab", { name: "源码", exact: true }).first().click();
+    return page.locator("textarea.note-body-textarea").first();
+}
+
 Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher_notes_e2e_" });
@@ -730,9 +736,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const card = page.locator(".notes-workspace-list .note-card")
                 .first();
             await card.locator(".note-title").click();
-            const input = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const input = await sourceEditor(page);
             await input.waitFor({ state: "visible" });
             const writes: Array<{ body: string; origin: string }> = [];
             const capture = (request: import("playwright").Request) => {
@@ -840,20 +844,23 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 await input.press("Meta+i");
                 assertEquals(await input.inputValue(), "*输入中文*");
                 await input.fill("A\nB\nC");
-                await page.getByRole("tab", { name: "预览", exact: true })
+                await page.getByRole("tab", { name: "所见即所得", exact: true })
                     .click();
                 await page.waitForFunction(() =>
                     document.querySelector(".save-state")?.textContent ===
                         "已保存"
                 );
-                assertEquals(await page.locator(".preview-pane br").count(), 2);
+                assertEquals(
+                    await page.locator(".note-live-editor").innerText(),
+                    "A\nB\nC",
+                );
                 assertEquals(
                     await page.locator(".note-markdown-toolbar:visible")
                         .count(),
-                    0,
+                    1,
                 );
                 assertEquals(writes.at(-1)?.body, "A\nB\nC");
-                assertEquals(writes.at(-1)?.origin, "manual");
+                assertEquals(writes.at(-1)?.origin, "autosave");
                 await ensureNotesRoot(page);
                 await card.hover();
                 await card.getByRole("button", { name: "展开", exact: true })
@@ -877,7 +884,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     );
 
     await t.step(
-        "Notes #78: coarse-pointer toolbar touch targets, split and read-only task rendering",
+        "Notes Source/Live: coarse-pointer toolbar touch targets and editable tasks",
         async () => {
             const touch = await browser.newContext({
                 viewport: { width: 390, height: 844 },
@@ -944,15 +951,16 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     ),
                     true,
                 );
-                await mobile.locator(
-                    '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-                ).first().fill(
+                await (await sourceEditor(mobile)).fill(
                     "- [ ] 未完成\n- [x] 已完成\n\n[本地链接](" + origin + ")",
                 );
-                await mobile.getByRole("tab", { name: "分栏", exact: true })
+                await mobile.getByRole("tab", {
+                    name: "所见即所得",
+                    exact: true,
+                })
                     .click();
                 const checkboxes = mobile.locator(
-                    '.preview-pane input[type="checkbox"]',
+                    '.note-live-editor input[type="checkbox"]',
                 );
                 assertEquals(
                     await checkboxes.evaluateAll((elements) =>
@@ -967,9 +975,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                             };
                         })
                     ),
-                    [{ checked: false, disabled: true, hasName: true }, {
+                    [{ checked: false, disabled: false, hasName: true }, {
                         checked: true,
-                        disabled: true,
+                        disabled: false,
                         hasName: true,
                     }],
                 );
@@ -1037,9 +1045,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             assertStringIncludes(await saveState.textContent() ?? "", "已保存");
 
             // 1. Type in body -> transitions to "未同步至云端"
-            const bodyInput = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const bodyInput = await sourceEditor(page);
             await bodyInput.fill(
                 "Fresh edited body for autosave lifecycle test",
             );
@@ -1112,15 +1118,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     await page.locator(".notes-workspace-list .note-card")
                         .first().locator(".note-title").click();
                 }
+                await sourceEditor(page);
                 await page.waitForFunction(() =>
                     document.querySelector<HTMLTextAreaElement>(
                         "textarea.note-body-textarea",
                     )?.value === "**Trigger error state body content**"
                 );
                 // A recovered draft has no debounce timer: trigger save via blur
-                const recoveredInput = page.locator(
-                    '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-                ).first();
+                const recoveredInput = await sourceEditor(page);
                 await recoveredInput.focus();
                 await recoveredInput.blur();
 
@@ -1207,9 +1212,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             });
 
             // 2. Local editor tries to save its changes (with old version -> 409 Conflict)
-            const bodyInput = page.locator(
-                '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-            ).first();
+            const bodyInput = await sourceEditor(page);
             await bodyInput.fill("Local conflicting edit body");
             await bodyInput.blur();
 
@@ -1397,9 +1400,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 }).first().click();
                 await versionsSection.waitFor({ state: "detached" });
                 assertEquals(
-                    await page.locator(
-                        '[id^="note-body-textarea-edit-"], textarea.note-body-textarea',
-                    ).first().inputValue(),
+                    await (await sourceEditor(page)).inputValue(),
                     historical.body,
                 );
                 const restoredBody = await page.evaluate(

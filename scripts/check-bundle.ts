@@ -25,6 +25,8 @@ interface BundleBudget {
     maxEntryChunkRawBytes?: number;
     maxEntryChunkGzipBytes?: number;
     minGzipReductionRatio: number;
+    maxSharedEditorGzipBytes: number;
+    maxNotesEditorGzipBytes: number;
 }
 
 interface FileMetric {
@@ -195,6 +197,10 @@ export function checkBundle(rootDir = Deno.cwd()): {
         "WallpaperMotionInspector",
         "assistant-vendor",
         "markdown-vendor",
+        "markdown-renderer-vendor",
+        "editor-vendor",
+        "src/features/markdown-editor/runtime",
+        "NoteLivePreviewEditor",
     ];
 
     for (const key of initialGraphKeys) {
@@ -312,6 +318,106 @@ export function checkBundle(rootDir = Deno.cwd()): {
                 `    + ${rm.path.padEnd(43)} ${
                     rm.rawBytes.toString().padStart(7)
                 } B │ gzip: ${rm.gzipBytes.toString().padStart(6)} B`,
+            );
+        }
+    }
+
+    // Notes consumes the same lazy foundation as Documents, never its presentation/runtime.
+    const buildReport = JSON.parse(
+        readFileSync(resolve(distDir, "bundle-report.json"), "utf-8"),
+    ) as Record<string, {
+        modules: Array<{ id: string; renderedLength: number }>;
+    }>;
+    const staticFiles = (entry: string) => {
+        const keys = new Set<string>();
+        const pending = [entry];
+        const files = new Set<string>();
+        while (pending.length) {
+            const key = pending.pop()!;
+            if (keys.has(key)) continue;
+            keys.add(key);
+            const chunk = manifest[key];
+            if (!chunk) throw new Error("Missing manifest dependency: " + key);
+            if (chunk.file.endsWith(".js")) files.add(chunk.file);
+            pending.push(...(chunk.imports ?? []));
+        }
+        return files;
+    };
+    const sharedFiles = staticFiles("src/features/markdown-editor/runtime.ts");
+    const notesFiles = staticFiles(
+        "src/components/searcher/NoteLivePreviewEditor.tsx",
+    );
+    const sharedMetrics = [...sharedFiles].filter((file) =>
+        !initialFilesSet.has(file)
+    ).map((file) => getFileMetric(distDir, file));
+    const notesMetrics = [...notesFiles].filter((file) =>
+        !initialFilesSet.has(file) && !sharedFiles.has(file)
+    ).map((file) => getFileMetric(distDir, file));
+    console.log("\n--- Notes Live Preview Budget (#108) ---");
+    for (
+        const [label, metrics, maximum] of [
+            [
+                "Shared editor async runtime",
+                sharedMetrics,
+                budget.maxSharedEditorGzipBytes,
+            ],
+            [
+                "Notes-only editor increment",
+                notesMetrics,
+                budget.maxNotesEditorGzipBytes,
+            ],
+        ] as const
+    ) {
+        const raw = metrics.reduce((sum, metric) => sum + metric.rawBytes, 0);
+        const gzip = metrics.reduce((sum, metric) => sum + metric.gzipBytes, 0);
+        console.log(
+            label + ": " + raw + " B raw / " + gzip + " B gzip (limit " +
+                maximum + " B)",
+        );
+        for (const metric of metrics) {
+            console.log(
+                "  " + metric.path + ": " + metric.rawBytes + " B raw / " +
+                    metric.gzipBytes + " B gzip",
+            );
+        }
+        if (gzip > maximum) {
+            errors.push(
+                label + " exceeds gzip budget: " + gzip + " > " + maximum,
+            );
+        }
+    }
+    const documentsOnly =
+        /features\/documents\/(?:DocumentEditor|DocumentOutline|editor-extensions|document-pagination|document-print|paper)/;
+    const frameworkVersions = new Map<string, Set<string>>();
+    for (const [file, chunk] of Object.entries(buildReport)) {
+        for (const module of chunk.modules) {
+            if (!module.renderedLength) continue;
+            const framework = module.id.match(
+                /\.deno\/((?:@milkdown\+|prosemirror-)[^/@]+)@([^/]+)/,
+            );
+            if (framework) {
+                const versions = frameworkVersions.get(framework[1]) ??
+                    new Set<string>();
+                versions.add(framework[2]);
+                frameworkVersions.set(framework[1], versions);
+                if (initialFilesSet.has(file)) {
+                    errors.push(
+                        "Editor framework in initial graph: " + module.id,
+                    );
+                }
+            }
+            if (notesFiles.has(file) && documentsOnly.test(module.id)) {
+                errors.push(
+                    "Documents-only runtime in Notes graph: " + module.id,
+                );
+            }
+        }
+    }
+    for (const [pkg, versions] of frameworkVersions) {
+        if (versions.size > 1) {
+            errors.push(
+                "Duplicated framework versions: " + pkg + " " +
+                    [...versions].join(", "),
             );
         }
     }

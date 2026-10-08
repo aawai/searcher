@@ -5,7 +5,7 @@
 问答、壁纸和跨设备偏好。管理员由交互式 CLI 创建，不存在默认管理员。
 M0A 编辑技术验证入口：`/design-lab/markdown-editor`，仅本地演示，不保存或替换便签。
 验证结论、bundle 口径和 #110 输入约束见 [M0A 报告](MARKDOWN_EDITOR_M0A.md)。
-共享编辑接口与 consumer/lazy/styling 契约见报告的 [Shared Foundation](MARKDOWN_EDITOR_M0A.md#110-shared-foundation)；当前便签仍使用原有 textarea 产品体验。
+共享编辑接口与 consumer/lazy/styling 契约见 [MARKDOWN_EDITOR.md](MARKDOWN_EDITOR.md)；便签默认使用共享 foundation 的 Live Preview，保留 textarea Source Mode。
 
 
 ## 主页外观
@@ -54,7 +54,7 @@ Widgets 窗口布局按登录用户保存在当前设备 IndexedDB（`searcher:d
 
 便签工作区根视图默认紧凑显示，点击展开/折叠按钮可原地浏览正文，点击卡片主体进入编辑器。展开状态只在当前工作区生命周期内有效，不参与自动保存，不改变便签版本或首页/Zen 的展开与位置。无搜索词时，“置顶与首页固定”与“其他便签”互斥；搜索覆盖全部便签，每条只展示一次。
 
-便签正文仍是 Markdown：编辑和分栏视图提供格式工具栏，可插入标题、粗体、斜体、删除线、代码、列表、任务、引用、链接、分隔线和表格模板。格式操作保留选区，通过现有 1500ms 自动保存与本地草稿链路同步；焦点在工具栏和正文之间移动不提前保存，离开正文编辑区或切到预览时手动保存。卡片、预览、冲突与历史版本统一显示单换行；任务 checkbox 只读，不改变正文，窄工作区分栏上下排列。
+便签默认使用所见即所得 Live Preview，也可切换至 textarea 源码模式；打开、切换模式或接受云端正文不会改写 Markdown 或触发保存，只有实际编辑才序列化。两种模式共用格式工具栏和本地快捷键；Live 任务 checkbox 可编辑，卡片、冲突和历史版本保持只读。正文编辑在 1500ms 后自动保存，中文组合输入结束后才保存；工具栏与正文之间移动焦点不提交，真正离开编辑组合区域或 Ctrl/Cmd+S 手动保存。云端冲突、覆盖/合并、版本恢复和本地草稿沿用原 Notes contract；Notes 不使用 Documents 分页、资产和 outline 插件。
 
 快捷键与搜索快捷命令的完整说明统一在 **设置 → 快捷键**（`/settings/shortcuts`），无需登录即可查阅，按当前平台展示键位与生效上下文。编辑器本地操作优先于首页聚焦搜索，不提供快捷键自定义或同步。开发时在 `web/src/features/shortcuts/shortcut-catalog.ts` 维护逻辑 binding 和命令 target；业务组件保留事件处理归属，页面和上下文提示消费同一 catalog。
 
@@ -106,7 +106,7 @@ deno task test:routing
 
 `test:routing` 先构建生产前端，再启动隔离的真实 Hono 服务、内存数据库与临时资源目录，验证直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航；不连接开发实例或使用真实账户。
 
-`deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序、Bento、workspace-contract 与 workspace-matrix 八套实页回归，使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的 A–F 分层响应式、主题、壁纸、窗口、持久化与 tablet contract；不会使用真实账户或开发数据库。
+`deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序、Bento、workspace-contract 与 workspace-matrix 及 Notes Live/Source 两套编辑实页回归（无副作用切换、IME、选区、undo/redo、任务列表、409 和恢复），使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的 A–F 分层响应式、主题、壁纸、窗口、持久化与 tablet contract；不会使用真实账户或开发数据库。
 
 `deno task test:documents` 构建生产前端，使用隔离服务、内存数据库和临时图片执行 Documents 的 390×844、768×1024、1024×768、1440×900 × Zen/Widgets × light/dark 三模式矩阵、Library 网络隔离与摘要契约、短屏输入保存，以及 100k Markdown / 200 headings / 50 images / 20 tables / 30 PageBreak 的大文档完整性验收；Bundle CI 自动运行同一套测试。390×400 短屏用于模拟软键盘缩小可用视口，不替代真机输入法测试。
 

@@ -52,9 +52,10 @@ const commands: ReadonlyArray<
     ["horizontalRule", "分隔线", Minus],
 ];
 
-export function NoteMarkdownToolbar({ onCommand, platform }: {
+export function NoteMarkdownToolbar({ onCommand, platform, disabled }: {
     onCommand: (command: MarkdownCommand) => void;
     platform?: ShortcutPlatform;
+    disabled?: boolean;
 }) {
     return (
         <div
@@ -73,10 +74,11 @@ export function NoteMarkdownToolbar({ onCommand, platform }: {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        disabled={disabled}
                         aria-label={label}
                         title={shortcut ? `${label} (${shortcut})` : label}
                         onPointerDown={(event) => {
-                            // Keep the textarea selection and avoid a premature blur save.
+                            // Keep the editor selection and avoid a premature blur save.
                             if (event.button === 0) event.preventDefault();
                         }}
                         onClick={() => onCommand(command)}

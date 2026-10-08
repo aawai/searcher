@@ -73,19 +73,20 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 
 ### Notes Markdown editor
 
-- Textarea 与 NoteMarkdownToolbar 构成一个 focus composite；工具栏只发送纯文本
-  command，选区在受控值提交后恢复。内部焦点切换不保存，离开 composite 或切到
-  Preview flush，标题 blur 与 Ctrl/Cmd+S 保持 manual save。IME composition
-  不执行格式快捷键，Tab 保持导航。
-- Toolbar 复用 Button ghost/icon 与 lucide；Button 的 compact / coarse-pointer
-  touch geometry 仍由 primitives.css 拥有。notes.css
-  只管理工具栏换行、正文布局；Notes Workspace 的 split 在 notes-workspace.css
-  退化为上下布局。
-- NoteCard、Preview、Split、Conflict、Version 共用 NoteMarkdown 的
-  GFM、soft-break、sanitize 与安全链接策略；不启用 raw HTML。markdown.css 管
-  inline/fenced code、task、table、quote、HR、image，pre/table
-  可键盘聚焦并局部滚动；任务状态有可访问名称且保持只读。Markdown
-  string、API、数据库与版本模型不变。
+- 默认 Live Preview，Source Mode 保留 textarea；两者和 NoteMarkdownToolbar
+  使用一个 focus composite。仅真正离开组合区域
+  flush；模式切换、初始化和云端替换不保存。IME composition
+  期间不执行格式命令或提交半成品。
+- NoteEditor 持有 canonical Markdown、1500ms autosave、IndexedDB 草稿及 mutation
+  queue；NoteLivePreviewEditor 仅持有共享 runtime 的实例生命周期、选区与
+  composition bridge，不拥有云端业务。详见
+  [MARKDOWN_EDITOR.md](MARKDOWN_EDITOR.md)。
+- Live 与同一 NoteEditor surface 的只读 NoteMarkdown 共用 markdown.css
+  的标题、列表、table、code、quote、inline typography 和安全策略；不加载
+  framework theme。Live task checkbox 可编辑，卡片/冲突/历史只读。Notes chrome
+  由 notes.css、Host 布局由 notes-workspace.css 拥有。
+- Toolbar 使用 Button ghost/icon、lucide 与 canonical touch geometry；不引入
+  Documents paper、分页、图片上传或 outline。
 
 ### M0A Markdown editor spike
 
