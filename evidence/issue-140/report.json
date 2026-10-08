@@ -1,0 +1,627 @@
+{
+  "matrix": [
+    {
+      "style": "zen",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "metrics": {
+        "theme": "light",
+        "editor": true,
+        "bodyHeight": 389,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 356
+      },
+      "liveShot": "zen-light-390x844-live.webp",
+      "sourceShot": "zen-light-390x844-source.webp",
+      "historyShot": "zen-light-390x844-history.webp"
+    },
+    {
+      "style": "zen",
+      "theme": "light",
+      "width": 768,
+      "height": 1024,
+      "metrics": {
+        "theme": "light",
+        "editor": true,
+        "bodyHeight": 661,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 366
+      },
+      "liveShot": "zen-light-768x1024-live.webp",
+      "sourceShot": "zen-light-768x1024-source.webp",
+      "historyShot": "zen-light-768x1024-history.webp"
+    },
+    {
+      "style": "zen",
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "metrics": {
+        "theme": "light",
+        "editor": true,
+        "bodyHeight": 537,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 366
+      },
+      "liveShot": "zen-light-1440x900-live.webp",
+      "sourceShot": "zen-light-1440x900-source.webp",
+      "historyShot": "zen-light-1440x900-history.webp"
+    },
+    {
+      "style": "zen",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "metrics": {
+        "theme": "dark",
+        "editor": true,
+        "bodyHeight": 389,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 356
+      },
+      "liveShot": "zen-dark-390x844-live.webp",
+      "sourceShot": "zen-dark-390x844-source.webp",
+      "historyShot": "zen-dark-390x844-history.webp"
+    },
+    {
+      "style": "zen",
+      "theme": "dark",
+      "width": 768,
+      "height": 1024,
+      "metrics": {
+        "theme": "dark",
+        "editor": true,
+        "bodyHeight": 661,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 366
+      },
+      "liveShot": "zen-dark-768x1024-live.webp",
+      "sourceShot": "zen-dark-768x1024-source.webp",
+      "historyShot": "zen-dark-768x1024-history.webp"
+    },
+    {
+      "style": "zen",
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "metrics": {
+        "theme": "dark",
+        "editor": true,
+        "bodyHeight": 537,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 366
+      },
+      "liveShot": "zen-dark-1440x900-live.webp",
+      "sourceShot": "zen-dark-1440x900-source.webp",
+      "historyShot": "zen-dark-1440x900-history.webp"
+    },
+    {
+      "style": "widgets",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "metrics": {
+        "theme": "light",
+        "preferences": {
+          "defaultEngine": "bing",
+          "theme": "light",
+          "style": "widgets",
+          "accent": "blue",
+          "searchShape": "rounded",
+          "searchOpacity": 1,
+          "backgroundImage": null,
+          "wallpaperPresentations": {},
+          "canvasMotion": "off",
+          "canvasMotionLevel": "soft",
+          "searchTarget": "same",
+          "searchHistoryEnabled": false,
+          "webAppHomeLimit": 12,
+          "webAppIconSize": "default",
+          "showAppLabels": true,
+          "aiGenerationDefaults": {
+            "models": {}
+          }
+        },
+        "editor": true,
+        "bodyHeight": 389,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 356
+      },
+      "liveShot": "widgets-light-390x844-live.webp",
+      "sourceShot": "widgets-light-390x844-source.webp",
+      "historyShot": "widgets-light-390x844-history.webp"
+    },
+    {
+      "style": "widgets",
+      "theme": "light",
+      "width": 768,
+      "height": 1024,
+      "metrics": {
+        "theme": "light",
+        "preferences": {
+          "defaultEngine": "bing",
+          "theme": "light",
+          "style": "widgets",
+          "accent": "blue",
+          "searchShape": "rounded",
+          "searchOpacity": 1,
+          "backgroundImage": null,
+          "wallpaperPresentations": {},
+          "canvasMotion": "off",
+          "canvasMotionLevel": "soft",
+          "searchTarget": "same",
+          "searchHistoryEnabled": false,
+          "webAppHomeLimit": 12,
+          "webAppIconSize": "default",
+          "showAppLabels": true,
+          "aiGenerationDefaults": {
+            "models": {}
+          }
+        },
+        "editor": true,
+        "bodyHeight": 370,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 540.078125
+      },
+      "liveShot": "widgets-light-768x1024-live.webp",
+      "sourceShot": "widgets-light-768x1024-source.webp",
+      "historyShot": "widgets-light-768x1024-history.webp"
+    },
+    {
+      "style": "widgets",
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "metrics": {
+        "theme": "light",
+        "preferences": {
+          "defaultEngine": "bing",
+          "theme": "light",
+          "style": "widgets",
+          "accent": "blue",
+          "searchShape": "rounded",
+          "searchOpacity": 1,
+          "backgroundImage": null,
+          "wallpaperPresentations": {},
+          "canvasMotion": "off",
+          "canvasMotionLevel": "soft",
+          "searchTarget": "same",
+          "searchHistoryEnabled": false,
+          "webAppHomeLimit": 12,
+          "webAppIconSize": "default",
+          "showAppLabels": true,
+          "aiGenerationDefaults": {
+            "models": {}
+          }
+        },
+        "editor": true,
+        "bodyHeight": 283,
+        "editorScroll": 0,
+        "pageOverflow": 0,
+        "toolbar": 558
+      },
+      "liveShot": "widgets-light-1440x900-live.webp",
+      "sourceShot": "widgets-light-1440x900-source.webp",
+      "historyShot": "widgets-light-1440x900-history.webp"
+    },
+    {
+      "style": "widgets",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "metrics": {
+        "theme": "dark",
+        "style": "widgets",
+        "editor": true,
+        "bodyHeight": 389,
+        "pageOverflow": 0
+      },
+      "liveShot": "widgets-dark-390x844-live.webp",
+      "sourceShot": "widgets-dark-390x844-source.webp",
+      "historyShot": "widgets-dark-390x844-history.webp"
+    },
+    {
+      "style": "widgets",
+      "theme": "dark",
+      "width": 768,
+      "height": 1024,
+      "metrics": {
+        "theme": "dark",
+        "style": "widgets",
+        "editor": true,
+        "bodyHeight": 370,
+        "pageOverflow": 0
+      },
+      "liveShot": "widgets-dark-768x1024-live.webp",
+      "sourceShot": "widgets-dark-768x1024-source.webp",
+      "historyShot": "widgets-dark-768x1024-history.webp"
+    },
+    {
+      "style": "widgets",
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "metrics": {
+        "theme": "dark",
+        "style": "widgets",
+        "editor": true,
+        "bodyHeight": 240,
+        "pageOverflow": 0
+      },
+      "liveShot": "widgets-dark-1440x900-live.webp",
+      "sourceShot": "widgets-dark-1440x900-source.webp",
+      "historyShot": "widgets-dark-1440x900-history.webp"
+    }
+  ],
+  "boundaries": [
+    {
+      "viewport": [
+        390,
+        568
+      ],
+      "editorHeight": 361,
+      "bodyHeight": 240,
+      "overflow": 0,
+      "canScroll": true,
+      "screenshot": "boundary-390x568.webp"
+    },
+    {
+      "viewport": [
+        640,
+        844
+      ],
+      "editorHeight": 604,
+      "bodyHeight": 433,
+      "overflow": 0,
+      "canScroll": false,
+      "screenshot": "boundary-640x844.webp"
+    },
+    {
+      "viewport": [
+        960,
+        600
+      ],
+      "editorHeight": 220,
+      "bodyHeight": 240,
+      "overflow": 0,
+      "canScroll": true,
+      "screenshot": "boundary-960x600.webp"
+    },
+    {
+      "viewport": [
+        1024,
+        600
+      ],
+      "editorHeight": 357,
+      "bodyHeight": 240,
+      "overflow": 0,
+      "canScroll": true,
+      "screenshot": "boundary-1024x600.webp"
+    },
+    {
+      "viewport": [
+        1280,
+        900
+      ],
+      "editorHeight": 357,
+      "bodyHeight": 240,
+      "overflow": 0,
+      "canScroll": true,
+      "screenshot": "boundary-1280x900.webp"
+    }
+  ],
+  "toolbar": [
+    {
+      "width": 639,
+      "buttons": 6
+    },
+    {
+      "width": 640,
+      "buttons": 13
+    },
+    {
+      "width": 641,
+      "buttons": 13
+    }
+  ],
+  "historyWidths": [
+    {
+      "width": 639,
+      "columns": "639px"
+    },
+    {
+      "width": 640,
+      "columns": "208px 416px"
+    },
+    {
+      "width": 641,
+      "columns": "208.328px 416.672px"
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "surface": "edit",
+      "actualTheme": "light",
+      "background": "rgb(255, 255, 255)",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "surface": "menu",
+      "actualTheme": "light",
+      "background": "rgb(255, 255, 255)",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "surface": "history",
+      "actualTheme": "light",
+      "background": "rgb(255, 255, 255)",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "surface": "confirm",
+      "actualTheme": "light",
+      "background": "rgb(255, 255, 255)",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "surface": "edit",
+      "actualTheme": "dark",
+      "background": "rgb(29, 33, 40)",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "surface": "menu",
+      "actualTheme": "dark",
+      "background": "rgb(29, 33, 40)",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "surface": "history",
+      "actualTheme": "dark",
+      "background": "rgb(29, 33, 40)",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "surface": "confirm",
+      "actualTheme": "dark",
+      "background": "rgb(29, 33, 40)",
+      "violations": []
+    }
+  ],
+  "colors": [
+    {
+      "name": "琥珀",
+      "actual": "琥珀",
+      "focus": "便签颜色：琥珀"
+    },
+    {
+      "name": "鼠尾草",
+      "actual": "鼠尾草",
+      "focus": "便签颜色：鼠尾草"
+    },
+    {
+      "name": "天空",
+      "actual": "天空",
+      "focus": "便签颜色：天空"
+    },
+    {
+      "name": "玫瑰",
+      "actual": "玫瑰",
+      "focus": "便签颜色：玫瑰"
+    },
+    {
+      "name": "纸白",
+      "actual": "纸白",
+      "focus": "便签颜色：纸白"
+    }
+  ],
+  "liveCommands": [
+    {
+      "label": "一级标题",
+      "live": true
+    },
+    {
+      "label": "二级标题",
+      "live": true
+    },
+    {
+      "label": "三级标题",
+      "live": true
+    },
+    {
+      "label": "粗体",
+      "live": true
+    },
+    {
+      "label": "斜体",
+      "live": true
+    },
+    {
+      "label": "删除线",
+      "live": true
+    },
+    {
+      "label": "行内代码",
+      "live": true
+    },
+    {
+      "label": "无序列表",
+      "live": true
+    },
+    {
+      "label": "有序列表",
+      "live": true
+    },
+    {
+      "label": "任务列表",
+      "live": true
+    },
+    {
+      "label": "引用",
+      "live": true
+    },
+    {
+      "label": "链接",
+      "live": true
+    },
+    {
+      "label": "代码块",
+      "live": true
+    },
+    {
+      "label": "表格",
+      "live": true
+    },
+    {
+      "label": "分隔线",
+      "live": true
+    }
+  ],
+  "sourceCommands": [
+    {
+      "label": "一级标题",
+      "output": "# 验收文本"
+    },
+    {
+      "label": "二级标题",
+      "output": "## 验收文本"
+    },
+    {
+      "label": "三级标题",
+      "output": "### 验收文本"
+    },
+    {
+      "label": "粗体",
+      "output": "**验收文本**"
+    },
+    {
+      "label": "斜体",
+      "output": "*验收文本*"
+    },
+    {
+      "label": "删除线",
+      "output": "~~验收文本~~"
+    },
+    {
+      "label": "行内代码",
+      "output": "`验收文本`"
+    },
+    {
+      "label": "无序列表",
+      "output": "- 验收文本"
+    },
+    {
+      "label": "有序列表",
+      "output": "1. 验收文本"
+    },
+    {
+      "label": "任务列表",
+      "output": "- [ ] 验收文本"
+    },
+    {
+      "label": "引用",
+      "output": "> 验收文本"
+    },
+    {
+      "label": "链接",
+      "output": "[验收文本](https://)"
+    },
+    {
+      "label": "代码块",
+      "output": "```\n验收文本\n```"
+    },
+    {
+      "label": "表格",
+      "output": "| 列 1 | 列 2 |\n| --- | --- |\n| 内容 | 内容 |"
+    },
+    {
+      "label": "分隔线",
+      "output": "---"
+    }
+  ],
+  "summaries": [
+    {
+      "query": "",
+      "text": "摘要Unicode\n\n前缀🙂中文🙂后缀\n\n2026/10/8 15:10\n摘要空白\n\n空白便签\n\n2026/10/8 15:10\n长文验收 · 标题与 Markdown\n\n长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42;\n\n2026/10/8 15:09\n摘要正则\n\nliteral .* [bracket]\n\n2026/10/8 15:10\n摘要标题命中\n\n正文不命中\n\n2026/10/8 15:10\n摘要HTML\n\n安全文字\n\n2026/10/8 15:10\n摘要普通\n\n段落 粗体 与 显示文本 code\n\n2026/10/8 15:10",
+      "unsafe": false
+    },
+    {
+      "query": "only-url",
+      "text": "摘要普通\n\n匹配Markdown源码：…ps://hidden.invalid/only-url) `code`\n\n2026/10/8 15:10",
+      "unsafe": false
+    },
+    {
+      "query": "🙂",
+      "text": "摘要Unicode\n\n前缀🙂中文🙂后缀\n\n2026/10/8 15:10\n长文验收 · 标题与 Markdown\n\n长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 const value = 42; 长文验收 段落包含 粗体、链接、中文与🙂。 任务甲 任务乙 co…\n\n2026/10/8 15:09",
+      "unsafe": false
+    },
+    {
+      "query": ".*",
+      "text": "摘要正则\n\nliteral .* [bracket]\n\n2026/10/8 15:10",
+      "unsafe": false
+    },
+    {
+      "query": "摘要标题命中",
+      "text": "摘要标题命中\n\n正文不命中\n\n2026/10/8 15:10",
+      "unsafe": false
+    },
+    {
+      "query": "script",
+      "text": "摘要HTML\n\n匹配Markdown源码：<script>window.evil140=true</script> 安全文字\n\n2026/10/8 15:10",
+      "unsafe": false
+    }
+  ],
+  "geometry": {
+    "identity": "stable",
+    "text": true,
+    "undoRestored": true,
+    "requests": []
+  },
+  "widgetsGeometry": {
+    "identity": "widgets-stable",
+    "width": 329,
+    "overflow": 0,
+    "requests": [],
+    "undo": true
+  },
+  "multiInstance": [
+    {
+      "url": "http://127.0.0.1:36983/api/notes/596c236f-9040-46d3-a3d3-d1b348c0a59f",
+      "origin": "manual"
+    }
+  ],
+  "card": {
+    "afterBodyDoubleClick": 0,
+    "compact": 1,
+    "enterOpens": true,
+    "spaceOpens": true
+  },
+  "guest": {
+    "notesStatus": 401,
+    "editors": 0,
+    "cards": 0
+  },
+  "unavailable": [
+    "OS IME candidate window",
+    "physical touch/soft keyboard",
+    "Safari",
+    "issue109 future masonry integration"
+  ]
+}
