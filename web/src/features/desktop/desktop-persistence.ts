@@ -1,6 +1,6 @@
 /**
  * Desktop Window Manager Persistence Engine
- * Issue #90 / #102 M2: IndexedDB desktop payload v2, readable legacy v1,
+ * Issue #90 / #102 M6: IndexedDB desktop payload v3, readable legacy v1/v2,
  * normalized frame geometry, strict validation fallbacks, and user isolation.
  */
 
@@ -21,7 +21,7 @@ import {
 } from "./desktop-state.ts";
 import { getLocal, setLocal } from "../../lib/local.ts";
 
-export const DESKTOP_LAYOUT_SCHEMA_VERSION = 2 as const;
+export const DESKTOP_LAYOUT_SCHEMA_VERSION = 3 as const;
 
 const VALID_SNAP_MODES: Record<string, true> = {
     "left": true,
@@ -52,7 +52,7 @@ export interface PersistedWindowLayout {
 }
 
 export interface PersistedDesktopLayout {
-    version: 1 | typeof DESKTOP_LAYOUT_SCHEMA_VERSION;
+    version: 1 | 2 | typeof DESKTOP_LAYOUT_SCHEMA_VERSION;
     windows: PersistedWindowLayout[];
     activeId: string | null;
 }
@@ -138,8 +138,11 @@ export function decodeDesktopLayout(
 
     const raw = payload as Record<string, unknown>;
 
-    // v1 remains readable; new root kind is encoded only in v2 payloads.
-    if (raw.version !== 1 && raw.version !== DESKTOP_LAYOUT_SCHEMA_VERSION) {
+    // Previous schemas remain readable without losing Apps/Notes or the Documents root.
+    if (
+        raw.version !== 1 && raw.version !== 2 &&
+        raw.version !== DESKTOP_LAYOUT_SCHEMA_VERSION
+    ) {
         return null;
     }
 
@@ -179,12 +182,13 @@ export function decodeDesktopLayout(
         } else if (kind === "documents") {
             if (raw.version === 1 || w.id !== "documents") return null;
             if (w.entityId !== null && w.entityId !== undefined) return null;
-        } else if (kind === "note") {
+        } else if (kind === "note" || kind === "document") {
+            if (kind === "document" && raw.version !== 3) return null;
             if (typeof w.entityId !== "string" || w.entityId.length === 0) {
                 return null;
             }
             entityId = w.entityId;
-            if (w.id !== `note:${entityId}`) return null;
+            if (w.id !== `${kind}:${entityId}`) return null;
         } else {
             return null; // Unknown kind corrupts payload
         }

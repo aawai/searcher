@@ -59,6 +59,13 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   feature 判断 viewport 或修改 Host geometry；400px Zen Panel
   永远保持单栏。摘要使用平面列表，不新增卡片墙；唯一 primary action
   为“新建笔记”，笔记本创建与行操作为 secondary/ghost。
+- Widgets >=1024px 的 Documents Library 是 singleton documents，笔记实体以
+  document:<id> 标识，复用 DesktopWindow、geometry、Snap、Dock transient 与
+  Overview，不增加另一套 chrome/editor core。768–1023px 和移动端仍由 Host 的
+  constrained surface / Sheet 展示 nested editor；Zen 展开现有 Panel。
+- 笔记内容外层滚动区提供可聚焦 region；页面模式的独立水平纸张 viewport
+  同样提供键盘滚动入口。窗口标题、Dock 和总览消费服务端派生标题；Library
+  保存后重取当前 scope/query 的摘要，不拉取全部正文。
 
 ### Notes Markdown editor
 

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import type {
+    DocumentDto,
     DocumentNotebookDto,
     DocumentPageDto,
     DocumentSummaryDto,
@@ -31,15 +32,28 @@ export interface DocumentsWorkspaceProps {
     onScopeChange: (scope: DocumentsScope) => void;
     onOpenDocument: (id: string) => void;
     onDirtyChange?: (dirty: boolean) => void;
+    onDocumentChanged?: (document: DocumentDto) => void;
+    onDocumentDeleted?: (id: string) => void;
+    revision?: number;
 }
 
 function DocumentSummaryRow(
-    { item, notebooks, scope, onChanged, onOpenDocument }: {
+    {
+        item,
+        notebooks,
+        scope,
+        onChanged,
+        onOpenDocument,
+        onDocumentChanged,
+        onDocumentDeleted,
+    }: {
         item: DocumentSummaryDto;
         notebooks: DocumentNotebookDto[];
         scope: DocumentsScope;
         onChanged: () => void;
         onOpenDocument: (id: string) => void;
+        onDocumentChanged?: (document: DocumentDto) => void;
+        onDocumentDeleted?: (id: string) => void;
     },
 ) {
     const displayTitle = item.displayTitle;
@@ -75,6 +89,8 @@ function DocumentSummaryRow(
                     item={item}
                     notebooks={notebooks}
                     onChanged={onChanged}
+                    onDocumentChanged={onDocumentChanged}
+                    onDocumentDeleted={onDocumentDeleted}
                 />
             </div>
             {item.snippet
@@ -112,6 +128,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     userId={props.userId}
                     onOpenDocument={props.onOpenDocument}
                     onDirtyChange={props.onDirtyChange}
+                    onDocumentChanged={props.onDocumentChanged}
                 />
             </Suspense>
         );
@@ -126,6 +143,9 @@ function DocumentsLibrary({
     scope,
     onScopeChange,
     onOpenDocument,
+    onDocumentChanged,
+    onDocumentDeleted,
+    revision,
 }: DocumentsWorkspaceProps) {
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
@@ -229,7 +249,7 @@ function DocumentsLibrary({
             cancelled = true;
             controller.abort();
         };
-    }, [userId, trimmedQuery, scopeKey, retryCount]);
+    }, [userId, trimmedQuery, scopeKey, retryCount, revision]);
 
     const handleLoadMore = async () => {
         const controller = activeRequestRef.current;
@@ -381,6 +401,8 @@ function DocumentsLibrary({
                                             : scope}
                                         onChanged={refresh}
                                         onOpenDocument={onOpenDocument}
+                                        onDocumentChanged={onDocumentChanged}
+                                        onDocumentDeleted={onDocumentDeleted}
                                     />
                                 ))}
                             </div>

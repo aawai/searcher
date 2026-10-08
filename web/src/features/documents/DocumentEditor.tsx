@@ -11,6 +11,7 @@ import {
 } from "react";
 import type {
     DocumentAssetDto,
+    DocumentDto,
     DocumentSettingsDto,
 } from "@shared/documents.ts";
 import { documentDisplayTitle } from "../../../../src/features/documents/markdown.ts";
@@ -20,7 +21,7 @@ import {
 } from "./document-pagination.ts";
 import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
-import { api } from "../../lib/api.ts";
+import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { TextSelection } from "@milkdown/prose/state";
@@ -76,6 +77,8 @@ export interface DocumentEditorProps {
     onOpenDocument?: (id: string) => void;
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
+    onDocumentChanged?: (document: DocumentDto) => void;
+    onUnavailable?: () => void;
 }
 
 export function DocumentEditor({
@@ -84,6 +87,8 @@ export function DocumentEditor({
     onOpenDocument,
     onChanged,
     onDirtyChange,
+    onDocumentChanged,
+    onUnavailable,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
     const session = useMemo(() => {
@@ -97,15 +102,17 @@ export function DocumentEditor({
     );
 
     useEffect(() => {
-        void session.load().catch((error: unknown) =>
-            setInitError(
-                error instanceof Error ? error.message : "加载文档失败",
-            )
-        );
+        void session.load().catch((error: unknown) => {
+            if (error instanceof ApiError && error.code === 404) {
+                onUnavailable?.();
+            } else {setInitError(
+                    error instanceof Error ? error.message : "加载文档失败",
+                );}
+        });
         return () => {
             void session.destroy();
         };
-    }, [session]);
+    }, [session, onUnavailable]);
 
     // View choice is local to this user, device and document.
     const viewStorageKey = `document:view:${userId}:${documentId}`;
@@ -180,6 +187,9 @@ export function DocumentEditor({
     const lastEditorBodyRef = useRef<string>("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const sourceTextareaRef = useRef<HTMLTextAreaElement>(null);
+    useEffect(() => {
+        if (snapshot.document) onDocumentChanged?.(snapshot.document);
+    }, [snapshot.document, onDocumentChanged]);
 
     // 5. Notify parent of save changes & dirty guard
     const prevSaveStatusRef = useRef(snapshot.saveStatus);
@@ -910,10 +920,20 @@ export function DocumentEditor({
 
             {/* Workspace Content Area: Editor + Outline */}
             <div className="document-editor-content-layout">
-                <div className="document-editor-scroll-area">
+                <div
+                    className="document-editor-scroll-area"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="笔记内容滚动区"
+                >
                     <div
                         ref={paginationViewportRef}
                         className="document-editor-readable-wrapper"
+                        tabIndex={viewMode === "page" ? 0 : undefined}
+                        role={viewMode === "page" ? "region" : undefined}
+                        aria-label={viewMode === "page"
+                            ? "正文页面滚动区"
+                            : undefined}
                     >
                         {/* Continuous Mode Container */}
                         <div
