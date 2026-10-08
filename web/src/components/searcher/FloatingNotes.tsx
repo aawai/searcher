@@ -76,9 +76,10 @@ function Floating(
             className="note-position"
             ref={setNodeRef}
             onPointerDown={(e) => {
+                // Re-layering a code scrollport cancels its native scrollbar drag.
                 if (
                     (e.target as HTMLElement).closest(
-                        "button, select, input, a, [role='button'], [data-slot='dropdown-menu-trigger']",
+                        "button, select, input, a, pre, [role='button'], [data-slot='dropdown-menu-trigger']",
                     )
                 ) return;
                 onBringToFront();

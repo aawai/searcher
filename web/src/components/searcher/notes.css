@@ -725,12 +725,26 @@
     resize: vertical;
 }
 
-/* Desktop floating note code-block scrollbar: visual-only override.
+/* Desktop floating note code-block presentation and native scrollbar.
    notes.css owns the 4px track and neutral hover/focus/active thumb states;
    native thin/overlay scrollbars may take precedence. */
 .floating-notes--canvas .note-preview.markdown pre {
+    border-radius: var(--radius-multiline);
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
+}
+
+/* Block code must not inherit the note's inline-code chip presentation.
+   An intrinsic-width block keeps both padding edges reachable when scrolling. */
+.floating-notes--canvas .note-preview.markdown pre code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: inherit;
+    line-height: inherit;
 }
 
 .floating-notes--canvas .note-preview.markdown pre:hover,

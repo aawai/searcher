@@ -42,6 +42,7 @@ Deno.test("production home notes expand/collapse persistence E2E (#122)", async 
     const browser = await chromium.launch({
         headless: true,
         args: ["--no-sandbox"],
+        ignoreDefaultArgs: ["--hide-scrollbars"],
     });
     cleanup.defer(() => browser.close());
 
@@ -613,6 +614,97 @@ Deno.test("production home notes expand/collapse persistence E2E (#122)", async 
                 '.floating-notes button.note-action-btn[aria-label="展开"]',
             );
             await expandBtn.waitFor({ state: "visible" });
+        },
+    );
+
+    await t.step(
+        "Zen code block native scrollbar remains draggable (#138)",
+        async () => {
+            await clearAllNotes();
+            await createNote({
+                title: "Long code command",
+                body:
+                    "```sh\nssh -L 51121:127.0.0.1:51121 -L 51122:127.0.0.1:51122 -N engineer@very-long-hostname.example.internal\n```",
+                isHomeFixed: true,
+                layout: {
+                    deviceClass: "desktop",
+                    x: 100,
+                    y: 100,
+                    zIndex: 1,
+                    expanded: true,
+                },
+            });
+            await page.reload();
+            const pre = page.locator(
+                ".floating-notes--canvas .note-preview.markdown pre",
+            ).first();
+            await pre.waitFor({ state: "visible" });
+            await pre.hover();
+            await pre.evaluate(async (element) => {
+                await Promise.all(
+                    element.closest(".note-card")!.getAnimations().map(
+                        (animation) => animation.finished,
+                    ),
+                );
+            });
+            const scrollbar = await pre.evaluate((element) => {
+                const rect = element.getBoundingClientRect();
+                return {
+                    x: rect.x,
+                    y: rect.bottom -
+                        (rect.height - element.clientHeight) / 2,
+                    width: element.clientWidth,
+                    scrollWidth: element.scrollWidth,
+                };
+            });
+            assertEquals(scrollbar.scrollWidth > scrollbar.width, true);
+            await page.mouse.move(scrollbar.x + 25, scrollbar.y);
+            await page.mouse.down();
+            await page.mouse.move(
+                scrollbar.x + scrollbar.width * 0.7,
+                scrollbar.y,
+                { steps: 15 },
+            );
+            await page.mouse.up();
+            await page.waitForFunction(
+                () =>
+                    document.querySelector(
+                        ".floating-notes--canvas .note-preview.markdown pre",
+                    )!.scrollLeft > 100,
+                undefined,
+                { timeout: 3000 },
+            );
+            assertEquals(
+                await pre.evaluate((element) =>
+                    element.closest(".note-preview")!.scrollLeft
+                ),
+                0,
+            );
+            const edges = await pre.evaluate((element) => {
+                const text = element.querySelector("code")!.firstChild!;
+                const end = text.textContent!.trimEnd().length;
+                const first = document.createRange();
+                first.setStart(text, 0);
+                first.setEnd(text, 1);
+                const last = document.createRange();
+                last.setStart(text, end - 1);
+                last.setEnd(text, end);
+                const rect = element.getBoundingClientRect();
+                const style = getComputedStyle(element);
+                element.scrollLeft = 0;
+                const startVisible = first.getBoundingClientRect().left >=
+                    rect.left + parseFloat(style.paddingLeft) - 1;
+                element.scrollLeft = element.scrollWidth;
+                const endVisible = last.getBoundingClientRect().right <=
+                    rect.right - parseFloat(style.paddingRight) + 1;
+                return { startVisible, endVisible };
+            });
+            assertEquals(
+                edges.startVisible,
+                true,
+                "first glyph is not clipped",
+            );
+            assertEquals(edges.endVisible, true, "last glyph is not clipped");
         },
     );
 });
