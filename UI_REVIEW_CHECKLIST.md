@@ -85,6 +85,55 @@
       在未修改其代码的完整重跑中通过。React Doctor 扫描为 71/100，39
       项均不位于本次编辑器变更；未扩大范围修改存量问题。
 
+## Issue #102 M7 最终矩阵 / A11y / 性能 / Contract 验收（2026-10-08）
+
+- [x] M0A/#110/M0B/M1–M6 均已独立 PR 合并；本阶段不改 Locked Decisions，不迁移
+      Notes baseline，也不增加第二套 editor core。
+- [x] 生产 Documents E2E：1 test / 19 steps；16 组 390×844 / 768×1024 / 1024×768
+      / 1440×900 × Zen/Widgets × light/dark，三种 view 均可用，continuous/page
+      保留同一实例，source 与服务端 canonical Markdown
+      一致，切换模式不保存新版本。
+- [x] 100k+ Markdown / 200 headings / 50 owner asset references / 20 tables / 30
+      manual breaks：真实输入、Ctrl+S、API 持久化、page reflow、source
+      往返不丢内容。夹具为 `web/e2e/fixtures/document.ts`；不以固定 FPS
+      或未测出的耗时作性能承诺。
+- [x] Library 打开前后生产网络不请求 editor-vendor，summary 不含 body；已接入
+      Bundle CI。新建 `deno task test:documents`，使用既有 production-app 隔离
+      helper。
+- [x] 实际 Browser 复验 16 组长段落/代码/宽表/高图片 page/source，以及 390/1440
+      × Zen/Widgets × light/dark 八组 gradient wallpaper 配对：截图、viewport
+      overflow、Home Search 几何通过，Search y shift=0，axe WCAG A/AA 0
+      violations。未宣称任意壁纸的绝对可读性，沿用既有 Phase 0 例外。
+- [x] 390×400 模拟软键盘高度，实页发现正文高度 0；新增最小阅读高度 Token +
+      editor container
+      scroll，回归修复前失败、修复后通过，聚焦后的源码可见并能真实输入保存。非移动
+      OS 真机测试，不替代已验收的 Chromium 中文 IME。
+- [x] axe 前等待有限 animation/transition finished；原失败来自切换按钮背景颜色
+      transition 中间态，稳定态仍使用原始 WCAG 门槛，未跳过规则。
+- [x] 全套 639 tests / 28 steps；`deno task test:workspace` 8 tests / 85
+      steps；shared lifecycle/IME/network/pagination production suites 3 tests /
+      9 steps，Documents 单独 1 test / 19 steps。src/main + web/main
+      typecheck、affected lint/format、build、UI Guard 0 drift、bundle gates
+      均通过。
+- [x] DocumentEditor route-only graph 约 172 KiB gzip，shared runtime 约 154
+      KiB；150–200 KiB 档保留 breakdown：framework 约 100 KiB、Markdown pipeline
+      约 51 KiB、adapter 约 3 KiB，加上 Documents UI/extension/paper。无
+      Crepe/CodeMirror/KaTeX，initial graph 不包含 editor runtime。
+
+### 最终 DoD 可追溯证据
+
+| #102 §42 条目      | 已验收证据                                                                                                                                         |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1、29              | 既有 Notes 语义不改；M6/M7 Workspace production regressions，包括 autosave/conflict/version/窗口恢复与身份隔离。                                   |
+| 2–8                | PR #128/#131/#133 的 Host integration + 本阶段完整矩阵：root/nested、Zen 非模态、Sheet、constrained 与 entity boundary。                           |
+| 9、10、28、33      | PR #127/#130 的 Notebook/CRUD/FTS/summary cursor 契约与 Library 实页；本阶段持续保护 body-free + runtime isolation。                               |
+| 11–18、23、26      | #110 shared round-trip/runtime/commands、M4 editor-session 和 M0B/M5 production 编辑、选区、IME、PageBreak；本阶段三模式与 canonical body 持久化。 |
+| 19–22、36          | PR #132 的 A4/Letter 四类纸张、margin 边界与严格 manual blank-page Print/PDF 证据；device-local view state 与 server paper owner 保持独立。        |
+| 24、25、34、35、37 | M1/M4 的资产 MIME/10 MiB/owner、limits、draft/conflict/version restore/snapshot retention 回归；本阶段长文真实 owner 图片与保存往返。              |
+| 27                 | 本阶段提交的大文档夹具与生产浏览器完整性测试。                                                                                                     |
+| 30、31             | 全套/focused/E2E/实页矩阵、typecheck/lint/format/build/UI/bundle，以及 README/Design System/checklist/Unreleased 文档。                            |
+| 32、38             | 单一 #102 Contract、单一 #110 core；#108 Notes consumer 为独立后续 Issue，未在本 Tracking 提前迁移或复制 core。                                    |
+
 ## Issue #102 M6 Widgets Entity Windows / Persistence 验收（2026-10-08）
 
 - [x] 复用 DesktopWindow、geometry、Dock、Overview 与 Snap；Library singleton
