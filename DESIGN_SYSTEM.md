@@ -66,6 +66,10 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 - 笔记内容外层滚动区提供可聚焦 region；页面模式的独立水平纸张 viewport
   同样提供键盘滚动入口。窗口标题、Dock 和总览消费服务端派生标题；Library
   保存后重取当前 scope/query 的摘要，不拉取全部正文。
+- 正文最低可读高度由
+  `--document-editor-min-content-height`（240px，约十行正文）拥有；header/toolbar
+  超出可用高度时，editor container 滚动 chrome，而不是把正文 flex viewport
+  压成零。此约束适用于所有 Host，不增加按设备的临时分支，也不改 Host geometry。
 
 ### Notes Markdown editor
 
