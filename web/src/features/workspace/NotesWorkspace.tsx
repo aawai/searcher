@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { NoteSummaryAnalysis } from "./note-summary.ts";
 import { GripVertical } from "lucide-react";
 import {
     closestCenter,
@@ -47,6 +48,9 @@ function WorkspaceNote({
     expanded = false,
     onToggleExpand,
     onDelete,
+    readable,
+    analysis,
+    query = "",
 }: {
     note: NoteItem;
     actions: NoteActions;
@@ -55,10 +59,27 @@ function WorkspaceNote({
     expanded?: boolean;
     onToggleExpand?: () => void;
     onDelete?: () => void;
+    readable?: string;
+    analysis?: NoteSummaryAnalysis | null;
+    query?: string;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition } =
         useSortable({ id: note.id, disabled: !sortable || disabled });
     const isInteractive = sortable && !disabled;
+    const displayTitle = getNoteDisplayTitle(note.title, note.body);
+    const titleMatches = displayTitle.toLowerCase().includes(
+        query.trim().toLowerCase(),
+    );
+    const preview = analysis && readable !== undefined
+        ? analysis.preview(
+            note.body,
+            readable,
+            titleMatches &&
+                !readable.toLowerCase().includes(query.trim().toLowerCase())
+                ? ""
+                : query,
+        )
+        : null;
     return (
         <div
             ref={sortable ? setNodeRef : undefined}
@@ -71,6 +92,40 @@ function WorkspaceNote({
                 mode={expanded ? "full" : "compact"}
                 onToggleMode={onToggleExpand}
                 onOpen={() => actions.editNote(note)}
+                titleContent={analysis?.highlight(displayTitle, query).map((
+                    part,
+                    index,
+                ) => part.match
+                    ? <mark key={index}>{part.text}</mark>
+                    : part.text
+                )}
+                summary={preview && (
+                    <div className="note-list-detail">
+                        <p className="note-list-summary">
+                            {preview.sourceOnly && (
+                                <span>匹配Markdown源码：</span>
+                            )}
+                            {analysis?.highlight(preview.text, query).map((
+                                part,
+                                index,
+                            ) => part.match
+                                ? <mark key={index}>{part.text}</mark>
+                                : part.text
+                            )}
+                        </p>
+                        {note.updatedAt !== undefined && (
+                            <time
+                                dateTime={new Date(note.updatedAt)
+                                    .toISOString()}
+                            >
+                                {new Date(note.updatedAt).toLocaleString(
+                                    "zh-CN",
+                                    { dateStyle: "short", timeStyle: "short" },
+                                )}
+                            </time>
+                        )}
+                    </div>
+                )}
                 dragHandle={
                     <Button
                         type="button"
@@ -92,10 +147,9 @@ function WorkspaceNote({
                 }
                 onTogglePin={() =>
                     void actions.updateNote(note, { isPinned: !note.isPinned })}
-                onToggleHomeFixed={() =>
-                    void actions.updateNote(note, {
-                        isHomeFixed: !note.isHomeFixed,
-                    })}
+                onToggleHomeFixed={() => void actions.updateNote(note, {
+                    isHomeFixed: !note.isHomeFixed,
+                })}
                 onChangeColor={(color) =>
                     void actions.updateNote(note, { color })}
                 onDelete={() => {
@@ -137,6 +191,42 @@ export function NotesWorkspace(
         new Set()
     );
 
+    const [analysis, setAnalysis] = useState<NoteSummaryAnalysis | null>(null);
+    const summaryCache = useRef(
+        new Map<string, { body: string; readable: string }>(),
+    );
+    useEffect(() => {
+        if (state.view !== "notes/root" || analysis) return;
+        let cancelled = false;
+        void import("./note-summary.ts").then((module) => {
+            if (!cancelled) {
+                setAnalysis({
+                    analyze: module.analyzeNoteBody,
+                    preview: module.noteSearchPreview,
+                    highlight: module.highlightNoteText,
+                });
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [state.view, analysis]);
+    const summaries = useMemo(() => {
+        const cache = summaryCache.current;
+        const ids = new Set(notes.map((note) => note.id));
+        for (const id of cache.keys()) if (!ids.has(id)) cache.delete(id);
+        if (analysis) {
+            for (const note of notes) {
+                if (cache.get(note.id)?.body !== note.body) {
+                    cache.set(note.id, {
+                        body: note.body,
+                        readable: analysis.analyze(note.body),
+                    });
+                }
+            }
+        }
+        return cache;
+    }, [notes, analysis]);
     useEffect(() => {
         setExpandedIds((prev) => {
             if (prev.size === 0) return prev;
@@ -215,7 +305,7 @@ export function NotesWorkspace(
     if (state.view === "notes/edit") {
         return editing
             ? (
-                <div className="notes-workspace-editor">
+                <div className="notes-workspace-editor" data-workspace-editor>
                     <NoteEditor
                         key={userId + ":" + editing.id}
                         note={editing}
@@ -277,6 +367,9 @@ export function NotesWorkspace(
                                         <WorkspaceNote
                                             key={note.id}
                                             note={note}
+                                            analysis={analysis}
+                                            readable={summaries.get(note.id)
+                                                ?.readable}
                                             actions={actions}
                                             expanded={expandedIds.has(note.id)}
                                             onToggleExpand={() =>
@@ -329,6 +422,10 @@ export function NotesWorkspace(
                                                 <WorkspaceNote
                                                     key={note.id}
                                                     note={note}
+                                                    analysis={analysis}
+                                                    readable={summaries.get(
+                                                        note.id,
+                                                    )?.readable}
                                                     actions={actions}
                                                     sortable
                                                     expanded={expandedIds.has(
@@ -375,6 +472,10 @@ export function NotesWorkspace(
                                     <WorkspaceNote
                                         key={note.id}
                                         note={note}
+                                        analysis={analysis}
+                                        readable={summaries.get(note.id)
+                                            ?.readable}
+                                        query={query}
                                         actions={actions}
                                         sortable={false}
                                         expanded={expandedIds.has(note.id)}

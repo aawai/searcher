@@ -231,9 +231,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             );
             assertEquals(page.url(), origin + "/");
 
-            // In contrast, clicking the note card body DOES open editor
+            // The title is the explicit edit entry; the drag handle stays independent.
             const cardBodyA = board.locator(
-                `.controlled-note-slot[data-note-id="${noteA.id}"] .note-card`,
+                `.controlled-note-slot[data-note-id="${noteA.id}"] .note-title`,
             );
             await cardBodyA.click();
             const panel = page.locator(

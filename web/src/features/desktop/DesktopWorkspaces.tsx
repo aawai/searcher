@@ -392,7 +392,10 @@ export function DesktopWorkspaces({
                                 onClose={() =>
                                     dispatch({ type: "CLOSE", id: win.id })}
                             >
-                                <div className="notes-workspace-editor">
+                                <div
+                                    className="notes-workspace-editor"
+                                    data-workspace-editor
+                                >
                                     <NoteEditor
                                         key={`${userId}:${note.id}`}
                                         note={note}
@@ -468,7 +471,9 @@ export function DesktopWorkspaces({
                             showMinimize={!isConstrained}
                             showMaximize={!isConstrained}
                             closeLabel="收起工作区"
-                            backLabel="返回上一级"
+                            backLabel={model.route.view === "notes/edit"
+                                ? "返回便签列表"
+                                : "返回上一级"}
                             onClose={() => onClose(kind)}
                             onBack={isNested ? () => onBack(kind) : undefined}
                             headerMenu={isConstrained

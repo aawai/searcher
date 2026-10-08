@@ -44,6 +44,10 @@ export function WorkspaceShell(
         children: ReactNode;
     },
 ) {
+    const [notesExpanded, setNotesExpanded] = useState(false);
+    useEffect(() => {
+        if (!open || state.view !== "notes/edit") setNotesExpanded(false);
+    }, [open, state.view]);
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
     );
@@ -98,7 +102,21 @@ export function WorkspaceShell(
         <WorkspaceSurface
             presentation={presentation}
             title={title}
-            expanded={state.view === "documents/edit"}
+            expanded={state.view === "documents/edit" ||
+                (state.view === "notes/edit" && notesExpanded)}
+            backLabel={state.view === "notes/edit" ? "返回便签列表" : undefined}
+            headerActions={state.view === "notes/edit" && !mobile
+                ? (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-pressed={notesExpanded}
+                        onClick={() => setNotesExpanded((value) => !value)}
+                    >
+                        {notesExpanded ? "收起编辑" : "展开编辑"}
+                    </Button>
+                )
+                : undefined}
             routeKey={JSON.stringify(state)}
             nested={!root}
             onBack={onBack}

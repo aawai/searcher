@@ -1174,13 +1174,23 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         }
                         if (foundPoint) break;
                     }
-                    return { foundPoint, surfaceRect };
+                    return {
+                        foundPoint,
+                        surfaceOrigin: {
+                            x: surfaceRect.left,
+                            y: surfaceRect.top,
+                        },
+                    };
                 });
                 if (!res.foundPoint) {
                     throw new Error("Blank point not found on surface");
                 }
-                await page.mouse.click(res.foundPoint.x, res.foundPoint.y, {
+                await page.locator(".launcher-surface-wrap").click({
                     button: "right",
+                    position: {
+                        x: res.foundPoint.x - res.surfaceOrigin.x,
+                        y: res.foundPoint.y - res.surfaceOrigin.y,
+                    },
                 });
             };
 

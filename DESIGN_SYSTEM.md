@@ -67,7 +67,7 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   同样提供键盘滚动入口。窗口标题、Dock 和总览消费服务端派生标题；Library
   保存后重取当前 scope/query 的摘要，不拉取全部正文。
 - 正文最低可读高度由
-  `--document-editor-min-content-height`（240px，约十行正文）拥有；header/toolbar
+  `--editor-min-content-height`（240px，约十行正文）拥有；header/toolbar
   超出可用高度时，editor container 滚动 chrome，而不是把正文 flex viewport
   压成零。此约束适用于所有 Host，不增加按设备的临时分支，也不改 Host geometry。
 
@@ -99,6 +99,27 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   code 与工作区不变。
 - Toolbar 使用 Button ghost/icon、lucide 与 canonical touch geometry；不引入
   Documents paper、分页、图片上传或 outline。
+- 编辑几何由 tokens.css 的 `--workspace-editor-expanded-width`（900px）、
+  `--editor-readable-width`（720px）、`--editor-min-content-height`（240px）统一拥有；
+  Documents 消费同一 Token，既有几何不变。Zen 便签会话可在头部展开/收起非模态
+  Panel，返回列表或关闭后重置；移动 Sheet 外部几何与 Widgets 窗口控制不变。
+- Notes 操作区包含标题、模式、保存状态、历史、颜色及单行格式工具栏；正常高度仅
+  Live 正文或 Source textarea 滚动，短窗口由编辑器整体滚动，正文不低于240px。
+  标题与正文阅读列居中；Host 保留唯一外框，Live 不再叠加卡片边框。
+- 工具栏按实际 inline-size 的640px边界切换6/13个入口，标题命令始终合并； Portal
+  使用实例归属标记，菜单选区、键盘操作与 Escape 不提前保存、不重启 debounce。
+  图标消费 `--control-icon-size`；颜色使用带名称和选中状态的5项 Menu radio。
+- 历史是保留编辑实例的内部子视图；dirty flush 和在途 queue 完成后读取版本，
+  失败/409留在编辑。历史按实际容器640px分栏，返回编辑恢复焦点、选区和滚动；
+  恢复先 AlertDialog 确认，再进入原 mutation queue，以服务端 DTO
+  更新所有草稿状态。
+- 卡片仅正式标题 Button 进入编辑，正文选择/滚动与双击不改变模式；显式展开和既有
+  drag handle 继续独立工作。<768px或 any-pointer:coarse
+  的动作/颜色入口至少44px， 常显且不遮挡标题。展开卡片提供颜色菜单，compact
+  卡片颜色位于更多菜单中。
+- 仅 Notes 根列表展示 AST 可读摘要、匹配片段和绝对更新时间；源码-only匹配保持
+  membership并明确标识。remark分析入口由根列表动态导入，按当前实例id/body缓存，
+  不进入 Home initial graph，也不引入 Documents-only 模块。
 
 ### M0A Markdown editor spike
 

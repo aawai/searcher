@@ -39,6 +39,15 @@ bridge。Home、NoteCard、FloatingNotes 和 Notes 根列表继续使用只读
 - 每个 consumer 拥有独立 handle、selection、history
   与计时器；异步初始化在卸载后完成时立即 destroy。解析/初始化失败保留正文并切换
   Source。
+- 格式菜单的 trigger、Portal 与内容通过 `data-note-editor-owner`
+  归属对应编辑实例；
+  跨实例菜单仍是外部焦点。窄容器为标题、粗体、斜体、任务、链接、更多六个入口，
+  宽容器将更多命令直接展示，15个命令与 shortcut catalog 不变。
+- 历史进入时临时禁止继续输入；dirty恰好一次manual flush，clean零PATCH，
+  等待原mutation queue 后GET。历史隐藏而不卸载当前编辑实例，返回使用layout
+  effect
+  在下一次输入前恢复焦点/选区/滚动；取消恢复无写入，确认restore共用原queue。
+  成功统一接受服务端DTO、版本与颜色，清除设备草稿；失败保留历史预览和现有草稿。
 
 Notes API、schema、版本持久化和 10,000 characters 限制未改变。Live task checkbox
 是用户编辑；卡片、冲突与历史版本 checkbox 只读。
@@ -49,6 +58,15 @@ Notes API、schema、版本持久化和 10,000 characters 限制未改变。Live
 HR；`notes.css` 定义 Notes chrome、focus ring 与可编辑 task layout。Live
 明确消费 `--font-body-line-height`，不继承 Tabs panel 的 control 行高。结构 CSS
 仅负责 ProseMirror whitespace、selection 与 overflow，不拥有产品 typography。
+
+操作区与正文滚动分离；阅读宽度720px，最低正文240px，低高度允许整个NoteEditor滚动。
+Live/Source各自记录滚动位置，模式切换的既有runtime生命周期不变。Zen展开/收起和
+Widgets最大化/还原不更换NoteEditor key；跨Host断点挂载策略不在此契约内。
+
+Notes根列表的`note-summary.ts`只读分析入口复用remark/remark-gfm AST，不替换共享
+editor
+parser/serializer。根列表动态加载并按当前实例id/body缓存结果，query变化只生成
+文本节点/mark片段；隐藏URL或Markdown语法匹配回退到escaped源码，不执行HTML。
 
 ## Bundle gate
 

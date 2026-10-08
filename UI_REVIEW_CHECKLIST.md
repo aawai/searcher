@@ -47,6 +47,64 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #140 便签编辑、历史与列表交互（2026-10-08）
+
+- [x] 沿用 Workspace archetype 与原有 Host chrome；复用 Button、Tabs、
+      DropdownMenu radio 与 AlertDialog。通用 900/720/240px 编辑几何 Token 由
+      tokens.css 拥有，Documents 仅迁移同值消费者。Notes 没有完整内层卡片框，
+      Markdown 正文排版仍由 canonical owner 提供。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共 12 组
+      authenticated 编辑页，每组 Live 长文中段、Source 与历史三张截图；
+      实际主题、活动编辑器、布局与 overflow 在 report.json 记录。证据在
+      [独立 evidence 分支](https://github.com/aawai/searcher/tree/evidence/issue-140/evidence/issue-140)，
+      不将截图并入 main。
+- [x] 640/960/1280 viewport；工具栏实际宽 639/640/641px 分别为 6/13/13
+      个入口，历史实际同宽分别为单列/两列/两列。边界 smoke 显式设置实际容器宽，
+      不以 viewport 代替；390×568 与 1024×600 正文高度均为 240px，
+      编辑器整体可滚动、页面横向 overflow 为 0。
+- [x] Zen 展开/收起与 Widgets 最大化/还原：同一编辑实例、已输入文本及 undo
+      保留，几何操作期间零 PATCH。最大化窗口 1408px、标题宽 720px；
+      正文内容扣除原生滚动条后 705px。不承诺跨 Host 的 undo 保留。
+- [x] 历史回归使用真实 API/DTO：dirty 一次 manual flush、clean 零 PATCH、 返回
+      Source 选区/焦点、取消零 POST、恢复 title/body/服务端 version、 当前 color
+      保留；保存失败/409不进入历史，接受云端后可再次进入；
+      恢复失败保留预览和草稿，重试后成功。GET 错误重试与在途保存仍由既有
+      production 回归覆盖，恢复复用原 mutationQueue。
+- [x] Live/Source 全部 15 个命令均通过真实菜单/按钮触发，分别观察 DOM 语义与
+      Markdown 转换。Portal 菜单保留选区、不会提前 flush；两实体窗口中，
+      第一实例 dirty 标题转到第二实例的格式菜单，仅第一实例产生 manual PATCH。
+      IME 为 composition/CDP 自动化模拟，不是 OS 候选窗验收。
+- [x] 五色单选显示名称、checked 状态；选择后菜单关闭、焦点返回当前颜色入口。
+      coarse-pointer E2E 验证工具栏触点至少44px；移动卡片动作常显。
+      卡片正文双击保持 compact 且不打开编辑，标题 Enter/Space 均进入编辑；
+      显式展开、首页拖动/持久化与 #138 原生代码滚动回归继续通过。
+- [x] 普通 AST 摘要、空白、标题命中、正文/Unicode 命中、URL 与 raw HTML
+      源码-only、正则字符输入均经真实根列表验证；script 文本只展示为文本，
+      没有执行。分组、排序及查询 membership 未改变；parser 只由 Notes root lazy
+      import，实例缓存随 body 失效并清理已删除便签。
+- [x] 壁纸 on/off、reduced-motion、长标题/表格/长代码实页证据已记录； guest
+      页面无便签卡片/编辑器，GET /api/notes 返回401。axe 4.10.3 对实际
+      light/dark 的 edit/history/menu/confirm 共8个表面执行 WCAG
+      2A/2AA/2.1AA，零 violation；隔离 console 只有 React DevTools info，
+      没有新增 warning/error。故障注入产生预期失败请求，单独记为验收数据。
+- [x] 脚本校准：菜单 focus restoration 等待关闭过渡完成；右键使用稳定 locator
+      的相对空白坐标而非过渡中的全局 mouse 坐标；主题审计等待 data-theme
+      与实际背景提交。首次并发构建会替换生产 assets，后续 构建/E2E
+      串行；失败范围复查后最终 workspace 全部通过，不放宽断言或门禁。
+- [x] deno task test：641 tests /51 steps；test:workspace：14 tests /105 steps；
+      test:home-notes：2 tests /14 steps；受影响 typecheck/lint/format 通过。
+      check:ui ownership A–M 与 visual violations 均为0； check:bundle initial
+      gzip 253959B、shared editor 141117B、 Notes-only editor 1529B，预算与
+      forbidden dependencies 门禁未放宽。
+- [x] 全库 lint 已运行，未改动的 lib/api.ts、lib/local.ts 与 search 域仍有
+      9项既有诊断；没有将无关清理混入本次修复。README、DESIGN_SYSTEM、
+      MARKDOWN_EDITOR、CHANGELOG Unreleased 与本记录同步更新。
+- [x] 全库 fmt check 已运行；未修改的 WORKSPACE_FINAL_REFACTOR_PLAN.md 与
+      scripts/ui-guard/baseline.json 共2个既有格式问题保留，本次文件单独检查。
+- [ ] 真机软键盘、物理触控、Safari、OS 输入法候选窗不可用，未验证且不宣称通过。
+      #109 当前仍 OPEN，尚不存在其最终 masonry 集成可验收；本次既有
+      ControlledNotes 动态高度/排序回归通过，不修改其布局算法或列数阈值。
+
 ## Issue #138 浮动画布代码块滚动条（2026-10-08）
 
 - [x] 沿用 Home archetype，Search 为 primary；无新 surface / primitive /

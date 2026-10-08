@@ -556,7 +556,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Open note editor
             if (!(await bodyInput.isVisible())) {
-                await page.locator(".notes-workspace-list .note-card").first()
+                await page.locator(".notes-workspace-list .note-title").first()
                     .click();
             }
             await titleInput.waitFor();
@@ -728,13 +728,24 @@ Deno.test("production workspace contracts", async (t) => {
                 '.note-editor-toolbar button:has-text("版本历史")',
             );
             await versionsBtn.click();
-            const versionsSection = page.locator(".note-versions");
+            const versionsSection = page.locator(".note-history");
             await versionsSection.waitFor();
-            const cloudSnapshot = versionsSection.locator("article").filter({
-                hasText: "Client conflicting edit",
-            }).first();
-            await cloudSnapshot.waitFor();
-            await cloudSnapshot.getByRole("button", { name: "恢复此版本" })
+            const versionNumber = await page.evaluate(async (id) => {
+                const versions =
+                    (await (await fetch(`/api/notes/${id}/versions`)).json())
+                        .data as Array<{ version: number; body: string }>;
+                return versions.find((version) =>
+                    version.body.includes("Client conflicting edit")
+                )!.version;
+            }, createdNoteId);
+            await versionsSection.locator(".note-history-list button").filter({
+                hasText: `版本 ${versionNumber} ·`,
+            }).click();
+            await versionsSection.getByRole("button", {
+                name: "恢复此版本",
+                exact: true,
+            }).click();
+            await page.getByRole("button", { name: "确认恢复", exact: true })
                 .click();
             await page.waitForFunction(() =>
                 document.querySelector<HTMLTextAreaElement>(
@@ -766,13 +777,13 @@ Deno.test("production workspace contracts", async (t) => {
                 );
                 await versionsBtn.click();
                 const versionErrorAlert = page.locator(
-                    '.note-editor p[role="alert"].error',
+                    '.note-history [role="alert"]',
                 );
                 await versionErrorAlert.waitFor();
-                assertEquals(
-                    (await versionErrorAlert.textContent() ?? "").length > 0,
-                    true,
-                );
+                await page.getByRole("button", {
+                    name: "返回编辑",
+                    exact: true,
+                }).click();
             } finally {
                 await page.unroute("**/api/notes/*/versions").catch(() => {});
             }
@@ -836,7 +847,7 @@ Deno.test("production workspace contracts", async (t) => {
                 "便签",
             );
             // Click note card to re-enter editor
-            await notesWindow.locator(".notes-workspace-list .note-card")
+            await notesWindow.locator(".notes-workspace-list .note-title")
                 .first()
                 .click();
             await page.locator(
@@ -1417,8 +1428,8 @@ Deno.test("production workspace contracts", async (t) => {
             const heroBoxBefore = await page.locator(".hero").boundingBox();
             const noteBoxBefore = await floatingNote.boundingBox();
 
-            // Click floating note card to open editor in workspace
-            await floatingNote.locator(".note-card").click();
+            // The title is the explicit edit entry; body interactions are read-only.
+            await floatingNote.locator(".note-title").click();
 
             // Workspace opens as desktop aside
             const panel = page.locator("aside.workspace-panel");
@@ -1432,7 +1443,7 @@ Deno.test("production workspace contracts", async (t) => {
             // Back button is present
             assertEquals(
                 await panel.locator(
-                    '.workspace-header button[aria-label="返回上一级"]',
+                    '.workspace-header button[aria-label="返回便签列表"]',
                 ).isVisible(),
                 true,
             );
