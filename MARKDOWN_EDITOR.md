@@ -26,9 +26,15 @@ bridge。Home、NoteCard、FloatingNotes 和 Notes 根列表继续使用只读
 - `preserveSoftBreaks: true` 仅改变 Notes hardbreak node 的 DOM
   presentation，让软换行和硬换行均可见；保留节点属性与序列化语义。Documents
   默认行为不变。
-- 工具栏与正文属于同一 focus composite。模式切换不
-  flush；真正离开组合区域才提交脏正文。延迟 blur 必须读取当前 canonical draft 与
-  accepted server note，不能使用旧 render 的保存状态。
+- 标题、当前 Live/Source 正文和格式工具栏属于同一实例的编辑焦点区域；鼠标、
+  Tab/Shift+Tab、标题 Enter 的内部移动不保存、不重启 1500ms debounce。 模式 Tab
+  是明确的不保存例外，不把整张 `.note-editor` 当作内部区域。
+- 真正移至历史、颜色或外部控件时，仅 dirty 草稿执行一次 manual flush，并取消
+  autosave timer；恢复的本地 dirty 草稿即使没有 timer 也可通过离开区域提交。
+  clean 离开不 PATCH；Ctrl/Cmd+S 保持显式 manual 保存语义。
+- 延迟 blur 读取最终 focus、当前 canonical draft、accepted server note 与
+  composition ref；跨实例焦点不是内部移动，卸载取消待执行判断，不补发保存。
+  标题中文 composition 期间也不提交或执行 Enter 跳转。
 - 较早保存请求成功后，仅在当前草稿仍等于提交内容时删除本地副本；否则保留当前草稿并更新基准版本，避免标题保存覆盖后来输入的正文。
 - 每个 consumer 拥有独立 handle、selection、history
   与计时器；异步初始化在卸载后完成时立即 destroy。解析/初始化失败保留正文并切换
@@ -64,9 +70,11 @@ Documents-only modules，以及 framework package 多版本重复。
 ## 验证入口
 
 - `deno task test`：共享 round-trip fixtures、origin、commands 与多实例等契约。
-- `deno task test:workspace`：原工作区行为与 Notes Live/Source
-  E2E，覆盖无副作用切换、IME、undo/redo、本地 Ctrl/Cmd+K、任务编辑、409
-  云端替换、历史恢复、9500 字正文与超限草稿。
+- `deno task test:workspace`：原工作区行为与 Notes Live/Source/focus
+  E2E，覆盖真实 PATCH/version/history、标题/正文/工具栏内部移动、dirty
+  离开、debounce、草稿恢复、失败重试、多实例、在途旧请求保留新草稿，以及
+  IME、undo/redo、本地 Ctrl/Cmd+K、任务编辑、409 云端替换、历史恢复、 9500
+  字正文与超限草稿。
 - `deno task check:ui`：Design Token 与 owner 门禁。
 - `deno task check:bundle`：上述 byte budget、lazy 与 consumer 隔离门禁。
 - 实页矩阵、computed-style parity、Chromium composition 与 20 次销毁后的

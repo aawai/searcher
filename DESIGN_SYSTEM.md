@@ -73,10 +73,12 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 
 ### Notes Markdown editor
 
-- 默认 Live Preview，Source Mode 保留 textarea；两者和 NoteMarkdownToolbar
-  使用一个 focus composite。仅真正离开组合区域
-  flush；模式切换、初始化和云端替换不保存。IME composition
-  期间不执行格式命令或提交半成品。
+- 标题、当前 Live Preview 或 Source textarea 与 NoteMarkdownToolbar 使用同一
+  实例的编辑 focus boundary；鼠标/键盘内部移动与标题 Enter 不提前保存、不重启
+  debounce。模式 Tab 保留不保存例外，历史、颜色和外部控件仍是真正离开。
+- 仅 dirty 草稿真正离开时执行一次 manual flush；clean 离开不提交，显式
+  Ctrl/Cmd+S 语义不变。初始化与云端替换不保存；标题/正文 IME composition
+  期间不执行格式命令、Enter 跳转或提交半成品。卸载不补发延迟保存。
 - NoteEditor 持有 canonical Markdown、1500ms autosave、IndexedDB 草稿及 mutation
   queue；NoteLivePreviewEditor 仅持有共享 runtime 的实例生命周期、选区与
   composition bridge，不拥有云端业务。详见

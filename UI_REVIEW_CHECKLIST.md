@@ -47,6 +47,46 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #136 Notes 编辑焦点与保存验收（2026-10-08）
+
+- [x] Owner 为现有 NoteEditor；标题、当前正文、工具栏消费同一实例的编辑焦点
+      判定，模式 Tab 保留例外。历史、颜色与外部控件不属于内部区域。未修改共享
+      Markdown adapter、API/schema、版本/snapshot 策略、样式或 Host geometry。
+- [x] Red：未修改标题，鼠标从标题点击 Live 正文，完整观察 1800ms 后捕获真实
+      manual PATCH（原始正文与 version=1），预期为零提交。Green：同一回归保护
+      PATCH、真实 Note DTO/version 与 history，不 mock save。
+- [x] 真实 production-app 的 390×844 / 768×1024 / 1440×900 × light/dark 六组
+      实页与 screenshot；390/1440 使用 Zen，768 使用 Widgets constrained。 标题
+      Enter → 正文 → 工具栏 → 正文 → Source，300ms 内无提前 PATCH；
+      真正移至历史后仅一个 manual PATCH，version +1，额外观察 1800ms 无重复
+      autosave。颜色/历史与两种模式的键盘边界由真实 E2E 覆盖。
+- [x] Chromium CDP `Input.imeSetComposition` 在标题输入“中文组合”，等待 1800ms
+      无半成品 PATCH；`Input.insertText` 提交后仅一个 autosave。 不是 OS
+      输入法候选窗人工验收。标题 composition Enter/格式命令/blur 与正文
+      IME、undo/redo、本地链接快捷键由 production E2E 覆盖。
+- [x] 1440×900 dark Widgets 两个真实便签窗口：第一窗口 dirty 标题移至第二窗口，
+      仅第一实例发 manual PATCH；第二实例 clean，不发 PATCH。截图确认独立窗口、
+      原有 chrome 与正文结构保持不变。
+- [x] 脚本/环境校准：补齐 user-local Chromium 运行库与中文字体，不改产品代码或
+      CI 预算。browser script 改用实际 Tabs 语义而非猜测 data-state；修正 press
+      API 参数后重跑全部六组。E2E 在打开第二实体前通过 Dock 重新聚焦 Notes
+      browser， 避免真实窗口遮挡；关闭/返回兼容两种 Host，不强制点击被遮挡控件。
+- [x] `notes-focus.test.ts` 的 14 steps：clean 内部/外部移动、Live/Source
+      标题与正文合并 autosave、原始 debounce、不保存的模式切换、dirty 标题-only
+      历史/颜色 flush、显式 clean Ctrl+S、标题 IME、卸载与恢复 dirty
+      草稿、失败重试、在途旧标题响应保留新正文、两个实例独立保存全部通过。
+      既有云端 409/替换、history restore、Source
+      transforms、工具栏与快捷键回归保持。
+- [x] `deno task test`：640 tests / 51 steps； `deno task test:workspace`：11
+      tests / 105 steps； affected typecheck/lint 通过。`check:ui` 为零
+      violations； `check:bundle` 通过，initial gzip 251140 bytes、shared editor
+      async 141117 bytes、Notes-only 1530 bytes；不放宽 baseline 或预算。现有
+      Notes regression CI 与 workspace task 纳入新 focus E2E。
+- [x] 全库 lint 已执行：未改动的 api.ts/local.ts 与 search 域仍有 9 项既有诊断；
+      本次新增测试的 require-await 已修复，受影响文件 lint 通过。全库 fmt check
+      已执行：未改动的 WORKSPACE_FINAL_REFACTOR_PLAN.md、ui-guard/baseline.json
+      格式不通过，不为此任务重排无关文件；本次修改文件单独检查。
+
 ## Issue #108 Notes Live Preview 验收（2026-10-08）
 
 - [x] 默认 Live + Source；消费 #110 单一 foundation，无第二套
