@@ -76,7 +76,13 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
         );
     }
     async function settled() {
-        await editor.locator(".save-state.save-saved").waitFor();
+        await editor.locator(".save-state.save-saved").waitFor({
+            state: "attached",
+        });
+        if (await editor.locator(".note-history").isVisible()) {
+            await editor.getByRole("button", { name: "返回编辑", exact: true })
+                .click();
+        }
     }
     await t.step(
         "clean title to body has no PATCH or version/history change",
@@ -89,6 +95,8 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             await page.waitForTimeout(1800);
             assertEquals(writes, []);
             assertEquals(await readState(), before);
+            await editor.getByRole("button", { name: "返回编辑", exact: true })
+                .click();
         },
     );
     for (const mode of ["源码", "所见即所得"]) {
@@ -197,7 +205,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                         exact: true,
                     }).click();
                 } else {
-                    await editor.getByRole("radio").first().focus();
+                    await editor.locator(".note-color-trigger").focus();
                 }
                 assertEquals((await response).status(), 200);
                 await settled();
@@ -248,7 +256,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             );
             await editor.getByRole("button", { name: "粗体", exact: true })
                 .click();
-            await editor.getByRole("radio").first().focus();
+            await editor.locator(".note-color-trigger").focus();
             await page.waitForTimeout(1800);
             assertEquals(writes.length, count);
             const response = saved("autosave");
@@ -264,7 +272,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             const count = writes.length;
             await title.fill("关闭后恢复");
             await page.locator(
-                'button[aria-label="关闭便签"], button[aria-label="返回上一级"]',
+                'button[aria-label="关闭便签"], button[aria-label="返回便签列表"]',
             ).first().click();
             await editor.waitFor({ state: "detached" });
             await page.waitForTimeout(1800);
@@ -311,7 +319,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             }
             await title.focus();
             const response = saved("manual");
-            await editor.getByRole("radio").first().focus();
+            await editor.locator(".note-color-trigger").focus();
             assertEquals((await response).status(), 200);
             await settled();
             assertEquals((await readState()).note.title, "失败后重试");
@@ -334,10 +342,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             try {
                 await title.fill("在途标题");
                 const response = saved("manual");
-                await editor.getByRole("button", {
-                    name: "版本历史",
-                    exact: true,
-                }).click();
+                await editor.locator(".note-color-trigger").focus();
                 await Promise.race([held.promise, response]);
                 await editor.getByRole("tab", { name: "源码", exact: true })
                     .click();
@@ -345,7 +350,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                     "在途请求后的最新正文",
                 );
                 await page.locator(
-                    'button[aria-label="关闭便签"], button[aria-label="返回上一级"]',
+                    'button[aria-label="关闭便签"], button[aria-label="返回便签列表"]',
                 ).first().click();
                 await editor.waitFor({ state: "detached" });
                 release.resolve();

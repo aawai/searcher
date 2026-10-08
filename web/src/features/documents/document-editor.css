@@ -48,7 +48,7 @@
 /* Document Title Input (Separate from Markdown body, no implicit H1) */
 .document-title-wrapper {
     width: 100%;
-    max-width: var(--document-readable-width);
+    max-width: var(--editor-readable-width);
     margin: 0 auto;
     padding-top: var(--space-2);
 }
@@ -168,7 +168,7 @@
 .document-editor-content-layout {
     display: flex;
     flex: 1;
-    min-height: var(--document-editor-min-content-height);
+    min-height: var(--editor-min-content-height);
     position: relative;
     overflow: hidden;
 }
@@ -192,7 +192,7 @@
 
 .document-editor-readable-wrapper {
     width: 100%;
-    max-width: var(--document-readable-width);
+    max-width: var(--editor-readable-width);
     margin: 0 auto;
     display: flex;
     flex-direction: column;

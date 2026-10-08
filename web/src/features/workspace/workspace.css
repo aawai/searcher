@@ -17,7 +17,7 @@
     animation: workspace-enter .16s ease-out;
 }
 .workspace-panel[data-workspace-expanded="true"] {
-    width: min(var(--workspace-document-editor-width), calc(100vw - 2 *
+    width: min(var(--workspace-editor-expanded-width), calc(100vw - 2 *
         var(--workspace-inset)));
 }
 .workspace-header {
@@ -42,6 +42,9 @@
     overflow: auto;
     overscroll-behavior: contain;
     padding: var(--space-4);
+}
+.workspace-body:has(> [data-workspace-editor]) {
+    overflow: hidden;
 }
 .workspace-root {
     display: flex;

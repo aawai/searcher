@@ -545,13 +545,13 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             const noteCard = notesPanel.locator(".note-card, [data-note-id]")
                 .first();
             await noteCard.waitFor({ state: "visible" });
-            await noteCard.click();
+            await noteCard.locator(".note-title").click();
             const noteEditor = notesPanel.locator(
                 ".notes-workspace-editor, textarea",
             ).first();
             await noteEditor.waitFor({ state: "visible" });
             const mobileNotesBack = notesPanel.locator(
-                'button[aria-label="返回上一级"]',
+                'button[aria-label="返回便签列表"]',
             ).first();
             await mobileNotesBack.waitFor({ state: "visible" });
             await mobileNotesBack.click();
@@ -619,7 +619,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 ".note-card, [data-note-id]",
             ).first();
             await desktopNoteCard.waitFor({ state: "visible" });
-            await desktopNoteCard.click();
+            await desktopNoteCard.locator(".note-title").click();
             const desktopNoteEditor = page.locator(
                 '.desktop-window[data-window-kind="note"], .notes-workspace-editor, textarea',
             ).first();
@@ -1468,12 +1468,17 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 "User 1 custom window position must be restored upon re-login",
             );
             // 6. Zen <-> Widgets switch
-            await request("/api/preferences", "PATCH", { style: "zen" });
+            const zenPreferences = await request<{ style: string }>(
+                "/api/preferences",
+                "PATCH",
+                { style: "zen" },
+            );
+            assertEquals(zenPreferences.style, "zen");
             await visit("/");
             await page.locator(".desktop-dock").waitFor({
                 state: "detached",
                 timeout: 3000,
-            }).catch(() => {});
+            });
             assertEquals(
                 await page.locator(".desktop-dock").count(),
                 0,
@@ -1604,7 +1609,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
             const noteCard = notesWin.locator(".note-card").first();
             await noteCard.waitFor({ state: "visible" });
-            await noteCard.click();
+            await noteCard.locator(".note-title").click();
             await notesWin.locator(".notes-workspace-editor").waitFor({
                 state: "visible",
             });
@@ -1615,7 +1620,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 "Nested note editor must fit the constrained window",
             );
             await notesWin.getByRole("button", {
-                name: "返回上一级",
+                name: "返回便签列表",
                 exact: true,
             }).click();
             await notesWin.locator(".note-card").first().waitFor({

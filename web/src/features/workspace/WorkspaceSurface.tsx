@@ -16,6 +16,8 @@ export function WorkspaceSurface(
         children,
         footer,
         expanded = false,
+        headerActions,
+        backLabel = "返回上一级",
     }: {
         presentation: Exclude<WorkspacePresentation, "window">;
         title: string;
@@ -26,6 +28,8 @@ export function WorkspaceSurface(
         children: ReactNode;
         footer: ReactNode;
         expanded?: boolean;
+        headerActions?: ReactNode;
+        backLabel?: string;
     },
 ) {
     const mobile = presentation === "sheet";
@@ -53,6 +57,10 @@ export function WorkspaceSurface(
         const escape = (event: KeyboardEvent) => {
             if (event.key !== "Escape" || event.defaultPrevented) return;
             if (
+                (event.target instanceof Element &&
+                    event.target.closest(
+                        '[role="menu"], [role="alertdialog"]',
+                    )) ||
                 document.querySelector(
                     '[role="menu"], [data-slot="popover-content"], [role="dialog"], [role="alertdialog"]',
                 )
@@ -87,7 +95,7 @@ export function WorkspaceSurface(
                         ref={back}
                         variant="ghost"
                         size="icon"
-                        aria-label="返回上一级"
+                        aria-label={backLabel}
                         onClick={onBack}
                     >
                         <ArrowLeft size={18} />
@@ -100,6 +108,7 @@ export function WorkspaceSurface(
                         </SheetTitle>
                     )
                     : <h2 className="workspace-title">{title}</h2>}
+                {headerActions}
                 <Button
                     ref={close}
                     variant="ghost"
@@ -118,7 +127,18 @@ export function WorkspaceSurface(
         ? (
             <Sheet
                 open
-                onOpenChange={(open) => {
+                onOpenChange={(open, details) => {
+                    const target = details.event.target;
+                    if (
+                        !open && details.reason === "escape-key" &&
+                        target instanceof Element &&
+                        target.closest(
+                            '[role="menu"], [role="alertdialog"], [data-workspace-escape-boundary]',
+                        )
+                    ) {
+                        details.cancel();
+                        return;
+                    }
                     if (!open) onClose();
                 }}
             >

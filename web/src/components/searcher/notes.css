@@ -208,6 +208,11 @@
     font-family: Georgia, "Noto Serif SC", "Source Han Serif SC", serif;
     flex: 1;
     color: inherit;
+    justify-content: flex-start;
+    padding: 0;
+    border-radius: var(--control-radius);
+    min-height: var(--control-compact-height);
+    display: block;
 }
 
 .note-card-actions {
@@ -221,11 +226,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s ease;
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border-radius: var(--control-radius);
-    padding: calc(var(--space-1) / 4);
     z-index: 5;
 }
 
@@ -285,40 +285,6 @@
     border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
-.note-editor-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding-top: var(--space-control-gap);
-    margin-top: var(--space-1);
-}
-
-.note-color-dots {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-control-gap);
-}
-
-.note-color-dot-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    padding: 0;
-    cursor: pointer;
-    position: relative;
-    outline: none;
-}
-
-.note-color-dot-btn:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-
 .note-quick-dot {
     width: 6px;
     height: 6px;
@@ -326,19 +292,6 @@
     display: block;
     transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s
         ease;
-}
-
-.note-color-dot-btn:hover .note-quick-dot {
-    transform: scale(1.35);
-}
-
-.note-color-dot-btn.is-selected::after {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    border-radius: 50%;
-    border: 1.5px solid var(--foreground);
-    pointer-events: none;
 }
 
 .note-quick-dot--paper {
@@ -437,13 +390,12 @@
 .note-editor {
     display: flex;
     flex-direction: column;
-    min-height: 100%;
-    gap: var(--space-row-gap);
-    padding: var(--space-row-gap) var(--space-5);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    gap: var(--space-control-gap);
+    padding: 0;
     background: var(--surface-solid);
-    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .note-title-frameless {
@@ -473,7 +425,7 @@
     flex-direction: column;
     flex: 1;
     min-width: 0;
-    margin-top: var(--space-row-gap);
+    min-height: var(--editor-min-content-height);
 }
 
 .note-live-editor {
@@ -485,11 +437,8 @@
 }
 
 .note-live-editor .ProseMirror {
-    min-height: calc(var(--control-touch-target) * 6);
+    min-height: var(--editor-min-content-height);
     padding: var(--space-row-gap);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--surface-soft) 40%, transparent);
     outline: none;
 }
 
@@ -710,19 +659,24 @@
     flex-direction: column;
     flex: 1;
     min-width: 0;
+    min-height: var(--editor-min-content-height);
     gap: var(--space-control-gap);
 }
 .note-markdown-toolbar {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: var(--space-inline-gap);
     min-width: 0;
+}
+.note-markdown-toolbar svg {
+    width: var(--control-icon-size);
+    height: var(--control-icon-size);
 }
 .note-body-textarea {
     flex: 1;
     min-width: 0;
-    min-height: calc(var(--control-touch-target) * 6);
-    resize: vertical;
+    min-height: var(--editor-min-content-height);
+    resize: none;
 }
 
 /* Desktop floating note code-block presentation and native scrollbar.
@@ -772,4 +726,25 @@
 
 .floating-notes--canvas .note-preview.markdown pre::-webkit-scrollbar-thumb:active {
     background: rgba(120, 120, 120, 0.7);
+}
+@media (max-width: 767px), (any-pointer: coarse) {
+    .note-card-actions {
+        position: static;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+        flex: none;
+    }
+    .note-card:hover .note-head,
+    .note-card:focus-within .note-head,
+    .notes-workspace .note-head {
+        padding-inline-end: 0;
+    }
+    .note-action-btn,
+    .note-color-trigger,
+    .note-markdown-toolbar .button {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+        height: var(--control-touch-target);
+    }
 }

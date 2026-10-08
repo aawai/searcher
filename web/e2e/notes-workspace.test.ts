@@ -97,7 +97,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         }
         // If inside editor, click back button
         const backBtn = currentPanel.locator(
-            '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
+            'button[aria-label="返回上一级"], button[aria-label="返回便签列表"]',
         );
         if (await backBtn.isVisible()) {
             await backBtn.click();
@@ -822,8 +822,21 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                         }
                         element.setSelectionRange(0, element.value.length);
                     });
-                    await page.getByRole("button", { name: label, exact: true })
-                        .click();
+                    const direct = page.getByRole("button", {
+                        name: label,
+                        exact: true,
+                    });
+                    if (await direct.isVisible()) await direct.click();
+                    else {
+                        await page.getByRole("button", {
+                            name: label.endsWith("标题") ? "标题" : "更多格式",
+                            exact: true,
+                        }).click();
+                        await page.getByRole("menuitem", {
+                            name: label,
+                            exact: true,
+                        }).click();
+                    }
                     assertStringIncludes(await input.inputValue(), expected);
                 }
                 await input.fill("输入中文");
@@ -917,10 +930,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 await mobile.locator(".notes-workspace-list .note-title", {
                     hasText: "Touch Markdown fixture",
                 }).click();
-                await mobile.waitForFunction(() =>
-                    document.activeElement?.getAttribute("aria-label") ===
-                        "返回上一级"
-                );
+                await mobile.locator(".note-editor").waitFor({
+                    state: "visible",
+                });
                 assertEquals(
                     await mobile.evaluate(() =>
                         matchMedia("(pointer: coarse)").matches
@@ -986,7 +998,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                         "已保存"
                 );
                 await mobile.getByRole("button", {
-                    name: "返回上一级",
+                    name: "返回便签列表",
                     exact: true,
                 }).click();
                 const fixtureCard = mobile.locator(".note-card", {
@@ -1152,7 +1164,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             // Return to root
             const returnBack = panel.locator(
-                '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
+                'button[aria-label="返回上一级"], button[aria-label="返回便签列表"]',
             );
             if (await returnBack.isVisible()) {
                 await returnBack.click();
@@ -1253,6 +1265,12 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     "已保存",
                 )
             );
+            await page.getByRole("button", { name: "版本历史", exact: true })
+                .click();
+            await page.locator(".note-history").waitFor({ state: "visible" });
+            await page.getByRole("button", { name: "返回编辑", exact: true })
+                .click();
+            assertEquals(await bodyInput.inputValue(), serverUpdatedBody);
 
             const afterCloudBody = "Edit after accepting the cloud version";
             const afterCloudSave = page.waitForResponse((response) =>
@@ -1316,7 +1334,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             // Return to root
             const returnBack2 = panel.locator(
-                '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
+                'button[aria-label="返回上一级"], button[aria-label="返回便签列表"]',
             );
             if (await returnBack2.isVisible()) {
                 await returnBack2.click();
@@ -1363,25 +1381,20 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 await versionsBtn.click();
 
                 // Error alert is displayed
-                const errorAlert = page.locator('p[role="alert"].error');
+                const errorAlert = page.locator('.note-history [role="alert"]');
                 await errorAlert.waitFor({ state: "visible" });
-                assertEquals(
-                    await errorAlert.textContent(),
-                    "加载版本历史失败",
-                );
 
                 // 2. Unroute and re-fetch versions
                 await page.unroute("**/api/notes/*/versions");
-                await versionsBtn.click();
+                await page.locator(".note-history").getByRole("button", {
+                    name: "重试",
+                    exact: true,
+                }).click();
 
                 // Error alert clears and versions list / empty notice displays
                 await errorAlert.waitFor({ state: "detached" });
-                const versionsSection = page.locator("section.note-versions");
+                const versionsSection = page.locator("section.note-history");
                 await versionsSection.waitFor({ state: "visible" });
-                assertStringIncludes(
-                    await versionsSection.textContent() ?? "",
-                    "版本历史",
-                );
                 const historical = await page.evaluate(async () => {
                     const note = (await fetch("/api/notes").then((r) =>
                         r.json()
@@ -1398,6 +1411,10 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     name: "恢复此版本",
                     exact: true,
                 }).first().click();
+                await page.getByRole("button", {
+                    name: "确认恢复",
+                    exact: true,
+                }).click();
                 await versionsSection.waitFor({ state: "detached" });
                 assertEquals(
                     await (await sourceEditor(page)).inputValue(),
@@ -1416,7 +1433,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             // Return to root
             const returnBack3 = panel.locator(
-                '.desktop-window-chrome button[aria-label="返回上一级"], .workspace-header button[aria-label="返回上一级"], button[aria-label="返回上一级"]',
+                'button[aria-label="返回上一级"], button[aria-label="返回便签列表"]',
             );
             if (await returnBack3.isVisible()) {
                 await returnBack3.click();

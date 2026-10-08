@@ -21,6 +21,8 @@ import {
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 
+import { Button } from "../ui/button.tsx";
+import { NoteColorItems, NoteColorMenu } from "./NoteColorMenu.tsx";
 export interface NoteLayoutDto {
     deviceClass: "desktop" | "tablet" | "mobile";
     x?: number | null;
@@ -46,14 +48,6 @@ export interface NoteItem {
     layout?: NoteLayoutDto;
 }
 
-export const NOTE_COLORS = ["paper", "amber", "rose", "sage", "sky"] as const;
-export const COLOR_NAMES: Record<string, string> = {
-    paper: "纸白",
-    amber: "琥珀",
-    rose: "玫瑰",
-    sage: "鼠尾草",
-    sky: "天空",
-};
 export function isNoteCompact(
     mode?: "full" | "compact",
     expanded?: boolean,
@@ -90,6 +84,8 @@ export function NoteCard(
         onToggleHomeFixed,
         onChangeColor,
         onDelete,
+        titleContent,
+        summary,
     }: {
         note: NoteItem;
         onOpen?: () => void;
@@ -103,6 +99,8 @@ export function NoteCard(
         onToggleHomeFixed?: () => void;
         onChangeColor?: (color: string) => void;
         onDelete?: () => void;
+        titleContent?: ReactNode;
+        summary?: ReactNode;
     },
 ) {
     const isCompact = isNoteCompact(mode, note.layout?.expanded);
@@ -111,32 +109,21 @@ export function NoteCard(
         <article
             className={"note-card note-" + (note.color || "paper") +
                 (isCompact ? " note-card--compact" : "")}
-            onClick={(e) => {
-                if (
-                    (e.target as HTMLElement).closest(
-                        "button, select, input, a, [role='button'], [data-slot='dropdown-menu-trigger']",
-                    )
-                ) return;
-                onOpen?.();
-            }}
-            onDoubleClick={(e) => {
-                if (
-                    (e.target as HTMLElement).closest(
-                        "button, select, input, a",
-                    )
-                ) return;
-                if (onToggleMode && !toggleDisabled) onToggleMode();
-                else onOpen?.();
-            }}
         >
             <header className="note-head">
                 <div className="note-head-left">
                     {dragHandle && (
                         <span className="note-drag">{dragHandle}</span>
                     )}
-                    <strong className="note-title" title={displayTitle}>
-                        {displayTitle}
-                    </strong>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="note-title"
+                        title={displayTitle}
+                        onClick={onOpen}
+                    >
+                        {titleContent ?? displayTitle}
+                    </Button>
                     {note.isPinned && (
                         <span
                             className="note-pin-marker"
@@ -155,8 +142,10 @@ export function NoteCard(
                     aria-label="便签操作"
                 >
                     {onToggleMode && (
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             className="note-action-btn"
                             disabled={toggleDisabled}
                             aria-busy={toggleDisabled || undefined}
@@ -170,7 +159,7 @@ export function NoteCard(
                             {isCompact
                                 ? <Maximize2 size={14} />
                                 : <Minimize2 size={14} />}
-                        </button>
+                        </Button>
                     )}
 
                     {(onTogglePin || onToggleHomeFixed || onOpen ||
@@ -186,6 +175,11 @@ export function NoteCard(
                             <DropdownMenuContent
                                 sideOffset={8}
                                 className="note-dropdown-content"
+                                onKeyDown={(event) => {
+                                    if (event.key === "Escape") {
+                                        event.stopPropagation();
+                                    }
+                                }}
                             >
                                 {onTogglePin && (
                                     <DropdownMenuItem
@@ -193,7 +187,6 @@ export function NoteCard(
                                             e?.stopPropagation();
                                             onTogglePin();
                                         }}
-                                        onSelect={onTogglePin}
                                     >
                                         <Pin
                                             size={13}
@@ -214,7 +207,6 @@ export function NoteCard(
                                             e?.stopPropagation();
                                             onToggleHomeFixed();
                                         }}
-                                        onSelect={onToggleHomeFixed}
                                     >
                                         <Bookmark
                                             size={13}
@@ -235,11 +227,16 @@ export function NoteCard(
                                             e?.stopPropagation();
                                             onOpen();
                                         }}
-                                        onSelect={onOpen}
                                     >
                                         <ExternalLink size={13} />
                                         <span>编辑便签</span>
                                     </DropdownMenuItem>
+                                )}
+                                {isCompact && onChangeColor && (
+                                    <NoteColorItems
+                                        color={note.color || "paper"}
+                                        onChange={onChangeColor}
+                                    />
                                 )}
                                 {onDelete && (
                                     <DropdownMenuItem
@@ -248,7 +245,6 @@ export function NoteCard(
                                             e?.stopPropagation();
                                             onDelete();
                                         }}
-                                        onSelect={onDelete}
                                     >
                                         <Trash2 size={13} />
                                         <span>移至回收站</span>
@@ -260,6 +256,7 @@ export function NoteCard(
                 </div>
             </header>
 
+            {isCompact && summary}
             {!isCompact && (
                 <div className="note-preview markdown">
                     {note.body?.trim()
@@ -275,37 +272,10 @@ export function NoteCard(
                 <footer className="note-card-footer">
                     {onChangeColor
                         ? (
-                            <div
-                                className="note-color-dots"
-                                role="radiogroup"
-                                aria-label="便签颜色"
-                            >
-                                {NOTE_COLORS.map((c) => {
-                                    const isSelected =
-                                        (note.color || "paper") === c;
-                                    return (
-                                        <button
-                                            key={c}
-                                            type="button"
-                                            role="radio"
-                                            aria-checked={isSelected}
-                                            aria-label={COLOR_NAMES[c]}
-                                            title={COLOR_NAMES[c]}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onChangeColor(c);
-                                            }}
-                                            className={`note-color-dot-btn ${
-                                                isSelected ? "is-selected" : ""
-                                            }`}
-                                        >
-                                            <span
-                                                className={`note-quick-dot note-quick-dot--${c}`}
-                                            />
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <NoteColorMenu
+                                color={note.color || "paper"}
+                                onChange={onChangeColor}
+                            />
                         )
                         : <span />}
                     {status && (

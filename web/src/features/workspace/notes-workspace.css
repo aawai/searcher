@@ -38,7 +38,7 @@
     }
 }
 .notes-workspace-editor .note-editor {
-    min-height: 100%;
+    min-height: 0;
     padding: 0;
 }
 .notes-workspace-editor .note-editor-toolbar {
@@ -51,5 +51,102 @@
 
 .notes-workspace-editor {
     height: 100%;
-    min-height: 100%;
+    min-height: 0;
+}
+.note-title-wrap,
+.note-body-scroll,
+.note-body-textarea {
+    width: 100%;
+    max-width: var(--editor-readable-width);
+    margin-inline: auto;
+}
+.note-body-scroll {
+    flex: 1;
+    min-height: var(--editor-min-content-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+.note-editor [hidden] {
+    display: none !important;
+}
+.note-edit-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: var(--space-control-gap);
+}
+.note-history {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: var(--editor-min-content-height);
+    gap: var(--space-row-gap);
+}
+.note-history-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-control-gap);
+}
+.note-history-header h3 {
+    font-size: var(--font-component-title-size);
+    margin: 0;
+}
+.note-history-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+    gap: var(--space-row-gap);
+    overflow-y: auto;
+}
+.note-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-control-gap);
+}
+.note-history-list button {
+    height: auto;
+    white-space: normal;
+    text-align: start;
+    justify-content: flex-start;
+}
+.note-history-preview {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+@container (min-width: 640px) {
+    .note-history-columns {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+        overflow: hidden;
+    }
+    .note-history-list,
+    .note-history-preview {
+        overflow-y: auto;
+        min-height: 0;
+    }
+}
+.note-list-detail {
+    min-width: 0;
+    margin-top: var(--space-control-gap);
+    font-size: var(--font-caption-size);
+}
+.note-list-summary {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.note-list-detail time {
+    color: var(--muted);
+    display: block;
+}
+.note-edit-view > *,
+.note-edit-view > [data-slot="tabs"] > :not(.note-editor-body) {
+    flex-shrink: 0;
+}
+.note-edit-view > [data-slot="tabs"] {
+    flex-shrink: 1;
 }

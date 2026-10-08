@@ -71,6 +71,26 @@ function DropdownMenuContent({
     );
 }
 
+function DropdownMenuRadioGroup(props: MenuPrimitive.RadioGroup.Props) {
+    return <MenuPrimitive.RadioGroup {...props} />;
+}
+
+function DropdownMenuRadioItem(
+    { className, children, ...props }: MenuPrimitive.RadioItem.Props,
+) {
+    return (
+        <MenuPrimitive.RadioItem
+            className={cn("engine-option", className)}
+            {...props}
+        >
+            <MenuPrimitive.RadioItemIndicator aria-hidden="true">
+                ✓
+            </MenuPrimitive.RadioItemIndicator>
+            {children}
+        </MenuPrimitive.RadioItem>
+    );
+}
+
 export {
     DropdownMenu,
     DropdownMenuContent,
@@ -78,5 +98,7 @@ export {
     DropdownMenuPopup,
     DropdownMenuPortal,
     DropdownMenuPositioner,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuTrigger,
 };

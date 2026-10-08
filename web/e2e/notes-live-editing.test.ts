@@ -203,16 +203,23 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
         async () => {
             await page.getByRole("button", { name: "版本历史", exact: true })
                 .click();
-            const version = page.locator(".note-versions article").filter({
-                hasText: "中文链接",
-            }).first();
-            await version.waitFor();
-            const before = writes.length;
-            await version.getByRole("button", {
-                name: "恢复此版本",
-                exact: true,
+            const versionNumber = await page.evaluate(async (id) => {
+                const versions =
+                    (await (await fetch(`/api/notes/${id}/versions`)).json())
+                        .data as Array<{ version: number; body: string }>;
+                return versions.find((version) =>
+                    version.body.includes("中文链接")
+                )!.version;
+            }, id);
+            await page.locator(".note-history-list button").filter({
+                hasText: `版本 ${versionNumber} ·`,
             }).click();
-            await page.locator(".note-versions").waitFor({ state: "detached" });
+            const before = writes.length;
+            await page.getByRole("button", { name: "恢复此版本", exact: true })
+                .click();
+            await page.getByRole("button", { name: "确认恢复", exact: true })
+                .click();
+            await page.locator(".note-history").waitFor({ state: "detached" });
             assertStringIncludes(await live.textContent() ?? "", "中文链接");
             await page.getByRole("tab", { name: "源码", exact: true }).click();
             assertStringIncludes(

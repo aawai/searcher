@@ -1,26 +1,7 @@
 import { assertEquals } from "@std/assert";
 import ReactDOMServer from "react-dom/server";
 import type { AiMessageDto } from "../ask/types.ts";
-import { NoteMarkdownToolbar } from "../../components/searcher/NoteMarkdownToolbar.tsx";
 import { ConversationHeader } from "../ask/ConversationHeader.tsx";
-
-Deno.test("NoteMarkdownToolbar unified formatter renders platform-specific titles", () => {
-    const htmlMac = ReactDOMServer.renderToStaticMarkup(
-        <NoteMarkdownToolbar onCommand={() => {}} platform="mac" />,
-    );
-    assertEquals(htmlMac.includes('title="粗体 (⌘ B)"'), true);
-    assertEquals(htmlMac.includes('title="斜体 (⌘ I)"'), true);
-    assertEquals(htmlMac.includes('title="链接 (⌘ K)"'), true);
-    assertEquals(htmlMac.includes('title="删除线 (⌘ ⇧ X)"'), true);
-
-    const htmlOther = ReactDOMServer.renderToStaticMarkup(
-        <NoteMarkdownToolbar onCommand={() => {}} platform="other" />,
-    );
-    assertEquals(htmlOther.includes('title="粗体 (Ctrl + B)"'), true);
-    assertEquals(htmlOther.includes('title="斜体 (Ctrl + I)"'), true);
-    assertEquals(htmlOther.includes('title="链接 (Ctrl + K)"'), true);
-    assertEquals(htmlOther.includes('title="删除线 (Ctrl + Shift + X)"'), true);
-});
 
 Deno.test("Ask ConversationHeader renders platform-specific search hints", () => {
     const mockMessage: AiMessageDto = {

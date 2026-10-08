@@ -20,13 +20,26 @@ import { api, ApiError, json } from "../../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
 import { Button } from "../ui/button.tsx";
 import { Textarea } from "../ui/textarea.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "../ui/alert-dialog.tsx";
+import { NoteColorMenu } from "./NoteColorMenu.tsx";
 import {
     matchesShortcut,
     type ShortcutPlatform,
     SHORTCUTS,
 } from "../../features/shortcuts/shortcut-catalog.ts";
-import { COLOR_NAMES, NOTE_COLORS, type NoteItem } from "./NoteCard.tsx";
+import type { Selection } from "@milkdown/prose/state";
+import type { NoteItem } from "./NoteCard.tsx";
 import type { MarkdownEditorHandle } from "../../features/markdown-editor/types.ts";
 
 const NoteLivePreviewEditor = lazy(() => import("./NoteLivePreviewEditor.tsx"));
@@ -75,6 +88,33 @@ export function NoteEditor(
     const [conflict, setConflict] = useState<NoteItem | null>(null);
     const [merge, setMerge] = useState("");
     const [copiedDraft, setCopiedDraft] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyBusy, setHistoryBusy] = useState(false);
+    const [selectedVersion, setSelectedVersion] = useState<Version | null>(
+        null,
+    );
+    const [restoreConfirm, setRestoreConfirm] = useState(false);
+    const historyTransition = useRef(false);
+    const saveFailed = useRef(false);
+    const lastEditFocus = useRef<HTMLElement | null>(null);
+    const liveScrollRef = useRef<HTMLDivElement>(null);
+    const modeScroll = useRef({ live: 0, source: 0 });
+    const historyFocus = useRef<
+        {
+            element: HTMLElement | null;
+            sourceStart: number;
+            sourceEnd: number;
+            liveSelection: Selection | null;
+            scroll: number;
+        } | null
+    >(null);
+    const historyBackRef = useRef<HTMLButtonElement>(null);
+    const returningFromHistory = useRef(false);
+    useEffect(() => {
+        if (historyOpen && !historyBusy) {
+            historyBackRef.current?.focus({ preventScroll: true });
+        }
+    }, [historyOpen, historyBusy]);
     const latestNoteRef = useRef(note);
     const draftRef = useRef(draft);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -204,7 +244,13 @@ export function NoteEditor(
     function editingBlur(event: FocusEvent<HTMLElement>) {
         const editor = event.currentTarget;
         const region = "[data-note-edit-focus], [data-note-mode-switch]";
-        if (!event.target.closest(region)) return;
+        const ownedMenuSelector = `[data-note-editor-owner="${
+            CSS.escape(editorId)
+        }"]`;
+        if (
+            !event.target.closest(region) &&
+            !event.target.closest(ownedMenuSelector)
+        ) return;
         clearTimeout(blurTimer.current);
         // Commands can replace focused DOM; inspect the final focus and latest refs.
         blurTimer.current = globalThis.setTimeout(() => {
@@ -212,9 +258,11 @@ export function NoteEditor(
             const target = editor.ownerDocument.activeElement;
             if (
                 !editor.isConnected || composingRef.current ||
+                historyTransition.current ||
                 submittedDraftRef.current === draftRef.current ||
                 !isDraftDirty() ||
-                (target?.closest(region) && editor.contains(target))
+                (target?.closest(region) && editor.contains(target)) ||
+                target?.closest(ownedMenuSelector)
             ) return;
             void save(undefined, "manual");
         });
@@ -283,13 +331,12 @@ export function NoteEditor(
                 data-note-edit-focus
                 onKeyDownCapture={bodyKeyDown}
             >
-                <NoteMarkdownToolbar
-                    onCommand={command}
-                    platform={platform}
-                    disabled={!draftReady || (view === "live" && !liveReady)}
-                />
-                {view === "live"
-                    ? (draftReady
+                <div
+                    className="note-body-scroll"
+                    ref={liveScrollRef}
+                    hidden={view !== "live"}
+                >
+                    {view === "live" && (draftReady
                         ? (
                             <Suspense
                                 fallback={<p role="status">正在加载编辑器…</p>}
@@ -310,33 +357,34 @@ export function NoteEditor(
                                 />
                             </Suspense>
                         )
-                        : <p role="status">正在恢复本地草稿…</p>)
-                    : (
-                        <>
-                            <label className="sr-only" htmlFor={sourceBodyId}>
-                                Markdown 内容
-                            </label>
-                            <Textarea
-                                ref={textareaRef}
-                                id={sourceBodyId}
-                                disabled={!draftReady}
-                                placeholder="输入 Markdown 内容…"
-                                value={draft.body}
-                                onChange={(event) =>
-                                    change({
-                                        ...draftRef.current,
-                                        body: event.target.value,
-                                    })}
-                                onCompositionStart={() => {
-                                    composition(true);
-                                }}
-                                onCompositionEnd={() => {
-                                    composition(false);
-                                }}
-                                className="note-body-textarea"
-                            />
-                        </>
-                    )}
+                        : <p role="status">正在恢复本地草稿…</p>)}
+                </div>
+                {view === "source" && (
+                    <>
+                        <label className="sr-only" htmlFor={sourceBodyId}>
+                            Markdown 内容
+                        </label>
+                        <Textarea
+                            ref={textareaRef}
+                            id={sourceBodyId}
+                            disabled={!draftReady}
+                            placeholder="输入 Markdown 内容…"
+                            value={draft.body}
+                            onChange={(event) =>
+                                change({
+                                    ...draftRef.current,
+                                    body: event.target.value,
+                                })}
+                            onCompositionStart={() => {
+                                composition(true);
+                            }}
+                            onCompositionEnd={() => {
+                                composition(false);
+                            }}
+                            className="note-body-textarea"
+                        />
+                    </>
+                )}
             </div>
         );
     }
@@ -351,6 +399,7 @@ export function NoteEditor(
         const data = next ?? draftRef.current;
         submittedDraftRef.current = data;
         setStatus("saving");
+        saveFailed.current = false;
         mutationQueue.current = mutationQueue.current.then(async () => {
             try {
                 const updated = await api<NoteItem>(
@@ -385,6 +434,7 @@ export function NoteEditor(
                 }
                 setConflict(null);
             } catch (error) {
+                saveFailed.current = true;
                 if (submittedDraftRef.current === data) {
                     submittedDraftRef.current = undefined;
                 }
@@ -409,6 +459,7 @@ export function NoteEditor(
         timer.current = undefined;
         setColor(nextColor);
         setStatus("saving");
+        saveFailed.current = false;
         mutationQueue.current = mutationQueue.current.then(async () => {
             try {
                 const updated = await api<NoteItem>(
@@ -430,6 +481,7 @@ export function NoteEditor(
                 }
                 setConflict(null);
             } catch (error) {
+                saveFailed.current = true;
                 if (error instanceof ApiError && error.code === 409) {
                     const serverNote = error.data as NoteItem | undefined;
                     if (serverNote) {
@@ -464,6 +516,8 @@ export function NoteEditor(
         const accepted = { body: conflict.body, title: conflict.title ?? "" };
         draftRef.current = accepted;
         setDraft(accepted);
+        submittedDraftRef.current = undefined;
+        saveFailed.current = false;
         if (conflict.color) {
             setColor(conflict.color);
         }
@@ -484,241 +538,465 @@ export function NoteEditor(
         void save(next, "conflict_resolution");
     }
 
-    async function showVersions() {
+    function rememberEditing() {
+        const textarea = textareaRef.current;
+        historyFocus.current = {
+            element: lastEditFocus.current,
+            sourceStart: textarea?.selectionStart ?? 0,
+            sourceEnd: textarea?.selectionEnd ?? 0,
+            liveSelection: liveEditorRef.current?.view.state.selection ?? null,
+            scroll: view === "live"
+                ? liveScrollRef.current?.scrollTop ?? 0
+                : textarea?.scrollTop ?? 0,
+        };
+    }
+
+    function returnToEditing() {
+        returningFromHistory.current = true;
+        setHistoryOpen(false);
+    }
+
+    useLayoutEffect(() => {
+        if (historyOpen || !returningFromHistory.current) return;
+        returningFromHistory.current = false;
+        const remembered = historyFocus.current;
+        if (!remembered) {
+            if (view === "live") liveEditorRef.current?.focus();
+            else textareaRef.current?.focus();
+            return;
+        }
+        const textarea = textareaRef.current;
+        if (view === "source" && textarea) {
+            textarea.setSelectionRange(
+                remembered.sourceStart,
+                remembered.sourceEnd,
+            );
+            textarea.scrollTop = remembered.scroll;
+        }
+        const handle = liveEditorRef.current;
+        if (view === "live" && handle && remembered.liveSelection) {
+            handle.view.dispatch(
+                handle.view.state.tr.setSelection(remembered.liveSelection),
+            );
+            if (liveScrollRef.current) {
+                liveScrollRef.current.scrollTop = remembered.scroll;
+            }
+        }
+        remembered.element?.focus({ preventScroll: true });
+    }, [historyOpen]);
+
+    async function loadVersions() {
+        setHistoryBusy(true);
         setVersionError("");
+        setVersions(null);
         try {
             const data = await api<Version[]>(
                 "/api/notes/" + encodeURIComponent(note.id) + "/versions",
             );
+            data.sort((a, b) => b.version - a.version);
             setVersions(data);
+            setSelectedVersion(data[0] ?? null);
         } catch {
-            setVersionError("加载版本历史失败");
+            setVersionError("加载版本历史失败，请重试");
+        } finally {
+            setHistoryBusy(false);
         }
     }
 
-    async function restore(old: Version) {
-        setVersionError("");
-        try {
-            const restored = await api<NoteItem>(
-                "/api/notes/" + encodeURIComponent(note.id) + "/versions/" +
-                    old.version + "/restore",
-                { method: "POST" },
-            );
-            await deleteLocal(key).catch(() => {});
-            onSaved(restored);
-            setDraft({ body: restored.body, title: restored.title ?? "" });
-            setStatus("saved");
-            setVersions(null);
-        } catch {
-            setVersionError("版本恢复失败，请重试");
+    async function showVersions() {
+        if (composingRef.current || historyTransition.current) return;
+        rememberEditing();
+        historyTransition.current = true;
+        setHistoryBusy(true);
+        clearTimeout(blurTimer.current);
+        // Share the submitted-draft guard with composite blur; never submit twice.
+        if (isDraftDirty() && submittedDraftRef.current !== draftRef.current) {
+            await save(undefined, "manual");
+        } else {
+            await mutationQueue.current;
         }
+        historyTransition.current = false;
+        if (saveFailed.current) {
+            setHistoryBusy(false);
+            return;
+        }
+        setHistoryOpen(true);
+        await loadVersions();
+    }
+
+    async function restore(old: Version) {
+        if (historyTransition.current) return;
+        historyTransition.current = true;
+        setHistoryBusy(true);
+        setRestoreConfirm(false);
+        setVersionError("");
+        clearTimeout(timer.current);
+        mutationQueue.current = mutationQueue.current.then(async () => {
+            try {
+                const restored = await api<NoteItem>(
+                    "/api/notes/" + encodeURIComponent(note.id) + "/versions/" +
+                        old.version + "/restore",
+                    { method: "POST" },
+                );
+                latestNoteRef.current = restored;
+                const accepted = {
+                    body: restored.body,
+                    title: restored.title ?? "",
+                };
+                draftRef.current = accepted;
+                submittedDraftRef.current = undefined;
+                setDraft(accepted);
+                setColor(restored.color || "paper");
+                await deleteLocal(key).catch(() => {});
+                onSaved(restored);
+                setConflict(null);
+                saveFailed.current = false;
+                setStatus("saved");
+                // The old selection may exceed the restored document.
+                historyFocus.current = null;
+                returningFromHistory.current = true;
+                setHistoryOpen(false);
+            } catch {
+                setVersionError("版本恢复失败，请重试");
+            } finally {
+                historyTransition.current = false;
+                setHistoryBusy(false);
+            }
+        });
+        await mutationQueue.current;
     }
     return (
         <section
             className={"note-editor note-" + (color || "paper")}
             onBlur={editingBlur}
+            onFocusCapture={(event) => {
+                if (
+                    event.target.closest("[data-note-edit-focus]")
+                ) lastEditFocus.current = event.target;
+            }}
+            onKeyDown={(event) => {
+                if (
+                    event.key === "Escape" && historyOpen && !historyBusy &&
+                    !restoreConfirm && !document.querySelector('[role="menu"]')
+                ) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    returnToEditing();
+                }
+            }}
         >
             <div
-                className="note-title-wrap px-1 pt-1 pb-1"
-                data-note-edit-focus
+                className="note-edit-view"
+                hidden={historyOpen}
+                inert={historyBusy || undefined}
             >
-                <input
-                    id={`note-title-input-${editorId}`}
-                    type="text"
-                    className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
-                    placeholder="便签标题…"
-                    aria-label="便签标题"
-                    value={draft.title}
-                    onChange={(event) =>
-                        change({
-                            ...draftRef.current,
-                            title: event.target.value,
-                        })}
-                    onCompositionStart={() => composition(true)}
-                    onCompositionEnd={() => composition(false)}
-                    onKeyDown={(event) => {
-                        if (
-                            composingRef.current ||
-                            event.nativeEvent.isComposing ||
-                            event.keyCode === 229
-                        ) return;
-                        if (event.key === "Enter") {
-                            event.preventDefault();
-                            if (view === "live") liveEditorRef.current?.focus();
-                            else textareaRef.current?.focus();
-                        }
+                <div
+                    className="note-title-wrap px-1 pt-1 pb-1"
+                    data-note-edit-focus
+                >
+                    <input
+                        id={`note-title-input-${editorId}`}
+                        type="text"
+                        className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
+                        placeholder="便签标题…"
+                        aria-label="便签标题"
+                        value={draft.title}
+                        onChange={(event) =>
+                            change({
+                                ...draftRef.current,
+                                title: event.target.value,
+                            })}
+                        onCompositionStart={() => composition(true)}
+                        onCompositionEnd={() => composition(false)}
+                        onKeyDown={(event) => {
+                            if (
+                                composingRef.current ||
+                                event.nativeEvent.isComposing ||
+                                event.keyCode === 229
+                            ) return;
+                            if (event.key === "Enter") {
+                                event.preventDefault();
+                                if (view === "live") {
+                                    liveEditorRef.current?.focus();
+                                } else textareaRef.current?.focus();
+                            }
+                        }}
+                    />
+                </div>
+                <Tabs
+                    value={view}
+                    onValueChange={(id) => {
+                        if (composingRef.current) return;
+                        modeScroll.current[view] = view === "live"
+                            ? liveScrollRef.current?.scrollTop ?? 0
+                            : textareaRef.current?.scrollTop ?? 0;
+                        setEditorError("");
+                        const next = id as "live" | "source";
+                        setView(next);
+                        requestAnimationFrame(() => {
+                            const target = next === "live"
+                                ? liveScrollRef.current
+                                : textareaRef.current;
+                            if (target) {
+                                target.scrollTop = modeScroll.current[next];
+                            }
+                        });
                     }}
-                />
-            </div>
-            <Tabs
-                value={view}
-                onValueChange={(id) => {
-                    if (composingRef.current) return;
-                    setEditorError("");
-                    setView(id as "live" | "source");
-                }}
-                className="flex-1 flex flex-col min-h-0"
-            >
-                <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
-                    <TabsList>
-                        <TabsTrigger value="live" data-note-mode-switch>
-                            所见即所得
-                        </TabsTrigger>
-                        <TabsTrigger value="source" data-note-mode-switch>
-                            源码
-                        </TabsTrigger>
-                    </TabsList>
-                    <div className="flex items-center gap-3">
-                        <p
-                            className={"save-state save-" + status +
-                                " text-xs m-0"}
-                            role="status"
-                        >
-                            {({
-                                saved: "已保存",
-                                saving: "保存中…",
-                                unsynced: "未同步至云端",
-                                error: "保存失败，草稿仍在此设备",
-                            })[status]}
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => void showVersions()}
-                        >
-                            版本历史
-                        </Button>
-                    </div>
-                </div>
-
-                {editorError && (
-                    <p role="alert" className="error">{editorError}</p>
-                )}
-                <TabsContent value="live" className="note-editor-body">
-                    {view === "live" && bodyEditor()}
-                </TabsContent>
-                <TabsContent value="source" className="note-editor-body">
-                    {view === "source" && bodyEditor()}
-                </TabsContent>
-            </Tabs>
-            <div className="note-editor-footer">
-                <div
-                    className="note-color-dots"
-                    role="radiogroup"
-                    aria-label="便签颜色"
+                    className="flex-1 flex flex-col min-h-0"
                 >
-                    {NOTE_COLORS.map((c) => {
-                        const isSelected = (color || "paper") === c;
-                        return (
-                            <button
-                                key={c}
-                                type="button"
-                                role="radio"
-                                aria-checked={isSelected}
-                                aria-label={COLOR_NAMES[c]}
-                                title={COLOR_NAMES[c]}
-                                onClick={() => void selectColor(c)}
-                                className={`note-color-dot-btn ${
-                                    isSelected ? "is-selected" : ""
-                                }`}
+                    <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
+                        <TabsList>
+                            <TabsTrigger value="live" data-note-mode-switch>
+                                所见即所得
+                            </TabsTrigger>
+                            <TabsTrigger value="source" data-note-mode-switch>
+                                源码
+                            </TabsTrigger>
+                        </TabsList>
+                        <div className="flex items-center gap-3">
+                            <p
+                                className={"save-state save-" + status +
+                                    " text-xs m-0"}
+                                role="status"
                             >
-                                <span
-                                    className={`note-quick-dot note-quick-dot--${c}`}
+                                {({
+                                    saved: "已保存",
+                                    saving: "保存中…",
+                                    unsynced: "未同步至云端",
+                                    error: "保存失败，草稿仍在此设备",
+                                })[status]}
+                            </p>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={historyBusy}
+                                onClick={() => void showVersions()}
+                            >
+                                版本历史
+                            </Button>
+                            <NoteColorMenu
+                                color={color}
+                                onChange={async (next) => {
+                                    clearTimeout(blurTimer.current);
+                                    if (
+                                        isDraftDirty() &&
+                                        submittedDraftRef.current !==
+                                            draftRef.current
+                                    ) await save(undefined, "manual");
+                                    else await mutationQueue.current;
+                                    if (!saveFailed.current) {
+                                        await selectColor(next);
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {editorError && (
+                        <p role="alert" className="error">{editorError}</p>
+                    )}
+                    <NoteMarkdownToolbar
+                        editorId={editorId}
+                        onCommand={command}
+                        platform={platform}
+                        disabled={!draftReady ||
+                            (view === "live" && !liveReady)}
+                    />
+                    {status === "error" && !conflict && (
+                        <div className="choice-row">
+                            <Button
+                                variant="outline"
+                                onClick={() => void save(undefined, "manual")}
+                            >
+                                重试同步
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => void copyDraftToClipboard()}
+                            >
+                                {copiedDraft ? "已复制草稿" : "复制本地草稿"}
+                            </Button>
+                        </div>
+                    )}
+                    {conflict && (
+                        <div
+                            className="conflict"
+                            role="alertdialog"
+                            aria-label="便签版本冲突"
+                        >
+                            <h3>另一台设备更新了这条便签</h3>
+                            <div className="conflict-columns">
+                                <div>
+                                    <h4>云端版本</h4>
+                                    {markdown(conflict.body)}
+                                </div>
+                                <div>
+                                    <h4>本地草稿</h4>
+                                    {markdown(draft.body)}
+                                </div>
+                            </div>
+                            <label className="field">
+                                合并内容<textarea
+                                    value={merge}
+                                    onChange={(event) =>
+                                        setMerge(event.target.value)}
                                 />
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-            {status === "error" && !conflict && (
-                <div className="choice-row">
-                    <button
-                        type="button"
-                        onClick={() => void save(undefined, "manual")}
-                    >
-                        重试同步
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => void copyDraftToClipboard()}
-                    >
-                        {copiedDraft ? "已复制草稿" : "复制本地草稿"}
-                    </button>
-                </div>
-            )}
-            {conflict && (
-                <div
-                    className="conflict"
-                    role="alertdialog"
-                    aria-label="便签版本冲突"
-                >
-                    <h3>另一台设备更新了这条便签</h3>
-                    <div className="conflict-columns">
-                        <div>
-                            <h4>云端版本</h4>
-                            {markdown(conflict.body)}
-                        </div>
-                        <div>
-                            <h4>本地草稿</h4>
-                            {markdown(draft.body)}
-                        </div>
-                    </div>
-                    <label className="field">
-                        合并内容<textarea
-                            value={merge}
-                            onChange={(event) => setMerge(event.target.value)}
-                        />
-                    </label>
-                    <div className="choice-row">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                void navigator.clipboard.writeText(draft.body)}
-                        >
-                            复制本地草稿
-                        </button>
-                        <button type="button" onClick={useCloud}>
-                            使用云端
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => resolve(draft.body)}
-                        >
-                            覆盖云端
-                        </button>
-                        <button type="button" onClick={() => resolve(merge)}>
-                            合并并保存
-                        </button>
-                    </div>
-                </div>
-            )}
-            {versions && (
-                <section className="note-versions">
-                    <h3>版本历史</h3>
-                    {versions.length
-                        ? versions.map((old) => (
-                            <article key={old.id}>
-                                <h4>
-                                    版本 {old.version} ·{" "}
-                                    {new Date(old.createdAt).toLocaleString(
-                                        "zh-CN",
-                                    )}
-                                </h4>
-                                {markdown(old.body)}
+                            </label>
+                            <div className="choice-row">
                                 <button
                                     type="button"
-                                    onClick={() => void restore(old)}
+                                    onClick={() =>
+                                        void navigator.clipboard.writeText(
+                                            draft.body,
+                                        )}
                                 >
-                                    恢复此版本
+                                    复制本地草稿
                                 </button>
-                            </article>
-                        ))
-                        : <p>暂无历史版本</p>}
+                                <button type="button" onClick={useCloud}>
+                                    使用云端
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => resolve(draft.body)}
+                                >
+                                    覆盖云端
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => resolve(merge)}
+                                >
+                                    合并并保存
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="note-editor-body">{bodyEditor()}</div>
+                </Tabs>
+            </div>
+            {historyOpen && (
+                <section
+                    className="note-history"
+                    aria-label="版本历史"
+                    data-workspace-escape-boundary
+                >
+                    <header className="note-history-header">
+                        <Button
+                            ref={historyBackRef}
+                            variant="ghost"
+                            disabled={historyBusy}
+                            onClick={returnToEditing}
+                        >
+                            返回编辑
+                        </Button>
+                        <h3>版本历史</h3>
+                    </header>
+                    {historyBusy && <p role="status">正在加载或恢复版本…</p>}
+                    {versionError && (
+                        <div role="alert">
+                            <p>{versionError}</p>
+                            <Button
+                                variant="outline"
+                                disabled={historyBusy}
+                                onClick={() =>
+                                    void (versions
+                                        ? selectedVersion &&
+                                            restore(selectedVersion)
+                                        : loadVersions())}
+                            >
+                                重试
+                            </Button>
+                        </div>
+                    )}
+                    {!historyBusy && versions?.length === 0 && (
+                        <p>暂无历史版本</p>
+                    )}
+                    {versions && versions.length > 0 && (
+                        <div className="note-history-columns">
+                            <div
+                                className="note-history-list"
+                                tabIndex={0}
+                                aria-label="历史版本列表"
+                            >
+                                {versions.map((old) => (
+                                    <Button
+                                        key={old.id}
+                                        variant="ghost"
+                                        aria-pressed={selectedVersion?.id ===
+                                            old.id}
+                                        disabled={historyBusy}
+                                        onClick={() => setSelectedVersion(old)}
+                                    >
+                                        <span>
+                                            版本 {old.version} ·{" "}
+                                            {new Date(old.createdAt)
+                                                .toLocaleString("zh-CN")}
+                                            <br />
+                                            {old.title || "空白便签"}
+                                        </span>
+                                    </Button>
+                                ))}
+                            </div>
+                            {selectedVersion && (
+                                <div
+                                    className="note-history-preview"
+                                    tabIndex={0}
+                                    aria-label="版本预览"
+                                >
+                                    <h4>
+                                        {selectedVersion.title || "空白便签"}
+                                    </h4>
+                                    <AlertDialog
+                                        open={restoreConfirm}
+                                        onOpenChange={setRestoreConfirm}
+                                    >
+                                        <AlertDialogTrigger
+                                            render={
+                                                <Button
+                                                    variant="outline"
+                                                    disabled={historyBusy}
+                                                />
+                                            }
+                                        >
+                                            恢复此版本
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Escape") {
+                                                    event.stopPropagation();
+                                                }
+                                            }}
+                                        >
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>
+                                                    恢复版本{" "}
+                                                    {selectedVersion.version}？
+                                                </AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    这将替换当前便签的标题与正文。当前内容仍可在版本历史中查阅。
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>
+                                                    取消
+                                                </AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() =>
+                                                        void restore(
+                                                            selectedVersion,
+                                                        )}
+                                                >
+                                                    确认恢复
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    {markdown(selectedVersion.body)}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
-            )}
-            {versionError && (
-                <p role="alert" className="error">{versionError}</p>
             )}
         </section>
     );
