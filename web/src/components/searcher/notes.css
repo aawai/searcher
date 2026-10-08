@@ -724,3 +724,52 @@
     min-height: calc(var(--control-touch-target) * 6);
     resize: vertical;
 }
+
+/* Desktop floating note code-block presentation and native scrollbar.
+   notes.css owns the 4px track and neutral hover/focus/active thumb states;
+   native thin/overlay scrollbars may take precedence. */
+.floating-notes--canvas .note-preview.markdown pre {
+    border-radius: var(--radius-multiline);
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+/* Block code must not inherit the note's inline-code chip presentation.
+   An intrinsic-width block keeps both padding edges reachable when scrolling. */
+.floating-notes--canvas .note-preview.markdown pre code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.floating-notes--canvas .note-preview.markdown pre:hover,
+.floating-notes--canvas .note-preview.markdown pre:focus-visible {
+    scrollbar-color: rgba(120, 120, 120, 0.45) transparent;
+}
+
+.floating-notes--canvas .note-preview.markdown pre::-webkit-scrollbar {
+    height: 4px;
+}
+
+.floating-notes--canvas .note-preview.markdown pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.floating-notes--canvas .note-preview.markdown pre::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.floating-notes--canvas .note-preview.markdown pre:hover::-webkit-scrollbar-thumb,
+.floating-notes--canvas .note-preview.markdown pre:focus-visible::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 120, 0.45);
+}
+
+.floating-notes--canvas .note-preview.markdown pre::-webkit-scrollbar-thumb:active {
+    background: rgba(120, 120, 120, 0.7);
+}

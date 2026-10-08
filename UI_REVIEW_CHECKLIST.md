@@ -47,6 +47,47 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #138 浮动画布代码块滚动条（2026-10-08）
+
+- [x] 沿用 Home archetype，Search 为 primary；无新 surface / primitive /
+      layout。 notes.css 为唯一 scrollbar presentation owner，作用域只匹配
+      `.floating-notes--canvas .note-preview.markdown pre`。Issue 授权的 4px、
+      中性 thumb 与 pill radius 仅用于原生滚动条；不重设 overflow。
+- [x] 用户确认允许最小交互修复：FloatingNotes 的既有 pointerdown guard 排除
+      pre，避免置顶重新分层打断原生滑块；未新增 listener/state/dependency。
+      标题、拖动手柄、其余卡片与控件保持既有交互。
+- [x] Red：真实 production home E2E 的原生拖动后 scrollLeft >100 等待超时，
+      原有六个持久化 steps 均通过；Green：同一原生拖动 step 与全部七个
+      persistence steps 通过。Playwright 默认隐藏 scrollbar，回归浏览器显式
+      去除该启动参数；不 mock scroll、不阻止事件冒泡、不替换 DOM。
+- [x] Linux headed Chromium 141.0.7390.37 / Firefox 142.0.1，390×844 / 768×1024
+      / 1440×900 × light/dark 共 12 组真实首页截图。用户追加指出胶囊与截断后，
+      更新 CSS 并重跑全部 12 组：pre 为共享 multiline 8px 圆角、块 code 无内层
+      chip；DOM Range 校验首/尾 glyph 完整位于两端 padding 内，
+      preview/page/短代码横向 overflow 均为 0。
+- [x] 用户确认保留单行横向滚动，不改为自动换行。块 code 恢复 canonical 13px
+      与透明背景、零 padding/radius；inline code 不变。生产回归增加 首/尾 glyph
+      可达断言，不以源码或样式文本代替可见内容契约。
+- [x] 未隔离事件的最终 smoke：Chromium 滑块拖动 scrollLeft=661，Firefox=464；
+      preview scrollLeft 与横向 overflow 均为 0。Tab 实际到达 pre，ArrowRight
+      与水平 wheel 继续可用；长代码单行、多行、短代码、行内代码和
+      纵向正文滚动均已观察，整张卡片几何不变。
+- [x] 默认透明、hover/focus alpha=.45；Chromium 标准 thin 优先，原生轨道
+      占10px，WebKit 伪元素 computed height=4px，不宣称实际绘制为4px。 Firefox
+      使用 native thin/overlay；active 使用浏览器原生反馈或 WebKit .7。
+- [x] Chromium 真实卡片手柄拖动从 (130,95) 到 (180,130)，折叠/展开、
+      纸白→琥珀→纸白控件通过。右侧工作区 pre 保持 auto scrollbar/overflow，
+      Widgets ControlledNotes 不匹配新选择器；卡片无可用 resize 控件。
+- [x] 截图见 PR #139 的私有仓库 evidence/issue-138 分支，不并入 main。 Firefox
+      headless 强制隐藏 scrollbar，视觉与指针验收使用 Xvfb headed； keyboard
+      smooth-scroll 完成后再发送 wheel，按实际 scrollbar/overlay
+      几何命中滑块。原型临时事件隔离只用于定位原因，最终 smoke 与回归无隔离。
+- [x] Safari、独立 Chrome/Edge 品牌浏览器与物理触控板不可用；未声称测试过。 a11y
+      验证为真实 Tab/focus-visible/ArrowRight，未新增 axe 运行或 OS 真机验收。
+- [x] 修复后 deno task test：640 tests / 51 steps；生产 Notes 回归合计 4 tests /
+      28 steps；build、受影响 typecheck/lint 与 check:ui 通过， ownership A–M /
+      visual violations 均为 0。未放宽 baseline 或 CI。
+
 ## Issue #136 Notes 编辑焦点与保存验收（2026-10-08）
 
 - [x] Owner 为现有 NoteEditor；标题、当前正文、工具栏消费同一实例的编辑焦点

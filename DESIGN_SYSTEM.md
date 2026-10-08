@@ -87,6 +87,16 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   的标题、列表、table、code、quote、inline typography 和安全策略；不加载
   framework theme。Live task checkbox 可编辑，卡片/冲突/历史只读。Notes chrome
   由 notes.css、Host 布局由 notes-workspace.css 拥有。
+- 首页浮动画布代码块的 scrollbar presentation 由 notes.css 中
+  `.floating-notes--canvas .note-preview.markdown pre` 独占：默认透明，
+  hover/focus-visible 显示中性滑块，WebKit active 增强对比度；标准 thin / WebKit
+  4px 允许浏览器原生降级，不重设 overflow 或影响工作区。代码块的 pointerdown
+  不触发画布卡片置顶，避免重新分层打断原生滑块手势；
+  标题、拖动手柄与其他卡片区域保持原交互。 同一作用域的 pre 使用
+  `--radius-multiline`，不继承 Home 的卡片圆角； pre code
+  恢复块代码的透明背景、零 padding/radius 与继承字号/行高， 以 intrinsic-width
+  block 保留两端滚动 padding。长行保持不换行， 首尾字符均可完整滚入视区；行内
+  code 与工作区不变。
 - Toolbar 使用 Button ghost/icon、lucide 与 canonical touch geometry；不引入
   Documents paper、分页、图片上传或 outline。
 
