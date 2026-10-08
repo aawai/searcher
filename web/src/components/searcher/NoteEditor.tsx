@@ -1,4 +1,5 @@
 import {
+    type FocusEvent,
     type KeyboardEvent,
     lazy,
     Suspense,
@@ -79,6 +80,9 @@ export function NoteEditor(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const liveEditorRef = useRef<MarkdownEditorHandle | null>(null);
     const composingRef = useRef(false);
+    const blurTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
     const pendingSelection = useRef<TextEditResult | null>(null);
     // Accepted conflict/save versions must not regress to a stale parent prop.
     if (note.version > latestNoteRef.current.version) {
@@ -157,6 +161,7 @@ export function NoteEditor(
 
     useEffect(() => () => {
         clearTimeout(timer.current);
+        clearTimeout(blurTimer.current);
     }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function change(next: Draft) {
@@ -188,7 +193,31 @@ export function NoteEditor(
     function composition(composing: boolean) {
         composingRef.current = composing;
         if (composing) clearTimeout(timer.current);
-        else if (status === "unsynced") scheduleAutosave(draftRef.current);
+        else if (isDraftDirty()) scheduleAutosave(draftRef.current);
+    }
+
+    function isDraftDirty() {
+        return draftRef.current.body !== latestNoteRef.current.body ||
+            draftRef.current.title !== (latestNoteRef.current.title ?? "");
+    }
+
+    function editingBlur(event: FocusEvent<HTMLElement>) {
+        const editor = event.currentTarget;
+        const region = "[data-note-edit-focus], [data-note-mode-switch]";
+        if (!event.target.closest(region)) return;
+        clearTimeout(blurTimer.current);
+        // Commands can replace focused DOM; inspect the final focus and latest refs.
+        blurTimer.current = globalThis.setTimeout(() => {
+            blurTimer.current = undefined;
+            const target = editor.ownerDocument.activeElement;
+            if (
+                !editor.isConnected || composingRef.current ||
+                submittedDraftRef.current === draftRef.current ||
+                !isDraftDirty() ||
+                (target?.closest(region) && editor.contains(target))
+            ) return;
+            void save(undefined, "manual");
+        });
     }
 
     function command(command: MarkdownCommand) {
@@ -251,34 +280,8 @@ export function NoteEditor(
         return (
             <div
                 className="note-body-composite"
+                data-note-edit-focus
                 onKeyDownCapture={bodyKeyDown}
-                onBlur={(event) => {
-                    const composite = event.currentTarget;
-                    // Node commands can detach the focused paragraph before restoring focus.
-                    // Resolve the composite boundary after the command's DOM changes settle.
-                    globalThis.setTimeout(() => {
-                        const target = document.activeElement;
-                        const modeSwitch = target?.closest(
-                            "[data-note-mode-switch]",
-                        );
-                        if (
-                            submittedDraftRef.current === draftRef.current ||
-                            !composite.isConnected ||
-                            (draftRef.current.body ===
-                                    latestNoteRef.current.body &&
-                                draftRef.current.title ===
-                                    (latestNoteRef.current.title ?? "")) ||
-                            composite.contains(target)
-                        ) return;
-                        if (
-                            modeSwitch &&
-                            composite.closest(".note-editor")?.contains(
-                                modeSwitch,
-                            )
-                        ) return;
-                        void save(undefined, "manual");
-                    });
-                }}
             >
                 <NoteMarkdownToolbar
                     onCommand={command}
@@ -511,8 +514,14 @@ export function NoteEditor(
         }
     }
     return (
-        <section className={"note-editor note-" + (color || "paper")}>
-            <div className="note-title-wrap px-1 pt-1 pb-1">
+        <section
+            className={"note-editor note-" + (color || "paper")}
+            onBlur={editingBlur}
+        >
+            <div
+                className="note-title-wrap px-1 pt-1 pb-1"
+                data-note-edit-focus
+            >
                 <input
                     id={`note-title-input-${editorId}`}
                     type="text"
@@ -521,9 +530,18 @@ export function NoteEditor(
                     aria-label="便签标题"
                     value={draft.title}
                     onChange={(event) =>
-                        change({ ...draft, title: event.target.value })}
-                    onBlur={() => void save(undefined, "manual")}
+                        change({
+                            ...draftRef.current,
+                            title: event.target.value,
+                        })}
+                    onCompositionStart={() => composition(true)}
+                    onCompositionEnd={() => composition(false)}
                     onKeyDown={(event) => {
+                        if (
+                            composingRef.current ||
+                            event.nativeEvent.isComposing ||
+                            event.keyCode === 229
+                        ) return;
                         if (event.key === "Enter") {
                             event.preventDefault();
                             if (view === "live") liveEditorRef.current?.focus();
