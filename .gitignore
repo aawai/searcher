@@ -8,3 +8,4 @@ coverage/
 *.tmp
 .DS_Store
 artifacts/
+.worktrees/
