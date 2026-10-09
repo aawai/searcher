@@ -189,6 +189,7 @@ function FolderView({
     dragListeners,
     actions,
     isFolderDropTarget = false,
+    presentation,
 }: {
     tile: Extract<LauncherTile, { group: LauncherGroup }>;
     managing: boolean;
@@ -200,9 +201,26 @@ function FolderView({
     dragListeners?: object;
     actions?: Actions;
     isFolderDropTarget?: boolean;
+    presentation?: WebAppLauncherProps["presentation"];
 }) {
     const large = tile.group.folderSize === "large";
-    const preview = tile.apps.slice(0, large ? 9 : 4);
+    const [touch, setTouch] = useState(() =>
+        globalThis.matchMedia?.("(pointer: coarse), (hover: none)").matches ??
+            false
+    );
+    useEffect(() => {
+        const media = globalThis.matchMedia?.(
+            "(pointer: coarse), (hover: none)",
+        );
+        if (!media) return;
+        const change = () => setTouch(media.matches);
+        media.addEventListener("change", change);
+        return () => media.removeEventListener("change", change);
+    }, []);
+    const previewLimit = large && !(touch && presentation === "workspace")
+        ? 9
+        : 4;
+    const preview = tile.apps.slice(0, previewLimit);
     const label = `打开文件夹 ${tile.group.name}，${tile.apps.length} 个应用`;
     return (
         <ContextMenu>
@@ -298,14 +316,14 @@ function FolderView({
                                     </span>
                                 );
                         })}
-                        {large && tile.apps.length > 9 && (
+                        {large && tile.apps.length > previewLimit && (
                             <span
                                 className="launcher-folder-more"
                                 aria-label={`另有 ${
-                                    tile.apps.length - 9
+                                    tile.apps.length - previewLimit
                                 } 个应用`}
                             >
-                                +{tile.apps.length - 9}
+                                +{tile.apps.length - previewLimit}
                             </span>
                         )}
                     </span>
@@ -484,6 +502,7 @@ function SortableTile({
                         dragListeners={dragListeners}
                         actions={actions}
                         isFolderDropTarget={isFolderDropTarget}
+                        presentation={actions.presentation}
                     />
                 )}
         </div>
@@ -881,7 +900,11 @@ export function WebAppLauncher({
                                 strategy={rectSortingStrategy}
                             >
                                 <div
-                                    className={`launcher-folder-contents launcher-grid--${size}`}
+                                    className={`launcher-folder-contents launcher-grid--${size}${
+                                        presentation === "workspace"
+                                            ? " launcher-grid--workspace"
+                                            : ""
+                                    }`}
                                 >
                                     {folderApps.map((app) => (
                                         <SortableFolderApp
@@ -1008,6 +1031,10 @@ export function WebAppLauncher({
                         ? (
                             <div
                                 className={`launcher-overlay launcher-grid--${size}${
+                                    presentation === "workspace"
+                                        ? " launcher-grid--workspace"
+                                        : ""
+                                }${
                                     showAppLabels
                                         ? ""
                                         : " launcher-grid--icons-only"
@@ -1032,6 +1059,7 @@ export function WebAppLauncher({
                                             onFolder={openFolder}
                                             showAppLabels={showAppLabels}
                                             onOpen={onOpen}
+                                            presentation={presentation}
                                         />
                                     )}
                             </div>
