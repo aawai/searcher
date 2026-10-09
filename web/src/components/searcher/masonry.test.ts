@@ -158,6 +158,65 @@ Deno.test("calculateMasonryLayout: responsive column calculation adapts to conta
     assertEquals(narrow.columnWidth, 400);
 });
 
+Deno.test("calculateMasonryLayout: column boundaries and maximum preserve available width", () => {
+    const items = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    for (
+        const [width, expectedColumns] of [
+            [505, 1],
+            [506, 2],
+            [766, 2],
+            [767, 3],
+            [2000, 3],
+        ]
+    ) {
+        const result = calculateMasonryLayout({
+            items,
+            heights: new Map(),
+            containerWidth: width,
+        });
+        assertEquals(result.columns, expectedColumns, `width ${width}`);
+        const rightmost = Math.max(
+            ...[...result.placements.values()].map((p) => p.x + p.width),
+        );
+        assertEquals(Math.round(rightmost), width);
+    }
+});
+
+Deno.test("calculateMasonryLayout: changed heights and removed items reflow without reordering", () => {
+    const items = ["a", "b", "c", "d", "e", "f"].map((id) => ({ id }));
+    const heights = new Map(items.map((item) => [item.id, 60]));
+    const compact = calculateMasonryLayout({
+        items,
+        heights,
+        containerWidth: 767,
+    });
+    assertEquals(compact.containerHeight, 136);
+    heights.set("a", 900);
+    const expanded = calculateMasonryLayout({
+        items,
+        heights,
+        containerWidth: 767,
+    });
+    assertEquals(expanded.containerHeight, 900);
+    assertEquals(expanded.placements.get("d")?.column, 1);
+    assertEquals(expanded.placements.get("f")?.y, 152);
+    const removed = calculateMasonryLayout({
+        items: items.slice(1),
+        heights,
+        containerWidth: 767,
+    });
+    assertEquals(removed.containerHeight, 136);
+    assertEquals(removed.placements.has("a"), false);
+    heights.set("a", 60);
+    const collapsed = calculateMasonryLayout({
+        items,
+        heights,
+        containerWidth: 767,
+    });
+    assertEquals(collapsed, compact);
+    assertEquals(items.map((item) => item.id), ["a", "b", "c", "d", "e", "f"]);
+});
+
 Deno.test("calculateMasonryLayout: handles zero width or empty items gracefully", () => {
     const empty = calculateMasonryLayout({
         items: [],

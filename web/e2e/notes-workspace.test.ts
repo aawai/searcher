@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
 import { chromium, type Page } from "playwright";
+import type { Request } from "playwright";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";
@@ -606,7 +607,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     );
 
     await t.step(
-        "Notes #44: Inline expand/collapse, card fullwidth geometry (<=2px), and API write purity",
+        "Notes #44/#109: Inline expand/collapse, card column-width geometry (<=2px), and API write purity",
         async () => {
             await ensureNotesRoot(page);
             const panel = getNotesWorkspace(page);
@@ -614,6 +615,10 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const listWidth = await listEl.evaluate((el) =>
                 el.getBoundingClientRect().width
             );
+            assertEquals(await listEl.getAttribute("data-layout"), "masonry");
+            const columns = Number(await listEl.getAttribute("data-columns"));
+            assertEquals(columns >= 1 && columns <= 3, true);
+            const columnWidth = (listWidth - 16 * (columns - 1)) / columns;
 
             const card = panel.locator(".notes-workspace-list .note-card")
                 .first();
@@ -629,18 +634,17 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const compactCardWidth = await card.evaluate((el) =>
                 el.getBoundingClientRect().width
             );
-            const compactDiff = Math.abs(compactCardWidth - listWidth);
+            const compactDiff = Math.abs(compactCardWidth - columnWidth);
             assertEquals(
                 compactDiff <= 2,
                 true,
-                `Compact card width ${compactCardWidth} vs list width ${listWidth} diff ${compactDiff} > 2px`,
+                `Compact card width ${compactCardWidth} vs column width ${columnWidth} diff ${compactDiff} > 2px`,
             );
 
             // Get note ID
-            const noteId = await page.evaluate(async () => {
-                const res = await fetch("/api/notes").then((r) => r.json());
-                return res.data[0].id as string;
-            });
+            const noteId = await card.evaluate((el) =>
+                el.closest<HTMLElement>("[data-note-id]")!.dataset.noteId!
+            );
 
             // Get note state before expand
             const noteBefore = await page.evaluate(async (id) => {
@@ -653,16 +657,15 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             // Track any mutation requests: expanding MUST NOT write to API
             let mutationSent = false;
-            page.on("request", (req) => {
+            const trackMutation = (req: Request) => {
                 if (
                     req.method() !== "GET" &&
-                    req.url().includes(
-                        `/api/notes/${encodeURIComponent(noteId)}`,
-                    )
+                    new URL(req.url()).pathname.startsWith("/api/notes")
                 ) {
                     mutationSent = true;
                 }
-            });
+            };
+            page.on("request", trackMutation);
 
             // Expand inline
             await card.hover();
@@ -684,11 +687,11 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             const expandedCardWidth = await card.evaluate((el) =>
                 el.getBoundingClientRect().width
             );
-            const expandedDiff = Math.abs(expandedCardWidth - listWidth);
+            const expandedDiff = Math.abs(expandedCardWidth - columnWidth);
             assertEquals(
                 expandedDiff <= 2,
                 true,
-                `Expanded card width ${expandedCardWidth} vs list width ${listWidth} diff ${expandedDiff} > 2px`,
+                `Expanded card width ${expandedCardWidth} vs column width ${columnWidth} diff ${expandedDiff} > 2px`,
             );
 
             // Preview is rendered inside card in root
@@ -709,6 +712,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 );
                 return c && c.classList.contains("note-card--compact");
             });
+            page.off("request", trackMutation);
 
             // Verify API write purity: zero writes occurred
             assertEquals(
