@@ -1,0 +1,20 @@
+[
+  {
+    "command": "deno lint",
+    "files": 36,
+    "exit": 0,
+    "output": "Checked 36 files\n"
+  },
+  {
+    "command": "deno fmt",
+    "files": 49,
+    "exit": 0,
+    "output": "Checked 49 files\n"
+  },
+  {
+    "command": "deno check",
+    "files": 36,
+    "exit": 0,
+    "output": "\u001b[0m\u001b[32mCheck\u001b[0m scripts/ui-guard/exceptions.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/apps-ai-session.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/apps-interactions.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/apps-ordering.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/apps-races.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/apps-session.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/launcher.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/ui-feedback.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/workspace-contract.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/workspace-matrix.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/workspace-shell.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/e2e/workspace.test.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/app/SearchHome.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/app/SettingsPage.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/AppForm.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/AppMenuItems.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/AppSessionProvider.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/LogoCandidatePicker.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/WebAppIcon.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/WebAppLauncher.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/semantic.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/useAppSession.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/searcher/useLogoSession.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/components/ui/tooltip.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/desktop/DesktopWorkspaces.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/home-layouts/ZenLayout.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/AppsRootView.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/AppsWorkspace.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/FolderNameDialog.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/WorkspaceSection.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/WorkspaceShell.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/WorkspaceSurface.tsx\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/apps-dismiss.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/useAppsLayoutPersistence.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/workspace-escape.ts\n\u001b[0m\u001b[32mCheck\u001b[0m web/src/features/workspace/workspace-state.ts\n"
+  }
+]

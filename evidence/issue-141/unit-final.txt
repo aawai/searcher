@@ -1,0 +1,304 @@
+Task test deno test -A src web/src
+Check src/app.test.ts
+Check src/db/ai-workspace-migration.test.ts
+Check src/db/database.test.ts
+Check src/features/ai/ai.route.test.ts
+Check src/features/ai/ai.test.ts
+Check src/features/ai/ask-workspace.test.ts
+Check src/features/ai/attachments.test.ts
+Check src/features/ai/client.test.ts
+Check src/features/ai/images.test.ts
+Check src/features/ai/model-capabilities.test.ts
+Check src/features/ai/provider-adapter.test.ts
+Check src/features/ai/reasoning.test.ts
+Check src/features/ai/tools.test.ts
+Check src/features/audit/audit.test.ts
+Check src/features/auth/auth.test.ts
+Check src/features/bookmarks/bookmarks.test.ts
+Check src/features/bookmarks/migration.test.ts
+Check src/features/documents/assets.test.ts
+Check src/features/documents/documents.route.test.ts
+Check src/features/documents/markdown.test.ts
+Check src/features/documents/notebooks.test.ts
+Check src/features/documents/service.test.ts
+Check src/features/documents/settings.test.ts
+Check src/features/notes/notes.test.ts
+Check src/features/preferences/generation-defaults.test.ts
+Check src/features/preferences/preferences.test.ts
+Check src/features/search/search.route.test.ts
+Check src/features/search/search.test.ts
+Check src/features/system/backup.test.ts
+Check src/features/system/config-import.test.ts
+Check src/features/system/settings-enforcement.test.ts
+Check src/features/system/system.route.test.ts
+Check src/features/users/users.test.ts
+Check src/features/wallpaper/wallpaper.test.ts
+Check src/features/webapp-icons/fetcher.test.ts
+Check src/features/webapp-icons/service.test.ts
+Check src/features/webapp-icons/ssrf.test.ts
+Check src/features/webapp-icons/svg.test.ts
+Check src/features/webapp-icons/validator.test.ts
+Check src/features/webapp-icons/webapp-icons.route.test.ts
+Check src/internal/crypto/vault.test.ts
+Check src/internal/hono/body-limit.test.ts
+Check src/internal/hono/body-policy.test.ts
+Check src/internal/hono/intake-response.test.ts
+Check src/internal/hono/middleware/logger.test.ts
+Check src/internal/hono/route-overlap.test.ts
+Check src/internal/hono/routes.test.ts
+Check src/internal/logger/logger.test.ts
+Check src/internal/validator/hono.test.ts
+Check src/shared/wallpaper-presentation.test.ts
+Check src/shared/wallpaper-temporal.test.ts
+Check src/shared/wallpaper.test.ts
+Check web/src/app/routes.test.ts
+Check web/src/app/state.test.ts
+Check web/src/components/searcher/NoteCard.test.ts
+Check web/src/components/searcher/NoteMarkdown.test.tsx
+Check web/src/components/searcher/SearcherSearchInput.test.ts
+Check web/src/components/searcher/SettingsPresetSlider.test.tsx
+Check web/src/components/searcher/WebAppLauncher.test.ts
+Check web/src/components/searcher/desktopLayout.test.ts
+Check web/src/components/searcher/masonry.test.ts
+Check web/src/components/searcher/note-markdown-edit.test.ts
+Check web/src/components/ui/slider.test.tsx
+Check web/src/components/wallpaper/WallpaperStageContextPreview.test.tsx
+Check web/src/components/wallpaper/WallpaperSurface.test.ts
+Check web/src/components/wallpaper/wallpaper-motion-controller.test.ts
+Check web/src/features/ask/ReasoningSelector.test.ts
+Check web/src/features/ask/SearcherAttachmentAdapter.test.ts
+Check web/src/features/ask/assistant-message-adapter.test.ts
+Check web/src/features/ask/attachment-utils.test.ts
+Check web/src/features/ask/tree-utils.test.ts
+Check web/src/features/ask/useAskStream.test.ts
+Check web/src/features/desktop/constrained-geometry.test.ts
+Check web/src/features/desktop/desktop-geometry.test.ts
+Check web/src/features/desktop/desktop-persistence.test.ts
+Check web/src/features/desktop/desktop-state.test.ts
+Check web/src/features/desktop/useDesktopLayout.test.ts
+Check web/src/features/documents/document-session.test.ts
+Check web/src/features/documents/editor-content.test.ts
+Check web/src/features/documents/editor-extensions.test.ts
+Check web/src/features/home-layouts/controlledNotesLayout.test.ts
+Check web/src/features/home-layouts/noteOrder.test.ts
+Check web/src/features/markdown-editor/commands.test.ts
+Check web/src/features/markdown-editor/runtime.test.ts
+Check web/src/features/shortcuts/ShortcutsSettings.test.tsx
+Check web/src/features/shortcuts/shortcut-catalog.test.ts
+Check web/src/features/shortcuts/shortcuts-notes-ask.test.tsx
+Check web/src/features/workspace/note-summary.test.ts
+Check web/src/features/workspace/workspace-host.test.ts
+Check web/src/features/workspace/workspace-state.test.ts
+Check web/src/lib/local.test.ts
+Check web/src/spikes/editable-pagination/runtime.test.ts
+Check web/src/spikes/markdown-editor/runtime.test.ts
+running 8 tests from ./src/app.test.ts
+SPA route integration: all official pages return SPA HTML shell ...
+------- output -------
+[2026-10-09 12:23:24.594] INFO: GET / 200 0ms undefined
+[2026-10-09 12:23:24.597] INFO: GET /ask 200 0ms undefined
+[2026-10-09 12:23:24.598] INFO: GET /login 200 1ms undefined
+[2026-10-09 12:23:24.598] INFO: GET /register 200 0ms undefined
+[2026-10-09 12:23:24.598] INFO: GET /account 200 0ms undefined
+[2026-10-09 12:23:24.599] INFO: GET /trash 200 0ms undefined
+[2026-10-09 12:23:24.599] INFO: GET /settings 200 0ms undefined
+[2026-10-09 12:23:24.599] INFO: GET /settings/appearance 200 0ms undefined
+[2026-10-09 12:23:24.600] INFO: GET /settings/ai 200 0ms undefined
+[2026-10-09 12:23:24.600] INFO: GET /settings/data 200 0ms undefined
+[2026-10-09 12:23:24.600] INFO: GET /admin 200 0ms undefined
+[2026-10-09 12:23:24.601] INFO: GET /admin/users 200 0ms undefined
+[2026-10-09 12:23:24.601] INFO: GET /admin/settings 200 0ms undefined
+[2026-10-09 12:23:24.601] INFO: GET /admin/audit 200 0ms undefined
+[2026-10-09 12:23:24.603] INFO: GET /admin/backup 200 2ms undefined
+[2026-10-09 12:23:24.603] INFO: GET /design-lab 200 0ms undefined
+----- output end -----
+SPA route integration: all official pages return SPA HTML shell ... ok (53ms)
+SPA route integration: unknown regular page returns SPA shell for client 404 ...
+------- output -------
+[2026-10-09 12:23:24.629] INFO: GET /unknown-regular-page 200 0ms undefined
+[2026-10-09 12:23:24.630] INFO: GET /some/nested/unknown/route 200 0ms undefined
+[2026-10-09 12:23:24.630] INFO: GET /settings/unknown-tab 200 0ms undefined
+[2026-10-09 12:23:24.630] INFO: GET /admin/unknown-section 200 0ms undefined
+----- output end -----
+SPA route integration: unknown regular page returns SPA shell for client 404 ... ok (21ms)
+SPA route integration: query parameters and query strings preserve SPA shell ...
+------- output -------
+[2026-10-09 12:23:24.650] INFO: GET /ask 200 0ms undefined
+[2026-10-09 12:23:24.650] INFO: GET /login 200 0ms undefined
+[2026-10-09 12:23:24.651] INFO: GET /trash 200 1ms undefined
+[2026-10-09 12:23:24.651] INFO: GET /settings 200 0ms undefined
+----- output end -----
+SPA route integration: query parameters and query strings preserve SPA shell ... ok (20ms)
+SPA route integration: HEAD requests on critical pages return empty body with headers ...
+------- output -------
+[2026-10-09 12:23:24.672] INFO: HEAD / 200 1ms undefined
+[2026-10-09 12:23:24.673] INFO: HEAD /settings/appearance 200 1ms undefined
+[2026-10-09 12:23:24.673] INFO: HEAD /admin/users 200 0ms undefined
+[2026-10-09 12:23:24.673] INFO: HEAD /ask 200 0ms undefined
+[2026-10-09 12:23:24.673] INFO: HEAD /unknown-regular-page 200 0ms undefined
+----- output end -----
+SPA route integration: HEAD requests on critical pages return empty body with headers ... ok (22ms)
+SPA route boundary: unknown /api or /api/* returns JSON 404 ...
+------- output -------
+[2026-10-09 12:23:24.697] INFO: GET /api 404 3ms undefined
+[2026-10-09 12:23:24.697] INFO: GET /api/ 404 0ms undefined
+[2026-10-09 12:23:24.697] INFO: GET /api/not-exists 404 0ms undefined
+[2026-10-09 12:23:24.698] INFO: GET /api/not-exists/deep/nested 404 1ms undefined
+[2026-10-09 12:23:24.698] INFO: GET /api/settings/not-found 404 0ms undefined
+[2026-10-09 12:23:24.699] INFO: POST /api/not-exists 404 1ms undefined
+----- output end -----
+SPA route boundary: unknown /api or /api/* returns JSON 404 ... ok (28ms)
+SPA route boundary: /assets and /assets/* return static 404 not shell ...
+------- output -------
+[2026-10-09 12:23:24.730] INFO: GET /assets 404 1ms undefined
+[2026-10-09 12:23:24.731] INFO: HEAD /assets 404 0ms undefined
+[2026-10-09 12:23:24.731] INFO: POST /assets 404 0ms undefined
+[2026-10-09 12:23:24.731] INFO: GET /assets/ 404 0ms undefined
+[2026-10-09 12:23:24.732] INFO: HEAD /assets/ 404 0ms undefined
+[2026-10-09 12:23:24.732] INFO: POST /assets/ 404 0ms undefined
+[2026-10-09 12:23:24.732] INFO: GET /assets/not-exists.js 404 0ms undefined
+[2026-10-09 12:23:24.733] INFO: HEAD /assets/not-exists.js 404 0ms undefined
+[2026-10-09 12:23:24.733] INFO: POST /assets/not-exists.js 404 0ms undefined
+[2026-10-09 12:23:24.733] INFO: GET /assets/styles/missing.css 404 0ms undefined
+[2026-10-09 12:23:24.733] INFO: HEAD /assets/styles/missing.css 404 0ms undefined
+[2026-10-09 12:23:24.733] INFO: POST /assets/styles/missing.css 404 0ms undefined
+----- output end -----
+SPA route boundary: /assets and /assets/* return static 404 not shell ... ok (26ms)
+SPA route boundary: non-GET/HEAD methods do not fall back to SPA shell ...
+------- output -------
+[2026-10-09 12:23:24.754] INFO: POST /not-exists 404 0ms undefined
+[2026-10-09 12:23:24.754] INFO: POST /settings 404 0ms undefined
+[2026-10-09 12:23:24.754] INFO: PUT /admin/users 404 0ms undefined
+[2026-10-09 12:23:24.754] INFO: DELETE /account 404 0ms undefined
+[2026-10-09 12:23:24.754] INFO: PATCH /ask 404 0ms undefined
+----- output end -----
+SPA route boundary: non-GET/HEAD methods do not fall back to SPA shell ... ok (20ms)
+SPA route: existing static assets are served properly ...
+------- output -------
+[2026-10-09 12:23:24.779] INFO: GET /assets/bundle.js 200 3ms undefined
+[2026-10-09 12:23:24.779] INFO: HEAD /assets/bundle.js 200 0ms undefined
+----- output end -----
+SPA route: existing static assets are served properly ... ok (24ms)
+running 1 test from ./src/db/ai-workspace-migration.test.ts
+AI workspace upgrade preserves Provider data and reconstructs legacy variants ... ok (21ms)
+running 3 tests from ./src/db/database.test.ts
+database: openDatabase with :memory: and migrateDatabase is idempotent ... ok (21ms)
+database: run queue executes in FIFO order with promise coordination ... ok (16ms)
+database: transaction rollback preserves consistency and next FIFO operations succeed ... ok (18ms)
+running 12 tests from ./src/features/ai/ai.route.test.ts
+AI Route: HTTP POST /api/ai/providers creates provider & /models endpoint lists them ... ok (21ms)
+AI Route: HTTP POST /api/ai/chat/stream returns SSE stream without leaking browser key ... ok (16ms)
+AI Route: HTTP POST /api/ai/chat/stream emits meta, token, and error events on provider stream failure ... ok (8ms)
+AI Route: HTTP POST /api/ai/chat/stream propagates request abort to provider and persists partial content ... ok (6ms)
+AI Route: HTTP POST /api/ai/conversations/:id/restore restores deleted conversation ... ok (7ms)
+AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes temporary conversation, messages and blobs (Cache-Control: no-store) ... ok (7ms)
+AI Logo candidates use the requested visible model and return three validated images ... ok (3ms)
+AI Logo candidates route rejects invalid styles before calling provider ...
+------- post-test output -------
+[2026-10-09 12:23:25.371] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+----- post-test output end -----
+AI Logo candidates route rejects invalid styles before calling provider ... ok (6ms)
+AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call ...
+------- post-test output -------
+[2026-10-09 12:23:25.375] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-09 12:23:25.375] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-09 12:23:25.375] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-09 12:23:25.376] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-09 12:23:25.376] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-09 12:23:25.379] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-09 12:23:25.379] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+----- post-test output end -----
+AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call ... ok (4ms)
+AI Logo candidates route rejects invalid images and denies unauthenticated or unowned model generation ... ok (5ms)
+AI Logo errors never disclose system credentials to ordinary users ... ok (4ms)
+AI image protocol selection preserves model aliases and text chat ... ok (11ms)
+running 12 tests from ./src/features/ai/ai.test.ts
+AI Crypto: encryptApiKey & decryptApiKey works with mask ... ok (9ms)
+AI ProviderAdapter: discoverProviderModels discovers models correctly ... ok (1ms)
+AI Client: normalizeBaseUrl validates allowed endpoints ... ok (553µs)
+AI Service: Provider creation requires /models discovery & sets default model ... ok (6ms)
+AI Service: Streaming chat persists conversation and messages with history ... ok (24ms)
+AI Provider update and refresh leave database available during model discovery ... ok (4ms)
+AI Service: History disabled (spec 7.4) maintains current context but excluded from history list ... ok (11ms)
+AI Service: Conversation deletion and short Undo restore (spec 17) ... ok (5ms)
+AI Service: Partial token Abort persists interrupted content ... ok (5ms)
+AI Service: 4xx and 5xx responses preserve failed status and error ... ok (6ms)
+AI Service: No silent provider failover when selected provider fails ... ok (3ms)
+AI Service: Target unavailable rejects without silent failover ... ok (4ms)
+running 11 tests from ./src/features/ai/ask-workspace.test.ts
+AskWorkspace Phase 2: Reasoning effort validation rejects unsupported models without DB mutation ... ok (18ms)
+AskWorkspace Phase 2: Manual reasoning override is preserved across provider refresh ... ok (6ms)
+AskWorkspace Phase 3: True parent chain, edit sibling branch, and regenerate variant ... ok (17ms)
+AskWorkspace Phase 4: Token usage, system instruction, search, and export ... ok (6ms)
+AskWorkspace Phase 5: Multi-round tools execution and sources persistence ... ok (5ms)
+AskWorkspace: Empty message allowed on regenerate ... ok (4ms)
+AskWorkspace: Non-vision model rejects image attachments with 400 before DB mutations ... ok (1ms)
+AskWorkspace: Tool call security rejects unknown names and disabled tools ... ok (587µs)
+AskWorkspace: SearXNG URL validation rejects invalid URLs ... ok (1ms)
+AskWorkspace: Live SearXNG HTTP mock smoke test verifies real query/sources/persistence ...Listening on http://0.0.0.0:34427/ (http://localhost:34427/)
+ ok (5ms)
+AskWorkspace: Public DTO strips image base64 data ... ok (3ms)
+running 7 tests from ./src/features/ai/attachments.test.ts
+Attachments: validateAttachments passes valid attachments ... ok (1ms)
+Attachments: validateAttachments rejects more than 4 attachments ... ok (1ms)
+Attachments: validateAttachments rejects image with invalid magic bytes ... ok (352µs)
+Attachments: validateAttachments rejects mismatched declared vs detected MIME type ... ok (333µs)
+Attachments: validateAttachments rejects unsupported MIME type ... ok (251µs)
+Attachments: validateAttachments rejects text larger than 1 MiB ... ok (1ms)
+Attachments: processAndStoreAttachments persists image blobs ... ok (11ms)
+running 7 tests from ./src/features/ai/client.test.ts
+AI Client: provider SSE errors terminate with an error event ... ok (22ms)
+AI Client: fragmented UTF-8 and CRLF SSE preserve text and ignore non-text chunks ... ok (2ms)
+AI Client: malformed SSE returns an error after partial output without throwing ...
+------- post-test output -------
+Could not parse message into JSON:
+From chunk:
+----- post-test output end -----
+AI Client: malformed SSE returns an error after partial output without throwing ... ok (1ms)
+AI Client: unexpected JSON chunks cannot escape the stream boundary ... ok (751µs)
+AI Client: models and chat never retry provider HTTP failures ... ok (3ms)
+AI Client: invalid models responses remain Searcher errors ... ok (1ms)
+AI Client: endpoint policy rejects credentials, query, hash and restricted hosts ... ok (540µs)
+running 3 tests from ./src/features/ai/images.test.ts
+logo prompt keeps untrusted metadata inside quoted context for every style ... ok (12ms)
+logo prompt omits absent and whitespace-only optional metadata ... ok (1ms)
+official Gemini API accepts native endpoint and API key authentication ... ok (3ms)
+running 9 tests from ./src/features/ai/model-capabilities.test.ts
+ModelCapabilities: normalizeRawModelCapabilities extracts known fields without inventing levels ... ok (750µs)
+ModelCapabilities: inference by model name limited to official o-series ... ok (489µs)
+ModelCapabilities: validateModelMetadata validates nested structures at runtime ... ok (471µs)
+ModelCapabilities: resolveEffectiveCapability priority order ... ok (552µs)
+ModelCapabilities: mergeModelMetadata preserves manual overrides on refresh ... ok (208µs)
+ModelCapabilities: applyManualOverride sets or clears override ... ok (199µs)
+ModelCapabilities: populateModelDtoCapabilities generates convenient DTO fields ... ok (247µs)
+ModelCapabilities: discovery without an explicit default preserves Provider defaults ... ok (123µs)
+ModelCapabilities: populateModelDtoCapabilities filters reasoningEfforts strictly by transport ... ok (198µs)
+running 10 tests from ./src/features/ai/provider-adapter.test.ts
+
+[Backing file: ~/.omp/agent/sessions/-searcher/2026-10-08T23-34-30-149Z_01a11dde-4c05-76b9-8872-dfff679d2e2c/161.bash.log (129.0KB). Use artifact://161:raw:1-3000 for bounded verbatim chunks, artifact://161:1-3000 for numbered exploration, and the backing file path for search/copy workflows.]
+
+[Showing lines 1-300 of 1945. Use :301 to continue]

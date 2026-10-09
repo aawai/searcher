@@ -1,0 +1,302 @@
+Task test:workspace deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/launcher.test.ts web/e2e/apps-session.test.ts web/e2e/apps-interactions.test.ts web/e2e/apps-races.test.ts web/e2e/apps-ordering.test.ts web/e2e/apps-ai-session.test.ts web/e2e/notes-workspace.test.ts web/e2e/notes-masonry.test.ts web/e2e/notes-live-preview.test.ts web/e2e/notes-live-editing.test.ts web/e2e/notes-focus.test.ts web/e2e/notes-ux.test.ts web/e2e/notes-history.test.ts web/e2e/notes-menu.test.ts web/e2e/notes-color.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts web/e2e/workspace-contract.test.ts web/e2e/workspace-matrix.test.ts
+Task build deno run -A npm:vite@7.1.7 build --config web/vite.config.ts
+vite v7.1.7 building for production...
+transforming...
+✓ 3135 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.91 kB │ gzip:   0.50 kB
+dist/manifest.json                                  11.45 kB │ gzip:   1.58 kB
+dist/bundle-report.json                            518.45 kB │ gzip:  30.38 kB
+dist/assets/structural-Cy9_WDdj.css                  0.30 kB │ gzip:   0.17 kB
+dist/assets/AuthPage-DHZUjKsq.css                    0.56 kB │ gzip:   0.31 kB
+dist/assets/MarkdownEditorSpike-B05I3N0K.css         1.24 kB │ gzip:   0.49 kB
+dist/assets/TrashPage-7GkguyJJ.css                   1.45 kB │ gzip:   0.43 kB
+dist/assets/WallpaperMotionInspector-5Hdr6HUV.css    1.54 kB │ gzip:   0.52 kB
+dist/assets/document-print-I2wQRGl3.css              2.32 kB │ gzip:   0.68 kB
+dist/assets/markdown-kZHnkPN1.css                    2.63 kB │ gzip:   0.71 kB
+dist/assets/document-pagination-CKf5ZGXW.css         3.37 kB │ gzip:   0.89 kB
+dist/assets/EditablePaginationSpike-JjoEVJv9.css     4.15 kB │ gzip:   1.02 kB
+dist/assets/AccountPage-C3jCQPi6.css                 4.56 kB │ gzip:   0.98 kB
+dist/assets/AdminPage-Ci9C7h92.css                   5.04 kB │ gzip:   1.12 kB
+dist/assets/DesignLab-C293bDgI.css                   8.14 kB │ gzip:   1.51 kB
+dist/assets/document-editor-i_SIFy16.css            12.90 kB │ gzip:   2.51 kB
+dist/assets/SettingsPage-B0wOJP32.css               17.51 kB │ gzip:   3.23 kB
+dist/assets/AskPage-Cm62X1-i.css                    19.87 kB │ gzip:   3.29 kB
+dist/assets/index-MAmQL3Xs.css                     165.76 kB │ gzip:  28.76 kB
+dist/assets/index-DU14uucz.js                        0.16 kB │ gzip:   0.14 kB
+dist/assets/paper-Bl2PZQws.js                        0.49 kB │ gzip:   0.33 kB
+dist/assets/runtime-qXESV49h.js                      0.75 kB │ gzip:   0.46 kB
+dist/assets/task-list-CsEWLaY8.js                    0.87 kB │ gzip:   0.56 kB
+dist/assets/NoteMarkdown-B7sEiF7S.js                 0.94 kB │ gzip:   0.53 kB
+dist/assets/slider-BfHhq9uy.js                       0.94 kB │ gzip:   0.51 kB
+dist/assets/NotFoundPage-ODT0L7Sp.js                 0.96 kB │ gzip:   0.60 kB
+dist/assets/note-summary-BuWTMpWV.js                 1.60 kB │ gzip:   0.82 kB
+dist/assets/runtime-BgHdL_tS.js                      2.03 kB │ gzip:   1.05 kB
+dist/assets/NoteLivePreviewEditor-CI7FSyAm.js        2.05 kB │ gzip:   0.97 kB
+dist/assets/AuthPage-DyskoH5A.js                     2.58 kB │ gzip:   1.25 kB
+dist/assets/MarkdownEditorSpike-oPWlEd6d.js          3.72 kB │ gzip:   1.87 kB
+dist/assets/WallpaperMotionInspector-_FYI9frD.js     3.76 kB │ gzip:   1.01 kB
+dist/assets/runtime-BC3bkWug.js                      7.20 kB │ gzip:   2.93 kB
+dist/assets/TrashPage-gmqtU_rk.js                    8.13 kB │ gzip:   2.25 kB
+dist/assets/AccountPage-CVyRnWMm.js                 11.95 kB │ gzip:   3.99 kB
+dist/assets/editor-extensions-CX43UV6m.js           12.76 kB │ gzip:   4.96 kB
+dist/assets/EditablePaginationSpike-BrqXDhjI.js     14.32 kB │ gzip:   6.48 kB
+dist/assets/DesignLab-Brcd0Pq1.js                   28.16 kB │ gzip:   8.47 kB
+dist/assets/AdminPage-BdlQLNAT.js                   39.73 kB │ gzip:  11.41 kB
+dist/assets/DocumentEditor-D1SDOnPl.js              45.03 kB │ gzip:  13.23 kB
+dist/assets/markdown-renderer-vendor-DanjsbcM.js    50.51 kB │ gzip:  17.07 kB
+dist/assets/SettingsPage-DUNHHDmB.js                54.31 kB │ gzip:  16.16 kB
+dist/assets/AskPage-DUpepXc8.js                     62.22 kB │ gzip:  18.72 kB
+dist/assets/markdown-vendor-BWoQJRHy.js            120.87 kB │ gzip:  35.70 kB
+dist/assets/react-vendor-B0DELUiE.js               219.81 kB │ gzip:  71.43 kB
+dist/assets/ui-vendor-B6Cgqgg3.js                  310.06 kB │ gzip:  97.50 kB
+dist/assets/assistant-vendor-enIpA7fE.js           318.33 kB │ gzip:  94.40 kB
+dist/assets/index-CoNeQB5H.js                      324.16 kB │ gzip:  97.50 kB
+dist/assets/editor-vendor-C5Ec8Nxk.js              332.48 kB │ gzip: 103.70 kB
+✓ built in 5.20s
+Check web/e2e/workspace.test.ts
+Check web/e2e/workspace-shell.test.ts
+Check web/e2e/launcher.test.ts
+Check web/e2e/apps-session.test.ts
+Check web/e2e/apps-interactions.test.ts
+Check web/e2e/apps-races.test.ts
+Check web/e2e/apps-ordering.test.ts
+Check web/e2e/apps-ai-session.test.ts
+Check web/e2e/notes-workspace.test.ts
+Check web/e2e/notes-masonry.test.ts
+Check web/e2e/notes-live-preview.test.ts
+Check web/e2e/notes-live-editing.test.ts
+Check web/e2e/notes-focus.test.ts
+Check web/e2e/notes-ux.test.ts
+Check web/e2e/notes-history.test.ts
+Check web/e2e/notes-menu.test.ts
+Check web/e2e/notes-color.test.ts
+Check web/e2e/home-notes-order.test.ts
+Check web/e2e/bento.test.ts
+Check web/e2e/workspace-contract.test.ts
+Check web/e2e/workspace-matrix.test.ts
+running 1 test from ./web/e2e/workspace.test.ts
+production workspace contracts ...
+  Widgets closed Dock -> Apps/Notes, non-modal desktop no backdrop/no focus trap/layout shift ... ok (132ms)
+  root in-place switch preserving queries ... ok (358ms)
+  nested AppForm dirty Back/Close protection and save ... ok (1s)
+  Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server ...
+------- output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- output end -----
+  Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server ... ok (5s)
+  Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation ... ok (7s)
+  Home Quick Apps pinned order, icon size and label preferences ... ok (1s)
+  Zen apps notes note edit FloatingNotes preserved desktop layout ... ok (683ms)
+  Mobile focustrap/swipe/escape and focus return ... ok (376ms)
+production workspace contracts ... ok (18s)
+running 1 test from ./web/e2e/workspace-shell.test.ts
+production Workspace state, keyboard and responsive contracts ...
+  loading remains bounded; retry recovers an empty Apps launcher ... ok (327ms)
+  offline stale Apps cache remains browsable and explicit retry refreshes it ... ok (503ms)
+  failed add/edit preserves draft and error; retry saves; delete/undo restores ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  failed add/edit preserves draft and error; retry saves; delete/undo restores ... ok (805ms)
+  viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus ... ok (6s)
+  keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority ... ok (880ms)
+  Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration ... ok (705ms)
+  issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability ... ok (6s)
+  presentation changes preserve Core queries and nested Back; logout clears transient state ... ok (2s)
+  Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence ... ok (2s)
+production Workspace state, keyboard and responsive contracts ... ok (21s)
+running 1 test from ./web/e2e/launcher.test.ts
+production launcher contracts - Issue #47 ...
+  0. Empty Launcher Root: blank surface menu available when zero apps or folders ... ok (123ms)
+  1. Unified Launcher Root: defaults directly to complete launcher without legacy IA ... ok (180ms)
+  2. Folder Inline Browse & Back scroll-focus restoration ... ok (157ms)
+  3. Blank space context menu & Keyboard / Touch folder creation ... ok (742ms)
+  4. Folder context actions: resize, rename, delete with confirmation and apps preserved ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  4. Folder context actions: resize, rename, delete with confirmation and apps preserved ... ok (989ms)
+  5. Search deduplication, Folder result click & arrange mode search unbinding ... ok (392ms)
+  6. App Context Menu ownership fallback (move in & out of folder) ... ok (479ms)
+  7. App -> Folder pointer DnD: drop-target feedback and move failure rollback ... ok (442ms)
+  8. App -> Folder pointer DnD: successful move and server reload consistency ... ok (411ms)
+  9. Folder-internal App reorder, scope-local order, and pinnedOrder untouched ... ok (406ms)
+  10. Mixed Root Reorder via KeyboardSensor and atomic PUT persistence ... ok (457ms)
+  11. 375px mobile viewport & real theme system (dataset.theme reactive) ... ok (141ms)
+  12. Folder across App and App across App preserve mixed order on reload ... ok (1s)
+  13. Real touch drag moves App into Folder without changing Home pin order ... ok (6s)
+production launcher contracts - Issue #47 ... ok (13s)
+running 1 test from ./web/e2e/apps-session.test.ts
+apps edit keeps fields and confirmation across hosts and window modes ... ok (2s)
+running 1 test from ./web/e2e/apps-interactions.test.ts
+apps session, modal undo and visible management contracts #141 ...
+  visible folder creation, arranging exit and layered Escape ... ok (1s)
+  all draft fields, icon input and real upload survive host replacement ... ok (1s)
+  cross-folder search context and icon shortcut versus normal edit ... ok (905ms)
+  mobile modal undo is a visible, hittable normal layout row ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  mobile modal undo is a visible, hittable normal layout row ... ok (340ms)
+  moving undo between modal and global hosts preserves its deadline ... ok (252ms)
+  restore failure remains inside the active modal and never restores falsely ... ok (512ms)
+apps session, modal undo and visible management contracts #141 ... ok (5s)
+running 1 test from ./web/e2e/apps-races.test.ts
+apps ignores obsolete fetches and retains failed saves ... ok (3s)
+running 1 test from ./web/e2e/apps-ordering.test.ts
+apps concurrent optimistic sorting converges to confirmed server order #141 ... ok (1s)
+running 1 test from ./web/e2e/apps-ai-session.test.ts
+apps AI snapshot, candidates and selection stay in one session #141 ... ok (3s)
+running 1 test from ./web/e2e/notes-workspace.test.ts
+production notes workspace contracts (#44 & #43) ...
+  Notes #44: Empty state (no notes) and search no result empty state ... ok (323ms)
+  Notes #44: Fixed section deduplication and search deduplication ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Notes #44: Fixed section deduplication and search deduplication ... ok (463ms)
+  Notes #44: Controls isolation (drag, expand, pin, home-fixed, color, delete do not enter editor) ... ok (1s)
+  Notes #44/#109: Inline expand/collapse, card column-width geometry (<=2px), and API write purity ... ok (578ms)
+  Notes #78: toolbar, shortcuts, composite blur, Markdown persistence and newline parity ... ok (5s)
+  Notes Source/Live: coarse-pointer toolbar touch targets and editable tasks ... ok (2s)
+  Notes #44: NoteEditor saving / unsynced / error and retry lifecycle ... ok (731ms)
+  Notes #44: NoteEditor 409 conflict detection, dialog UI, and resolution ... ok (710ms)
+  Notes #44: Version history error handling and display ... ok (402ms)
+  Notes #44: Stale cached notes browse and retry on API failure ... ok (267ms)
+  Notes #44: Long title and many notes overflow contracts across desktop (1440) and mobile (390) ... ok (3s)
+  Notes #44: Zen FloatingNotes opening/closing workspace geometry isolation ... ok (1s)
+  Notes #44: ControlledNotes deterministic spatial layout and narrow fallback ... ok (660ms)
+production notes workspace contracts (#44 & #43) ... ok (18s)
+running 1 test from ./web/e2e/notes-masonry.test.ts
+production notes masonry contracts (#109) ...
+  Content widths 505/506/766/767, max three columns and every desktop window operation are write-free ... ok (8s)
+  768–1023 constrained presets reflow without resetting query, expansion or API order ... ok (4s)
+  Unequal expanded Markdown heights use shortest columns; expand/collapse restores geometry without writes ... ok (2s)
+  Search uses independent nonsortable masonry, prunes filtered geometry and clear restores grouping and expansion ... ok (2s)
+  Pin/home-fixed membership changes preserve expansion; deletion reflows both independent containers ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Pin/home-fixed membership changes preserve expansion; deletion reflows both independent containers ... ok (3s)
+  2-column pointer drop across columns at upper target center persists canonical order ... ok (2s)
+  2-column pointer drop across columns at lower target center persists canonical order ... ok (3s)
+  2-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion ... ok (4s)
+  3-column pointer drop across columns at upper target center persists canonical order ... ok (2s)
+  3-column pointer drop across columns at lower target center persists canonical order ... ok (2s)
+  3-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion ... ok (4s)
+  widgets 390px light: root/search presentation and home isolation with screenshot evidence ... ok (894ms)
+  widgets 390px dark: root/search presentation and home isolation with screenshot evidence ... ok (934ms)
+  widgets 768px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  widgets 768px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  widgets 1440px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  widgets 1440px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 390px light: root/search presentation and home isolation with screenshot evidence ... ok (816ms)
+  zen 390px dark: root/search presentation and home isolation with screenshot evidence ... ok (898ms)
+  zen 768px light: root/search presentation and home isolation with screenshot evidence ... ok (877ms)
+  zen 768px dark: root/search presentation and home isolation with screenshot evidence ... ok (931ms)
+  zen 1440px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 1440px dark: root/search presentation and home isolation with screenshot evidence ... ok (993ms)
+production notes masonry contracts (#109) ... ok (55s)
+running 1 test from ./web/e2e/notes-live-preview.test.ts
+Notes Live Preview: opening and switching preserve canonical Markdown without saves ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes Live Preview: opening and switching preserve canonical Markdown without saves ... ok (3s)
+running 1 test from ./web/e2e/notes-live-editing.test.ts
+Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ...
+  IME does not save or format partial composition; final text autosaves ... ok (3s)
+  selection, undo/redo, local link precedence and manual save ... ok (84ms)
+  toolbar focus stays inside composite and tasks persist checked state ... ok (122ms)
+  use cloud replaces both modes without callback/autosave loop ... ok (1s)
+  long Markdown saves without truncation; over-limit draft survives rejection ...
+------- post-test output -------
+[2026-10-09 12:33:31.811] INFO:
+    method: "PATCH"
+    path: "/api/notes/772e93df-a75c-49a3-b021-fbc904e38a4a"
+    event: "validation-failed"
+----- post-test output end -----
+  long Markdown saves without truncation; over-limit draft survives rejection ... ok (104ms)
+  restore updates Live and Source without a second PATCH ... ok (2s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... ok (9s)
+running 1 test from ./web/e2e/notes-focus.test.ts
+Notes focus boundary preserves network, versions and history ...
+  clean title to body has no PATCH or version/history change ... ok (1s)
+  源码: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown ... ok (2s)
+  源码: dirty title and body autosave together, never a title-only manual snapshot ... ok (1s)
+  所见即所得: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown ... ok (1s)
+  所见即所得: dirty title and body autosave together, never a title-only manual snapshot ... ok (1s)
+  internal focus does not restart the original title debounce ... ok (1s)
+  title-only dirty leave to history flushes exactly once with a manual snapshot ... ok (1s)
+  title-only dirty leave to color flushes exactly once with a manual snapshot ... ok (1s)
+  clean explicit Ctrl+S retains manual save and version semantics ... ok (54ms)
+  title composition blocks Enter, commands and blur; committed title autosaves ... ok (3s)
+  unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer ... ok (5s)
+  failed title flush stays dirty and can retry through real leave ... ok (131ms)
+  older title response cannot delete newer body draft after immediate close ... ok (368ms)
+  two note instances flush only the dirty instance actually left ... ok (4s)
+Notes focus boundary preserves network, versions and history ... ok (31s)
+running 1 test from ./web/e2e/notes-ux.test.ts
+Notes long document actions and history stay reachable without replacing editor ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes long document actions and history stay reachable without replacing editor ... ok (2s)
+running 1 test from ./web/e2e/notes-history.test.ts
+Notes history flush, cancel, restore and failure preserve real server contracts ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes history flush, cancel, restore and failure preserve real server contracts ... ok (3s)
+running 1 test from ./web/e2e/notes-menu.test.ts
+Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands ... ok (6s)
+running 1 test from ./web/e2e/notes-color.test.ts
+Note card color dots have accessible names without visible labels and persist keyboard selection ... ok (1s)
+running 1 test from ./web/e2e/home-notes-order.test.ts
+production home notes manual order E2E (#62) ...
+  Notes #62: Handle rendering and handle click does not open editor ... ok (593ms)
+  Notes #62: Pointer drag C->A immediate DOM, reload and relogin persistence, normal notes preserved ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Notes #62: Pointer drag C->A immediate DOM, reload and relogin persistence, normal notes preserved ... ok (1s)
+  Notes #62: Keyboard equivalent reordering and reload persistence ... ok (871ms)
+  Notes #62: Max 5 slots displayed, hidden sixth+ note preserved in background ... ok (944ms)
+  Notes #62: Fix and unfix notes toggles board presence and sorting capability ... ok (1s)
+  Notes #62: Workspace other notes sorting and search unsortable contract ... ok (847ms)
+  Notes #62: Visual overflow at 375/390/768/1024/1440 light/dark and #40 layout contract ... ok (4s)
+production home notes manual order E2E (#62) ... ok (12s)
+running 1 test from ./web/e2e/bento.test.ts
+production Bento contracts & empty expansion matrix (#44) ...
+  Bento Contract: Both have content -> 5:3 double-column & intrinsic height ... ok (378ms)
+  Bento Contract: Apps-only -> Apps card full width, Notes empty moves down compact ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Bento Contract: Apps-only -> Apps card full width, Notes empty moves down compact ... ok (303ms)
+  Bento Contract: Notes-only -> Notes card full width, Apps empty moves down compact ... ok (360ms)
+  Bento Contract: Both empty -> Both entries discoverable, 5:3 side-by-side, no large fixed min-height ... ok (285ms)
+  Bento Tile Centering: 1 to 4 tiles centered (data-few-apps), 5+ start-aligned ... ok (500ms)
+  Bento Geometry: Long app title & long note title do not cause overflow ... ok (146ms)
+  Bento Matrix: 375 mobile (375x667) - light ... ok (173ms)
+  Bento Matrix: 390 mobile standard (390x844) - light ... ok (108ms)
+  Bento Matrix: 768 tablet (768x1024) - light ... ok (160ms)
+  Bento Matrix: 1024 desktop small (1024x768) - light ... ok (166ms)
+  Bento Matrix: 1440 desktop standard (1440x900) - light ... ok (138ms)
+  Bento Matrix: 1920 desktop large (1920x1080) - light ... ok (153ms)
+  Bento Matrix: 375 mobile (375x667) - dark ... ok (169ms)
+
+[Showing lines 1-300 of 342. Use :301 to continue]

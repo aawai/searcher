@@ -1,0 +1,18 @@
+{
+  "source": "173b45c",
+  "baseline": "e747aa4",
+  "integrationMain": "aa4c4d8",
+  "issueUpdated": "2026-10-09T05:57:30Z",
+  "fixedMatrix": "72 unique scenarios; core screenshots before main integration, 24 form screenshots refreshed after integration",
+  "performance": "same-data production --minify false sample before main integration; does not claim postmerge timing",
+  "unverified": [
+    "physical mobile keyboard and OS IME",
+    "Safari",
+    "real AI image generation: no providers/models configured"
+  ],
+  "tests": {
+    "unit": "643 passed, 51 steps",
+    "workspace": "21 passed, 134 steps",
+    "sharedFeedbackDocuments": "2 passed,25 steps"
+  }
+}

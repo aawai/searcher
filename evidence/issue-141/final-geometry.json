@@ -1,0 +1,1315 @@
+[
+  {
+    "name": "390-zen-light-root",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-light-folder",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-light-search",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-light-edit",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-light-create",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-light-arrange",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-light-root",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-light-folder",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-light-search",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-light-edit",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": {
+      "top": 938,
+      "bottom": 1007
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-light-create",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": {
+      "top": 938,
+      "bottom": 1007
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-light-arrange",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-light-root",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-light-folder",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-light-search",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-light-edit",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": {
+      "top": 814,
+      "bottom": 883
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-light-create",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": {
+      "top": 814,
+      "bottom": 883
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-light-arrange",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-dark-root",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-dark-folder",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-dark-search",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-dark-edit",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-dark-create",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-zen-dark-arrange",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-dark-root",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-dark-folder",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-dark-search",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-dark-edit",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": {
+      "top": 938,
+      "bottom": 1007
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-dark-create",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": {
+      "top": 938,
+      "bottom": 1007
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-zen-dark-arrange",
+    "host": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-dark-root",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-dark-folder",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-dark-search",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-dark-edit",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": {
+      "top": 814,
+      "bottom": 883
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-dark-create",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": {
+      "top": 814,
+      "bottom": 883
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-zen-dark-arrange",
+    "host": {
+      "x": 1024,
+      "y": 64,
+      "width": 400,
+      "height": 820
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-light-root",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-light-folder",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-light-search",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-light-edit",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-light-create",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-light-arrange",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-light-root",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-light-folder",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-light-search",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-light-edit",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": {
+      "top": 729,
+      "bottom": 798
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-light-create",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": {
+      "top": 729,
+      "bottom": 798
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-light-arrange",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-light-root",
+    "host": {
+      "x": 16,
+      "y": 163,
+      "width": 480,
+      "height": 583
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-light-folder",
+    "host": {
+      "x": 16,
+      "y": 163,
+      "width": 480,
+      "height": 583
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-light-search",
+    "host": {
+      "x": 16,
+      "y": 163,
+      "width": 480,
+      "height": 583
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-light-edit",
+    "host": {
+      "x": 16,
+      "y": 163,
+      "width": 480,
+      "height": 583
+    },
+    "footer": {
+      "top": 664,
+      "bottom": 733
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-light-create",
+    "host": {
+      "x": 16,
+      "y": 163,
+      "width": 480,
+      "height": 583
+    },
+    "footer": {
+      "top": 664,
+      "bottom": 733
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-light-arrange",
+    "host": {
+      "x": 16,
+      "y": 163,
+      "width": 480,
+      "height": 583
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-root",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-root",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-folder",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-search",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-edit",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-create",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": {
+      "top": 775,
+      "bottom": 844
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "390-widgets-dark-arrange",
+    "host": {
+      "x": 0,
+      "y": 101.28125,
+      "width": 390,
+      "height": 742.71875
+    },
+    "footer": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-dark-root",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-dark-folder",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-dark-search",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-dark-edit",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": {
+      "top": 729,
+      "bottom": 798
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-dark-create",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": {
+      "top": 729,
+      "bottom": 798
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "768-widgets-dark-arrange",
+    "host": {
+      "x": 96.95999908447266,
+      "y": 199,
+      "width": 574.078125,
+      "height": 612
+    },
+    "footer": null,
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-dark-root",
+    "host": {
+      "x": 16,
+      "y": 166,
+      "width": 480,
+      "height": 601
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-dark-folder",
+    "host": {
+      "x": 16,
+      "y": 166,
+      "width": 480,
+      "height": 601
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回应用列表",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-dark-search",
+    "host": {
+      "x": 16,
+      "y": 166,
+      "width": 480,
+      "height": 601
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "搜索应用",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-dark-edit",
+    "host": {
+      "x": 16,
+      "y": 166,
+      "width": 480,
+      "height": 601
+    },
+    "footer": {
+      "top": 685,
+      "bottom": 754
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-dark-create",
+    "host": {
+      "x": 16,
+      "y": 166,
+      "width": 480,
+      "height": 601
+    },
+    "footer": {
+      "top": 685,
+      "bottom": 754
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "返回上一级",
+    "coarse": true
+  },
+  {
+    "name": "1440-widgets-dark-arrange",
+    "host": {
+      "x": 16,
+      "y": 166,
+      "width": 480,
+      "height": 601
+    },
+    "footer": null,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "horizontalOverflow": false,
+    "focus": "应用更多操作",
+    "coarse": true
+  }
+]

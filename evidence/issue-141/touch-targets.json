@@ -1,0 +1,198 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "controls": [
+    {
+      "label": "跟随全局",
+      "rect": {
+        "x": 34,
+        "y": 468.953125,
+        "width": 102.328125,
+        "height": 44,
+        "top": 468.953125,
+        "right": 136.328125,
+        "bottom": 512.953125,
+        "left": 34
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "新标签页",
+      "rect": {
+        "x": 136.328125,
+        "y": 468.953125,
+        "width": 102.328125,
+        "height": 44,
+        "top": 468.953125,
+        "right": 238.65625,
+        "bottom": 512.953125,
+        "left": 136.328125
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "当前标签页",
+      "rect": {
+        "x": 238.65625,
+        "y": 468.953125,
+        "width": 102.34375,
+        "height": 44,
+        "top": 468.953125,
+        "right": 341,
+        "bottom": 512.953125,
+        "left": 238.65625
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "自动获取",
+      "rect": {
+        "x": 34,
+        "y": 731.015625,
+        "width": 76.75,
+        "height": 44,
+        "top": 731.015625,
+        "right": 110.75,
+        "bottom": 775.015625,
+        "left": 34
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "上传图片",
+      "rect": {
+        "x": 110.75,
+        "y": 731.015625,
+        "width": 76.75,
+        "height": 44,
+        "top": 731.015625,
+        "right": 187.5,
+        "bottom": 775.015625,
+        "left": 110.75
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "网络图片",
+      "rect": {
+        "x": 187.5,
+        "y": 731.015625,
+        "width": 76.75,
+        "height": 44,
+        "top": 731.015625,
+        "right": 264.25,
+        "bottom": 775.015625,
+        "left": 187.5
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "AI 生成",
+      "rect": {
+        "x": 264.25,
+        "y": 731.015625,
+        "width": 76.75,
+        "height": 44,
+        "top": 731.015625,
+        "right": 341,
+        "bottom": 775.015625,
+        "left": 264.25
+      },
+      "clip": {
+        "x": 1,
+        "y": 187.28125,
+        "width": 388,
+        "height": 587.71875,
+        "top": 187.28125,
+        "right": 389,
+        "bottom": 775,
+        "left": 1
+      }
+    },
+    {
+      "label": "取消",
+      "rect": {
+        "x": 209,
+        "y": 788,
+        "width": 62,
+        "height": 44,
+        "top": 788,
+        "right": 271,
+        "bottom": 832,
+        "left": 209
+      },
+      "clip": null
+    },
+    {
+      "label": "保存修改",
+      "rect": {
+        "x": 279,
+        "y": 788,
+        "width": 90,
+        "height": 44,
+        "top": 788,
+        "right": 369,
+        "bottom": 832,
+        "left": 279
+      },
+      "clip": null
+    }
+  ],
+  "measurement": "Scrolled icon tabs into visible body; body clip excludes offscreen opening tabs."
+}

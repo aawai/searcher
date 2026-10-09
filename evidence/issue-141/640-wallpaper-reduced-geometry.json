@@ -1,0 +1,111 @@
+{
+  "viewport": {
+    "width": 640,
+    "height": 800
+  },
+  "reduced": true,
+  "wallpaper": null,
+  "overflow": false,
+  "buttons": [
+    {
+      "name": "收起工作区",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "应用更多操作",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "打开文件夹 知识工具与团队协作——长文件夹名称检查换行及操作入口，5 个应用",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开文件夹 同名资料库，5 个应用",
+      "width": 146,
+      "height": 146
+    },
+    {
+      "name": "打开 应用 6 · 技术资料",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "打开 应用 7 · 技术资料",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "打开 应用 8 · 技术资料",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "打开 应用 9 · 技术资料",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "打开 应用 10 · 技术资料",
+      "width": 44,
+      "height": 44
+    },
+    {
+      "name": "打开 应用 12 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开 应用 13 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开 应用 14 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开 应用 15 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开 应用 16 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开 应用 17 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "打开 应用 18 · 技术资料",
+      "width": 88,
+      "height": 88
+    },
+    {
+      "name": "添加应用",
+      "width": 606,
+      "height": 44
+    },
+    {
+      "name": "应用工作区",
+      "width": 196.671875,
+      "height": 44
+    },
+    {
+      "name": "便签工作区",
+      "width": 196.671875,
+      "height": 44
+    },
+    {
+      "name": "笔记工作区",
+      "width": 196.671875,
+      "height": 44
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "label": "baseline",
+    "count": 100,
+    "columns": "68px 68px 68px 68px 68px 68px 68px 68px 68px",
+    "gap": "4px",
+    "tile": {
+      "width": 68,
+      "height": 68
+    },
+    "fine": false
+  },
+  {
+    "label": "current",
+    "count": 100,
+    "columns": "88px 88px 88px 88px 88px 88px 88px",
+    "gap": "4px",
+    "tile": {
+      "width": 88,
+      "height": 88
+    },
+    "fine": false
+  }
+]

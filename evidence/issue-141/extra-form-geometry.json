@@ -1,0 +1,238 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 640
+    },
+    "footer": {
+      "top": 571,
+      "bottom": 640
+    },
+    "bodyOverflow": 0,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "跟随全局",
+        "width": 102.328125,
+        "height": 44
+      },
+      {
+        "label": "新标签页",
+        "width": 102.328125,
+        "height": 44
+      },
+      {
+        "label": "当前标签页",
+        "width": 102.34375,
+        "height": 44
+      },
+      {
+        "label": "自动获取",
+        "width": 76.75,
+        "height": 44
+      },
+      {
+        "label": "上传图片",
+        "width": 76.75,
+        "height": 44
+      },
+      {
+        "label": "网络图片",
+        "width": 76.75,
+        "height": 44
+      },
+      {
+        "label": "AI 生成",
+        "width": 76.75,
+        "height": 44
+      },
+      {
+        "label": "取消",
+        "width": 62,
+        "height": 44
+      },
+      {
+        "label": "添加应用",
+        "width": 90,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 640,
+      "height": 800
+    },
+    "footer": {
+      "top": 731,
+      "bottom": 800
+    },
+    "bodyOverflow": 0,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "跟随全局",
+        "width": 185.65625,
+        "height": 44
+      },
+      {
+        "label": "新标签页",
+        "width": 185.671875,
+        "height": 44
+      },
+      {
+        "label": "当前标签页",
+        "width": 185.671875,
+        "height": 44
+      },
+      {
+        "label": "自动获取",
+        "width": 139.25,
+        "height": 44
+      },
+      {
+        "label": "上传图片",
+        "width": 139.25,
+        "height": 44
+      },
+      {
+        "label": "网络图片",
+        "width": 139.25,
+        "height": 44
+      },
+      {
+        "label": "AI 生成",
+        "width": 139.25,
+        "height": 44
+      },
+      {
+        "label": "取消",
+        "width": 62,
+        "height": 44
+      },
+      {
+        "label": "添加应用",
+        "width": 90,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 960,
+      "height": 800
+    },
+    "footer": {
+      "top": 536.3587646484375,
+      "bottom": 605.3587646484375
+    },
+    "bodyOverflow": 0,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "跟随全局",
+        "width": 199,
+        "height": 44
+      },
+      {
+        "label": "新标签页",
+        "width": 199,
+        "height": 44
+      },
+      {
+        "label": "当前标签页",
+        "width": 199,
+        "height": 44
+      },
+      {
+        "label": "自动获取",
+        "width": 149.25,
+        "height": 44
+      },
+      {
+        "label": "上传图片",
+        "width": 149.25,
+        "height": 44
+      },
+      {
+        "label": "网络图片",
+        "width": 149.25,
+        "height": 44
+      },
+      {
+        "label": "AI 生成",
+        "width": 149.25,
+        "height": 44
+      },
+      {
+        "label": "取消",
+        "width": 62,
+        "height": 44
+      },
+      {
+        "label": "添加应用",
+        "width": 90,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "footer": {
+      "top": 624,
+      "bottom": 693
+    },
+    "bodyOverflow": 0,
+    "overflow": false,
+    "targets": [
+      {
+        "label": "跟随全局",
+        "width": 132.328125,
+        "height": 44
+      },
+      {
+        "label": "新标签页",
+        "width": 132.328125,
+        "height": 44
+      },
+      {
+        "label": "当前标签页",
+        "width": 132.328125,
+        "height": 44
+      },
+      {
+        "label": "自动获取",
+        "width": 99.25,
+        "height": 44
+      },
+      {
+        "label": "上传图片",
+        "width": 99.25,
+        "height": 44
+      },
+      {
+        "label": "网络图片",
+        "width": 99.25,
+        "height": 44
+      },
+      {
+        "label": "AI 生成",
+        "width": 99.25,
+        "height": 44
+      },
+      {
+        "label": "取消",
+        "width": 62,
+        "height": 44
+      },
+      {
+        "label": "添加应用",
+        "width": 90,
+        "height": 44
+      }
+    ]
+  }
+]
