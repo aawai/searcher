@@ -1573,6 +1573,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 ).first();
                 const a = (await source.boundingBox())!;
                 const b = (await target.boundingBox())!;
+                assertEquals([a.width, a.height], [68, 68]);
+                assertEquals([b.width, b.height], [68, 68]);
                 const point = (x: number, y: number) => [{ x, y, id: 1 }];
                 await cdp.send("Input.dispatchTouchEvent", {
                     type: "touchStart",
@@ -1590,6 +1592,24 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     touchPoints: point(b.x + b.width / 2, b.y + b.height / 2),
                 });
                 await panel.locator(".launcher-folder-drop-badge").waitFor();
+                const overlay = touchPage.locator(".launcher-overlay");
+                await overlay.waitFor();
+                const overlayBox = (await overlay.boundingBox())!;
+                assertEquals([overlayBox.width, overlayBox.height], [68, 68]);
+                assertEquals(
+                    Math.abs(
+                        overlayBox.x + overlayBox.width / 2 -
+                            (b.x + b.width / 2),
+                    ) < 1,
+                    true,
+                );
+                assertEquals(
+                    Math.abs(
+                        overlayBox.y + overlayBox.height / 2 -
+                            (b.y + b.height / 2),
+                    ) < 1,
+                    true,
+                );
                 const saved = touchPage.waitForResponse((response) =>
                     new URL(response.url()).pathname ===
                         "/api/webapps/" + appGitHub.id &&
