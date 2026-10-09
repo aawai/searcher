@@ -1,5 +1,14 @@
 # Wiki Update Log
 
+## 2026-10-09
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-09-ubuntu-chromium","title":"Ubuntu Chromium 系统依赖修复与默认启动验收"}
+
+## 2026-10-08
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings","title":"Issue 140 Notes history and Portal regression findings"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137","title":"Issue #136 Notes focus boundary merged via PR #137"}
+
 ## 2026-10-05
 
 - **ensure\_page**: {"page_type":"entity","path":"entities/vite-bundler","title":"Vite Bundler"}

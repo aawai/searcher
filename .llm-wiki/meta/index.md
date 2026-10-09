@@ -79,6 +79,9 @@
 - [[sources/obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-]] — Observation: Issue #114 wallpaper motion perceptibility calibrated and PR #115 merged *(created: 2026-10-05)*
 - [[sources/obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge]] — Observation: Issue 116 Phase 0C v2 Wallpaper Temporal Motion System merged *(created: 2026-10-05)*
 - [[sources/obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged]] — Observation: Issue #117: Route dynamic splitting and bundle guard merged *(created: 2026-10-05)*
+- [[sources/obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137]] — Observation: Issue #136 Notes focus boundary merged via PR #137 *(created: 2026-10-08)*
+- [[sources/obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings]] — Observation: Issue 140 Notes history and Portal regression findings *(created: 2026-10-08)*
+- [[sources/obs-2026-10-09-ubuntu-chromium]] — Observation: Ubuntu Chromium 系统依赖修复与默认启动验收 *(created: 2026-10-09)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -135,4 +138,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-05T13:09:54.658Z* | *Total pages: 120*
+*Last updated: 2026-10-09T01:43:00.867Z* | *Total pages: 123*

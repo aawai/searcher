@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-05T13:09:54.658Z",
+  "last_updated": "2026-10-09T01:43:00.867Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1383,6 +1383,62 @@
       "source_context": "Resolving Issue #117",
       "created": "2026-10-05",
       "updated": "2026-10-05"
+    },
+    "sources/obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137": {
+      "type": "source",
+      "title": "Observation: Issue #136 Notes focus boundary merged via PR #137",
+      "tags": [
+        "notes",
+        "focus",
+        "save",
+        "issue-136",
+        "pr-137",
+        "regression",
+        "worktree"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137",
+      "relevance": "high",
+      "observed_at": "2026-10-08T07:52:13.619Z",
+      "source_context": "Issue #136 implementation and authorized PR merge",
+      "created": "2026-10-08",
+      "updated": "2026-10-08"
+    },
+    "sources/obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings": {
+      "type": "source",
+      "title": "Observation: Issue 140 Notes history and Portal regression findings",
+      "tags": [
+        "notes",
+        "issue-140",
+        "focus",
+        "history",
+        "worktree"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings",
+      "relevance": "high",
+      "observed_at": "2026-10-08T14:43:26.344Z",
+      "source_context": "Implementing issue #140",
+      "created": "2026-10-08",
+      "updated": "2026-10-08"
+    },
+    "sources/obs-2026-10-09-ubuntu-chromium": {
+      "type": "source",
+      "title": "Observation: Ubuntu Chromium 系统依赖修复与默认启动验收",
+      "tags": [
+        "browser",
+        "environment",
+        "chromium",
+        "playwright",
+        "verification"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-09-ubuntu-chromium",
+      "relevance": "high",
+      "observed_at": "2026-10-09T01:43:00.846Z",
+      "source_context": "独立修复本机浏览器环境",
+      "created": "2026-10-09",
+      "updated": "2026-10-09"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",
