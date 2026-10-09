@@ -91,4 +91,7 @@
 - [Observation: Issue #114 wallpaper motion perceptibility calibrated and PR #115 merged](obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-.md)
 - [Observation: Issue 116 Phase 0C v2 Wallpaper Temporal Motion System merged](obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge.md)
 - [Observation: Issue #117: Route dynamic splitting and bundle guard merged](obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged.md)
+- [Observation: Issue #136 Notes focus boundary merged via PR #137](obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137.md)
+- [Observation: Issue 140 Notes history and Portal regression findings](obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings.md)
+- [Observation: Ubuntu Chromium 系统依赖修复与默认启动验收](obs-2026-10-09-ubuntu-chromium.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

@@ -562,6 +562,9 @@
   "sources/obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-": [],
   "sources/obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge": [],
   "sources/obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged": [],
+  "sources/obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137": [],
+  "sources/obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings": [],
+  "sources/obs-2026-10-09-ubuntu-chromium": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

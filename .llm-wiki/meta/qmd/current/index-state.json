@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+  "qmdVersion": "2.8.3",
+  "models": {
+    "embed": "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf",
+    "generate": "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf",
+    "rerank": "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf"
+  },
+  "manifestHash": "5b98c81a580118b855177a27f40d85fa1c627dc6d849b5ef93884a16265846c0",
+  "indexedAt": "2026-10-09T01:43:01.191Z",
+  "status": {
+    "totalDocuments": 122,
+    "canonicalDocuments": 29,
+    "evidenceDocuments": 93,
+    "needsEmbedding": 122,
+    "hasVectorIndex": false
+  }
+}
