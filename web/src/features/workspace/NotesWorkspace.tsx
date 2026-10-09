@@ -1,12 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    type CSSProperties,
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+import { createPortal } from "react-dom";
 import type { NoteSummaryAnalysis } from "./note-summary.ts";
 import { GripVertical } from "lucide-react";
 import {
     closestCenter,
+    type CollisionDetection,
     DndContext,
     type DragEndEvent,
+    DragOverlay,
+    getClientRect,
     KeyboardSensor,
     PointerSensor,
+    pointerWithin,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
@@ -25,6 +38,7 @@ import {
     type NoteItem,
 } from "../../components/searcher/NoteCard.tsx";
 import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
+import { useMasonryLayout } from "../../components/searcher/masonry.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import { WorkspaceSection } from "./WorkspaceSection.tsx";
@@ -40,18 +54,7 @@ type NoteActions = Pick<
     HomeLayoutProps,
     "editNote" | "updateNote" | "updateNoteLayout" | "deleteNote"
 >;
-function WorkspaceNote({
-    note,
-    actions,
-    sortable = false,
-    disabled = false,
-    expanded = false,
-    onToggleExpand,
-    onDelete,
-    readable,
-    analysis,
-    query = "",
-}: {
+type WorkspaceNoteProps = {
     note: NoteItem;
     actions: NoteActions;
     sortable?: boolean;
@@ -62,9 +65,21 @@ function WorkspaceNote({
     readable?: string;
     analysis?: NoteSummaryAnalysis | null;
     query?: string;
-}) {
-    const { attributes, listeners, setNodeRef, transform, transition } =
-        useSortable({ id: note.id, disabled: !sortable || disabled });
+};
+
+function WorkspaceNoteContent({
+    note,
+    actions,
+    sortable = false,
+    disabled = false,
+    expanded = false,
+    onToggleExpand,
+    onDelete,
+    readable,
+    analysis,
+    query = "",
+    dragHandle,
+}: WorkspaceNoteProps & { dragHandle?: ReactNode }) {
     const isInteractive = sortable && !disabled;
     const displayTitle = getNoteDisplayTitle(note.title, note.body);
     const titleMatches = displayTitle.toLowerCase().includes(
@@ -81,12 +96,7 @@ function WorkspaceNote({
         )
         : null;
     return (
-        <div
-            ref={sortable ? setNodeRef : undefined}
-            style={sortable
-                ? { transform: CSS.Transform.toString(transform), transition }
-                : undefined}
-        >
+        <>
             <NoteCard
                 note={note}
                 mode={expanded ? "full" : "compact"}
@@ -126,25 +136,26 @@ function WorkspaceNote({
                         )}
                     </div>
                 )}
-                dragHandle={
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={(isInteractive ? "排序 " : "不可排序 ") +
-                            getNoteDisplayTitle(note.title, note.body)}
-                        aria-disabled={!isInteractive ? "true" : undefined}
-                        tabIndex={isInteractive ? 0 : -1}
-                        onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }}
-                        {...(isInteractive ? attributes : {})}
-                        {...(isInteractive ? listeners : {})}
-                    >
-                        <GripVertical size={14} />
-                    </Button>
-                }
+                dragHandle={dragHandle ??
+                    (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={(isInteractive
+                                ? "排序 "
+                                : "不可排序 ") +
+                                getNoteDisplayTitle(note.title, note.body)}
+                            aria-disabled={!isInteractive ? "true" : undefined}
+                            tabIndex={isInteractive ? 0 : -1}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }}
+                        >
+                            <GripVertical size={14} />
+                        </Button>
+                    )}
                 onTogglePin={() =>
                     void actions.updateNote(note, { isPinned: !note.isPinned })}
                 onToggleHomeFixed={() => void actions.updateNote(note, {
@@ -157,8 +168,183 @@ function WorkspaceNote({
                     void actions.deleteNote(note);
                 }}
             />
+        </>
+    );
+}
+
+type MasonryNoteGeometry = {
+    style: CSSProperties;
+    registerCard: (id: string, el: HTMLElement | null) => void;
+};
+
+function WorkspaceNote(
+    { geometry, ...props }: WorkspaceNoteProps & {
+        geometry?: MasonryNoteGeometry;
+    },
+) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: props.note.id,
+        disabled: !props.sortable || props.disabled,
+    });
+    const interactive = props.sortable && !props.disabled;
+    const ref = useCallback((el: HTMLDivElement | null) => {
+        setNodeRef(el);
+        geometry?.registerCard(props.note.id, el);
+    }, [setNodeRef, geometry?.registerCard, props.note.id]);
+    return (
+        <div
+            ref={ref}
+            className={geometry ? "notes-workspace-masonry-item" : undefined}
+            data-note-id={props.note.id}
+            data-dragging={isDragging || undefined}
+            style={geometry?.style ?? (props.sortable
+                ? { transform: CSS.Transform.toString(transform), transition }
+                : undefined)}
+        >
+            <WorkspaceNoteContent
+                {...props}
+                dragHandle={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={(interactive ? "排序 " : "不可排序 ") +
+                            getNoteDisplayTitle(
+                                props.note.title,
+                                props.note.body,
+                            )}
+                        aria-disabled={!interactive ? "true" : undefined}
+                        tabIndex={interactive ? 0 : -1}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }}
+                        {...(interactive ? attributes : {})}
+                        {...(interactive ? listeners : {})}
+                    >
+                        <GripVertical size={14} />
+                    </Button>
+                }
+            />
         </div>
     );
+}
+
+type NotesListLayout = "single-column" | "masonry";
+const masonryCollision: CollisionDetection = (args) => {
+    const hits = pointerWithin(args);
+    return hits.length ? hits : closestCenter(args);
+};
+const masonrySortingStrategy = () => null;
+// Masonry translations are layout coordinates, not drag offsets to discard.
+const masonryMeasuring = {
+    draggable: { measure: getClientRect },
+    droppable: { measure: getClientRect },
+};
+
+function WorkspaceMasonryNotesList({
+    notes,
+    renderNote,
+    activeId,
+    renderOverlay,
+}: {
+    notes: NoteItem[];
+    renderNote: (note: NoteItem, geometry?: MasonryNoteGeometry) => ReactNode;
+    activeId?: string | null;
+    renderOverlay?: (note: NoteItem) => ReactNode;
+}) {
+    const [gap, setGap] = useState<number>();
+    const { containerRef, registerCard, layout, heights } = useMasonryLayout({
+        items: notes,
+        gap,
+    });
+    const measureContainer = useCallback((el: HTMLDivElement | null) => {
+        containerRef(el);
+        if (el) {
+            setGap(Number.parseFloat(
+                getComputedStyle(el).getPropertyValue("--space-row-gap"),
+            ));
+        }
+    }, [containerRef]);
+    const active = notes.find((note) => note.id === activeId);
+    return (
+        <>
+            <div
+                ref={measureContainer}
+                className="notes-workspace-list notes-workspace-masonry"
+                data-layout="masonry"
+                data-columns={layout.columns}
+                style={{ height: layout.containerHeight }}
+            >
+                {notes.map((note) => {
+                    const placement = layout.placements.get(note.id);
+                    return renderNote(note, {
+                        registerCard,
+                        style: {
+                            width: placement?.width ?? "100%",
+                            transform: placement
+                                ? `translate3d(${placement.x}px, ${placement.y}px, 0)`
+                                : undefined,
+                            visibility: placement && heights.has(note.id)
+                                ? undefined
+                                : "hidden",
+                        },
+                    });
+                })}
+            </div>
+            {renderOverlay && createPortal(
+                <DragOverlay>
+                    {active && (
+                        <div
+                            className="notes-workspace notes-workspace-masonry-overlay"
+                            aria-hidden="true"
+                            inert
+                            style={{ width: layout.columnWidth }}
+                        >
+                            {renderOverlay(active)}
+                        </div>
+                    )}
+                </DragOverlay>,
+                document.body,
+            )}
+        </>
+    );
+}
+
+function WorkspaceNotesList({
+    notes,
+    listLayout,
+    renderNote,
+    activeId,
+    renderOverlay,
+}: {
+    notes: NoteItem[];
+    listLayout: NotesListLayout;
+    renderNote: (note: NoteItem, geometry?: MasonryNoteGeometry) => ReactNode;
+    activeId?: string | null;
+    renderOverlay?: (note: NoteItem) => ReactNode;
+}) {
+    return listLayout === "masonry"
+        ? (
+            <WorkspaceMasonryNotesList
+                notes={notes}
+                renderNote={renderNote}
+                activeId={activeId}
+                renderOverlay={renderOverlay}
+            />
+        )
+        : (
+            <div className="notes-workspace-list" data-layout="single-column">
+                {notes.map((note) => renderNote(note))}
+            </div>
+        );
 }
 export function NotesWorkspace(
     {
@@ -173,6 +359,7 @@ export function NotesWorkspace(
         loading,
         error,
         onRetry,
+        listLayout,
     }: {
         state: NotesRoute;
         notes: NoteItem[];
@@ -185,12 +372,16 @@ export function NotesWorkspace(
         loading: boolean;
         error: string;
         onRetry: () => void;
+        listLayout: NotesListLayout;
     },
 ) {
     const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
         new Set()
     );
 
+    const [activeMasonryNoteId, setActiveMasonryNoteId] = useState<
+        string | null
+    >(null);
     const [analysis, setAnalysis] = useState<NoteSummaryAnalysis | null>(null);
     const summaryCache = useRef(
         new Map<string, { body: string; readable: string }>(),
@@ -321,16 +512,64 @@ export function NotesWorkspace(
     }
 
     function reorder(event: DragEndEvent) {
+        setActiveMasonryNoteId(null);
         if (!event.over || event.active.id === event.over.id || isSearching) {
             return;
         }
         const from = otherNotes.findIndex((note) =>
             note.id === event.active.id
         );
-        const to = otherNotes.findIndex((note) => note.id === event.over?.id);
-        if (from < 0 || to < 0) return;
+        const overIndex = otherNotes.findIndex((note) =>
+            note.id === event.over?.id
+        );
+        if (from < 0 || overIndex < 0) return;
+        let to = overIndex;
+        // Keyboard coordinates identify the destination slot, not a pointer insertion edge.
+        if (
+            listLayout === "masonry" && event.activatorEvent.type !== "keydown"
+        ) {
+            const translated = event.active.rect.current.translated;
+            if (!translated) return;
+            const after = translated.top + translated.height / 2 >
+                event.over.rect.top + event.over.rect.height / 2;
+            to = Math.max(
+                0,
+                Math.min(
+                    otherNotes.length - 1,
+                    overIndex + Number(after) - Number(from < overIndex),
+                ),
+            );
+        }
+        if (from === to) return;
         const reorderedOther = arrayMove(otherNotes, from, to);
         void onReorder([...fixedNotes, ...reorderedOther]);
+    }
+
+    function noteProps(note: NoteItem): WorkspaceNoteProps {
+        return {
+            note,
+            actions,
+            analysis,
+            readable: summaries.get(note.id)?.readable,
+            query: isSearching ? query : "",
+            expanded: expandedIds.has(note.id),
+            onToggleExpand: () => toggleExpand(note.id),
+            onDelete: () => handleDelete(note.id),
+        };
+    }
+    function renderNote(
+        note: NoteItem,
+        geometry?: MasonryNoteGeometry,
+        sortable = false,
+    ) {
+        return (
+            <WorkspaceNote
+                key={note.id}
+                {...noteProps(note)}
+                sortable={sortable}
+                geometry={geometry}
+            />
+        );
     }
 
     return (
@@ -362,23 +601,11 @@ export function NotesWorkspace(
                                 title="置顶与首页固定"
                                 count={fixedNotes.length}
                             >
-                                <div className="notes-workspace-list">
-                                    {fixedNotes.map((note) => (
-                                        <WorkspaceNote
-                                            key={note.id}
-                                            note={note}
-                                            analysis={analysis}
-                                            readable={summaries.get(note.id)
-                                                ?.readable}
-                                            actions={actions}
-                                            expanded={expandedIds.has(note.id)}
-                                            onToggleExpand={() =>
-                                                toggleExpand(note.id)}
-                                            onDelete={() =>
-                                                handleDelete(note.id)}
-                                        />
-                                    ))}
-                                </div>
+                                <WorkspaceNotesList
+                                    notes={fixedNotes}
+                                    listLayout={listLayout}
+                                    renderNote={renderNote}
+                                />
                             </WorkspaceSection>
                         )}
                         <WorkspaceSection
@@ -407,37 +634,48 @@ export function NotesWorkspace(
                             )}
                             {otherNotes.length > 0 && (
                                 <DndContext
+                                    measuring={listLayout === "masonry"
+                                        ? masonryMeasuring
+                                        : undefined}
                                     sensors={sensors}
-                                    collisionDetection={closestCenter}
+                                    collisionDetection={listLayout === "masonry"
+                                        ? masonryCollision
+                                        : closestCenter}
+                                    onDragStart={(event) => {
+                                        if (listLayout === "masonry") {
+                                            setActiveMasonryNoteId(
+                                                String(event.active.id),
+                                            );
+                                        }
+                                    }}
+                                    onDragCancel={() =>
+                                        setActiveMasonryNoteId(null)}
                                     onDragEnd={reorder}
                                 >
                                     <SortableContext
                                         items={otherNotes.map((note) =>
                                             note.id
                                         )}
-                                        strategy={verticalListSortingStrategy}
+                                        strategy={listLayout === "masonry"
+                                            ? masonrySortingStrategy
+                                            : verticalListSortingStrategy}
                                     >
-                                        <div className="notes-workspace-list">
-                                            {otherNotes.map((note) => (
-                                                <WorkspaceNote
-                                                    key={note.id}
-                                                    note={note}
-                                                    analysis={analysis}
-                                                    readable={summaries.get(
-                                                        note.id,
-                                                    )?.readable}
-                                                    actions={actions}
-                                                    sortable
-                                                    expanded={expandedIds.has(
-                                                        note.id,
-                                                    )}
-                                                    onToggleExpand={() =>
-                                                        toggleExpand(note.id)}
-                                                    onDelete={() =>
-                                                        handleDelete(note.id)}
+                                        <WorkspaceNotesList
+                                            notes={otherNotes}
+                                            listLayout={listLayout}
+                                            renderNote={(note, geometry) =>
+                                                renderNote(
+                                                    note,
+                                                    geometry,
+                                                    true,
+                                                )}
+                                            activeId={activeMasonryNoteId}
+                                            renderOverlay={(note) => (
+                                                <WorkspaceNoteContent
+                                                    {...noteProps(note)}
                                                 />
-                                            ))}
-                                        </div>
+                                            )}
+                                        />
                                     </SortableContext>
                                 </DndContext>
                             )}
@@ -467,24 +705,11 @@ export function NotesWorkspace(
                             />
                         )}
                         {searchNotes.length > 0 && (
-                            <div className="notes-workspace-list">
-                                {searchNotes.map((note) => (
-                                    <WorkspaceNote
-                                        key={note.id}
-                                        note={note}
-                                        analysis={analysis}
-                                        readable={summaries.get(note.id)
-                                            ?.readable}
-                                        query={query}
-                                        actions={actions}
-                                        sortable={false}
-                                        expanded={expandedIds.has(note.id)}
-                                        onToggleExpand={() =>
-                                            toggleExpand(note.id)}
-                                        onDelete={() => handleDelete(note.id)}
-                                    />
-                                ))}
-                            </div>
+                            <WorkspaceNotesList
+                                notes={searchNotes}
+                                listLayout={listLayout}
+                                renderNote={renderNote}
+                            />
                         )}
                     </WorkspaceSection>
                 )}
