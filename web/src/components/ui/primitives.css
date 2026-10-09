@@ -337,11 +337,12 @@
     padding: 0;
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse), (hover: none) {
     .button,
     .button--sm,
     .button--icon {
         min-height: var(--control-touch-target);
+        min-width: var(--control-touch-target);
     }
     .button--icon {
         width: var(--control-touch-target);
@@ -497,9 +498,10 @@
     outline-offset: 2px;
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse), (hover: none) {
     .field input,
-    .field select {
+    .field select,
+    [data-slot="native-select"] {
         min-height: var(--control-touch-target);
     }
 }
@@ -558,4 +560,29 @@
    -------------------------------------------------------------------------- */
 .context-menu-positioner {
     z-index: var(--elevation-popover);
+}
+
+.tooltip-positioner {
+    z-index: var(--elevation-popover);
+}
+.tooltip-content {
+    max-width: min(var(--workspace-width), calc(100vw - var(--space-8)));
+    padding: var(--space-control-gap) var(--space-row-gap);
+    border-radius: var(--control-radius);
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-l2);
+    color: var(--foreground);
+    font-size: var(--font-caption-size);
+    overflow-wrap: anywhere;
+}
+@media (pointer: coarse), (hover: none) {
+    [data-slot="tabs-list"] {
+        height: auto;
+    }
+    [data-slot="tabs-trigger"],
+    .engine-option {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+    }
 }

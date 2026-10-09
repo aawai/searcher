@@ -311,7 +311,8 @@ AlertDialog）具有严格不同的交互与视觉语义：
   route 和 query。
 - AppsWorkspace/NotesWorkspace 各只有一套 content JSX，复用
   WorkspaceSearch、WorkspaceSection、 LoadingState/StatusBanner/EmptyState；各
-  presenter 的唯一 scroll boundary 为 .workspace-body。
+  Root presenter 的唯一 scroll boundary 为 `.workspace-body`；应用表单改由
+  AppForm Body 滚动。
 - Widgets >=1024 的 Apps/Notes browser 是 singleton windows，可同时打开、重叠、
   focus、minimize/restore、maximize；Apps create/edit 保持 nested route。Notes
   通过 Host `openNote` / `createAndOpenNote` 打开 `note:<id>` entity window，
@@ -329,9 +330,10 @@ AlertDialog）具有严格不同的交互与视觉语义：
   打开便签和新建便签等内容级动作，不加入重复 root workspace navigation。
 - Canvas safe rect 顶部避让 Topbar/connection banner，底部避让 Dock；打开 window
   不推动 Search/Bento。 Pointer activation 不抢夺 input/textarea focus；Dock
-  键盘打开/恢复聚焦 root Close 或 nested Back。>=1024 普通窗口不因 Escape
-  关闭；优先级为 modal/AlertDialog → popover/menu → Overview → Zen Panel。
-  768–1023 保留 active workspace Escape 关闭；关闭后聚焦对应 Dock item。
+  键盘打开/恢复聚焦 root Close 或 nested Back。应用窗口由领域 Escape policy
+  逐层消费菜单、query、整理、文件夹、表单返回、工作区关闭，且只作用于 active
+  window；IME 不消费。其他 >=1024 普通窗口不因 Escape 关闭，保留既有语义。
+  关闭后聚焦对应 Dock item。
 - <768 无 DesktopDock；shared Sheet 保留 modal focus trap、swipe、实际 opener
   restore。<1024 与 Zen 的 `openNote` 仍使用 Notes nested editor，不创建 entity
   window。
@@ -396,18 +398,18 @@ AlertDialog）具有严格不同的交互与视觉语义：
 Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 domain window
 中， Zen/Sheet 使用同一 Shell；内容列表表现形式由各 feature 拥有：
 
-- `.workspace-body` 是 page-level inline inset 的唯一 owner，使用 `--space-4`；
-  Root 的 Search、status、empty state 与 content boundary 对齐，不再添加
-  Apps-only padding。 Nested AppForm / NoteEditor 同样使用 Body
-  inset，不叠加外层 form padding。
+- `.workspace-body` 是 Root page-level inline inset 的唯一 owner，使用
+  `--space-4`； Search、status、empty state 与 content boundary 对齐。应用
+  create/edit 以 `data-layout="app-form"` 切换为无 inset、无滚动的 flex
+  容器，AppForm 自身拥有正文 inset；不改写 NoteEditor / Documents 的几何。
 - `.workspace-root` 使用 `--space-section-gap`；Search 控制组使用
   `--space-control-gap`。Launcher tile gap、NoteCard list gap 和 section heading
   间距仍由各 feature 拥有。
 - Apps Root 弹性占满 Body 剩余高度，搜索区域保持内容高度；
   `.launcher-surface-wrap` 占满其余内容面，Grid 仍按原有 square-cell
-  几何位于顶部。 搜索、空状态和文件夹内联共用 Surface
-  空白菜单，新建文件夹与整理操作不再常驻顶部。 Surface 保留触屏滚动，整理时仅
-  draggable tile 使用 `touch-action: none`。
+  几何位于顶部。 搜索、空状态和文件夹内联共用 Surface 空白菜单；section header
+  的 canonical DropdownMenu 同时提供新建文件夹、 整理入口，满网格也可达。Surface
+  保留触屏滚动，整理时仅 draggable tile 使用 `touch-action: none`。
 - `WorkspaceSearch` 复用 Input / Button；两侧使用 `--control-input-height`、
   `--radius-input`，提供相同 Search icon、clear action 和可辨识的 focus-visible
   ring。Root 不 autofocus Search，不叠加全局 outline，不因 focus 改变布局。Apps
@@ -418,6 +420,53 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
   滚动。 Widgets desktop 的 Apps/Notes 导航由 Dock 唯一拥有；Zen/Sheet 保留
   Switcher。 Apps 整理时隐藏 create action，仅“完成整理”为 primary；nested
   editor/form 不渲染 Root create action。
+
+#### 应用编辑会话与反馈（#141）
+
+- `SearchHome` 在 presenter 分支之上放置 `AppSessionProvider`，由它持有
+  `useAppSession`；context 只订阅 AppForm，输入不驱动 SearchHome、 Widgets/Zen
+  或其他窗口重新渲染。账号与一次编辑 session identity 共同隔离草稿。
+  初始基线只在真实进入会话时快照，Host、窗口 mode、props 更新不重新初始化。
+  字段、dirty、确认、AI 模型选择/候选及 pending 均属会话；登出/换账号/
+  明确离开清空并取消失效请求、释放计时器，不跨刷新保存。
+- 旧会话及旧 URL 响应不得覆盖当前草稿；自动名称不覆盖手填名称，迟到的网站图标
+  不覆盖上传/网络/AI 来源选择。自动获取失败不清提交错误，不自动重试； 合法 URL
+  保留名称回退规则。网址校验、网站获取、图标操作与提交分别展示反馈。
+- 获取按 session、URL/request version 防旧写回；blur、debounce、显式重试 对同一
+  pending URL 去重。上传/网络图片及 AI 选择另检查图标操作版本；
+  保存与确认使用同步防重入，成功仅由一个 owner 返回一次。 UI
+  不公开内部获取错误，开发 console 保留失败原因；可保存但不可自动检测的 单标签
+  hostname 不因检测规则改变而被拒绝。
+- 应用 form 的受限高度链为 presenter Body → AppsWorkspace → AppForm。 每层 flex
+  / min-height:0，只有 `.app-dialog-body` 滚动，Footer 为正常 flex
+  非收缩项并消费 safe-area；外层无空 Footer。Sheet 的可见高度由 VisualViewport
+  测量，两个 runtime CSS geometry 变量只允许 WorkspaceSurface 写入，ui-guard
+  以文件/表达式限定，不开放 feature raw visual value。
+- Home 唯一 `UndoToast` 使用 semantic `placement` / `host`，移动时将同一个
+  portal container 移到活动 Sheet Body 与 Footer 间的 feedback slot；无 Sheet
+  时移回全局 host。移动不重建 live region、不抢焦点、不重启业务 owner 的 5000ms
+  timer，应用/便签优先级与 Ask 契约不变。 全局移动反馈留出导航触控高度，不能阻挡
+  Zen/Widgets 的工作区入口； 恢复失败在当前 Sheet feedback slot 内显示 error
+  Banner，不假恢复。
+- `useAppsEscape` 是当前 active 应用工作区唯一领域裁决器，window capture
+  先处理所属业务确认，再按事件所属控件让菜单/Popover 自行处理；不查询页面任意
+  dialog 作为全局跳过条件。应用 Sheet 取消 Base UI 默认 Escape-dismiss，
+  Panel/Window 不注册第二个应用 dismiss listener。一次只退一层，IME composing
+  不导航；空格 query 也清空，返回文件夹恢复 tile focus，表单返回经过 dirty
+  保护；X/backdrop/swipe 表示关闭整个工作区，其他领域保留既有语义。
+- 图标默认仅预览/来源摘要，展开隐藏不清会话；“更换图标”快捷入口进入展开编辑，
+  普通编辑默认折叠。打开方式始终显示；图标错误自动展开。
+- 文件夹标题只有返回、名称、count、更多一组。搜索按原匹配规则分组为文件夹/
+  应用，应用 row 的打开与更多为 sibling Button，显示两行名称、hostname 与所属
+  文件夹；完整名称由 accessible name、菜单和细指针 Tooltip 提供。
+- coarse/no-hover 控件消费 `--control-touch-target`（44px）；launcher
+  square-cell 消费
+  `--launcher-touch-cell-size`，文件夹标签与图标共享入口。Button、Tab、 menu
+  item 的 touch hit geometry 由 primitives owner 统一定义，不以负边距扩大。
+- `useAppsLayoutPersistence` 位于 presenter 之上，保留并发乐观重排和现有 API，
+  所有已发出的布局请求 settled 后读取服务端确认 snapshot。新的操作使旧
+  reconciliation version 失效；不使用旧数组整体 rollback 覆盖新排序。
+  失败反馈可关闭，退出整理/关闭 Host 不终止持久化确认；账号切换隔离写回。
 
 ### Wallpaper canvas
 

@@ -976,10 +976,10 @@ export function SettingsPage() {
                                         <div className="settings-row settings-row--inline-mobile">
                                             <div className="settings-row-label">
                                                 <span className="settings-row-title">
-                                                    显示网站名称
+                                                    显示应用名称
                                                 </span>
                                                 <p className="settings-row-desc">
-                                                    在桌面或快捷列表中展示网站文字标签
+                                                    在桌面或快捷列表中展示应用文字标签
                                                 </p>
                                             </div>
                                             <div className="settings-row-control">

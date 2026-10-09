@@ -274,6 +274,13 @@ export function isDomainValueException(
             return true;
         }
     }
+    // Workspace Sheet follows measured VisualViewport geometry, not visual styling.
+    if (p === "web/src/features/workspace/WorkspaceSurface.tsx") {
+        return (prop === "--workspace-visible-height" &&
+            norm === "`${viewport.height}px`") ||
+            (prop === "--workspace-visible-bottom" &&
+                norm === "`${viewport.bottom}px`");
+    }
 
     // Dynamic accent color preview swatches (scoped strictly to swatch owners)
     if (isSwatchOwner(file)) {

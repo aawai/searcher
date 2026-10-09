@@ -3,7 +3,9 @@ import {
     type ReactNode,
     useLayoutEffect,
     useRef,
+    useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "../ui/card.tsx";
 import { Button } from "../ui/button.tsx";
@@ -165,14 +167,38 @@ export function LoadingState(
     );
 }
 export function UndoToast(
-    { message, onUndo, onClose, className, ...props }: ComponentProps<"div"> & {
+    {
+        message,
+        onUndo,
+        onClose,
+        className,
+        placement = "floating",
+        host,
+        ...props
+    }: ComponentProps<"div"> & {
         message: ReactNode;
         onUndo: () => void;
         onClose?: () => void;
+        placement?: "floating" | "inline";
+        host?: HTMLElement | null;
     },
 ) {
-    return (
-        <div {...props} className={cn("undo-toast", className)} role="status">
+    const [container] = useState(() =>
+        host !== undefined ? document.createElement("div") : null
+    );
+    useLayoutEffect(() => {
+        if (container) (host ?? document.body).append(container);
+    }, [container, host]);
+    useLayoutEffect(() => () => {
+        container?.remove();
+    }, [container]);
+    const content = (
+        <div
+            {...props}
+            className={cn("undo-toast", className)}
+            data-placement={placement}
+            role="status"
+        >
             <span>{message}</span>
             <Button variant="ghost" onClick={onUndo}>撤销</Button>
             {onClose && (
@@ -187,6 +213,7 @@ export function UndoToast(
             )}
         </div>
     );
+    return container ? createPortal(content, container) : content;
 }
 
 export function WorkspaceToolbar(

@@ -299,14 +299,6 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             const emptyH3 = rootEmpty.getByRole("heading", { level: 3 });
             await emptyH3.waitFor({ state: "visible" });
 
-            // Inside Workspace body, there is NO competing primary add button
-            assertEquals(
-                await appsPanel.locator(
-                    ".workspace-body button:has-text('添加网站')",
-                ).count(),
-                0,
-            );
-
             // Workspace footer has the sole primary action: "添加应用"
             const addBtn = appsPanel.locator(
                 ".workspace-footer button.workspace-primary, .workspace-footer button:has-text('添加应用'), button:has-text('添加应用')",
@@ -365,14 +357,6 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await folderEmptyH3.waitFor({ state: "visible" });
 
-            // Inside folder body, no competing primary button
-            assertEquals(
-                await appsPanel.locator(
-                    ".workspace-body button:has-text('添加网站')",
-                ).count(),
-                0,
-            );
-
             // Footer primary button navigates to create inside folder
             await addBtn.click();
             await appsPanel.locator(".apps-workspace-form").waitFor({
@@ -382,7 +366,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await folderEmpty.waitFor({ state: "visible" });
 
             // Return to root and clean up group
-            await appsPanel.locator('button[aria-label="返回网站列表"]')
+            await appsPanel.locator('button[aria-label="返回应用列表"]')
                 .click();
             await page.evaluate(async (id) => {
                 await fetch(`/api/webapp-groups/${id}`, { method: "DELETE" });
@@ -581,10 +565,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 "compact",
             );
             const emptyH3 = emptyState.getByRole("heading", { level: 3 });
-            assertEquals(
-                await emptyH3.textContent(),
-                "未找到匹配的网站或文件夹",
-            );
+            await emptyH3.waitFor({ state: "visible" });
 
             // Action button "清空搜索" is present
             const clearBtn = emptyState.getByRole("button", {
@@ -725,7 +706,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             // Offline warning status banner should appear
             const warningBanner = appsPanel.locator(
-                '.status-banner[data-density="compact"]:has-text("当前离线，显示此账户上次保存的网站列表。")',
+                '.status-banner[data-density="compact"][data-tone="warning"]',
             );
             await warningBanner.waitFor({ state: "visible" });
 

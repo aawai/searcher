@@ -1,15 +1,5 @@
-import {
-    type ChangeEvent,
-    type FormEvent,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { useAppSessionContext } from "./AppSessionProvider.tsx";
 import { Check, Loader2, RefreshCw, Upload } from "lucide-react";
-import { api, json } from "../../lib/api.ts";
-import type { Appearance } from "../../app/state.tsx";
-import { errorMessage } from "../../app/state.tsx";
 import { Button } from "../ui/button.tsx";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
@@ -26,544 +16,60 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../ui/alert-dialog.tsx";
-import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 
-export interface AppFormProps {
-    onClose: () => void;
-    editingApp: ExtendedWebApp | null;
-    groups: WebAppGroup[];
-    appearance: Appearance;
-    existingApps: ExtendedWebApp[];
-    defaultGroupId?: string;
-    onSaved: (app: ExtendedWebApp, isEdit: boolean) => void;
-    onDirtyChange?: (isDirty: boolean) => void;
-}
-
-export function AppForm({
-    onClose,
-    editingApp,
-    groups,
-    appearance,
-    existingApps,
-    defaultGroupId = "",
-    onSaved,
-    onDirtyChange,
-}: AppFormProps) {
-    // Form fields
-    const [appUrl, setAppUrl] = useState("");
-    const [appName, setAppName] = useState("");
-    const [appGroupId, setAppGroupId] = useState("");
-    const [appOpenMode, setAppOpenMode] = useState<
-        "global" | "current" | "new_tab"
-    >("global");
-    const [appIsPinned, setAppIsPinned] = useState(false);
-
-    // Icon fields
-    const [iconTab, setIconTab] = useState<"auto" | "upload" | "url" | "ai">(
-        "auto",
-    );
-    const [appIconAssetId, setAppIconAssetId] = useState<string | null>(null);
-    const [appIconSource, setAppIconSource] = useState<
-        "website" | "upload" | "url" | "ai" | "default"
-    >("website");
-    const [iconPreviewUrl, setIconPreviewUrl] = useState<string | null>(null);
-    const [iconImageUrl, setIconImageUrl] = useState("");
-    const [imageLoadError, setImageLoadError] = useState(false);
-
-    // Operation / UI states
-    const [urlFetchStatus, setUrlFetchStatus] = useState<
-        "idle" | "loading" | "success" | "error"
-    >("idle");
-    const [urlFetchMessage, setUrlFetchMessage] = useState("");
-    const [formError, setFormError] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUploadingIcon, setIsUploadingIcon] = useState(false);
-    const [isFetchingUrlIcon, setIsFetchingUrlIcon] = useState(false);
-
-    const [confirmDialog, setConfirmDialog] = useState<
-        | {
-            type: "duplicate";
-            parsedHref: string;
-        }
-        | {
-            type: "icon_update";
-            parsedHref: string;
-        }
-        | null
-    >(null);
-    const lastConfirmTypeRef = useRef<"duplicate" | "icon_update">("duplicate");
-    if (confirmDialog) {
-        lastConfirmTypeRef.current = confirmDialog.type;
-    }
-    const activeConfirmType = confirmDialog?.type ?? lastConfirmTypeRef.current;
-    const submitTriggerRef = useRef<HTMLElement | null>(null);
-    const lastFetchedUrlRef = useRef("");
-    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-        undefined,
-    );
-
-    // Normalize URL helper
-    function normalizeUrl(input: string): string | null {
-        const raw = input.trim();
-        if (!raw) return null;
-        const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-        try {
-            const parsed = new URL(candidate);
-            if (!["http:", "https:"].includes(parsed.protocol)) return null;
-            if (!parsed.hostname || !parsed.hostname.includes(".")) return null;
-            return parsed.href;
-        } catch {
-            return null;
-        }
-    }
-
-    const siteDomain = useMemo(() => {
-        const normalized = normalizeUrl(appUrl);
-        if (!normalized) return undefined;
-        try {
-            const parsed = new URL(normalized);
-            return parsed.hostname || undefined;
-        } catch {
-            return undefined;
-        }
-    }, [appUrl]);
-
-    // Initialize or reset form when dialog opens or editingApp changes
-    useEffect(() => {
-        if (!open) {
-            clearTimeout(debounceTimerRef.current);
-            debounceTimerRef.current = undefined;
-            return;
-        }
-
-        setFormError("");
-        setImageLoadError(false);
-
-        if (editingApp) {
-            setAppUrl(editingApp.url);
-            setAppName(editingApp.name);
-            setAppGroupId(editingApp.groupId || "");
-            setAppOpenMode(editingApp.openMode ?? "global");
-            setAppIsPinned(Boolean(editingApp.isPinned));
-            setAppIconAssetId(editingApp.iconAssetId || null);
-            setAppIconSource(editingApp.iconSource || "website");
-            setIconPreviewUrl(
-                editingApp.iconUrl ||
-                    (editingApp.iconAssetId
-                        ? `/api/webapp-icons/${editingApp.iconAssetId}`
-                        : null),
-            );
-            setIconImageUrl("");
-            lastFetchedUrlRef.current = editingApp.url;
-            setUrlFetchStatus("idle");
-            setUrlFetchMessage("");
-            setIconTab(
-                editingApp.iconSource === "upload"
-                    ? "upload"
-                    : editingApp.iconSource === "url"
-                    ? "url"
-                    : editingApp.iconSource === "ai"
-                    ? "ai"
-                    : "auto",
-            );
-        } else {
-            setAppUrl("");
-            setAppName("");
-            setAppGroupId(defaultGroupId);
-            setAppOpenMode("global");
-            setAppIsPinned(false);
-            setAppIconAssetId(null);
-            setAppIconSource("website");
-            setIconPreviewUrl(null);
-            setIconImageUrl("");
-            lastFetchedUrlRef.current = "";
-            setUrlFetchStatus("idle");
-            setUrlFetchMessage("");
-            setIconTab("auto");
-        }
-    }, [open, editingApp, defaultGroupId]);
-
-    // Cleanup timer on unmount
-    useEffect(() => {
-        return () => {
-            clearTimeout(debounceTimerRef.current);
-        };
-    }, []);
-    const isDirty = useMemo(() => {
-        if (editingApp) {
-            return (
-                appUrl !== editingApp.url ||
-                appName !== editingApp.name ||
-                appGroupId !== (editingApp.groupId || "") ||
-                appOpenMode !== (editingApp.openMode ?? "global") ||
-                appIsPinned !== Boolean(editingApp.isPinned) ||
-                appIconAssetId !== (editingApp.iconAssetId || null) ||
-                appIconSource !== (editingApp.iconSource || "website") ||
-                Boolean(iconImageUrl)
-            );
-        }
-        return (
-            Boolean(appUrl.trim()) ||
-            Boolean(appName.trim()) ||
-            appGroupId !== defaultGroupId ||
-            appOpenMode !== "global" ||
-            appIsPinned !== false ||
-            appIconAssetId !== null ||
-            Boolean(iconImageUrl)
-        );
-    }, [
+export function AppForm() {
+    const session = useAppSessionContext();
+    const {
         editingApp,
+        groups,
+        appearance,
         appUrl,
         appName,
         appGroupId,
         appOpenMode,
         appIsPinned,
-        appIconAssetId,
+        iconTab,
         appIconSource,
+        iconPreviewUrl,
         iconImageUrl,
-        defaultGroupId,
-    ]);
-
-    useEffect(() => {
-        onDirtyChange?.(isDirty);
-    }, [isDirty, onDirtyChange]);
-
-    // Perform URL detection
-    async function doDetectUrl(targetUrl: string) {
-        setUrlFetchStatus("loading");
-        setUrlFetchMessage("正在获取网站信息…");
-        setFormError("");
-        try {
-            const found = await api<
-                { id: string; url: string; siteName: string | null }
-            >(
-                "/api/webapp-icons/fetch",
-                json("POST", { url: targetUrl }),
-            );
-            lastFetchedUrlRef.current = targetUrl;
-            setAppIconAssetId(found.id);
-            setAppIconSource("website");
-            setIconPreviewUrl(found.url);
-            setImageLoadError(false);
-            if (!appName.trim() && found.siteName) {
-                setAppName(found.siteName);
-            }
-            setUrlFetchStatus("success");
-            setUrlFetchMessage("已获取网站名称和图标");
-        } catch (err) {
-            setUrlFetchStatus("error");
-            setUrlFetchMessage(
-                err instanceof Error ? err.message : "获取网站信息失败",
-            );
-        }
-    }
-
-    // Handle URL input changes with debounce
-    function handleUrlChange(val: string) {
-        setAppUrl(val);
-        setFormError("");
-        if (urlFetchStatus === "success") {
-            setUrlFetchStatus("idle");
-            setUrlFetchMessage("");
-        }
-
-        clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = undefined;
-
-        const normalized = normalizeUrl(val);
-        if (normalized && normalized !== lastFetchedUrlRef.current) {
-            debounceTimerRef.current = setTimeout(() => {
-                void doDetectUrl(normalized);
-            }, 750);
-        }
-    }
-
-    // Handle blur on URL input
-    function handleUrlBlur() {
-        const normalized = normalizeUrl(appUrl);
-        if (
-            normalized &&
-            normalized !== lastFetchedUrlRef.current &&
-            urlFetchStatus !== "loading"
-        ) {
-            clearTimeout(debounceTimerRef.current);
-            debounceTimerRef.current = undefined;
-            void doDetectUrl(normalized);
-        }
-    }
-
-    // Manual retry fetch
-    function handleRetryFetch() {
-        const normalized = normalizeUrl(appUrl);
-        if (normalized) {
-            void doDetectUrl(normalized);
-        } else {
-            setFormError("请先输入有效的网址");
-        }
-    }
-
-    // Handle image file upload
-    async function handleFileUpload(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            setFormError("图片文件大小不能超过 5MB");
-            return;
-        }
-        setIsUploadingIcon(true);
-        setFormError("");
-        const fd = new FormData();
-        fd.append("icon", file);
-        try {
-            const res = await fetch("/api/webapp-icons/upload", {
-                method: "POST",
-                body: fd,
-            });
-            const data = await res.json();
-            if (data.status && data.data) {
-                setAppIconAssetId(data.data.id);
-                setAppIconSource("upload");
-                setIconPreviewUrl(data.data.url);
-                setImageLoadError(false);
-            } else {
-                setFormError(data.message || "上传图标失败");
-            }
-        } catch (err) {
-            setFormError(
-                "上传图标出错: " +
-                    (err instanceof Error ? err.message : String(err)),
-            );
-        } finally {
-            setIsUploadingIcon(false);
-            e.target.value = "";
-        }
-    }
-
-    // Handle network image URL
-    async function handleUseImageUrl() {
-        const raw = iconImageUrl.trim();
-        if (!raw) return;
-        setIsFetchingUrlIcon(true);
-        setFormError("");
-        try {
-            const res = await api<{ id: string; url: string }>(
-                "/api/webapp-icons/url",
-                json("POST", { imageUrl: raw }),
-            );
-            setAppIconAssetId(res.id);
-            setAppIconSource("url");
-            setIconPreviewUrl(res.url);
-            setImageLoadError(false);
-        } catch (err) {
-            setFormError("获取图片失败: " + errorMessage(err));
-        } finally {
-            setIsFetchingUrlIcon(false);
-        }
-    }
-
-    // Form save
-    async function executeSave(opts?: {
-        overrideIconAssetId?: string | null;
-        overrideIconSource?: "website" | "upload" | "url" | "ai" | "default";
-        overrideIconPreviewUrl?: string | null;
-    }) {
-        let normalizedUrl = appUrl.trim();
-        if (!/^https?:\/\//i.test(normalizedUrl)) {
-            normalizedUrl = "https://" + normalizedUrl;
-        }
-        const parsed = new URL(normalizedUrl);
-        if (!["http:", "https:"].includes(parsed.protocol)) {
-            throw new Error("只支持 HTTP 或 HTTPS 地址");
-        }
-
-        const name = appName.trim() || parsed.hostname;
-        const groupId = appGroupId ? appGroupId : null;
-
-        const nextIconAssetId = opts && "overrideIconAssetId" in opts
-            ? opts.overrideIconAssetId
-            : appIconAssetId;
-        const nextIconSource = opts && "overrideIconSource" in opts
-            ? opts.overrideIconSource!
-            : appIconSource;
-        const nextIconPreviewUrl = opts && "overrideIconPreviewUrl" in opts
-            ? opts.overrideIconPreviewUrl
-            : iconPreviewUrl;
-
-        if (editingApp) {
-            const updated = await api<ExtendedWebApp>(
-                `/api/webapps/${editingApp.id}`,
-                json("PATCH", {
-                    name,
-                    url: parsed.href,
-                    groupId,
-                    iconAssetId: nextIconAssetId,
-                    iconSource: nextIconSource,
-                    openMode: appOpenMode,
-                    isPinned: appIsPinned,
-                }),
-            );
-            onSaved(
-                {
-                    ...editingApp,
-                    ...updated,
-                    iconUrl: nextIconPreviewUrl || updated.iconUrl,
-                },
-                true,
-            );
-        } else {
-            const created = await api<ExtendedWebApp>(
-                "/api/webapps",
-                json("POST", {
-                    name,
-                    url: parsed.href,
-                    groupId,
-                    iconAssetId: nextIconAssetId,
-                    iconSource: nextIconSource,
-                    openMode: appOpenMode,
-                    isPinned: appIsPinned,
-                    sortOrder: existingApps.length,
-                }),
-            );
-            onSaved(
-                {
-                    ...created,
-                    iconUrl: nextIconPreviewUrl || created.iconUrl,
-                },
-                false,
-            );
-        }
-        onDirtyChange?.(false);
-        onClose();
-    }
-
-    function handleCancelConfirm() {
-        if (isSubmitting) return;
-        setConfirmDialog(null);
-        requestAnimationFrame(() => {
-            submitTriggerRef.current?.focus();
-        });
-    }
-
-    async function handleConfirmDuplicate() {
-        if (
-            !confirmDialog || confirmDialog.type !== "duplicate" || isSubmitting
-        ) {
-            return;
-        }
-        setIsSubmitting(true);
-        setFormError("");
-        try {
-            await executeSave();
-            setConfirmDialog(null);
-        } catch (err) {
-            setFormError(`保存失败：${errorMessage(err)}`);
-            setConfirmDialog(null);
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    async function handleConfirmIconUpdate() {
-        if (
-            !confirmDialog || confirmDialog.type !== "icon_update" ||
-            isSubmitting
-        ) {
-            return;
-        }
-        setIsSubmitting(true);
-        setFormError("");
-        try {
-            const found = await api<{ id: string; url: string }>(
-                "/api/webapp-icons/fetch",
-                json("POST", { url: confirmDialog.parsedHref }),
-            );
-            await executeSave({
-                overrideIconAssetId: found.id,
-                overrideIconSource: "website",
-                overrideIconPreviewUrl: found.url,
-            });
-            setConfirmDialog(null);
-        } catch (err) {
-            setFormError(`保存失败：${errorMessage(err)}`);
-            setConfirmDialog(null);
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    async function handleSubmit(e: FormEvent) {
-        e.preventDefault();
-        setFormError("");
-
-        let normalizedUrl = appUrl.trim();
-        if (!/^https?:\/\//i.test(normalizedUrl)) {
-            normalizedUrl = "https://" + normalizedUrl;
-        }
-        let parsed: URL;
-        try {
-            parsed = new URL(normalizedUrl);
-            if (!["http:", "https:"].includes(parsed.protocol)) {
-                throw new Error("只支持 HTTP 或 HTTPS 地址");
-            }
-        } catch (err) {
-            setFormError(`保存失败：${errorMessage(err)}`);
-            return;
-        }
-
-        submitTriggerRef.current = (document.activeElement as HTMLElement) ??
-            null;
-
-        if (
-            !editingApp &&
-            existingApps.some((app) => app.url === parsed.href)
-        ) {
-            setConfirmDialog({
-                type: "duplicate",
-                parsedHref: parsed.href,
-            });
-            return;
-        }
-
-        if (
-            editingApp &&
-            editingApp.url !== parsed.href &&
-            editingApp.iconAssetId === appIconAssetId
-        ) {
-            setConfirmDialog({
-                type: "icon_update",
-                parsedHref: parsed.href,
-            });
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await executeSave();
-        } catch (err) {
-            setFormError(`保存失败：${errorMessage(err)}`);
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    // Calculated preview values
-    const displayDomain = useMemo(() => {
-        try {
-            const raw = appUrl.trim();
-            if (!raw) return "";
-            const candidate = /^https?:\/\//i.test(raw)
-                ? raw
-                : `https://${raw}`;
-            return new URL(candidate).hostname;
-        } catch {
-            return "";
-        }
-    }, [appUrl]);
-
-    const previewName = appName.trim() || displayDomain || "未命名应用";
-    const previewDomain = displayDomain || "example.com";
-    const previewInitial = (previewName.slice(0, 1) || "W").toUpperCase();
-
+        imageLoadError,
+        urlFetchStatus,
+        urlFetchMessage,
+        formError,
+        isSubmitting,
+        isUploadingIcon,
+        isFetchingUrlIcon,
+        confirmDialog,
+        activeConfirmType,
+        urlValidationError,
+        previewName,
+        previewDomain,
+        previewInitial,
+        iconExpanded,
+        iconError,
+        logo,
+        setIconExpanded,
+        setAppName,
+        setAppGroupId,
+        setAppOpenMode,
+        setAppIsPinned,
+        setIconTab,
+        setAppIconAssetId,
+        setAppIconSource,
+        setIconPreviewUrl,
+        setImageLoadError,
+        setIconImageUrl,
+        handleUrlChange,
+        handleUrlBlur,
+        handleRetryFetch,
+        handleFileUpload,
+        handleUseImageUrl,
+        handleSubmit,
+        handleCancelConfirm,
+        handleConfirmDuplicate,
+        handleConfirmIconUpdate,
+        onClose,
+    } = session;
     const formJsx = (
         <form onSubmit={handleSubmit} className="app-dialog-form">
             <div className="app-dialog-body">
@@ -603,6 +109,11 @@ export function AppForm({
                             autoFocus={!editingApp}
                             className="w-full"
                         />
+                        {urlValidationError && (
+                            <p className="error" role="alert">
+                                {urlValidationError}
+                            </p>
+                        )}
                         {/* URL 状态反馈 */}
                         {urlFetchStatus === "loading" && (
                             <div className="app-dialog-url-status loading">
@@ -618,7 +129,7 @@ export function AppForm({
                         )}
                         {urlFetchStatus === "error" && (
                             <div className="app-dialog-url-status error">
-                                <span>获取失败：{urlFetchMessage}</span>
+                                <span>{urlFetchMessage}</span>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -639,7 +150,7 @@ export function AppForm({
                                 htmlFor="app-name-input"
                                 className="app-dialog-field-label"
                             >
-                                网站名称
+                                应用名称
                             </label>
                             <Input
                                 id="app-name-input"
@@ -687,7 +198,7 @@ export function AppForm({
                                     htmlFor="app-pin-switch"
                                     className="app-dialog-option-title cursor-pointer"
                                 >
-                                    固定在搜索首页
+                                    固定到首页
                                 </label>
                                 <span className="app-dialog-option-desc">
                                     在搜索框下方快速显示
@@ -697,7 +208,7 @@ export function AppForm({
                                 id="app-pin-switch"
                                 checked={appIsPinned}
                                 onCheckedChange={setAppIsPinned}
-                                aria-label="固定在搜索首页"
+                                aria-label="固定到首页"
                             />
                         </div>
 
@@ -818,141 +329,156 @@ export function AppForm({
                             )}
                         </div>
 
-                        {/* 图标来源模式切换 */}
-                        <Tabs
-                            value={iconTab}
-                            onValueChange={(val) => setIconTab(
-                                val as "auto" | "upload" | "url" | "ai",
-                            )}
-                            className="w-full"
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-expanded={iconExpanded}
+                            onClick={() => setIconExpanded(!iconExpanded)}
                         >
-                            <TabsList className="w-full grid grid-cols-4 h-8">
-                                <TabsTrigger value="auto" className="text-xs">
-                                    自动获取
-                                </TabsTrigger>
-                                <TabsTrigger value="upload" className="text-xs">
-                                    上传图片
-                                </TabsTrigger>
-                                <TabsTrigger value="url" className="text-xs">
-                                    网络图片
-                                </TabsTrigger>
-                                <TabsTrigger value="ai" className="text-xs">
-                                    AI 生成
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-
-                        {/* 来源子面板 */}
-                        <div className="app-dialog-icon-subpanel-wrap">
-                            {iconTab === "auto" && (
-                                <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--auto">
-                                    <span className="app-dialog-helper-text">
-                                        根据填写的网址自动获取高清 Favicon
-                                        或网站图标。
-                                    </span>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={urlFetchStatus ===
-                                                "loading" || !appUrl.trim()}
-                                        onClick={() => void handleRetryFetch()}
-                                        className="h-7 text-xs gap-1.5 flex-shrink-0"
+                            {iconExpanded ? "收起图标设置" : "更换图标"}
+                        </Button>
+                        {iconError && (
+                            <p role="alert" className="error">{iconError}</p>
+                        )}
+                        <div hidden={!iconExpanded}>
+                            {/* 图标来源模式切换 */}
+                            <Tabs
+                                value={iconTab}
+                                onValueChange={(val) => setIconTab(
+                                    val as "auto" | "upload" | "url" | "ai",
+                                )}
+                                className="w-full"
+                            >
+                                <TabsList className="w-full grid grid-cols-4 h-8">
+                                    <TabsTrigger
+                                        value="auto"
+                                        className="text-xs"
                                     >
-                                        {urlFetchStatus === "loading"
-                                            ? (
-                                                <Loader2
-                                                    size={12}
-                                                    className="animate-spin"
-                                                />
-                                            )
-                                            : <RefreshCw size={12} />}
-                                        <span>
-                                            {urlFetchStatus === "loading"
-                                                ? "正在抓取…"
-                                                : "重新抓取网站图标"}
-                                        </span>
-                                    </Button>
-                                </div>
-                            )}
+                                        自动获取
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="upload"
+                                        className="text-xs"
+                                    >
+                                        上传图片
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="url"
+                                        className="text-xs"
+                                    >
+                                        网络图片
+                                    </TabsTrigger>
+                                    <TabsTrigger value="ai" className="text-xs">
+                                        AI 生成
+                                    </TabsTrigger>
+                                </TabsList>
+                            </Tabs>
 
-                            {iconTab === "upload" && (
-                                <div className="app-dialog-icon-subpanel">
-                                    <label className="app-upload-dropzone">
-                                        <Upload
-                                            size={18}
-                                            className="app-upload-icon"
-                                        />
-                                        <span className="app-upload-text">
-                                            {isUploadingIcon
-                                                ? "正在上传…"
-                                                : "点击或拖拽上传本地图片"}
+                            {/* 来源子面板 */}
+                            <div className="app-dialog-icon-subpanel-wrap">
+                                {iconTab === "auto" && (
+                                    <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--auto">
+                                        <span className="app-dialog-helper-text">
+                                            根据填写的网址自动获取高清 Favicon
+                                            或网站图标。
                                         </span>
-                                        <span className="app-upload-hint">
-                                            支持
-                                            PNG、JPEG、WebP、AVIF、SVG、ICO，文件小于
-                                            5MB
-                                        </span>
-                                        <input
-                                            type="file"
-                                            accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
-                                            hidden
-                                            disabled={isUploadingIcon}
-                                            onChange={(e) =>
-                                                void handleFileUpload(e)}
-                                        />
-                                    </label>
-                                </div>
-                            )}
-
-                            {iconTab === "url" && (
-                                <div className="app-dialog-icon-subpanel">
-                                    <div className="app-input-with-button">
-                                        <Input
-                                            type="url"
-                                            placeholder="https://example.com/icon.png"
-                                            value={iconImageUrl}
-                                            onChange={(e) =>
-                                                setIconImageUrl(e.target.value)}
-                                            className="h-8 text-xs"
-                                        />
                                         <Button
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            disabled={!iconImageUrl.trim() ||
-                                                isFetchingUrlIcon}
+                                            disabled={urlFetchStatus ===
+                                                    "loading" || !appUrl.trim()}
                                             onClick={() =>
-                                                void handleUseImageUrl()}
-                                            className="h-8 text-xs flex-shrink-0"
+                                                void handleRetryFetch()}
+                                            className="h-7 text-xs gap-1.5 flex-shrink-0"
                                         >
-                                            {isFetchingUrlIcon
-                                                ? "提取中…"
-                                                : "使用图片"}
+                                            {urlFetchStatus === "loading"
+                                                ? (
+                                                    <Loader2
+                                                        size={12}
+                                                        className="animate-spin"
+                                                    />
+                                                )
+                                                : <RefreshCw size={12} />}
+                                            <span>
+                                                {urlFetchStatus === "loading"
+                                                    ? "正在抓取…"
+                                                    : "重新抓取网站图标"}
+                                            </span>
                                         </Button>
                                     </div>
-                                    <p className="app-dialog-helper-text">
-                                        支持公开可直接访问的 PNG、JPG、SVG 或
-                                        WebP 图片链接。
-                                    </p>
-                                </div>
-                            )}
+                                )}
 
-                            {iconTab === "ai" && (
-                                <LogoCandidatePicker
-                                    siteName={appName.trim() || siteDomain ||
-                                        ""}
-                                    siteDomain={siteDomain}
-                                    onSelect={(asset) => {
-                                        setAppIconAssetId(asset.id);
-                                        setAppIconSource("ai");
-                                        setIconPreviewUrl(asset.url);
-                                        setImageLoadError(false);
-                                    }}
-                                    onError={(err) => setFormError(err)}
-                                    onClose={onClose}
-                                />
-                            )}
+                                {iconTab === "upload" && (
+                                    <div className="app-dialog-icon-subpanel">
+                                        <label className="app-upload-dropzone">
+                                            <Upload
+                                                size={18}
+                                                className="app-upload-icon"
+                                            />
+                                            <span className="app-upload-text">
+                                                {isUploadingIcon
+                                                    ? "正在上传…"
+                                                    : "点击或拖拽上传本地图片"}
+                                            </span>
+                                            <span className="app-upload-hint">
+                                                支持
+                                                PNG、JPEG、WebP、AVIF、SVG、ICO，文件小于
+                                                5MB
+                                            </span>
+                                            <input
+                                                type="file"
+                                                accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
+                                                hidden
+                                                disabled={isUploadingIcon}
+                                                onChange={(e) =>
+                                                    void handleFileUpload(e)}
+                                            />
+                                        </label>
+                                    </div>
+                                )}
+
+                                {iconTab === "url" && (
+                                    <div className="app-dialog-icon-subpanel">
+                                        <div className="app-input-with-button">
+                                            <Input
+                                                type="url"
+                                                placeholder="https://example.com/icon.png"
+                                                value={iconImageUrl}
+                                                onChange={(e) =>
+                                                    setIconImageUrl(
+                                                        e.target.value,
+                                                    )}
+                                                className="h-8 text-xs"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={!iconImageUrl
+                                                    .trim() ||
+                                                    isFetchingUrlIcon}
+                                                onClick={() =>
+                                                    void handleUseImageUrl()}
+                                                className="h-8 text-xs flex-shrink-0"
+                                            >
+                                                {isFetchingUrlIcon
+                                                    ? "提取中…"
+                                                    : "使用图片"}
+                                            </Button>
+                                        </div>
+                                        <p className="app-dialog-helper-text">
+                                            支持公开可直接访问的 PNG、JPG、SVG
+                                            或 WebP 图片链接。
+                                        </p>
+                                    </div>
+                                )}
+
+                                {iconTab === "ai" && (
+                                    <LogoCandidatePicker session={logo} />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -976,8 +502,8 @@ export function AppForm({
                     {isSubmitting
                         ? "保存中…"
                         : editingApp
-                        ? "保存更新"
-                        : "添加网站"}
+                        ? "保存修改"
+                        : "添加应用"}
                 </Button>
             </div>
         </form>
@@ -1000,7 +526,7 @@ export function AppForm({
                             <>
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>
-                                        该网站已存在，仍要继续添加吗？
+                                        该应用已存在，仍要继续添加吗？
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                         启动器中已存在相同网址的应用。重复添加可用于设置不同的名称、图标或分组。

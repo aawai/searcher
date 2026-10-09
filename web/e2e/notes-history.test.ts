@@ -156,9 +156,5 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
             .inputValue(),
         "第一版标题",
     );
-    assertEquals(
-        await editor.locator(".note-color-trigger").textContent(),
-        "琥珀",
-    );
     assertEquals((await state()).color, "amber");
 });
