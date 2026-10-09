@@ -72,7 +72,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
             assertEquals(
                 rect.width >= 44 && rect.height >= 44,
                 true,
-                `${id} must be touch-accessible`,
+                `${id} must be touch-accessible: ${JSON.stringify(rect)}`,
             );
         }
         await page.getByRole("button", { name: "生成 3 个候选", exact: true })

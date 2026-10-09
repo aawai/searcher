@@ -79,7 +79,8 @@
       Zen/Widgets，每组 root/folder/search/create/edit/arrange，72 张稳定截图。
       校准 preferences 提交、字体与有限 transition；分批采集，最终几何文件含 73
       条记录（390 Widgets dark root 重复一次），72 个唯一场景均无横向溢出。
-      截图与几何发布于
+      合入最新 main 后刷新 24 张 create/edit 截图，另存
+      refreshed-form-geometry.json；最终表单联系图单独记录。 截图与几何发布于
       [evidence/issue-141](https://github.com/aawai/searcher/tree/evidence/issue-141/evidence/issue-141)，
       不把图片并入 main。
 - [x] 390×640 短屏正文顶/中/底、图标折叠/展开/错误；另外记录 640/960/1280
@@ -87,18 +88,18 @@
       reduced-motion 代表组合可读；壁纸关闭覆盖固定矩阵。Footer 完整可见、
       workspace-body scrollTop=0，正文是唯一滚动 owner。
 
-| 合同 | 已执行证据                                                                                                                                                                                                                       |
-| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1   | 新增全部字段、图标输入与真实 SVG 上传；编辑全部字段与 URL 图标确认，767/768、1023/1024、1440/390、窗口最大化/还原/最小化/恢复。失败保存保留草稿，继续/放弃确认、旧会话获取结果、同步双 submit 单次请求、保存只返回原文件夹一层。 |
-| A2   | 390×640/844 模态内 Undo 中心 hit-test、pointer/touch/Space 恢复；clock 控制 Sheet 内外移动为同一 DOM/live region，不重启 5 秒期限；恢复 503 在当前 Sheet error Banner 可见，无虚假条目。共享 Home note/Ask Undo 复验。           |
-| A3   | Body 与非收缩 Footer 的完整 flex 高度链、无空外层 Footer，VisualViewport owner 消费可见高度和 safe-area；短屏及临界宽度截图/几何。真实软键盘另列未验证。                                                                         |
-| A4   | 所属菜单/业务 AlertDialog、空格 query、整理、文件夹、dirty 表单、根收起分别一键一层并恢复焦点；合成 composing Escape 不导航；Panel/Sheet/Window 单一应用 coordinator，其他工作区既有语义复验。                                   |
-| A5   | 可见新建文件夹与整理/完成；保留右键、真实 CDP touch 长按、鼠标/触摸拖拽、键盘排序、满网格管理入口。并发两次排序：新请求先成功、旧请求后失败，UI 与真实服务端确认排序及刷新一致。                                                 |
-| A6   | coarse/no-hover 下根关闭/更多 44×44，小文件夹 88×88、大文件夹 146×146、mini 应用 44×44，Switcher/表单 Tab/提交/取消高度 44；相邻 mini、Tab、Footer 控件不相交。细指针网格对照见下表。                                            |
-| A7   | 默认图标摘要、打开方式常显；普通编辑折叠、更换图标直接展开；展开/折叠和 Host 切换保持 AI snapshot、描述、风格、候选。真实上传及重复 URL/更新图标确认复验；受控 AI fixture 不冒充真实生成。                                       |
-| A8   | 长文件夹只有一组返回/名称/count/更多，换行且返回/更多可达；文件夹 CRUD、大小切换、删除确认与应用保留复验。                                                                                                                       |
-| A9   | 原匹配/去重/计数及文件夹进入/清 query；同名长名称显示 hostname/文件夹，完整 accessible name/菜单；搜索主按钮实际打开目标新标签页，与更多为 sibling。原菜单、长按、拖拽及键盘路径复验。                                           |
-| A10  | 失败提示可手动继续，原始原因保留开发 console；手填名称/图标来源不被迟到获取覆盖；blur/debounce pending 去重；`https://intranet/` 不自动检测仍保存并以 hostname 回退名称，未收紧保存规则。                                        |
+| 合同 | 已执行证据                                                                                                                                                                                                                                                              |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1   | 新增全部字段、图标输入与真实 SVG 上传；编辑全部字段与 URL 图标确认，767/768、1023/1024、1440/390、窗口最大化/还原/最小化/恢复。失败保存保留草稿，继续/放弃确认、旧会话获取结果、同步双 submit 单次请求、保存只返回原文件夹一层。                                        |
+| A2   | 390×640/844 模态内 Undo 中心 hit-test、pointer/touch/Space 恢复；clock 控制 Sheet 内外移动为同一 DOM/live region，不重启 5 秒期限；恢复 503 在当前 Sheet error Banner 可见，无虚假条目。共享 Home note/Ask Undo 复验。                                                  |
+| A3   | Body 与非收缩 Footer 的完整 flex 高度链、无空外层 Footer，VisualViewport owner 消费可见高度和 safe-area；短屏及临界宽度截图/几何。真实软键盘另列未验证。                                                                                                                |
+| A4   | 所属菜单/业务 AlertDialog、空格 query、整理、文件夹、dirty 表单、根收起分别一键一层并恢复焦点；合成 composing Escape 不导航；Panel/Sheet/Window 单一应用 coordinator，其他工作区既有语义复验。                                                                          |
+| A5   | 可见新建文件夹与整理/完成；保留右键、真实 CDP touch 长按、鼠标/触摸拖拽、键盘排序、满网格管理入口。并发两次排序：新请求先成功、旧请求后失败，UI 与真实服务端确认排序及刷新一致。                                                                                        |
+| A6   | coarse/no-hover 下根关闭/更多 44×44，小文件夹 88×88、大文件夹 146×146、mini 应用 44×44，Switcher/表单 Tab/提交/取消高度 44；滚入可见正文后的相邻 Tab 与 Footer 不相交。AI 原生下拉框另以真实 bounding box 验证，移除覆盖共享尺寸的 feature 规则。细指针网格对照见下表。 |
+| A7   | 默认图标摘要、打开方式常显；普通编辑折叠、更换图标直接展开；展开/折叠和 Host 切换保持 AI snapshot、描述、风格、候选。真实上传及重复 URL/更新图标确认复验；受控 AI fixture 不冒充真实生成。                                                                              |
+| A8   | 长文件夹只有一组返回/名称/count/更多，换行且返回/更多可达；文件夹 CRUD、大小切换、删除确认与应用保留复验。                                                                                                                                                              |
+| A9   | 原匹配/去重/计数及文件夹进入/清 query；同名长名称显示 hostname/文件夹，完整 accessible name/菜单；搜索主按钮实际打开目标新标签页，与更多为 sibling。原菜单、长按、拖拽及键盘路径复验。                                                                                  |
+| A10  | 失败提示可手动继续，原始原因保留开发 console；手填名称/图标来源不被迟到获取覆盖；blur/debounce pending 去重；`https://intranet/` 不自动检测仍保存并以 hostname 回退名称，未收紧保存规则。                                                                               |
 
 - [x] 渲染/输入基线：e747aa4 与修复工作树分别使用相同 production
       `--minify false` 构建、100 个应用、1440×900 Widgets、60 次名称键入。
@@ -123,13 +124,15 @@
 - [x] 真实模型查询 `/api/ai/models`、`/api/ai/providers` 均为空；无模型引导
       保留。受控候选 fixture 只验证会话/异步，候选选择使用真实 upload API。
       Guest 实页应用入口/个人 tile 均为 0。
-- [x] `deno task test` 641 tests / 51 steps；build、受影响入口 typecheck、
-      `check:ui` ownership/visual 均通过。`test:workspace` 首次批量 17 suites /
-      106 steps 通过、Launcher 4 steps 失败：排序错误缺少关闭入口
-      导致第一个失败，后续为残留菜单的级联。补回关闭后 focused Launcher +
-      ui-feedback + concurrent ordering 共 3 suites / 20 steps 通过；新增/变化
-      Apps 会话、AI、交互与 races 分批通过。所有19个 workspace suite
-      均取得有效通过结果，不描述为完整命令一次通过。
+- [x] `deno task test` 643 tests / 51 steps；build、受影响入口 typecheck、
+      `check:ui` ownership（194 files）/visual（141 files）均为零违规。 合入
+      main 后首批 workspace 为 18 suites / 128 steps 通过，另三项失败： AI
+      下拉框被 feature 的 40px min-height 覆盖、菜单 Escape 在新 Sheet
+      挂载前操作、便签历史仍断言上游已移除的颜色文字。分别移除重复尺寸规则、
+      等待实际 Sheet/menu、删除 incidental 文字断言（保留真实恢复颜色 API
+      断言）。 最终 `deno task test:workspace` 完整命令 21 suites / 134 steps
+      通过； AI 三个下拉框真实命中区均满足 44px。最终共享反馈/文档复查 2 suites
+      / 25 steps 通过。保留上游 #109 masonry 与 #145 颜色点改动。
 - [x] 共享消费者：Home 便签/Ask、Account/Trash/Provider 确认与 Undo、 Notes
       编辑/历史/menu/order、Zen/Widgets/window/Guest；Documents 实页 16
       个尺寸/主题/Host 组合、短屏输入及大文档完整性共19 steps 通过。

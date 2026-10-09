@@ -148,10 +148,12 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                     }).click();
                     assertEquals(await search.isDisabled(), false);
                     await page.setViewportSize({ width: 390, height: 844 });
+                    await page.locator(".workspace-panel--mobile").waitFor();
                     await page.getByRole("button", {
                         name: "应用更多操作",
                         exact: true,
                     }).click();
+                    await page.getByRole("menu").waitFor();
                     await page.keyboard.press("Escape");
                     await page.getByRole("menu").waitFor({ state: "detached" });
                     assertEquals(

@@ -382,11 +382,6 @@
     color: var(--muted);
 }
 
-.app-ai-field select {
-    width: 100%;
-    min-height: 40px;
-}
-
 .app-ai-action-row {
     display: flex;
     align-items: center;
