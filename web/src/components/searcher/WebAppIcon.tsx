@@ -1,6 +1,7 @@
 import { ArrowUpRight, GripVertical } from "lucide-react";
 import { useState } from "react";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 export interface WebAppItem {
     id: string;
     name: string;
@@ -49,42 +50,58 @@ export function WebAppIcon({
     const firstChar = app.name.trim().slice(0, 1).toUpperCase() || "W";
 
     return (
-        <button
-            type="button"
-            className={`webapp-icon webapp-icon--${size}${
-                isDragging ? " is-dragging" : ""
-            }`}
-            onClick={() => onOpen(app)}
-            title={`${app.name} (${hostname})`}
-            {...dragAttributes}
-            {...dragListeners}
-            aria-label={movable
-                ? `编辑 ${app.name}；拖动或按方向键排序`
-                : `打开 ${app.name}`}
+        <Tooltip
+            disabled={globalThis.matchMedia?.(
+                "(pointer: coarse), (hover: none)",
+            ).matches}
         >
-            <span className="webapp-glyph">
-                {effectiveIconUrl
-                    ? (
-                        <img
-                            src={effectiveIconUrl}
-                            alt=""
-                            loading="lazy"
-                            onError={() => setImageError(true)}
+            <TooltipTrigger
+                render={
+                    <button
+                        type="button"
+                        className={`webapp-icon webapp-icon--${size}${
+                            isDragging ? " is-dragging" : ""
+                        }`}
+                        data-app-id={app.id}
+                        onClick={() => onOpen(app)}
+                        {...dragAttributes}
+                        {...dragListeners}
+                        aria-label={movable
+                            ? `编辑 ${app.name}；拖动或按方向键排序`
+                            : `打开 ${app.name}`}
+                    >
+                        <span className="webapp-glyph">
+                            {effectiveIconUrl
+                                ? (
+                                    <img
+                                        src={effectiveIconUrl}
+                                        alt=""
+                                        loading="lazy"
+                                        onError={() => setImageError(true)}
+                                    />
+                                )
+                                : <span>{firstChar}</span>}
+                        </span>
+                        {movable && (
+                            <span
+                                className="launcher-drag-cue"
+                                aria-hidden="true"
+                            >
+                                <GripVertical size={14} />
+                            </span>
+                        )}
+                        {showLabel && (
+                            <span className="webapp-name">{app.name}</span>
+                        )}
+                        <ArrowUpRight
+                            className="webapp-arrow"
+                            size={13}
+                            aria-hidden="true"
                         />
-                    )
-                    : <span>{firstChar}</span>}
-            </span>
-            {movable && (
-                <span className="launcher-drag-cue" aria-hidden="true">
-                    <GripVertical size={14} />
-                </span>
-            )}
-            {showLabel && <span className="webapp-name">{app.name}</span>}
-            <ArrowUpRight
-                className="webapp-arrow"
-                size={13}
-                aria-hidden="true"
+                    </button>
+                }
             />
-        </button>
+            <TooltipContent>{app.name} ({hostname})</TooltipContent>
+        </Tooltip>
     );
 }

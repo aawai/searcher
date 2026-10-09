@@ -763,6 +763,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.getByRole("menu").waitFor();
             await page.keyboard.press("Escape");
             await page.getByRole("menu").waitFor({ state: "detached" });
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("aria-label") ===
+                    "打开 Edited Alpha"
+            );
             assertEquals(await panel.isVisible(), true);
             await panel.locator(".workspace-footer .workspace-primary").focus();
             await page.keyboard.press("Enter");
@@ -774,8 +778,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.keyboard.press("Enter");
             await search().waitFor();
             await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("aria-label") ===
-                    "收起工作区"
+                document.activeElement?.matches(".workspace-primary") === true
             );
             await page.locator(
                 '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
@@ -861,10 +864,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 // Trigger Back
                 await page.keyboard.press("Enter");
                 await search().waitFor();
-                // Back to root restores focus to Close button
+                // Form Back restores the entry action, not unrelated chrome.
                 await page.waitForFunction(() =>
-                    document.activeElement?.getAttribute("aria-label") ===
-                        "收起工作区"
+                    document.activeElement?.matches(".workspace-primary") ===
+                        true
                 );
 
                 // Overlay Escape precedence in Zen panel/sheet
@@ -1210,7 +1213,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             assertEquals(
                 await panel.locator(".workspace-footer .button--primary")
                     .count(),
-                0,
+                1,
             );
 
             await rightClickBlankSurface();

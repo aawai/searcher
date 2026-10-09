@@ -6,7 +6,6 @@ import {
 } from "../../components/searcher/semantic.tsx";
 import type { AppsRoute, WorkspaceRoute } from "./workspace-state.ts";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
-import type { Appearance } from "../../app/state.tsx";
 import { errorMessage } from "../../app/state.tsx";
 import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
@@ -22,16 +21,17 @@ import "./apps-workspace.css";
 export interface AppsWorkspaceProps {
     state: AppsRoute;
     navigate: (next: WorkspaceRoute) => void;
-    onBack: () => void;
     apps: ExtendedWebApp[];
     groups: WebAppGroup[];
     setApps: React.Dispatch<React.SetStateAction<ExtendedWebApp[]>>;
     setGroups: React.Dispatch<React.SetStateAction<WebAppGroup[]>>;
+    persistLayout: (path: string, init: RequestInit) => Promise<void>;
+    layoutError: string;
+    onDismissLayoutError: () => void;
     isArranging: boolean;
     onArrangeChange: (arranging: boolean) => void;
     query: string;
     onQueryChange: (query: string) => void;
-    appearance: Appearance;
     status: "loading" | "ready" | "offline" | "error";
     error: string;
     onRetry: () => void;
@@ -41,13 +41,7 @@ export interface AppsWorkspaceProps {
         openMode?: "current" | "new_tab" | "global" | null;
     }) => void;
     onPin: (app: ExtendedWebApp) => Promise<void> | void;
-    onMove: (
-        app: ExtendedWebApp,
-        groupId: string | null,
-    ) => Promise<void> | void;
     onDelete: (app: ExtendedWebApp) => Promise<void> | void;
-    onReorder: (ids: string[]) => Promise<void> | void;
-    onDirtyChange?: (isDirty: boolean) => void;
     activeFolderId?: string | null;
     onFolderChange?: (folderId: string | null) => void;
 }
@@ -55,25 +49,23 @@ export interface AppsWorkspaceProps {
 export function AppsWorkspace({
     state,
     navigate,
-    onBack,
     apps,
     groups,
     setApps,
     setGroups,
+    persistLayout,
+    layoutError,
+    onDismissLayoutError,
     isArranging,
     onArrangeChange,
     query,
     onQueryChange,
-    appearance,
     status,
     error,
     onRetry,
     onOpen,
     onPin,
-    onMove: _onMove,
     onDelete,
-    onReorder: _onReorder,
-    onDirtyChange,
     activeFolderId,
     onFolderChange,
 }: AppsWorkspaceProps) {
@@ -171,7 +163,6 @@ export function AppsWorkspace({
         targetGroupId: string,
     ) => {
         setActionError("");
-        const prevApps = apps;
         const targetApps = apps.filter(
             (a) => a.groupId === targetGroupId && a.id !== app.id,
         );
@@ -189,18 +180,10 @@ export function AppsWorkspace({
                     : a
             )
         );
-        try {
-            await api(
-                `/api/webapps/${app.id}`,
-                json("PATCH", {
-                    groupId: targetGroupId,
-                    sortOrder: nextSortOrder,
-                }),
-            );
-        } catch (err) {
-            setApps(prevApps);
-            setActionError(errorMessage(err));
-        }
+        await persistLayout(
+            `/api/webapps/${app.id}`,
+            json("PATCH", { groupId: targetGroupId, sortOrder: nextSortOrder }),
+        );
     };
 
     // Move app in/out of folder (Context Menu)
@@ -209,7 +192,6 @@ export function AppsWorkspace({
         groupId: string | null,
     ) => {
         setActionError("");
-        const prevApps = apps;
         let nextSortOrder = 0;
         if (groupId) {
             const targetApps = apps.filter(
@@ -238,22 +220,15 @@ export function AppsWorkspace({
                     : a
             )
         );
-        try {
-            await api(
-                `/api/webapps/${app.id}`,
-                json("PATCH", { groupId, sortOrder: nextSortOrder }),
-            );
-        } catch (err) {
-            setApps(prevApps);
-            setActionError(errorMessage(err));
-        }
+        await persistLayout(
+            `/api/webapps/${app.id}`,
+            json("PATCH", { groupId, sortOrder: nextSortOrder }),
+        );
     };
 
     // Mixed root reorder
     const handleReorderRoot = async (newTiles: LauncherTile[]) => {
         setActionError("");
-        const prevApps = apps;
-        const prevGroups = groups;
 
         const appUpdates: Array<{ id: string; sortOrder: number }> = [];
         const groupUpdates: Array<{ id: string; sortOrder: number }> = [];
@@ -289,16 +264,10 @@ export function AppsWorkspace({
             )
         );
 
-        try {
-            await api(
-                "/api/webapps/reorder",
-                json("PUT", { items: appUpdates, groups: groupUpdates }),
-            );
-        } catch (err) {
-            setApps(prevApps);
-            setGroups(prevGroups);
-            setActionError(errorMessage(err));
-        }
+        await persistLayout(
+            "/api/webapps/reorder",
+            json("PUT", { items: appUpdates, groups: groupUpdates }),
+        );
     };
 
     // Folder-internal reorder
@@ -307,7 +276,6 @@ export function AppsWorkspace({
         reorderedAppIds: string[],
     ) => {
         setActionError("");
-        const prevApps = apps;
 
         const updates = reorderedAppIds.map((id, index) => ({
             id,
@@ -323,25 +291,10 @@ export function AppsWorkspace({
             )
         );
 
-        try {
-            await api("/api/webapps/reorder", json("PUT", { items: updates }));
-        } catch (err) {
-            setApps(prevApps);
-            setActionError(errorMessage(err));
-        }
-    };
-
-    // App Form save handler
-    const handleAppSaved = (savedApp: ExtendedWebApp, isEdit: boolean) => {
-        onDirtyChange?.(false);
-        if (isEdit) {
-            setApps((prev) =>
-                prev.map((a) => (a.id === savedApp.id ? savedApp : a))
-            );
-        } else {
-            setApps((prev) => [...prev, savedApp]);
-        }
-        onBack();
+        await persistLayout(
+            "/api/webapps/reorder",
+            json("PUT", { items: updates }),
+        );
     };
 
     // Render nested view body
@@ -358,8 +311,8 @@ export function AppsWorkspace({
                 onQueryChange={onQueryChange}
                 activeFolderId={activeFolderId}
                 onFolderChange={onFolderChange}
-                onNavigateToEdit={(appId) =>
-                    navigate({ view: "apps/edit", id: appId })}
+                onNavigateToEdit={(appId, expandIcon) =>
+                    navigate({ view: "apps/edit", id: appId, expandIcon })}
                 onNavigateToAdd={(groupId) =>
                     navigate({
                         view: "apps/create",
@@ -379,50 +332,28 @@ export function AppsWorkspace({
                 onFolderSizeChange={handleChangeGroupSize}
             />
         );
-    } else if (state.view === "apps/create") {
+    } else {
         viewContent = (
             <div className="apps-workspace-form">
-                <AppForm
-                    defaultGroupId={state.groupId || activeFolderId || ""}
-                    editingApp={null}
-                    groups={groups}
-                    appearance={appearance}
-                    existingApps={apps}
-                    onSaved={handleAppSaved}
-                    onClose={onBack}
-                    onDirtyChange={onDirtyChange}
-                />
-            </div>
-        );
-    } else if (state.view === "apps/edit") {
-        const editingApp = apps.find((a) => a.id === state.id) || null;
-        viewContent = (
-            <div className="apps-workspace-form">
-                <AppForm
-                    defaultGroupId={editingApp?.groupId || ""}
-                    editingApp={editingApp}
-                    groups={groups}
-                    appearance={appearance}
-                    existingApps={apps}
-                    onSaved={handleAppSaved}
-                    onClose={onBack}
-                    onDirtyChange={onDirtyChange}
-                />
+                <AppForm />
             </div>
         );
     }
 
     return (
-        <div className="apps-workspace">
+        <div
+            className="apps-workspace"
+            data-layout={state.view === "apps/root" ? undefined : "form"}
+        >
             {/* Status alerts */}
             {status === "loading" && (
-                <LoadingState density="compact">正在加载网站…</LoadingState>
+                <LoadingState density="compact">正在加载应用…</LoadingState>
             )}
 
             {status === "error" && (
                 <StatusBanner tone="error" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">
-                        <span>网站加载失败：{error}</span>
+                        <span>应用加载失败：{error}</span>
                         <ActionGroup>
                             <Button
                                 variant="outline"
@@ -439,7 +370,7 @@ export function AppsWorkspace({
             {status === "offline" && (
                 <StatusBanner tone="warning" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">
-                        <span>当前离线，显示此账户上次保存的网站列表。</span>
+                        <span>当前离线，显示此账户上次保存的应用列表。</span>
                         <ActionGroup>
                             <Button
                                 variant="outline"
@@ -453,6 +384,22 @@ export function AppsWorkspace({
                 </StatusBanner>
             )}
 
+            {layoutError && (
+                <StatusBanner tone="error" density="compact">
+                    <div className="flex items-center justify-between gap-3 w-full">
+                        <span>排列保存失败：{layoutError}</span>
+                        <ActionGroup>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onDismissLayoutError}
+                            >
+                                关闭
+                            </Button>
+                        </ActionGroup>
+                    </div>
+                </StatusBanner>
+            )}
             {actionError && (
                 <StatusBanner tone="error" density="compact">
                     <div className="flex items-center justify-between gap-3 w-full">

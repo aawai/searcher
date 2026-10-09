@@ -692,3 +692,44 @@
     box-sizing: border-box;
     justify-content: center;
 }
+
+.launcher-menu-title {
+    padding: var(--space-control-gap) var(--space-row-gap);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    white-space: normal;
+    max-width: var(--workspace-width);
+    font-size: var(--font-caption-size);
+}
+@media (pointer: coarse), (hover: none) {
+    .launcher-grid,
+    .launcher-folder-contents,
+    .launcher-overlay {
+        --launcher-col-w: var(--launcher-touch-cell-size);
+    }
+    .launcher-folder-item--small {
+        position: relative;
+    }
+    .launcher-folder-item--small .launcher-folder-surface {
+        position: static;
+    }
+    .launcher-folder-item--small .launcher-folder-background {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+    }
+    .launcher-folder-item--large .launcher-folder-surface {
+        --launcher-surface-size: calc(2 * var(--launcher-col-w) + var(--launcher-gap-x) - var(--space-7));
+        left: calc(var(--space-7) / 2);
+    }
+    .launcher-folder-item--large .launcher-folder-preview {
+        --launcher-mini-size: var(--control-touch-target);
+    }
+    .launcher-folder-item--large .launcher-folder-preview--sparse,
+    .launcher-folder-item--large .launcher-folder-preview--medium {
+        grid-template-columns: repeat(2, var(--control-touch-target));
+        grid-template-rows: repeat(2, var(--control-touch-target));
+    }
+    .launcher-folder-item--large .launcher-folder-preview--sparse {
+        grid-template-rows: var(--control-touch-target);
+    }
+}

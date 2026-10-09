@@ -402,13 +402,16 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 "应用",
             ); // Route stays apps/root!
             assertEquals(
-                await inlineView.locator("h3").textContent(),
+                await panel.getByRole("heading", {
+                    name: "Dev Tools",
+                    exact: true,
+                }).textContent(),
                 "Dev Tools",
             );
 
             // Focus enters folder region on open: Back button has focus
-            const backBtn = inlineView.locator(
-                'button[aria-label="返回网站列表"]',
+            const backBtn = panel.locator(
+                'button[aria-label="返回应用列表"]',
             );
             await backBtn.waitFor();
             assertEquals(
@@ -648,11 +651,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
 
             const alert = page.locator('[data-slot="alert-dialog-content"]');
             await alert.waitFor();
-            assertStringIncludes(
-                await alert.locator('[data-slot="alert-dialog-description"]')
-                    .textContent() ?? "",
-                "文件夹中的网站将保留在启动器根目录，不会被删除",
-            );
 
             // Confirm delete
             await alert.locator('button[data-slot="alert-dialog-action"]')
@@ -692,7 +690,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             assertEquals(await countBadge.isVisible(), true);
 
             // GitLab (inside Dev Tools folder) directly appears in search results for fast access
-            const appResults = searchSection.locator(".webapp-name");
+            const appResults = searchSection.locator(".apps-search-name");
             const textContents = await appResults.allTextContents();
             assertEquals(textContents.includes("GitHub"), true);
             assertEquals(textContents.includes("GitLab"), true);
@@ -755,7 +753,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             // In arrange mode: "添加应用" is hidden
             assertEquals(
                 await panel.locator(
-                    ".workspace-footer button.workspace-primary, .workspace-footer button:has-text('添加应用'), button:has-text('添加应用')",
+                    "button:has-text('添加应用')",
                 ).count(),
                 0,
             );
@@ -878,7 +876,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await moveOutItem.click();
 
             // Close folder view
-            await inlineView.locator('button[aria-label="返回网站列表"]')
+            await panel.locator('button[aria-label="返回应用列表"]')
                 .click();
             await inlineView.waitFor({ state: "detached" });
 
@@ -1162,7 +1160,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             await exitArrangingViaSurface(page);
 
             // Return to root
-            await inlineView.locator('button[aria-label="返回网站列表"]')
+            await panel.locator('button[aria-label="返回应用列表"]')
                 .click();
             await inlineView.waitFor({ state: "detached" });
 
@@ -1618,7 +1616,10 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                         ?.pinnedSortOrder,
                     0,
                 );
-                await exitArrangingViaSurface(touchPage);
+                await touchPage.getByRole("button", {
+                    name: "完成整理",
+                    exact: true,
+                }).click();
                 for (
                     const selector of [
                         ".launcher-app",

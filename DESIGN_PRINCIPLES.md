@@ -16,6 +16,11 @@ baseline 仅记录迁移债务，不允许新增同类样式。
 | Responsive by available space     | 页面骨架可用 viewport；settings row、action card、toolbar 按容器或可用空间重排；Bento 使用 `@container bento-wrapper` 5:3 不对称列比，Controlled Notes 在移动端（<=767px）或 `<=280px` 容器下自动回流为单列流（align-self stretch）。                                              | 缩小字号/touch target 挤布局；将已工作的 container query 改成 viewport-only；卡片强行等高或内容被不当截断。                                                        |
 | Restrained motion                 | 全局遵循动效预算（GLOBAL_MOTION_BUDGET）；壁纸仅允许离散档位且周期 >=28s 的环境光/漂移/缩放微动（位移 <=1.0%，缩放增量 <=4.0%）；强调色总贡献 <=8%（双光场单场 <=4%），黑白模式强制使用纯白中性光（accent 0%）；prefers-reduced-motion 下位移/缩放降级为关闭且冻结光场位移与缩放。 | 未经预算的高频循环、快速移动（周期 <28s 或位移 >1.0%）、缩放过大（>4.0%）、高饱和/高对比动态光斑抢夺 Search 视觉焦点；绕过 prefers-reduced-motion 执行无感知动效。 |
 
+应用 Workspace 的操作层级：section 更多为 secondary，整理态以“完成整理”替换 创建
+primary；表单仅自身提交 Footer。Escape 一次只消费一层，显式关闭与返回
+不混用。应用编辑会话不由 presentation 持有；Host 切换不等于离开草稿。
+移动反馈必须进入活动模态的交互树与正常布局，不以 z-index 绕过模态边界。
+
 ## 例外
 
 必须说明新增系统级语义、owner、状态与可验证边界。“现在就是这样”“更现代/优雅”不是理由。runtime

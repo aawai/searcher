@@ -56,6 +56,7 @@ export interface DesktopWorkspacesProps {
     onClose: (kind: WorkspaceKind) => void;
     onBack: (kind: WorkspaceKind) => void;
     onCreate: (kind: "apps" | "notes") => void;
+    onFinishArrange: () => void;
     onDockElement: (el: HTMLElement | null) => void;
     appsArranging: boolean;
     notes: NoteItem[];
@@ -139,6 +140,7 @@ export function DesktopWorkspaces({
     onClose,
     onBack,
     onCreate,
+    onFinishArrange,
     onDockElement,
     appsArranging,
     notes,
@@ -252,8 +254,9 @@ export function DesktopWorkspaces({
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (
-                !isConstrained || event.key !== "Escape" ||
-                event.defaultPrevented
+                !isConstrained || activeKind === "apps" ||
+                event.key !== "Escape" ||
+                event.isComposing || event.defaultPrevented
             ) return;
             // Avoid closing window if any popup, menu, or dialog is currently open
             if (
@@ -451,9 +454,7 @@ export function DesktopWorkspaces({
                         }
                         : win;
 
-                    const showCreate = isRoot &&
-                        !(kind === "apps" && appsArranging) &&
-                        kind !== "documents";
+                    const showCreate = isRoot && kind !== "documents";
 
                     return (
                         <DesktopWindow
@@ -490,7 +491,12 @@ export function DesktopWorkspaces({
                             closeBtnRef={chromeRefs[kind].close}
                             backBtnRef={chromeRefs[kind].back}
                         >
-                            <div className="workspace-body">
+                            <div
+                                className="workspace-body"
+                                data-layout={kind === "apps" && isNested
+                                    ? "app-form"
+                                    : undefined}
+                            >
                                 {renderContent(kind)}
                             </div>
 
@@ -500,14 +506,18 @@ export function DesktopWorkspaces({
                                         className="workspace-primary"
                                         variant="default"
                                         onClick={() =>
-                                            onCreate(
-                                                kind === "apps"
-                                                    ? "apps"
-                                                    : "notes",
-                                            )}
+                                            kind === "apps" && appsArranging
+                                                ? onFinishArrange()
+                                                : onCreate(
+                                                    kind === "apps"
+                                                        ? "apps"
+                                                        : "notes",
+                                                )}
                                     >
                                         {kind === "apps"
-                                            ? "添加应用"
+                                            ? appsArranging
+                                                ? "完成整理"
+                                                : "添加应用"
                                             : "新建便签"}
                                     </Button>
                                 </footer>

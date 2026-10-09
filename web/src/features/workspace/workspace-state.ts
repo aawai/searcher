@@ -1,7 +1,7 @@
 export type AppsRoute =
     | { view: "apps/root" }
     | { view: "apps/create"; groupId?: string }
-    | { view: "apps/edit"; id: string };
+    | { view: "apps/edit"; id: string; expandIcon?: boolean };
 
 export type NotesRoute =
     | { view: "notes/root" }

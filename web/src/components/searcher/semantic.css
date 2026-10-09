@@ -213,6 +213,22 @@
     box-shadow: var(--shadow-l3);
     z-index: var(--elevation-popover);
 }
+@media (max-width: 767px) {
+    .status-banner[data-presentation="floating"],
+    .undo-toast[data-placement="floating"] {
+        inset-block-end: calc(env(safe-area-inset-bottom, 0px) +
+            var(--control-touch-target) + var(--space-8));
+    }
+}
+.undo-toast[data-placement="inline"] {
+    position: static;
+    transform: none;
+    max-width: none;
+    margin: var(--space-control-gap) var(--space-4);
+    flex: 0 0 auto;
+    box-shadow: none;
+    z-index: auto;
+}
 .undo-toast > span {
     min-width: 0;
     overflow-wrap: anywhere;

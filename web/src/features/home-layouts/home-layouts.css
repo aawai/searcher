@@ -143,6 +143,13 @@
     background: var(--surface);
 }
 
+@media (pointer: coarse), (hover: none) {
+    .zen-edge-btn {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+    }
+}
+
 /* Managing mode indicator in home layouts */
 .home-managing-bar {
     display: flex;

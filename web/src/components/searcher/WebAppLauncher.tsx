@@ -44,9 +44,11 @@ import {
     FolderNameDialog,
 } from "../../features/workspace/FolderNameDialog.tsx";
 
+import { AppMenuItems } from "./AppMenuItems.tsx";
 interface Actions {
     onOpen: (app: LauncherApp) => void;
     onEdit: (app: LauncherApp) => void;
+    onChangeIcon?: (app: LauncherApp) => void;
     onMove: (app: LauncherApp, groupId: string | null) => void;
     onPin: (app: LauncherApp) => void;
     onDelete: (app: LauncherApp) => void;
@@ -125,46 +127,13 @@ function AppActions({
                 />
             </ContextMenuTrigger>
             <ContextMenuContent aria-label={`${app.name} 的操作`}>
-                {actions.onToggleManaging && (
-                    <ContextMenuItem onClick={actions.onToggleManaging}>
-                        {managing ? "完成布局" : "编辑布局"}
-                    </ContextMenuItem>
-                )}
-                {managing && actions.onResetLayout && (
-                    <ContextMenuItem onClick={actions.onResetLayout}>
-                        恢复默认布局
-                    </ContextMenuItem>
-                )}
-                <ContextMenuItem onClick={() => actions.onOpen(app)}>
-                    打开
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => actions.onPin(app)}>
-                    {app.isPinned ? "取消固定" : "固定到首页"}
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => actions.onEdit(app)}>
-                    编辑
-                </ContextMenuItem>
-                {app.groupId && (
-                    <ContextMenuItem onClick={() => actions.onMove(app, null)}>
-                        移出文件夹
-                    </ContextMenuItem>
-                )}
-                {groups.filter((group) => group.id !== app.groupId).map((
-                    group,
-                ) => (
-                    <ContextMenuItem
-                        key={group.id}
-                        onClick={() => actions.onMove(app, group.id)}
-                    >
-                        移至文件夹 {group.name}
-                    </ContextMenuItem>
-                ))}
-                <ContextMenuItem onClick={() => actions.onEdit(app)}>
-                    更换图标
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => actions.onDelete(app)}>
-                    删除
-                </ContextMenuItem>
+                <AppMenuItems
+                    app={app}
+                    groups={groups}
+                    managing={managing}
+                    actions={actions}
+                    Item={ContextMenuItem}
+                />
             </ContextMenuContent>
         </ContextMenu>
     );
@@ -234,7 +203,7 @@ function FolderView({
 }) {
     const large = tile.group.folderSize === "large";
     const preview = tile.apps.slice(0, large ? 9 : 4);
-    const label = `打开文件夹 ${tile.group.name}，${tile.apps.length} 个网站`;
+    const label = `打开文件夹 ${tile.group.name}，${tile.apps.length} 个应用`;
     return (
         <ContextMenu>
             <ContextMenuTrigger
@@ -334,7 +303,7 @@ function FolderView({
                                 className="launcher-folder-more"
                                 aria-label={`另有 ${
                                     tile.apps.length - 9
-                                } 个网站`}
+                                } 个应用`}
                             >
                                 +{tile.apps.length - 9}
                             </span>
@@ -586,6 +555,8 @@ export interface WebAppLauncherProps {
     managing: boolean;
     onOpen: (app: LauncherApp) => void;
     onEdit: (app: LauncherApp) => void;
+    onChangeIcon?: (app: LauncherApp) => void;
+    showFolderHeader?: boolean;
     onMove: (app: LauncherApp, groupId: string | null) => void;
     onPin: (app: LauncherApp) => void;
     onDelete: (app: LauncherApp) => void;
@@ -625,6 +596,8 @@ export function WebAppLauncher({
     managing,
     onOpen,
     onEdit,
+    onChangeIcon,
+    showFolderHeader = true,
     onMove,
     onPin,
     onDelete,
@@ -633,7 +606,7 @@ export function WebAppLauncher({
     onAdd,
     onToggleManaging,
     onResetLayout,
-    emptyMessage = "还没有常用网站",
+    emptyMessage = "还没有常用应用",
     emptyAction = true,
     activeFolderId,
     onFolderChange,
@@ -761,12 +734,15 @@ export function WebAppLauncher({
 
     useEffect(() => {
         if (folderId && folderInlineRef.current) {
-            const backBtn = folderInlineRef.current.querySelector<HTMLElement>(
-                "button",
-            );
+            const backBtn = showFolderHeader
+                ? folderInlineRef.current.querySelector<HTMLElement>("button")
+                : folderInlineRef.current.closest(".apps-workspace-root")
+                    ?.querySelector<HTMLElement>(
+                        'button[aria-label="返回应用列表"]',
+                    );
             backBtn?.focus();
         }
-    }, [folderId]);
+    }, [folderId, showFolderHeader]);
 
     useEffect(() => {
         if (folderId && !groups.some((g) => g.id === folderId)) {
@@ -782,6 +758,7 @@ export function WebAppLauncher({
     const actions: Actions = {
         onOpen,
         onEdit,
+        onChangeIcon,
         onMove,
         onPin,
         onDelete,
@@ -836,37 +813,34 @@ export function WebAppLauncher({
                 role="region"
                 aria-label={`文件夹：${folder.group.name}`}
             >
-                <div className="launcher-folder-inline-header flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--border)]">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={closeFolder}
-                            className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
-                            aria-label="返回网站列表"
-                        >
-                            <ArrowLeft size={14} />
-                            <span>返回</span>
-                        </Button>
-                        <span
-                            className="text-[var(--muted)]"
-                            aria-hidden="true"
-                        >
-                            /
-                        </span>
-                        <h3 className="text-base font-semibold text-[var(--foreground)] truncate m-0">
-                            {folder.group.name}
-                        </h3>
-                        <span className="text-xs text-[var(--muted)] shrink-0">
-                            ({folderApps.length} 个网站)
-                        </span>
+                {showFolderHeader && (
+                    <div className="launcher-folder-inline-header flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--border)]">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={closeFolder}
+                                className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+                                aria-label="返回应用列表"
+                            >
+                                <ArrowLeft size={14} />
+                                <span>返回</span>
+                            </Button>
+                            <span aria-hidden="true">/</span>
+                            <h3 className="text-base font-semibold text-[var(--foreground)] truncate m-0">
+                                {folder.group.name}
+                            </h3>
+                            <span className="text-xs text-[var(--muted)] shrink-0">
+                                ({folderApps.length} 个应用)
+                            </span>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {folderApps.length === 0
                     ? (
                         <EmptyState
-                            title="文件夹暂无网站"
+                            title="文件夹暂无应用"
                             headingLevel={3}
                             density="compact"
                         />
@@ -931,7 +905,7 @@ export function WebAppLauncher({
             return (
                 <div className="launcher-empty">
                     {emptyMessage}{" "}
-                    {emptyAction && <Button onClick={onAdd}>添加网站</Button>}
+                    {emptyAction && <Button onClick={onAdd}>添加应用</Button>}
                 </div>
             );
         }

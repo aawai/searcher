@@ -20,7 +20,6 @@ import { X } from "lucide-react";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
-import { mergeVisibleOrder } from "../components/searcher/launcherTiles.ts";
 import { mergeNoteOrder } from "../features/home-layouts/noteOrder.ts";
 import type {
     NoteItem,
@@ -44,10 +43,8 @@ import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
 import { WorkspaceNavigation } from "../features/workspace/WorkspaceNavigation.tsx";
-import {
-    AppsWorkspace,
-    type AppsWorkspaceProps,
-} from "../features/workspace/AppsWorkspace.tsx";
+import { AppsWorkspace } from "../features/workspace/AppsWorkspace.tsx";
+import { useAppsLayoutPersistence } from "../features/workspace/useAppsLayoutPersistence.ts";
 import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
 import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
 import "../features/workspace/documents-workspace.css";
@@ -68,11 +65,19 @@ import {
 import { isConstrainedViewport } from "../features/desktop/constrained-geometry.ts";
 import { useDesktopLayout } from "../features/desktop/useDesktopLayout.ts";
 import { useDesktopSafeRect } from "../features/desktop/DesktopCanvas.tsx";
+import { getTopmostVisibleWindowId } from "../features/desktop/desktop-state.ts";
 import {
     DesktopWorkspaces,
     isWorkspaceKind,
 } from "../features/desktop/DesktopWorkspaces.tsx";
 
+import {
+    type AppSessionNavigation,
+    AppSessionProvider,
+} from "../components/searcher/AppSessionProvider.tsx";
+import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
+import { appsEscapeIntent } from "../features/workspace/apps-dismiss.ts";
+import { useAppsEscape } from "../features/workspace/workspace-escape.ts";
 export interface WebAppGroup {
     id: string;
     userId: string;
@@ -89,10 +94,6 @@ export interface ExtendedWebApp extends WebAppItem {
     openMode?: "global" | "current" | "new_tab";
     groupId?: string | null;
 }
-
-const AppsWorkspaceView = AppsWorkspace as React.ComponentType<
-    AppsWorkspaceProps & { onBack?: () => void }
->;
 
 export function SearchHome() {
     const { user, appearance } = useAppState();
@@ -118,7 +119,10 @@ export function SearchHome() {
     >("loading");
     const [appsError, setAppsError] = useState("");
     const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+    const [appsOwnerId, setAppsOwnerId] = useState<string | null>(null);
     const [reloadApps, setReloadApps] = useState(0);
+    const appLayout = useAppsLayoutPersistence(user?.id, setApps, setGroups);
+    const appSession = useRef<AppSessionNavigation | null>(null);
     const [host, dispatchHost] = useReducer(
         workspaceHostReducer,
         initialWorkspaceHost,
@@ -159,6 +163,7 @@ export function SearchHome() {
         }));
     }, []);
     const [appsArranging, setAppsArranging] = useState(false);
+    const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
     const initialSyncDoneRef = useRef(false);
     const [pendingAction, setPendingAction] = useState<
@@ -172,6 +177,20 @@ export function SearchHome() {
         }
         | null
     >(null);
+    const appEntryFocus = useRef<string>("");
+    function focusApps(selector = appEntryFocus.current) {
+        requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+                const target = selector
+                    ? document.querySelector<HTMLElement>(selector)
+                    : null;
+                (target ??
+                    document.querySelector<HTMLElement>(
+                        ".apps-workspace-root input",
+                    ))?.focus({ preventScroll: true });
+            })
+        );
+    }
     function applyWorkspace(
         kind: WorkspaceKind,
         action:
@@ -180,6 +199,20 @@ export function SearchHome() {
             | DomainWorkspaceAction<DocumentsRoute>
             | { type: "close" },
     ) {
+        if (
+            kind === "apps" && action.type === "navigate" &&
+            (action.route.view === "apps/create" ||
+                action.route.view === "apps/edit") &&
+            host.models.apps.route.view === "apps/root"
+        ) {
+            const appId = action.route.view === "apps/edit"
+                ? action.route.id
+                : null;
+            appEntryFocus.current = appId
+                ? `[data-app-id="${CSS.escape(appId)}"]`
+                : ".workspace-primary";
+        }
+        if (kind === "apps" && action.type === "back") focusApps();
         if (kind === "apps") {
             setAppsArranging(false);
             if (action.type === "close") setActiveFolderId(null);
@@ -239,10 +272,15 @@ export function SearchHome() {
             | DomainWorkspaceAction<DocumentsRoute>
             | { type: "close" },
     ) {
+        const leavingApps = kind === "apps" || mobile ||
+            appearance.style === "zen";
+        if (leavingApps && appSession.current?.isSubmitting) return;
         if (
-            dirtyForm.current &&
-            (kind === "apps" || kind === "documents" ||
-                appearance.style === "zen")
+            (leavingApps && appSession.current?.isDirty &&
+                (appRoute.view === "apps/create" ||
+                    appRoute.view === "apps/edit")) ||
+            (dirtyForm.current &&
+                (kind === "documents" || appearance.style === "zen"))
         ) {
             setPendingAction({ kind, action });
             return;
@@ -280,6 +318,34 @@ export function SearchHome() {
     }
     function closeWorkspace(kind = host.activeKind) {
         if (kind) requestWorkspace(kind, { type: "close" });
+    }
+    function escapeWorkspace(kind = host.activeKind) {
+        if (kind !== "apps") {
+            if (kind) closeWorkspace(kind);
+            return;
+        }
+        const intent = appsEscapeIntent(
+            appRoute,
+            host.models.apps.query,
+            appsArranging,
+            activeFolderId,
+        );
+        if (intent === "clear-query") {
+            dispatchHost({
+                type: "domain",
+                kind: "apps",
+                action: { type: "query", value: "" },
+            });
+            focusApps(".apps-workspace-root input");
+        } else if (intent === "finish-arrange") {
+            setAppsArranging(false);
+            focusApps("[data-app-arrange]");
+        } else if (intent === "leave-folder") {
+            const folderId = activeFolderId;
+            setActiveFolderId(null);
+            focusApps(`[data-folder-id="${CSS.escape(folderId!)}"] button`);
+        } else if (intent === "back") backWorkspace("apps");
+        else closeWorkspace("apps");
     }
     function openWorkspace(kind: WorkspaceKind) {
         if (appearance.style === "zen") {
@@ -390,6 +456,36 @@ export function SearchHome() {
         { app: ExtendedWebApp; timer: ReturnType<typeof setTimeout> } | null
     >(null);
     const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+    const appRoute = host.models.apps.route;
+    const appSessionOptions: AppSessionOptions = {
+        sessionKey: user && appsOwnerId === user.id &&
+                (appRoute.view === "apps/create" ||
+                    appRoute.view === "apps/edit")
+            ? `${user.id}:${appRoute.view}:${
+                appRoute.view === "apps/edit" ? appRoute.id : ""
+            }`
+            : "",
+        editingApp:
+            user && appsOwnerId === user.id && appRoute.view === "apps/edit"
+                ? apps.find((app) => app.id === appRoute.id) ?? null
+                : null,
+        defaultGroupId: appRoute.view === "apps/create"
+            ? appRoute.groupId || activeFolderId || ""
+            : "",
+        groups: appsOwnerId === user?.id ? groups : [],
+        appearance,
+        existingApps: appsOwnerId === user?.id ? apps : [],
+        expandIcon: appRoute.view === "apps/edit" && appRoute.expandIcon,
+        onSaved: (saved, isEdit) => {
+            setApps((items) =>
+                isEdit
+                    ? items.map((item) => item.id === saved.id ? saved : item)
+                    : [...items, saved]
+            );
+            applyWorkspace("apps", { type: "back" });
+        },
+        onClose: () => backWorkspace("apps"),
+    };
     useEffect(() => setEngine(appearance.engine), [appearance.engine]);
     useEffect(() => {
         void getLocal<Reachability>("reachability")
@@ -404,10 +500,12 @@ export function SearchHome() {
             setApps([]);
             setGroups([]);
             setLoadedUserId(null);
+            setAppsOwnerId(null);
             return;
         }
         let active = true;
         const userId = user.id;
+        setAppsOwnerId(userId);
         setAppsStatus("loading");
         setAppsError("");
         setApps([]);
@@ -636,29 +734,6 @@ export function SearchHome() {
             );
             setApps((items) =>
                 items.map((item) => item.id === app.id ? updated : item)
-            );
-        } catch (e) {
-            setError(errorMessage(e));
-        }
-    }
-
-    async function reorderApps(ids: string[]) {
-        const order = mergeVisibleOrder(
-            apps.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                .map((app) => app.id),
-            ids,
-        );
-        const updates = order.map((id, sortOrder) => ({ id, sortOrder }));
-        try {
-            await api("/api/webapps/reorder", json("PUT", { items: updates }));
-            const positions = new Map(
-                updates.map((item) => [item.id, item.sortOrder]),
-            );
-            setApps((items) =>
-                items.map((app) => ({
-                    ...app,
-                    sortOrder: positions.get(app.id) ?? app.sortOrder,
-                }))
             );
         } catch (e) {
             setError(errorMessage(e));
@@ -958,18 +1033,21 @@ export function SearchHome() {
     function renderWorkspaceContent(kind: WorkspaceKind) {
         if (!user) return null;
         if (kind === "apps") {
+            if (appsOwnerId !== user.id) return null;
             const model = host.models.apps;
             return (
-                <AppsWorkspaceView
+                <AppsWorkspace
                     state={model.route}
                     navigate={navigateWorkspace}
-                    onBack={() => backWorkspace("apps")}
                     activeFolderId={activeFolderId}
                     onFolderChange={setActiveFolderId}
                     apps={apps}
                     groups={groups}
                     setApps={setApps}
                     setGroups={setGroups}
+                    persistLayout={appLayout.persist}
+                    layoutError={appLayout.error}
+                    onDismissLayoutError={appLayout.dismissError}
                     isArranging={appsArranging}
                     onArrangeChange={setAppsArranging}
                     query={model.query}
@@ -981,18 +1059,12 @@ export function SearchHome() {
                             action: { type: "query", value },
                         });
                     }}
-                    appearance={appearance}
                     status={appsStatus}
                     error={appsError}
                     onRetry={layoutProps.onReloadApps}
                     onOpen={openApp}
                     onPin={togglePinApp}
-                    onMove={moveAppGroup}
                     onDelete={softDeleteApp}
-                    onReorder={reorderApps}
-                    onDirtyChange={(dirty) => {
-                        dirtyForm.current = dirty;
-                    }}
                 />
             );
         }
@@ -1052,121 +1124,179 @@ export function SearchHome() {
             />
         );
     }
+    const mobileFeedback = Boolean(user && mobile && host.activeKind);
+    const undoMessage = undoApp
+        ? "应用已移至回收站"
+        : noteUndo
+        ? "便签已移至回收站"
+        : "";
+    const undoFeedback = undoMessage && (
+        <UndoToast
+            message={undoMessage}
+            host={feedbackHost}
+            placement={mobileFeedback ? "inline" : "floating"}
+            onUndo={() =>
+                undoApp ? void undoDeleteApp() : void undoDeleteNote()}
+        />
+    );
+    const appWindow = desktop.windows.find((window) => window.id === "apps");
+    useAppsEscape({
+        enabled: Boolean(
+            user &&
+                (appearance.style === "widgets" && !mobile
+                    ? appWindow && appWindow.mode !== "minimized" &&
+                        (desktop.activeId ??
+                                getTopmostVisibleWindowId(desktop.windows)) ===
+                            "apps"
+                    : host.activeKind === "apps"),
+        ),
+        hasDialog: () =>
+            Boolean(pendingAction || appSession.current?.hasDialog),
+        onDialogEscape: () => {
+            if (pendingAction) setPendingAction(null);
+            else appSession.current?.dismissDialog();
+        },
+        onEscape: () => escapeWorkspace("apps"),
+    });
     return (
-        <PageShell archetype="search" className={"home home-" + layoutStyle}>
-            {error && (
-                <StatusBanner tone="error" presentation="floating">
-                    <span>{error}</span>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="关闭错误提示"
-                        onClick={() => setError("")}
-                    >
-                        <X size={16} />
-                    </Button>
-                </StatusBanner>
-            )}
-            {layoutStyle === "widgets"
-                ? <WidgetsLayout {...layoutProps} />
-                : <ZenLayout {...layoutProps} />}
-            {user && (layoutStyle === "widgets" && !mobile
-                ? (
-                    <DesktopWorkspaces
-                        state={desktop}
-                        rect={safeRect}
-                        dispatch={dispatchDesktop}
-                        models={host.models}
-                        renderContent={renderWorkspaceContent}
-                        onOpen={openWorkspace}
-                        onClose={closeWorkspace}
-                        onBack={backWorkspace}
-                        onCreate={createWorkspaceItem}
-                        onDockElement={setDockElement}
-                        appsArranging={appsArranging}
-                        notes={notes}
-                        onSaveNote={(saved) => {
-                            setNotes((items) =>
-                                items.map((item) =>
-                                    item.id === saved.id ? saved : item
-                                )
-                            );
-                        }}
-                        userId={user.id}
-                        documents={documentPreviews}
-                        onOpenDocument={openDocument}
-                        onDocumentChanged={onDocumentChanged}
-                        onDocumentsChanged={onDocumentsChanged}
-                    />
-                )
-                : (
-                    <>
-                        {layoutStyle === "widgets" && (
-                            <WorkspaceNavigation
-                                variant="mobile"
-                                onSelect={openWorkspace}
-                            />
-                        )}
-                        <WorkspaceShell
-                            open={Boolean(host.activeKind)}
-                            state={currentRoute}
-                            title={title}
-                            style={layoutStyle}
-                            appsArranging={appsArranging}
-                            navigate={navigateWorkspace}
-                            onBack={() => backWorkspace()}
-                            onClose={() => closeWorkspace()}
-                            onCreate={host.activeKind &&
-                                    host.activeKind !== "documents"
-                                ? () =>
-                                    createWorkspaceItem(
-                                        host.activeKind as "apps" | "notes",
-                                    )
-                                : undefined}
-                        >
-                            {host.activeKind &&
-                                renderWorkspaceContent(host.activeKind)}
-                        </WorkspaceShell>
-                    </>
-                ))}
-            {(undoApp || noteUndo) && (
-                <UndoToast
-                    message={undoApp ? "应用已移至回收站" : "便签已移至回收站"}
-                    onUndo={() =>
-                        undoApp ? void undoDeleteApp() : void undoDeleteNote()}
-                />
-            )}
-            <AlertDialog
-                open={Boolean(pendingAction)}
-                onOpenChange={(open) => {
-                    if (!open) setPendingAction(null);
-                }}
+        <AppSessionProvider
+            options={appSessionOptions}
+            navigationRef={appSession}
+        >
+            <PageShell
+                archetype="search"
+                className={"home home-" + layoutStyle}
             >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            放弃未保存的应用修改？
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            返回或收起工作区后，当前未保存的表单内容将丢失。
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>继续编辑</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() => {
-                                if (!pendingAction) return;
-                                const action = pendingAction;
-                                dirtyForm.current = false;
-                                setPendingAction(null);
-                                applyWorkspace(action.kind, action.action);
-                            }}
+                {error && !mobileFeedback && (
+                    <StatusBanner tone="error" presentation="floating">
+                        <span>{error}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="关闭错误提示"
+                            onClick={() =>
+                                setError("")}
                         >
-                            放弃修改
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </PageShell>
+                            <X size={16} />
+                        </Button>
+                    </StatusBanner>
+                )}
+                {layoutStyle === "widgets"
+                    ? <WidgetsLayout {...layoutProps} />
+                    : <ZenLayout {...layoutProps} />}
+                {user && (layoutStyle === "widgets" && !mobile
+                    ? (
+                        <DesktopWorkspaces
+                            state={desktop}
+                            rect={safeRect}
+                            dispatch={dispatchDesktop}
+                            models={host.models}
+                            renderContent={renderWorkspaceContent}
+                            onOpen={openWorkspace}
+                            onClose={closeWorkspace}
+                            onBack={backWorkspace}
+                            onFinishArrange={() => setAppsArranging(false)}
+                            onCreate={createWorkspaceItem}
+                            onDockElement={setDockElement}
+                            appsArranging={appsArranging}
+                            notes={notes}
+                            onSaveNote={(saved) => {
+                                setNotes((items) =>
+                                    items.map((item) =>
+                                        item.id === saved.id ? saved : item
+                                    )
+                                );
+                            }}
+                            userId={user.id}
+                            documents={documentPreviews}
+                            onOpenDocument={openDocument}
+                            onDocumentChanged={onDocumentChanged}
+                            onDocumentsChanged={onDocumentsChanged}
+                        />
+                    )
+                    : (
+                        <>
+                            {layoutStyle === "widgets" && (
+                                <WorkspaceNavigation
+                                    variant="mobile"
+                                    onSelect={openWorkspace}
+                                />
+                            )}
+                            <WorkspaceShell
+                                open={Boolean(host.activeKind)}
+                                state={currentRoute}
+                                title={title}
+                                style={layoutStyle}
+                                appsArranging={appsArranging}
+                                navigate={navigateWorkspace}
+                                onBack={() => backWorkspace()}
+                                onClose={() => closeWorkspace()}
+                                onEscape={() => escapeWorkspace()}
+                                onFinishArrange={() => setAppsArranging(false)}
+                                feedback={
+                                    <>
+                                        {error && (
+                                            <StatusBanner
+                                                tone="error"
+                                                density="compact"
+                                            >
+                                                {error}
+                                            </StatusBanner>
+                                        )}
+                                    </>
+                                }
+                                onFeedbackHost={setFeedbackHost}
+                                onCreate={host.activeKind &&
+                                        host.activeKind !== "documents"
+                                    ? () =>
+                                        createWorkspaceItem(
+                                            host.activeKind as "apps" | "notes",
+                                        )
+                                    : undefined}
+                            >
+                                {host.activeKind &&
+                                    renderWorkspaceContent(host.activeKind)}
+                            </WorkspaceShell>
+                        </>
+                    ))}
+                {undoFeedback}
+                <AlertDialog
+                    open={Boolean(pendingAction)}
+                    onOpenChange={(open) => {
+                        if (!open) setPendingAction(null);
+                    }}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                {pendingAction?.kind === "apps"
+                                    ? "放弃未保存的应用修改？"
+                                    : "放弃未保存的修改？"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                返回或收起工作区后，当前未保存的表单内容将丢失。
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>继续编辑</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    if (!pendingAction) return;
+                                    const action = pendingAction;
+                                    if (
+                                        action.kind === "documents" || mobile ||
+                                        appearance.style === "zen"
+                                    ) dirtyForm.current = false;
+                                    setPendingAction(null);
+                                    applyWorkspace(action.kind, action.action);
+                                }}
+                            >
+                                放弃修改
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </PageShell>
+        </AppSessionProvider>
     );
 }

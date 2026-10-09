@@ -29,6 +29,10 @@ export function WorkspaceShell(
         onBack,
         onClose,
         onCreate,
+        onEscape,
+        onFinishArrange,
+        feedback,
+        onFeedbackHost,
         appsArranging = false,
         children,
     }: {
@@ -40,6 +44,10 @@ export function WorkspaceShell(
         onBack: () => void;
         onClose: () => void;
         onCreate?: () => void;
+        onEscape?: () => void;
+        onFinishArrange?: () => void;
+        feedback?: ReactNode;
+        onFeedbackHost?: (host: HTMLElement | null) => void;
         appsArranging?: boolean;
         children: ReactNode;
     },
@@ -121,30 +129,38 @@ export function WorkspaceShell(
             nested={!root}
             onBack={onBack}
             onClose={onClose}
-            footer={
-                <footer className="workspace-footer">
-                    {root && onCreate &&
-                        !(workspace === "apps" && appsArranging) && (
-                        <Button
-                            className="workspace-primary"
-                            variant="default"
-                            onClick={onCreate}
-                        >
-                            {workspace === "apps"
-                                ? "添加应用"
-                                : workspace === "notes"
-                                ? "新建便签"
-                                : "新建笔记"}
-                        </Button>
-                    )}
-                    {!editing && (
-                        <WorkspaceNavigation
-                            selected={workspace}
-                            onSelect={select}
-                        />
-                    )}
-                </footer>
-            }
+            onEscape={onEscape}
+            escapeManaged={workspace === "apps"}
+            formLayout={state.view === "apps/create" ||
+                state.view === "apps/edit"}
+            feedback={mobile ? feedback : undefined}
+            onFeedbackHost={mobile ? onFeedbackHost : undefined}
+            footer={!editing &&
+                (
+                    <footer className="workspace-footer">
+                        {root && onCreate && (
+                            <Button
+                                className="workspace-primary"
+                                variant="default"
+                                onClick={workspace === "apps" && appsArranging
+                                    ? onFinishArrange
+                                    : onCreate}
+                            >
+                                {workspace === "apps"
+                                    ? appsArranging ? "完成整理" : "添加应用"
+                                    : workspace === "notes"
+                                    ? "新建便签"
+                                    : "新建笔记"}
+                            </Button>
+                        )}
+                        {!editing && (
+                            <WorkspaceNavigation
+                                selected={workspace}
+                                onSelect={select}
+                            />
+                        )}
+                    </footer>
+                )}
         >
             {children}
         </WorkspaceSurface>

@@ -200,13 +200,8 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(bentoBoxAfter?.x, bentoBoxBefore?.x);
             assertEquals(bentoBoxAfter?.y, bentoBoxBefore?.y);
 
-            // Issue #91 contract: Ordinary Escape on desktop does not close window
+            // Apps root Escape closes only the active app window and restores its opener.
             await page.keyboard.press("Escape");
-            assertEquals(await appsWindow.isVisible(), true);
-            // Explicit close button closes window and returns focus to dock opener
-            await appsWindow.locator(
-                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
-            ).click();
             await appsWindow.waitFor({ state: "detached" });
             // Dock remains visible and focus returns to the Apps dock button
             await dock.waitFor();
@@ -556,6 +551,14 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Open note editor
             if (!(await bodyInput.isVisible())) {
+                const suggestions = page.getByRole("listbox", {
+                    name: "搜索建议",
+                    exact: true,
+                });
+                if (await suggestions.isVisible()) {
+                    await page.locator(".search-form input").press("Escape");
+                    await suggestions.waitFor({ state: "detached" });
+                }
                 await page.locator(".notes-workspace-list .note-title").first()
                     .click();
             }

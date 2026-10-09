@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Folder } from "lucide-react";
+import { ArrowLeft, Folder, MoreHorizontal } from "lucide-react";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
@@ -8,14 +8,21 @@ import {
     ContextMenuItem,
     ContextMenuTrigger,
 } from "../../components/ui/context-menu.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
+import { AppMenuItems } from "../../components/searcher/AppMenuItems.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import type {
     LauncherApp,
     LauncherGroup,
     LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
-import { FolderNameDialog } from "./FolderNameDialog.tsx";
+import { FolderDeleteDialog, FolderNameDialog } from "./FolderNameDialog.tsx";
 import { EmptyState } from "../../components/searcher/semantic.tsx";
 import { Badge } from "../../components/ui/badge.tsx";
 import { WorkspaceSection } from "./WorkspaceSection.tsx";
@@ -29,7 +36,7 @@ export interface AppsRootViewProps {
     onQueryChange: (query: string) => void;
     activeFolderId?: string | null;
     onFolderChange?: (folderId: string | null) => void;
-    onNavigateToEdit: (appId: string) => void;
+    onNavigateToEdit: (appId: string, expandIcon?: boolean) => void;
     onNavigateToAdd?: (groupId?: string | null) => void;
     onOpen: (app: {
         name: string;
@@ -86,6 +93,12 @@ export function AppsRootView({
     onFolderSizeChange,
 }: AppsRootViewProps) {
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+    const [renamingFolder, setRenamingFolder] = useState<LauncherGroup | null>(
+        null,
+    );
+    const [deletingFolder, setDeletingFolder] = useState<LauncherGroup | null>(
+        null,
+    );
     const trimmedQuery = query.trim().toLowerCase();
 
     // Deduplicated matched apps across loose apps and in-folder apps
@@ -128,64 +141,154 @@ export function AppsRootView({
         return apps.length;
     }, [activeFolder, apps]);
 
+    const actions = {
+        onOpen,
+        onPin,
+        onMove,
+        onDelete,
+        onEdit: (app: LauncherApp) => onNavigateToEdit(app.id),
+        onChangeIcon: (app: LauncherApp) => onNavigateToEdit(app.id, true),
+    };
+    const more = (
+        <DropdownMenu>
+            <DropdownMenuTrigger
+                render={
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="应用更多操作"
+                        data-app-arrange
+                    >
+                        <MoreHorizontal size={18} />
+                    </Button>
+                }
+            />
+            <DropdownMenuContent aria-label="应用管理操作">
+                {onCreateFolder && (
+                    <DropdownMenuItem
+                        disabled={isArranging}
+                        onClick={() => setIsCreateFolderOpen(true)}
+                    >
+                        新建文件夹
+                    </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                    onClick={() => {
+                        if (!isArranging) onQueryChange("");
+                        onArrangeChange(!isArranging);
+                    }}
+                >
+                    {isArranging ? "完成整理" : "整理布局"}
+                </DropdownMenuItem>
+                {activeFolder && (
+                    <>
+                        {onFolderSizeChange && (
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    onFolderSizeChange(
+                                        activeFolder,
+                                        activeFolder.folderSize === "small"
+                                            ? "large"
+                                            : "small",
+                                    )}
+                            >
+                                {activeFolder.folderSize === "small"
+                                    ? "切换为大文件夹"
+                                    : "切换为小文件夹"}
+                            </DropdownMenuItem>
+                        )}
+                        {onRenameFolder && (
+                            <DropdownMenuItem
+                                onClick={() => setRenamingFolder(activeFolder)}
+                            >
+                                重命名文件夹
+                            </DropdownMenuItem>
+                        )}
+                        {onDeleteFolder && (
+                            <DropdownMenuItem
+                                onClick={() => setDeletingFolder(activeFolder)}
+                            >
+                                删除文件夹
+                            </DropdownMenuItem>
+                        )}
+                    </>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+    const searching = Boolean(trimmedQuery && !isArranging);
     return (
-        <div className="workspace-root apps-workspace-root">
+        <div className="workspace-root apps-workspace-root" data-domain="apps">
             <div className="workspace-root-controls">
                 <WorkspaceSearch
                     value={query}
                     onChange={onQueryChange}
                     placeholder={isArranging
                         ? "整理模式下暂停搜索"
-                        : "搜索网站名称、网址或文件夹…"}
+                        : "搜索应用、网址或文件夹…"}
                     disabled={isArranging}
-                    ariaLabel="搜索网站"
+                    ariaLabel="搜索应用"
                 />
             </div>
-
+            {isArranging && (
+                <p className="apps-arrange-help">
+                    拖动应用或文件夹调整顺序，应用可移入文件夹
+                </p>
+            )}
             <ContextMenu>
                 <ContextMenuTrigger
                     className="launcher-surface-wrap"
                     tabIndex={0}
                     aria-label="启动器空白区域"
                 >
-                    {/* When searching and NOT arranging */}
-                    {trimmedQuery && !isArranging
-                        ? (
-                            <WorkspaceSection
-                                title="搜索结果"
-                                count={totalMatches}
+                    <WorkspaceSection
+                        title={searching ? "搜索结果" : standardSectionTitle}
+                        count={searching ? totalMatches : standardSectionCount}
+                        actions={more}
+                        leading={!searching && activeFolder && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="返回应用列表"
+                                onClick={() => onFolderChange?.(null)}
                             >
-                                {totalMatches === 0
-                                    ? (
-                                        <EmptyState
-                                            headingLevel={3}
-                                            density="compact"
-                                            title="未找到匹配的网站或文件夹"
-                                            description="尝试搜索其他名称或网址关键词"
-                                            action={
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        onQueryChange("")}
-                                                >
-                                                    清空搜索
-                                                </Button>
-                                            }
-                                        />
-                                    )
-                                    : (
-                                        <div className="flex flex-col gap-3">
-                                            {matchedGroups.length > 0 && (
+                                <ArrowLeft size={18} />
+                            </Button>
+                        )}
+                    >
+                        {searching
+                            ? totalMatches === 0
+                                ? (
+                                    <EmptyState
+                                        headingLevel={3}
+                                        density="compact"
+                                        title="未找到匹配的应用或文件夹"
+                                        description="尝试搜索其他名称或网址关键词"
+                                        action={
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    onQueryChange("")}
+                                            >
+                                                清空搜索
+                                            </Button>
+                                        }
+                                    />
+                                )
+                                : (
+                                    <>
+                                        {matchedGroups.length > 0 && (
+                                            <WorkspaceSection title="文件夹">
                                                 <div className="apps-workspace-groups-grid">
                                                     {matchedGroups.map(
                                                         (group) => {
-                                                            const groupCount =
-                                                                apps.filter(
-                                                                    (a) =>
-                                                                        a.groupId ===
-                                                                            group
-                                                                                .id,
+                                                            const count =
+                                                                apps.filter((
+                                                                    app,
+                                                                ) => app
+                                                                    .groupId ===
+                                                                    group.id
                                                                 ).length;
                                                             return (
                                                                 <button
@@ -193,6 +296,7 @@ export function AppsRootView({
                                                                         .id}
                                                                     type="button"
                                                                     className="apps-workspace-group-card"
+                                                                    aria-label={`打开文件夹 ${group.name}，包含 ${count} 个应用`}
                                                                     onClick={() => {
                                                                         onFolderChange?.(
                                                                             group
@@ -202,77 +306,112 @@ export function AppsRootView({
                                                                             "",
                                                                         );
                                                                     }}
-                                                                    aria-label={`打开文件夹 ${group.name}，包含 ${groupCount} 个网站`}
                                                                 >
-                                                                    <span className="apps-workspace-group-card-icon">
-                                                                        <Folder
-                                                                            size={18}
-                                                                        />
+                                                                    <Folder
+                                                                        size={18}
+                                                                    />
+                                                                    <span className="apps-workspace-group-card-info">
+                                                                        {group
+                                                                            .name}
                                                                     </span>
-                                                                    <div className="apps-workspace-group-card-info">
-                                                                        <span className="apps-workspace-group-card-name">
-                                                                            {group
-                                                                                .name}
-                                                                        </span>
-                                                                    </div>
                                                                     <Badge variant="secondary">
-                                                                        {groupCount}
+                                                                        {count}
                                                                         {" "}
-                                                                        个网站
+                                                                        个应用
                                                                     </Badge>
                                                                 </button>
                                                             );
                                                         },
                                                     )}
                                                 </div>
-                                            )}
-
-                                            {matchedApps.length > 0 && (
-                                                <WebAppLauncher
-                                                    presentation="workspace"
-                                                    apps={matchedApps}
-                                                    groups={groups}
-                                                    showFolders={false}
-                                                    size="default"
-                                                    showAppLabels
-                                                    managing={false}
-                                                    onOpen={onOpen}
-                                                    onEdit={(app) =>
-                                                        onNavigateToEdit(
-                                                            app.id,
-                                                        )}
-                                                    onMove={onMove}
-                                                    onPin={onPin}
-                                                    onDelete={onDelete}
-                                                    onReorder={() => {}}
-                                                    onAdd={() => {}}
-                                                />
-                                            )}
-                                        </div>
-                                    )}
-                            </WorkspaceSection>
-                        )
-                        : (
-                            /* Standard view: Unified Launcher */
-                            <WorkspaceSection
-                                title={standardSectionTitle}
-                                count={standardSectionCount}
-                            >
+                                            </WorkspaceSection>
+                                        )}
+                                        {matchedApps.length > 0 && (
+                                            <WorkspaceSection title="应用">
+                                                <div className="apps-search-results">
+                                                    {matchedApps.map((app) => {
+                                                        const hostname =
+                                                            new URL(app.url)
+                                                                .hostname;
+                                                        const folderName =
+                                                            groups.find((
+                                                                group,
+                                                            ) => group.id ===
+                                                                app.groupId
+                                                            )?.name ??
+                                                                "未放入文件夹";
+                                                        return (
+                                                            <div
+                                                                className="apps-search-row"
+                                                                key={app.id}
+                                                                data-app-id={app
+                                                                    .id}
+                                                            >
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    className="apps-search-open"
+                                                                    aria-label={`打开 ${app.name}，${hostname}，${folderName}`}
+                                                                    onClick={() =>
+                                                                        onOpen(
+                                                                            app,
+                                                                        )}
+                                                                >
+                                                                    <span className="apps-search-name">
+                                                                        {app.name}
+                                                                    </span>
+                                                                    <span className="apps-search-context">
+                                                                        {hostname}
+                                                                        {" "}
+                                                                        ·{" "}
+                                                                        {folderName}
+                                                                    </span>
+                                                                </Button>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger
+                                                                        render={
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                aria-label={`${app.name} 的更多操作`}
+                                                                            >
+                                                                                <MoreHorizontal
+                                                                                    size={18}
+                                                                                />
+                                                                            </Button>
+                                                                        }
+                                                                    />
+                                                                    <DropdownMenuContent
+                                                                        aria-label={`${app.name} 的操作`}
+                                                                    >
+                                                                        <AppMenuItems
+                                                                            app={app}
+                                                                            groups={groups}
+                                                                            actions={actions}
+                                                                            Item={DropdownMenuItem}
+                                                                        />
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </WorkspaceSection>
+                                        )}
+                                    </>
+                                )
+                            : (
                                 <WebAppLauncher
                                     presentation="workspace"
                                     apps={apps}
                                     groups={groups}
                                     showFolders
+                                    showFolderHeader={false}
                                     size="default"
                                     showAppLabels
                                     managing={isArranging}
                                     activeFolderId={activeFolderId}
                                     onFolderChange={onFolderChange}
-                                    onOpen={onOpen}
-                                    onEdit={(app) => onNavigateToEdit(app.id)}
-                                    onMove={onMove}
-                                    onPin={onPin}
-                                    onDelete={onDelete}
+                                    {...actions}
                                     onReorder={onReorder}
                                     onReorderRoot={onReorderRoot}
                                     onReorderFolder={onReorderFolder}
@@ -283,8 +422,8 @@ export function AppsRootView({
                                     onAdd={() =>
                                         onNavigateToAdd?.(activeFolderId)}
                                 />
-                            </WorkspaceSection>
-                        )}
+                            )}
+                    </WorkspaceSection>
                 </ContextMenuTrigger>
                 <ContextMenuContent aria-label="启动器空白区域操作">
                     {onCreateFolder && (
@@ -310,9 +449,32 @@ export function AppsRootView({
                     open={isCreateFolderOpen}
                     onOpenChange={setIsCreateFolderOpen}
                     mode="create"
-                    onSubmit={async (name) => {
-                        await onCreateFolder(name);
+                    onSubmit={onCreateFolder}
+                />
+            )}
+            {onRenameFolder && (
+                <FolderNameDialog
+                    open={Boolean(renamingFolder)}
+                    onOpenChange={(open) => {
+                        if (!open) setRenamingFolder(null);
                     }}
+                    mode="rename"
+                    initialName={renamingFolder?.name}
+                    onSubmit={async (name) => {
+                        if (renamingFolder) {
+                            await onRenameFolder(renamingFolder, name);
+                        }
+                    }}
+                />
+            )}
+            {onDeleteFolder && (
+                <FolderDeleteDialog
+                    group={deletingFolder}
+                    open={Boolean(deletingFolder)}
+                    onOpenChange={(open) => {
+                        if (!open) setDeletingFolder(null);
+                    }}
+                    onConfirm={onDeleteFolder}
                 />
             )}
         </div>

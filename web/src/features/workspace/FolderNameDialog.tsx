@@ -177,7 +177,7 @@ export function FolderDeleteDialog({
                     <AlertDialogTitle>删除文件夹</AlertDialogTitle>
                     <AlertDialogDescription>
                         确定删除文件夹“{group
-                            ?.name}”吗？文件夹中的网站将保留在启动器根目录，不会被删除。
+                            ?.name}”吗？文件夹中的应用将保留在启动器根目录，不会被删除。
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 

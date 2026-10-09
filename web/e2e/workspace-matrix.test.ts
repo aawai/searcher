@@ -509,7 +509,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             await workFolder.waitFor({ state: "visible" });
             await workFolder.click();
             const backBtn = appsPanel.locator(
-                'button[aria-label="返回网站列表"], button[aria-label="返回上一级"]',
+                'button[aria-label="返回应用列表"], button[aria-label="返回上一级"]',
             ).first();
             await backBtn.waitFor({ state: "visible" });
             await backBtn.click();
@@ -591,7 +591,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             await desktopWorkFolder.waitFor({ state: "visible" });
             await desktopWorkFolder.click();
             await appsWin.locator(
-                'button[aria-label="返回网站列表"], button[aria-label="返回上一级"]',
+                'button[aria-label="返回应用列表"], button[aria-label="返回上一级"]',
             ).first().waitFor({ state: "visible" });
 
             // 2b. Desktop Apps empty state
@@ -641,7 +641,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
             // 2e. ASSERT: Both domains operate simultaneously and independently
             const appsBackIsVisible = await appsWin.locator(
-                'button[aria-label="返回网站列表"], button[aria-label="返回上一级"]',
+                'button[aria-label="返回应用列表"], button[aria-label="返回上一级"]',
             ).first().isVisible();
             assert(appsBackIsVisible, "Apps window must maintain nested state");
             assert(

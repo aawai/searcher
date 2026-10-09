@@ -1,4 +1,11 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
+import {
+    type CSSProperties,
+    type ReactNode,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
@@ -15,6 +22,11 @@ export function WorkspaceSurface(
         onClose,
         children,
         footer,
+        feedback,
+        onFeedbackHost,
+        formLayout = false,
+        onEscape = onClose,
+        escapeManaged = false,
         expanded = false,
         headerActions,
         backLabel = "返回上一级",
@@ -27,6 +39,11 @@ export function WorkspaceSurface(
         onClose: () => void;
         children: ReactNode;
         footer: ReactNode;
+        feedback?: ReactNode;
+        onFeedbackHost?: (host: HTMLElement | null) => void;
+        formLayout?: boolean;
+        onEscape?: () => void;
+        escapeManaged?: boolean;
         expanded?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
@@ -37,6 +54,29 @@ export function WorkspaceSurface(
     const close = useRef<HTMLButtonElement>(null);
     const touchY = useRef<number | null>(null);
     const mounted = useRef(false);
+    const [viewport, setViewport] = useState(() => ({
+        height: globalThis.visualViewport?.height ?? globalThis.innerHeight,
+        bottom: 0,
+    }));
+    useEffect(() => {
+        const visual = globalThis.visualViewport;
+        if (!mobile || !visual) return;
+        const update = () =>
+            setViewport({
+                height: visual.height,
+                bottom: Math.max(
+                    0,
+                    globalThis.innerHeight - visual.height - visual.offsetTop,
+                ),
+            });
+        update();
+        visual.addEventListener("resize", update);
+        visual.addEventListener("scroll", update);
+        return () => {
+            visual.removeEventListener("resize", update);
+            visual.removeEventListener("scroll", update);
+        };
+    }, [mobile]);
     useLayoutEffect(() => {
         const focusChrome = () => {
             (nested ? back.current : close.current)?.focus({
@@ -53,9 +93,12 @@ export function WorkspaceSurface(
         return () => cancelAnimationFrame(frame);
     }, [routeKey, mobile, nested]);
     useEffect(() => {
-        if (mobile) return;
+        if (mobile || escapeManaged) return;
         const escape = (event: KeyboardEvent) => {
-            if (event.key !== "Escape" || event.defaultPrevented) return;
+            if (
+                event.key !== "Escape" || event.defaultPrevented ||
+                event.isComposing
+            ) return;
             if (
                 (event.target instanceof Element &&
                     event.target.closest(
@@ -66,11 +109,11 @@ export function WorkspaceSurface(
                 )
             ) return;
             event.preventDefault();
-            onClose();
+            onEscape();
         };
         document.addEventListener("keydown", escape);
         return () => document.removeEventListener("keydown", escape);
-    }, [mobile, onClose]);
+    }, [mobile, onEscape, escapeManaged]);
     const content = (
         <>
             <header
@@ -119,7 +162,14 @@ export function WorkspaceSurface(
                     <X size={18} />
                 </Button>
             </header>
-            <div className="workspace-body">{children}</div>
+            <div
+                className="workspace-body"
+                data-layout={formLayout ? "app-form" : undefined}
+            >
+                {children}
+            </div>
+            {feedback}
+            {onFeedbackHost && <div ref={onFeedbackHost} />}
             {footer}
         </>
     );
@@ -131,6 +181,13 @@ export function WorkspaceSurface(
                     const target = details.event.target;
                     if (
                         !open && details.reason === "escape-key" &&
+                        escapeManaged
+                    ) {
+                        details.cancel();
+                        return;
+                    }
+                    if (
+                        !open && details.reason === "escape-key" &&
                         target instanceof Element &&
                         target.closest(
                             '[role="menu"], [role="alertdialog"], [data-workspace-escape-boundary]',
@@ -139,12 +196,30 @@ export function WorkspaceSurface(
                         details.cancel();
                         return;
                     }
+                    if (!open && details.reason === "escape-key") {
+                        details.cancel();
+                        if (
+                            details.event instanceof KeyboardEvent &&
+                            details.event.isComposing
+                        ) return;
+                        if (
+                            document.querySelector(
+                                '[role="menu"], [data-slot="popover-content"], [role="alertdialog"], [role="dialog"]:not(.workspace-panel)',
+                            )
+                        ) return;
+                        onEscape();
+                        return;
+                    }
                     if (!open) onClose();
                 }}
             >
                 <SheetContent
                     className="workspace-panel workspace-panel--mobile"
                     data-presentation={presentation}
+                    style={{
+                        "--workspace-visible-height": `${viewport.height}px`,
+                        "--workspace-visible-bottom": `${viewport.bottom}px`,
+                    } as CSSProperties}
                     aria-describedby={undefined}
                     initialFocus={() => nested ? back.current : close.current}
                     finalFocus={false}

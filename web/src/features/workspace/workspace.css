@@ -46,6 +46,12 @@
 .workspace-body:has(> [data-workspace-editor]) {
     overflow: hidden;
 }
+.workspace-body[data-layout="app-form"] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+}
 .workspace-root {
     display: flex;
     flex-direction: column;
@@ -89,9 +95,15 @@
     font-weight: var(--font-title-weight);
     overflow-wrap: anywhere;
 }
-/* Nested AppForm in Workspace: single-owner root content inset */
-.workspace-body .app-dialog-body {
-    padding: 0;
+.workspace-body[data-layout="app-form"] .app-dialog-body {
+    padding: var(--space-4);
+}
+.workspace-root[data-domain="apps"] .workspace-section-header {
+    flex-wrap: nowrap;
+}
+.workspace-root[data-domain="apps"] .workspace-section-header > .button,
+.workspace-root[data-domain="apps"] .workspace-section-header > .action-group {
+    flex-shrink: 0;
 }
 
 /* Workspace Search */
@@ -167,11 +179,14 @@
     background: var(--surface-soft);
 }
 .workspace-panel--mobile.sheet {
-    inset: auto 0 0;
+    --workspace-visible-height: 100dvh;
+    --workspace-visible-bottom: 0px;
+    inset: auto 0 var(--workspace-visible-bottom, 0);
     transform: none;
     width: 100%;
-    height: min(88dvh, var(--workspace-mobile-height));
-    max-height: calc(100dvh - var(--space-4));
+    height: min(88dvh, var(--workspace-mobile-height),
+        calc(var(--workspace-visible-height, 100dvh) - var(--space-4)));
+    max-height: calc(var(--workspace-visible-height, 100dvh) - var(--space-4));
     border-radius: var(--radius) var(--radius) 0 0;
     z-index: var(--elevation-sheet);
 }

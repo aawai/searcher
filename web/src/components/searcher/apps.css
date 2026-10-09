@@ -477,13 +477,13 @@
 
 .app-dialog-footer {
     padding: var(--space-3) var(--space-5);
+    padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
     background: var(--surface-solid);
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: flex-end;
     gap: var(--space-control-gap);
     flex-shrink: 0;
-    z-index: 10;
 }
 
 @media (max-width: 640px) {
@@ -492,7 +492,7 @@
         gap: var(--space-section-gap);
     }
     .app-dialog-footer {
-        padding: var(--space-3) var(--space-5);
+        padding-inline: var(--space-5);
     }
     .app-dialog-preview-bar {
         flex-wrap: wrap;
@@ -526,4 +526,18 @@
 .app-ai-unavailable-action {
     flex-shrink: 0;
     text-decoration: none;
+}
+
+.app-panel-form-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+@media (pointer: coarse), (hover: none) {
+    .app-upload-dropzone,
+    .app-ai-candidate-card {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+    }
 }

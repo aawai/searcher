@@ -102,7 +102,7 @@ export function ZenLayout(props: HomeLayoutProps) {
                     )}
                     {appsStatus === "offline" && (
                         <p role="status" className="launcher-notice">
-                            当前离线，显示此账户上次保存的网站列表；更改需联网。
+                            当前离线，显示此账户上次保存的应用列表；更改需联网。
                         </p>
                     )}
                     {(appsStatus === "ready" || appsStatus === "offline") &&

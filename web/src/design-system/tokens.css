@@ -193,6 +193,7 @@
     --control-compact-height: 36px;
     --control-input-height: 40px;
     --control-touch-target: 44px;
+    --launcher-touch-cell-size: 88px;
     --control-icon-size: 16px;
 
     /* Stacking levels, independent of the existing material/shadow tokens. */
