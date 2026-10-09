@@ -843,6 +843,46 @@ Deno.test("Issue 80 P6 Positive Fixture: authorized workspace CSS prefixes pass 
     );
 });
 
+Deno.test("Issue 109: masonry selectors stay in the notes workspace CSS owner", () => {
+    const css = `
+.notes-workspace-masonry { position: relative; }
+.notes-workspace-masonry-item { position: absolute; transition: transform 160ms; }
+.notes-workspace-masonry-overlay { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+    .notes-workspace-masonry-item { transition: none; }
+}
+`;
+    assertEquals(
+        checkRuleF_CssPrefixOwnership(
+            "web/src/features/workspace/notes-workspace.css",
+            css,
+        ),
+        [],
+    );
+    for (
+        const file of [
+            "web/src/features/workspace/apps-workspace.css",
+            "web/src/features/home-layouts/home-layouts.css",
+            "web/src/styles/global.css",
+        ]
+    ) {
+        const violations = checkRuleF_CssPrefixOwnership(file, css);
+        assertEquals(violations.length, 4, file);
+        assertEquals(
+            violations.every((violation) =>
+                violation.rule === "css-prefix-ownership"
+            ),
+            true,
+            file,
+        );
+    }
+    assertEquals(
+        checkRuleA_GlobalFeaturePrefix("web/src/styles/global.css", css)
+            .length,
+        4,
+    );
+});
+
 Deno.test("Issue 80 P6 Positive Fixture: shared feedback in workspace views passes ownership rules", () => {
     const tsxCode = `
 export function CanonicalFeedbackSample() {

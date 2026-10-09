@@ -23,5 +23,5 @@ jobs:
               run: npx --yes playwright@1.56.1 install --with-deps chromium
             - name: Home notes persistence and order regression
               run: deno task test:home-notes
-            - name: Live Preview, Source, focus boundary and save/conflict/version contracts
-              run: NODE_ENV=test deno test -A web/e2e/notes-workspace.test.ts web/e2e/notes-live-preview.test.ts web/e2e/notes-live-editing.test.ts web/e2e/notes-focus.test.ts
+            - name: Masonry, Live Preview, Source, focus boundary and save/conflict/version contracts
+              run: NODE_ENV=test deno test -A web/e2e/notes-workspace.test.ts web/e2e/notes-masonry.test.ts web/e2e/notes-live-preview.test.ts web/e2e/notes-live-editing.test.ts web/e2e/notes-focus.test.ts

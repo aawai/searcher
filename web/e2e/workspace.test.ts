@@ -551,16 +551,11 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Open note editor
             if (!(await bodyInput.isVisible())) {
-                const suggestions = page.getByRole("listbox", {
-                    name: "搜索建议",
-                    exact: true,
-                });
-                if (await suggestions.isVisible()) {
-                    await page.locator(".search-form input").press("Escape");
-                    await suggestions.waitFor({ state: "detached" });
-                }
-                await page.locator(".notes-workspace-list .note-title").first()
-                    .click();
+                const noteTitle = notesWindow.locator(
+                    ".notes-workspace-list .note-title",
+                ).first();
+                await noteTitle.focus();
+                await noteTitle.press("Enter");
             }
             await titleInput.waitFor();
             await sourceEditor(page);
@@ -886,7 +881,7 @@ Deno.test("production workspace contracts", async (t) => {
     );
 
     await t.step(
-        "Workspace Notes #43: geometry card fills list <=2px, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation",
+        "Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation",
         async () => {
             const panel = page.locator(
                 ".desktop-window[data-window-id='notes'], .workspace-panel--mobile, .workspace-panel",
@@ -992,9 +987,6 @@ Deno.test("production workspace contracts", async (t) => {
                     const listEl = currentPanel.locator(".notes-workspace-list")
                         .first();
                     await listEl.waitFor();
-                    const listWidth = await listEl.evaluate((el) =>
-                        el.getBoundingClientRect().width
-                    );
 
                     const cards = currentPanel.locator(
                         ".notes-workspace-list .note-card",
@@ -1002,26 +994,13 @@ Deno.test("production workspace contracts", async (t) => {
                     const cardCount = await cards.count();
                     assertEquals(cardCount > 0, true);
 
-                    // 1. Check compact card width fills list width <= 2px (unconditional)
+                    // Expand/collapse remains available across presentations.
                     const firstCard = cards.first();
                     const firstExpandBtn = firstCard.locator(
                         'button.note-action-btn[aria-label="展开"]',
                     );
                     assertEquals(await firstExpandBtn.isVisible(), true);
-                    for (let i = 0; i < Math.min(cardCount, 3); i++) {
-                        const card = cards.nth(i);
-                        const cardWidth = await card.evaluate((el) =>
-                            el.getBoundingClientRect().width
-                        );
-                        const diff = Math.abs(cardWidth - listWidth);
-                        assertEquals(
-                            diff <= 2,
-                            true,
-                            `Viewport ${vp.width} ${scheme}: card ${i} width ${cardWidth} vs list width ${listWidth} diff ${diff}`,
-                        );
-                    }
 
-                    // 2. Unconditionally expand first card, verify width <= 2px, collapse back
                     await firstCard.hover();
                     await firstExpandBtn.click();
                     await page.waitForFunction(() => {
@@ -1030,15 +1009,6 @@ Deno.test("production workspace contracts", async (t) => {
                         );
                         return c && !c.classList.contains("note-card--compact");
                     });
-                    const expandedWidth = await firstCard.evaluate((el) =>
-                        el.getBoundingClientRect().width
-                    );
-                    const expDiff = Math.abs(expandedWidth - listWidth);
-                    assertEquals(
-                        expDiff <= 2,
-                        true,
-                        `Viewport ${vp.width} ${scheme} expanded card: width ${expandedWidth} vs list width ${listWidth} diff ${expDiff}`,
-                    );
                     await firstCard.hover();
                     await firstCard.locator(
                         'button.note-action-btn[aria-label="折叠"]',

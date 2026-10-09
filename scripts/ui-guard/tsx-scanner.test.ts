@@ -173,3 +173,109 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
     );
     assertEquals(unrelViolations.length, 2);
 });
+
+Deno.test("tsx-scanner - allows measured NotesWorkspace masonry geometry", () => {
+    const code = `
+        export function MasonryNotes() {
+            return (
+                <div style={{ height: layout.containerHeight }}>
+                    <div style={{
+                        width: placement?.width ?? "100%",
+                        transform: placement
+                            ? \`translate3d(\${placement.x}px, \${placement.y}px, 0)\`
+                            : undefined,
+                        visibility: placement && heights.has(note.id)
+                            ? undefined
+                            : "hidden",
+                    }} />
+                    <div style={{ width: layout.columnWidth }} />
+                    <div style={geometry?.style ?? (sortable
+                        ? { transform: CSS.Transform.toString(transform), transition }
+                        : undefined)} />
+                </div>
+            );
+        }
+    `;
+    assertEquals(
+        scanTsxCode("web/src/features/workspace/NotesWorkspace.tsx", code),
+        [],
+    );
+    assertEquals(
+        scanTsxCode("web\\src\\features\\workspace\\NotesWorkspace.tsx", code),
+        [],
+    );
+});
+
+Deno.test("tsx-scanner - NotesWorkspace masonry does not exempt static visuals or other coordinates", () => {
+    const code = `
+        export function InvalidNotes() {
+            return <div style={{
+                width: 240,
+                height: 320,
+                left: placement.x,
+                position: "absolute",
+                transform: "translate3d(0, 0, 0)",
+                visibility: "hidden",
+                color: "#ff0000",
+                gap: 12,
+                padding: 16,
+                borderRadius: 10,
+            }}>
+                <div style={{ width: placement?.width ?? "240px" }} />
+            </div>;
+        }
+    `;
+    assertEquals(
+        scanTsxCode("web/src/features/workspace/NotesWorkspace.tsx", code)
+            .map((violation) => [violation.property, violation.rule]),
+        [
+            ["width", "inline-visual-style"],
+            ["height", "inline-visual-style"],
+            ["left", "inline-visual-style"],
+            ["position", "inline-visual-style"],
+            ["transform", "inline-visual-style"],
+            ["visibility", "inline-visual-style"],
+            ["color", "inline-visual-style"],
+            ["gap", "raw-spacing-literal"],
+            ["padding", "raw-spacing-literal"],
+            ["borderRadius", "raw-border-radius"],
+            ["width", "inline-visual-style"],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - NotesWorkspace masonry expressions stay at their exact owner", () => {
+    const code = `
+        export function UnownedMasonry() {
+            return <div style={{
+                height: layout.containerHeight,
+                width: layout.columnWidth,
+                transform: placement
+                    ? \`translate3d(\${placement.x}px, \${placement.y}px, 0)\`
+                    : undefined,
+                visibility: placement && heights.has(note.id)
+                    ? undefined
+                    : "hidden",
+            }}>
+                <div style={{ width: placement?.width ?? "100%" }} />
+            </div>;
+        }
+    `;
+    for (
+        const file of [
+            "web/src/features/workspace/OtherWorkspace.tsx",
+            "web/src/features/other/NotesWorkspace.tsx",
+            "web/src/features/workspace/NotesWorkspaceCopy.tsx",
+        ]
+    ) {
+        const violations = scanTsxCode(file, code);
+        assertEquals(violations.length, 5, file);
+        assertEquals(
+            violations.every((violation) =>
+                violation.rule === "inline-visual-style"
+            ),
+            true,
+            file,
+        );
+    }
+});

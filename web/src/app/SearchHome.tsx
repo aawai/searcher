@@ -1030,7 +1030,10 @@ export function SearchHome() {
             });
         } else void createNote();
     }
-    function renderWorkspaceContent(kind: WorkspaceKind) {
+    function renderWorkspaceContent(
+        kind: WorkspaceKind,
+        noteListLayout: "single-column" | "masonry",
+    ) {
         if (!user) return null;
         if (kind === "apps") {
             if (appsOwnerId !== user.id) return null;
@@ -1102,6 +1105,7 @@ export function SearchHome() {
         const model = host.models.notes;
         return (
             <NotesWorkspace
+                listLayout={noteListLayout}
                 state={model.route}
                 notes={notes}
                 userId={user.id}
@@ -1191,7 +1195,8 @@ export function SearchHome() {
                             rect={safeRect}
                             dispatch={dispatchDesktop}
                             models={host.models}
-                            renderContent={renderWorkspaceContent}
+                            renderContent={(kind) =>
+                                renderWorkspaceContent(kind, "masonry")}
                             onOpen={openWorkspace}
                             onClose={closeWorkspace}
                             onBack={backWorkspace}
@@ -1255,7 +1260,10 @@ export function SearchHome() {
                                     : undefined}
                             >
                                 {host.activeKind &&
-                                    renderWorkspaceContent(host.activeKind)}
+                                    renderWorkspaceContent(
+                                        host.activeKind,
+                                        "single-column",
+                                    )}
                             </WorkspaceShell>
                         </>
                     ))}

@@ -4,6 +4,29 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #145 便签颜色入口（2026-10-09）
+
+- [x] 沿用 Home / Workspace archetype，唯一 presentation owner 为
+      NoteColorMenu；仅删除触发器文字，复用 Button、DropdownMenu radio， 不修改
+      CSS、Token、Host、保存逻辑或 compact 更多菜单。
+- [x] 五色真实首页卡片均无可见标签；aria-label 保留当前颜色名称，菜单名称与
+      checked 状态保留。纸白在 light/dark 均有原有 inset swatch 边框。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共12组
+      authenticated 实页截图；页面无横向 overflow，移动入口44×44px。
+      截图与矩阵报告在本次运行的 `/tmp/issue145-evidence/`，不提交图片至 main。
+- [x] 生产 E2E 在修复前因触发器可见“纸白”失败；修复后五色菜单 checked、
+      Enter/Escape、焦点返回、纸白→鼠尾草保存/刷新、多便签正文保留通过。
+      既有菜单回归继续验证五色鼠标选择、编辑保存与 focus restoration。
+- [x] 首轮主题矩阵发现读取时过渡未完成，最终截图等待字体、连续两帧与有限动画
+      完成后重取全部12组；菜单截图与 Accessibility Tree 保留五色名称。 浏览器
+      errors 为空；真实触控、Safari 与独立 axe 未执行。
+- [x] build、两项 focused production E2E、受影响 typecheck/lint/format 与
+      check:ui 通过；ownership A–M、visual violations 与 matched allowances
+      均为0。
+- [x] guest/empty/loading/error
+      不创建新的颜色入口；壁纸、标题偏好、其他卡片操作、
+      编辑器及保存状态的实现未改动，不将历史验证冒充本次证据。
+
 ## 设计与所有权
 
 - [ ] Page Archetype：****；primary interaction：****。
@@ -115,6 +138,47 @@
 - [ ] 全库 lint/fmt 清洁：本次未修改文件仍有 9 项既有 lint 诊断，
       WORKSPACE_FINAL_REFACTOR_PLAN.md 与 scripts/ui-guard/baseline.json
       两个既有格式问题；不混入无关清理。本次文件 scoped lint/format 单独验证。
+
+## Issue #109 Widgets 便签响应式 masonry
+
+- [x] 沿用 Workspace archetype、NoteCard 与 Host chrome；不增加基础控件、
+      surface 或视觉 Token。NotesWorkspace 显式接收 listLayout，仅 Widgets
+      desktop root/search 使用 masonry；Zen Panel、移动 Sheet 与首页不改布局。
+- [x] 复用 canonical masonry engine，容器宽度决定 1/2/3 列，最多三列；
+      minColumnWidth 245px，gap 从 --space-row-gap 读取。505/506/766/767px
+      实际内容宽边界逐项验证，不以 viewport 代替。固定、其他、搜索独立测量；
+      未测量卡片隐藏，展开长 Markdown 后无重叠，容器高度覆盖全部卡片。
+- [x] 横向、纵向、对角 resize，最大化/还原、snap 与 constrained preset
+      均经真实窗口操作验证；查询、展开状态和 canonical API order 不变，
+      纯几何变化零写请求。pin/home-fixed 迁移、删除与清空搜索重新测量。
+- [x] 两列和三列分别验证跨列 pointer 上半/下半插入与 keyboard 排序；
+      取消零排序写入，固定组不参与排序，成功排序经 API 与关闭/重开验证。
+      DragOverlay portal 至 body，并使用实际 transform-aware rect； overlay
+      卡片宽度等于当前列宽，inert 且不重复暴露可操作控件。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共 12 组
+      authenticated 真实页面截图，保存在本次运行的
+      /tmp/issue109-evidence/notes-{style}-{width}-{theme}.png。 可通过
+      E2E_EVIDENCE_DIR 与 test:workspace 重新生成；截图不并入 main。 root/search
+      与首页隔离有实页断言，移动单列无横向 overflow。
+- [x] 浏览器手动 smoke 验证 1440px 三列、768px constrained 两列、390px Sheet
+      单列；实际 keyboard 跨列移动、overlay/card 等宽与排序提交通过。
+      reduced-motion 实页匹配；masonry 没有新增过渡或动画。
+- [x] 脚本先校准 Origin、lazy summary 和连续两帧稳定布局；resize 等待 rAF
+      提交后释放鼠标，keyboard 等待 sensor 测量完成后发送方向键。
+      初次回归定位并修复产品的 transform 测量与 overlay containing-block
+      问题；最终专项 1 test /23 steps 全部通过，没有放宽几何/排序断言。
+- [x] deno task test：643 tests /51 steps；受影响 lint/typecheck 通过； check:ui
+      A–M ownership、visual violations 与 matched allowances 均为0。 build
+      通过；bundle initial gzip 255794B、shared editor 141117B、 Notes-only
+      editor 1526B，未放宽预算或依赖门禁。
+- [x] 完整 test:workspace 初跑 13 tests /126 steps 通过、2 steps 失败：
+      重复的旧全宽断言和单列 ArrowUp 假设。删除重复全宽检查（新的列宽契约
+      已覆盖），按卡片实际位置选择键盘方向；受影响两文件复查分别 8/7 steps
+      通过，其余已通过范围不重复。全部 15 tests /128 steps 已取得通过证据。
+      复查另遇首页 suggestion 遮挡 editor reopen 的 pointer click，改为实际
+      focus/Enter 打开便签后验证 draft/autosave；不使用 force click。
+- [ ] 真机触控、Safari 与独立 axe 审计未执行。本次不修改身份鉴权、
+      编辑器、history、壁纸或 Design Lab；不将已有验收冒充本次结果。
 
 ## Issue #140 便签编辑、历史与列表交互（2026-10-08）
 
