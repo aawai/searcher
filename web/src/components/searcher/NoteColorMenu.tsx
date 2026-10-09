@@ -56,7 +56,6 @@ export function NoteColorMenu(
                     aria-hidden="true"
                     className={`note-quick-dot note-quick-dot--${color}`}
                 />
-                {COLOR_NAMES[color]}
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 onKeyDown={(event) => {

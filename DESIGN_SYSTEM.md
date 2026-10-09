@@ -116,7 +116,8 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 - 卡片仅正式标题 Button 进入编辑，正文选择/滚动与双击不改变模式；显式展开和既有
   drag handle 继续独立工作。<768px或 any-pointer:coarse
   的动作/颜色入口至少44px， 常显且不遮挡标题。展开卡片提供颜色菜单，compact
-  卡片颜色位于更多菜单中。
+  卡片颜色位于更多菜单中。常驻颜色触发器仅显示色点，颜色名称通过 aria-label
+  暴露；名称与选中指示保留在菜单内部，纸白保留 swatch 边框。
 - 仅 Notes 根列表展示 AST 可读摘要、匹配片段和绝对更新时间；源码-only匹配保持
   membership并明确标识。remark分析入口由根列表动态导入，按当前实例id/body缓存，
   不进入 Home initial graph，也不引入 Documents-only 模块。

@@ -86,7 +86,6 @@ Deno.test("Notes format menus retain Source selection, keyboard focus and deboun
         await trigger.click();
         await page.getByRole("menuitemradio", { name, exact: true }).click();
         await page.getByRole("menu").waitFor({ state: "detached" });
-        assertEquals(await trigger.textContent(), name);
         assertEquals(
             await trigger.evaluate((el) => el === document.activeElement),
             true,
