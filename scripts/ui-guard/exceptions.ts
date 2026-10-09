@@ -170,14 +170,38 @@ export function isDragTransformException(
 
 /**
  * Masonry layout geometry exception:
- * Dynamic positioning (left, top, width, height, gridColumn, gridRow, minHeight)
- * computed at runtime from layout calculations. Scoped strictly to layout owners.
+ * Dynamic positioning computed at runtime from layout calculations.
+ * NotesWorkspace accepts only its measured masonry expressions; other layout
+ * owners retain their existing coordinate contract.
  */
 export function isMasonryGeometryException(
     file: string,
     prop: string,
     value: string,
 ): boolean {
+    if (
+        normalizePath(file) ===
+            "web/src/features/workspace/NotesWorkspace.tsx"
+    ) {
+        const norm = value.trim().replaceAll(/\s+/g, " ");
+        switch (prop) {
+            case "height":
+                return norm === "layout.containerHeight";
+            case "width":
+                // Unmeasured cards fill the column until a placement is available.
+                return norm === "layout.columnWidth" ||
+                    /^placement\?\.width\s*\?\?\s*(["'])100%\1$/.test(norm);
+            case "transform":
+                return /^placement\s*\?\s*`translate3d\(\$\{placement\.x\}px,\s*\$\{placement\.y\}px,\s*0\)`\s*:\s*undefined$/
+                    .test(norm);
+            case "visibility":
+                return /^placement\s*&&\s*heights\.has\(note\.id\)\s*\?\s*undefined\s*:\s*(["'])hidden\1$/
+                    .test(norm);
+            default:
+                return false;
+        }
+    }
+
     if (!MASONRY_GEOMETRY_PROPS[prop]) {
         return false;
     }

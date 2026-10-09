@@ -47,6 +47,47 @@
 - [ ] API 权限、history、conversation model 保持
       contract；只有直接相关的改动才追加验证。
 
+## Issue #109 Widgets 便签响应式 masonry
+
+- [x] 沿用 Workspace archetype、NoteCard 与 Host chrome；不增加基础控件、
+      surface 或视觉 Token。NotesWorkspace 显式接收 listLayout，仅 Widgets
+      desktop root/search 使用 masonry；Zen Panel、移动 Sheet 与首页不改布局。
+- [x] 复用 canonical masonry engine，容器宽度决定 1/2/3 列，最多三列；
+      minColumnWidth 245px，gap 从 --space-row-gap 读取。505/506/766/767px
+      实际内容宽边界逐项验证，不以 viewport 代替。固定、其他、搜索独立测量；
+      未测量卡片隐藏，展开长 Markdown 后无重叠，容器高度覆盖全部卡片。
+- [x] 横向、纵向、对角 resize，最大化/还原、snap 与 constrained preset
+      均经真实窗口操作验证；查询、展开状态和 canonical API order 不变，
+      纯几何变化零写请求。pin/home-fixed 迁移、删除与清空搜索重新测量。
+- [x] 两列和三列分别验证跨列 pointer 上半/下半插入与 keyboard 排序；
+      取消零排序写入，固定组不参与排序，成功排序经 API 与关闭/重开验证。
+      DragOverlay portal 至 body，并使用实际 transform-aware rect； overlay
+      卡片宽度等于当前列宽，inert 且不重复暴露可操作控件。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共 12 组
+      authenticated 真实页面截图，保存在本次运行的
+      /tmp/issue109-evidence/notes-{style}-{width}-{theme}.png。 可通过
+      E2E_EVIDENCE_DIR 与 test:workspace 重新生成；截图不并入 main。 root/search
+      与首页隔离有实页断言，移动单列无横向 overflow。
+- [x] 浏览器手动 smoke 验证 1440px 三列、768px constrained 两列、390px Sheet
+      单列；实际 keyboard 跨列移动、overlay/card 等宽与排序提交通过。
+      reduced-motion 实页匹配；masonry 没有新增过渡或动画。
+- [x] 脚本先校准 Origin、lazy summary 和连续两帧稳定布局；resize 等待 rAF
+      提交后释放鼠标，keyboard 等待 sensor 测量完成后发送方向键。
+      初次回归定位并修复产品的 transform 测量与 overlay containing-block
+      问题；最终专项 1 test /23 steps 全部通过，没有放宽几何/排序断言。
+- [x] deno task test：643 tests /51 steps；受影响 lint/typecheck 通过； check:ui
+      A–M ownership、visual violations 与 matched allowances 均为0。 build
+      通过；bundle initial gzip 255794B、shared editor 141117B、 Notes-only
+      editor 1526B，未放宽预算或依赖门禁。
+- [x] 完整 test:workspace 初跑 13 tests /126 steps 通过、2 steps 失败：
+      重复的旧全宽断言和单列 ArrowUp 假设。删除重复全宽检查（新的列宽契约
+      已覆盖），按卡片实际位置选择键盘方向；受影响两文件复查分别 8/7 steps
+      通过，其余已通过范围不重复。全部 15 tests /128 steps 已取得通过证据。
+      复查另遇首页 suggestion 遮挡 editor reopen 的 pointer click，改为实际
+      focus/Enter 打开便签后验证 draft/autosave；不使用 force click。
+- [ ] 真机触控、Safari 与独立 axe 审计未执行。本次不修改身份鉴权、
+      编辑器、history、壁纸或 Design Lab；不将已有验收冒充本次结果。
+
 ## Issue #140 便签编辑、历史与列表交互（2026-10-08）
 
 - [x] 沿用 Workspace archetype 与原有 Host chrome；复用 Button、Tabs、

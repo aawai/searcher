@@ -120,6 +120,21 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 - 仅 Notes 根列表展示 AST 可读摘要、匹配片段和绝对更新时间；源码-only匹配保持
   membership并明确标识。remark分析入口由根列表动态导入，按当前实例id/body缓存，
   不进入 Home initial graph，也不引入 Documents-only 模块。
+- Notes Workspace 列表由 `SearchHome` 显式传入
+  `listLayout: single-column | masonry`；只有 Widgets 的 DesktopWorkspaces
+  （包括 constrained window）使用 masonry，Zen Panel 与移动 Sheet 保持单列。
+  内容不读取 Host geometry、viewport 或 appearance style。
+- masonry 复用 `components/searcher/masonry.ts`，最小列宽245px、最多3列； gap 从
+  `--space-row-gap`（16px）读取，列数按列表容器实际宽度计算，
+  506/767px分别进入2/3列。fixed、other、search使用独立列表； 空状态不进入
+  masonry。runtime width/height/translate 与拖拽状态仅由 `NotesWorkspace.tsx` 和
+  `notes-workspace.css` 拥有，不改 NoteCard 视觉。
+- masonry 只派生 placement；resize、展开/折叠、搜索和分组迁移不调用 reorder。
+  只有 other 分组支持排序，pointer按目标卡片Y中心前/后插入，键盘按目标槽位移动；
+  原卡保留槽位并降低opacity，overlay不参与高度测量或sortable注册。 DnD 测量保留
+  masonry 的布局 transform，single-column 沿用原测量策略； DragOverlay 通过
+  document.body portal 避免 DesktopWindow transform 改变 fixed 坐标系。
+  列表重排即时完成，不新增位移动画，reduced-motion下保持相同行为。
 
 ### M0A Markdown editor spike
 

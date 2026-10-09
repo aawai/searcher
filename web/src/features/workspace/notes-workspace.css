@@ -15,6 +15,26 @@
     max-width: 100%;
     box-sizing: border-box;
 }
+.notes-workspace .notes-workspace-masonry {
+    display: block;
+    position: relative;
+}
+.notes-workspace .notes-workspace-masonry-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.notes-workspace .notes-workspace-masonry-item[data-dragging] {
+    opacity: 0.5;
+}
+.notes-workspace.notes-workspace-masonry-overlay {
+    pointer-events: none;
+}
+.notes-workspace.notes-workspace-masonry-overlay .note-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
 .notes-workspace .note-preview {
     overflow-wrap: break-word;
     word-break: break-word;

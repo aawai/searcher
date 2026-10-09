@@ -843,7 +843,14 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
                 )?.getAttribute("aria-pressed") === "true"
             );
             await page.waitForTimeout(150);
-            await page.keyboard.press("ArrowUp");
+            const alphaBox = await r1Handle.boundingBox();
+            const betaBox = await betaHandle.boundingBox();
+            if (!alphaBox || !betaBox) {
+                throw new Error("Sorting handles unavailable");
+            }
+            await page.keyboard.press(
+                Math.abs(alphaBox.y - betaBox.y) < 2 ? "ArrowLeft" : "ArrowUp",
+            );
             await page.waitForTimeout(150);
             await page.keyboard.press("Space");
             await page.waitForFunction(() => {
