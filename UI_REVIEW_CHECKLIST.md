@@ -4,6 +4,29 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #145 便签颜色入口（2026-10-09）
+
+- [x] 沿用 Home / Workspace archetype，唯一 presentation owner 为
+      NoteColorMenu；仅删除触发器文字，复用 Button、DropdownMenu radio， 不修改
+      CSS、Token、Host、保存逻辑或 compact 更多菜单。
+- [x] 五色真实首页卡片均无可见标签；aria-label 保留当前颜色名称，菜单名称与
+      checked 状态保留。纸白在 light/dark 均有原有 inset swatch 边框。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共12组
+      authenticated 实页截图；页面无横向 overflow，移动入口44×44px。
+      截图与矩阵报告在本次运行的 `/tmp/issue145-evidence/`，不提交图片至 main。
+- [x] 生产 E2E 在修复前因触发器可见“纸白”失败；修复后五色菜单 checked、
+      Enter/Escape、焦点返回、纸白→鼠尾草保存/刷新、多便签正文保留通过。
+      既有菜单回归继续验证五色鼠标选择、编辑保存与 focus restoration。
+- [x] 首轮主题矩阵发现读取时过渡未完成，最终截图等待字体、连续两帧与有限动画
+      完成后重取全部12组；菜单截图与 Accessibility Tree 保留五色名称。 浏览器
+      errors 为空；真实触控、Safari 与独立 axe 未执行。
+- [x] build、两项 focused production E2E、受影响 typecheck/lint/format 与
+      check:ui 通过；ownership A–M、visual violations 与 matched allowances
+      均为0。
+- [x] guest/empty/loading/error
+      不创建新的颜色入口；壁纸、标题偏好、其他卡片操作、
+      编辑器及保存状态的实现未改动，不将历史验证冒充本次证据。
+
 ## 设计与所有权
 
 - [ ] Page Archetype：****；primary interaction：****。
