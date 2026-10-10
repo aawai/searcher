@@ -102,11 +102,13 @@ Deno.test("Zen home touch grid density and drag alignment", async () => {
             true,
         );
 
-        for (const { width, columns } of [
-            { width: 375, columns: 4 },
-            { width: 390, columns: 5 },
-            { width: 430, columns: 5 },
-        ]) {
+        for (
+            const { width, columns } of [
+                { width: 375, columns: 4 },
+                { width: 390, columns: 5 },
+                { width: 430, columns: 5 },
+            ]
+        ) {
             await page.setViewportSize({ width, height: 844 });
             await waitForHomeColumns(columns);
             const metrics = await grid.evaluate((node) => {
@@ -422,13 +424,17 @@ Deno.test("Zen home touch grid density and drag alignment", async () => {
             type: "touchMove",
             touchPoints: [dropPoint],
         });
-        await page.waitForFunction((targetId) =>
-            Array.from(
-                document.querySelectorAll(
-                    ".pinned-area .launcher-tile.is-over",
+        await page.waitForFunction(
+            (targetId) =>
+                Array.from(
+                    document.querySelectorAll(
+                        ".pinned-area .launcher-tile.is-over",
+                    ),
+                ).some((node) =>
+                    node.getAttribute("data-tile-id") === targetId
                 ),
-            ).some((node) => node.getAttribute("data-tile-id") === targetId),
-        initialIds[1]);
+            initialIds[1],
+        );
         await cdp.send("Input.dispatchTouchEvent", {
             type: "touchEnd",
             touchPoints: [],
