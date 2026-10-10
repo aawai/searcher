@@ -307,7 +307,10 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
 
         // Comparing sizes alone misses vertical glyph jumps. Normalize both
         // glyph rectangles to their own tile/overlay to account for dragging.
-        const assertPreviewAlignment = async (expectedGlyphSize: number) => {
+        const assertPreviewAlignment = async (
+            expectedGlyphSize: number,
+            showLabelsForAlignment = true,
+        ) => {
             const relative = await page.evaluate(() => {
                 const original = document.querySelector<HTMLElement>(
                     ".pinned-area .launcher-tile.is-dragging",
@@ -350,6 +353,19 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             assertEquals(relative.preview.tileWidth, 68);
             assertEquals(relative.tile.tileHeight, 68);
             assertEquals(relative.preview.tileHeight, 68);
+            // Without labels the glyph itself must be centered, not simply
+            // shifted by the same amount in both source and preview.
+            if (expectedGlyphSize === 42 && !showLabelsForAlignment) {
+                const centered = (68 - expectedGlyphSize) / 2;
+                assert(
+                    Math.abs(relative.tile.y - centered) < 1,
+                    `Hidden-label home glyph must be vertically centered: ${JSON.stringify(relative)}`,
+                );
+                assert(
+                    Math.abs(relative.preview.y - centered) < 1,
+                    `Hidden-label drag glyph must be vertically centered: ${JSON.stringify(relative)}`,
+                );
+            }
         };
         await assertPreviewAlignment(42);
 
@@ -438,7 +454,7 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             touchPoints: [{ ...hiddenStart, x: hiddenStart.x + 20 }],
         });
         await overlay.waitFor({ state: "visible" });
-        await assertPreviewAlignment(42);
+        await assertPreviewAlignment(42, false);
         await cdp.send("Input.dispatchTouchEvent", {
             type: "touchCancel",
             touchPoints: [],
