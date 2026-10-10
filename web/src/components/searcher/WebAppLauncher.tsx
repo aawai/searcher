@@ -1033,6 +1033,8 @@ export function WebAppLauncher({
                                 className={`launcher-overlay launcher-grid--${size}${
                                     presentation === "workspace"
                                         ? " launcher-grid--workspace"
+                                        : !showFolders
+                                        ? " launcher-overlay--home"
                                         : ""
                                 }${
                                     showAppLabels
