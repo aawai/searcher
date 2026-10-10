@@ -5,7 +5,7 @@ import {
     type RefObject,
     useRef,
 } from "react";
-import type { SafeRect } from "./desktop-geometry.ts";
+import { clampFrame, type DesktopGeometry } from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 import { WindowChrome } from "./WindowChrome.tsx";
 import { WindowResizeHandles } from "./WindowResizeHandles.tsx";
@@ -13,7 +13,7 @@ import "./desktop.css";
 
 export interface DesktopWindowProps {
     window: DesktopWindowState;
-    rect: SafeRect;
+    rect: DesktopGeometry;
     active: boolean;
     dispatch: Dispatch<DesktopAction>;
     children: ReactNode;
@@ -32,6 +32,9 @@ export interface DesktopWindowProps {
     closeBtnRef?: RefObject<HTMLButtonElement | null>;
     backBtnRef?: RefObject<HTMLButtonElement | null>;
     showWindowMenu?: boolean;
+    immersive?: boolean;
+    background?: boolean;
+    chrome?: ReactNode;
 }
 export function DesktopWindow({
     window: win,
@@ -54,17 +57,24 @@ export function DesktopWindow({
     closeBtnRef,
     backBtnRef,
     showWindowMenu,
+    immersive = false,
+    background = false,
+    chrome,
 }: DesktopWindowProps) {
     const windowRef = useRef<HTMLDivElement | null>(null);
 
     // Nonmodal window pointer-events auto, focus dispatch without swallowing child events.
     const handlePointerDownCapture = (
-        _e: ReactPointerEvent<HTMLDivElement>,
+        event: ReactPointerEvent<HTMLDivElement>,
     ) => {
-        if (!active) {
+        const enteringImmersion = event.target instanceof Element &&
+            event.target.closest("[data-immersive-enter]");
+        if (!active && !immersive && !enteringImmersion) {
             dispatch({ type: "FOCUS", id: win.id });
         }
     };
+
+    const frame = rect.usable ? win.frame : clampFrame(win.frame, rect, win.kind);
 
     const isMinimized = win.mode === "minimized";
     const isMaximized = win.mode === "maximized";
@@ -77,6 +87,8 @@ export function DesktopWindow({
         isMinimized ? "desktop-window--minimized" : "",
         isSnapped ? "desktop-window--snapped" : "",
         isSnapped && win.snap ? `desktop-window--snapped-${win.snap}` : "",
+        immersive ? "desktop-window--immersive" : "",
+        background ? "desktop-window--immersive-background" : "",
         className ?? "",
     ].filter(Boolean).join(" ");
     return (
@@ -90,18 +102,22 @@ export function DesktopWindow({
             data-window-active={active}
             data-window-mode={win.mode}
             data-window-snap={win.snap ?? undefined}
+            data-window-immersive={immersive || undefined}
+            inert={background}
             data-presentation="window"
             className={classNames}
             style={{
-                transform: `translate3d(${win.frame.x}px, ${win.frame.y}px, 0)`,
-                width: `${win.frame.width}px`,
-                height: `${win.frame.height}px`,
+                transform: immersive
+                    ? "translate3d(0, 0, 0)"
+                    : `translate3d(${frame.x}px, ${frame.y}px, 0)`,
+                width: `${immersive ? rect.viewportRect.width : frame.width}px`,
+                height: `${immersive ? rect.viewportRect.height : frame.height}px`,
                 zIndex: win.zOrder,
             }}
             tabIndex={-1}
             onPointerDownCapture={handlePointerDownCapture}
         >
-            <WindowChrome
+            {chrome ?? <WindowChrome
                 window={win}
                 title={title}
                 rect={rect}
@@ -120,13 +136,13 @@ export function DesktopWindow({
                 closeBtnRef={closeBtnRef}
                 backBtnRef={backBtnRef}
                 showWindowMenu={showWindowMenu}
-            />
+            />}
 
             <div className="desktop-window-content">
                 {children}
             </div>
 
-            {!disableResize && !isMaximized && !isMinimized && !isSnapped && (
+            {!immersive && !disableResize && !isMaximized && !isMinimized && !isSnapped && (
                 <WindowResizeHandles
                     window={win}
                     rect={rect}

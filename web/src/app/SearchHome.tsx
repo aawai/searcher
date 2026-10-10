@@ -64,7 +64,7 @@ import {
 } from "../features/workspace/workspace-host.ts";
 import { isConstrainedViewport } from "../features/desktop/constrained-geometry.ts";
 import { useDesktopLayout } from "../features/desktop/useDesktopLayout.ts";
-import { useDesktopSafeRect } from "../features/desktop/DesktopCanvas.tsx";
+import { useDesktopGeometry } from "../features/desktop/DesktopCanvas.tsx";
 import { getTopmostVisibleWindowId } from "../features/desktop/desktop-state.ts";
 import {
     DesktopWorkspaces,
@@ -128,11 +128,11 @@ export function SearchHome() {
         initialWorkspaceHost,
     );
     const [dockElement, setDockElement] = useState<HTMLElement | null>(null);
-    const safeRect = useDesktopSafeRect(dockElement);
+    const geometry = useDesktopGeometry(dockElement);
     const [desktop, dispatchDesktop] = useDesktopLayout({
         userId: user?.id,
         layoutStyle,
-        rect: safeRect,
+        rect: geometry,
         notes,
         notesLoaded: !notesLoading,
     });
@@ -259,7 +259,7 @@ export function SearchHome() {
                     type: "OPEN",
                     id: kind,
                     kind,
-                    rect: safeRect,
+                    rect: geometry,
                 });
             }
         }
@@ -301,7 +301,7 @@ export function SearchHome() {
                 id: `document:${id}`,
                 kind: "document",
                 entityId: id,
-                rect: safeRect,
+                rect: geometry,
             });
         } else navigateWorkspace({ view: "documents/edit", id });
     }
@@ -363,7 +363,7 @@ export function SearchHome() {
                     type: "OPEN",
                     id: kind,
                     kind,
-                    rect: safeRect,
+                    rect: geometry,
                 });
             }
         } else {
@@ -373,7 +373,7 @@ export function SearchHome() {
                     type: "OPEN",
                     id: kind,
                     kind,
-                    rect: safeRect,
+                    rect: geometry,
                 });
             }
             if (!mobile) {
@@ -789,7 +789,7 @@ export function SearchHome() {
             id: `note:${noteId}`,
             kind: "note",
             entityId: noteId,
-            rect: safeRect,
+            rect: geometry,
         });
     }
 
@@ -1192,7 +1192,7 @@ export function SearchHome() {
                     ? (
                         <DesktopWorkspaces
                             state={desktop}
-                            rect={safeRect}
+                            rect={geometry}
                             dispatch={dispatchDesktop}
                             models={host.models}
                             renderContent={(kind) =>

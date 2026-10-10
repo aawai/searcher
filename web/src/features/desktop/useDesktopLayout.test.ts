@@ -14,8 +14,8 @@ import {
     saveDesktopLayout,
 } from "./desktop-persistence.ts";
 import type { DesktopState } from "./desktop-state.ts";
-import type { SafeRect } from "./desktop-geometry.ts";
-import { getLocal } from "../../lib/local.ts";
+import { desktopGeometry } from "./desktop-geometry.ts";
+import { getLocal, setLocal } from "../../lib/local.ts";
 
 // Setup DOM environment for React hooks testing
 const win = new Window();
@@ -33,7 +33,7 @@ function waitTick(ms = 10): Promise<void> {
     return promise;
 }
 
-const sampleRect: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
+const sampleRect = desktopGeometry(1440, 900, 64, 820, 16, 48);
 
 /** Helper to render and inspect the hook inside a test container */
 function renderHook(initialProps: UseDesktopLayoutOptions) {
@@ -458,7 +458,7 @@ Deno.test("useDesktopLayout: regression - restore waits for nonzero measured rec
     const harness = renderHook({
         userId: "user-wait-rect",
         layoutStyle: "widgets",
-        rect: { x: 0, y: 0, width: 0, height: 0 },
+        rect: desktopGeometry(0, 0),
         notes: [],
         notesLoaded: false,
     });
@@ -469,7 +469,7 @@ Deno.test("useDesktopLayout: regression - restore waits for nonzero measured rec
     });
     assertEquals(harness.result[0].windows.length, 0);
 
-    // SafeRect measured and notes finished loading
+    // Viewport and safe bounds are measured and notes finish loading.
     await act(async () => {
         harness.rerender({
             userId: "user-wait-rect",
@@ -487,6 +487,58 @@ Deno.test("useDesktopLayout: regression - restore waits for nonzero measured rec
     assertEquals(harness.result[0].windows[0].frame.width > 0, true);
 
     harness.unmount();
+});
+
+Deno.test("useDesktopLayout: waits for safe bounds before migrating a v3 layout", async () => {
+    setupMockIndexedDB();
+    const userId = "user-safe-bounds";
+    const key = desktopLayoutStorageKey(userId);
+    const legacy = {
+        version: 3,
+        activeId: "apps",
+        windows: [{
+            id: "apps",
+            kind: "apps",
+            entityId: null,
+            frame: { x: 0.1, y: 0.2, width: 0.5, height: 0.5 },
+            restoreFrame: null,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+    };
+    await setLocal(key, legacy);
+    const zeroSafeGeometry = desktopGeometry(1440, 900, 64, 820, 800, 48, 0);
+    const harness = renderHook({
+        userId,
+        layoutStyle: "widgets",
+        rect: zeroSafeGeometry,
+        notesLoaded: true,
+    });
+
+    try {
+        await act(async () => {
+            await waitTick(20);
+        });
+        assertEquals(harness.result[0].windows.length, 0);
+        assertEquals((await getLocal<{ version: number }>(key))?.version, 3);
+
+        await act(async () => {
+            harness.rerender({
+                userId,
+                layoutStyle: "widgets",
+                rect: sampleRect,
+                notesLoaded: true,
+            });
+            await waitTick(30);
+        });
+        assertEquals(harness.result[0].windows.map((window) => window.id), [
+            "apps",
+        ]);
+        assertEquals((await getLocal<{ version: number }>(key))?.version, 4);
+    } finally {
+        harness.unmount();
+    }
 });
 
 Deno.test("useDesktopLayout: regression - effect cleanup cancels in-flight restore when user or mode changes", async () => {

@@ -1,13 +1,13 @@
 import { assertEquals } from "@std/assert";
 import { computeConstrainedFrame } from "./constrained-geometry.ts";
 
-Deno.test("constrained geometry: medium caps dimensions without inflating percentage sizes", () => {
+Deno.test("constrained geometry: medium caps dimensions and returns viewport-global coordinates", () => {
     assertEquals(
         computeConstrainedFrame({
             preset: "medium",
             rect: { x: 16, y: 80, width: 1000, height: 1100 },
         }),
-        { x: 160, y: 190, width: 680, height: 720 },
+        { x: 176, y: 270, width: 680, height: 720 },
     );
     assertEquals(
         computeConstrainedFrame({
@@ -37,13 +37,13 @@ Deno.test("constrained geometry: large preserves gap and caps width and height",
     );
 });
 
-Deno.test("constrained geometry: fullscreen fills the safe rect using relative coordinates", () => {
+Deno.test("constrained geometry: fullscreen fills the safe rect in viewport coordinates", () => {
     assertEquals(
         computeConstrainedFrame({
             preset: "fullscreen",
             rect: { x: 16, y: 80, width: 900, height: 750 },
         }),
-        { x: 0, y: 0, width: 900, height: 750 },
+        { x: 16, y: 80, width: 900, height: 750 },
     );
 });
 

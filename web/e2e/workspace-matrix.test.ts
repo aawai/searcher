@@ -208,6 +208,79 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             };
         });
     }
+    async function measureDesktopGeometry() {
+        return await page.evaluate(() => {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            let chromeBottom = 0;
+            for (
+                const element of document.querySelectorAll(
+                    ".topbar, .connection-banner",
+                )
+            ) {
+                const style = getComputedStyle(element);
+                const bounds = element.getBoundingClientRect();
+                if (
+                    style.display !== "none" && bounds.width > 0 &&
+                    bounds.height > 0 && bounds.bottom > 0
+                ) {
+                    chromeBottom = Math.max(chromeBottom, bounds.bottom);
+                }
+            }
+
+            const dock = document.querySelector<HTMLElement>(".desktop-dock");
+            const dockStyle = dock ? getComputedStyle(dock) : null;
+            const dockBounds = dock?.getBoundingClientRect();
+            const dockTop = dock && dockBounds &&
+                    dockStyle?.display !== "none" && dockBounds.width > 0 &&
+                    dockBounds.height > 0
+                ? dockBounds.top
+                : viewportHeight;
+            const rootStyle = getComputedStyle(document.documentElement);
+            const parsedGap = Number.parseFloat(
+                rootStyle.getPropertyValue("--space-window-gap"),
+            );
+            const gap = Number.isFinite(parsedGap) ? Math.max(0, parsedGap) : 0;
+            let chromeHeight = Number.parseFloat(
+                rootStyle.getPropertyValue("--window-chrome-height"),
+            );
+            for (
+                const element of document.querySelectorAll(
+                    ".desktop-window-chrome",
+                )
+            ) {
+                const height = element.getBoundingClientRect().height;
+                if (height > 0) chromeHeight = height;
+            }
+            if (!Number.isFinite(chromeHeight) || chromeHeight <= 0) {
+                chromeHeight = 48;
+            }
+            const workHeight = Math.max(0, dockTop - chromeBottom);
+            return {
+                viewportRect: {
+                    x: 0,
+                    y: 0,
+                    width: viewportWidth,
+                    height: viewportHeight,
+                },
+                workRect: {
+                    x: 0,
+                    y: chromeBottom,
+                    width: viewportWidth,
+                    height: workHeight,
+                },
+                safeRect: {
+                    x: gap,
+                    y: chromeBottom + gap,
+                    width: Math.max(0, viewportWidth - 2 * gap),
+                    height: Math.max(0, workHeight - 2 * gap),
+                },
+                chromeBottom,
+                dockTop,
+                chromeHeight,
+            };
+        });
+    }
 
     // =========================================================================
     // Matrix A: 16-combination Core responsive & visual matrix
@@ -999,9 +1072,8 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 });
 
                 const beforeSnap = await measure(appsWin);
-                const safeForSnap = await measure(
-                    page.locator(".desktop-canvas"),
-                );
+                const workRect =
+                    (await measureDesktopGeometry()).workRect;
                 await appsWin.getByRole("button", {
                     name: "窗口系统菜单",
                     exact: true,
@@ -1017,10 +1089,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 );
                 const leftSnap = await measure(appsWin);
                 assert(
-                    Math.abs(leftSnap.x - safeForSnap.x) <= 2 &&
-                        Math.abs(leftSnap.width - safeForSnap.width / 2) <= 2 &&
-                        Math.abs(leftSnap.height - safeForSnap.height) <= 2,
-                    "Left Snap must fill the left half of the Canvas safe rect",
+                    Math.abs(leftSnap.x - workRect.x) <= 2 &&
+                        Math.abs(leftSnap.width - workRect.width / 2) <= 2 &&
+                        Math.abs(leftSnap.height - workRect.height) <= 2,
+                    "Left Snap must fill the left half of Work Rect",
                 );
                 await restoreBtn.click();
                 await page.waitForFunction(() =>
@@ -1192,23 +1264,21 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             await page.setViewportSize({ width: 1024, height: 768 });
             await page.waitForTimeout(300);
             const boxClamped = await measure(appsWin);
-            const safeRectBox = await page.locator(".desktop-canvas").first()
-                .evaluate((el) => {
-                    const r = el.getBoundingClientRect();
-                    return { x: r.x, y: r.y, width: r.width, height: r.height };
-                });
+            const desktopGeometry = await measureDesktopGeometry();
             assert(
-                boxClamped.x + boxClamped.width <=
-                    safeRectBox.x + safeRectBox.width + 2,
-                `Clamped window right (${
-                    boxClamped.x + boxClamped.width
-                }) must not exceed safeRect (${
-                    safeRectBox.x + safeRectBox.width
-                })`,
+                boxClamped.x >= desktopGeometry.viewportRect.x - 1 &&
+                    boxClamped.x + boxClamped.width <=
+                        desktopGeometry.viewportRect.width + 2,
+                "Normal window must remain within viewport horizontal bounds",
             );
             assert(
-                boxClamped.y >= safeRectBox.y - 1,
-                "Clamped window top must be within safeRect",
+                boxClamped.y >= desktopGeometry.chromeBottom - 1,
+                "Normal window top must remain below visible top chrome",
+            );
+            assert(
+                boxClamped.y + desktopGeometry.chromeHeight <=
+                    desktopGeometry.dockTop + 2,
+                "Normal window titlebar must remain above the Dock",
             );
 
             await page.setViewportSize({ width: 1440, height: 900 });
@@ -1298,10 +1368,14 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 await page.locator(".desktop-dock").waitFor({
                     state: "visible",
                 });
-                // Wait for recovery to settle, not the initial pre-hydration render.
-                await page.waitForFunction(async (key) => {
-                    const payload = await new Promise<unknown>(
-                        (resolve, reject) => {
+                await page.waitForFunction(() =>
+                    document.querySelector(".desktop-dock")?.isConnected &&
+                    document.querySelectorAll(".desktop-window").length === 0
+                );
+                await page.waitForTimeout(100);
+                const persistedPayload = await page.evaluate(
+                    async (key) =>
+                        await new Promise<unknown>((resolve, reject) => {
                             const req = indexedDB.open("searcher-client", 1);
                             req.onerror = () => reject(req.error);
                             req.onsuccess = () => {
@@ -1312,24 +1386,40 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                                 read.onerror = () => reject(read.error);
                                 tx.oncomplete = () => db.close();
                             };
-                        },
-                    );
-                    return payload !== null && typeof payload === "object" &&
-                        "version" in payload && payload.version === 1 &&
-                        "windows" in payload &&
-                        Array.isArray(payload.windows) &&
-                        payload.windows.length === 0;
-                }, storageKey);
+                        }),
+                    storageKey,
+                );
+                assertEquals(
+                    persistedPayload,
+                    fixture.payload,
+                    `${fixture.name} must not overwrite the rejected payload`,
+                );
                 assertEquals(
                     await page.locator(".desktop-window").count(),
                     0,
-                    `${fixture.name} must restore an empty desktop`,
+                    `${fixture.name} must fall back to an empty desktop`,
                 );
                 await openWorkspace("apps");
                 const defaultBox = await measure(appsWin);
-                const canvas = await measure(page.locator(".desktop-canvas"));
-                const expectedWidth = Math.min(760, canvas.width * 0.72);
-                const expectedHeight = Math.min(720, canvas.height * 0.78);
+                const { safeRect } = await measureDesktopGeometry();
+                const expectedWidth = Math.min(
+                    safeRect.width,
+                    Math.max(
+                        Math.min(480, safeRect.width),
+                        Math.min(760, Math.round(safeRect.width * 0.72)),
+                    ),
+                );
+                const expectedHeight = Math.min(
+                    safeRect.height,
+                    Math.max(
+                        Math.min(360, safeRect.height),
+                        Math.min(720, Math.round(safeRect.height * 0.78)),
+                    ),
+                );
+                const expectedX = safeRect.x +
+                    Math.round((safeRect.width - expectedWidth) / 2);
+                const expectedY = safeRect.y +
+                    Math.round((safeRect.height - expectedHeight) / 2);
                 assert(
                     Math.abs(defaultBox.width - expectedWidth) <= 1,
                     fixture.name,
@@ -1339,18 +1429,12 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     fixture.name,
                 );
                 assert(
-                    Math.abs(
-                        defaultBox.x -
-                            (canvas.x + (canvas.width - expectedWidth) / 2),
-                    ) <= 1,
-                    `${fixture.name} must use the default centered horizontal position`,
+                    Math.abs(defaultBox.x - expectedX) <= 1,
+                    `${fixture.name} must open at the safe origin`,
                 );
                 assert(
-                    Math.abs(
-                        defaultBox.y -
-                            (canvas.y + (canvas.height - expectedHeight) / 2),
-                    ) <= 1,
-                    `${fixture.name} must use the default centered vertical position`,
+                    Math.abs(defaultBox.y - expectedY) <= 1,
+                    `${fixture.name} must open at the safe origin`,
                 );
                 await closeWorkspace("apps");
             }
@@ -1576,7 +1660,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             );
 
             // All three presets must change the actual constrained window geometry.
-            const safe = await measure(page.locator(".desktop-canvas"));
+            const safe = (await measureDesktopGeometry()).safeRect;
             async function selectPreset(label: string) {
                 await notesWin.getByRole("button", {
                     name: "窗口尺寸",

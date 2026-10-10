@@ -493,3 +493,15 @@
     gap: var(--space-control-gap);
     flex-shrink: 0;
 }
+
+.document-editor-container[data-immersive] .document-editor-header {
+    padding-block: var(--space-2);
+}
+
+.document-editor-container[data-immersive] .document-title-wrapper {
+    padding-top: 0;
+}
+
+.document-editor-container[data-immersive] .document-metadata-bar .document-save-status {
+    display: none;
+}

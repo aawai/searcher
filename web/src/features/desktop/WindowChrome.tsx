@@ -13,7 +13,7 @@ import {
 import { createPortal } from "react-dom";
 import { ArrowLeft, Maximize2, Minimize2, Minus, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
-import type { Frame, SafeRect, SnapMode } from "./desktop-geometry.ts";
+import type { Frame, DesktopGeometry, SnapMode } from "./desktop-geometry.ts";
 import {
     clampFrame,
     defaultFrame,
@@ -26,7 +26,7 @@ import { WindowMenu } from "./WindowMenu.tsx";
 export interface WindowChromeProps {
     window: DesktopWindowState;
     title: string;
-    rect: SafeRect;
+    rect: DesktopGeometry;
     active: boolean;
     dispatch: Dispatch<DesktopAction>;
     windowRef: RefObject<HTMLDivElement | null>;
@@ -109,25 +109,29 @@ export function WindowChrome({
         };
     }, []);
 
-    // A safe-rect change cancels capture and commits the last transient frame.
+    // A geometry change ends the current gesture in the updated coordinate system.
     useEffect(() => {
         if (dragSessionRef.current) handlePointerCancel();
-    }, [rect.width, rect.height, rect.x, rect.y]);
+    }, [rect]);
 
-    // Ensure DOM style stays synchronized with semantic win.frame whenever not dragging
+    const presentationFrame = rect.usable
+        ? win.frame
+        : clampFrame(win.frame, rect, win.kind);
+
+    // Keep transient DOM geometry aligned with the rendered presentation frame.
     useLayoutEffect(() => {
         if (!isDragging && windowRef.current) {
             windowRef.current.style.transform =
-                `translate3d(${win.frame.x}px, ${win.frame.y}px, 0)`;
-            windowRef.current.style.width = `${win.frame.width}px`;
-            windowRef.current.style.height = `${win.frame.height}px`;
+                `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+            windowRef.current.style.width = `${presentationFrame.width}px`;
+            windowRef.current.style.height = `${presentationFrame.height}px`;
         }
     }, [
         isDragging,
-        win.frame.x,
-        win.frame.y,
-        win.frame.width,
-        win.frame.height,
+        presentationFrame.x,
+        presentationFrame.y,
+        presentationFrame.width,
+        presentationFrame.height,
     ]);
     const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
         // Portal events bubble through React ancestors, not the titlebar DOM.
@@ -146,7 +150,7 @@ export function WindowChrome({
         }
 
         // Drag-disabled window titlebar does not drag; normal, snapped, and maximized are draggable
-        if (disableDrag) return;
+        if (disableDrag || !rect.usable) return;
 
         // Focus on start allowed
         if (!active) {
@@ -179,6 +183,10 @@ export function WindowChrome({
     const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
         const session = dragSessionRef.current;
         if (!session) return;
+        if (!rect.usable) {
+            handlePointerCancel();
+            return;
+        }
 
         const dx = e.clientX - session.startX;
         const dy = e.clientY - session.startY;
@@ -199,8 +207,7 @@ export function WindowChrome({
                 fallbackFrame.width;
             const restoredHeight = session.restoreFrame?.height ??
                 fallbackFrame.height;
-            const grabOffsetX = session.startX -
-                (session.startFrame.x + rect.x);
+            const grabOffsetX = session.startX - session.startFrame.x;
             const ratio = session.startFrame.width > 0
                 ? grabOffsetX / session.startFrame.width
                 : 0.5;
@@ -210,13 +217,13 @@ export function WindowChrome({
                 Math.max(24, restoredWidth - 24),
             );
             const restoredGrabOffsetY = Math.min(
-                session.startY - (session.startFrame.y + rect.y),
+                session.startY - session.startFrame.y,
                 32,
             );
 
             const candidate: Frame = {
-                x: (session.startX - rect.x) - restoredGrabOffsetX + dx,
-                y: (session.startY - rect.y) - restoredGrabOffsetY + dy,
+                x: session.startX - restoredGrabOffsetX + dx,
+                y: session.startY - restoredGrabOffsetY + dy,
                 width: restoredWidth,
                 height: restoredHeight,
             };
@@ -250,7 +257,7 @@ export function WindowChrome({
 
         // Edge drag preview SNAP (tablet 禁用 desktop snap)
         const targetSnap = (isDesktop && !disableDrag)
-            ? snapTarget(e.clientX, e.clientY, rect)
+            ? snapTarget(e.clientX, e.clientY, rect.workRect)
             : null;
         setActiveSnapMode(targetSnap);
     };
@@ -278,7 +285,18 @@ export function WindowChrome({
         const winEl = windowRef.current ??
             (session.chromeEl.closest(".desktop-window") as HTMLElement | null);
 
-        // 避免点击未移动改状态，恢复原 semantic frame DOM
+        if (!rect.usable) {
+            const presentationFrame = clampFrame(win.frame, rect, win.kind);
+            if (winEl) {
+                winEl.style.transform =
+                    `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+                winEl.style.width = `${presentationFrame.width}px`;
+                winEl.style.height = `${presentationFrame.height}px`;
+            }
+            return;
+        }
+
+        // Avoid changing semantic frame on a click without dragging.
         if (!session.hasMoved) {
             if (winEl) {
                 winEl.style.transform =
@@ -291,12 +309,12 @@ export function WindowChrome({
 
         // Calculate snap target from final release coordinates e.clientX, e.clientY
         const snapModeToCommit = (isDesktop && !disableDrag)
-            ? snapTarget(e.clientX, e.clientY, rect)
+            ? snapTarget(e.clientX, e.clientY, rect.workRect)
             : null;
 
         // Release SNAP if targeting a snap zone
         if (snapModeToCommit && isDesktop && !disableDrag) {
-            const snapToCommitFrame = snapFrame(snapModeToCommit, rect);
+            const snapToCommitFrame = snapFrame(snapModeToCommit, rect.workRect);
             if (winEl) {
                 winEl.style.transform =
                     `translate3d(${snapToCommitFrame.x}px, ${snapToCommitFrame.y}px, 0)`;
@@ -352,7 +370,18 @@ export function WindowChrome({
         const winEl = windowRef.current ??
             (session.chromeEl.closest(".desktop-window") as HTMLElement | null);
 
-        // 避免点击未移动改状态
+        if (!rect.usable) {
+            const presentationFrame = clampFrame(win.frame, rect, win.kind);
+            if (winEl) {
+                winEl.style.transform =
+                    `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+                winEl.style.width = `${presentationFrame.width}px`;
+                winEl.style.height = `${presentationFrame.height}px`;
+            }
+            return;
+        }
+
+        // Avoid changing semantic frame on a click without dragging.
         if (!session.hasMoved) {
             if (winEl) {
                 winEl.style.transform =
@@ -390,7 +419,7 @@ export function WindowChrome({
         ) {
             return;
         }
-        if (disableDrag || showMaximize === false) return;
+        if (disableDrag || showMaximize === false || !rect.usable) return;
 
         if (win.mode === "maximized") {
             dispatch({ type: "RESTORE", id: win.id, rect });
@@ -444,6 +473,7 @@ export function WindowChrome({
             default:
                 return;
         }
+        if (!rect.usable) return;
 
         e.preventDefault();
         if (!active) {
@@ -474,7 +504,7 @@ export function WindowChrome({
             : null);
 
     const snapPreviewFrame = activeSnapMode
-        ? snapFrame(activeSnapMode, rect)
+        ? snapFrame(activeSnapMode, rect.workRect)
         : null;
 
     return (
@@ -565,6 +595,7 @@ export function WindowChrome({
                         (win.mode === "maximized" || win.mode === "snapped")
                             ? (
                                 <Button
+                                    disabled={!rect.usable}
                                     variant="ghost"
                                     size="icon"
                                     className="desktop-window-chrome-btn desktop-window-chrome-btn--restore"
@@ -584,6 +615,7 @@ export function WindowChrome({
                             )
                             : (
                                 <Button
+                                    disabled={!rect.usable}
                                     variant="ghost"
                                     size="icon"
                                     className="desktop-window-chrome-btn desktop-window-chrome-btn--maximize"
@@ -624,7 +656,7 @@ export function WindowChrome({
                 </div>
             </div>
 
-            {/* Snap preview: portal to canvas or window sibling ensuring coordinates are relative to safeRect */}
+            {/* Snap preview coordinates are viewport-global and match the committed Work Rect frame. */}
             {isDragging && activeSnapMode && snapPreviewFrame && portalTarget &&
                 createPortal(
                     <div

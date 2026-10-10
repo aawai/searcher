@@ -1,4 +1,4 @@
-import { assertEquals, assertNotEquals } from "@std/assert";
+import { assertEquals, assertNotEquals, assertThrows } from "@std/assert";
 import { setupMockIndexedDB } from "../../lib/test-mock-idb.ts";
 import {
     decodeDesktopLayout,
@@ -8,10 +8,23 @@ import {
     saveDesktopLayout,
 } from "./desktop-persistence.ts";
 import type { DesktopState } from "./desktop-state.ts";
-import { type SafeRect, snapFrame } from "./desktop-geometry.ts";
+import {
+    desktopGeometry,
+    type DesktopGeometry,
+    snapFrame,
+} from "./desktop-geometry.ts";
 
-const rect1440: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
-const rect1024: SafeRect = { x: 0, y: 0, width: 1024, height: 768 };
+const rect1440: DesktopGeometry = desktopGeometry(1440, 900, 0, 900, 0, 48, 0);
+const rect1024: DesktopGeometry = desktopGeometry(1024, 768, 0, 768, 0, 48, 0);
+const offsetSafeGeometry: DesktopGeometry = desktopGeometry(
+    1440,
+    900,
+    48,
+    840,
+    24,
+    48,
+    0,
+);
 
 Deno.test("desktop-persistence: normalized normal frames preserve window modes and stacking", () => {
     const state: DesktopState = {
@@ -33,6 +46,7 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
                 restoreFrame: { x: 288, y: 180, width: 640, height: 400 },
                 mode: "maximized",
                 zOrder: 2,
+                snap: "maximize",
             },
             {
                 id: "note:item-1",
@@ -49,6 +63,7 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
 
     const encoded = encodeDesktopLayout(state, rect1440);
     assertEquals(encoded.windows.length, 3);
+    assertEquals(encoded.version, 4);
     assertEquals(encoded.activeId, "notes");
 
     // Maximized window stores normal frame in normalized form
@@ -56,7 +71,11 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
     assertEquals(encodedNotes.mode, "maximized");
     assertEquals(encodedNotes.frame.x, 0.2); // 288 / 1440
     assertEquals(encodedNotes.frame.y, 0.2); // 180 / 900
-    assertEquals(encodedNotes.snap, null);
+    assertEquals(encodedNotes.snap, "maximize");
+    assertEquals(
+        encodeDesktopLayout(decodeDesktopLayout(encoded, rect1440)!, rect1440),
+        encoded,
+    );
 });
 
 Deno.test("desktop-persistence: decodeDesktopLayout clamps geometry across resolution changes (1440x900 -> 1024x768)", () => {
@@ -91,10 +110,13 @@ Deno.test("desktop-persistence: decodeDesktopLayout clamps geometry across resol
     assertEquals(decoded!.windows.length, 2);
 
     const appsWin = decoded!.windows.find((w) => w.id === "apps")!;
-    // In 1024x768, apps must fit completely within safeRect bounds
-    assertEquals(appsWin.frame.x + appsWin.frame.width <= rect1024.width, true);
+    // Normal windows remain inside the viewport, independently of the safeRect.
     assertEquals(
-        appsWin.frame.y + appsWin.frame.height <= rect1024.height,
+        appsWin.frame.x + appsWin.frame.width <= rect1024.viewportRect.width,
+        true,
+    );
+    assertEquals(
+        appsWin.frame.y + appsWin.frame.height <= rect1024.viewportRect.height,
         true,
     );
     assertEquals(appsWin.frame.x >= 0, true);
@@ -156,7 +178,7 @@ Deno.test("desktop-persistence: decodeDesktopLayout strictly rejects corrupt pay
 
     // Unsupported version
     assertEquals(
-        decodeDesktopLayout({ version: 4, windows: [] }, rect1440),
+        decodeDesktopLayout({ version: 5, windows: [] }, rect1440),
         null,
     );
     assertEquals(
@@ -285,6 +307,7 @@ Deno.test("desktop-persistence: regression - normal -> MAXIMIZE -> MINIMIZE -> r
                 mode: "maximized",
                 frame: { x: 0, y: 0, width: 1440, height: 900 },
                 restoreFrame: { x: 144, y: 90, width: 720, height: 450 },
+                snap: "maximize",
             },
         ],
         activeId: "apps",
@@ -444,7 +467,7 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
                 id: "apps",
                 kind: "apps",
                 entityId: null,
-                frame: snapFrame("left", rect1440),
+                frame: snapFrame("left", rect1440.workRect),
                 restoreFrame: { x: 100, y: 100, width: 600, height: 400 },
                 mode: "snapped",
                 snap: "left",
@@ -454,7 +477,7 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
                 id: "notes",
                 kind: "notes",
                 entityId: null,
-                frame: snapFrame("bottom-right", rect1440),
+                frame: snapFrame("bottom-right", rect1440.workRect),
                 restoreFrame: { x: 200, y: 200, width: 500, height: 350 },
                 mode: "snapped",
                 snap: "bottom-right",
@@ -464,7 +487,7 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
                 id: "note:item-1",
                 kind: "note",
                 entityId: "item-1",
-                frame: snapFrame("top-left", rect1440),
+                frame: snapFrame("top-left", rect1440.workRect),
                 restoreFrame: { x: 50, y: 50, width: 400, height: 300 },
                 mode: "minimized",
                 snap: "top-left",
@@ -501,17 +524,17 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
     const appsWin = decoded!.windows.find((w) => w.id === "apps")!;
     assertEquals(appsWin.mode, "snapped");
     assertEquals(appsWin.snap, "left");
-    assertEquals(appsWin.frame, snapFrame("left", rect1024));
+    assertEquals(appsWin.frame, snapFrame("left", rect1024.workRect));
 
     const notesWin = decoded!.windows.find((w) => w.id === "notes")!;
     assertEquals(notesWin.mode, "snapped");
     assertEquals(notesWin.snap, "bottom-right");
-    assertEquals(notesWin.frame, snapFrame("bottom-right", rect1024));
+    assertEquals(notesWin.frame, snapFrame("bottom-right", rect1024.workRect));
 
     const noteWin = decoded!.windows.find((w) => w.id === "note:item-1")!;
     assertEquals(noteWin.mode, "minimized");
     assertEquals(noteWin.snap, "top-left");
-    assertEquals(noteWin.frame, snapFrame("top-left", rect1024));
+    assertEquals(noteWin.frame, snapFrame("top-left", rect1024.workRect));
 });
 
 Deno.test("desktop-persistence: backward compatibility with legacy schema v1 fixtures without snap property", () => {
@@ -549,7 +572,7 @@ Deno.test("desktop-persistence: backward compatibility with legacy schema v1 fix
     const notesWin = decoded!.windows.find((w) => w.id === "notes")!;
     assertEquals(notesWin.mode, "maximized");
     assertEquals(notesWin.snap, "maximize");
-    assertEquals(notesWin.frame, snapFrame("maximize", rect1440));
+    assertEquals(notesWin.frame, snapFrame("maximize", rect1440.workRect));
 });
 
 Deno.test("desktop-persistence: strict validation rejects invalid snap values or corrupt mode-snap combinations", () => {
@@ -642,6 +665,70 @@ Deno.test("desktop-persistence: strict validation rejects invalid snap values or
         ),
         null,
     );
+});
+
+Deno.test("desktop-persistence: serialization rejects invalid identity, frame, and snap state", async () => {
+    const key = "searcher:desktop-layout:v1:invalid-runtime-state";
+    const sessionMemory = new Map<string, PersistedDesktopLayout>();
+    const validState: DesktopState = {
+        windows: [{
+            id: "apps",
+            kind: "apps",
+            entityId: null,
+            frame: { x: 100, y: 100, width: 600, height: 400 },
+            restoreFrame: null,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+        activeId: "apps",
+    };
+    await saveDesktopLayout(
+        "invalid-runtime-state",
+        validState,
+        rect1440,
+        sessionMemory,
+    );
+    const persisted = sessionMemory.get(key);
+    assertNotEquals(persisted, undefined);
+
+    const invalidStates: DesktopState[] = [
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                id: "not-the-apps-window",
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                frame: { ...validState.windows[0].frame, x: Number.NaN },
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                snap: "left",
+            }],
+        },
+    ];
+
+    for (const invalidState of invalidStates) {
+        assertThrows(
+            () => encodeDesktopLayout(invalidState, rect1440),
+            TypeError,
+        );
+        await saveDesktopLayout(
+            "invalid-runtime-state",
+            invalidState,
+            rect1440,
+            sessionMemory,
+        );
+        assertEquals(sessionMemory.get(key), persisted);
+    }
 });
 
 Deno.test("desktop-persistence: v1 Apps/Notes survive migration and v2 Documents root restores without entity confusion", () => {
@@ -775,4 +862,265 @@ Deno.test("desktop-persistence: document entity windows survive refresh without 
         }, rect1024),
         null,
     );
+});
+Deno.test("desktop-persistence: legacy v1-v3 use safeRect while v4 uses viewport geometry", () => {
+    const frame = { x: 0.2, y: 0.2, width: 0.5, height: 0.5 };
+    for (const version of [1, 2, 3] as const) {
+        const migrated = decodeDesktopLayout({
+            version,
+            activeId: "apps",
+            windows: [{
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame,
+                restoreFrame: frame,
+                mode: "maximized",
+                zOrder: 1,
+                snap: null,
+            }],
+        }, offsetSafeGeometry);
+        assertNotEquals(migrated, null);
+        assertEquals(migrated!.windows[0].frame, snapFrame(
+            "maximize",
+            offsetSafeGeometry.workRect,
+        ));
+        assertEquals(migrated!.windows[0].restoreFrame, {
+            x: 302,
+            y: 221,
+            width: 696,
+            height: 372,
+        });
+    }
+
+    const current = decodeDesktopLayout({
+        version: 4,
+        activeId: "apps",
+        windows: [{
+            id: "apps",
+            kind: "apps",
+            entityId: null,
+            frame,
+            restoreFrame: frame,
+            mode: "maximized",
+            zOrder: 1,
+            snap: "maximize",
+        }],
+    }, offsetSafeGeometry);
+    assertNotEquals(current, null);
+    assertEquals(current!.windows[0].frame, snapFrame(
+        "maximize",
+        offsetSafeGeometry.workRect,
+    ));
+    assertEquals(current!.windows[0].restoreFrame, {
+        x: 288,
+        y: 180,
+        width: 720,
+        height: 450,
+    });
+});
+
+Deno.test("desktop-persistence: document identity support follows schema versions", () => {
+    const frame = { x: 0.1, y: 0.1, width: 0.5, height: 0.5 };
+    const documentWindow = {
+        id: "document:one",
+        kind: "document",
+        entityId: "one",
+        frame,
+        restoreFrame: null,
+        mode: "normal",
+        zOrder: 1,
+        snap: null,
+    };
+    for (const version of [1, 2] as const) {
+        assertEquals(decodeDesktopLayout({
+            version,
+            windows: [documentWindow],
+        }, rect1440), null);
+    }
+    for (const version of [3, 4] as const) {
+        assertNotEquals(decodeDesktopLayout({
+            version,
+            windows: [documentWindow],
+        }, rect1440), null);
+    }
+
+    assertEquals(decodeDesktopLayout({
+        version: 1,
+        windows: [{
+            id: "documents",
+            kind: "documents",
+            entityId: null,
+            frame,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+    }, rect1440), null);
+    for (const version of [2, 3, 4] as const) {
+        assertNotEquals(decodeDesktopLayout({
+            version,
+            windows: [{
+                id: "documents",
+                kind: "documents",
+                entityId: null,
+                frame,
+                restoreFrame: null,
+                mode: "normal",
+                zOrder: 1,
+                snap: null,
+            }],
+        }, rect1440), null);
+    }
+});
+
+Deno.test("desktop-persistence: v4 requires complete restore and snap semantics", () => {
+    const base = {
+        id: "apps",
+        kind: "apps",
+        entityId: null,
+        frame: { x: 0.1, y: 0.1, width: 0.5, height: 0.5 },
+        zOrder: 1,
+        snap: null,
+    };
+    const payload = (window: Record<string, unknown>) => ({
+        version: 4,
+        windows: [window],
+        activeId: "apps",
+    });
+
+    assertNotEquals(decodeDesktopLayout(payload({
+        ...base,
+        restoreFrame: null,
+        mode: "normal",
+    }), rect1440), null);
+    assertEquals(decodeDesktopLayout(payload({
+        ...base,
+        mode: "normal",
+    }), rect1440), null);
+    assertEquals(decodeDesktopLayout(payload({
+        ...base,
+        restoreFrame: base.frame,
+        mode: "maximized",
+    }), rect1440), null);
+    assertEquals(decodeDesktopLayout(payload({
+        ...base,
+        restoreFrame: base.frame,
+        mode: "snapped",
+        snap: "maximize",
+    }), rect1440), null);
+    assertNotEquals(decodeDesktopLayout(payload({
+        ...base,
+        restoreFrame: base.frame,
+        mode: "snapped",
+        snap: "left",
+    }), rect1440), null);
+    assertNotEquals(decodeDesktopLayout(payload({
+        ...base,
+        restoreFrame: base.frame,
+        mode: "maximized",
+        snap: "maximize",
+    }), rect1440), null);
+});
+
+Deno.test("desktop-persistence: unusable geometry and corrupt loads do not replace saved layouts", async () => {
+    const userId = "geometry-fallback-user";
+    const key = `searcher:desktop-layout:v1:${userId}`;
+    const sessionMemory = new Map<string, PersistedDesktopLayout>();
+    const state: DesktopState = {
+        windows: [{
+            id: "apps",
+            kind: "apps",
+            entityId: null,
+            frame: { x: 100, y: 100, width: 600, height: 400 },
+            restoreFrame: null,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+        activeId: "apps",
+    };
+    const saved = encodeDesktopLayout(state, rect1440);
+    sessionMemory.set(key, saved);
+
+    for (
+        const failedGeometry of [
+            desktopGeometry(0, 0),
+            desktopGeometry(1440, 900, 0, 0),
+        ]
+    ) {
+        assertEquals(
+            await loadDesktopLayout(
+                userId,
+                failedGeometry,
+                undefined,
+                sessionMemory,
+            ),
+            null,
+        );
+        await saveDesktopLayout(
+            userId,
+            { windows: [], activeId: null },
+            failedGeometry,
+            sessionMemory,
+        );
+        assertEquals(sessionMemory.get(key), saved);
+    }
+
+    const corrupt: PersistedDesktopLayout = {
+        version: 4,
+        windows: [{
+            id: "apps",
+            kind: "apps",
+            entityId: null,
+            frame: { x: Number.NaN, y: 0, width: 0.5, height: 0.5 },
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+        activeId: "apps",
+    };
+    sessionMemory.set(key, corrupt);
+    assertEquals(
+        await loadDesktopLayout(userId, rect1440, undefined, sessionMemory),
+        null,
+    );
+    assertEquals(sessionMemory.get(key), corrupt);
+});
+Deno.test("desktop-persistence: zero safeRect does not migrate or overwrite a legacy layout", async () => {
+    const userId = "safe-rect-zero-user";
+    const key = `searcher:desktop-layout:v1:${userId}`;
+    const sessionMemory = new Map<string, PersistedDesktopLayout>();
+    const validState: DesktopState = {
+        windows: [{
+            id: "apps",
+            kind: "apps",
+            entityId: null,
+            frame: { x: 100, y: 100, width: 600, height: 400 },
+            restoreFrame: null,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }],
+        activeId: "apps",
+    };
+    const v4 = encodeDesktopLayout(validState, rect1440);
+    const legacy = { ...v4, version: 3 as const };
+    sessionMemory.set(key, legacy);
+    const zeroSafeRect = desktopGeometry(1440, 900, 64, 820, 800, 48, 0);
+
+    assertEquals(zeroSafeRect.usable, true);
+    assertEquals(zeroSafeRect.safeRect.width, 0);
+    assertEquals(zeroSafeRect.safeRect.height, 0);
+    assertEquals(
+        await loadDesktopLayout(userId, zeroSafeRect, undefined, sessionMemory),
+        null,
+    );
+    await saveDesktopLayout(
+        userId,
+        validState,
+        zeroSafeRect,
+        sessionMemory,
+    );
+    assertEquals(sessionMemory.get(key), legacy);
 });

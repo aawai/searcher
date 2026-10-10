@@ -2,341 +2,355 @@ import { assertEquals } from "@std/assert";
 import {
     clampFrame,
     defaultFrame,
+    desktopGeometry,
     type Frame,
     minimumSize,
     resizeFrame,
-    type SafeRect,
     snapFrame,
     snapTarget,
 } from "./desktop-geometry.ts";
 
-Deno.test("desktop-geometry: minimumSize returns sensible documented minima bounded by safe rect", () => {
-    // Sensible base minimums: apps (480x360), notes (400x320), note (320x240)
+Deno.test("desktop-geometry: constructs viewport, Work Rect, and Safe Rect from measured bounds", () => {
+    const geometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
+
+    assertEquals(geometry.viewportRect, {
+        x: 0,
+        y: 0,
+        width: 1440,
+        height: 900,
+    });
+    assertEquals(geometry.workRect, {
+        x: 0,
+        y: 64,
+        width: 1440,
+        height: 756,
+    });
+    assertEquals(geometry.safeRect, {
+        x: 16,
+        y: 80,
+        width: 1408,
+        height: 724,
+    });
+    assertEquals(geometry.chromeBottom, 64);
+    assertEquals(geometry.dockTop, 820);
+    assertEquals(geometry.windowGap, 16);
+    assertEquals(geometry.chromeHeight, 48);
+    assertEquals(geometry.usable, true);
+
+    assertEquals(desktopGeometry(1024, 768, 64, 720, 16, 48).usable, true);
+    assertEquals(desktopGeometry(1024, 768, 64, 300, 16, 48).usable, false);
+});
+
+Deno.test("desktop-geometry: minimumSize preserves kind minima and bounds them to available space", () => {
     const appsMin = minimumSize("apps");
-    assertEquals(appsMin.width, 480);
-    assertEquals(appsMin.height, 360);
-    assertEquals(appsMin.minWidth, 480);
-    assertEquals(appsMin.minHeight, 360);
+    assertEquals(appsMin, {
+        width: 480,
+        height: 360,
+        minWidth: 480,
+        minHeight: 360,
+    });
+    assertEquals(minimumSize("notes").width, 400);
+    assertEquals(minimumSize("notes").height, 320);
+    assertEquals(minimumSize("note").width, 320);
+    assertEquals(minimumSize("note").height, 240);
 
-    const notesMin = minimumSize("notes");
-    assertEquals(notesMin.width, 400);
-    assertEquals(notesMin.height, 320);
-
-    const noteMin = minimumSize("note");
-    assertEquals(noteMin.width, 320);
-    assertEquals(noteMin.height, 240);
-
-    // When safe rect is smaller than base minimum, min-size is bounded by available safe size
-    const narrowRect: SafeRect = { x: 0, y: 0, width: 300, height: 200 };
-    const boundedApps = minimumSize("apps", narrowRect);
-    assertEquals(boundedApps.width, 300);
-    assertEquals(boundedApps.height, 200);
+    const available = desktopGeometry(300, 200, 0, 200, 0, 48, 0).safeRect;
+    assertEquals(minimumSize("apps", available).width, 300);
+    assertEquals(minimumSize("apps", available).height, 200);
 });
 
-Deno.test("desktop-geometry: clampFrame clamps position and size fully within safe rect", () => {
-    const rect: SafeRect = { x: 100, y: 50, width: 1000, height: 700 };
+Deno.test("desktop-geometry: normal frames use viewport bounds and keep the titlebar above Dock", () => {
+    const geometry = desktopGeometry(1440, 900, 50, 600, 20, 48);
 
-    // Off-screen negative coordinates are clamped to 0
-    const offLeftTop: Frame = { x: -50, y: -20, width: 500, height: 400 };
-    const clampedLeftTop = clampFrame(offLeftTop, rect, "apps");
-    assertEquals(clampedLeftTop.x, 0);
-    assertEquals(clampedLeftTop.y, 0);
-    assertEquals(clampedLeftTop.width, 500);
-    assertEquals(clampedLeftTop.height, 400);
+    const clampedTopLeft = clampFrame(
+        { x: -50, y: -20, width: 500, height: 400 },
+        geometry,
+        "apps",
+    );
+    assertEquals(clampedTopLeft, { x: 0, y: 50, width: 500, height: 400 });
 
-    // Frame extending past bottom-right is shifted into safe rect
-    const offRightBottom: Frame = { x: 800, y: 500, width: 500, height: 400 };
-    const clampedRightBottom = clampFrame(offRightBottom, rect, "apps");
-    assertEquals(clampedRightBottom.x, 500); // 1000 - 500
-    assertEquals(clampedRightBottom.y, 300); // 700 - 400
-    assertEquals(clampedRightBottom.width, 500);
-    assertEquals(clampedRightBottom.height, 400);
+    const clampedBottomRight = clampFrame(
+        { x: 1300, y: 800, width: 500, height: 400 },
+        geometry,
+        "apps",
+    );
+    assertEquals(clampedBottomRight, {
+        x: 940,
+        y: 500,
+        width: 500,
+        height: 400,
+    });
 
-    // Undersized frame is expanded to minimum size
-    const tinyFrame: Frame = { x: 10, y: 10, width: 100, height: 100 };
-    const clampedTiny = clampFrame(tinyFrame, rect, "note");
-    assertEquals(clampedTiny.width, 320);
-    assertEquals(clampedTiny.height, 240);
+    const clampedTiny = clampFrame(
+        { x: 10, y: 10, width: 100, height: 100 },
+        geometry,
+        "note",
+    );
+    assertEquals(clampedTiny, {
+        x: 10,
+        y: 50,
+        width: 320,
+        height: 240,
+    });
+
+    const frameAtDock = clampFrame(
+        { x: 120, y: 760, width: 500, height: 300 },
+        geometry,
+        "note",
+    );
+    assertEquals(frameAtDock.y + geometry.chromeHeight, geometry.dockTop);
+    assertEquals(frameAtDock.y + frameAtDock.height > geometry.dockTop, true);
+});
+Deno.test("desktop-geometry: unusable viewport still has a titlebar-reachable presentation frame", () => {
+    const geometry = desktopGeometry(1024, 200, 64, 122, 16, 48);
+    const frame = clampFrame(
+        { x: 0, y: 162, width: 768, height: 610 },
+        geometry,
+        "document",
+    );
+
+    assertEquals(geometry.usable, false);
+    assertEquals(frame, { x: 0, y: 64, width: 768, height: 136 });
+    assertEquals(frame.y >= geometry.chromeBottom, true);
+    assertEquals(frame.y + geometry.chromeHeight <= geometry.dockTop, true);
+    assertEquals(
+        frame.x + frame.width <= geometry.viewportRect.width,
+        true,
+    );
+    assertEquals(
+        frame.y + frame.height <= geometry.viewportRect.height,
+        true,
+    );
 });
 
-Deno.test("desktop-geometry: defaultFrame sizes and centers correctly for each WindowKind", () => {
-    const largeRect: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
+Deno.test("desktop-geometry: defaultFrame opens within safeRect in viewport coordinates", () => {
+    const geometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
 
-    // Apps: min(760, 72% of 1440 = 1037) x min(720, 78% of 900 = 702) -> 760 x 702
-    const appsFrame = defaultFrame("apps", largeRect, 0);
-    assertEquals(appsFrame.width, 760);
-    assertEquals(appsFrame.height, 702);
-    assertEquals(appsFrame.x, Math.round((1440 - 760) / 2)); // 340
-    assertEquals(appsFrame.y, Math.round((900 - 702) / 2)); // 99
+    const appsFrame = defaultFrame("apps", geometry);
+    assertEquals(appsFrame, { x: 340, y: 160, width: 760, height: 565 });
 
-    // Notes: min(640, 62% of 1440 = 893) x min(680, 74% of 900 = 666) -> 640 x 666
-    const notesFrame = defaultFrame("notes", largeRect, 0);
-    assertEquals(notesFrame.width, 640);
-    assertEquals(notesFrame.height, 666);
-    assertEquals(notesFrame.x, Math.round((1440 - 640) / 2)); // 400
-    assertEquals(notesFrame.y, Math.round((900 - 666) / 2)); // 117
+    const notesFrame = defaultFrame("notes", geometry);
+    assertEquals(notesFrame, { x: 400, y: 174, width: 640, height: 536 });
 
-    // Note: min(560, 54% of 1440 = 778) x min(600, 68% of 900 = 612) -> 560 x 600
-    const noteFrame = defaultFrame("note", largeRect, 0);
-    assertEquals(noteFrame.width, 560);
-    assertEquals(noteFrame.height, 600);
-    assertEquals(noteFrame.x, Math.round((1440 - 560) / 2)); // 440
-    assertEquals(noteFrame.y, Math.round((900 - 600) / 2)); // 150
+    const noteFrame = defaultFrame("note", geometry);
+    assertEquals(noteFrame, { x: 440, y: 196, width: 560, height: 492 });
+    assertEquals(noteFrame.x >= geometry.safeRect.x, true);
+    assertEquals(noteFrame.y >= geometry.safeRect.y, true);
 
-    // Small viewport constraint: min(760, 72% of 800 = 576) x min(720, 78% of 600 = 468) -> 576 x 468
-    const smallRect: SafeRect = { x: 0, y: 0, width: 800, height: 600 };
-    const smallApps = defaultFrame("apps", smallRect, 0);
-    assertEquals(smallApps.width, 576);
-    assertEquals(smallApps.height, 468);
-    assertEquals(smallApps.x, Math.round((800 - 576) / 2)); // 112
-    assertEquals(smallApps.y, Math.round((600 - 468) / 2)); // 66
+    const smallGeometry = desktopGeometry(800, 600, 0, 600, 0, 48, 0);
+    const smallApps = defaultFrame("apps", smallGeometry);
+    assertEquals(smallApps, { x: 112, y: 66, width: 576, height: 468 });
 });
 
-Deno.test("desktop-geometry: defaultFrame applies deterministic 24px cascade and resets at edges", () => {
-    const rect: SafeRect = { x: 0, y: 0, width: 1000, height: 800 };
-    // For note: 560 x 544 (bounded: 560x544, startX = 220, startY = 128)
-    const f0 = defaultFrame("note", rect, 0);
-    const f1 = defaultFrame("note", rect, 1);
-    const f2 = defaultFrame("note", rect, 2);
+Deno.test("desktop-geometry: defaultFrame cascades by 24px and wraps within safeRect", () => {
+    const geometry = desktopGeometry(1000, 800, 0, 800, 0, 48, 0);
+    const f0 = defaultFrame("note", geometry, 0);
+    const f1 = defaultFrame("note", geometry, 1);
+    const f2 = defaultFrame("note", geometry, 2);
 
     assertEquals(f1.x, f0.x + 24);
     assertEquals(f1.y, f0.y + 24);
     assertEquals(f2.x, f0.x + 48);
     assertEquals(f2.y, f0.y + 48);
 
-    // Calculate max steps before hitting safe edge:
-    // maxX = 1000 - 560 = 440; available space = 440 - 220 = 220px; 220 / 24 = 9 steps (216px)
-    // maxY = 800 - 544 = 256; available space = 256 - 128 = 128px; 128 / 24 = 5 steps (120px)
-    // maxSteps = min(floor(220/24), floor(128/24)) = 5
-    // At cascadeIndex = 6, it must reset back to safe start origin (f0)
-    const f5 = defaultFrame("note", rect, 5);
+    const f5 = defaultFrame("note", geometry, 5);
     assertEquals(f5.x, f0.x + 5 * 24);
     assertEquals(f5.y, f0.y + 5 * 24);
 
-    const f6 = defaultFrame("note", rect, 6);
+    const f6 = defaultFrame("note", geometry, 6);
     assertEquals(f6.x, f0.x);
     assertEquals(f6.y, f0.y);
 });
 
-Deno.test("desktop-geometry: resizeFrame handles 8 directions, min-size, and safe-rect constraints", () => {
-    const rect: SafeRect = { x: 0, y: 0, width: 1200, height: 800 };
-    // Initial frame at (200, 200), size (400, 300). For note kind, min is (320, 240).
+Deno.test("desktop-geometry: resizeFrame keeps opposite edges anchored in all eight directions", () => {
+    const geometry = desktopGeometry(1200, 800, 40, 760, 16, 48, 0);
     const initial: Frame = { x: 200, y: 200, width: 400, height: 300 };
 
-    // 1. East: expands right, keeps x fixed
-    const resizedE = resizeFrame(initial, "e", 50, 0, rect, "note");
-    assertEquals(resizedE, { x: 200, y: 200, width: 450, height: 300 });
+    assertEquals(resizeFrame(initial, "e", 50, 0, geometry, "note"), {
+        x: 200,
+        y: 200,
+        width: 450,
+        height: 300,
+    });
+    assertEquals(resizeFrame(initial, "w", -50, 0, geometry, "note"), {
+        x: 150,
+        y: 200,
+        width: 450,
+        height: 300,
+    });
+    assertEquals(resizeFrame(initial, "s", 0, 40, geometry, "note"), {
+        x: 200,
+        y: 200,
+        width: 400,
+        height: 340,
+    });
+    assertEquals(resizeFrame(initial, "n", 0, -40, geometry, "note"), {
+        x: 200,
+        y: 160,
+        width: 400,
+        height: 340,
+    });
+    assertEquals(resizeFrame(initial, "se", 30, 30, geometry, "note"), {
+        x: 200,
+        y: 200,
+        width: 430,
+        height: 330,
+    });
+    assertEquals(resizeFrame(initial, "nw", -20, -20, geometry, "note"), {
+        x: 180,
+        y: 180,
+        width: 420,
+        height: 320,
+    });
+    assertEquals(resizeFrame(initial, "sw", -20, 20, geometry, "note"), {
+        x: 180,
+        y: 200,
+        width: 420,
+        height: 320,
+    });
+    assertEquals(resizeFrame(initial, "ne", 20, -20, geometry, "note"), {
+        x: 200,
+        y: 180,
+        width: 420,
+        height: 320,
+    });
 
-    // 2. West: moves left edge, keeps right edge at (200 + 400 = 600)
-    const resizedW = resizeFrame(initial, "w", -50, 0, rect, "note");
-    assertEquals(resizedW, { x: 150, y: 200, width: 450, height: 300 });
-
-    // 3. South: expands bottom, keeps y fixed
-    const resizedS = resizeFrame(initial, "s", 0, 40, rect, "note");
-    assertEquals(resizedS, { x: 200, y: 200, width: 400, height: 340 });
-
-    // 4. North: moves top edge, keeps bottom edge at (200 + 300 = 500)
-    const resizedN = resizeFrame(initial, "n", 0, -40, rect, "note");
-    assertEquals(resizedN, { x: 200, y: 160, width: 400, height: 340 });
-
-    // 5. Southeast: moves right and bottom
-    const resizedSE = resizeFrame(initial, "se", 30, 30, rect, "note");
-    assertEquals(resizedSE, { x: 200, y: 200, width: 430, height: 330 });
-
-    // 6. Northwest: moves top and left, keeps bottom-right corner fixed at (600, 500)
-    const resizedNW = resizeFrame(initial, "nw", -20, -20, rect, "note");
-    assertEquals(resizedNW, { x: 180, y: 180, width: 420, height: 320 });
-
-    // 7. Southwest: moves bottom and left, keeps top-right corner fixed at (600, 200)
-    const resizedSW = resizeFrame(initial, "sw", -20, 20, rect, "note");
-    assertEquals(resizedSW, { x: 180, y: 200, width: 420, height: 320 });
-
-    // 8. Northeast: moves top and right, keeps bottom-left corner fixed at (200, 500)
-    const resizedNE = resizeFrame(initial, "ne", 20, -20, rect, "note");
-    assertEquals(resizedNE, { x: 200, y: 180, width: 420, height: 320 });
-
-    // Minimum size constraint: attempt to shrink smaller than minimum (320x240 for note)
-    const shrinkWestTooMuch = resizeFrame(initial, "w", 200, 0, rect, "note");
-    // Right edge is 600, width capped at min 320 -> x = 600 - 320 = 280
-    assertEquals(shrinkWestTooMuch, {
+    assertEquals(resizeFrame(initial, "w", 200, 0, geometry, "note"), {
         x: 280,
         y: 200,
         width: 320,
         height: 300,
     });
-
-    const shrinkNorthTooMuch = resizeFrame(initial, "n", 0, 200, rect, "note");
-    // Bottom edge is 500, height capped at min 240 -> y = 500 - 240 = 260
-    assertEquals(shrinkNorthTooMuch, {
+    assertEquals(resizeFrame(initial, "n", 0, 200, geometry, "note"), {
         x: 200,
         y: 260,
         width: 400,
         height: 240,
     });
 
-    // Safe rect boundary clamping: attempt to drag west past left edge (0)
-    const expandPastLeft = resizeFrame(initial, "w", -500, 0, rect, "note");
+    const expandPastLeft = resizeFrame(initial, "w", -500, 0, geometry, "note");
     assertEquals(expandPastLeft.x, 0);
-    assertEquals(expandPastLeft.width, 600); // 0 to 600
-
-    // Safe rect boundary clamping: attempt to drag east past rect.width (1200)
-    const expandPastRight = resizeFrame(initial, "e", 2000, 0, rect, "note");
+    assertEquals(expandPastLeft.width, 600);
+    const expandPastRight = resizeFrame(
+        initial,
+        "e",
+        2000,
+        0,
+        geometry,
+        "note",
+    );
     assertEquals(expandPastRight.x, 200);
-    assertEquals(expandPastRight.width, 1000); // 1200 - 200
+    assertEquals(expandPastRight.width, 1000);
 });
 
-Deno.test("desktop-geometry: robust handling of degraded/zero safeRect dimensions", () => {
-    const zeroRect: SafeRect = { x: 0, y: 0, width: 0, height: 0 };
-    const f = defaultFrame("apps", zeroRect, 0);
-    assertEquals(f.width, 0);
-    assertEquals(f.height, 0);
-    assertEquals(f.x, 0);
-    assertEquals(f.y, 0);
+Deno.test("desktop-geometry: empty viewport geometry produces finite empty frames", () => {
+    const geometry = desktopGeometry(0, 0);
+    const frame = defaultFrame("apps", geometry);
+    assertEquals(frame, { x: 0, y: 0, width: 0, height: 0 });
 
-    const clamped = clampFrame(
-        { x: 50, y: 50, width: 200, height: 200 },
-        zeroRect,
-        "apps",
-    );
-    assertEquals(clamped.width, 0);
-    assertEquals(clamped.height, 0);
-    assertEquals(clamped.x, 0);
-    assertEquals(clamped.y, 0);
-});
-
-Deno.test("desktop-geometry: snapFrame computes frames accurately for all 7 modes (even and odd dimensions)", () => {
-    // Even safe rect: 1440 x 900
-    const rectEven: SafeRect = { x: 100, y: 50, width: 1440, height: 900 };
-
-    assertEquals(snapFrame("maximize", rectEven), {
-        x: 0,
-        y: 0,
-        width: 1440,
-        height: 900,
-    });
-    assertEquals(snapFrame("left", rectEven), {
-        x: 0,
-        y: 0,
-        width: 720,
-        height: 900,
-    });
-    assertEquals(snapFrame("right", rectEven), {
-        x: 720,
-        y: 0,
-        width: 720,
-        height: 900,
-    });
-    assertEquals(snapFrame("top-left", rectEven), {
-        x: 0,
-        y: 0,
-        width: 720,
-        height: 450,
-    });
-    assertEquals(snapFrame("top-right", rectEven), {
-        x: 720,
-        y: 0,
-        width: 720,
-        height: 450,
-    });
-    assertEquals(snapFrame("bottom-left", rectEven), {
-        x: 0,
-        y: 450,
-        width: 720,
-        height: 450,
-    });
-    assertEquals(snapFrame("bottom-right", rectEven), {
-        x: 720,
-        y: 450,
-        width: 720,
-        height: 450,
-    });
-
-    // Odd safe rect: 1001 x 801 (halfW = 500, rightW = 501; halfH = 400, bottomH = 401)
-    const rectOdd: SafeRect = { x: 0, y: 0, width: 1001, height: 801 };
-    assertEquals(snapFrame("left", rectOdd), {
-        x: 0,
-        y: 0,
-        width: 500,
-        height: 801,
-    });
-    assertEquals(snapFrame("right", rectOdd), {
-        x: 500,
-        y: 0,
-        width: 501,
-        height: 801,
-    });
-    assertEquals(snapFrame("top-left", rectOdd), {
-        x: 0,
-        y: 0,
-        width: 500,
-        height: 400,
-    });
-    assertEquals(snapFrame("top-right", rectOdd), {
-        x: 500,
-        y: 0,
-        width: 501,
-        height: 400,
-    });
-    assertEquals(snapFrame("bottom-left", rectOdd), {
-        x: 0,
-        y: 400,
-        width: 500,
-        height: 401,
-    });
-    assertEquals(snapFrame("bottom-right", rectOdd), {
-        x: 500,
-        y: 400,
-        width: 501,
-        height: 401,
-    });
-    assertEquals(snapFrame("maximize", rectOdd), {
-        x: 0,
-        y: 0,
-        width: 1001,
-        height: 801,
-    });
-
-    // Zero/degraded rect
-    const zeroRect: SafeRect = { x: 0, y: 0, width: 0, height: 0 };
-    assertEquals(snapFrame("left", zeroRect), {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-    });
-});
-
-Deno.test("desktop-geometry: snapTarget detects 7 modes across edges and corners, and returns null for center and degraded rects", () => {
-    const rect: SafeRect = { x: 100, y: 50, width: 1000, height: 800 };
-
-    // Corners
-    assertEquals(snapTarget(105, 55, rect), "top-left"); // (relX=5, relY=5)
-    assertEquals(snapTarget(1095, 55, rect), "top-right"); // (relX=995, relY=5)
-    assertEquals(snapTarget(105, 845, rect), "bottom-left"); // (relX=5, relY=795)
-    assertEquals(snapTarget(1095, 845, rect), "bottom-right"); // (relX=995, relY=795)
-
-    // Non-corner edges
-    assertEquals(snapTarget(600, 55, rect), "maximize"); // top edge center (relX=500, relY=5)
-    assertEquals(snapTarget(105, 450, rect), "left"); // left edge center (relX=5, relY=400)
-    assertEquals(snapTarget(1095, 450, rect), "right"); // right edge center (relX=995, relY=400)
-
-    // Bottom non-corner (no bottom snap mode)
-    assertEquals(snapTarget(600, 845, rect), null); // (relX=500, relY=795)
-
-    // Interior / center of safe rect
-    assertEquals(snapTarget(600, 450, rect), null); // (relX=500, relY=400)
-
-    // Over-drag within margin (e.g. into topbar relY = -20)
-    assertEquals(snapTarget(600, 30, rect), "maximize");
-    assertEquals(snapTarget(80, 30, rect), "top-left");
-
-    // Far outside safe rect
-    assertEquals(snapTarget(600, 1000, rect), null);
-    assertEquals(snapTarget(-500, 400, rect), null);
-
-    // Zero rect
     assertEquals(
-        snapTarget(100, 50, { x: 100, y: 50, width: 0, height: 0 }),
-        null,
+        clampFrame(
+            { x: 50, y: 50, width: 200, height: 200 },
+            geometry,
+            "apps",
+        ),
+        { x: 0, y: 0, width: 0, height: 0 },
     );
+});
+
+Deno.test("desktop-geometry: snapFrame covers all seven modes in the Work Rect", () => {
+    const workRect = desktopGeometry(1440, 900, 64, 864, 0, 48, 0).workRect;
+    assertEquals(workRect, { x: 0, y: 64, width: 1440, height: 800 });
+
+    assertEquals(snapFrame("maximize", workRect), {
+        x: 0,
+        y: 64,
+        width: 1440,
+        height: 800,
+    });
+    assertEquals(snapFrame("left", workRect), {
+        x: 0,
+        y: 64,
+        width: 720,
+        height: 800,
+    });
+    assertEquals(snapFrame("right", workRect), {
+        x: 720,
+        y: 64,
+        width: 720,
+        height: 800,
+    });
+    assertEquals(snapFrame("top-left", workRect), {
+        x: 0,
+        y: 64,
+        width: 720,
+        height: 400,
+    });
+    assertEquals(snapFrame("top-right", workRect), {
+        x: 720,
+        y: 64,
+        width: 720,
+        height: 400,
+    });
+    assertEquals(snapFrame("bottom-left", workRect), {
+        x: 0,
+        y: 464,
+        width: 720,
+        height: 400,
+    });
+    assertEquals(snapFrame("bottom-right", workRect), {
+        x: 720,
+        y: 464,
+        width: 720,
+        height: 400,
+    });
+
+    const oddWorkRect = desktopGeometry(1001, 801, 64, 801, 0, 48, 0)
+        .workRect;
+    assertEquals(snapFrame("left", oddWorkRect), {
+        x: 0,
+        y: 64,
+        width: 500,
+        height: 737,
+    });
+    assertEquals(snapFrame("right", oddWorkRect), {
+        x: 500,
+        y: 64,
+        width: 501,
+        height: 737,
+    });
+    assertEquals(snapFrame("top-left", oddWorkRect), {
+        x: 0,
+        y: 64,
+        width: 500,
+        height: 368,
+    });
+    assertEquals(snapFrame("bottom-right", oddWorkRect), {
+        x: 500,
+        y: 432,
+        width: 501,
+        height: 369,
+    });
+});
+
+Deno.test("desktop-geometry: snapTarget maps pointer edges to the matching Work Rect snap", () => {
+    const workRect = desktopGeometry(1000, 900, 50, 850, 0, 48, 0).workRect;
+
+    assertEquals(snapTarget(5, 55, workRect), "top-left");
+    assertEquals(snapTarget(995, 55, workRect), "top-right");
+    assertEquals(snapTarget(5, 845, workRect), "bottom-left");
+    assertEquals(snapTarget(995, 845, workRect), "bottom-right");
+    assertEquals(snapTarget(500, 55, workRect), "maximize");
+    assertEquals(snapTarget(5, 450, workRect), "left");
+    assertEquals(snapTarget(995, 450, workRect), "right");
+    assertEquals(snapTarget(500, 845, workRect), null);
+    assertEquals(snapTarget(500, 450, workRect), null);
+
+    assertEquals(snapTarget(500, 30, workRect), "maximize");
+    assertEquals(snapTarget(-20, 30, workRect), "top-left");
+    assertEquals(snapTarget(500, 1000, workRect), null);
+    assertEquals(snapTarget(-500, 400, workRect), null);
+
+    const emptyWorkRect = desktopGeometry(0, 0).workRect;
+    assertEquals(snapTarget(0, 0, emptyWorkRect), null);
 });
