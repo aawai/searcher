@@ -4,6 +4,30 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## 移动端 Zen 首页固定应用密度回归（2026-10-10）
+
+- [x] 源码根因核实：#149 仅限定 `.launcher-grid--workspace` 的 68px
+      override；Home 在 coarse/no-hover 下仍使用共享 88px track 与 6px gap。
+      不改变 Apps、Widgets Quick 与 fine-pointer Home。
+- [x] CSS 修复范围仅为 <768px coarse/no-hover 的
+      `.pinned-area .launcher-grid--home`：68px square tracks、
+      4px 双向 gap；完整 68px tile 仍 ≥44px。
+      原有可视 glyph 大小设置 40/42/44px 不变。
+- [ ] 生产页面触屏 E2E（`home-launcher-density.test.ts`）：
+      375px 4 列，390px（358px 内容宽）5 列，430px 5 列。
+      测 computed 轨道/间距、tile 行数、hit-test、无重叠与横向溢出。
+- [ ] 同套 E2E 验证 Widgets Quick touch 仍 88px/8px，
+      fine-pointer Zen Home 仍 64px/6px；测试真正执行并记录结果。
+- [ ] 实页验证浅/深主题、Zen 首页开启/关闭应用名称、
+      图标尺寸紧凑/标准/大图标、长按/拖拽顺序、固定应用数量跨列、
+      390×640 短屏及真机或明确标记未验证。
+- [ ] 执行构建、受影响 suite、`deno task test:workspace`、
+      `deno task check:ui` 和受影响文件 fmt/lint/check；
+      不以创建 PR 或仅静态检查代替验收。
+
+**历史区分**：下面 #149 记录的「Home/Quick 仍为 88px」仅描述 #149
+合并时的状态；此次 PR 把移动 Zen Home 改为 68px，Widgets Quick 保持不变。
+
 ## Issue #149 触屏应用网格密度（2026-10-09）
 
 - [x] 沿用 Apps Workspace archetype；`launcher.css` 拥有视觉轨道和局部预览，
