@@ -764,13 +764,23 @@
     }
 }
 
-/* Zen home pins keep the same compact touch rhythm as Apps Workspace.
-   The 44px hit target is provided by the 68px tile, not an 88px grid track.
+/* Zen home pins and their portaled drag preview share compact touch tracks.
    Keep Widgets Quick and fine-pointer Home at their existing densities. */
 @media (max-width: 767px) and (pointer: coarse),
     (max-width: 767px) and (hover: none) {
-    .pinned-area .launcher-grid--home {
+    :is(.pinned-area .launcher-grid--home, .launcher-overlay.launcher-overlay--home) {
         --launcher-col-w: 68px;
         --launcher-gap-x: var(--space-1);
+    }
+    .launcher-overlay.launcher-overlay--home {
+        --launcher-icon: 42px;
+        --launcher-pad-t: 0px;
+        --launcher-pad-b: 0px;
+    }
+    .launcher-overlay.launcher-overlay--home.launcher-grid--compact {
+        --launcher-icon: 40px;
+    }
+    .launcher-overlay.launcher-overlay--home.launcher-grid--large {
+        --launcher-icon: 44px;
     }
 }
