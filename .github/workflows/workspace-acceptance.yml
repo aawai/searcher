@@ -32,6 +32,7 @@ jobs:
                   web/src/components/searcher/launcher.css
                   web/e2e/apps-density.test.ts
                   web/e2e/home-launcher-density.test.ts
+                  web/e2e/workspace-matrix.test.ts
 
     workspace-e2e:
         name: Full production Workspace E2E
