@@ -162,6 +162,175 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             }
         }
 
+        // Visual icon size and label preferences must not change tracks/columns.
+        await page.setViewportSize({ width: 390, height: 844 });
+        const setHomeVisuals = async (payload: {
+            webAppIconSize?: "compact" | "default" | "large";
+            showAppLabels?: boolean;
+        }) => {
+            const status = await page.evaluate(async (values) => {
+                const response = await fetch("/api/preferences", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(values),
+                });
+                return response.status;
+            }, payload);
+            assertEquals(status, 200);
+            await page.reload();
+            await grid.waitFor({ state: "visible" });
+        };
+        for (
+            const { size, iconWidth } of [
+                { size: "compact", iconWidth: 40 },
+                { size: "default", iconWidth: 42 },
+                { size: "large", iconWidth: 44 },
+            ] as const
+        ) {
+            await setHomeVisuals({
+                webAppIconSize: size,
+                showAppLabels: true,
+            });
+            await page.waitForFunction((width) => {
+                const glyph = document.querySelector<HTMLElement>(
+                    ".pinned-area .launcher-grid--home .webapp-glyph",
+                );
+                return glyph && Math.abs(glyph.getBoundingClientRect().width - width) < 1;
+            }, iconWidth);
+            const visual = await grid.evaluate((element) => ({
+                tileCount: element.querySelectorAll(".launcher-tile").length,
+                labels: element.querySelectorAll(".webapp-name").length,
+                track: Number.parseFloat(
+                    getComputedStyle(element).getPropertyValue("--launcher-col-w"),
+                ),
+                columns: Number((element as HTMLElement).dataset.columns),
+            }));
+            assertEquals(visual.tileCount, 6);
+            assertEquals(visual.labels, 6);
+            assertEquals(visual.track, 68);
+            assertEquals(visual.columns, 5);
+        }
+        await setHomeVisuals({
+            webAppIconSize: "default",
+            showAppLabels: false,
+        });
+        await page.waitForFunction(() =>
+            document.querySelector(
+                ".pinned-area .launcher-grid--home.launcher-grid--icons-only",
+            ) !== null
+        );
+        assertEquals(await grid.locator(".webapp-name").count(), 0);
+        assertEquals(await grid.getAttribute("data-columns"), "5");
+        await setHomeVisuals({ showAppLabels: true });
+        await page.waitForFunction(() =>
+            document.querySelectorAll(
+                ".pinned-area .launcher-grid--home .webapp-name",
+            ).length === 6
+        );
+
+        // Enter arranging via context menu; reproduce real CDP touch dragging
+        // into another cell and verify the portaled preview + persistence.
+        const tiles = grid.locator(":scope > .launcher-tile");
+        const initialIds = await tiles.evaluateAll((nodes) =>
+            nodes.map((node) => node.getAttribute("data-tile-id"))
+        );
+        assertEquals(initialIds.length, 6);
+        await tiles.first().locator(".webapp-icon").click({ button: "right" });
+        await page.getByRole("menuitem", {
+            name: "整理布局",
+            exact: true,
+        }).click();
+        await page.waitForFunction(() =>
+            document.querySelectorAll(
+                ".pinned-area .launcher-tile.is-managing",
+            ).length === 6
+        );
+        const source = (await tiles.nth(0).boundingBox())!;
+        const destination = (await tiles.nth(1).boundingBox())!;
+        const start = {
+            x: source.x + source.width / 2,
+            y: source.y + source.height / 2,
+            id: 1,
+        };
+        const cdp = await context.newCDPSession(page);
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchStart",
+            touchPoints: [start],
+        });
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove",
+            touchPoints: [{ ...start, x: start.x + 12 }],
+        });
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove",
+            touchPoints: [{ ...start, x: start.x + 20 }],
+        });
+        const overlay = page.locator(".launcher-overlay--home");
+        await overlay.waitFor({ state: "visible" });
+        const previewGeometry = await overlay.evaluate((element) => {
+            const r = element.getBoundingClientRect();
+            const glyph = element.querySelector(".webapp-glyph")!
+                .getBoundingClientRect();
+            const css = getComputedStyle(element);
+            return {
+                width: r.width,
+                height: r.height,
+                glyphWidth: glyph.width,
+                cell: Number.parseFloat(css.getPropertyValue("--launcher-col-w")),
+                gap: Number.parseFloat(css.getPropertyValue("--launcher-gap-x")),
+            };
+        });
+        assertEquals(previewGeometry.width, 68);
+        assertEquals(previewGeometry.height, 68);
+        assertEquals(previewGeometry.glyphWidth, 42);
+        assertEquals(previewGeometry.cell, 68);
+        assertEquals(previewGeometry.gap, 4);
+
+        const saved = page.waitForResponse((response) =>
+            new URL(response.url()).pathname === "/api/webapps/reorder" &&
+            response.request().method() === "PUT"
+        );
+        const dropPoint = {
+            x: destination.x + destination.width / 2,
+            y: destination.y + destination.height / 2,
+            id: 1,
+        };
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove",
+            touchPoints: [dropPoint],
+        });
+        await page.waitForFunction((targetId) =>
+            Array.from(
+                document.querySelectorAll(
+                    ".pinned-area .launcher-tile.is-over",
+                ),
+            ).some((node) => node.getAttribute("data-tile-id") === targetId),
+        initialIds[1]);
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchEnd",
+            touchPoints: [],
+        });
+        assertEquals((await saved).status(), 200);
+        await page.waitForFunction((ids) => {
+            const actual = Array.from(
+                document.querySelectorAll(
+                    ".pinned-area .launcher-grid--home > .launcher-tile",
+                ),
+                (node) => node.getAttribute("data-tile-id"),
+            );
+            return actual[0] === ids[1] && actual[1] === ids[0];
+        }, initialIds);
+        await page.reload();
+        await grid.waitFor({ state: "visible" });
+        const reorderedIds = await grid.locator(":scope > .launcher-tile")
+            .evaluateAll((nodes) =>
+                nodes.map((node) => node.getAttribute("data-tile-id"))
+            );
+        assertEquals(reorderedIds.slice(0, 2), [
+            initialIds[1],
+            initialIds[0],
+        ]);
+
         // Widgets Quick retains its independent touch density.
         await page.setViewportSize({ width: 390, height: 844 });
         await setStyle("widgets");
