@@ -777,6 +777,10 @@
         --launcher-pad-t: 0px;
         --launcher-pad-b: 0px;
     }
+    /* Portal previews do not inherit the Home grid's icon alignment. */
+    .launcher-overlay.launcher-overlay--home .webapp-icon {
+        justify-content: center;
+    }
     .launcher-overlay.launcher-overlay--home.launcher-grid--compact {
         --launcher-icon: 40px;
     }
