@@ -32,7 +32,6 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
                         url: "https://pinned-" + index + ".example/",
                         isPinned: true,
                         sortOrder: index,
-                        pinnedSortOrder: index,
                     }),
                 });
                 if (!response.ok) {
