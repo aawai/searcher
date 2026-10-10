@@ -17,7 +17,9 @@
       375px 4 列，390px（358px 内容宽）5 列，430px 5 列。
       测 computed 轨道/间距、tile 行数、hit-test、无重叠与横向溢出；
       检查三个图标尺寸、显示/隐藏名称、真实 CDP 触屏拖拽的 overlay
-      68px/4px 与 42px 默认 glyph，并断言排序保存、刷新后顺序持久化。
+      68px/4px 与 42px 默认 glyph，比较原始 tile 与 portaled overlay 的
+      glyph 相对 X/Y 坐标，验证隐藏名称时两者均居中；触屏长按进入整理，
+      并断言排序保存、刷新后顺序持久化。上述断言尚未执行。
       #149 原有 `apps-density.test.ts` 已按 Zen Home、Widgets Quick
       及 767/768 断点分别更新预期。**测试已写入，但尚未执行。**
 - [ ] 同套 E2E 验证 Widgets Quick touch 仍 88px/8px，
