@@ -235,11 +235,31 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             nodes.map((node) => node.getAttribute("data-tile-id"))
         );
         assertEquals(initialIds.length, 6);
-        await tiles.first().locator(".webapp-icon").click({ button: "right" });
-        await page.getByRole("menuitem", {
+        const cdp = await context.newCDPSession(page);
+        const pressBox = (await tiles.first().locator(".webapp-icon")
+            .boundingBox())!;
+        const pressPoint = {
+            x: pressBox.x + pressBox.width / 2,
+            y: pressBox.y + pressBox.height / 2,
+            id: 10,
+        };
+        // Open the actual Home context menu by a touch long-press, rather
+        // than a desktop right-click in a mobile viewport.
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchStart",
+            touchPoints: [pressPoint],
+        });
+        await page.waitForTimeout(650);
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchEnd",
+            touchPoints: [],
+        });
+        const arrange = page.getByRole("menuitem", {
             name: "整理布局",
             exact: true,
-        }).click();
+        });
+        await arrange.waitFor({ state: "visible" });
+        await arrange.click();
         await page.waitForFunction(() =>
             document.querySelectorAll(
                 ".pinned-area .launcher-tile.is-managing",
@@ -252,7 +272,6 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             y: source.y + source.height / 2,
             id: 1,
         };
-        const cdp = await context.newCDPSession(page);
         await cdp.send("Input.dispatchTouchEvent", {
             type: "touchStart",
             touchPoints: [start],
@@ -285,6 +304,54 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
         assertEquals(previewGeometry.glyphWidth, 42);
         assertEquals(previewGeometry.cell, 68);
         assertEquals(previewGeometry.gap, 4);
+
+        // Comparing sizes alone misses vertical glyph jumps. Normalize both
+        // glyph rectangles to their own tile/overlay to account for dragging.
+        const assertPreviewAlignment = async (expectedGlyphSize: number) => {
+            const relative = await page.evaluate(() => {
+                const original = document.querySelector<HTMLElement>(
+                    ".pinned-area .launcher-tile.is-dragging",
+                );
+                const preview = document.querySelector<HTMLElement>(
+                    ".launcher-overlay--home",
+                );
+                if (!original || !preview) {
+                    throw new Error("Active home tile or preview missing");
+                }
+                const relativeGlyph = (tile: HTMLElement) => {
+                    const box = tile.getBoundingClientRect();
+                    const glyph = tile.querySelector<HTMLElement>(
+                        ".webapp-glyph",
+                    )?.getBoundingClientRect();
+                    if (!glyph) throw new Error("Expected a glyph");
+                    return {
+                        x: glyph.left - box.left,
+                        y: glyph.top - box.top,
+                        width: glyph.width,
+                        height: glyph.height,
+                        tileWidth: box.width,
+                        tileHeight: box.height,
+                    };
+                };
+                return {
+                    tile: relativeGlyph(original),
+                    preview: relativeGlyph(preview),
+                };
+            });
+            for (const axis of ["x", "y", "width", "height"] as const) {
+                assert(
+                    Math.abs(relative.tile[axis] - relative.preview[axis]) < 1,
+                    `Home drag preview ${axis} must match tile: ${JSON.stringify(relative)}`,
+                );
+            }
+            assertEquals(relative.tile.width, expectedGlyphSize);
+            assertEquals(relative.preview.width, expectedGlyphSize);
+            assertEquals(relative.tile.tileWidth, 68);
+            assertEquals(relative.preview.tileWidth, 68);
+            assertEquals(relative.tile.tileHeight, 68);
+            assertEquals(relative.preview.tileHeight, 68);
+        };
+        await assertPreviewAlignment(42);
 
         const saved = page.waitForResponse((response) =>
             new URL(response.url()).pathname === "/api/webapps/reorder" &&
@@ -330,6 +397,54 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             initialIds[1],
             initialIds[0],
         ]);
+
+        // Repeat the alignment regression without app labels. Cancel this
+        // gesture to leave the already-persisted Home order unchanged.
+        await setHomeVisuals({ showAppLabels: false });
+        await page.waitForFunction(() =>
+            document.querySelector(
+                ".pinned-area .launcher-grid--home.launcher-grid--icons-only",
+            ) !== null
+        );
+        const hiddenTiles = grid.locator(":scope > .launcher-tile");
+        await hiddenTiles.first().locator(".webapp-icon").click({
+            button: "right",
+        });
+        await page.getByRole("menuitem", {
+            name: "整理布局",
+            exact: true,
+        }).click();
+        await page.waitForFunction(() =>
+            document.querySelectorAll(
+                ".pinned-area .launcher-tile.is-managing",
+            ).length === 6
+        );
+        const hiddenBox = (await hiddenTiles.first().boundingBox())!;
+        const hiddenStart = {
+            x: hiddenBox.x + hiddenBox.width / 2,
+            y: hiddenBox.y + hiddenBox.height / 2,
+            id: 2,
+        };
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchStart",
+            touchPoints: [hiddenStart],
+        });
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove",
+            touchPoints: [{ ...hiddenStart, x: hiddenStart.x + 12 }],
+        });
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove",
+            touchPoints: [{ ...hiddenStart, x: hiddenStart.x + 20 }],
+        });
+        await overlay.waitFor({ state: "visible" });
+        await assertPreviewAlignment(42);
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchCancel",
+            touchPoints: [],
+        });
+        await overlay.waitFor({ state: "detached" });
+        await setHomeVisuals({ showAppLabels: true });
 
         // Widgets Quick retains its independent touch density.
         await page.setViewportSize({ width: 390, height: 844 });
