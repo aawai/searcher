@@ -764,27 +764,27 @@
     }
 }
 
-/* Zen home pins and their portaled drag preview share compact touch tracks.
-   Keep Widgets Quick and fine-pointer Home at their existing densities. */
+/* Mobile Home presenters and their portaled preview share touch geometry. */
 @media (max-width: 767px) and (pointer: coarse),
     (max-width: 767px) and (hover: none) {
-    :is(.pinned-area .launcher-grid--home, .launcher-overlay.launcher-overlay--home) {
+    :is(.pinned-area .launcher-grid--home, .launcher-grid--quick, .launcher-overlay.launcher-overlay--home) {
         --launcher-col-w: 68px;
         --launcher-gap-x: var(--space-1);
-    }
-    .launcher-overlay.launcher-overlay--home {
         --launcher-icon: 42px;
         --launcher-pad-t: 0px;
         --launcher-pad-b: 0px;
+    }
+    .launcher-grid--quick {
+        --launcher-justify: center;
     }
     /* Portal previews do not inherit the Home grid's icon alignment. */
     .launcher-overlay.launcher-overlay--home .webapp-icon {
         justify-content: center;
     }
-    .launcher-overlay.launcher-overlay--home.launcher-grid--compact {
+    :is(.pinned-area .launcher-grid--home, .launcher-grid--quick, .launcher-overlay.launcher-overlay--home).launcher-grid--compact {
         --launcher-icon: 40px;
     }
-    .launcher-overlay.launcher-overlay--home.launcher-grid--large {
+    :is(.pinned-area .launcher-grid--home, .launcher-grid--quick, .launcher-overlay.launcher-overlay--home).launcher-grid--large {
         --launcher-icon: 44px;
     }
 }

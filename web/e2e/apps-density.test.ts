@@ -1094,27 +1094,26 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                         touchPage,
                         homeSelector,
                     );
-                    const compactZenHome = style === "zen" &&
-                        viewport.width < 768;
+                    const compactHome = viewport.width < 768;
                     assertNear(
                         home.cellWidth,
-                        compactZenHome ? 68 : 88,
-                        "Zen Home compact touch tracks; Widgets Quick unchanged",
+                        compactHome ? 68 : 88,
+                        "Mobile Home presenters share compact touch tracks",
                     );
                     assertNear(
                         home.rowHeight,
-                        compactZenHome ? 68 : 88,
-                        "Zen Home touch row geometry",
+                        compactHome ? 68 : 88,
+                        "Home touch row geometry",
                     );
                     assertNear(
                         home.columnGap,
-                        compactZenHome ? 4 : style === "widgets" ? 8 : 6,
-                        "Zen Home compact gaps; Widgets Quick unchanged",
+                        compactHome ? 4 : style === "widgets" ? 8 : 6,
+                        "Mobile Home presenters share compact gaps",
                     );
                     assertNear(
                         home.rowGap,
-                        compactZenHome ? 4 : style === "widgets" ? 8 : 6,
-                        "Zen Home touch row gaps",
+                        compactHome ? 4 : style === "widgets" ? 8 : 6,
+                        "Home touch row gaps",
                     );
                     await openAppsWorkspace(touchPage);
                     const metrics = await collectDensityMetrics(

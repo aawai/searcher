@@ -2,9 +2,9 @@ import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-// Production-page regression for Zen home pins: 68px touch tracks, 4px gap,
-// and at least 44px usable targets without changing Widgets Quick or desktop.
-Deno.test("Zen home touch grid density and drag alignment", async () => {
+// Production-page regression for mobile Home presenters: square touch tracks,
+// centered glyphs and usable targets, without changing tablet or desktop.
+Deno.test("Home touch grid density and drag alignment", async () => {
     const app = await startProductionApp();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
     try {
@@ -508,20 +508,126 @@ Deno.test("Zen home touch grid density and drag alignment", async () => {
         await overlay.waitFor({ state: "detached" });
         await setHomeVisuals({ showAppLabels: true });
 
-        // Widgets Quick retains its independent touch density.
+        // Both mobile Home presenters share tracks, glyphs and hit areas.
         await page.setViewportSize({ width: 390, height: 844 });
         await setStyle("widgets");
         const quick = page.locator(".widgets-bento-card .launcher-grid--quick");
         await quick.waitFor({ state: "visible" });
-        const quickMetrics = await quick.evaluate((node) => {
-            const css = getComputedStyle(node);
-            return {
-                cell: parseFloat(css.getPropertyValue("--launcher-col-w")),
-                gap: parseFloat(css.columnGap),
-            };
-        });
-        assertEquals(quickMetrics.cell, 88);
-        assertEquals(quickMetrics.gap, 8);
+        const assertQuickGeometry = async (
+            columns: number,
+            glyphSize: number,
+            showLabels: boolean,
+        ) => {
+            await page.waitForFunction((columns) => {
+                const element = document.querySelector<HTMLElement>(
+                    ".widgets-bento-card .launcher-grid--quick",
+                );
+                return element?.dataset.columns === String(columns) &&
+                    element.querySelectorAll(".launcher-tile").length === 6;
+            }, columns);
+            const metrics = await quick.evaluate((node) => {
+                const css = getComputedStyle(node);
+                const container = node.getBoundingClientRect();
+                const tiles = Array.from(
+                    node.querySelectorAll<HTMLElement>(
+                        ":scope > .launcher-tile",
+                    ),
+                    (tile) => tile.getBoundingClientRect(),
+                );
+                const left = Math.min(...tiles.map((tile) => tile.left));
+                const right = Math.max(...tiles.map((tile) => tile.right));
+                return {
+                    cell: parseFloat(css.getPropertyValue("--launcher-col-w")),
+                    row: parseFloat(css.getPropertyValue("--launcher-row-h")),
+                    gapX: parseFloat(css.columnGap),
+                    gapY: parseFloat(css.rowGap),
+                    firstRow: tiles.filter((tile) =>
+                        Math.abs(tile.top - tiles[0].top) < 1
+                    ).length,
+                    centerOffset: Math.abs(
+                        (left + right) / 2 -
+                            (container.left + container.right) / 2,
+                    ),
+                    overflow: node.scrollWidth > node.clientWidth + 1,
+                    labels: node.querySelectorAll(".webapp-name").length,
+                    buttons: Array.from(
+                        node.querySelectorAll<HTMLElement>(".webapp-icon"),
+                        (button) => {
+                            const box = button.getBoundingClientRect();
+                            const glyph = button.querySelector(".webapp-glyph")!
+                                .getBoundingClientRect();
+                            const hit = document.elementFromPoint(
+                                box.left + box.width / 2,
+                                box.top + box.height / 2,
+                            );
+                            return {
+                                width: box.width,
+                                height: box.height,
+                                glyph: glyph.width,
+                                centeredX: Math.abs(
+                                    glyph.left + glyph.width / 2 -
+                                        (box.left + box.width / 2),
+                                ),
+                                centeredY: Math.abs(
+                                    glyph.top + glyph.height / 2 -
+                                        (box.top + box.height / 2),
+                                ),
+                                hittable: hit === button ||
+                                    button.contains(hit),
+                            };
+                        },
+                    ),
+                };
+            });
+            assertEquals(metrics.cell, 68);
+            assertEquals(metrics.row, 68);
+            assertEquals(metrics.gapX, 4);
+            assertEquals(metrics.gapY, 4);
+            assertEquals(metrics.firstRow, columns);
+            assert(metrics.centerOffset < 1, JSON.stringify(metrics));
+            assertEquals(metrics.overflow, false);
+            assertEquals(metrics.labels, showLabels ? 6 : 0);
+            for (const button of metrics.buttons) {
+                assertEquals(button.width, 68);
+                assertEquals(button.height, 68);
+                assertEquals(button.glyph, glyphSize);
+                assert(button.centeredX < 1);
+                if (!showLabels) assert(button.centeredY < 1);
+                assertEquals(button.hittable, true);
+            }
+        };
+        for (
+            const { width, columns } of [
+                { width: 375, columns: 4 },
+                { width: 390, columns: 4 },
+                { width: 430, columns: 5 },
+            ]
+        ) {
+            await page.setViewportSize({ width, height: 844 });
+            await assertQuickGeometry(columns, 42, true);
+        }
+        await page.setViewportSize({ width: 390, height: 844 });
+        for (
+            const { size, glyph } of [
+                { size: "compact", glyph: 40 },
+                { size: "default", glyph: 42 },
+                { size: "large", glyph: 44 },
+            ]
+        ) {
+            for (const showLabels of [true, false]) {
+                const status = await page.evaluate(async (values) => {
+                    const response = await fetch("/api/preferences", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(values),
+                    });
+                    return response.status;
+                }, { webAppIconSize: size, showAppLabels: showLabels });
+                assertEquals(status, 200);
+                await page.reload();
+                await assertQuickGeometry(4, glyph, showLabels);
+            }
+        }
 
         // Fine-pointer Home keeps the pre-existing 64px / 6px layout.
         await setStyle("zen");

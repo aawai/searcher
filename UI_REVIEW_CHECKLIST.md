@@ -4,37 +4,50 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
-## 移动端 Zen 首页固定应用密度回归（2026-10-10）
+## 移动端首页固定应用密度回归（2026-10-10）
 
-- [x] 源码根因核实：#149 仅限定 `.launcher-grid--workspace` 的 68px
-      override；Home 在 coarse/no-hover 下仍使用共享 88px track 与 6px gap。
-      不改变 Apps、Widgets Quick 与 fine-pointer Home。
-- [x] CSS 修复范围仅为 <768px coarse/no-hover 的
-      `.pinned-area .launcher-grid--home`：68px square tracks、
-      4px 双向 gap；完整 68px tile 仍 ≥44px。
-      原有可视 glyph 大小设置 40/42/44px 不变。
-- [x] 生产页面触屏 E2E 已加入源码（`home-launcher-density.test.ts`）：
-      375px 4 列，390px（358px 内容宽）5 列，430px 5 列。
-      测 computed 轨道/间距、tile 行数、hit-test、无重叠与横向溢出；
-      检查三个图标尺寸、显示/隐藏名称、真实 CDP 触屏拖拽的 overlay
-      68px/4px 与 42px 默认 glyph，比较原始 tile 与 portaled overlay 的
-      glyph 相对 X/Y 坐标，验证隐藏名称时两者均居中；触屏长按进入整理，
+- [x] 根因与最终范围：#149 仅恢复 Apps；本次移动 coarse/no-hover `<768px` 的 Zen
+      与 Widgets Quick 统一为 68×68px tracks、4px 双向 gap、 40/42/44px
+      glyph。Apps、fine-pointer 与 >=768px touch 保持原有布局。 Quick 卡片
+      padding 不变，网格在实际内容区居中。
+- [x] Zen 生产页面触屏 E2E（`home-launcher-density.test.ts`）：375px 4
+      列，390px（358px 内容宽）5 列，430px 5 列。 测 computed 轨道/间距、tile
+      行数、hit-test、无重叠与横向溢出； 检查三个图标尺寸、显示/隐藏名称、真实
+      CDP 触屏拖拽的 overlay 68px/4px 与 42px 默认 glyph，比较原始 tile 与
+      portaled overlay 的 glyph 相对 X/Y
+      坐标，验证隐藏名称时两者均居中；触屏长按进入整理，
       并断言排序保存、刷新后顺序持久化。页面加载、尺寸切换及设置重载后，
-      额外等待 ResizeObserver 列数与实测首行几何一致再断言。
-      上述断言尚未执行。
-      #149 原有 `apps-density.test.ts` 已按 Zen Home、Widgets Quick
-      及 767/768 断点分别更新预期。**测试已写入，但尚未执行。**
-- [ ] 同套 E2E 验证 Widgets Quick touch 仍 88px/8px，
-      fine-pointer Zen Home 仍 64px/6px；测试真正执行并记录结果。
-- [ ] 实页验证浅/深主题、Zen 首页开启/关闭应用名称、
-      图标尺寸紧凑/标准/大图标、长按/拖拽顺序、固定应用数量跨列、
-      390×640 短屏及真机或明确标记未验证。
-- [ ] 执行构建、受影响 suite、`deno task test:workspace`、
-      `deno task check:ui` 和受影响文件 fmt/lint/check；
-      不以创建 PR 或仅静态检查代替验收。
+      额外等待 ResizeObserver 列数与实测首行几何一致再断言。 更新后的 Home
+      density suite 已单独通过；原 Apps density 的移动首页 及 767/768
+      断点预期同步更新。
+- [x] Widgets Quick 375/390/430px 首行分别 4/4/5 个，实际区域 68×68px， gap
+      4px；六种 glyph/名称组合均验证水平居中、隐藏名称时垂直居中、 网格中心偏差
+      <1px 和按钮 hit-test。更新后的 Home density E2E 通过； 首次回归在 88≠68
+      失败，随后居中回归发现 16.5px 偏移，修正后通过。 fine-pointer Zen Home 仍
+      64px/6px。
+- [x] 最终生产构建的 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共
+      12 组实页截图与几何验证，无页面或网格横向溢出。 截图矩阵媒体实测均为
+      coarse/no-hover，不冒充 fine-pointer； fine-pointer 由独立 Playwright
+      context 的 E2E 验证。 390px Quick 内容宽 332px、4 列，Zen 内容宽 358px、5
+      列； 两者均 68px track / 4px gap / 42px 默认 glyph，移动网格中心偏差为 0。
+      390×640 Quick 另采集 light/dark × 三种图标尺寸 × 名称开关共 12 张；
+      图标与名称整体（或单独 glyph）在单元内水平、垂直中心偏差均为 0。 1/3/5/6
+      个固定应用实页复查网格中心偏差均为 0。 截图
+      `/tmp/pr151-unified-*.png`，报告 `/tmp/pr151-unified-report.json`； 浏览器
+      errors 为空。矩阵脚本首次误用卡片外宽计算列数导致等待超时，
+      改为按实际内容区验收并重新采集全部最终矩阵，不修改卡片 padding。
+- [x] 本地 build、受影响 TypeScript check/lint 与四个源文件 fmt 通过。
+      `check:ui` 使用 `/tmp/searcher-pr151-acceptance` 路径别名避开 `.omp`
+      绝对路径排除：ownership 实扫 194 文件、visual 实扫 141 文件，
+      violations/allowances 均为 0。
+- [x] 最终代码本地完整 `deno task test:workspace` 通过： 23 passed（134 steps）/
+      0 failed；包含生产构建、更新后的 Home/Apps density、Bento、launcher 及全部
+      Workspace 回归，不复用旧提交 CI。
+- [ ] 真实 iOS/Android、Safari 与真实软键盘未验证；本次触屏为 Chromium 模拟与
+      CDP 输入。未执行独立 axe；不将历史验收冒充本次结果。
 
 **历史区分**：下面 #149 记录的「Home/Quick 仍为 88px」仅描述 #149
-合并时的状态；此次 PR 把移动 Zen Home 改为 68px，Widgets Quick 保持不变。
+合并时的状态；此次最终范围包含移动 Zen 与 Widgets Quick 的 68px 统一。
 
 ## Issue #149 触屏应用网格密度（2026-10-09）
 
