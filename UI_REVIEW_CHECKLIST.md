@@ -19,7 +19,9 @@
       检查三个图标尺寸、显示/隐藏名称、真实 CDP 触屏拖拽的 overlay
       68px/4px 与 42px 默认 glyph，比较原始 tile 与 portaled overlay 的
       glyph 相对 X/Y 坐标，验证隐藏名称时两者均居中；触屏长按进入整理，
-      并断言排序保存、刷新后顺序持久化。上述断言尚未执行。
+      并断言排序保存、刷新后顺序持久化。页面加载、尺寸切换及设置重载后，
+      额外等待 ResizeObserver 列数与实测首行几何一致再断言。
+      上述断言尚未执行。
       #149 原有 `apps-density.test.ts` 已按 Zen Home、Widgets Quick
       及 767/768 断点分别更新预期。**测试已写入，但尚未执行。**
 - [ ] 同套 E2E 验证 Widgets Quick touch 仍 88px/8px，
