@@ -4,7 +4,7 @@ import { startProductionApp } from "./helpers/production-app.ts";
 
 // Production-page regression for Zen home pins: 68px touch tracks, 4px gap,
 // and at least 44px usable targets without changing Widgets Quick or desktop.
-Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => {
+Deno.test("Zen home touch grid density and drag alignment", async () => {
     const app = await startProductionApp();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
     try {
@@ -35,7 +35,9 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
                     }),
                 });
                 if (!response.ok) {
-                    throw new Error("Seed pinned app: " + await response.text());
+                    throw new Error(
+                        "Seed pinned app: " + await response.text(),
+                    );
                 }
             }
         });
@@ -54,12 +56,45 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
         await setStyle("zen");
 
         const grid = page.locator(".pinned-area .launcher-grid--home");
-        await grid.waitFor({ state: "visible" });
-        await page.waitForFunction(() =>
-            document.querySelectorAll(
-                ".pinned-area .launcher-grid--home .launcher-tile",
-            ).length === 6
-        );
+        // Visibility alone is not enough: useDesktopColumns initializes with
+        // six columns and ResizeObserver updates the responsive grid later.
+        const waitForHomeColumns = async (expected: number) => {
+            await grid.waitFor({ state: "visible" });
+            await page.waitForFunction((columns) => {
+                const home = document.querySelector<HTMLElement>(
+                    ".pinned-area .launcher-grid--home",
+                );
+                if (!home || Number(home.dataset.columns) !== columns) {
+                    return false;
+                }
+                const style = getComputedStyle(home);
+                const cell = Number.parseFloat(
+                    style.getPropertyValue("--launcher-col-w"),
+                );
+                const gap = Number.parseFloat(style.columnGap);
+                const width = home.parentElement?.getBoundingClientRect()
+                    .width ?? 0;
+                const tiles = Array.from(
+                    home.querySelectorAll<HTMLElement>(
+                        ":scope > .launcher-tile",
+                    ),
+                );
+                if (
+                    cell !== 68 || gap !== 4 || tiles.length !== 6 ||
+                    width <= 0
+                ) return false;
+                const measured = Math.max(
+                    2,
+                    Math.floor((width + gap) / (cell + gap)),
+                );
+                const top = tiles[0].getBoundingClientRect().top;
+                const firstRow = tiles.filter((tile) =>
+                    Math.abs(tile.getBoundingClientRect().top - top) < 1
+                ).length;
+                return measured === columns && firstRow === columns;
+            }, expected);
+        };
+        await waitForHomeColumns(5);
         assertEquals(
             await page.evaluate(() =>
                 matchMedia("(pointer: coarse), (hover: none)").matches
@@ -73,10 +108,7 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             { width: 430, columns: 5 },
         ]) {
             await page.setViewportSize({ width, height: 844 });
-            await page.waitForFunction((count) =>
-                document.querySelector(
-                    ".pinned-area .launcher-grid--home",
-                )?.getAttribute("data-columns") === String(count), columns);
+            await waitForHomeColumns(columns);
             const metrics = await grid.evaluate((node) => {
                 const element = node as HTMLElement;
                 const css = getComputedStyle(element);
@@ -162,7 +194,7 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             }
         }
 
-        // Visual icon size and label preferences must not change tracks/columns.
+        // Icon size and label preferences must not change tracks or columns.
         await page.setViewportSize({ width: 390, height: 844 });
         const setHomeVisuals = async (payload: {
             webAppIconSize?: "compact" | "default" | "large";
@@ -178,7 +210,7 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             }, payload);
             assertEquals(status, 200);
             await page.reload();
-            await grid.waitFor({ state: "visible" });
+            await waitForHomeColumns(5);
         };
         for (
             const { size, iconWidth } of [
@@ -195,13 +227,16 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
                 const glyph = document.querySelector<HTMLElement>(
                     ".pinned-area .launcher-grid--home .webapp-glyph",
                 );
-                return glyph && Math.abs(glyph.getBoundingClientRect().width - width) < 1;
+                return glyph &&
+                    Math.abs(glyph.getBoundingClientRect().width - width) < 1;
             }, iconWidth);
             const visual = await grid.evaluate((element) => ({
                 tileCount: element.querySelectorAll(".launcher-tile").length,
                 labels: element.querySelectorAll(".webapp-name").length,
                 track: Number.parseFloat(
-                    getComputedStyle(element).getPropertyValue("--launcher-col-w"),
+                    getComputedStyle(element).getPropertyValue(
+                        "--launcher-col-w",
+                    ),
                 ),
                 columns: Number((element as HTMLElement).dataset.columns),
             }));
@@ -295,8 +330,12 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
                 width: r.width,
                 height: r.height,
                 glyphWidth: glyph.width,
-                cell: Number.parseFloat(css.getPropertyValue("--launcher-col-w")),
-                gap: Number.parseFloat(css.getPropertyValue("--launcher-gap-x")),
+                cell: Number.parseFloat(
+                    css.getPropertyValue("--launcher-col-w"),
+                ),
+                gap: Number.parseFloat(
+                    css.getPropertyValue("--launcher-gap-x"),
+                ),
             };
         });
         assertEquals(previewGeometry.width, 68);
@@ -344,7 +383,9 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             for (const axis of ["x", "y", "width", "height"] as const) {
                 assert(
                     Math.abs(relative.tile[axis] - relative.preview[axis]) < 1,
-                    `Home drag preview ${axis} must match tile: ${JSON.stringify(relative)}`,
+                    `Home drag preview ${axis} must match tile: ${JSON.stringify(
+                        relative,
+                    )}`,
                 );
             }
             assertEquals(relative.tile.width, expectedGlyphSize);
@@ -359,11 +400,15 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
                 const centered = (68 - expectedGlyphSize) / 2;
                 assert(
                     Math.abs(relative.tile.y - centered) < 1,
-                    `Hidden-label home glyph must be vertically centered: ${JSON.stringify(relative)}`,
+                    `Hidden-label home glyph must be vertically centered: ${JSON.stringify(
+                        relative,
+                    )}`,
                 );
                 assert(
                     Math.abs(relative.preview.y - centered) < 1,
-                    `Hidden-label drag glyph must be vertically centered: ${JSON.stringify(relative)}`,
+                    `Hidden-label drag glyph must be vertically centered: ${JSON.stringify(
+                        relative,
+                    )}`,
                 );
             }
         };
@@ -404,7 +449,7 @@ Deno.test("mobile Zen pinned launcher keeps five columns at 390px", async () => 
             return actual[0] === ids[1] && actual[1] === ids[0];
         }, initialIds);
         await page.reload();
-        await grid.waitFor({ state: "visible" });
+        await waitForHomeColumns(5);
         const reorderedIds = await grid.locator(":scope > .launcher-tile")
             .evaluateAll((nodes) =>
                 nodes.map((node) => node.getAttribute("data-tile-id"))
