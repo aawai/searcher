@@ -473,8 +473,13 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
   可交互按钮，glyph 与 hit area 分离，剩余数量显示 +N，
   全部成员通过文件夹详情访问。预览局部几何留出底部完整 44px 高的
   文件夹打开区域，名称不盖住按钮；相邻 tile 与 preview hit area 不重叠。
-  Home/Quick 的触屏 track 仍消费 `--launcher-touch-cell-size`（88px），
-  fine-pointer 原有密度、九项大文件夹预览与非空搜索列表不变。
+  移动触屏 Zen 首页 `.pinned-area .launcher-grid--home` 与 Apps 使用相同的
+  68×68px 轨道及 4px 双向间距，维持完整 tile ≥44px 命中区；
+  它仅在 `<768px` 的 coarse/no-hover 条件生效，390px 屏幕上 358px
+  首页可用宽度容纳 5 列。首页的 `webAppIconSize` 仍只控制可视 glyph
+  （紧凑/标准/大图标），不改变轨道或列数。
+  Widgets Quick 触屏轨道继续消费 `--launcher-touch-cell-size`（88px），
+  fine-pointer Home/Quick 原有密度、九项大文件夹预览与非空搜索列表不变。
 - `useAppsLayoutPersistence` 位于 presenter 之上，保留并发乐观重排和现有 API，
   所有已发出的布局请求 settled 后读取服务端确认 snapshot。新的操作使旧
   reconciliation version 失效；不使用旧数组整体 rollback 覆盖新排序。
