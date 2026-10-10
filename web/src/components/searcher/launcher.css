@@ -763,3 +763,14 @@
         pointer-events: none;
     }
 }
+
+/* Zen home pins keep the same compact touch rhythm as Apps Workspace.
+   The 44px hit target is provided by the 68px tile, not an 88px grid track.
+   Keep Widgets Quick and fine-pointer Home at their existing densities. */
+@media (max-width: 767px) and (pointer: coarse),
+    (max-width: 767px) and (hover: none) {
+    .pinned-area .launcher-grid--home {
+        --launcher-col-w: 68px;
+        --launcher-gap-x: var(--space-1);
+    }
+}
