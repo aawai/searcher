@@ -1,6 +1,10 @@
 import type { MilkdownPlugin } from "@milkdown/ctx";
-import { Plugin, PluginKey, type Transaction } from "@milkdown/prose/state";
-import type { EditorView } from "@milkdown/prose/view";
+import { Plugin, PluginKey } from "@milkdown/prose/state";
+import {
+    Decoration,
+    DecorationSet,
+    type EditorView,
+} from "@milkdown/prose/view";
 import { $prose } from "@milkdown/utils";
 
 import type { MarkdownEditorHandle } from "../markdown-editor/types.ts";
@@ -42,60 +46,120 @@ export interface DocumentPagination {
     readonly mode: PaginationMode;
 }
 
-function anchorScrollToSelection(
+type FlowEventKind =
+    | "line"
+    | "block"
+    | "empty"
+    | "manual"
+    | "table-row"
+    | "image";
+
+interface FlowEvent {
+    readonly kind: FlowEventKind;
+    readonly pos: number;
+    readonly top: number;
+    readonly height: number;
+    readonly nodeSize?: number;
+    readonly columns?: number;
+}
+
+interface TableCellFlow {
+    readonly height: number;
+    readonly events: FlowEvent[];
+}
+
+interface TableRowFlow {
+    readonly kind: "table-row-flow";
+    readonly pos: number;
+    readonly top: number;
+    readonly cells: TableCellFlow[];
+}
+
+type LayoutItem = FlowEvent | TableRowFlow;
+
+interface ActiveWidget {
+    readonly kind: "line" | "table-row";
+    readonly height: number;
+    readonly columns: number;
+}
+
+interface SelectionAnchor {
+    readonly position: number;
+    readonly top: number;
+}
+
+interface StyleValue {
+    readonly value: string;
+    readonly priority: string;
+}
+
+function asHTMLElement(node: Node | null): HTMLElement | null {
+    return node && node.nodeType === 1 ? node as HTMLElement : null;
+}
+
+function captureVisibleSelection(
     view: EditorView,
     scrollContainer: HTMLElement,
-    targetMode: PaginationMode,
-    metrics: PaperMetrics,
-    scale: number,
-): void {
+): SelectionAnchor | null {
     try {
-        const { from } = view.state.selection;
-        const coords = view.coordsAtPos(from);
-        if (
-            coords &&
-            typeof scrollContainer.getBoundingClientRect === "function"
-        ) {
-            const scRect = scrollContainer.getBoundingClientRect();
-            if (targetMode === "page") {
-                const relX = coords.left - scRect.left +
-                    scrollContainer.scrollLeft;
-                const pitch = metrics.pitch * scale;
-                const pageIndex = Math.max(0, Math.floor(relX / pitch));
-                const top = coords.top < scRect.top
-                    ? scrollContainer.scrollTop + coords.top - scRect.top
-                    : coords.bottom > scRect.bottom
-                    ? scrollContainer.scrollTop + coords.bottom - scRect.bottom
-                    : scrollContainer.scrollTop;
-                scrollContainer.scrollTo({
-                    left: pageIndex * pitch,
-                    top,
-                    behavior: "instant",
-                });
-            } else {
-                const relY = coords.top - scRect.top +
-                    scrollContainer.scrollTop;
-                scrollContainer.scrollTo({
-                    left: 0,
-                    top: Math.max(0, relY),
-                    behavior: "instant",
-                });
-            }
+        const position = view.state.selection.from;
+        const coords = view.coordsAtPos(position);
+        const scrollRect = scrollContainer.getBoundingClientRect();
+        if (coords.bottom < scrollRect.top || coords.top > scrollRect.bottom) {
+            return null;
         }
+        return { position, top: coords.top };
     } catch {
-        // Safe fallback in headless / test environments
+        return null;
     }
 }
 
+function restoreVisibleSelection(
+    view: EditorView,
+    scrollContainer: HTMLElement,
+    anchor: SelectionAnchor | null,
+    scale: number,
+): void {
+    if (!anchor) return;
+    try {
+        const position = Math.min(anchor.position, view.state.doc.content.size);
+        const nextTop = view.coordsAtPos(position).top;
+        scrollContainer.scrollTop += (nextTop - anchor.top) / scale;
+    } catch {
+        // Headless DOMs may not expose selection coordinates.
+    }
+}
+
+function createGapWidget(
+    document: Document,
+    height: number,
+    scale: number,
+    kind: ActiveWidget["kind"],
+    columns: number,
+): HTMLElement {
+    if (kind === "table-row") {
+        const row = document.createElement("tr");
+        row.className = "pagination-gap pagination-gap-row";
+        row.setAttribute("aria-hidden", "true");
+        row.setAttribute("contenteditable", "false");
+        const cell = document.createElement("td");
+        cell.colSpan = Math.max(1, columns);
+        cell.style.height = `${height / scale}px`;
+        row.append(cell);
+        return row;
+    }
+
+    const gap = document.createElement("span");
+    gap.className = "pagination-gap";
+    gap.setAttribute("aria-hidden", "true");
+    gap.setAttribute("contenteditable", "false");
+    gap.style.height = `${height / scale}px`;
+    return gap;
+}
+
 /**
- * Creates a pagination layout owner managing CSS multi-column geometry, paper backgrounds,
- * composition deferrals, and mode toggling across the shared editor instance.
- *
- * Invariants:
- * - Does not create or destroy the Markdown/Milkdown editor instance.
- * - Preserves the exact same EditorView, EditorState, and undo history between continuous and page modes.
- * - Queues CSS structural reflow during active IME composition until compositionend.
- * - Cleans up all DOM paper sheets, attributes, and CSS variables upon destruction.
+ * Creates the single layout owner for the shared editable ProseMirror view.
+ * Pagination is represented by ephemeral decorations in ordinary vertical flow.
  */
 export function createDocumentPagination(
     root: HTMLElement,
@@ -105,34 +169,123 @@ export function createDocumentPagination(
     let mode: PaginationMode = options.initialMode ?? "continuous";
     let currentPaper: UpdateDocumentSettingsInput = options.paper;
 
+    const document = viewport.ownerDocument;
+    const window = document.defaultView;
+    const scrollContainer = options.scrollViewport ?? viewport;
+    const widthContainer = options.scrollViewport ??
+        viewport.parentElement ?? viewport;
+    const decorationKey = new PluginKey<DecorationSet>(
+        "documentPaginationLayout",
+    );
+
     const resolveGap = (): number => {
         try {
-            if (viewport.ownerDocument?.defaultView) {
-                const raw = viewport.ownerDocument.defaultView
-                    .getComputedStyle(viewport)
-                    .getPropertyValue("--space-document-page-gap");
-                const parsed = Number.parseFloat(raw);
-                if (Number.isFinite(parsed) && parsed >= 0) {
-                    return parsed;
-                }
-            }
+            const raw = window?.getComputedStyle(viewport)
+                .getPropertyValue("--space-document-page-gap") ?? "";
+            const parsed = Number.parseFloat(raw);
+            return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
         } catch {
-            // Safe fallback
+            return 0;
         }
-        return 0;
     };
 
-    let currentMetrics: PaperMetrics = paperMetrics(currentPaper, resolveGap());
+    let currentMetrics = paperMetrics(currentPaper, resolveGap());
     let editorHandle: MarkdownEditorHandle | null = null;
     let isComposing = false;
     let pendingPaper: UpdateDocumentSettingsInput | null = null;
     let pendingMode: PaginationMode | null = null;
     let hasPendingReflow = false;
     let rafId: number | null = null;
+    let cancelScheduledFrame: ((id: number) => void) | null = null;
     let destroyed = false;
     let resizeObserver: ResizeObserver | null = null;
-    let anchorAfterReflow = false;
     let pageScale = 1;
+    let layoutDoc: unknown = null;
+    let layoutGeometry: string | null = null;
+    let layoutStackHeight: number | null = null;
+    let layoutPaper: UpdateDocumentSettingsInput | null = null;
+
+    const originalAttributes = new Map<
+        HTMLElement,
+        Map<string, string | null>
+    >();
+    const originalStyles = new Map<HTMLElement, Map<string, StyleValue>>();
+    const rootHadPaginationClass = root.classList.contains("pagination-root");
+    const viewportHadPaginationClass = viewport.classList.contains(
+        "pagination-viewport",
+    );
+
+    function setOwnedAttribute(
+        element: HTMLElement,
+        name: string,
+        value: string,
+    ): void {
+        let attributes = originalAttributes.get(element);
+        if (!attributes) {
+            attributes = new Map();
+            originalAttributes.set(element, attributes);
+        }
+        if (!attributes.has(name)) {
+            attributes.set(name, element.getAttribute(name));
+        }
+        element.setAttribute(name, value);
+    }
+
+    function setOwnedStyle(
+        element: HTMLElement,
+        property: string,
+        value: string,
+    ): void {
+        let styles = originalStyles.get(element);
+        if (!styles) {
+            styles = new Map();
+            originalStyles.set(element, styles);
+        }
+        if (!styles.has(property)) {
+            styles.set(property, {
+                value: element.style.getPropertyValue(property),
+                priority: element.style.getPropertyPriority(property),
+            });
+        }
+        element.style.setProperty(property, value);
+    }
+
+    function clearOwnedStyle(element: HTMLElement, property: string): void {
+        let styles = originalStyles.get(element);
+        if (!styles) {
+            styles = new Map();
+            originalStyles.set(element, styles);
+        }
+        if (!styles.has(property)) {
+            styles.set(property, {
+                value: element.style.getPropertyValue(property),
+                priority: element.style.getPropertyPriority(property),
+            });
+        }
+        element.style.removeProperty(property);
+    }
+
+    function restoreOwnedAttributesAndStyles(): void {
+        for (const [element, attributes] of originalAttributes) {
+            for (const [name, value] of attributes) {
+                if (value === null) element.removeAttribute(name);
+                else element.setAttribute(name, value);
+            }
+        }
+        for (const [element, styles] of originalStyles) {
+            for (const [property, value] of styles) {
+                if (value.value) {
+                    element.style.setProperty(
+                        property,
+                        value.value,
+                        value.priority,
+                    );
+                } else {
+                    element.style.removeProperty(property);
+                }
+            }
+        }
+    }
 
     let latestSnapshot: PaginationSnapshot = {
         mode,
@@ -142,51 +295,42 @@ export function createDocumentPagination(
         durationMs: 0,
     };
 
-    function getActiveScrollContainer(): HTMLElement {
-        return options.scrollViewport ?? viewport;
-    }
-
-    function applyGeometry(metrics: PaperMetrics, pages: number): void {
-        const stripWidth = Math.max(1, pages) * metrics.pitch - metrics.gap;
-        const columnGap = metrics.left + metrics.right + metrics.gap;
-
+    function applyGeometry(metrics: PaperMetrics): void {
         const vars: [string, string][] = [
             ["--page-width", `${metrics.width}px`],
             ["--page-height", `${metrics.height}px`],
             ["--page-content-width", `${metrics.contentWidth}px`],
             ["--page-content-height", `${metrics.contentHeight}px`],
-            ["--space-document-print-top", `${metrics.top}px`],
+            ["--page-margin-top", `${metrics.top}px`],
+            ["--page-margin-left", `${metrics.left}px`],
             ["--page-margin-right", `${metrics.right}px`],
             ["--page-margin-bottom", `${metrics.bottom}px`],
-            ["--space-document-print-left", `${metrics.left}px`],
             ["--page-gap", `${metrics.gap}px`],
             ["--page-pitch", `${metrics.pitch}px`],
-            ["--space-document-column-gap", `${columnGap}px`],
-            ["--page-count", `${pages}`],
-            ["--strip-width", `${stripWidth}px`],
         ];
 
-        for (const [key, val] of vars) {
-            root.style.setProperty(key, val);
-            viewport.style.setProperty(key, val);
+        for (const [property, value] of vars) {
+            setOwnedStyle(root, property, value);
+            setOwnedStyle(viewport, property, value);
         }
     }
 
     function applyModeAttributes(targetMode: PaginationMode): void {
-        root.setAttribute("data-mode", targetMode);
-        root.setAttribute("data-pagination-mode", targetMode);
+        setOwnedAttribute(root, "data-mode", targetMode);
+        setOwnedAttribute(root, "data-pagination-mode", targetMode);
         root.classList.add("pagination-root");
 
-        viewport.setAttribute("data-mode", targetMode);
-        viewport.setAttribute("data-pagination-mode", targetMode);
+        setOwnedAttribute(viewport, "data-mode", targetMode);
+        setOwnedAttribute(viewport, "data-pagination-mode", targetMode);
+        setOwnedAttribute(
+            viewport,
+            "data-scroll-owner",
+            options.scrollViewport ? "outer" : "viewport",
+        );
         viewport.classList.add("pagination-viewport");
     }
 
-    function updatePaperSheets(
-        pages: number,
-        metrics: PaperMetrics,
-        targetMode: PaginationMode,
-    ): void {
+    function setPaperSheets(pages: number, targetMode: PaginationMode): void {
         let sheetsContainer = viewport.querySelector(
             ".pagination-sheets",
         ) as HTMLElement | null;
@@ -202,11 +346,12 @@ export function createDocumentPagination(
 
         if (targetMode === "continuous") {
             sheetsContainer.style.display = "none";
+            layoutStackHeight = null;
+            clearOwnedStyle(viewport, "height");
             return;
         }
 
         sheetsContainer.style.display = "block";
-
         while (sheetsContainer.children.length < pages) {
             const sheet = document.createElement("div");
             sheet.className = "pagination-sheet pagination-paper-bg";
@@ -218,115 +363,530 @@ export function createDocumentPagination(
             sheetsContainer.removeChild(sheetsContainer.lastChild!);
         }
 
-        for (let i = 0; i < pages; i++) {
-            const sheet = sheetsContainer.children[i] as HTMLElement;
-            const pageIndex = i + 1;
-            sheet.setAttribute("data-pagination-page", `${pageIndex}`);
-            sheet.setAttribute("data-page-index", `${pageIndex}`);
-            sheet.style.left = `${i * metrics.pitch}px`;
+        for (let index = 0; index < pages; index++) {
+            const sheet = sheetsContainer.children[index] as HTMLElement;
+            const pageNumber = index + 1;
+            sheet.setAttribute("data-pagination-page", `${pageNumber}`);
+            sheet.setAttribute("data-page-index", `${pageNumber}`);
+            sheet.style.top = `${index * currentMetrics.pitch}px`;
         }
+
+        layoutStackHeight = Math.max(1, pages) * currentMetrics.pitch -
+            currentMetrics.gap;
+        setOwnedStyle(viewport, "height", `${layoutStackHeight}px`);
     }
 
-    function performReflow(): void {
-        if (destroyed) return;
-        if (
-            isComposing || (editorHandle?.view && editorHandle.view.composing)
-        ) {
-            hasPendingReflow = true;
-            // ProseMirror can finish its composition after the native end event.
-            if (!isComposing) scheduleReflow();
-            return;
+    function isPageGapAtClientY(clientY: number): boolean {
+        if (mode !== "page" || pageScale <= 0 || currentMetrics.pitch <= 0) {
+            return false;
         }
+        const scrollOffset = scrollContainer === viewport
+            ? viewport.scrollTop
+            : 0;
+        const relativeY = (clientY -
+                    viewport.getBoundingClientRect().top) / pageScale +
+            scrollOffset;
+        return relativeY >= 0 &&
+            relativeY % currentMetrics.pitch >= currentMetrics.height;
+    }
 
-        const t0 = (typeof performance !== "undefined" && performance.now)
-            ? performance.now()
-            : Date.now();
-        currentMetrics = paperMetrics(currentPaper, resolveGap());
-
-        applyModeAttributes(mode);
-        applyGeometry(currentMetrics, 1);
-        pageScale = 1;
-        const scrollContainer = getActiveScrollContainer();
-        const window = viewport.ownerDocument.defaultView;
-        if (
-            mode === "page" && scrollContainer !== viewport &&
-            window?.matchMedia("(max-width: 767px)").matches
-        ) {
-            const outerStyle = window.getComputedStyle(scrollContainer);
-            const paperStyle = window.getComputedStyle(viewport);
-            const availableWidth = scrollContainer.clientWidth -
-                parseFloat(outerStyle.paddingLeft) -
-                parseFloat(outerStyle.paddingRight);
-            const paperWidth = currentMetrics.width +
-                parseFloat(paperStyle.paddingLeft) +
-                parseFloat(paperStyle.paddingRight);
-            if (availableWidth > 0) {
-                pageScale = Math.min(1, availableWidth / paperWidth);
-            }
+    function activeWidgets(view: EditorView): Map<number, ActiveWidget> {
+        const set = decorationKey.getState(view.state);
+        const active = new Map<number, ActiveWidget>();
+        for (const decoration of set?.find() ?? []) {
+            const key = decoration.spec.key;
+            if (typeof key !== "string") continue;
+            const [kind, heightRaw, columnsRaw] = key.split(":");
+            if (kind !== "line" && kind !== "table-row") continue;
+            const height = Number(heightRaw);
+            const columns = Number(columnsRaw);
+            if (!Number.isFinite(height) || height <= 0) continue;
+            active.set(decoration.from, {
+                kind,
+                height,
+                columns: Number.isFinite(columns) ? columns : 1,
+            });
         }
-        viewport.style.zoom = String(pageScale);
+        return active;
+    }
+
+    function collectEvents(
+        view: EditorView,
+    ): { events: LayoutItem[]; measurements: number } {
+        const events: LayoutItem[] = [];
         let measurements = 0;
-        let pages = 1;
+        const pmDocument = view.state.doc;
 
-        if (mode === "page") {
-            let maxPageFromDOM = 1;
-            const pmEl = root.querySelector(
-                ".ProseMirror",
-            ) as HTMLElement | null;
-            if (pmEl) {
+        const appendTextLines = (element: HTMLElement): FlowEvent[] => {
+            const lineEvents = new Map<number, FlowEvent>();
+            const walker = document.createTreeWalker(
+                element,
+                window?.NodeFilter.SHOW_TEXT ?? 4,
+            );
+            while (walker.nextNode()) {
+                const textNode = walker.currentNode as Text;
+                const range = document.createRange();
+                range.selectNodeContents(textNode);
+                const fragments = range.getClientRects();
                 measurements++;
-                const rootRect = pmEl.getBoundingClientRect();
-                const children = pmEl.children;
-                for (let i = 0; i < children.length; i++) {
-                    const child = children[i] as HTMLElement;
-                    const rects = child.getClientRects();
-                    measurements++;
-                    for (let j = 0; j < rects.length; j++) {
-                        const r = rects[j];
-                        const relX = (r.left - rootRect.left) / pageScale;
-                        if (currentMetrics.pitch > 0 && relX >= 0) {
-                            const pageIdx =
-                                Math.round(relX / currentMetrics.pitch) + 1;
-                            if (pageIdx > maxPageFromDOM) {
-                                maxPageFromDOM = pageIdx;
-                            }
+                for (let index = 0; index < fragments.length; index++) {
+                    const fragment = fragments[index];
+                    if (fragment.width <= 0 || fragment.height <= 0) continue;
+
+                    let low = 0;
+                    let high = Math.max(0, textNode.length - 1);
+                    const character = document.createRange();
+                    while (low < high) {
+                        const middle = Math.floor((low + high) / 2);
+                        character.setStart(textNode, middle);
+                        character.setEnd(textNode, middle + 1);
+                        measurements++;
+                        if (
+                            character.getBoundingClientRect().top <
+                                fragment.top - 0.5
+                        ) {
+                            low = middle + 1;
+                        } else {
+                            high = middle;
                         }
+                    }
+
+                    const position = view.posAtDOM(textNode, low);
+                    const lineKey = Math.round(fragment.top * 2);
+                    if (!lineEvents.has(lineKey)) {
+                        lineEvents.set(lineKey, {
+                            kind: "line",
+                            pos: position,
+                            top: fragment.top,
+                            height: fragment.height,
+                        });
                     }
                 }
             }
-            pages = maxPageFromDOM;
-        } else {
-            pages = 1;
+            return [...lineEvents.values()];
+        };
+
+        const collectTextBlock = (
+            node: typeof pmDocument,
+            pos: number,
+        ): FlowEvent[] => {
+            const element = asHTMLElement(view.nodeDOM(pos));
+            if (!element) return [];
+            const rect = element.getBoundingClientRect();
+            measurements++;
+            if (node.textContent.length === 0) {
+                return [{
+                    kind: "empty",
+                    pos,
+                    top: rect.top,
+                    height: rect.height,
+                }];
+            }
+            if (
+                rect.height >
+                    currentMetrics.contentHeight * pageScale + 0.5
+            ) {
+                return appendTextLines(element);
+            }
+            return [{
+                kind: "block",
+                pos,
+                top: rect.top,
+                height: rect.height,
+            }];
+        };
+
+        pmDocument.descendants((node, pos) => {
+            if (node.type.name === "pagebreak") {
+                const element = asHTMLElement(view.nodeDOM(pos));
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    measurements++;
+                    events.push({
+                        kind: "manual",
+                        pos,
+                        top: rect.top,
+                        height: rect.height,
+                        nodeSize: node.nodeSize,
+                    });
+                }
+                return false;
+            }
+
+            if (node.type.name === "table_row") {
+                const row = asHTMLElement(view.nodeDOM(pos));
+                if (row) {
+                    const rect = row.getBoundingClientRect();
+                    measurements++;
+                    if (
+                        rect.height >
+                            currentMetrics.contentHeight * pageScale + 0.5
+                    ) {
+                        const cells: TableCellFlow[] = [];
+                        node.forEach((cellNode, offset) => {
+                            const cellPos = pos + 1 + offset;
+                            const cell = asHTMLElement(view.nodeDOM(cellPos));
+                            if (!cell) return;
+                            const cellRect = cell.getBoundingClientRect();
+                            measurements++;
+                            const cellEvents: FlowEvent[] = [];
+                            cellNode.descendants((child, childOffset) => {
+                                if (child.isTextblock) {
+                                    cellEvents.push(
+                                        ...collectTextBlock(
+                                            child,
+                                            cellPos + 1 + childOffset,
+                                        ),
+                                    );
+                                    return false;
+                                }
+                                return true;
+                            });
+                            cellEvents.sort((left, right) =>
+                                left.pos - right.pos || left.top - right.top
+                            );
+                            cells.push({
+                                height: cellRect.height,
+                                events: cellEvents,
+                            });
+                        });
+                        events.push({
+                            kind: "table-row-flow",
+                            pos,
+                            top: rect.top,
+                            cells,
+                        });
+                    } else {
+                        const table = row.closest("table");
+                        const firstRow = table?.querySelector("tr");
+                        const columns = row.querySelectorAll(
+                            ":scope > th, :scope > td",
+                        ).length ||
+                            firstRow?.querySelectorAll(
+                                ":scope > th, :scope > td",
+                            ).length ||
+                            1;
+                        events.push({
+                            kind: "table-row",
+                            pos,
+                            top: rect.top,
+                            height: rect.height,
+                            columns,
+                        });
+                    }
+                }
+                return false;
+            }
+
+            if (node.type.name === "image") {
+                const image = asHTMLElement(view.nodeDOM(pos));
+                if (image) {
+                    const rect = image.getBoundingClientRect();
+                    measurements++;
+                    events.push({
+                        kind: "image",
+                        pos,
+                        top: rect.top,
+                        height: rect.height,
+                    });
+                }
+                return false;
+            }
+
+            if (node.isTextblock) {
+                const element = asHTMLElement(view.nodeDOM(pos));
+                if (!element || element.closest("table")) return false;
+                events.push(...collectTextBlock(node, pos));
+                return false;
+            }
+
+            return true;
+        });
+
+        events.sort((left, right) =>
+            left.pos - right.pos || left.top - right.top
+        );
+        return { events, measurements };
+    }
+
+    function clearLayoutDecorations(view: EditorView): void {
+        const decorations = decorationKey.getState(view.state);
+        if (!decorations || decorations.find().length === 0) return;
+        view.dispatch(
+            view.state.tr
+                .setMeta(decorationKey, [])
+                .setMeta("addToHistory", false),
+        );
+    }
+
+    function performReflow(): void {
+        if (destroyed || !editorHandle) return;
+        const view = editorHandle.view;
+        if (isComposing || view.composing) {
+            hasPendingReflow = true;
+            return;
         }
 
-        applyModeAttributes(mode);
-        applyGeometry(currentMetrics, pages);
-        updatePaperSheets(pages, currentMetrics, mode);
+        const startedAt = window?.performance.now() ?? Date.now();
+        const selectionAnchor = captureVisibleSelection(view, scrollContainer);
+        const previousPageScale = pageScale;
+        currentMetrics = paperMetrics(currentPaper, resolveGap());
 
-        const pmEl = root.querySelector(".ProseMirror") as HTMLElement | null;
-        if (pmEl) {
-            pmEl.setAttribute("aria-label", "分页正文");
-            pmEl.setAttribute("role", "textbox");
+        const outerStyle = window?.getComputedStyle(widthContainer);
+        const paddingLeft = Number.parseFloat(outerStyle?.paddingLeft ?? "0") ||
+            0;
+        const paddingRight =
+            Number.parseFloat(outerStyle?.paddingRight ?? "0") ||
+            0;
+        const availableWidth = Math.max(
+            1,
+            widthContainer.clientWidth - paddingLeft - paddingRight,
+        );
+        pageScale = mode === "page"
+            ? Math.min(1, availableWidth / currentMetrics.width)
+            : 1;
+
+        const targetGeometry = [
+            mode,
+            currentMetrics.width,
+            currentMetrics.height,
+            currentMetrics.top,
+            currentMetrics.right,
+            currentMetrics.bottom,
+            currentMetrics.left,
+            currentMetrics.gap,
+            pageScale,
+        ].join(":");
+        const geometryChanged = layoutGeometry !== targetGeometry;
+        const documentChanged = layoutDoc !== view.state.doc;
+        const paperSettingsChanged = !layoutPaper ||
+            currentPaper.paperSize !== layoutPaper.paperSize ||
+            currentPaper.orientation !== layoutPaper.orientation ||
+            currentPaper.marginTopMm !== layoutPaper.marginTopMm ||
+            currentPaper.marginRightMm !== layoutPaper.marginRightMm ||
+            currentPaper.marginBottomMm !== layoutPaper.marginBottomMm ||
+            currentPaper.marginLeftMm !== layoutPaper.marginLeftMm;
+        const layoutChanged = geometryChanged || documentChanged ||
+            paperSettingsChanged;
+        layoutGeometry = targetGeometry;
+        layoutDoc = view.state.doc;
+
+        if (layoutChanged) {
+            clearLayoutDecorations(view);
+            setOwnedAttribute(viewport, "data-decoration-signature", "");
         }
-
-        if (anchorAfterReflow && editorHandle?.view) {
-            anchorAfterReflow = false;
-            anchorScrollToSelection(
-                editorHandle.view,
-                getActiveScrollContainer(),
-                mode,
-                currentMetrics,
-                pageScale,
+        if (
+            mode === "page" && layoutChanged && layoutStackHeight !== null &&
+            pageScale > 0
+        ) {
+            setOwnedStyle(
+                viewport,
+                "height",
+                `${layoutStackHeight * previousPageScale / pageScale}px`,
             );
         }
 
-        const durationMs =
-            (typeof performance !== "undefined" && performance.now)
-                ? performance.now() - t0
-                : 0;
+        applyModeAttributes(mode);
+        applyGeometry(currentMetrics);
+        if (mode === "page") {
+            setOwnedStyle(viewport, "zoom", `${pageScale}`);
+            setOwnedStyle(viewport, "width", `${availableWidth / pageScale}px`);
+        } else {
+            clearOwnedStyle(viewport, "zoom");
+            clearOwnedStyle(viewport, "width");
+        }
+        hasPendingReflow = false;
 
-        viewport.setAttribute("data-page-count", `${pages}`);
-        viewport.setAttribute("data-duration-ms", durationMs.toFixed(2));
+        let measurements = 0;
+        let pages = 1;
+        let signatureChanged = false;
+
+        if (mode === "page") {
+            const viewportRect = viewport.getBoundingClientRect();
+            const current = activeWidgets(view);
+            const { events, measurements: domMeasurements } = collectEvents(
+                view,
+            );
+            measurements = domMeasurements;
+
+            const decorations: Decoration[] = [];
+            const signature: string[] = [];
+            const decoratedPositions = new Set<number>();
+            let addedOffset = 0;
+            const pitch = currentMetrics.pitch * pageScale;
+            const pageTopMargin = currentMetrics.top * pageScale;
+            const pageBottom = (currentMetrics.height - currentMetrics.bottom) *
+                pageScale;
+
+            const placeFlowEvent = (
+                event: FlowEvent,
+                flowOffset: number,
+                applyDelta: (delta: number) => void,
+            ): void => {
+                const relativeTop = event.top - viewportRect.top + flowOffset;
+                const pageIndex = Math.max(
+                    0,
+                    Math.floor((relativeTop - pageTopMargin) / pitch),
+                );
+                const pageStart = pageIndex * pitch;
+                const contentBottom = pageStart + pageBottom;
+                const nextContentTop = (pageIndex + 1) * pitch +
+                    pageTopMargin;
+                pages = Math.max(pages, pageIndex + 1);
+
+                if (event.kind === "manual") {
+                    const targetHeight = Math.max(
+                        0,
+                        nextContentTop - relativeTop,
+                    );
+                    const cssHeight = targetHeight / pageScale;
+                    decorations.push(
+                        Decoration.node(
+                            event.pos,
+                            event.pos + (event.nodeSize ?? 1),
+                            {
+                                style:
+                                    `display:block;box-sizing:border-box;width:100%;height:${cssHeight}px;min-height:${cssHeight}px;max-height:${cssHeight}px;margin:0;padding:0;border:0;overflow:hidden;visibility:hidden;pointer-events:none;`,
+                            },
+                        ),
+                    );
+                    signature.push(
+                        `manual:${event.pos}:${cssHeight.toFixed(2)}`,
+                    );
+                    applyDelta(targetHeight - event.height);
+                    pages = Math.max(pages, pageIndex + 2);
+                    return;
+                }
+
+                let kind: ActiveWidget["kind"] | null = null;
+                let columns = 1;
+                if (
+                    event.kind === "line" ||
+                    event.kind === "block" ||
+                    event.kind === "empty" ||
+                    event.kind === "image"
+                ) {
+                    kind = "line";
+                } else if (event.kind === "table-row") {
+                    kind = "table-row";
+                    columns = event.columns ?? 1;
+                }
+
+                const existing = current.get(event.pos);
+                const lineBottom = relativeTop + event.height;
+                const needsGap = lineBottom > contentBottom + 0.5;
+                if (
+                    kind && !decoratedPositions.has(event.pos) &&
+                    (existing || needsGap)
+                ) {
+                    // DOM positions include existing gaps; add only new height.
+                    const targetHeight = existing && !needsGap
+                        ? existing.height
+                        : (existing?.height ?? 0) +
+                            Math.max(0, nextContentTop - relativeTop);
+                    if (targetHeight > 0.5) {
+                        const activeKind = existing?.kind ?? kind;
+                        const activeColumns = activeKind === "table-row"
+                            ? existing?.columns ?? columns
+                            : 1;
+                        const key = `${activeKind}:${
+                            targetHeight.toFixed(2)
+                        }:${activeColumns}`;
+                        decorations.push(
+                            Decoration.widget(
+                                event.pos,
+                                () =>
+                                    createGapWidget(
+                                        document,
+                                        targetHeight,
+                                        pageScale,
+                                        activeKind,
+                                        activeColumns,
+                                    ),
+                                {
+                                    side: -1,
+                                    key,
+                                    ignoreSelection: true,
+                                },
+                            ),
+                        );
+                        decoratedPositions.add(event.pos);
+                        signature.push(`${event.pos}:${key}`);
+                        applyDelta(
+                            targetHeight - (existing?.height ?? 0),
+                        );
+                    }
+                }
+                if (needsGap) pages = Math.max(pages, pageIndex + 2);
+            };
+
+            for (const item of events) {
+                if (item.kind !== "table-row-flow") {
+                    placeFlowEvent(item, addedOffset, (delta) => {
+                        addedOffset += delta;
+                    });
+                    continue;
+                }
+
+                const existingRowGap = current.get(item.pos);
+                if (existingRowGap?.kind === "table-row") {
+                    addedOffset -= existingRowGap.height;
+                }
+
+                // Cells flow independently; later rows advance by max height delta.
+                let currentCellHeight = 0;
+                let nextCellHeight = 0;
+                for (const cell of item.cells) {
+                    currentCellHeight = Math.max(
+                        currentCellHeight,
+                        cell.height,
+                    );
+                    let cellOffset = 0;
+                    for (const event of cell.events) {
+                        placeFlowEvent(
+                            event,
+                            addedOffset + cellOffset,
+                            (delta) => {
+                                cellOffset += delta;
+                            },
+                        );
+                    }
+                    nextCellHeight = Math.max(
+                        nextCellHeight,
+                        cell.height + cellOffset,
+                    );
+                }
+                addedOffset += nextCellHeight - currentCellHeight;
+            }
+
+            const nextSignature = signature.join("|");
+            const previousSignature = viewport.getAttribute(
+                "data-decoration-signature",
+            ) ?? "";
+            signatureChanged = nextSignature !== previousSignature;
+            if (signatureChanged) {
+                view.dispatch(
+                    view.state.tr
+                        .setMeta(decorationKey, decorations)
+                        .setMeta("addToHistory", false),
+                );
+                setOwnedAttribute(
+                    viewport,
+                    "data-decoration-signature",
+                    nextSignature,
+                );
+            }
+        }
+
+        setPaperSheets(pages, mode);
+        layoutPaper = { ...currentPaper };
+        setOwnedAttribute(view.dom, "aria-label", "分页正文");
+        setOwnedAttribute(view.dom, "role", "textbox");
+
+        const durationMs = (window?.performance.now() ?? Date.now()) -
+            startedAt;
+        setOwnedAttribute(viewport, "data-page-count", `${pages}`);
+        setOwnedAttribute(viewport, "data-duration-ms", durationMs.toFixed(2));
 
         latestSnapshot = {
             mode,
@@ -336,25 +896,41 @@ export function createDocumentPagination(
             durationMs,
         };
 
+        restoreVisibleSelection(
+            view,
+            scrollContainer,
+            selectionAnchor,
+            scrollContainer === viewport ? pageScale : 1,
+        );
         options.onLayout?.(latestSnapshot);
+
+        if (signatureChanged) scheduleReflow();
     }
 
     function scheduleReflow(): void {
-        if (destroyed) return;
+        if (destroyed || !editorHandle) return;
         if (isComposing) {
             hasPendingReflow = true;
             return;
         }
         if (rafId !== null) return;
 
-        if (typeof requestAnimationFrame === "function") {
-            rafId = requestAnimationFrame(() => {
+        const requestFrame = window?.requestAnimationFrame?.bind(window) ??
+            globalThis.requestAnimationFrame?.bind(globalThis);
+        const cancelFrame = window?.cancelAnimationFrame?.bind(window) ??
+            globalThis.cancelAnimationFrame?.bind(globalThis);
+        if (requestFrame && cancelFrame) {
+            cancelScheduledFrame = cancelFrame;
+            rafId = requestFrame(() => {
                 rafId = null;
+                cancelScheduledFrame = null;
                 performReflow();
             });
         } else {
+            cancelScheduledFrame = clearTimeout;
             rafId = setTimeout(() => {
                 rafId = null;
+                cancelScheduledFrame = null;
                 performReflow();
             }, 0) as unknown as number;
         }
@@ -371,31 +947,20 @@ export function createDocumentPagination(
 
         if (pendingPaper !== null) {
             currentPaper = pendingPaper;
-            currentMetrics = paperMetrics(currentPaper, resolveGap());
             pendingPaper = null;
             needsReflow = true;
         }
-
         if (pendingMode !== null) {
             mode = pendingMode;
             pendingMode = null;
             needsReflow = true;
         }
 
-        if (needsReflow) {
-            scheduleReflow();
-        }
+        if (needsReflow) scheduleReflow();
     };
 
     const preventGapSelection = (event: PointerEvent): void => {
-        if (mode !== "page") return;
-        const x = (event.clientX - root.getBoundingClientRect().left) /
-            pageScale;
-        const withinPage = ((x % currentMetrics.pitch) + currentMetrics.pitch) %
-            currentMetrics.pitch;
-        if (withinPage > currentMetrics.width) {
-            event.preventDefault();
-        }
+        if (isPageGapAtClientY(event.clientY)) event.preventDefault();
     };
 
     root.addEventListener("load", scheduleReflow, true);
@@ -404,46 +969,72 @@ export function createDocumentPagination(
     viewport.addEventListener("pointerdown", preventGapSelection, true);
 
     if (typeof ResizeObserver === "function") {
-        resizeObserver = new ResizeObserver(() => {
-            scheduleReflow();
-        });
+        resizeObserver = new ResizeObserver(() => scheduleReflow());
         resizeObserver.observe(viewport);
         resizeObserver.observe(root);
-        if (options.scrollViewport) {
-            resizeObserver.observe(options.scrollViewport);
+        if (widthContainer !== viewport && widthContainer !== root) {
+            resizeObserver.observe(widthContainer);
         }
     }
 
-    if (
-        typeof document !== "undefined" &&
-        "fonts" in document &&
-        document.fonts?.ready
-    ) {
-        document.fonts.ready
-            .then(() => {
-                if (!destroyed) scheduleReflow();
-            })
-            .catch(() => {});
+    const fontsReady = document.fonts?.ready;
+    if (fontsReady) {
+        fontsReady.then(() => {
+            if (!destroyed) scheduleReflow();
+        }).catch(() => {});
     }
 
-    const plugin = $prose(() => {
-        return new Plugin({
-            key: new PluginKey("documentPaginationWatcher"),
+    const plugin = $prose(() =>
+        new Plugin<DecorationSet>({
+            key: decorationKey,
             state: {
-                init: () => null,
-                apply: (tr: Transaction) => {
-                    if (tr.docChanged) {
-                        scheduleReflow();
-                    }
-                    return null;
+                init: () => DecorationSet.empty,
+                apply(transaction, previous, _oldState, newState) {
+                    const replacements = transaction.getMeta(decorationKey) as
+                        | Decoration[]
+                        | undefined;
+                    return replacements
+                        ? DecorationSet.create(newState.doc, replacements)
+                        : previous.map(transaction.mapping, newState.doc);
                 },
             },
-        });
-    });
+            props: {
+                decorations(state) {
+                    return decorationKey.getState(state) ??
+                        DecorationSet.empty;
+                },
+                handleDOMEvents: {
+                    mousedown(_view, event) {
+                        if (!isPageGapAtClientY(event.clientY)) return false;
+                        event.preventDefault();
+                        return true;
+                    },
+                },
+            },
+            view(view) {
+                let currentDoc = view.state.doc;
+                let wasComposing = view.composing;
+                return {
+                    update(currentView) {
+                        if (currentView.state.doc !== currentDoc) {
+                            currentDoc = currentView.state.doc;
+                            scheduleReflow();
+                        }
+                        if (
+                            (wasComposing && !currentView.composing) ||
+                            (!currentView.composing && hasPendingReflow)
+                        ) {
+                            scheduleReflow();
+                        }
+                        wasComposing = currentView.composing;
+                    },
+                };
+            },
+        })
+    );
 
-    // Apply initial geometry and mode attributes
     applyModeAttributes(mode);
-    applyGeometry(currentMetrics, 1);
+    applyGeometry(currentMetrics);
 
     return {
         plugin,
@@ -452,14 +1043,14 @@ export function createDocumentPagination(
             editorHandle = editor;
             if (pendingPaper !== null) {
                 currentPaper = pendingPaper;
-                currentMetrics = paperMetrics(currentPaper, resolveGap());
                 pendingPaper = null;
             }
             if (pendingMode !== null) {
                 mode = pendingMode;
                 pendingMode = null;
             }
-
+            currentMetrics = paperMetrics(currentPaper, resolveGap());
+            layoutDoc = editor.view.state.doc;
             performReflow();
         },
         setMode(newMode: PaginationMode): void {
@@ -473,7 +1064,6 @@ export function createDocumentPagination(
                 return;
             }
             mode = newMode;
-            anchorAfterReflow = true;
             scheduleReflow();
         },
         setPaper(newPaper: UpdateDocumentSettingsInput): void {
@@ -486,7 +1076,6 @@ export function createDocumentPagination(
                 return;
             }
             currentPaper = newPaper;
-            currentMetrics = paperMetrics(currentPaper, resolveGap());
             scheduleReflow();
         },
         destroy(): void {
@@ -494,12 +1083,9 @@ export function createDocumentPagination(
             destroyed = true;
 
             if (rafId !== null) {
-                if (typeof cancelAnimationFrame === "function") {
-                    cancelAnimationFrame(rafId);
-                } else {
-                    clearTimeout(rafId);
-                }
+                cancelScheduledFrame?.(rafId);
                 rafId = null;
+                cancelScheduledFrame = null;
             }
 
             if (resizeObserver) {
@@ -520,43 +1106,22 @@ export function createDocumentPagination(
                 true,
             );
 
-            const sheets = viewport.querySelector(
-                ".pagination-sheets",
-            );
-            if (sheets) {
-                sheets.remove();
+            if (editorHandle) {
+                try {
+                    clearLayoutDecorations(editorHandle.view);
+                } catch {
+                    // The editor may already be in teardown.
+                }
             }
 
-            root.removeAttribute("data-mode");
-            root.removeAttribute("data-pagination-mode");
-            root.classList.remove("pagination-root");
-
-            viewport.removeAttribute("data-mode");
-            viewport.removeAttribute("data-pagination-mode");
-            viewport.removeAttribute("data-page-count");
-            viewport.removeAttribute("data-duration-ms");
-            viewport.classList.remove("pagination-viewport");
-            viewport.style.removeProperty("zoom");
-
-            const cssVars = [
-                "--page-width",
-                "--page-height",
-                "--page-content-width",
-                "--page-content-height",
-                "--space-document-print-top",
-                "--page-margin-right",
-                "--page-margin-bottom",
-                "--space-document-print-left",
-                "--page-gap",
-                "--page-pitch",
-                "--space-document-column-gap",
-                "--page-count",
-                "--strip-width",
-            ];
-            for (const v of cssVars) {
-                root.style.removeProperty(v);
-                viewport.style.removeProperty(v);
+            viewport.querySelector(".pagination-sheets")?.remove();
+            if (!rootHadPaginationClass) {
+                root.classList.remove("pagination-root");
             }
+            if (!viewportHadPaginationClass) {
+                viewport.classList.remove("pagination-viewport");
+            }
+            restoreOwnedAttributesAndStyles();
 
             editorHandle = null;
         },

@@ -1,4 +1,4 @@
-/* Production Document Pagination Styling (Issue #102 M5) */
+/* Production Document Pagination Styling (Issue #147) */
 
 .pagination-viewport {
     position: relative;
@@ -7,8 +7,7 @@
     box-sizing: border-box;
 }
 
-/* Continuous scroll mode: respects document readable width, no paper width override */
-.pagination-viewport[data-mode="continuous"] {
+.pagination-viewport[data-mode="continuous"][data-scroll-owner="viewport"] {
     overflow-y: auto;
     overflow-x: hidden;
     max-height: 100%;
@@ -16,87 +15,112 @@
     padding: var(--space-card-padding);
 }
 
-.pagination-viewport .ProseMirror {
-    outline: none;
-    color: var(--foreground);
-}
-
-/* Page mode: horizontal strip of paper surfaces with vertical scroll access on short screens */
-.pagination-viewport[data-mode="page"] {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: 100%;
-    min-height: min-content;
-    background: var(--surface-soft);
-    padding: var(--space-card-padding);
-}
-
-/* Outer scroll compatibility when integrated inside DocumentEditor (.document-editor-scroll-area) */
-.document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="continuous"] {
+.pagination-viewport[data-mode="continuous"][data-scroll-owner="outer"] {
     overflow: visible;
     max-height: none;
     background: transparent;
     padding: 0;
 }
 
-.document-editor-scroll-area:has([data-mode="page"]) {
-    overflow: auto;
+.pagination-viewport .ProseMirror {
+    outline: none;
+    color: var(--foreground);
 }
 
-.document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="page"] {
-    max-width: none;
-    width: max-content;
-    min-width: 100%;
-}
-
-.document-editor-readable-wrapper.pagination-viewport[data-mode="page"] .document-continuous-editor.pagination-root {
+.pagination-viewport[data-mode="page"] {
+    position: relative;
+    display: block;
     flex: none;
-    min-height: var(--page-height);
-    width: var(--strip-width);
-    height: var(--page-height);
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    background: var(--surface-soft);
+    padding: 0;
 }
 
-/* Paper canvas background layer (aria-hidden, pointer-inert) */
+.pagination-viewport[data-mode="page"][data-scroll-owner="viewport"] {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100%;
+}
+
+.document-editor-scroll-area:has(.pagination-viewport[data-mode="page"][data-scroll-owner="outer"]) {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="continuous"][data-scroll-owner="outer"] {
+    overflow: visible;
+    max-height: none;
+    background: transparent;
+    padding: 0;
+}
+
+.document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="page"][data-scroll-owner="outer"] {
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+    margin: 0;
+}
+
 .pagination-sheets {
     position: absolute;
-    top: var(--space-card-padding);
-    left: var(--space-card-padding);
-    height: var(--page-height);
+    z-index: 0;
+    inset-block-start: 0;
+    inset-inline: 0;
+    width: var(--page-width);
+    margin-inline: auto;
     pointer-events: none;
     user-select: none;
 }
 
 .pagination-sheet {
     position: absolute;
-    top: 0;
+    inset-inline: 0;
+    box-sizing: border-box;
     width: var(--page-width);
     height: var(--page-height);
     background: var(--surface-document-paper, var(--surface-solid));
     box-shadow: var(--shadow-document-paper, var(--shadow-l1));
     border: 1px solid var(--border);
-    box-sizing: border-box;
+    pointer-events: none;
 }
 
 .pagination-viewport[data-mode="page"] .pagination-root {
     position: relative;
-    width: var(--strip-width);
-    height: var(--page-height);
-    padding-top: var(--space-document-print-top);
+    z-index: 1;
+    flex: none;
+    width: var(--page-width);
+    max-width: none;
+    min-height: var(--page-height);
+    height: auto;
+    margin: 0 auto;
 }
 
 .pagination-viewport[data-mode="page"] .ProseMirror {
-    width: var(--page-content-width);
-    height: var(--page-content-height);
-    max-height: var(--page-content-height);
-    margin-left: var(--space-document-print-left);
-    column-width: var(--page-content-width);
-    column-gap: var(--space-document-column-gap);
-    column-fill: auto;
-    box-sizing: content-box;
-    padding: 0;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--page-height);
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: var(--page-margin-top) var(--page-margin-right)
+        var(--page-margin-bottom) var(--page-margin-left);
 }
 
-/* Layout break discipline */
+.pagination-viewport[data-mode="page"] .ProseMirror > * {
+    box-sizing: border-box;
+}
+
 .pagination-viewport[data-mode="page"] :is(h1, h2, h3, h4, h5, h6) {
     break-after: avoid;
     break-inside: avoid;
@@ -116,8 +140,15 @@
 .pagination-viewport[data-mode="page"] table {
     break-inside: auto;
     width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
     display: table;
     overflow: visible;
+}
+
+.pagination-viewport[data-mode="page"] :is(th, td) {
+    overflow-wrap: anywhere;
+    vertical-align: top;
 }
 
 .pagination-viewport[data-mode="page"] tr {
@@ -139,7 +170,32 @@
     height: auto;
 }
 
-/* PageBreak visual node styling */
+.pagination-viewport[data-mode="page"] .pagination-gap {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    flex: none;
+}
+
+.pagination-viewport[data-mode="page"] .pagination-gap-row {
+    display: table-row;
+    height: 0;
+}
+
+.pagination-viewport[data-mode="page"] .pagination-gap-row > td {
+    height: 0;
+    padding: 0;
+    border: 0;
+}
+
 .pagination-viewport[data-mode="continuous"] :is(.milkdown-pagebreak, .document-pagebreak-node, .pagebreak-node) {
     user-select: none;
     margin-block: var(--space-row-gap);
@@ -152,10 +208,12 @@
 }
 
 .pagination-viewport[data-mode="page"] :is(.milkdown-pagebreak, .document-pagebreak-node, .pagebreak-node) {
-    break-after: column;
-    height: 1px;
-    min-height: 1px;
-    max-height: 1px;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 0;
+    min-height: 0;
+    max-height: 0;
     line-height: 0;
     margin: 0;
     padding: 0;

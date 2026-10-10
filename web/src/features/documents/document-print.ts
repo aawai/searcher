@@ -62,7 +62,7 @@ export async function prepareDocumentPrint(
         node.removeAttribute("contenteditable")
     );
     body.querySelectorAll(
-        ".ProseMirror-cursor, .ProseMirror-gapcursor, .ProseMirror-separator, .ProseMirror-trailingBreak",
+        ".pagination-gap, .ProseMirror-cursor, .ProseMirror-gapcursor, .ProseMirror-separator, .ProseMirror-trailingBreak",
     )
         .forEach((node) => node.remove());
     // Selection is a class on real image/table nodes, not disposable decoration.

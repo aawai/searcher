@@ -40,11 +40,13 @@ export async function createPaginationEditor(
     onChange?: (event: MarkdownEditorEvent) => void,
     onLayout?: (snapshot: PaginationSnapshot) => void,
     initialMarkdown?: string,
+    scrollViewport?: HTMLElement,
 ): Promise<PaginationEditor> {
     const pagination = createDocumentPagination(root, viewport, {
         paper,
         onLayout,
         initialMode: "page",
+        scrollViewport,
     });
 
     const plugins: MilkdownPlugin[] = [

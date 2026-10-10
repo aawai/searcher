@@ -59,6 +59,6 @@ export function paperMetrics(
         contentWidth: width - left - right,
         contentHeight: height - top - bottom,
         gap,
-        pitch: width + gap,
+        pitch: height + gap,
     };
 }
