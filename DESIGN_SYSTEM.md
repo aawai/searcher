@@ -479,7 +479,8 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
   首页可用宽度容纳 5 列。首页的 `webAppIconSize` 仍只控制可视 glyph
   （紧凑/标准/大图标），不改变轨道或列数。首页的 portaled DragOverlay
   使用独立 `.launcher-overlay--home` owner，与 tile 共享触屏轨道、间距及
-  40/42/44px glyph 尺寸，不依赖 `.pinned-area` 祖先继承。
+  40/42/44px glyph 尺寸，且独立设置图标的垂直居中对齐，不依赖
+  `.pinned-area` 祖先继承。
   Widgets Quick 触屏轨道继续消费 `--launcher-touch-cell-size`（88px），
   fine-pointer Home/Quick 原有密度、九项大文件夹预览与非空搜索列表不变。
 - `useAppsLayoutPersistence` 位于 presenter 之上，保留并发乐观重排和现有 API，
