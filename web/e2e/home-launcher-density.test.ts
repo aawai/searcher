@@ -380,12 +380,11 @@ Deno.test("Zen home touch grid density and drag alignment", async () => {
                     preview: relativeGlyph(preview),
                 };
             });
+            const detail = JSON.stringify(relative);
             for (const axis of ["x", "y", "width", "height"] as const) {
                 assert(
                     Math.abs(relative.tile[axis] - relative.preview[axis]) < 1,
-                    `Home drag preview ${axis} must match tile: ${JSON.stringify(
-                        relative,
-                    )}`,
+                    `Home drag preview ${axis} differs: ${detail}`,
                 );
             }
             assertEquals(relative.tile.width, expectedGlyphSize);
@@ -400,15 +399,11 @@ Deno.test("Zen home touch grid density and drag alignment", async () => {
                 const centered = (68 - expectedGlyphSize) / 2;
                 assert(
                     Math.abs(relative.tile.y - centered) < 1,
-                    `Hidden-label home glyph must be vertically centered: ${JSON.stringify(
-                        relative,
-                    )}`,
+                    `Hidden-label home glyph not centered: ${detail}`,
                 );
                 assert(
                     Math.abs(relative.preview.y - centered) < 1,
-                    `Hidden-label drag glyph must be vertically centered: ${JSON.stringify(
-                        relative,
-                    )}`,
+                    `Hidden-label drag glyph not centered: ${detail}`,
                 );
             }
         };
