@@ -7,13 +7,17 @@ import {
     useRef,
     useState,
 } from "react";
-import type { Frame, ResizeDirection, SafeRect } from "./desktop-geometry.ts";
+import type {
+    DesktopGeometry,
+    Frame,
+    ResizeDirection,
+} from "./desktop-geometry.ts";
 import { clampFrame, resizeFrame } from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 
 export interface WindowResizeHandlesProps {
     window: DesktopWindowState;
-    rect: SafeRect;
+    rect: DesktopGeometry;
     active: boolean;
     dispatch: Dispatch<DesktopAction>;
     windowRef: RefObject<HTMLDivElement | null>;
@@ -94,18 +98,17 @@ export function WindowResizeHandles({
         };
     }, []);
 
-    // Safe-rect changes end this gesture in the same coordinate system.
+    // A geometry change ends this gesture using the current viewport bounds.
     useEffect(() => {
         if (sessionRef.current) handlePointerCancel();
-    }, [rect.width, rect.height, rect.x, rect.y]);
+    }, [rect]);
 
     const handlePointerDown = (
         direction: ResizeDirection,
         e: ReactPointerEvent<HTMLDivElement>,
     ) => {
         // Only primary pointer button
-        if (e.button !== 0) return;
-        if (win.mode === "maximized" || win.mode === "minimized") return;
+        if (e.button !== 0 || !rect.usable) return;
 
         e.preventDefault();
         e.stopPropagation();
@@ -138,6 +141,10 @@ export function WindowResizeHandles({
         const session = sessionRef.current;
         if (!session) return;
 
+        if (!rect.usable) {
+            handlePointerCancel();
+            return;
+        }
         const dx = e.clientX - session.startX;
         const dy = e.clientY - session.startY;
 
@@ -187,7 +194,19 @@ export function WindowResizeHandles({
             rafIdRef.current = null;
         }
 
-        // Handle final pointerup coordinates
+        const winEl = windowRef.current ??
+            (session.handleEl.closest(".desktop-window") as HTMLElement | null);
+        if (!rect.usable) {
+            const presentationFrame = clampFrame(win.frame, rect, win.kind);
+            if (winEl) {
+                winEl.style.transform =
+                    `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+                winEl.style.width = `${presentationFrame.width}px`;
+                winEl.style.height = `${presentationFrame.height}px`;
+            }
+            return;
+        }
+
         const dx = e.clientX - session.startX;
         const dy = e.clientY - session.startY;
         const finalFrame = resizeFrame(
@@ -198,9 +217,6 @@ export function WindowResizeHandles({
             rect,
             win.kind,
         );
-
-        const winEl = windowRef.current ??
-            (session.handleEl.closest(".desktop-window") as HTMLElement | null);
         if (winEl) {
             winEl.style.transform =
                 `translate3d(${finalFrame.x}px, ${finalFrame.y}px, 0)`;
@@ -234,11 +250,20 @@ export function WindowResizeHandles({
             rafIdRef.current = null;
         }
 
-        // Cancel commits last frame
-        const frameToCommit = clampFrame(session.currentFrame, rect, win.kind);
-
         const winEl = windowRef.current ??
             (session.handleEl.closest(".desktop-window") as HTMLElement | null);
+        if (!rect.usable) {
+            const presentationFrame = clampFrame(win.frame, rect, win.kind);
+            if (winEl) {
+                winEl.style.transform =
+                    `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+                winEl.style.width = `${presentationFrame.width}px`;
+                winEl.style.height = `${presentationFrame.height}px`;
+            }
+            return;
+        }
+
+        const frameToCommit = clampFrame(session.currentFrame, rect, win.kind);
         if (winEl) {
             winEl.style.transform =
                 `translate3d(${frameToCommit.x}px, ${frameToCommit.y}px, 0)`;
@@ -259,6 +284,7 @@ export function WindowResizeHandles({
         direction: ResizeDirection,
         e: KeyboardEvent<HTMLDivElement>,
     ) => {
+        if (!rect.usable) return;
         const step = e.shiftKey ? 40 : 10;
         let dx = 0;
         let dy = 0;
@@ -308,9 +334,9 @@ export function WindowResizeHandles({
         });
     };
 
-    // Only allow resize on viewports >= 1024px and non-maximized/non-minimized windows
+    // Only allow resize on usable desktop viewports and normal windows
     if (
-        disabled || !isDesktop || win.mode === "maximized" ||
+        disabled || !isDesktop || !rect.usable || win.mode === "maximized" ||
         win.mode === "minimized"
     ) {
         return null;
@@ -333,8 +359,10 @@ export function WindowResizeHandles({
                     aria-valuemax={100}
                     aria-valuenow={Math.round(
                         100 * (dir === "n" || dir === "s"
-                            ? win.frame.height / Math.max(1, rect.height)
-                            : win.frame.width / Math.max(1, rect.width)),
+                            ? win.frame.height /
+                                Math.max(1, rect.viewportRect.height)
+                            : win.frame.width /
+                                Math.max(1, rect.viewportRect.width)),
                     )}
                     aria-valuetext={`${Math.round(win.frame.width)} × ${
                         Math.round(win.frame.height)

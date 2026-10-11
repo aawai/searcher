@@ -79,6 +79,8 @@ export interface DocumentEditorProps {
     onDirtyChange?: (dirty: boolean) => void;
     onDocumentChanged?: (document: DocumentDto) => void;
     onUnavailable?: () => void;
+    immersive?: boolean;
+    onSaveStatusChange?: (status: string) => void;
 }
 
 export function DocumentEditor({
@@ -89,6 +91,8 @@ export function DocumentEditor({
     onDirtyChange,
     onDocumentChanged,
     onUnavailable,
+    immersive = false,
+    onSaveStatusChange,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
     const session = useMemo(() => {
@@ -152,6 +156,16 @@ export function DocumentEditor({
     const [initError, setInitError] = useState<string | null>(null);
     const [initKey, setInitKey] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const saveStatusLabel = {
+        saved: "已保存",
+        dirty: "未保存",
+        saving: "正在保存…",
+        error: "保存失败",
+        conflict: "版本冲突",
+    }[snapshot.saveStatus];
+    useEffect(() => {
+        onSaveStatusChange?.(isUploading ? "正在上传图片…" : saveStatusLabel);
+    }, [isUploading, saveStatusLabel, onSaveStatusChange]);
     const [paperSettings, setPaperSettings] = useState<
         DocumentSettingsDto | null
     >(null);
@@ -626,17 +640,10 @@ export function DocumentEditor({
         );
     }
 
-    const saveStatusLabel = {
-        saved: "已保存",
-        dirty: "未保存",
-        saving: "正在保存…",
-        error: "保存失败",
-        conflict: "版本冲突",
-    }[snapshot.saveStatus];
-
     return (
         <div
             className="document-editor-container"
+            data-immersive={immersive || undefined}
             onKeyDown={handleContainerKeyDown}
             onBlur={handleContainerBlur}
         >

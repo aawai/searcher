@@ -723,14 +723,20 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await visit("/");
             await page.locator(appsTrigger).focus();
             await page.keyboard.press("Enter");
-            await search().waitFor();
-            await search().fill("State");
+            const appsSearch = panel.getByRole("searchbox", {
+                name: "搜索应用",
+                exact: true,
+            });
+            await appsSearch.fill("State");
             await page.locator(
                 '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
-            await search().fill("Shell");
+            await panel.getByRole("searchbox", {
+                name: "搜索便签",
+                exact: true,
+            }).fill("Shell");
             const expand = panel.getByRole("button", {
                 name: "展开",
                 exact: true,
@@ -753,12 +759,24 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             )
                 .focus();
             await page.keyboard.press("Enter");
-            assertEquals(await search().inputValue(), "State");
-            await search().fill("");
+            assertEquals(await appsSearch.inputValue(), "State");
+            await appsSearch.fill("");
             await panel.getByRole("button", {
                 name: "打开 Edited Alpha",
                 exact: true,
-            }).focus();
+            }).focus().catch(async (cause) => {
+                throw new Error(
+                    `Apps keyboard fixture: ${
+                        JSON.stringify({
+                            activeSurface: await panel.innerText(),
+                            apps: await page.evaluate(async () =>
+                                (await fetch("/api/webapps")).json()
+                            ),
+                        })
+                    }`,
+                    { cause },
+                );
+            });
             await page.keyboard.press("Shift+F10");
             await page.getByRole("menu").waitFor();
             await page.keyboard.press("Escape");
@@ -766,7 +784,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("aria-label") ===
                     "打开 Edited Alpha"
-            );
+            ).catch(async (cause) => {
+                throw new Error(
+                    `Context menu Escape focus: ${await page.evaluate(() =>
+                        document.activeElement?.outerHTML
+                    )}`,
+                    { cause },
+                );
+            });
             assertEquals(await panel.isVisible(), true);
             await panel.locator(".workspace-footer .workspace-primary").focus();
             await page.keyboard.press("Enter");
@@ -1394,9 +1419,50 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await appsWin.waitFor({ state: "visible" });
             const originalFrame = await measureBox(appsWin);
+            let expectedRestoreFrame = originalFrame;
             const canvas = page.locator(".desktop-canvas");
             await canvas.waitFor({ state: "visible" });
             const canvasBox = await measureBox(canvas);
+            const measuredBounds = await page.evaluate(() => {
+                let chromeBottom = 0;
+                for (
+                    const element of document.querySelectorAll(
+                        ".topbar, .connection-banner",
+                    )
+                ) {
+                    const style = getComputedStyle(element);
+                    const bounds = element.getBoundingClientRect();
+                    if (
+                        style.display !== "none" && bounds.width > 0 &&
+                        bounds.height > 0 && bounds.bottom > 0
+                    ) {
+                        chromeBottom = Math.max(
+                            chromeBottom,
+                            bounds.bottom,
+                        );
+                    }
+                }
+                const dock = document.querySelector<HTMLElement>(
+                    ".desktop-dock",
+                );
+                const dockStyle = dock ? getComputedStyle(dock) : null;
+                const dockBounds = dock?.getBoundingClientRect();
+                const dockTop = dock && dockBounds &&
+                        dockStyle?.display !== "none" &&
+                        dockBounds.width > 0 && dockBounds.height > 0
+                    ? dockBounds.top
+                    : globalThis.innerHeight;
+                return { chromeBottom, dockTop };
+            });
+            const workBox = {
+                x: canvasBox.x,
+                y: measuredBounds.chromeBottom,
+                width: canvasBox.width,
+                height: Math.max(
+                    0,
+                    measuredBounds.dockTop - measuredBounds.chromeBottom,
+                ),
+            };
 
             async function dragTitleTo(
                 toX: number,
@@ -1446,15 +1512,208 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     },
                     [mode, snap, expectedWidth],
                 );
+                await waitForWindowFrame({
+                    x: workBox.x +
+                        (["right", "top-right", "bottom-right"].includes(snap)
+                            ? halfW
+                            : 0),
+                    y: workBox.y + (snap.startsWith("bottom-") ? halfH : 0),
+                    width: expectedWidth,
+                    height: snap.startsWith("top-")
+                        ? halfH
+                        : snap.startsWith("bottom-")
+                        ? workBox.height - halfH
+                        : workBox.height,
+                });
+            }
+            async function waitForWindowFrame(
+                expected: Pick<ElementBox, "x" | "y" | "width" | "height">,
+            ) {
+                await page.waitForFunction((frame) => {
+                    const el = document.querySelector<HTMLElement>(
+                        '.desktop-window[data-window-id="apps"]',
+                    );
+                    if (!el) return false;
+                    const box = el.getBoundingClientRect();
+                    return Math.abs(box.x - frame.x) <= 1 &&
+                        Math.abs(box.y - frame.y) <= 1 &&
+                        Math.abs(box.width - frame.width) <= 1 &&
+                        Math.abs(box.height - frame.height) <= 1;
+                }, expected);
             }
 
-            const halfW = Math.floor(canvasBox.width / 2);
-            const halfH = Math.floor(canvasBox.height / 2);
+            const halfW = Math.floor(workBox.width / 2);
+            const halfH = Math.floor(workBox.height / 2);
+            // Pointer cancellation commits the last viewport-global drag frame.
+            const cancelTitle = appsWin.locator(
+                ".desktop-window-chrome-title",
+            );
+            const cancelTitleBox = await measureBox(cancelTitle);
+            const cancelStartX = cancelTitleBox.x + cancelTitleBox.width / 2;
+            const cancelStartY = cancelTitleBox.y + cancelTitleBox.height / 2;
+            await page.mouse.move(cancelStartX, cancelStartY);
+            await page.mouse.down();
+            await page.mouse.move(cancelStartX + 30, cancelStartY + 20, {
+                steps: 5,
+            });
+            await appsWin.locator(".desktop-window-chrome").evaluate((chrome) =>
+                chrome.dispatchEvent(
+                    new PointerEvent("pointercancel", {
+                        bubbles: true,
+                        pointerId: 1,
+                        pointerType: "mouse",
+                    }),
+                )
+            );
+            await page.mouse.up();
+            expectedRestoreFrame = {
+                ...originalFrame,
+                x: originalFrame.x + 30,
+                y: originalFrame.y + 20,
+            };
+            await waitForWindowFrame(expectedRestoreFrame);
 
+            // Shift+Arrow movement uses the same normal viewport bounds.
+            const keyboardChrome = appsWin.locator(".desktop-window-chrome");
+            await keyboardChrome.focus();
+            await page.keyboard.press("Shift+ArrowRight");
+            await waitForWindowFrame({
+                ...expectedRestoreFrame,
+                x: expectedRestoreFrame.x + 40,
+            });
+            await page.keyboard.press("Shift+ArrowLeft");
+            await waitForWindowFrame(expectedRestoreFrame);
+            await page.keyboard.press("Shift+ArrowDown");
+            await waitForWindowFrame({
+                ...expectedRestoreFrame,
+                y: expectedRestoreFrame.y + 40,
+            });
+            await page.keyboard.press("Shift+ArrowUp");
+            await waitForWindowFrame(expectedRestoreFrame);
+            async function waitForTinyPresentation() {
+                await page.waitForFunction(() => {
+                    const win = document.querySelector<HTMLElement>(
+                        '.desktop-window[data-window-id="apps"]',
+                    );
+                    const close = win?.querySelector<HTMLElement>(
+                        ".desktop-window-chrome-btn--close",
+                    );
+                    if (
+                        !win || !close || win.dataset.windowMode !== "normal"
+                    ) return false;
+
+                    const bounds = win.getBoundingClientRect();
+                    const closeBounds = close.getBoundingClientRect();
+                    let chromeBottom = 0;
+                    for (
+                        const element of document.querySelectorAll(
+                            ".topbar, .connection-banner",
+                        )
+                    ) {
+                        const style = getComputedStyle(element);
+                        const header = element.getBoundingClientRect();
+                        if (
+                            style.display !== "none" && header.width > 0 &&
+                            header.height > 0 && header.bottom > 0
+                        ) {
+                            chromeBottom = Math.max(
+                                chromeBottom,
+                                header.bottom,
+                            );
+                        }
+                    }
+
+                    const dock = document.querySelector<HTMLElement>(
+                        ".desktop-dock",
+                    );
+                    const dockBounds = dock?.getBoundingClientRect();
+                    const dockTop = dock && dockBounds &&
+                            getComputedStyle(dock).display !== "none" &&
+                            dockBounds.width > 0 && dockBounds.height > 0
+                        ? dockBounds.top
+                        : globalThis.innerHeight;
+                    return bounds.x >= 0 &&
+                        bounds.y >= chromeBottom &&
+                        bounds.right <= globalThis.innerWidth &&
+                        bounds.bottom <= globalThis.innerHeight &&
+                        closeBounds.width > 0 && closeBounds.height > 0 &&
+                        closeBounds.x >= 0 &&
+                        closeBounds.right <= globalThis.innerWidth &&
+                        closeBounds.bottom <= dockTop + 1;
+                });
+            }
+
+            // Geometry changes cancel an in-flight drag without replacing the
+            // semantic frame with its tiny-viewport presentation frame.
+            const tinyTitleBox = await measureBox(
+                appsWin.locator(".desktop-window-chrome-title"),
+            );
+            const tinyDragStart = {
+                x: tinyTitleBox.x + tinyTitleBox.width / 2,
+                y: tinyTitleBox.y + tinyTitleBox.height / 2,
+            };
+            await page.mouse.move(tinyDragStart.x, tinyDragStart.y);
+            await page.mouse.down();
+            await page.mouse.move(
+                tinyDragStart.x + 30,
+                tinyDragStart.y + 20,
+                { steps: 4 },
+            );
+            await page.setViewportSize({ width: 1024, height: 200 });
+            await waitForTinyPresentation();
+            await appsWin.locator(".desktop-window-chrome").evaluate(
+                (chrome) =>
+                    chrome.dispatchEvent(
+                        new PointerEvent("pointercancel", {
+                            bubbles: true,
+                            pointerId: 1,
+                            pointerType: "mouse",
+                        }),
+                    ),
+            );
+            await page.mouse.up();
+            await waitForTinyPresentation();
+            assertEquals(
+                await appsWin.getAttribute("data-window-mode"),
+                "normal",
+            );
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await waitForWindowFrame(expectedRestoreFrame);
+
+            // Resize cancellation follows the same presentation-only fallback.
+            const tinyResize = appsWin.locator(
+                ".desktop-window-resize-handle--se",
+            );
+            const tinyResizeBox = await measureBox(tinyResize);
+            const tinyResizeStart = {
+                x: tinyResizeBox.x + tinyResizeBox.width / 2,
+                y: tinyResizeBox.y + tinyResizeBox.height / 2,
+            };
+            await page.mouse.move(tinyResizeStart.x, tinyResizeStart.y);
+            await page.mouse.down();
+            await page.mouse.move(
+                tinyResizeStart.x + 30,
+                tinyResizeStart.y + 20,
+                { steps: 4 },
+            );
+            await page.setViewportSize({ width: 1024, height: 200 });
+            await waitForTinyPresentation();
+            await page.mouse.up();
+            await waitForTinyPresentation();
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await waitForWindowFrame(expectedRestoreFrame);
+
+            await page.keyboard.press("Shift+ArrowRight");
+            await waitForWindowFrame({
+                ...expectedRestoreFrame,
+                x: expectedRestoreFrame.x + 40,
+            });
+            await page.keyboard.press("Shift+ArrowLeft");
+            await waitForWindowFrame(expectedRestoreFrame);
             // 1. Preview pointer-events: none and non-blocking during drag
             await dragTitleTo(
-                canvasBox.x + 16,
-                canvasBox.y + canvasBox.height / 2,
+                workBox.x + 16,
+                workBox.y + workBox.height / 2,
                 false,
             );
             const preview = page.locator("[data-snap-preview]");
@@ -1469,9 +1728,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await preview.waitFor({ state: "detached" });
             await waitForSnap("snapped", "left", halfW);
             const leftBox = await measureBox(appsWin);
-            assertNear(leftBox.x, canvasBox.x, 4);
+            assertNear(leftBox.x, workBox.x, 4);
             assertNear(leftBox.width, halfW, 4);
-            assertNear(leftBox.height, canvasBox.height, 4);
+            assertNear(leftBox.height, workBox.height, 4);
             // Resize handles hidden while snapped
             assertEquals(
                 await appsWin.locator(".desktop-window-resize-handle").count(),
@@ -1514,7 +1773,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     Math.abs(box.y - expected.y) <= 1 &&
                     Math.abs(box.width - expected.width) <= 1 &&
                     Math.abs(box.height - expected.height) <= 1;
-            }, originalFrame);
+            }, expectedRestoreFrame);
             assert(
                 (await appsWin.locator(".desktop-window-resize-handle")
                     .count()) > 0,
@@ -1522,77 +1781,77 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
             // 3. 7 release modes matrix
             // right
-            const rightTargetX = canvasBox.x + canvasBox.width - 16;
-            const rightTargetY = canvasBox.y + canvasBox.height / 2;
+            const rightTargetX = workBox.x + workBox.width - 16;
+            const rightTargetY = workBox.y + workBox.height / 2;
             await dragTitleTo(rightTargetX, rightTargetY, false);
             await page.mouse.up();
-            await waitForSnap("snapped", "right", canvasBox.width - halfW);
+            await waitForSnap("snapped", "right", workBox.width - halfW);
             const rightBox = await measureBox(appsWin);
-            assertNear(rightBox.x, canvasBox.x + halfW, 4);
-            assertNear(rightBox.width, canvasBox.width - halfW, 4);
-            assertNear(rightBox.height, canvasBox.height, 4);
+            assertNear(rightBox.x, workBox.x + halfW, 4);
+            assertNear(rightBox.width, workBox.width - halfW, 4);
+            assertNear(rightBox.height, workBox.height, 4);
 
             // top-left
-            await dragTitleTo(canvasBox.x + 30, canvasBox.y + 16);
+            await dragTitleTo(workBox.x + 30, workBox.y + 16);
             await waitForSnap("snapped", "top-left");
             const tlBox = await measureBox(appsWin);
-            assertNear(tlBox.x, canvasBox.x, 4);
-            assertNear(tlBox.y, canvasBox.y, 4);
+            assertNear(tlBox.x, workBox.x, 4);
+            assertNear(tlBox.y, workBox.y, 4);
             assertNear(tlBox.width, halfW, 4);
             assertNear(tlBox.height, halfH, 4);
 
             // top-right
             await dragTitleTo(
-                canvasBox.x + canvasBox.width - 30,
-                canvasBox.y + 16,
+                workBox.x + workBox.width - 30,
+                workBox.y + 16,
             );
             await waitForSnap("snapped", "top-right");
             const trBox = await measureBox(appsWin);
-            assertNear(trBox.x, canvasBox.x + halfW, 4);
-            assertNear(trBox.y, canvasBox.y, 4);
-            assertNear(trBox.width, canvasBox.width - halfW, 4);
+            assertNear(trBox.x, workBox.x + halfW, 4);
+            assertNear(trBox.y, workBox.y, 4);
+            assertNear(trBox.width, workBox.width - halfW, 4);
             assertNear(trBox.height, halfH, 4);
 
             // bottom-left
             await dragTitleTo(
-                canvasBox.x + 30,
-                canvasBox.y + canvasBox.height - 16,
+                workBox.x + 30,
+                workBox.y + workBox.height - 16,
             );
             await waitForSnap("snapped", "bottom-left");
             const blBox = await measureBox(appsWin);
-            assertNear(blBox.x, canvasBox.x, 4);
-            assertNear(blBox.y, canvasBox.y + halfH, 4);
+            assertNear(blBox.x, workBox.x, 4);
+            assertNear(blBox.y, workBox.y + halfH, 4);
             assertNear(blBox.width, halfW, 4);
-            assertNear(blBox.height, canvasBox.height - halfH, 4);
+            assertNear(blBox.height, workBox.height - halfH, 4);
 
             // bottom-right
             await dragTitleTo(
-                canvasBox.x + canvasBox.width - 30,
-                canvasBox.y + canvasBox.height - 16,
+                workBox.x + workBox.width - 30,
+                workBox.y + workBox.height - 16,
             );
             await waitForSnap("snapped", "bottom-right");
             const brBox = await measureBox(appsWin);
-            assertNear(brBox.x, canvasBox.x + halfW, 4);
-            assertNear(brBox.y, canvasBox.y + halfH, 4);
-            assertNear(brBox.width, canvasBox.width - halfW, 4);
-            assertNear(brBox.height, canvasBox.height - halfH, 4);
+            assertNear(brBox.x, workBox.x + halfW, 4);
+            assertNear(brBox.y, workBox.y + halfH, 4);
+            assertNear(brBox.width, workBox.width - halfW, 4);
+            assertNear(brBox.height, workBox.height - halfH, 4);
 
             // maximize
             await dragTitleTo(
-                canvasBox.x + canvasBox.width / 2,
-                canvasBox.y + 16,
+                workBox.x + workBox.width / 2,
+                workBox.y + 16,
             );
-            await waitForSnap("maximized", "maximize", canvasBox.width);
+            await waitForSnap("maximized", "maximize", workBox.width);
             const maxBox = await measureBox(appsWin);
-            assertNear(maxBox.x, canvasBox.x, 4);
-            assertNear(maxBox.y, canvasBox.y, 4);
-            assertNear(maxBox.width, canvasBox.width, 4);
-            assertNear(maxBox.height, canvasBox.height, 4);
+            assertNear(maxBox.x, workBox.x, 4);
+            assertNear(maxBox.y, workBox.y, 4);
+            assertNear(maxBox.width, workBox.width, 4);
+            assertNear(maxBox.height, workBox.height, 4);
 
             // 4. Drag away un-snaps to normal and restores frame
             await dragTitleTo(
-                canvasBox.x + canvasBox.width / 2,
-                canvasBox.y + canvasBox.height / 2,
+                workBox.x + workBox.width / 2,
+                workBox.y + workBox.height / 2,
             );
             await page.waitForFunction(() => {
                 const el = document.querySelector(
@@ -1602,17 +1861,36 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     !el?.hasAttribute("data-window-snap");
             });
 
+            await dragTitleTo(720, workBox.y + 150);
+            await page.waitForFunction((dockTop) => {
+                const element = document.querySelector(
+                    '[data-window-id="apps"]',
+                );
+                return !!element &&
+                    element.getBoundingClientRect().bottom < dockTop;
+            }, measuredBounds.dockTop);
             // 5. 8-way resize handle active in normal mode
             const seHandle = appsWin.locator(
                 ".desktop-window-resize-handle--se",
             );
-            await seHandle.waitFor({ state: "visible" });
+            await seHandle.hover();
             const handleBox = await measureBox(seHandle);
             const boxBeforeResize = await measureBox(appsWin);
             await page.mouse.move(
                 handleBox.x + handleBox.width / 2,
                 handleBox.y + handleBox.height / 2,
             );
+            const resizeTarget = await page.evaluate(
+                ({ x, y }) =>
+                    document.elementFromPoint(x, y)?.closest(
+                        ".desktop-window-resize-handle",
+                    )?.getAttribute("data-direction"),
+                {
+                    x: handleBox.x + handleBox.width / 2,
+                    y: handleBox.y + handleBox.height / 2,
+                },
+            );
+            assertEquals(resizeTarget, "se", "Resize must hit the real handle");
             await page.mouse.down();
             await page.mouse.move(
                 handleBox.x + handleBox.width / 2 - 50,
@@ -1630,12 +1908,94 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             1;
                 },
                 boxBeforeResize.width,
-            );
+            ).catch(async (cause) => {
+                throw new Error(
+                    `SE resize: ${
+                        JSON.stringify({
+                            before: boxBeforeResize,
+                            after: await measureBox(appsWin),
+                            target: resizeTarget,
+                            handle: handleBox,
+                            currentHandle: await measureBox(seHandle),
+                            style: await appsWin.getAttribute("style"),
+                        })
+                    }`,
+                    { cause },
+                );
+            });
+            for (
+                const direction of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
+            ) {
+                const handle = appsWin.locator(
+                    `[data-direction="${direction}"]`,
+                );
+                await handle.hover();
+                const before = await measureBox(appsWin);
+                const handleBounds = await measureBox(handle);
+                const dx = direction.includes("w")
+                    ? 12
+                    : direction.includes("e")
+                    ? -12
+                    : 0;
+                const dy = direction.includes("n")
+                    ? 12
+                    : direction.includes("s")
+                    ? -12
+                    : 0;
+                const pointer = {
+                    x: direction === "s"
+                        ? handleBounds.x + handleBounds.width - 12
+                        : handleBounds.x +
+                            (direction === "n" ? 12 : handleBounds.width / 2),
+                    y: handleBounds.y + handleBounds.height / 2,
+                };
+                const expected = {
+                    x: before.x + (direction.includes("w") ? 12 : 0),
+                    y: before.y + (direction.includes("n") ? 12 : 0),
+                    width: before.width - (dx ? 12 : 0),
+                    height: before.height - (dy ? 12 : 0),
+                };
+                await page.mouse.move(pointer.x, pointer.y);
+                await page.mouse.down();
+                await page.mouse.move(pointer.x + dx, pointer.y + dy, {
+                    steps: 4,
+                });
+                await page.mouse.up();
+                await page.waitForFunction(
+                    (expected) => {
+                        const element = document.querySelector(
+                            '[data-window-id="apps"]',
+                        );
+                        if (!element) return false;
+                        const frame = element.getBoundingClientRect();
+                        return Math.abs(frame.x - expected.x) <= 1 &&
+                            Math.abs(frame.y - expected.y) <= 1 &&
+                            Math.abs(frame.width - expected.width) <= 1 &&
+                            Math.abs(frame.height - expected.height) <= 1;
+                    },
+                    expected,
+                    { timeout: 5000 },
+                ).catch(async (error: unknown) => {
+                    throw new Error(
+                        `${direction} resize: before=${
+                            JSON.stringify(before)
+                        } expected=${JSON.stringify(expected)} actual=${
+                            JSON.stringify(await measureBox(appsWin))
+                        }`,
+                        { cause: error },
+                    );
+                });
+                const after = await measureBox(appsWin);
+                assertNear(after.x, expected.x, 1);
+                assertNear(after.y, expected.y, 1);
+                assertNear(after.width, expected.width, 1);
+                assertNear(after.height, expected.height, 1);
+            }
 
             // 6. Reload persistence of snapped state
             await dragTitleTo(
-                canvasBox.x + 16,
-                canvasBox.y + canvasBox.height / 2,
+                workBox.x + 16,
+                workBox.y + workBox.height / 2,
             );
             await waitForSnap("snapped", "left", halfW);
             await page.reload();

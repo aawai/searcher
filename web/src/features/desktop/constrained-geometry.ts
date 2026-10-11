@@ -40,13 +40,12 @@ export function isDesktopViewport(width: number): boolean {
 }
 
 /**
- * Computes the constrained window frame for a given preset inside the safe rect:
- * - medium: min 680 / 78%w x min 720 / 72%h, centered in safe rect
- * - large: min 880 / (safeW - 2*gap) x min 820 / 88%h, centered in safe rect
- * - fullscreen: full safe rect (x: 0, y: 0, width: safeW, height: safeH)
+ * Computes the constrained window frame for a given preset inside the supplied rect:
+ * - medium: min 680 / 78%w x min 720 / 72%h, centered in the rect
+ * - large: min 880 / (rectW - 2*gap) x min 820 / 88%h, centered in the rect
+ * - fullscreen: fills the rect
  *
- * Strict constraint: No min-size inflation outside the specified preset bounds.
- * Dimensions are always bounded by the safe rect.
+ * Returned coordinates are viewport-global, including the rect origin.
  */
 export function computeConstrainedFrame(
     options: ConstrainedFrameOptions,
@@ -57,8 +56,8 @@ export function computeConstrainedFrame(
 
     if (preset === "fullscreen") {
         return {
-            x: 0,
-            y: 0,
+            x: rect.x,
+            y: rect.y,
             width: safeW,
             height: safeH,
         };
@@ -75,8 +74,8 @@ export function computeConstrainedFrame(
         height = Math.min(820, safeH * 0.88);
     }
 
-    const x = (safeW - width) / 2;
-    const y = (safeH - height) / 2;
+    const x = rect.x + (safeW - width) / 2;
+    const y = rect.y + (safeH - height) / 2;
 
     return { x, y, width, height };
 }

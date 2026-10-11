@@ -9,6 +9,7 @@ import { Button } from "../../components/ui/button.tsx";
 import {
     type WorkspacePresentation,
     WorkspaceSurface,
+    type WorkspaceViewportInsets,
 } from "./WorkspaceSurface.tsx";
 import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 import {
@@ -35,6 +36,7 @@ export function WorkspaceShell(
         onFeedbackHost,
         appsArranging = false,
         children,
+        viewportInsets,
     }: {
         open?: boolean;
         state: WorkspaceRoute;
@@ -50,6 +52,7 @@ export function WorkspaceShell(
         onFeedbackHost?: (host: HTMLElement | null) => void;
         appsArranging?: boolean;
         children: ReactNode;
+        viewportInsets?: WorkspaceViewportInsets;
     },
 ) {
     const [notesExpanded, setNotesExpanded] = useState(false);
@@ -100,7 +103,9 @@ export function WorkspaceShell(
         wasOpen.current = open;
     }, [open, workspace]);
     const select = (kind: WorkspaceKind) => navigate({ view: `${kind}/root` });
-    if (!open || (style === "widgets" && !mobile)) return null;
+    if (!open || (style === "widgets" && !mobile && !viewportInsets)) {
+        return null;
+    }
     const root = state.view === "apps/root" || state.view === "notes/root" ||
         state.view === "documents/root";
     const editing = state.view === "apps/create" ||
@@ -109,6 +114,7 @@ export function WorkspaceShell(
     return (
         <WorkspaceSurface
             presentation={presentation}
+            viewportInsets={viewportInsets}
             title={title}
             expanded={state.view === "documents/edit" ||
                 (state.view === "notes/edit" && notesExpanded)}

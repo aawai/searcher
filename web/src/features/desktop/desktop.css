@@ -77,10 +77,15 @@
     white-space: nowrap;
 }
 
+:root:not([data-document-immersive]) .app-shell:has(.desktop-canvas) > .topbar,
+:root:not([data-document-immersive]) .app-shell:has(.desktop-canvas) > .connection-banner {
+    position: relative;
+    z-index: var(--elevation-desktop-dock);
+}
 .desktop-canvas {
     position: fixed;
     pointer-events: none;
-    z-index: var(--window-elevation);
+    z-index: var(--elevation-window-base);
     box-sizing: border-box;
 }
 
@@ -374,4 +379,63 @@
 }
 .desktop-snap-preview--maximize {
     border-radius: 0;
+}
+
+/* Immersion hides navigation without changing its normal measurement geometry. */
+[data-immersive-background],
+.desktop-window--immersive-background,
+.desktop-dock[data-immersive-hidden] {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.desktop-canvas[data-document-immersive] {
+    z-index: var(--elevation-document-immersive);
+}
+
+.desktop-window--immersive {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--surface-window);
+}
+
+.desktop-window--immersive .desktop-window-content {
+    padding-bottom: 0;
+}
+
+.desktop-immersive-chrome .desktop-window-chrome-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.desktop-immersive-save-status {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    white-space: nowrap;
+}
+
+.desktop-dock--immersive {
+    z-index: var(--elevation-immersive-dock);
+}
+
+.desktop-immersive-dock-trigger[data-slot="button"] {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    width: 100%;
+    height: var(--immersive-dock-trigger-height);
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+    color: transparent;
+    background: transparent;
+    z-index: var(--elevation-immersive-trigger);
+}
+
+.desktop-immersive-dock-trigger[data-slot="button"]:focus-visible {
+    height: var(--control-touch-target);
+    color: var(--foreground);
+    background: var(--surface-navigation);
 }

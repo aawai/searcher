@@ -4,7 +4,14 @@
  * Zen/Widgets lifecycle transitions, and stale note cleanup.
  */
 
-import { type Dispatch, useEffect, useMemo, useReducer, useRef } from "react";
+import {
+    type Dispatch,
+    useCallback,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+} from "react";
 import {
     type DesktopAction,
     desktopReducer,
@@ -12,7 +19,7 @@ import {
     initialDesktopState,
     normalizeZOrders,
 } from "./desktop-state.ts";
-import type { SafeRect } from "./desktop-geometry.ts";
+import type { DesktopGeometry } from "./desktop-geometry.ts";
 import {
     loadDesktopLayout,
     type PersistedDesktopLayout,
@@ -22,12 +29,28 @@ import {
 export interface UseDesktopLayoutOptions {
     userId?: string | null;
     layoutStyle?: "widgets" | "zen";
-    rect: SafeRect;
+    rect: DesktopGeometry;
     notes?: Array<{ id: string }> | null;
     notesLoaded?: boolean;
 }
 
 export type UseDesktopLayoutReturn = [DesktopState, Dispatch<DesktopAction>];
+
+function hasStableGeometry(geometry: DesktopGeometry): boolean {
+    return geometry.usable &&
+        Number.isFinite(geometry.viewportRect.width) &&
+        geometry.viewportRect.width > 0 &&
+        Number.isFinite(geometry.viewportRect.height) &&
+        geometry.viewportRect.height > 0 &&
+        Number.isFinite(geometry.workRect.width) &&
+        geometry.workRect.width > 0 &&
+        Number.isFinite(geometry.workRect.height) &&
+        geometry.workRect.height > 0 &&
+        Number.isFinite(geometry.safeRect.width) &&
+        geometry.safeRect.width > 0 &&
+        Number.isFinite(geometry.safeRect.height) &&
+        geometry.safeRect.height > 0;
+}
 
 export function useDesktopLayout(
     options: UseDesktopLayoutOptions,
@@ -46,18 +69,27 @@ export function useDesktopLayout(
         : null;
 
     const [state, dispatch] = useReducer(desktopReducer, initialDesktopState);
-
-    // Instance-level session fallback (no module-level mutable state)
-    const sessionMemoryRef = useRef<Map<string, PersistedDesktopLayout>>(
-        new Map(),
-    );
+    const currentActiveKeyRef = useRef(currentActiveKey);
+    currentActiveKeyRef.current = currentActiveKey;
+    const writeEnabledKeyRef = useRef<string | null>(null);
+    const rectRef = useRef(rect);
+    rectRef.current = rect;
+    const dispatchAction = useCallback<Dispatch<DesktopAction>>((action) => {
+        const geometry = "rect" in action ? action.rect : rectRef.current;
+        if (
+            action.type !== "HYDRATE" && action.type !== "RESET" &&
+            action.type !== "CLAMP" && action.type !== "NORMALIZE" &&
+            action.type !== "PRUNE_STALE_NOTES" &&
+            hasStableGeometry(geometry)
+        ) {
+            writeEnabledKeyRef.current = currentActiveKeyRef.current;
+        }
+        dispatch(action);
+    }, []);
 
     // Refs for lifecycle tracking and racing avoidance
     const stateRef = useRef(state);
     stateRef.current = state;
-
-    const rectRef = useRef(rect);
-    rectRef.current = rect;
 
     const userIdRef = useRef(userId);
     userIdRef.current = userId;
@@ -65,6 +97,9 @@ export function useDesktopLayout(
     const layoutStyleRef = useRef(layoutStyle);
     layoutStyleRef.current = layoutStyle;
 
+    const sessionMemoryRef = useRef(
+        new Map<string, PersistedDesktopLayout>(),
+    );
     const restoreSeqRef = useRef(0);
     const activeRestoredKeyRef = useRef<string | null>(null);
     const restoredKeyRef = useRef<string | null>(null);
@@ -80,17 +115,22 @@ export function useDesktopLayout(
         return set;
     }, [notes]);
 
-    // Helper to immediately flush state persistence to storage
-    const flushSave = (uid: string, s: DesktopState, r: SafeRect) => {
-        return saveDesktopLayout(uid, s, r, sessionMemoryRef.current);
-    };
-
     // Runtime ownership must not wait for network data or IndexedDB.
     useEffect(() => {
         const previousUser = lastSavedUserIdRef.current;
-        if (previousUser && restoredKeyRef.current === previousUser) {
-            void flushSave(previousUser, stateRef.current, rectRef.current);
+        if (
+            previousUser && restoredKeyRef.current === previousUser &&
+            writeEnabledKeyRef.current === previousUser &&
+            hasStableGeometry(rectRef.current)
+        ) {
+            void saveDesktopLayout(
+                previousUser,
+                stateRef.current,
+                rectRef.current,
+                sessionMemoryRef.current,
+            );
         }
+        writeEnabledKeyRef.current = null;
         dispatch({ type: "RESET" });
         stateRef.current = initialDesktopState;
         activeRestoredKeyRef.current = currentActiveKey;
@@ -98,10 +138,10 @@ export function useDesktopLayout(
         restoredKeyRef.current = null;
     }, [currentActiveKey]);
 
-    // Restore only once note identities and the measured safe rect are available.
+    // Restore only after usable viewport and safe bounds have been measured.
     useEffect(() => {
         if (
-            !currentActiveKey || rect.width <= 0 || rect.height <= 0 ||
+            !currentActiveKey || !hasStableGeometry(rect) ||
             !notesLoaded ||
             restoredKeyRef.current === currentActiveKey
         ) return;
@@ -129,7 +169,7 @@ export function useDesktopLayout(
                     dispatch({ type: "HYDRATE", state: stateRef.current });
                     return;
                 }
-
+                writeEnabledKeyRef.current = targetUserId;
                 // Handle async restore race: merge with any windows opened by user during restore
                 const currentWindows =
                     activeRestoredKeyRef.current === targetUserId
@@ -185,9 +225,14 @@ export function useDesktopLayout(
         }
     }, [notesLoaded, validNoteIds, state.windows]);
 
-    // 3. Immediate persistence per stable reducer commit
+    // Persist only after a successful restore or a stable user-initiated layout action.
     useEffect(() => {
-        if (!currentActiveKey || restoredKeyRef.current !== currentActiveKey) {
+        if (
+            !currentActiveKey ||
+            writeEnabledKeyRef.current !== currentActiveKey ||
+            restoredKeyRef.current !== currentActiveKey ||
+            !hasStableGeometry(rect)
+        ) {
             return;
         }
 
@@ -197,7 +242,7 @@ export function useDesktopLayout(
             rectRef.current,
             sessionMemoryRef.current,
         );
-    }, [state, currentActiveKey]);
+    }, [state, currentActiveKey, rect]);
 
     // 4. Lifecycle flush on pagehide, visibilitychange (e.g. reload or tab background) and unmount
     useEffect(() => {
@@ -205,7 +250,9 @@ export function useDesktopLayout(
             if (
                 userIdRef.current &&
                 layoutStyleRef.current === "widgets" &&
-                restoredKeyRef.current === userIdRef.current
+                restoredKeyRef.current === userIdRef.current &&
+                writeEnabledKeyRef.current === userIdRef.current &&
+                hasStableGeometry(rectRef.current)
             ) {
                 void saveDesktopLayout(
                     userIdRef.current,
@@ -237,5 +284,5 @@ export function useDesktopLayout(
     const isOwnerMatch = activeRestoredKeyRef.current === currentActiveKey;
     const displayedState = isOwnerMatch ? state : initialDesktopState;
 
-    return [displayedState, dispatch];
+    return [displayedState, dispatchAction];
 }

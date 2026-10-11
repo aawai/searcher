@@ -3,11 +3,13 @@ import { useEffect } from "react";
 // One active apps coordinator; presenters cancel their default apps dismiss.
 export function useAppsEscape({
     enabled,
+    isForeground,
     hasDialog,
     onDialogEscape,
     onEscape,
 }: {
     enabled: boolean;
+    isForeground?: () => boolean;
     hasDialog: () => boolean;
     onDialogEscape: () => void;
     onEscape: () => void;
@@ -17,7 +19,7 @@ export function useAppsEscape({
         const escape = (event: KeyboardEvent) => {
             if (
                 event.key !== "Escape" || event.isComposing ||
-                event.defaultPrevented
+                event.defaultPrevented || isForeground?.() === false
             ) return;
             if (hasDialog()) {
                 event.preventDefault();
@@ -43,5 +45,5 @@ export function useAppsEscape({
         };
         globalThis.addEventListener("keydown", escape, true);
         return () => globalThis.removeEventListener("keydown", escape, true);
-    }, [enabled, hasDialog, onDialogEscape, onEscape]);
+    }, [enabled, isForeground, hasDialog, onDialogEscape, onEscape]);
 }

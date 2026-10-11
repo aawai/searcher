@@ -139,21 +139,25 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
     "--wallpaper-motion-scale":
         "WallpaperSurface runtime owner: Shared zoom stage peak scale",
     "--page-width":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+        "DocumentPagination layout owner: physical paper metrics and measured vertical page flow; never visual styling",
     "--page-height":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+        "DocumentPagination layout owner: physical paper metrics and measured vertical page flow; never visual styling",
     "--page-content-width":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+        "DocumentPagination layout owner: physical paper metrics and measured vertical page flow; never visual styling",
     "--page-content-height":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
-    "--space-document-print-top":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
-    "--space-document-print-left":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
-    "--space-document-column-gap":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
-    "--strip-width":
-        "EditablePagination layout owner: physical paper metrics and measured local strip geometry; never visual styling",
+        "DocumentPagination layout owner: physical paper metrics and measured vertical page flow; never visual styling",
+    "--page-margin-top":
+        "DocumentPagination layout owner: physical paper margins; never visual styling",
+    "--page-margin-right":
+        "DocumentPagination layout owner: physical paper margins; never visual styling",
+    "--page-margin-bottom":
+        "DocumentPagination layout owner: physical paper margins; never visual styling",
+    "--page-margin-left":
+        "DocumentPagination layout owner: physical paper margins; never visual styling",
+    "--page-gap":
+        "DocumentPagination layout owner: measured semantic page gap; never visual styling",
+    "--page-pitch":
+        "DocumentPagination layout owner: physical paper height plus measured semantic gap; never visual styling",
 };
 
 /**

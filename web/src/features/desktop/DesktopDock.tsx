@@ -8,12 +8,18 @@ import "./desktop.css";
 
 export interface DesktopDockProps {
     state: DesktopState;
+    activeWindowId?: string | null;
     onOpen: (kind: WorkspaceKind) => void;
     className?: string;
     runningEntities?: WindowPreview[];
     onSelectWindow?: (id: string) => void;
     onOverview?: () => void;
     overviewOpen?: boolean;
+    suppressed?: boolean;
+    onPointerEnter?: () => void;
+    onPointerLeave?: () => void;
+    onFocus?: () => void;
+    onBlur?: () => void;
 }
 
 const WORKSPACE_ITEMS: readonly {
@@ -30,12 +36,18 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
     function DesktopDock(
         {
             state,
+            activeWindowId = state.activeId,
             onOpen,
             className,
             runningEntities = [],
             onSelectWindow,
             onOverview,
             overviewOpen,
+            suppressed = false,
+            onPointerEnter,
+            onPointerLeave,
+            onFocus,
+            onBlur,
         },
         ref,
     ) {
@@ -63,6 +75,12 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                 className={["desktop-dock", className ?? ""].filter(Boolean)
                     .join(" ")}
                 aria-label="桌面工作区导航"
+                inert={suppressed}
+                data-immersive-hidden={suppressed || undefined}
+                onPointerEnter={onPointerEnter}
+                onPointerLeave={onPointerLeave}
+                onFocusCapture={onFocus}
+                onBlurCapture={onBlur}
             >
                 {WORKSPACE_ITEMS.map((item) => {
                     const win = state.windows.find(
@@ -71,7 +89,7 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                     const isOpen = Boolean(win);
                     const isMinimized = win?.mode === "minimized";
                     const isActive = Boolean(
-                        win && state.activeId === win.id && !isMinimized,
+                        win && activeWindowId === win.id && !isMinimized,
                     );
 
                     const stateStr = isActive
@@ -156,7 +174,7 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                                     note.kind === "document" ? "笔记" : "便签"
                                 }窗口：${note.title}`}
                                 title={note.title}
-                                aria-pressed={state.activeId === note.id &&
+                                aria-pressed={activeWindowId === note.id &&
                                     !note.minimized}
                                 onClick={() => onSelectWindow?.(note.id)}
                             >

@@ -25,7 +25,7 @@ import {
     CONSTRAINED_PRESETS,
     type ConstrainedPreset,
 } from "./constrained-geometry.ts";
-import type { SafeRect } from "./desktop-geometry.ts";
+import type { DesktopGeometry } from "./desktop-geometry.ts";
 import type {
     DesktopAction,
     DesktopState,
@@ -45,10 +45,11 @@ import {
 import "./desktop.css";
 import type { DocumentDto } from "@shared/documents.ts";
 import { DocumentEntityWindow } from "./DocumentEntityWindow.tsx";
+import { useDocumentImmersion } from "./useDocumentImmersion.ts";
 
 export interface DesktopWorkspacesProps {
     state: DesktopState;
-    rect: SafeRect;
+    rect: DesktopGeometry;
     dispatch: Dispatch<DesktopAction>;
     models: WorkspaceCoreState;
     renderContent: (kind: WorkspaceKind) => ReactNode;
@@ -192,6 +193,12 @@ export function DesktopWorkspaces({
         globalThis.addEventListener("resize", handleResize);
         return () => globalThis.removeEventListener("resize", handleResize);
     }, []);
+    const immersion = useDocumentImmersion(
+        state,
+        userId,
+        !isMobile && !isConstrained && rect.usable,
+    );
+    const immersiveId = immersion.immersiveDocumentId;
 
     // DesktopState.windows is the single source of truth for window visibility
     const openWindows = state.windows.filter((w) => {
@@ -341,6 +348,15 @@ export function DesktopWorkspaces({
     const selectWindow = (id: string) => {
         const win = openWindows.find((w) => w.id === id);
         if (!win) return;
+        if (id === immersiveId) {
+            requestAnimationFrame(() =>
+                document.getElementById(`desktop-window-${id}`)
+                    ?.querySelector<HTMLElement>(".ProseMirror, textarea")
+                    ?.focus({ preventScroll: true })
+            );
+            return;
+        }
+        immersion.exit(false);
         dispatch(
             win.mode === "minimized"
                 ? { type: "RESTORE", id, rect }
@@ -386,6 +402,7 @@ export function DesktopWorkspaces({
                                 rect={rect}
                                 active={isActive}
                                 dispatch={dispatch}
+                                background={Boolean(immersiveId)}
                                 title={title}
                                 disableDrag={isConstrained}
                                 disableResize={isConstrained}
@@ -415,12 +432,25 @@ export function DesktopWorkspaces({
                                 key={`${userId}:${win.id}`}
                                 window={win}
                                 rect={rect}
-                                active={state.activeId === win.id}
+                                active={immersiveId
+                                    ? immersiveId === win.id
+                                    : state.activeId === win.id}
                                 dispatch={dispatch}
+                                immersive={immersiveId === win.id}
+                                background={Boolean(
+                                    immersiveId && immersiveId !== win.id,
+                                )}
+                                onEnterImmersive={() => immersion.enter(win.id)}
+                                onExitImmersive={() => immersion.exit()}
                                 userId={userId}
                                 title={previews.find((p) => p.id === win.id)
                                     ?.title ?? "笔记"}
-                                onOpenDocument={onOpenDocument}
+                                onOpenDocument={(id) => {
+                                    if (
+                                        `document:${id}` !== immersiveId
+                                    ) immersion.exit(false);
+                                    onOpenDocument(id);
+                                }}
                                 onDocumentChanged={onDocumentChanged}
                                 onDocumentsChanged={onDocumentsChanged}
                             />
@@ -449,7 +479,7 @@ export function DesktopWorkspaces({
                             ...win,
                             frame: computeConstrainedFrame({
                                 preset: effectivePreset,
-                                rect,
+                                rect: rect.safeRect,
                             }),
                         }
                         : win;
@@ -464,6 +494,7 @@ export function DesktopWorkspaces({
                             active={isActive && !isConstrainedHidden}
                             dispatch={dispatch}
                             title={title}
+                            background={Boolean(immersiveId)}
                             className={isConstrainedHidden
                                 ? "desktop-window--constrained-hidden"
                                 : undefined}
@@ -530,7 +561,11 @@ export function DesktopWorkspaces({
             <DesktopDock
                 ref={handleDockRef}
                 state={state}
-                onOpen={onOpen}
+                activeWindowId={immersiveId ?? state.activeId}
+                onOpen={(kind) => {
+                    immersion.exit(false);
+                    onOpen(kind);
+                }}
                 runningEntities={isConstrained
                     ? []
                     : previews.filter((w) =>
@@ -538,11 +573,40 @@ export function DesktopWorkspaces({
                     )}
                 onSelectWindow={selectWindow}
                 overviewOpen={overviewOpen}
+                className={immersiveId ? "desktop-dock--immersive" : undefined}
+                suppressed={Boolean(immersiveId && !immersion.dockShown)}
+                onPointerEnter={immersion.onDockEnter}
+                onPointerLeave={immersion.onDockLeave}
+                onFocus={immersion.showDock}
+                onBlur={immersion.onDockBlur}
                 onOverview={isConstrained ? undefined : () => {
+                    immersion.exit(false);
                     overviewSelection.current = null;
                     setOverviewOpen(true);
                 }}
             />
+            {immersiveId && (
+                <Button
+                    variant="ghost"
+                    className="desktop-immersive-dock-trigger"
+                    data-immersive-dock-trigger
+                    aria-label="显示 Dock"
+                    onPointerEnter={immersion.onEdgeEnter}
+                    onPointerLeave={immersion.onEdgeLeave}
+                    onFocus={immersion.showDock}
+                    onBlur={immersion.onDockBlur}
+                    onClick={() => {
+                        immersion.showDock();
+                        requestAnimationFrame(() =>
+                            dockNavRef.current?.querySelector<HTMLElement>(
+                                "button",
+                            )?.focus()
+                        );
+                    }}
+                >
+                    显示 Dock
+                </Button>
+            )}
             {!isConstrained && (
                 <DesktopOverview
                     open={overviewOpen}

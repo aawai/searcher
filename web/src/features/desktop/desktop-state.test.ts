@@ -1,12 +1,12 @@
 import { assertEquals, assertNotEquals } from "@std/assert";
-import { type SafeRect, snapFrame } from "./desktop-geometry.ts";
+import { desktopGeometry, snapFrame } from "./desktop-geometry.ts";
 import {
     desktopReducer,
     type DesktopState,
     initialDesktopState,
 } from "./desktop-state.ts";
 
-const sampleRect: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
+const sampleRect = desktopGeometry(1440, 900, 64, 820, 16, 48);
 
 Deno.test("desktop-state: OPEN creates window, stacks on top, and activates", () => {
     let state = desktopReducer(initialDesktopState, {
@@ -201,15 +201,13 @@ Deno.test("desktop-state: MAXIMIZE saves restoreFrame, and RESTORE_FRAME clamps 
     const maximizedWin = state.windows[0];
     assertEquals(maximizedWin.mode, "maximized");
     assertEquals(maximizedWin.restoreFrame, initialFrame);
-    assertEquals(maximizedWin.frame, {
-        x: 0,
-        y: 0,
-        width: sampleRect.width,
-        height: sampleRect.height,
-    });
+    assertEquals(
+        maximizedWin.frame,
+        snapFrame("maximize", sampleRect.workRect),
+    );
 
     // Restore frame in a smaller viewport rect -> clamps restoreFrame
-    const smallerRect: SafeRect = { x: 0, y: 0, width: 600, height: 500 };
+    const smallerRect = desktopGeometry(600, 500, 48, 452, 16, 48, 0);
     state = desktopReducer(state, {
         type: "RESTORE_FRAME",
         id: "w1",
@@ -299,15 +297,24 @@ Deno.test("desktop-state: MOVE and RESIZE update frame clamped and un-maximize",
     });
     assertEquals(state.windows[0].frame, movedFrame);
 
-    // Move with out-of-bounds coordinates clamps into safe rect
+    // Move with out-of-bounds coordinates clamps to the viewport while keeping the titlebar above Dock.
     state = desktopReducer(state, {
         type: "MOVE",
         id: "w1",
         frame: { x: 2000, y: 2000, width: 760, height: 700 },
         rect: sampleRect,
     });
-    assertEquals(state.windows[0].frame.x, sampleRect.width - 760);
-    assertEquals(state.windows[0].frame.y, sampleRect.height - 700);
+    assertEquals(
+        state.windows[0].frame.x,
+        sampleRect.viewportRect.width - 760,
+    );
+    assertEquals(
+        state.windows[0].frame.y,
+        Math.min(
+            sampleRect.viewportRect.height - 700,
+            sampleRect.dockTop - sampleRect.chromeHeight,
+        ),
+    );
 
     // Maximize then MOVE un-maximizes
     state = desktopReducer(state, {
@@ -340,7 +347,7 @@ Deno.test("desktop-state: MOVE and RESIZE update frame clamped and un-maximize",
     });
 });
 
-Deno.test("desktop-state: CLAMP updates all windows when safe rect changes", () => {
+Deno.test("desktop-state: CLAMP bounds normal frames to the viewport and snaps to Work Rect", () => {
     let state = desktopReducer(initialDesktopState, {
         type: "OPEN",
         id: "w-normal",
@@ -359,33 +366,22 @@ Deno.test("desktop-state: CLAMP updates all windows when safe rect changes", () 
         rect: sampleRect,
     });
 
-    // Shrink viewport
-    const shrunkRect: SafeRect = { x: 0, y: 0, width: 700, height: 500 };
-    state = desktopReducer(state, {
-        type: "CLAMP",
-        rect: shrunkRect,
-    });
+    const shrunkRect = desktopGeometry(700, 500, 40, 460, 16, 48, 0);
+    state = desktopReducer(state, { type: "CLAMP", rect: shrunkRect });
 
     const normalWin = state.windows.find((w) => w.id === "w-normal")!;
     const maxWin = state.windows.find((w) => w.id === "w-max")!;
-
-    // Normal window clamped inside shrunk safe rect
     assertEquals(
-        normalWin.frame.x + normalWin.frame.width <= shrunkRect.width,
+        normalWin.frame.x + normalWin.frame.width <=
+            shrunkRect.viewportRect.width,
         true,
     );
+    assertEquals(normalWin.frame.y >= shrunkRect.chromeBottom, true);
     assertEquals(
-        normalWin.frame.y + normalWin.frame.height <= shrunkRect.height,
+        normalWin.frame.y + shrunkRect.chromeHeight <= shrunkRect.dockTop,
         true,
     );
-
-    // Maximized window updated to exactly fill shrunk safe rect
-    assertEquals(maxWin.frame, {
-        x: 0,
-        y: 0,
-        width: shrunkRect.width,
-        height: shrunkRect.height,
-    });
+    assertEquals(maxWin.frame, shrunkRect.workRect);
 });
 
 Deno.test("desktop-state: regression - repeated elevations stay strictly bounded 1..N and preserve relative stacking", () => {
@@ -570,7 +566,7 @@ Deno.test("desktop-state: SNAP action handles 7 modes, captures restoreFrame fro
     const leftWin = state.windows[0];
     assertEquals(leftWin.mode, "snapped");
     assertEquals(leftWin.snap, "left");
-    assertEquals(leftWin.frame, snapFrame("left", sampleRect));
+    assertEquals(leftWin.frame, snapFrame("left", sampleRect.workRect));
     assertEquals(leftWin.restoreFrame, initialNormalFrame);
 
     // 2. Switch snap to top-right -> MUST NOT overwrite restoreFrame with the left snap frame
@@ -583,7 +579,7 @@ Deno.test("desktop-state: SNAP action handles 7 modes, captures restoreFrame fro
     const trWin = state.windows[0];
     assertEquals(trWin.mode, "snapped");
     assertEquals(trWin.snap, "top-right");
-    assertEquals(trWin.frame, snapFrame("top-right", sampleRect));
+    assertEquals(trWin.frame, snapFrame("top-right", sampleRect.workRect));
     assertEquals(trWin.restoreFrame, initialNormalFrame);
 
     // 3. Switch snap to maximize mode via SNAP action
@@ -596,7 +592,7 @@ Deno.test("desktop-state: SNAP action handles 7 modes, captures restoreFrame fro
     const maxWin = state.windows[0];
     assertEquals(maxWin.mode, "maximized");
     assertEquals(maxWin.snap, "maximize");
-    assertEquals(maxWin.frame, snapFrame("maximize", sampleRect));
+    assertEquals(maxWin.frame, snapFrame("maximize", sampleRect.workRect));
     assertEquals(maxWin.restoreFrame, initialNormalFrame);
 });
 
@@ -628,7 +624,7 @@ Deno.test("desktop-state: MAXIMIZE sets snap='maximize' and preserves existing r
     assertEquals(maxWin.mode, "maximized");
     assertEquals(maxWin.snap, "maximize");
     assertEquals(maxWin.restoreFrame, initialNormalFrame);
-    assertEquals(maxWin.frame, snapFrame("maximize", sampleRect));
+    assertEquals(maxWin.frame, snapFrame("maximize", sampleRect.workRect));
 });
 
 Deno.test("desktop-state: RESTORE on snapped window restores to normal mode and clears snap and restoreFrame", () => {
@@ -707,7 +703,10 @@ Deno.test("desktop-state: MINIMIZE on snapped window retains snap; RESTORE recov
     const restoredSnap = state.windows.find((w) => w.id === "w2")!;
     assertEquals(restoredSnap.mode, "snapped");
     assertEquals(restoredSnap.snap, "bottom-right");
-    assertEquals(restoredSnap.frame, snapFrame("bottom-right", sampleRect));
+    assertEquals(
+        restoredSnap.frame,
+        snapFrame("bottom-right", sampleRect.workRect),
+    );
     assertEquals(restoredSnap.restoreFrame, initialNormalFrame);
     assertEquals(state.activeId, "w2");
 });
@@ -792,7 +791,7 @@ Deno.test("desktop-state: MOVE and RESIZE clear snap and restoreFrame, resetting
     assertEquals(state.windows[0].restoreFrame, null);
 });
 
-Deno.test("desktop-state: CLAMP recomputes frame according to snap semantic on viewport resize", () => {
+Deno.test("desktop-state: CLAMP recomputes snapped and maximized frames from Work Rect", () => {
     let state = desktopReducer(initialDesktopState, {
         type: "OPEN",
         id: "w-snapped",
@@ -820,29 +819,24 @@ Deno.test("desktop-state: CLAMP recomputes frame according to snap semantic on v
         rect: sampleRect,
     });
 
-    // Resize safeRect to 1200 x 800
-    const newRect: SafeRect = { x: 0, y: 0, width: 1200, height: 800 };
-    state = desktopReducer(state, {
-        type: "CLAMP",
-        rect: newRect,
-    });
+    const newRect = desktopGeometry(1200, 800, 64, 740, 16, 48);
+    state = desktopReducer(state, { type: "CLAMP", rect: newRect });
 
     const winSnapped = state.windows.find((w) => w.id === "w-snapped")!;
     assertEquals(winSnapped.mode, "snapped");
     assertEquals(winSnapped.snap, "right");
-    assertEquals(winSnapped.frame, snapFrame("right", newRect)); // (600, 0, 600, 800)
-    // restoreFrame was clamped to newRect
-    assertEquals(winSnapped.restoreFrame, { ...snappedNormalFrame, y: 98 });
+    assertEquals(winSnapped.frame, snapFrame("right", newRect.workRect));
+    assertEquals(winSnapped.restoreFrame, snappedNormalFrame);
 
     const winMax = state.windows.find((w) => w.id === "w-max")!;
     assertEquals(winMax.mode, "maximized");
     assertEquals(winMax.snap, "maximize");
-    assertEquals(winMax.frame, snapFrame("maximize", newRect)); // (0, 0, 1200, 800)
+    assertEquals(winMax.frame, snapFrame("maximize", newRect.workRect));
 });
 
 Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> switch snap -> minimize -> resize -> restore -> un-snap -> maximize -> restore_frame)", () => {
-    const r1440: SafeRect = { x: 0, y: 0, width: 1440, height: 900 };
-    const r1024: SafeRect = { x: 0, y: 0, width: 1024, height: 768 };
+    const r1440 = desktopGeometry(1440, 900, 64, 820, 16, 48);
+    const r1024 = desktopGeometry(1024, 768, 56, 688, 16, 48);
 
     // 1. Initial normal window
     let state = desktopReducer(initialDesktopState, {
@@ -885,13 +879,19 @@ Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> sw
     state = desktopReducer(state, { type: "CLAMP", rect: r1024 });
     assertEquals(state.windows[0].mode, "minimized");
     assertEquals(state.windows[0].snap, "bottom-right");
-    assertEquals(state.windows[0].frame, snapFrame("bottom-right", r1024));
+    assertEquals(
+        state.windows[0].frame,
+        snapFrame("bottom-right", r1024.workRect),
+    );
 
     // 6. Restore from minimized: recovers snapped semantic in new resolution!
     state = desktopReducer(state, { type: "RESTORE", id: "w1", rect: r1024 });
     assertEquals(state.windows[0].mode, "snapped");
     assertEquals(state.windows[0].snap, "bottom-right");
-    assertEquals(state.windows[0].frame, snapFrame("bottom-right", r1024));
+    assertEquals(
+        state.windows[0].frame,
+        snapFrame("bottom-right", r1024.workRect),
+    );
     assertNotEquals(state.windows[0].restoreFrame, null);
 
     // 7. Non-minimized RESTORE: restores to normal mode with restoreFrame
@@ -914,4 +914,53 @@ Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> sw
     assertEquals(state.windows[0].mode, "normal");
     assertEquals(state.windows[0].snap, null);
     assertEquals(state.windows[0].restoreFrame, null);
+});
+Deno.test("desktop-state: unusable viewport measurements do not change window geometry", () => {
+    const state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "apps",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    const unusable = desktopGeometry(1024, 200, 64, 100, 16, 48);
+
+    assertEquals(unusable.usable, false);
+    assertEquals(
+        desktopReducer(initialDesktopState, {
+            type: "OPEN",
+            id: "apps",
+            kind: "apps",
+            rect: unusable,
+        }),
+        initialDesktopState,
+    );
+    assertEquals(
+        desktopReducer(state, { type: "CLAMP", rect: unusable }),
+        state,
+    );
+    assertEquals(
+        desktopReducer(state, {
+            type: "MOVE",
+            id: "apps",
+            frame: { x: 10, y: 10, width: 480, height: 360 },
+            rect: unusable,
+        }),
+        state,
+    );
+});
+Deno.test("desktop-state: unusable safe inset rejects a new window", () => {
+    const zeroSafe = desktopGeometry(1440, 900, 64, 820, 800, 48);
+
+    assertEquals(zeroSafe.usable, true);
+    assertEquals(zeroSafe.safeRect.width, 0);
+    assertEquals(zeroSafe.safeRect.height, 0);
+    assertEquals(
+        desktopReducer(initialDesktopState, {
+            type: "OPEN",
+            id: "apps",
+            kind: "apps",
+            rect: zeroSafe,
+        }),
+        initialDesktopState,
+    );
 });

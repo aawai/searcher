@@ -1,13 +1,13 @@
 /**
  * Desktop Window Manager Persistence Engine
- * Issue #90 / #102 M6: IndexedDB desktop payload v3, readable legacy v1/v2,
- * normalized frame geometry, strict validation fallbacks, and user isolation.
+ * Issue #90 / #102 M6: IndexedDB desktop payload v4, readable legacy v1-v3,
+ * viewport-global normalized frames, strict validation, and user isolation.
  */
 
 import {
     clampFrame,
+    type DesktopGeometry,
     type Frame,
-    type SafeRect,
     snapFrame,
     type SnapMode,
     type WindowKind,
@@ -21,7 +21,7 @@ import {
 } from "./desktop-state.ts";
 import { getLocal, setLocal } from "../../lib/local.ts";
 
-export const DESKTOP_LAYOUT_SCHEMA_VERSION = 3 as const;
+export const DESKTOP_LAYOUT_SCHEMA_VERSION = 4 as const;
 
 const VALID_SNAP_MODES: Record<string, true> = {
     "left": true,
@@ -52,7 +52,7 @@ export interface PersistedWindowLayout {
 }
 
 export interface PersistedDesktopLayout {
-    version: 1 | 2 | typeof DESKTOP_LAYOUT_SCHEMA_VERSION;
+    version: 1 | 2 | 3 | typeof DESKTOP_LAYOUT_SCHEMA_VERSION;
     windows: PersistedWindowLayout[];
     activeId: string | null;
 }
@@ -61,37 +61,194 @@ export function desktopLayoutStorageKey(userId: string): string {
     return `searcher:desktop-layout:v1:${userId}`;
 }
 
-export function normalizeFrame(frame: Frame, rect: SafeRect): NormalizedFrame {
-    const safeW = rect.width > 0 ? rect.width : 1;
-    const safeH = rect.height > 0 ? rect.height : 1;
-    return {
-        x: Math.max(0, frame.x / safeW),
-        y: Math.max(0, frame.y / safeH),
-        width: Math.max(0, Math.min(1, frame.width / safeW)),
-        height: Math.max(0, Math.min(1, frame.height / safeH)),
-    };
+function hasPositiveFiniteDimensions(rect: {
+    width: number;
+    height: number;
+}): boolean {
+    return Number.isFinite(rect.width) && rect.width > 0 &&
+        Number.isFinite(rect.height) && rect.height > 0;
 }
 
-export function denormalizeFrame(norm: NormalizedFrame, rect: SafeRect): Frame {
-    const safeW = Math.max(0, rect.width);
-    const safeH = Math.max(0, rect.height);
-    return {
-        x: Math.round(norm.x * safeW),
-        y: Math.round(norm.y * safeH),
-        width: Math.round(norm.width * safeW),
-        height: Math.round(norm.height * safeH),
-    };
+function hasUsableGeometry(geometry: DesktopGeometry): boolean {
+    return geometry.usable &&
+        hasPositiveFiniteDimensions(geometry.viewportRect) &&
+        hasPositiveFiniteDimensions(geometry.workRect);
 }
 
-/**
- * Encodes runtime DesktopState into PersistedDesktopLayout with normalized coordinates.
- */
-export function encodeDesktopLayout(
+function hasMeasuredSafeGeometry(geometry: DesktopGeometry): boolean {
+    return hasUsableGeometry(geometry) &&
+        hasPositiveFiniteDimensions(geometry.safeRect);
+}
+
+function isFiniteFrame(frame: unknown): frame is Frame {
+    if (!frame || typeof frame !== "object" || Array.isArray(frame)) {
+        return false;
+    }
+    const candidate = frame as Record<string, unknown>;
+    return typeof candidate.x === "number" && Number.isFinite(candidate.x) &&
+        typeof candidate.y === "number" && Number.isFinite(candidate.y) &&
+        typeof candidate.width === "number" &&
+        Number.isFinite(candidate.width) && candidate.width > 0 &&
+        typeof candidate.height === "number" &&
+        Number.isFinite(candidate.height) && candidate.height > 0;
+}
+
+function fitsViewport(frame: Frame, geometry: DesktopGeometry): boolean {
+    const { width, height } = geometry.viewportRect;
+    return frame.x >= 0 && frame.y >= 0 &&
+        frame.x + frame.width <= width &&
+        frame.y + frame.height <= height;
+}
+
+function isValidRuntimeLayout(
     state: DesktopState,
-    rect: SafeRect,
+    geometry: DesktopGeometry,
+): boolean {
+    if (!Array.isArray(state.windows)) return false;
+    const seenIds = new Set<string>();
+
+    for (const window of state.windows) {
+        if (
+            !window || typeof window.id !== "string" ||
+            window.id.length === 0 || seenIds.has(window.id) ||
+            !isFiniteFrame(window.frame) ||
+            !fitsViewport(window.frame, geometry) ||
+            (window.restoreFrame !== null &&
+                (!isFiniteFrame(window.restoreFrame) ||
+                    !fitsViewport(window.restoreFrame, geometry))) ||
+            typeof window.zOrder !== "number" ||
+            !Number.isFinite(window.zOrder)
+        ) {
+            return false;
+        }
+        seenIds.add(window.id);
+
+        switch (window.kind) {
+            case "apps":
+                if (window.id !== "apps" || window.entityId !== null) {
+                    return false;
+                }
+                break;
+            case "notes":
+                if (window.id !== "notes" || window.entityId !== null) {
+                    return false;
+                }
+                break;
+            case "documents":
+                if (window.id !== "documents" || window.entityId !== null) {
+                    return false;
+                }
+                break;
+            case "note":
+            case "document":
+                if (
+                    typeof window.entityId !== "string" ||
+                    window.entityId.length === 0 ||
+                    window.id !== `${window.kind}:${window.entityId}`
+                ) {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+        }
+
+        const snap = window.snap ?? null;
+        if (
+            snap !== null &&
+            (typeof snap !== "string" ||
+                !Object.hasOwn(VALID_SNAP_MODES, snap))
+        ) {
+            return false;
+        }
+        if (
+            (window.mode === "normal" &&
+                (snap !== null || window.restoreFrame !== null)) ||
+            (window.mode === "snapped" &&
+                (!snap || snap === "maximize" ||
+                    window.restoreFrame === null)) ||
+            (window.mode === "maximized" &&
+                (snap !== "maximize" || window.restoreFrame === null)) ||
+            (window.mode === "minimized" &&
+                ((snap === null && window.restoreFrame !== null) ||
+                    (snap !== null && window.restoreFrame === null)))
+        ) {
+            return false;
+        }
+        if (
+            window.mode !== "normal" && window.mode !== "minimized" &&
+            window.mode !== "maximized" && window.mode !== "snapped"
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+export function normalizeFrame(
+    frame: Frame,
+    geometry: DesktopGeometry,
+): NormalizedFrame {
+    const { width, height } = geometry.viewportRect;
+    const viewportWidth = width > 0 && Number.isFinite(width) ? width : 1;
+    const viewportHeight = height > 0 && Number.isFinite(height) ? height : 1;
+    return {
+        x: Math.max(0, frame.x / viewportWidth),
+        y: Math.max(0, frame.y / viewportHeight),
+        width: Math.max(0, Math.min(1, frame.width / viewportWidth)),
+        height: Math.max(0, Math.min(1, frame.height / viewportHeight)),
+    };
+}
+
+export function denormalizeFrame(
+    norm: NormalizedFrame,
+    geometry: DesktopGeometry,
+): Frame {
+    const { width, height } = geometry.viewportRect;
+    return {
+        x: Math.round(norm.x * Math.max(0, width)),
+        y: Math.round(norm.y * Math.max(0, height)),
+        width: Math.round(norm.width * Math.max(0, width)),
+        height: Math.round(norm.height * Math.max(0, height)),
+    };
+}
+
+function denormalizeLegacyFrame(
+    norm: NormalizedFrame,
+    geometry: DesktopGeometry,
+): Frame {
+    const { x, y, width, height } = geometry.safeRect;
+    return {
+        x: Math.round(norm.x * width) + x,
+        y: Math.round(norm.y * height) + y,
+        width: Math.round(norm.width * width),
+        height: Math.round(norm.height * height),
+    };
+}
+
+function isNormalizedFrame(value: unknown): value is NormalizedFrame {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+    const frame = value as Record<string, unknown>;
+    return typeof frame.x === "number" && Number.isFinite(frame.x) &&
+        frame.x >= 0 && frame.x <= 1 &&
+        typeof frame.y === "number" && Number.isFinite(frame.y) &&
+        frame.y >= 0 && frame.y <= 1 &&
+        typeof frame.width === "number" && Number.isFinite(frame.width) &&
+        frame.width > 0 && frame.width <= 1 &&
+        typeof frame.height === "number" && Number.isFinite(frame.height) &&
+        frame.height > 0 && frame.height <= 1;
+}
+
+/** Serializes a layout after the caller has validated its geometry and state. */
+function serializeDesktopLayout(
+    state: DesktopState,
+    rect: DesktopGeometry,
 ): PersistedDesktopLayout {
     const windows: PersistedWindowLayout[] = state.windows.map((win) => {
-        // Normal frame is the unmaximized frame
+        // Normal frame is the unmaximized frame.
         const normalFrame = win.restoreFrame ?? win.frame;
         const normalizedNormalFrame = normalizeFrame(normalFrame, rect);
         const normalizedRestoreFrame = win.restoreFrame
@@ -118,6 +275,19 @@ export function encodeDesktopLayout(
 }
 
 /**
+ * Encodes runtime DesktopState into v4 normalized viewport coordinates.
+ */
+export function encodeDesktopLayout(
+    state: DesktopState,
+    rect: DesktopGeometry,
+): PersistedDesktopLayout {
+    if (!hasUsableGeometry(rect) || !isValidRuntimeLayout(state, rect)) {
+        throw new TypeError("Cannot encode an invalid desktop layout");
+    }
+    return serializeDesktopLayout(state, rect);
+}
+
+/**
  * Decodes and strictly validates unknown payload into DesktopState.
  * Any structural corruption, duplicate IDs, or illegal discriminants cause the
  * entire desktop to fall back to null (default initial state).
@@ -125,7 +295,7 @@ export function encodeDesktopLayout(
  */
 export function decodeDesktopLayout(
     payload: unknown,
-    rect: SafeRect,
+    rect: DesktopGeometry,
     validNoteIds?: Set<string>,
 ): DesktopState | null {
     if (
@@ -137,11 +307,17 @@ export function decodeDesktopLayout(
     }
 
     const raw = payload as Record<string, unknown>;
-
-    // Previous schemas remain readable without losing Apps/Notes or the Documents root.
     if (
-        raw.version !== 1 && raw.version !== 2 &&
+        raw.version !== 1 && raw.version !== 2 && raw.version !== 3 &&
         raw.version !== DESKTOP_LAYOUT_SCHEMA_VERSION
+    ) {
+        return null;
+    }
+
+    if (
+        raw.version === 4
+            ? !hasUsableGeometry(rect)
+            : !hasMeasuredSafeGeometry(rect)
     ) {
         return null;
     }
@@ -162,7 +338,7 @@ export function decodeDesktopLayout(
 
     for (const item of raw.windows) {
         if (!item || typeof item !== "object" || Array.isArray(item)) {
-            return null; // Corrupted payload defaults entire desktop
+            return null;
         }
         const w = item as Record<string, unknown>;
 
@@ -172,7 +348,6 @@ export function decodeDesktopLayout(
         const kind = w.kind;
         let entityId: string | null = null;
 
-        // Strict identity validation per kind
         if (kind === "apps") {
             if (w.id !== "apps") return null;
             if (w.entityId !== null && w.entityId !== undefined) return null;
@@ -183,23 +358,19 @@ export function decodeDesktopLayout(
             if (raw.version === 1 || w.id !== "documents") return null;
             if (w.entityId !== null && w.entityId !== undefined) return null;
         } else if (kind === "note" || kind === "document") {
-            if (kind === "document" && raw.version !== 3) return null;
+            if (kind === "document" && raw.version < 3) return null;
             if (typeof w.entityId !== "string" || w.entityId.length === 0) {
                 return null;
             }
             entityId = w.entityId;
             if (w.id !== `${kind}:${entityId}`) return null;
         } else {
-            return null; // Unknown kind corrupts payload
-        }
-
-        // Duplicate window IDs are forbidden
-        if (seenIds.has(w.id)) {
             return null;
         }
+
+        if (seenIds.has(w.id)) return null;
         seenIds.add(w.id);
 
-        // Strict mode validation
         if (
             w.mode !== "normal" &&
             w.mode !== "minimized" &&
@@ -210,13 +381,11 @@ export function decodeDesktopLayout(
         }
         const mode = w.mode as WindowMode;
 
-        // Strict zOrder validation
         if (typeof w.zOrder !== "number" || !Number.isFinite(w.zOrder)) {
             return null;
         }
         const zOrder = w.zOrder;
 
-        // Strict snap validation (nullable / string)
         if (w.snap !== null && w.snap !== undefined) {
             if (
                 typeof w.snap !== "string" ||
@@ -229,14 +398,13 @@ export function decodeDesktopLayout(
         if (mode === "snapped") {
             if (
                 !w.snap || typeof w.snap !== "string" ||
-                !Object.hasOwn(VALID_SNAP_MODES, w.snap)
+                !Object.hasOwn(VALID_SNAP_MODES, w.snap) ||
+                w.snap === "maximize"
             ) {
                 return null;
             }
         } else if (mode === "normal") {
-            if (w.snap !== null && w.snap !== undefined) {
-                return null;
-            }
+            if (w.snap !== null && w.snap !== undefined) return null;
         } else if (mode === "maximized") {
             if (
                 w.snap !== null && w.snap !== undefined && w.snap !== "maximize"
@@ -244,75 +412,53 @@ export function decodeDesktopLayout(
                 return null;
             }
         }
-        // Strict frame validation: all coordinates must be finite numbers in [0..1]
-        const rawFrame = w.frame as Record<string, unknown> | undefined;
+
+        const rawFrame = w.frame;
+        if (!isNormalizedFrame(rawFrame)) return null;
+
+        const rawRestoreFrame = w.restoreFrame;
         if (
-            !rawFrame || typeof rawFrame !== "object" || Array.isArray(rawFrame)
+            rawRestoreFrame !== null && rawRestoreFrame !== undefined &&
+            !isNormalizedFrame(rawRestoreFrame)
         ) {
             return null;
         }
+
         if (
-            typeof rawFrame.x !== "number" || !Number.isFinite(rawFrame.x) ||
-            rawFrame.x < 0 || rawFrame.x > 1 ||
-            typeof rawFrame.y !== "number" || !Number.isFinite(rawFrame.y) ||
-            rawFrame.y < 0 || rawFrame.y > 1 ||
-            typeof rawFrame.width !== "number" ||
-            !Number.isFinite(rawFrame.width) || rawFrame.width <= 0 ||
-            rawFrame.width > 1 ||
-            typeof rawFrame.height !== "number" ||
-            !Number.isFinite(rawFrame.height) || rawFrame.height <= 0 ||
-            rawFrame.height > 1
+            raw.version === 4 &&
+            (!Object.hasOwn(w, "snap") || w.snap === undefined ||
+                !Object.hasOwn(w, "restoreFrame") ||
+                rawRestoreFrame === undefined)
         ) {
             return null;
         }
-        // Strict restoreFrame validation if present
-        const rawRestoreFrame = w.restoreFrame as
-            | Record<string, unknown>
-            | undefined
-            | null;
-        if (rawRestoreFrame !== null && rawRestoreFrame !== undefined) {
-            if (
-                typeof rawRestoreFrame !== "object" ||
-                Array.isArray(rawRestoreFrame)
-            ) {
-                return null;
-            }
-            if (
-                typeof rawRestoreFrame.x !== "number" ||
-                !Number.isFinite(rawRestoreFrame.x) || rawRestoreFrame.x < 0 ||
-                rawRestoreFrame.x > 1 ||
-                typeof rawRestoreFrame.y !== "number" ||
-                !Number.isFinite(rawRestoreFrame.y) || rawRestoreFrame.y < 0 ||
-                rawRestoreFrame.y > 1 ||
-                typeof rawRestoreFrame.width !== "number" ||
-                !Number.isFinite(rawRestoreFrame.width) ||
-                rawRestoreFrame.width <= 0 || rawRestoreFrame.width > 1 ||
-                typeof rawRestoreFrame.height !== "number" ||
-                !Number.isFinite(rawRestoreFrame.height) ||
-                rawRestoreFrame.height <= 0 || rawRestoreFrame.height > 1
-            ) {
-                return null;
-            }
+        if (raw.version === 4) {
+            const hasRestoreFrame = rawRestoreFrame !== null;
+            const invalidModeSnap = (mode === "normal" &&
+                (w.snap !== null || hasRestoreFrame)) ||
+                (mode === "snapped" &&
+                    (w.snap === null || w.snap === "maximize" ||
+                        !hasRestoreFrame)) ||
+                (mode === "maximized" &&
+                    (w.snap !== "maximize" || !hasRestoreFrame)) ||
+                (mode === "minimized" &&
+                    ((w.snap === null && hasRestoreFrame) ||
+                        (w.snap !== null && !hasRestoreFrame)));
+            if (invalidModeSnap) return null;
         }
-        // Stale note cleanup: only legitimate note rows missing from validNoteIds are dropped
         if (kind === "note" && validNoteIds && entityId !== null) {
-            if (!validNoteIds.has(entityId)) {
-                continue;
-            }
+            if (!validNoteIds.has(entityId)) continue;
         }
 
-        // Denormalize normal frame to pixel values
-        const denormalized = denormalizeFrame(
-            {
-                x: rawFrame.x,
-                y: rawFrame.y,
-                width: rawFrame.width,
-                height: rawFrame.height,
-            },
-            rect,
-        );
-
-        // Clamp normal frame inside safeRect
+        const normalizedFrame: NormalizedFrame = {
+            x: rawFrame.x,
+            y: rawFrame.y,
+            width: rawFrame.width,
+            height: rawFrame.height,
+        };
+        const denormalized = raw.version === 4
+            ? denormalizeFrame(normalizedFrame, rect)
+            : denormalizeLegacyFrame(normalizedFrame, rect);
         const clampedNormal = clampFrame(
             denormalized,
             rect,
@@ -324,20 +470,20 @@ export function decodeDesktopLayout(
         let finalSnap: SnapMode | null = null;
 
         if (mode === "maximized") {
-            finalFrame = snapFrame("maximize", rect);
+            finalFrame = snapFrame("maximize", rect.workRect);
             finalRestoreFrame = clampedNormal;
             finalSnap = "maximize";
         } else if (mode === "snapped") {
-            finalFrame = snapFrame(w.snap as SnapMode, rect);
+            finalFrame = snapFrame(w.snap as SnapMode, rect.workRect);
             finalRestoreFrame = clampedNormal;
             finalSnap = w.snap as SnapMode;
         } else if (mode === "minimized") {
             if (w.snap === "maximize" || (w.snap == null && rawRestoreFrame)) {
-                finalFrame = snapFrame("maximize", rect);
+                finalFrame = snapFrame("maximize", rect.workRect);
                 finalRestoreFrame = clampedNormal;
                 finalSnap = "maximize";
             } else if (w.snap) {
-                finalFrame = snapFrame(w.snap as SnapMode, rect);
+                finalFrame = snapFrame(w.snap as SnapMode, rect.workRect);
                 finalRestoreFrame = clampedNormal;
                 finalSnap = w.snap as SnapMode;
             } else {
@@ -390,7 +536,7 @@ export function decodeDesktopLayout(
  */
 export async function loadDesktopLayout(
     userId: string,
-    rect: SafeRect,
+    rect: DesktopGeometry,
     validNoteIds?: Set<string>,
     sessionFallback?: Map<string, PersistedDesktopLayout>,
 ): Promise<DesktopState | null> {
@@ -419,12 +565,15 @@ export async function loadDesktopLayout(
 export async function saveDesktopLayout(
     userId: string,
     state: DesktopState,
-    rect: SafeRect,
+    rect: DesktopGeometry,
     sessionFallback?: Map<string, PersistedDesktopLayout>,
 ): Promise<void> {
+    if (
+        !hasMeasuredSafeGeometry(rect) ||
+        !isValidRuntimeLayout(state, rect)
+    ) return;
     const key = desktopLayoutStorageKey(userId);
-    const payload = encodeDesktopLayout(state, rect);
-
+    const payload = serializeDesktopLayout(state, rect);
     // Keep instance session memory up-to-date
     sessionFallback?.set(key, payload);
 

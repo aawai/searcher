@@ -1,6 +1,6 @@
 /**
- * Desktop Window Geometry Engine
- * Issue #88: Window Manager geometry, safe rect bounding, cascade, and 8-way resize.
+ * Desktop geometry: every frame is viewport-global in CSS px.
+ * Safe is only for OPEN/cascade; work is only for Snap; normal may extend behind Dock.
  */
 
 export interface Frame {
@@ -15,6 +15,59 @@ export interface SafeRect {
     y: number;
     width: number;
     height: number;
+}
+
+export interface DesktopGeometry {
+    viewportRect: SafeRect;
+    workRect: SafeRect;
+    safeRect: SafeRect;
+    chromeBottom: number;
+    dockTop: number;
+    windowGap: number;
+    chromeHeight: number;
+    usable: boolean;
+}
+
+function finite(value: number, fallback = 0): number {
+    return Number.isFinite(value) ? value : fallback;
+}
+
+function bounded(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(Math.max(min, max), finite(value, min)));
+}
+
+export function desktopGeometry(
+    width: number,
+    height: number,
+    chromeBottom = 0,
+    dockTop = height,
+    windowGap = 0,
+    chromeHeight = 48,
+    minContentHeight = 240,
+): DesktopGeometry {
+    width = Math.max(0, finite(width));
+    height = Math.max(0, finite(height));
+    chromeBottom = bounded(chromeBottom, 0, height);
+    dockTop = bounded(dockTop, 0, height);
+    windowGap = Math.max(0, finite(windowGap));
+    chromeHeight = Math.max(0, finite(chromeHeight));
+    const workHeight = Math.max(0, dockTop - chromeBottom);
+    return {
+        viewportRect: { x: 0, y: 0, width, height },
+        workRect: { x: 0, y: chromeBottom, width, height: workHeight },
+        safeRect: {
+            x: windowGap,
+            y: chromeBottom + windowGap,
+            width: Math.max(0, width - 2 * windowGap),
+            height: Math.max(0, workHeight - 2 * windowGap),
+        },
+        chromeBottom,
+        dockTop,
+        windowGap,
+        chromeHeight,
+        usable: width >= Math.max(160, chromeHeight * 4) &&
+            workHeight >= chromeHeight + Math.max(0, finite(minContentHeight)),
+    };
 }
 
 export type WindowKind = "apps" | "notes" | "note" | "documents" | "document";
@@ -54,7 +107,7 @@ export interface WindowSize {
  * - apps: 480x360 (full application launcher/creator needs minimum width for multi-column grid)
  * - notes: 400x320 (workspace notes list + reading panel)
  * - note: 320x240 (individual card/editor titlebar + controls)
- * When safe rect is provided, min-size is bounded by available safe size.
+ * When an available rect is supplied, min-size is bounded to its dimensions.
  */
 export function minimumSize(kind: WindowKind, rect?: SafeRect): WindowSize {
     let baseW: number;
@@ -92,52 +145,43 @@ export function minimumSize(kind: WindowKind, rect?: SafeRect): WindowSize {
     };
 }
 
-/**
- * Clamps a frame fully inside the safe rect:
- * - Coordinates x, y are always safe-relative (0, 0 is safe-rect top-left).
- * - Enforces minimum size (bounded by available safe size).
- * - Clamps width/height to safe rect width/height.
- * - Ensures titlebar is fully visible inside safe rect (>= 80px).
- */
+/** Normal bounds deliberately permit the Dock to cover the bottom of the body. */
 export function clampFrame(
     frame: Frame,
-    rect: SafeRect,
+    geometry: DesktopGeometry,
     kind?: WindowKind,
+    chromeHeight = geometry.chromeHeight,
 ): Frame {
-    const safeW = Math.max(0, rect.width);
-    const safeH = Math.max(0, rect.height);
-
-    // Minimum size enforcement
-    let minW = 0;
-    let minH = 0;
-    if (kind) {
-        const min = minimumSize(kind, rect);
-        minW = min.width;
-        minH = min.height;
-    }
-
-    // Size clamping: at least min size, at most safe rect dimensions
-    let width = Math.max(minW, frame.width);
-    let height = Math.max(minH, frame.height);
-    width = Math.min(safeW, width);
-    height = Math.min(safeH, height);
-
-    // Position clamping: fully inside [0..safeW - width, 0..safeH - height]
-    const maxX = Math.max(0, safeW - width);
-    const maxY = Math.max(0, safeH - height);
-    const x = Math.max(0, Math.min(maxX, frame.x));
-    const y = Math.max(0, Math.min(maxY, frame.y));
-
-    return { x, y, width, height };
+    const { viewportRect: viewport, chromeBottom: top, dockTop } = geometry;
+    const available = {
+        x: 0,
+        y: top,
+        width: viewport.width,
+        height: Math.max(0, viewport.height - top),
+    };
+    const min = kind ? minimumSize(kind, available) : { width: 0, height: 0 };
+    const width = bounded(frame.width, min.width, available.width);
+    const height = bounded(frame.height, min.height, available.height);
+    return {
+        x: bounded(frame.x, 0, viewport.width - width),
+        y: bounded(
+            frame.y,
+            top,
+            Math.min(viewport.height - height, dockTop - finite(chromeHeight)),
+        ),
+        width,
+        height,
+    };
 }
 
 export function defaultFrame(
     kind: WindowKind,
-    rect: SafeRect,
+    geometry: DesktopGeometry,
     cascadeIndex: number = 0,
 ): Frame {
-    const safeW = Math.max(0, rect.width);
-    const safeH = Math.max(0, rect.height);
+    const rect = geometry.safeRect;
+    const safeW = rect.width;
+    const safeH = rect.height;
 
     // Default target proportions:
     // - apps: min(760, 72% width) x min(720, 78% height)
@@ -193,7 +237,7 @@ export function defaultFrame(
     const x = startX + effectiveStep * CASCADE_STEP;
     const y = startY + effectiveStep * CASCADE_STEP;
 
-    return clampFrame({ x, y, width, height }, rect, kind);
+    return { x: rect.x + x, y: rect.y + y, width, height };
 }
 
 export function resizeFrame(
@@ -201,42 +245,37 @@ export function resizeFrame(
     direction: ResizeDirection,
     dx: number,
     dy: number,
-    rect: SafeRect,
+    geometry: DesktopGeometry,
     kind?: WindowKind,
+    chromeHeight = geometry.chromeHeight,
 ): Frame {
-    const safeW = Math.max(0, rect.width);
-    const safeH = Math.max(0, rect.height);
+    const base = clampFrame(frame, geometry, kind, chromeHeight);
+    const { viewportRect: viewport, chromeBottom: topLimit, dockTop } =
+        geometry;
+    const min = minimumSize(kind ?? "note", {
+        ...viewport,
+        height: Math.max(0, viewport.height - topLimit),
+    });
+    let left = base.x;
+    let right = base.x + base.width;
+    let top = base.y;
+    let bottom = base.y + base.height;
 
-    const min = kind
-        ? minimumSize(kind, rect)
-        : { width: 320, height: 240, minWidth: 320, minHeight: 240 };
-
-    const minW = Math.min(min.width, safeW);
-    const minH = Math.min(min.height, safeH);
-
-    let left = frame.x;
-    let right = frame.x + frame.width;
-    let top = frame.y;
-    let bottom = frame.y + frame.height;
-
-    // Horizontal resizing
     if (direction.includes("e")) {
-        right = Math.min(safeW, Math.max(left + minW, right + dx));
+        right = bounded(right + dx, left + min.width, viewport.width);
     } else if (direction.includes("w")) {
-        left = Math.max(0, Math.min(right - minW, left + dx));
+        left = bounded(left + dx, 0, right - min.width);
     }
-
-    // Vertical resizing
     if (direction.includes("s")) {
-        bottom = Math.min(safeH, Math.max(top + minH, bottom + dy));
+        bottom = bounded(bottom + dy, top + min.height, viewport.height);
     } else if (direction.includes("n")) {
-        top = Math.max(0, Math.min(bottom - minH, top + dy));
+        top = bounded(
+            top + dy,
+            topLimit,
+            Math.min(bottom - min.height, dockTop - chromeHeight),
+        );
     }
-
-    const width = Math.max(minW, right - left);
-    const height = Math.max(minH, bottom - top);
-
-    return clampFrame({ x: left, y: top, width, height }, rect, kind);
+    return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
 export function snapFrame(mode: SnapMode, rect: SafeRect): Frame {
@@ -247,21 +286,36 @@ export function snapFrame(mode: SnapMode, rect: SafeRect): Frame {
 
     switch (mode) {
         case "maximize":
-            return { x: 0, y: 0, width: safeW, height: safeH };
+            return { x: rect.x, y: rect.y, width: safeW, height: safeH };
         case "left":
-            return { x: 0, y: 0, width: halfW, height: safeH };
+            return { x: rect.x, y: rect.y, width: halfW, height: safeH };
         case "right":
-            return { x: halfW, y: 0, width: safeW - halfW, height: safeH };
+            return {
+                x: rect.x + halfW,
+                y: rect.y,
+                width: safeW - halfW,
+                height: safeH,
+            };
         case "top-left":
-            return { x: 0, y: 0, width: halfW, height: halfH };
+            return { x: rect.x, y: rect.y, width: halfW, height: halfH };
         case "top-right":
-            return { x: halfW, y: 0, width: safeW - halfW, height: halfH };
+            return {
+                x: rect.x + halfW,
+                y: rect.y,
+                width: safeW - halfW,
+                height: halfH,
+            };
         case "bottom-left":
-            return { x: 0, y: halfH, width: halfW, height: safeH - halfH };
+            return {
+                x: rect.x,
+                y: rect.y + halfH,
+                width: halfW,
+                height: safeH - halfH,
+            };
         case "bottom-right":
             return {
-                x: halfW,
-                y: halfH,
+                x: rect.x + halfW,
+                y: rect.y + halfH,
                 width: safeW - halfW,
                 height: safeH - halfH,
             };

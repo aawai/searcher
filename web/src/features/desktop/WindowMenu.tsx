@@ -15,12 +15,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
-import type { SafeRect, SnapMode } from "./desktop-geometry.ts";
+import type { DesktopGeometry, SnapMode } from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 
 export interface WindowMenuProps {
     window: DesktopWindowState;
-    rect: SafeRect;
+    rect: DesktopGeometry;
     dispatch: Dispatch<DesktopAction>;
     onClose?: () => void;
     showMinimize?: boolean;
@@ -73,6 +73,7 @@ export function WindowMenu({
 
     const handleRestore = () => {
         handleOpenChange(false);
+        if (!rect.usable) return;
         dispatch({ type: "RESTORE", id: win.id, rect });
     };
 
@@ -83,11 +84,13 @@ export function WindowMenu({
 
     const handleMaximize = () => {
         handleOpenChange(false);
+        if (!rect.usable) return;
         dispatch({ type: "MAXIMIZE", id: win.id, rect });
     };
 
     const handleSnap = (snap: SnapMode) => {
         handleOpenChange(false);
+        if (!rect.usable) return;
         dispatch({ type: "SNAP", id: win.id, snap, rect });
     };
 
@@ -135,7 +138,7 @@ export function WindowMenu({
             >
                 {/* 还原 (Restore) */}
                 <DropdownMenuItem
-                    disabled={isNormal || disabled}
+                    disabled={isNormal || disabled || !rect.usable}
                     onClick={handleRestore}
                     data-action="restore"
                     data-testid="window-menu-item-restore"
@@ -162,7 +165,7 @@ export function WindowMenu({
                 {/* 最大化 (Maximize) */}
                 {showMaximize && (
                     <DropdownMenuItem
-                        disabled={isMaximized || disabled}
+                        disabled={isMaximized || disabled || !rect.usable}
                         onClick={handleMaximize}
                         data-action="maximize"
                         data-testid="window-menu-item-maximize"
@@ -174,7 +177,7 @@ export function WindowMenu({
                 )}
 
                 {/* 桌面分屏 (Desktop Snap) - Tablet禁用或仅桌面展示 */}
-                {isDesktop && !disabled && (
+                {isDesktop && !disabled && rect.usable && (
                     <>
                         <DropdownMenuItem
                             onClick={() => handleSnap("left")}

@@ -12,6 +12,11 @@ import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
 
 export type WorkspacePresentation = "panel" | "window" | "sheet";
 
+export interface WorkspaceViewportInsets {
+    top: number;
+    bottom: number;
+}
+
 export function WorkspaceSurface(
     {
         presentation,
@@ -30,6 +35,7 @@ export function WorkspaceSurface(
         expanded = false,
         headerActions,
         backLabel = "返回上一级",
+        viewportInsets,
     }: {
         presentation: Exclude<WorkspacePresentation, "window">;
         title: string;
@@ -47,6 +53,7 @@ export function WorkspaceSurface(
         expanded?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
+        viewportInsets?: WorkspaceViewportInsets;
     },
 ) {
     const mobile = presentation === "sheet";
@@ -233,6 +240,10 @@ export function WorkspaceSurface(
                 className="workspace-panel"
                 data-presentation={presentation}
                 data-workspace-expanded={expanded || undefined}
+                data-viewport-constrained={Boolean(viewportInsets) || undefined}
+                style={viewportInsets
+                    ? { top: viewportInsets.top, bottom: viewportInsets.bottom }
+                    : undefined}
                 aria-label={title + "工作区"}
             >
                 {content}

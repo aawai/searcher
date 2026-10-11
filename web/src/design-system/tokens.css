@@ -23,6 +23,11 @@
     --shadow-window-active: var(--shadow-l3);
     --elevation-window-base: 30;
     --elevation-desktop-dock: 40;
+    /* Session-only Documents presentation; menus/dialogs remain above this layer. */
+    --elevation-document-immersive: 40;
+    --elevation-immersive-dock: 41;
+    --elevation-immersive-trigger: 42;
+    --immersive-dock-trigger-height: 12px;
     --desktop-window-gap: 16px;
     /* Material levels: canvas, content, primary search, temporary overlay. */
     --surface-l0: var(--background);

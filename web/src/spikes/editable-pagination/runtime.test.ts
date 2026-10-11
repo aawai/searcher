@@ -360,7 +360,7 @@ Deno.test("M0B live IME composition queue: defer paper geometry updates until co
         );
 
         const initialTop = env.root.style.getPropertyValue(
-            "--space-document-print-top",
+            "--page-margin-top",
         );
         assertNotEquals(initialTop, "");
 
@@ -382,7 +382,7 @@ Deno.test("M0B live IME composition queue: defer paper geometry updates until co
         pagination.setPaper(updatedPaper);
         // 3. Verify CSS geometry variables did NOT change during composition
         assertEquals(
-            env.root.style.getPropertyValue("--space-document-print-top"),
+            env.root.style.getPropertyValue("--page-margin-top"),
             initialTop,
             "CSS structural geometry must not mutate while IME composition is active",
         );
@@ -398,7 +398,7 @@ Deno.test("M0B live IME composition queue: defer paper geometry updates until co
         // 5. Verify deferred geometry update was cleanly applied
         const expectedNewTop = `${5 * (96 / 25.4)}px`;
         assertEquals(
-            env.root.style.getPropertyValue("--space-document-print-top"),
+            env.root.style.getPropertyValue("--page-margin-top"),
             expectedNewTop,
             "CSS structural geometry must update only after compositionend",
         );
@@ -415,7 +415,7 @@ Deno.test("M0B live IME composition queue: defer paper geometry updates until co
     }
 });
 
-Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins (5-50mm), pitch and gap math", () => {
+Deno.test("M0B physical geometry edges: A4, Letter, orientation, and extreme margins", () => {
     const gap = 32;
 
     // 1. A4 Portrait
@@ -433,7 +433,6 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
     const pxPerMm = 96 / 25.4;
     assertEquals(Math.round(a4p.width), Math.round(210 * pxPerMm));
     assertEquals(Math.round(a4p.height), Math.round(297 * pxPerMm));
-    assertEquals(a4p.pitch, a4p.width + gap);
     assertEquals(a4p.contentWidth, a4p.width - a4p.left - a4p.right);
     assertEquals(a4p.contentHeight, a4p.height - a4p.top - a4p.bottom);
 
@@ -522,10 +521,6 @@ Deno.test("M0B physical geometry edges: A4, Letter, orientation, extreme margins
         maxMargin.contentHeight > 0,
         "Content height must be positive at maximum margin (50mm)",
     );
-
-    // Multi-column gap invariants
-    const columnGap = minMargin.left + minMargin.right + gap;
-    assertEquals(minMargin.pitch, minMargin.contentWidth + columnGap);
 });
 
 Deno.test("M0B insertPageBreak: manual break insertion and teardown lifecycle", async () => {

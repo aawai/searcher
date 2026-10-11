@@ -455,3 +455,39 @@ Deno.test("documented rules - design system token definitions", () => {
         false,
     );
 });
+
+Deno.test("viewport and physical paper exceptions reject unrelated visual values", () => {
+    const canvas = "web/src/features/desktop/DesktopCanvas.tsx";
+    assertEquals(
+        isDomainValueException(canvas, "width", "rect.viewportRect.width"),
+        true,
+    );
+    assertEquals(isDomainValueException(canvas, "left", "0"), true);
+    assertEquals(isDomainValueException(canvas, "width", "640"), false);
+    assertEquals(isDomainValueException(canvas, "left", "24"), false);
+    assertEquals(
+        isDomainValueException(
+            "web/src/app/SearchHome.tsx",
+            "width",
+            "rect.viewportRect.width",
+        ),
+        false,
+    );
+    const paper = "web/src/features/documents/document-pagination.css";
+    const margins =
+        "var(--page-margin-top) var(--page-margin-right) var(--page-margin-bottom) var(--page-margin-left)";
+    assertEquals(isDesignSystemAllowed(paper, "padding", margins), true);
+    assertEquals(isDesignSystemAllowed(paper, "padding", "20mm"), false);
+    assertEquals(
+        isDesignSystemAllowed(paper, "margin", "24px !important"),
+        false,
+    );
+    assertEquals(
+        isDesignSystemAllowed(
+            "web/src/features/workspace/workspace.css",
+            "padding",
+            margins,
+        ),
+        false,
+    );
+});

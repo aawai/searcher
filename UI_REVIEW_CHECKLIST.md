@@ -2000,3 +2000,164 @@
       Print 不适用本阶段；留至对应阶段而非宣称已经覆盖。
 - [x] 已知限制与 M5 接入路径记录于
       MARKDOWN_EDITOR_M0A.md；本报告不冒充正式业务页面验收。
+
+## #147 Desktop viewport 几何与 Document Immersion / 竖向分页
+
+- [x] M0 使用独立 worktree `feat/issue-147`，基于 main
+      `f5d84249766f86c155907c8021174d1ef8c75b66`。保存真实 390×844 / 768×1024 /
+      1024×768 / 1440×900 × Zen/Widgets × light/dark
+      连续/页面截图、双页/三页横向基线及 Chrome/Dock/window geometry； 本地证据
+      `/tmp/issue147-evidence/m0/`。
+- [x] viewport geometry Red 4 项、沉浸入口 Red、双页竖向 geometry Red
+      均在旧实现失败；不是仅比较源码、CSS 字符串或 mock forwarding。
+- [x] M1/M2 focused Desktop module 73 项通过。生产 workspace-shell 1 test / 9
+      steps、workspace-matrix 1 test / 7 steps 分批通过； 八方向真实
+      resize、拖拽 preview/release、Snap/maximize/restore/reload、 v1–v4
+      迁移、零尺寸/读取失败不覆写、账号隔离均有契约证据。
+- [x] M3A 实页保留同一窗口和富文本实例；连续/页面各 20 次沉浸循环保留
+      selection/history，Source 往返保留 canonical/version。纯 presentation
+      无正文 PATCH；dirty blur 与普通窗口控制路径均只保存一次。 dialog Escape
+      优先、键盘/12px 底边同一 Dock、自身/其他窗口/Overview、
+      最小化/关闭/刷新/768 响应式退出、保存失败重试、409 与真实 PNG 上传通过。
+- [x] 1024×200 受限 Surface 的关闭入口真实命中；正文容器 wheel 可滚动， 原
+      snapped semantic 不被受限 frame 覆写；恢复可用视口后还原原 frame。 HTTP
+      logout 后 History 请求 401 清除沉浸/账号 Surface，重新登录不恢复
+      session-only flag。此扩展 focused trace 1 test 通过。
+- [x] M3B 代表 fixtures 使用真实 Chromium `141.0.7390.37`、Linux x86_64、
+      1440×900、DPR 1.25；UA 的 Chrome150/Windows 字符串仅为固定 fixture
+      override， 不当作实际浏览器/OS 证据。每组 warm-up 3 次、测量 20 次；
+      不可变横向基线为
+      `web/src/spikes/editable-pagination/issue147-horizontal-baseline.json`，
+      后续生产 cutover 不再把当前 owner 冒称横向基线。
+- [x] 单一 editable DOM/state 的三页竖向 wheel、真实跨页鼠标拖选、
+      Shift-click/copy/cut/paste、Enter/Backspace/Delete/history、 composition
+      延期、A4/Letter 两方向、自动段落/代码/多行表格、 2000×3000 PNG、390
+      同实例缩放字形/图像边界均取得实测。 打印 PDF 五个短夹具页数
+      1/2/2/2/3，起始/连续/尾部空白位置实读验证。原 writing-mode 候选失败与成功
+      prototype 的恢复源码、历史实测记录及原始截图由 PR 的证据分支提供。
+- [x] 超高单个 table row 的追加边界 Red→Green：两列一短一长，prototype 曾有 18
+      个字形落入 margin/gap；生产 owner 在原 cell 内独立分片， 274 个真实 Range
+      字形、7 页实读未越界，canonical 不变。
+- [x] M4 实验适配器已删除 prototype 分页算法，仅挂载生产 owner。
+      同一冻结环境下生产 10/30 页 median 为 0.60/1.85ms，max 为 1.40/2.20ms； 30
+      页低于横向基线 2.80ms 的两倍门槛。生产 PDF 五个夹具仍为 1/2/2/2/3
+      页，起始/连续/末尾空白位置实读正确。
+- [x] 第三页真实鼠标/键盘输入后 scrollTop 保持 2200、caret top 210.625，
+      未因重新分页收缩为单页或跳回顶部。布局交易不进入历史；
+      两步编辑撤销恢复原文、两步重做恢复修改，EditorView 身份不变。
+- [x] 生产竖排构建后的沉浸完整 focused trace 再次通过（1 test，31s）。
+- Safari、真实触屏与 OS IME 在当前环境不可用；合成 CompositionEvent + Chromium
+  insertText 只证明 composition/layout 延期，不冒充 OS IME 验收。
+
+### #147 分页技术决策与复现
+
+- 选择普通竖向 DOM flow + 单个 ProseMirror DecorationSet，而不是 writing-mode
+  多列或每页独立编辑器。纸张背景按 `height + gap` 定位；真实 DOM Range 行框和
+  `view.posAtDOM` 映射到同一文档位置，手动 PageBreak 强制下一页。
+- 超高 table row 保留原 tr/td；各 cell 内独立插入不可编辑间隙，后续正文只累加 该
+  row 的最大高度增长。短 cell 不复制内容，也不补整页填充。
+- doc、paper、scale 改变时，在同一 RAF 清除旧 Decoration、测量并提交新布局；
+  保留旧纸张栈直到提交，避免 scroll owner 短暂收缩。仅补偿原本可见的 caret，
+  不把离屏选区拉回视口。signature 收敛触发后续测量；IME 期间延期。
+- `decoration-flow-repro.ts` 仅为生产 owner 的 fixture mount。先运行
+  `deno task dev --host 127.0.0.1 --port 5173`，再运行
+  `deno run -A web/src/spikes/editable-pagination/m3b-browser-experiment.ts http://127.0.0.1:5173 /tmp/issue147-pagination decorations`。
+  原始性能 JSON、截图与五个 PDF 写入指定目录；冻结基线同时校验
+  engine、viewport、 DPR 与 UA fixture，30 页超过两倍 median 时命令失败。
+- 原临时 `verified-m3b.tgz` 与 32 张 M0 截图文件在运行环境重启后丢失。
+  保留的持久会话记录可追溯 M0 的 32 组采集和 geometry；原始两/三页截图仍在。
+  成功 prototype 已从首次完整写入与 24 次成功补丁恢复，并逐行核对历史工具输出；
+  证据集 `historical/m3b-prototype-recovered.ts` 明确标为恢复源码，不冒充原
+  tar。本轮重新采集完整 48 张实页、失败候选五个夹具、生产 JSON/PDF。
+  [发布证据集](https://github.com/aawai/searcher/tree/cf0c967/historical)
+  与[完整实页矩阵](https://github.com/aawai/searcher/tree/cf0c967/visual-matrix)
+  已存入独立 `evidence/issue-147` 分支，不污染应用 bundle。
+- 回滚：M1+M2 必须整体回滚，不能独立降级坐标或 payload writer；旧 v3 runtime
+  不识别 v4
+  设备窗口缓存时会按安全回退重建窗口，不影响服务器笔记/资产或设备草稿。 M3A/M4
+  可分别整体 revert 对应 UI/布局 owner 增量；无数据库 migration。
+
+### #147 最终复查与集成验收
+
+- 集成 main `a6c33ce68f5b4c1433e5f5e72117540909bf7f72`： 保留 #149 Apps
+  触屏网格与 PR #151 首页密度改动、两个新增 density E2E、 touched-file formatter
+  CI 和既有 workspace-matrix 稳定等待。
+- 初始 1024×350 无合法 window 的 Red 曾无法打开任何 Surface；现在复用
+  WorkspaceSurface，以实测 Chrome/Dock 边界呈现，可关闭且恢复 1024×768 后
+  创建普通窗口。扩展 trace 也打开初始受限便签实体和文档实体、滚动长文并关闭，
+  不创建非法 window；沉浸时后台 active Apps 不截获 Escape，trigger/Dock 焦点
+  保持可见。完整定向运行 4 tests / 39 steps 通过，沉浸场景 34s。
+- 非文本边界 Red→Green：同段相邻图片、文字夹图片、表格 cell 图片、 100 条
+  HR、hardbreak 与 self-owned viewport 的 scrollTop 坐标均实测； 图片/HR
+  不再进入纸张 margin/gap，自滚动 owner 的三页位置与高度保持不变。 实验 runner
+  已加入相邻/inline/cell 图片和 HR 的真实物理边界断言。
+- 最新同环境 10/30 页 warm-up 3 次、测量 20 次： median 0.60/1.65ms，max
+  1.10/2.10ms，30 页低于冻结横向 2.80ms 的两倍； 原始 JSON 与五个 PDF
+  保存在证据集 `final-production/`，errors 为零。
+- 生产 `document-vertical-layout.test.ts` 完整 1 test / 49s 通过： 16
+  个纸型×方向×宽度组合、第三页编辑、真实剪贴板/历史、超高 cell、 390px
+  缩放和五种打印页序；不是把多次失败运行合称一次通过。
+- 实页矩阵完整采集 48 张：390/768/1024/1440 × Widgets/Zen × light/dark ×
+  continuous/page/source。每组 page 为 3 张纸，rich 模式只有一个编辑器， source
+  模式只有一个源码输入，应用横向 overflow 均为 false；
+  `visual-matrix/geometry.json` 与联系图保留各组证据。
+- 代表性 dark / wallpaper on / reduced-motion 下，normal 与 immersion 的 axe
+  WCAG 2 A/AA、2.1 AA violations 均为零；reduced-motion 实测 true， 运行中的
+  animation 为零。键盘与 wallpaper off 覆盖分别由 focused trace
+  与完整实页矩阵提供，不把合成输入当作真实 Safari/触屏/OS IME。
+- UI Guard 按新坐标合同迁移精确 owner 表达式豁免，并仅授权分页 owner 的
+  实际纸张边距与零间隙 reset；未添加 baseline allowance。 实际 CLI 检查
+  architecture/visual violations 均为零；新增边界测试拒绝 任意尺寸、非零 spacing
+  和其他 feature 冒用纸张变量。
+- malformed payload 的新 regression 先以自动 CLAMP 覆写为 v4 而失败；
+  CLAMP/NORMALIZE 现在不能授予 persistence 写权限，旧账号卸载 flush 也验证
+  writer authorization。完整 hook 模块 15 tests 通过，正常用户 OPEN 仍可保存。
+- 第一轮完整 Workspace 20 tests / 122 steps 通过、3 tests / 12 steps 失败：
+  便签拖动 fixture 仍用 safe-local y、拒绝缓存被自动 CLAMP 覆写、菜单焦点等待；
+  对应修复/诊断后完整定向 4 tests / 39 steps 通过。 下一轮完整 Workspace 22
+  tests / 133 steps 通过、1 step 失败： Snap 还原后正文允许进入 Dock 区域，旧
+  resize fixture 在 Dock 后抓 SE handle。 fixture 改为先真实拖动到 Dock
+  上方再执行八向 resize，未放宽尺寸/锚点断言。
+- 本 Issue 全部变更文件：Deno fmt 58 files、lint 46 TypeScript files 通过； 不把
+  affected-file 检查称为全仓库 lint/fmt 通过。
+- 最终顺序门禁完整通过：`test:documents` 3 tests / 19 steps； `check:bundle`
+  四个 budget/invariant gate 通过，Home initial JS gzip 261.01 KiB； `check:ui`
+  architecture/visual violations 均为零； `test` 660 tests / 51 steps；显式
+  backend/frontend typecheck 通过； UI Guard exception/regression 14
+  tests；`test:workspace` 23 tests / 134 steps。 各专项任务包含的 production
+  build 均通过。此轮完整运行 495s，未拼接局部结果。
+  `deno check src/main.ts web/src/main.tsx` 通过。仓库没有
+  `lint`、`fmt`、`typecheck` task，使用 Deno 原生命令替代并记录结果。 全仓库
+  `deno lint` 仍有 9 项既有失败（api/local/search），全仓库 fmt 的
+  `WORKSPACE_FINAL_REFACTOR_PLAN.md` 与 `scripts/ui-guard/baseline.json`
+  仍为既有不规范文件；不修改无关代码、不增加忽略规则或声称全仓库通过。
+- PR #152 首轮 CI：UI / Bundle+route / Docker / Wallpaper / Notes 通过；
+  Workspace formatter 通过，E2E 22 tests / 130 steps 通过、1 step 失败。 Apps
+  脏稿从 Window 切换到 Sheet 时，旧 fixture 在 viewport resize 后 仍可能读取旧
+  input 并立即发 Escape，未等待真正的新 Host。 现等待实际 Sheet 内 input
+  可见并从该 input 发键盘事件，保留 AlertDialog 与草稿不丢断言。该完整模块 1
+  test / 6 steps、fmt/lint 各 1 file 通过； 产品实现与已通过
+  Documents/geometry/unit/bundle 结果未改变。
+- 第二轮 CI 的 Sheet 草稿 Escape 场景通过；Workspace 22 tests / 133 steps
+  通过、1 step 失败于撤销期限 fixture：从运行中的 Date.now() 取样再跨进程
+  pauseAt，该目标在慢 runner 上已经成为过去。现从固定初值安装时钟，并在
+  删除操作前暂停；保留跨 Host 同一 live region、3000+300+300+1500ms
+  原始期限与到期消失断言，不重发失败场景或延长产品期限。
+  受控时钟下在删除前推进菜单调度，不使用真实 sleep；修正后完整模块 1 test / 6
+  steps 通过，撤销到期语义不变。
+- 第三轮 CI 的 Apps 模块全部通过；Workspace 22 tests / 133 steps 通过、 1 step
+  失败于 right→top-left Snap 的 x=20（期望0）。 原等待仅检查
+  mode/snap/width，两种 Snap 宽度相同，未检查完整 DOM frame。
+  现复用已有真实几何等待，同时验证 x/y/width/height（误差<=1px）； 原
+  Snap/preview/restore/resize 断言保留，不增加 sleep、重试或更宽容差。
+- 本地追加诊断捕获 resize 未变化：760×569，点击位置的 elementFromPoint 为 Home
+  main，而非 SE handle。fixture 现在先由标准 hover 等待真实 handle
+  可交互，再读取坐标并验证 SE 命中；八向 resize 均保留原尺寸与锚点断言。 Dock
+  键盘域切换也按“搜索应用/搜索便签”可观察标签等待，避免共用 input selector 在旧
+  active Surface 上输入。没有 force、固定 sleep 或重发手势。 修正后的 Workspace
+  shell 完整模块 1 test / 9 steps、fmt/lint 各 1 file 通过。
+- 第四轮 CI 的 Workspace shell 与 Apps 模块通过；Workspace 22 tests / 133 steps
+  通过、1 step 失败于 Launcher 375px：旧等待只确认 innerWidth， 尚未等 React
+  移除 DesktopDock 就断言 count=0。fixture 改为等待 Dock detached 和实际 mobile
+  Sheet，保留无 Dock、无横向 overflow 与系统主题断言。 修正后的 Launcher
+  完整模块 1 test / 14 steps、fmt/lint 各 1 file 通过。
