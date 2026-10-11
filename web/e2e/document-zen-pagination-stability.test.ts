@@ -87,8 +87,28 @@ async function ready(page: Page) {
         await document.fonts.ready;
         await Promise.all(
             Array.from(
-                document.querySelectorAll<HTMLImageElement>(".ProseMirror img"),
-            ).map((image) => image.decode()),
+                // DocumentImageView owns canonical content; Milkdown also has an empty tool image.
+                document.querySelectorAll<HTMLImageElement>(
+                    ".ProseMirror img[data-canonical-src]",
+                ),
+            ).map(async (image) => {
+                try {
+                    await image.decode();
+                } catch (error) {
+                    throw new Error(
+                        `Fixture image decode failed: ${
+                            JSON.stringify({
+                                src: image.src,
+                                currentSrc: image.currentSrc,
+                                complete: image.complete,
+                                naturalWidth: image.naturalWidth,
+                                canonical: image.dataset.canonicalSrc,
+                            })
+                        }`,
+                        { cause: error },
+                    );
+                }
+            }),
         );
         await Promise.all(
             document.getAnimations().filter((animation) =>
@@ -158,6 +178,11 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
                 "FIRST158\n\n<!-- pagebreak -->\n\nSECOND158\n\n<!-- pagebreak -->\n\nTHIRD158",
         },
         {
+            name: "consecutive",
+            body:
+                "FIRST158\n\n<!-- pagebreak -->\n\n<!-- pagebreak -->\n\n<!-- pagebreak -->\n\nLAST158",
+        },
+        {
             name: "mixed",
             body: "# Long paragraph\n\n" + "long paragraph words ".repeat(500) +
                 "\n\n| A | B |\n| --- | --- |\n" +
@@ -171,19 +196,73 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
             Deno.env.get("E2E_FIXTURE") &&
             Deno.env.get("E2E_FIXTURE") !== fixture.name
         ) continue;
-        const doc = await request<DocumentDto>("/api/documents", "POST", {
+        let doc = await request<DocumentDto>("/api/documents", "POST", {
             title: fixture.name,
             body: fixture.body,
         });
+        if (fixture.name === "mixed") {
+            const asset = await page.evaluate(async (id) => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 320;
+                canvas.height = 180;
+                canvas.getContext("2d")!.fillRect(0, 0, 320, 180);
+                const { promise, resolve, reject } = Promise.withResolvers<
+                    Blob
+                >();
+                canvas.toBlob(
+                    (blob) =>
+                        blob ? resolve(blob) : reject(
+                            new Error("Image fixture encoding failed"),
+                        ),
+                    "image/png",
+                );
+                const form = new FormData();
+                form.append("file", await promise, "layout.png");
+                const response = await fetch(`/api/documents/${id}/assets`, {
+                    method: "POST",
+                    body: form,
+                });
+                if (!response.ok) throw new Error(await response.text());
+                return (await response.json()).data as { assetId: string };
+            }, doc.id);
+            doc = await request<DocumentDto>(
+                `/api/documents/${doc.id}`,
+                "PATCH",
+                {
+                    body:
+                        `![layout image](asset://${asset.assetId})\n\n${fixture.body}`,
+                    version: doc.version,
+                },
+            );
+        }
         const viewports = Deno.env.get("E2E_TALL_ONLY")
             ? [[1024, 1552], [1024, 1548], [1024, 1556]]
             : [[1440, 900], [1024, 768], [768, 1024], [390, 844], [1024, 1552]];
-        for (const [width, height] of viewports) {
-            const name = `${fixture.name}-${width}x${height}`;
+        const scenarios = viewports.flatMap(([width, height]) =>
+            (["light", "dark"] as const).map((theme) => ({
+                width,
+                height,
+                theme,
+            }))
+        );
+        for (const { width, height, theme } of scenarios) {
+            const name = `${fixture.name}-${width}x${height}-${theme}`;
             const passed = await t.step(name, async () => {
                 await page.setViewportSize({ width, height });
-                await page.goto(
-                    (Deno.env.get("E2E_FRONTEND_ORIGIN") ?? app.origin) + "/",
+                await page.emulateMedia({
+                    colorScheme: theme,
+                    reducedMotion: theme === "dark"
+                        ? "reduce"
+                        : "no-preference",
+                });
+                const origin = Deno.env.get("E2E_FRONTEND_ORIGIN") ??
+                    app.origin;
+                await page.goto(origin + "/settings");
+                await request("/api/preferences", "PATCH", { theme });
+                await page.goto(origin + "/");
+                await page.waitForFunction(
+                    (theme) => document.documentElement.dataset.theme === theme,
+                    theme,
                 );
                 await page.locator('button[data-workspace="documents"]').first()
                     .click();
@@ -203,9 +282,25 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
                     .click();
                 const initial = await sample(page, 5000);
                 await ready(page);
+                if (fixture.name === "mixed") {
+                    const dimensions = await page.locator(
+                        ".ProseMirror img[data-canonical-src]",
+                    ).evaluate((image) => {
+                        const content = image as HTMLImageElement;
+                        return [content.naturalWidth, content.naturalHeight];
+                    });
+                    assertEquals(
+                        dimensions,
+                        [320, 180],
+                        "fixture asset actually decodes",
+                    );
+                }
                 const idleSample = await sample(
                     page,
-                    fixture.name === "manual" && width === 1440 ? 9000 : 2000,
+                    height === 1552 ||
+                        (fixture.name === "manual" && width === 1440)
+                        ? 9000
+                        : 2000,
                 );
                 const idle = idleSample.frames;
                 page.off("request", listener);
