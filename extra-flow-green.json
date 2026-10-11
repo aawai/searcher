@@ -1,0 +1,37 @@
+{
+  "cell": {
+    "pages": "3",
+    "integrity": {
+      "fragments": 3,
+      "bad": [],
+      "imageSizes": [
+        {
+          "width": 642.5,
+          "height": 963.765625,
+          "naturalWidth": 2000,
+          "naturalHeight": 3000
+        }
+      ]
+    }
+  },
+  "breaks": {
+    "name": "hardbreak",
+    "counts": [
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3"
+    ],
+    "canonicalUnchanged": true,
+    "brCount": 101,
+    "bad": []
+  }
+}

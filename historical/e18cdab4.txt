@@ -1,0 +1,190 @@
+{
+  "crossPageKeyboard": {
+    "backspaceFixture": {
+      "pages": 3,
+      "measurements": 5,
+      "durationMs": 0.20000001788139343
+    },
+    "backspaceSeed": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+    "afterFirstBackspace": {
+      "markdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "selection": "_TextSelection",
+      "selectedNode": null,
+      "pages": 3
+    },
+    "afterBackspace": {
+      "markdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "pages": 3
+    },
+    "backspaceRemovedBreak": false,
+    "backspaceReflowed": false,
+    "backspaceUndoRestored": false,
+    "backspaceUndoReflowed": false,
+    "backspaceRedoRestored": false,
+    "deleteFixture": {
+      "pages": 3,
+      "measurements": 5,
+      "durationMs": 0.09999999403953552
+    },
+    "deleteSeed": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+    "afterFirstDelete": {
+      "markdown": "First editable page.Second editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "selection": "_TextSelection",
+      "selectedNode": null
+    },
+    "afterDelete": {
+      "markdown": "First editable page.Second editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "pages": 3
+    },
+    "deleteRemovedBreak": true,
+    "deleteReflowed": true,
+    "deleteUndoRestored": true,
+    "deleteUndoReflowed": true,
+    "deleteRedoRestored": true
+  },
+  "crossPageMouseClipboard": {
+    "dragScrollTop": 1800,
+    "method": "mouse click followed by Shift-click across scrolled pages",
+    "selectionAnchor": {
+      "anchor": 68,
+      "from": 68
+    },
+    "dragEnd": {
+      "x": 1039.265625,
+      "y": 612.625
+    },
+    "selection": {
+      "type": "_TextSelection",
+      "from": 1,
+      "to": 1,
+      "empty": true,
+      "text": ""
+    },
+    "clipboardText": "",
+    "copiedAllPages": false,
+    "cutChangedDocument": false,
+    "pasteChangedDocument": false,
+    "pasteRestoredAllPages": true,
+    "pasteRestoredExact": true,
+    "undoChangedDocument": false,
+    "undoReturnedToCutOrOriginal": true,
+    "redoRestoredDocument": true
+  },
+  "editing": {
+    "afterKeyboard": {
+      "markdown": "First editable page. typed\n\nkeyboard-nex\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "initialMarkdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "inputApplied": true,
+      "enterCreatedNextBlock": true,
+      "viewIdentityPreserved": true,
+      "editorCount": 1
+    },
+    "historyAfterUndoRedo": {
+      "undoSteps": 2,
+      "undoRestoredInitial": true,
+      "redoSteps": 2,
+      "redoRestoredEdited": true,
+      "viewIdentityPreserved": true
+    }
+  },
+  "threePageNavigation": {
+    "initialScrollTop": 0,
+    "afterFirstWheel": 900,
+    "afterSecondWheel": 2000,
+    "gapPoint": {
+      "left": 410.734375,
+      "top": 692.84375
+    },
+    "gapTarget": {
+      "tag": "DIV",
+      "className": "ProseMirror editor ProseMirror-focused"
+    },
+    "gapHitPos": 23,
+    "gapClick": {
+      "type": "_TextSelection",
+      "from": 68,
+      "to": 68,
+      "empty": true,
+      "anchor": 68,
+      "head": 68,
+      "parentType": "paragraph",
+      "selectedNodeType": null
+    },
+    "selectionBeforeGap": {
+      "from": 1,
+      "to": 1,
+      "anchor": 1
+    }
+  },
+  "performance": {
+    "10-pages": {
+      "fixturePages": 10,
+      "actualPages": 10,
+      "warmup": [
+        0.4000000059604645,
+        0.30000001192092896,
+        0.19999998807907104
+      ],
+      "samples": [
+        0.09999999403953552,
+        0.19999998807907104,
+        0.09999999403953552,
+        0.19999998807907104,
+        0.20000001788139343,
+        0.19999998807907104,
+        0.19999998807907104,
+        0.20000001788139343,
+        0.19999998807907104,
+        0.19999998807907104,
+        0.10000002384185791,
+        0.09999999403953552,
+        0.09999999403953552,
+        0.20000001788139343,
+        0.20000001788139343,
+        0.30000001192092896,
+        0.09999999403953552,
+        0.09999999403953552,
+        0.09999999403953552,
+        0
+      ],
+      "medianMs": 0.19999998807907104,
+      "maxMs": 0.30000001192092896,
+      "measurements": 99
+    },
+    "30-pages": {
+      "fixturePages": 30,
+      "actualPages": 30,
+      "warmup": [
+        0.800000011920929,
+        0.699999988079071,
+        0.6000000238418579
+      ],
+      "samples": [
+        1.4000000059604645,
+        1.5,
+        1.2000000178813934,
+        1.0999999940395355,
+        1.0999999940395355,
+        0.5999999940395355,
+        0.699999988079071,
+        0.5999999940395355,
+        0.5999999940395355,
+        0.5999999940395355,
+        0.5,
+        0.5,
+        0.6000000238418579,
+        0.7000000178813934,
+        0.5999999940395355,
+        0.5999999940395355,
+        0.5999999940395355,
+        0.699999988079071,
+        0.5999999940395355,
+        0.5999999940395355
+      ],
+      "medianMs": 0.5999999940395355,
+      "maxMs": 1.5,
+      "measurements": 299
+    }
+  },
+  "errors": []
+}

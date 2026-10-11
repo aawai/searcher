@@ -1,0 +1,44 @@
+[/tmp/issue147-evidence/m0/controls.json#9AA4]
+1:{
+2:  "normal": {
+3:    "x": 270,
+4:    "y": 138,
+5:    "height": 610,
+6:    "width": 900
+7:  },
+8:  "maximized": {
+9:    "x": 16,
+10:    "y": 80,
+11:    "width": 1408,
+12:    "height": 726,
+13:    "top": 80,
+14:    "right": 1424,
+15:    "bottom": 806,
+16:    "left": 16
+17:  },
+18:  "snapLeft": {
+19:    "x": 16,
+20:    "y": 80,
+21:    "width": 704,
+22:    "height": 726,
+23:    "top": 80,
+24:    "right": 720,
+25:    "bottom": 806,
+26:    "left": 16
+27:  },
+28:  "dockRestore": {
+29:    "entities": 1,
+30:    "active": "true",
+31:    "mode": "snapped",
+32:    "frame": {
+33:      "x": 16,
+34:      "y": 80,
+35:      "width": 704,
+36:      "height": 726,
+37:      "top": 80,
+38:      "right": 720,
+39:      "bottom": 806,
+40:      "left": 16
+41:    }
+42:  }
+43:}

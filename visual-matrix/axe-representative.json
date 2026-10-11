@@ -1,0 +1,19 @@
+{
+  "normal": [],
+  "immersive": [],
+  "motion": {
+    "reduced": true,
+    "immersive": "document:99e11f00-7050-4632-8fe0-af9d584a70c4",
+    "animations": []
+  },
+  "errors": {
+    "entries": [],
+    "nextSeq": 0,
+    "dropped": 0
+  },
+  "console": {
+    "entries": [],
+    "nextSeq": 0,
+    "dropped": 0
+  }
+}

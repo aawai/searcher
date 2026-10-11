@@ -1,0 +1,62 @@
+{
+  "row": {
+    "pages": 7,
+    "fragments": 274,
+    "bad": []
+  },
+  "short": {
+    "empty": {
+      "expected": 1,
+      "actual": 1
+    },
+    "middle": {
+      "expected": 2,
+      "actual": 2
+    },
+    "leading": {
+      "expected": 2,
+      "actual": 2
+    },
+    "trailing": {
+      "expected": 2,
+      "actual": 2
+    },
+    "consecutive": {
+      "expected": 3,
+      "actual": 3
+    }
+  },
+  "clipboard": {
+    "dragScrollTop": 1800,
+    "method": "mouse click followed by Shift-click across scrolled pages",
+    "selectionAnchor": {
+      "anchor": 1,
+      "from": 1
+    },
+    "dragEnd": {
+      "x": 537.609375,
+      "y": 618.625
+    },
+    "selection": {
+      "type": "_TextSelection",
+      "from": 1,
+      "to": 68,
+      "empty": false,
+      "text": "First editable page.\nSecond editable page.\nThird editable page."
+    },
+    "clipboardText": "First editable page.\n\nSecond editable page.\n\nThird editable page.",
+    "copiedAllPages": true,
+    "cutChangedDocument": true,
+    "pasteChangedDocument": true,
+    "pasteRestoredAllPages": true,
+    "pasteRestoredExact": true,
+    "undoChangedDocument": false,
+    "undoReturnedToCutOrOriginal": true,
+    "redoRestoredDocument": true
+  },
+  "drag": {
+    "from": 1,
+    "to": 67,
+    "text": "First editable page.\nSecond editable page.\nThird editable page"
+  }
+}

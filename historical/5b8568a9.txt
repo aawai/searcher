@@ -1,0 +1,115 @@
+display[1]:
+{
+  "pointerDrag": {
+    "from": 48,
+    "to": 67,
+    "text": "Third editable page"
+  },
+  "keyboard": {
+    "backspaceFixture": {
+      "pages": 3,
+      "measurements": 5,
+      "durationMs": 0
+    },
+    "backspaceSeed": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+    "afterFirstBackspace": {
+      "markdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "selection": "_NodeSelection",
+      "selectedNode": "pagebreak",
+      "pages": 3
+    },
+    "afterBackspace": {
+      "markdown": "First editable page.\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "pages": 2
+    },
+    "backspaceRemovedBreak": true,
+    "backspaceReflowed": true,
+    "backspaceUndoRestored": true,
+    "backspaceUndoReflowed": true,
+    "backspaceRedoRestored": true,
+    "deleteFixture": {
+      "pages": 3,
+      "measurements": 5,
+      "durationMs": 0.09999999403953552
+    },
+    "deleteSeed": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+    "afterFirstDelete": {
+      "markdown": "First editable page.\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "selection": "_TextSelection",
+      "selectedNode": null
+    },
+    "afterDelete": {
+      "markdown": "First editable page.\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "pages": 2
+    },
+    "deleteRemovedBreak": true,
+    "deleteReflowed": true,
+    "deleteUndoRestored": true,
+    "deleteUndoReflowed": true,
+    "deleteRedoRestored": true
+  },
+  "editing": {
+    "afterKeyboard": {
+      "markdown": "First editable page. typed\n\nkeyboard-nex\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "initialMarkdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "inputApplied": true,
+      "enterCreatedNextBlock": true,
+      "viewIdentityPreserved": true,
+      "editorCount": 1
+    },
+    "historyAfterUndoRedo": {
+      "undoSteps": 2,
+      "undoRestoredInitial": true,
+      "redoSteps": 2,
+      "redoRestoredEdited": true,
+      "viewIdentityPreserved": true
+    }
+  },
+  "print": [
+    {
+      "name": "empty",
+      "pages": 1,
+      "text": [
+        "Print boundary"
+      ]
+    },
+    {
+      "name": "middle",
+      "pages": 2,
+      "text": [
+        "Print boundary  A",
+        "B"
+      ]
+    },
+    {
+      "name": "leading",
+      "pages": 2,
+      "text": [
+        "",
+        "Print boundary  A"
+      ]
+    },
+    {
+      "name": "trailing",
+      "pages": 2,
+      "text": [
+        "Print boundary  A",
+        ""
+      ]
+    },
+    {
+      "name": "consecutive",
+      "pages": 3,
+      "text": [
+        "Print boundary  A",
+        "",
+        "B"
+      ]
+    }
+  ],
+  "performance": {
+    "candidate30": 0.5999999940395355,
+    "horizontal30": 2.7999999970197678
+  },
+  "errors": []
+}

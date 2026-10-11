@@ -1,0 +1,73 @@
+{
+  "crossPageKeyboard": {
+    "backspaceFixture": {
+      "pages": 3,
+      "measurements": 5,
+      "durationMs": 0.09999999403953552
+    },
+    "backspaceSeed": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+    "afterFirstBackspace": {
+      "markdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "selection": "_NodeSelection",
+      "selectedNode": "pagebreak",
+      "pages": 3
+    },
+    "afterBackspace": {
+      "markdown": "First editable page.\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "pages": 2
+    },
+    "backspaceRemovedBreak": true,
+    "backspaceReflowed": true,
+    "backspaceUndoRestored": true,
+    "backspaceUndoReflowed": true,
+    "backspaceRedoRestored": true,
+    "deleteFixture": {
+      "pages": 3,
+      "measurements": 5,
+      "durationMs": 0.10000002384185791
+    },
+    "deleteSeed": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+    "afterFirstDelete": {
+      "markdown": "First editable page.\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "selection": "_TextSelection",
+      "selectedNode": null
+    },
+    "afterDelete": {
+      "markdown": "First editable page.\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "pages": 2
+    },
+    "deleteRemovedBreak": true,
+    "deleteReflowed": true,
+    "deleteUndoRestored": true,
+    "deleteUndoReflowed": true,
+    "deleteRedoRestored": true
+  },
+  "crossPageMouseClipboard": {
+    "dragScrollTop": 1800,
+    "method": "mouse click followed by Shift-click across scrolled pages",
+    "selectionAnchor": {
+      "anchor": 1,
+      "from": 1
+    },
+    "dragEnd": {
+      "x": 557.734375,
+      "y": 612.125
+    },
+    "selection": {
+      "type": "_TextSelection",
+      "from": 68,
+      "to": 68,
+      "empty": true,
+      "text": ""
+    },
+    "clipboardText": "",
+    "copiedAllPages": false,
+    "cutChangedDocument": false,
+    "pasteChangedDocument": false,
+    "pasteRestoredAllPages": true,
+    "pasteRestoredExact": true,
+    "undoChangedDocument": false,
+    "undoReturnedToCutOrOriginal": true,
+    "redoRestoredDocument": true
+  }
+}

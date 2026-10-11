@@ -1,0 +1,76 @@
+{
+  "source": "web/src/spikes/editable-pagination/vertical-repro.ts",
+  "reproducedAt": "2026-10-11T04:46:34.877Z",
+  "results": [
+    {
+      "name": "empty",
+      "expected": 1,
+      "pages": 1,
+      "editorCount": 1,
+      "sheets": [
+        {
+          "x": 323.15625,
+          "y": 32,
+          "width": 793.6875,
+          "height": 1122.515625
+        }
+      ]
+    },
+    {
+      "name": "middle",
+      "expected": 2,
+      "pages": 1,
+      "editorCount": 1,
+      "sheets": [
+        {
+          "x": 323.15625,
+          "y": 32,
+          "width": 793.6875,
+          "height": 1122.515625
+        }
+      ]
+    },
+    {
+      "name": "leading",
+      "expected": 2,
+      "pages": 1,
+      "editorCount": 1,
+      "sheets": [
+        {
+          "x": 323.15625,
+          "y": 32,
+          "width": 793.6875,
+          "height": 1122.515625
+        }
+      ]
+    },
+    {
+      "name": "trailing",
+      "expected": 2,
+      "pages": 1,
+      "editorCount": 1,
+      "sheets": [
+        {
+          "x": 323.15625,
+          "y": 32,
+          "width": 793.6875,
+          "height": 1122.515625
+        }
+      ]
+    },
+    {
+      "name": "consecutive",
+      "expected": 3,
+      "pages": 1,
+      "editorCount": 1,
+      "sheets": [
+        {
+          "x": 323.15625,
+          "y": 32,
+          "width": 793.6875,
+          "height": 1122.515625
+        }
+      ]
+    }
+  ]
+}

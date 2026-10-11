@@ -1,0 +1,145 @@
+{
+  "performance": {
+    "10-pages": {
+      "fixturePages": 10,
+      "actualPages": 10,
+      "warmup": [
+        0.30000001192092896,
+        0.30000001192092896,
+        0.5
+      ],
+      "samples": [
+        0.5,
+        0.6000000238418579,
+        0.7000000178813934,
+        1.399999976158142,
+        0.7999999821186066,
+        0.7000000178813934,
+        0.5999999940395355,
+        0.5,
+        0.5999999940395355,
+        0.699999988079071,
+        0.5999999940395355,
+        0.6000000238418579,
+        0.5,
+        0.5,
+        0.30000001192092896,
+        0.800000011920929,
+        0.5,
+        0.6000000238418579,
+        0.5,
+        0.7999999821186066
+      ],
+      "medianMs": 0.6000000089406967,
+      "maxMs": 1.399999976158142,
+      "measurements": 99
+    },
+    "30-pages": {
+      "fixturePages": 30,
+      "actualPages": 30,
+      "warmup": [
+        2.399999976158142,
+        1.300000011920929,
+        1.300000011920929
+      ],
+      "samples": [
+        1.5,
+        2,
+        2,
+        2.199999988079071,
+        1.9000000059604645,
+        1.699999988079071,
+        1.800000011920929,
+        1.699999988079071,
+        1.699999988079071,
+        2.0999999940395355,
+        1.800000011920929,
+        1.9000000059604645,
+        1.9000000059604645,
+        2.100000023841858,
+        1.7999999821186066,
+        1.800000011920929,
+        2.0999999940395355,
+        2.0999999940395355,
+        1.800000011920929,
+        1.7000000178813934
+      ],
+      "medianMs": 1.8500000089406967,
+      "maxMs": 2.199999988079071,
+      "measurements": 299
+    }
+  },
+  "editing": {
+    "afterKeyboard": {
+      "markdown": "First editable page. typed\n\nkeyboard-nex\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "initialMarkdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n",
+      "inputApplied": true,
+      "enterCreatedNextBlock": true,
+      "viewIdentityPreserved": true,
+      "editorCount": 1
+    },
+    "historyAfterUndoRedo": {
+      "undoSteps": 2,
+      "undoRestoredInitial": true,
+      "redoSteps": 2,
+      "redoRestoredEdited": true,
+      "viewIdentityPreserved": true
+    }
+  },
+  "errors": [],
+  "automaticIntegrity": {
+    "fragments": 475,
+    "bad": [],
+    "imageSizes": []
+  },
+  "mobileIntegrity": {
+    "fragments": 3,
+    "bad": [],
+    "imageSizes": []
+  },
+  "composition": {
+    "mechanism": "synthetic CompositionEvent plus Chromium insertText; OS IME unavailable",
+    "before": {
+      "signature": "manual:22:1108.56|manual:46:1108.55",
+      "markdown": "First editable page.\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n"
+    },
+    "during": {
+      "signature": "manual:22:1108.56|manual:46:1108.55",
+      "markdown": "First editable page.中文输入\n\n<!-- pagebreak -->\n\nSecond editable page.\n\n<!-- pagebreak -->\n\nThird editable page.\n"
+    },
+    "integrity": {
+      "fragments": 3,
+      "bad": [],
+      "imageSizes": []
+    }
+  },
+  "short": [
+    {
+      "pages": null
+    },
+    {
+      "pages": null
+    },
+    {
+      "pages": null
+    },
+    {
+      "pages": null
+    },
+    {
+      "pages": null
+    }
+  ],
+  "resize": {
+    "fragments": 720,
+    "bad": [],
+    "imageSizes": [
+      {
+        "width": 642.5,
+        "height": 963.765625,
+        "naturalWidth": 2000,
+        "naturalHeight": 3000
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "crossPageMouseClipboard": {
+    "dragScrollTop": 1800,
+    "method": "mouse click followed by Shift-click across scrolled pages",
+    "selectionAnchor": {
+      "anchor": 1,
+      "from": 1
+    },
+    "dragEnd": {
+      "x": 557.734375,
+      "y": 612.125
+    },
+    "selection": {
+      "type": "_TextSelection",
+      "from": 1,
+      "to": 68,
+      "empty": false,
+      "text": "First editable page.\nSecond editable page.\nThird editable page."
+    },
+    "clipboardText": "First editable page.\n\nSecond editable page.\n\nThird editable page.",
+    "copiedAllPages": true,
+    "cutChangedDocument": true,
+    "pasteChangedDocument": true,
+    "pasteRestoredAllPages": true,
+    "pasteRestoredExact": true,
+    "undoChangedDocument": false,
+    "undoReturnedToCutOrOriginal": true,
+    "redoRestoredDocument": true
+  },
+  "specialContent": {
+    "image": {
+      "pages": 11,
+      "measurements": 52,
+      "durationMs": 965.1000000238419
+    }
+  },
+  "errors": []
+}

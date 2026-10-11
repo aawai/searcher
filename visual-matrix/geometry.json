@@ -1,0 +1,434 @@
+[
+  {
+    "name": "390-widgets-light-continuous.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "390-widgets-light-page.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "390-widgets-light-source.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "390-widgets-dark-continuous.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "390-widgets-dark-page.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "390-widgets-dark-source.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "390-zen-light-continuous.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "390-zen-light-page.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "390-zen-light-source.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "390-zen-dark-continuous.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "390-zen-dark-page.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "390-zen-dark-source.png",
+    "width": 390,
+    "height": 844,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "768-widgets-light-continuous.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "768-widgets-light-page.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "768-widgets-light-source.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "768-widgets-dark-continuous.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "768-widgets-dark-page.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "768-widgets-dark-source.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "768-zen-light-continuous.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "768-zen-light-page.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "768-zen-light-source.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "768-zen-dark-continuous.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "768-zen-dark-page.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "768-zen-dark-source.png",
+    "width": 768,
+    "height": 1024,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1024-widgets-light-continuous.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1024-widgets-light-page.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1024-widgets-light-source.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1024-widgets-dark-continuous.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1024-widgets-dark-page.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1024-widgets-dark-source.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1024-zen-light-continuous.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1024-zen-light-page.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1024-zen-light-source.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1024-zen-dark-continuous.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1024-zen-dark-page.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1024-zen-dark-source.png",
+    "width": 1024,
+    "height": 768,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1440-widgets-light-continuous.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1440-widgets-light-page.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1440-widgets-light-source.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1440-widgets-dark-continuous.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1440-widgets-dark-page.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1440-widgets-dark-source.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1440-zen-light-continuous.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1440-zen-light-page.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1440-zen-light-source.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  },
+  {
+    "name": "1440-zen-dark-continuous.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "1"
+  },
+  {
+    "name": "1440-zen-dark-page.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 1,
+    "source": 0,
+    "pages": "3"
+  },
+  {
+    "name": "1440-zen-dark-source.png",
+    "width": 1440,
+    "height": 900,
+    "overflow": false,
+    "rich": 0,
+    "source": 1,
+    "pages": null
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "before": {
+    "pages": "3",
+    "scrollHeight": 3416,
+    "scroll": 0,
+    "paragraphs": [
+      {
+        "text": "First",
+        "flowTop": 83.578125
+      },
+      {
+        "text": "Second",
+        "flowTop": 1230.109375
+      },
+      {
+        "text": "Third",
+        "flowTop": 2376.625
+      }
+    ]
+  },
+  "after": {
+    "pages": "3",
+    "scrollHeight": 3416,
+    "scroll": 1000,
+    "paragraphs": [
+      {
+        "text": "First",
+        "flowTop": 83.578125
+      },
+      {
+        "text": "Second",
+        "flowTop": 1230.109375
+      },
+      {
+        "text": "Third",
+        "flowTop": 2376.625
+      }
+    ]
+  }
+}

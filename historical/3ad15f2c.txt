@@ -1,0 +1,33 @@
+{
+  "automatic": {
+    "snapshot": {
+      "pages": 13,
+      "measurements": 95,
+      "durationMs": 1.0999999940395355
+    },
+    "sheets": null
+  },
+  "runError": "Error: Glyph/image fragments outside printable pages: [{\"text\":\"Paragraph 073. Automatic pagination must\",\"top\":11464.9375,\"height\":16,\"local\":1114.4330803571431},{\"text\":\"Paragraph 073. Automatic pagination must\",\"top\":11486.90625,\"height\":16,\"local\":1136.4018303571431},{\"text\":\"Paragraph 073. Automatic pagination must\",\"top\":11508.875,\"height\":16,\"local\":11.870089285714585},{\"text\":\"Paragraph 073. Automatic pagination must\",\"top\":11530.84375,\"height\":16,\"local\":33.838839285714585},{\"text\":\"Paragraph 073. Automatic pagination must\",\"top\":11552.8125,\"height\":16,\"local\":55.807589285714585},{\"text\":\"Paragraph 081. Automatic pagination must\",\"top\":12673.390625,\"height\":16,\"local\":29.885223214286043},{\"text\":\"Paragraph 081. Automatic pagination must\",\"top\":12695.359375,\"height\":16,\"local\":51.85397321428604},{\"text\":\"Paragraph 088. Automatic pagination must\",\"top\":13855.96875,\"height\":16,\"local\":65.9628571428575}]",
+  "shortPagebreaks": [
+    {
+      "name": "empty",
+      "pages": 1
+    },
+    {
+      "name": "middle",
+      "pages": 2
+    },
+    {
+      "name": "leading",
+      "pages": 2
+    },
+    {
+      "name": "trailing",
+      "pages": 2
+    },
+    {
+      "name": "consecutive",
+      "pages": 3
+    }
+  ]
+}

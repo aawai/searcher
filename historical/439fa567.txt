@@ -1,0 +1,23 @@
+{
+  "pointerDragStart": {
+    "selection": {
+      "type": "text",
+      "anchor": 1,
+      "head": 6
+    },
+    "nativeText": "First"
+  },
+  "pointerDragAfterWheel": {
+    "selection": {
+      "type": "text",
+      "anchor": 1,
+      "head": 48
+    },
+    "nativeText": "First editable page.\n\nSecond editable page.\n\n"
+  },
+  "crossPagePointerDrag": {
+    "from": 1,
+    "to": 67,
+    "text": "First editable page.\nSecond editable page.\nThird editable page"
+  }
+}
