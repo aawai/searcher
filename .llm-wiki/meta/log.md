@@ -380,3 +380,15 @@
 ## [2026-10-09T01:43:00.850Z] observe
 - slug: "obs-2026-10-09-ubuntu-chromium", title: "Ubuntu Chromium 系统依赖修复与默认启动验收", relevance: "high"
 
+## [2026-10-10T13:00:42.732Z] observe
+- slug: "obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un", title: "PR #151 merged into main: mobile Home density and centering unified", relevance: "high"
+
+## [2026-10-11T04:21:10.847Z] observe
+- slug: "obs-2026-10-11-147", title: "#147 非文本分页与自滚动坐标修复", relevance: "high"
+
+## [2026-10-11T14:33:36.559Z] observe
+- slug: "obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop", title: "Issue 158 Zen page scrollbar feedback loop", relevance: "high"
+
+## [2026-10-11T14:52:06.474Z] observe
+- slug: "obs-2026-10-11-issue-158-completed-through-pr-159", title: "Issue 158 completed through PR 159", relevance: "high"
+

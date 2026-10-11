@@ -82,6 +82,10 @@
 - [[sources/obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137]] — Observation: Issue #136 Notes focus boundary merged via PR #137 *(created: 2026-10-08)*
 - [[sources/obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings]] — Observation: Issue 140 Notes history and Portal regression findings *(created: 2026-10-08)*
 - [[sources/obs-2026-10-09-ubuntu-chromium]] — Observation: Ubuntu Chromium 系统依赖修复与默认启动验收 *(created: 2026-10-09)*
+- [[sources/obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un]] — Observation: PR #151 merged into main: mobile Home density and centering unified *(created: 2026-10-10)*
+- [[sources/obs-2026-10-11-147]] — Observation: #147 非文本分页与自滚动坐标修复 *(created: 2026-10-11)*
+- [[sources/obs-2026-10-11-issue-158-completed-through-pr-159]] — Observation: Issue 158 completed through PR 159 *(created: 2026-10-11)*
+- [[sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop]] — Observation: Issue 158 Zen page scrollbar feedback loop *(created: 2026-10-11)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -138,4 +142,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-09T01:43:00.867Z* | *Total pages: 123*
+*Last updated: 2026-10-11T14:52:06.498Z* | *Total pages: 127*

@@ -124,3 +124,7 @@
 {"slug":"obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137","title":"Issue #136 Notes focus boundary merged via PR #137","relevance":"high","timestamp":"2026-10-08T07:52:13.623Z","kind":"observe"}
 {"slug":"obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings","title":"Issue 140 Notes history and Portal regression findings","relevance":"high","timestamp":"2026-10-08T14:43:26.347Z","kind":"observe"}
 {"slug":"obs-2026-10-09-ubuntu-chromium","title":"Ubuntu Chromium 系统依赖修复与默认启动验收","relevance":"high","timestamp":"2026-10-09T01:43:00.850Z","kind":"observe"}
+{"slug":"obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un","title":"PR #151 merged into main: mobile Home density and centering unified","relevance":"high","timestamp":"2026-10-10T13:00:42.732Z","kind":"observe"}
+{"slug":"obs-2026-10-11-147","title":"#147 非文本分页与自滚动坐标修复","relevance":"high","timestamp":"2026-10-11T04:21:10.847Z","kind":"observe"}
+{"slug":"obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop","title":"Issue 158 Zen page scrollbar feedback loop","relevance":"high","timestamp":"2026-10-11T14:33:36.559Z","kind":"observe"}
+{"slug":"obs-2026-10-11-issue-158-completed-through-pr-159","title":"Issue 158 completed through PR 159","relevance":"high","timestamp":"2026-10-11T14:52:06.474Z","kind":"observe"}

@@ -1,5 +1,15 @@
 # Wiki Update Log
 
+## 2026-10-11
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-11-issue-158-completed-through-pr-159","title":"Issue 158 completed through PR 159"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop","title":"Issue 158 Zen page scrollbar feedback loop"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-11-147","title":"#147 非文本分页与自滚动坐标修复"}
+
+## 2026-10-10
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un","title":"PR #151 merged into main: mobile Home density and centering unified"}
+
 ## 2026-10-09
 
 - **observe**: {"relevance":"high","slug":"obs-2026-10-09-ubuntu-chromium","title":"Ubuntu Chromium 系统依赖修复与默认启动验收"}

@@ -962,6 +962,38 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un",
+      "contentHash": "8c856a8e7ed11dfbf40f10611de435452a697fe10b17b3f36bb32870998c64dc",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-11-147.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-11-147.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-11-147",
+      "contentHash": "84bc00754e1ac522ae561161deaf4abdbc11a9a491d4dddf66fc1f7c27c74054",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-11-issue-158-completed-through-pr-159.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-11-issue-158-completed-through-pr-159.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-11-issue-158-completed-through-pr-159",
+      "contentHash": "79fb2ee98cff1f9768ae8944846ab08e330ecc158471918dd94a5a05d9d46d36",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop",
+      "contentHash": "78fa8419f136a792b7b1d1e2a09e8e5232a19f92209223b9781b7dd08ac8f5c7",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/sqlite-table-recreation-migration-zero-loss.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/sqlite-table-recreation-migration-zero-loss.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",

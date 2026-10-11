@@ -94,4 +94,8 @@
 - [Observation: Issue #136 Notes focus boundary merged via PR #137](obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137.md)
 - [Observation: Issue 140 Notes history and Portal regression findings](obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings.md)
 - [Observation: Ubuntu Chromium 系统依赖修复与默认启动验收](obs-2026-10-09-ubuntu-chromium.md)
+- [Observation: PR #151 merged into main: mobile Home density and centering unified](obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un.md)
+- [Observation: #147 非文本分页与自滚动坐标修复](obs-2026-10-11-147.md)
+- [Observation: Issue 158 completed through PR 159](obs-2026-10-11-issue-158-completed-through-pr-159.md)
+- [Observation: Issue 158 Zen page scrollbar feedback loop](obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)
