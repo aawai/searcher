@@ -4,6 +4,51 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #158 Zen 页面模式稳定性
+
+- [x] 复用 Documents Editor archetype；唯一样式改动为页面模式正文 scroll owner
+      的 `scrollbar-gutter: stable`。不修改 Workspace 外层
+      overflow、Notes、Apps、 WindowChrome、分页引擎、保存流程或选区恢复策略。
+- [x] 用户录屏指出单页/高视口的滚动条显隐边界。经典滚动条 Chromium `1024×1552`
+      修复前：可用宽度 851↔866px、scale 1↔0.991558， 2 秒 idle 120 次
+      reflow；独立 Red Test 提交 `b7965ca`。
+- [x] 最小修复后 `1024×1548/1552/1556` focused 浏览器测试全部收敛， 未禁用
+      ResizeObserver、字体/图片重排或合法 dirty 保存。
+- [x] 四个正常视口和 `1440×240` / `390×240` 短屏实际可访问 header、返回/关闭、
+      格式工具栏、首末页及源码 textarea。是否启用 chrome 兜底按实际 header +
+      toolbar + 240px 正文最低高度判断，不按 viewport 高度硬编码。 正文 Wheel
+      不同时移动 chrome；Library 与 Apps 列表仍能滚动。
+- [x] 独立浏览器契约覆盖 20 次连续/页面切换、Editor DOM 身份、选区、undo/redo、
+      composition defer、晚加载图片/字体、纸张/视口变化及 clean/dirty/in-flight
+      保存。 CompositionEvent 模拟不冒充原生 OS IME。
+- [x] 实页额外 9 秒 / 542 帧采样：0 reflow、宽度 851px、zoom 0.991558 恒定。
+      十次打开/关闭，在退出动画结束并 GC 后 DOM nodes 恒为 112、 event listeners
+      恒为 173。初版诊断未释放 `waitForSelector` 返回的
+      ElementHandle，产生采样工具自身的保留；改用不保留 DOM 的就绪条件后复测。
+      合成文档对照录屏先以测试 CSS 恢复旧 gutter，再移除覆盖验证最终样式；
+      不发布用户录屏或个人正文。
+- [x] `deno task test`：663 tests / 51 steps；完整 Workspace：23 tests / 135
+      steps。 `check:ui` ownership 实扫 200、visual 实扫 141，violations /
+      allowances 为 0； `check:bundle`、`deno check src/main.ts web/src/App.tsx`
+      及变更文件 fmt/lint 通过。
+- [x] 全仓库 `deno fmt --check` 失败于未修改的
+      `WORKSPACE_FINAL_REFACTOR_PLAN.md` 与
+      `scripts/ui-guard/baseline.json`；`deno lint` 有 9 项既有错误，位于
+      `web/src/lib/{api,local}.ts` 和
+      `src/features/search/{search.route.ts,search.route.test.ts,service.ts}`。
+      已与 Red commit 比较确认这些文件未改动，不把局部门禁通过描述为全仓库通过。
+- [x] 开发构建经典滚动条 `1024×1548/1552/1556` × light/dark 的 6 个 focused
+      场景通过。
+- [x] 最终完整 `deno task test:documents`：6 tests / 65 steps / 0 failed；
+      覆盖既有 Widgets normal / 最大化 / Snap / 沉浸、打印和大文档契约。
+- [x] 最终 4 类 fixture × 5 个视口 × light/default 与 dark/reduced-motion，共 40
+      组实页截图和逐帧采样；每组 2 秒 idle，临界高视口及代表多页场景 9 秒， idle
+      reflow 均为 0。首轮图片测试误将 Milkdown 空工具图片纳入 decode， 修正为
+      canonical 正文图片并断言真实 320×180 decode 后，focused 及完整回归通过。
+      证据位于 `evidence/issue-158-scrollbar-stability` 分支；不合并媒体至
+      main。
+- [ ] 真实 Windows 浏览器、Safari、原生 OS IME 与真实软键盘未验证。
+
 ## 移动端首页固定应用密度回归（2026-10-10）
 
 - [x] 根因与最终范围：#149 仅恢复 Apps；本次移动 coarse/no-hover `<768px` 的 Zen

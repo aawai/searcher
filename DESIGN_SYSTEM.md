@@ -67,7 +67,9 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   展示居中的纸张，禁止横向 strip 或第二个正文滚动区。纸张尺寸与 margin 保持
   物理规格，窄 Host 只统一缩放纸张与可编辑 DOM，不缩小正文 Typography Token。
   窗口标题、Dock 和总览消费服务端派生标题；Library 保存后重取当前 scope/query
-  的摘要，不拉取全部正文。
+  的摘要，不拉取全部正文。 页面模式的正文 scroll owner 使用稳定 scrollbar
+  gutter；纸张缩放的可用宽度
+  不随纵向滚动条显隐变化，单页接近可视高度时不得形成尺寸反馈循环。
 - 竖向分页复用唯一 ProseMirror EditorView/State；自动断页是临时 Decoration，
   不写 canonical Markdown、历史或保存队列。手动 PageBreak 保留语义；跨页长文本、
   code、table cell 在原 DOM

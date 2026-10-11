@@ -51,6 +51,8 @@
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    /* Keep width-driven paper scaling independent of vertical scrollbar visibility. */
+    scrollbar-gutter: stable;
 }
 
 .document-editor-scroll-area .document-editor-readable-wrapper.pagination-viewport[data-mode="continuous"][data-scroll-owner="outer"] {
