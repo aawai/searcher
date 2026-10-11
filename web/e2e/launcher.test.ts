@@ -1297,13 +1297,11 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         async () => {
             // Mobile 375px
             await page.setViewportSize({ width: 375, height: 667 });
-            await page.waitForFunction(() => globalThis.innerWidth === 375);
+            await page.locator(".desktop-dock").waitFor({ state: "detached" });
 
             // DesktopDock absent below 768; Mobile uses shared Sheet .workspace-panel--mobile
             assertEquals(await page.locator(".desktop-dock").count(), 0);
-            const panel = page.locator(
-                ".workspace-panel--mobile, .workspace-panel",
-            );
+            const panel = page.locator(".workspace-panel--mobile");
             await panel.waitFor();
 
             // Check no horizontal overflow

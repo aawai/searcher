@@ -2156,3 +2156,8 @@
   键盘域切换也按“搜索应用/搜索便签”可观察标签等待，避免共用 input selector 在旧
   active Surface 上输入。没有 force、固定 sleep 或重发手势。 修正后的 Workspace
   shell 完整模块 1 test / 9 steps、fmt/lint 各 1 file 通过。
+- 第四轮 CI 的 Workspace shell 与 Apps 模块通过；Workspace 22 tests / 133 steps
+  通过、1 step 失败于 Launcher 375px：旧等待只确认 innerWidth， 尚未等 React
+  移除 DesktopDock 就断言 count=0。fixture 改为等待 Dock detached 和实际 mobile
+  Sheet，保留无 Dock、无横向 overflow 与系统主题断言。 修正后的 Launcher
+  完整模块 1 test / 14 steps、fmt/lint 各 1 file 通过。
