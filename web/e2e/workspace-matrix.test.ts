@@ -210,8 +210,8 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     }
     async function measureDesktopGeometry() {
         return await page.evaluate(() => {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+            const viewportWidth = globalThis.innerWidth;
+            const viewportHeight = globalThis.innerHeight;
             let chromeBottom = 0;
             for (
                 const element of document.querySelectorAll(
@@ -1072,8 +1072,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 });
 
                 const beforeSnap = await measure(appsWin);
-                const workRect =
-                    (await measureDesktopGeometry()).workRect;
+                const workRect = (await measureDesktopGeometry()).workRect;
                 await appsWin.getByRole("button", {
                     name: "窗口系统菜单",
                     exact: true,

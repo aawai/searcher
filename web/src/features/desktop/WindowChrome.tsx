@@ -13,7 +13,7 @@ import {
 import { createPortal } from "react-dom";
 import { ArrowLeft, Maximize2, Minimize2, Minus, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
-import type { Frame, DesktopGeometry, SnapMode } from "./desktop-geometry.ts";
+import type { DesktopGeometry, Frame, SnapMode } from "./desktop-geometry.ts";
 import {
     clampFrame,
     defaultFrame,
@@ -314,7 +314,10 @@ export function WindowChrome({
 
         // Release SNAP if targeting a snap zone
         if (snapModeToCommit && isDesktop && !disableDrag) {
-            const snapToCommitFrame = snapFrame(snapModeToCommit, rect.workRect);
+            const snapToCommitFrame = snapFrame(
+                snapModeToCommit,
+                rect.workRect,
+            );
             if (winEl) {
                 winEl.style.transform =
                     `translate3d(${snapToCommitFrame.x}px, ${snapToCommitFrame.y}px, 0)`;

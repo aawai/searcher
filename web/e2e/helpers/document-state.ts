@@ -16,9 +16,15 @@ export async function waitForDocument(
             return (await response.json()).data as DocumentDto;
         }, id);
         if (accepts(latest)) return latest;
-        await page.evaluate(() => new Promise<void>((resolve) => {
-            requestAnimationFrame(() => resolve());
-        }));
+        await page.evaluate(() =>
+            new Promise<void>((resolve) => {
+                requestAnimationFrame(() => resolve());
+            })
+        );
     }
-    throw new Error(`Document ${id} did not converge: version=${latest?.version}, body tail=${latest?.body.slice(-200)}`);
+    throw new Error(
+        `Document ${id} did not converge: version=${latest?.version}, body tail=${
+            latest?.body.slice(-200)
+        }`,
+    );
 }

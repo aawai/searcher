@@ -24,6 +24,10 @@ Documents DTO 的 `displayTitle` 是服务端派生展示值：依次取 trimmed
 
 图片支持 PNG/JPEG/WebP、最大 10 MiB，上传成功后才插入 `asset://<assetId>`。复制与 `.md` 导出保留正文原文及 internal asset ref，不附加标题，也不声称是独立可移植的图片包；备份完整资产仍须使用数据库备份。页面视图自动分页不写回 Markdown；手动 `<!-- pagebreak -->` 保留首部、连续和末尾空白页。纸张设置支持 A4/Letter、横向/纵向和四边 5–50 mm 边距，按文档保存到服务器。打印使用独立的无应用 chrome 排版，标题仅在首个非空白页出现；正文、图片、代码、表格和手动分页参与打印，自动分页由浏览器决定，不承诺与编辑视图逐像素一致。
 
+页面模式的纸张自上而下居中排列，使用正文外层的同一个滚动区；跨页编辑、
+选区及撤销仍属于唯一编辑器。窄窗口和移动端统一缩放纸张，不改正文 Token，
+不保留横向滚动 strip。切换纸张或连续/页面视图不会把自动断页写进正文。
+
 匿名外观偏好保存在当前设备的 IndexedDB，刷新后恢复；不上传服务器，也不与账号缓存混用。登录后的设备外观缓存按用户 ID 隔离，共享偏好由云端同步；退出登录或会话失效后恢复该设备的匿名外观。升级时删除旧的未关联账号外观缓存，新增光晕与动态字段缺失时使用 canonical defaults。
 
 “设置 → 外观 → 壁纸与背景效果”支持主题光晕强度（0–30%，默认 14%）、动态氛围（关闭 / 呼吸 / 呼吸 + 涟漪，默认呼吸 + 涟漪）和动态强度（0–100%，默认 35%）。壁纸遮罩默认 36%，只控制图片可读性，不压制上层主题光晕；系统 reduced-motion 关闭动画但保留静态光晕，不改变已保存偏好。
@@ -48,7 +52,9 @@ Widgets Task Dock 的应用/便签项根据窗口状态执行 Open、Focus 或 R
 
 Widgets >=1024 的便签按 `note:<id>` 打开独立窗口：同一便签重复打开只恢复并聚焦，多份便签可同时编辑；Notes browser 仍保留。窗口复用 NoteEditor 的自动保存、冲突处理和版本历史，删除便签会关闭对应窗口。768–1023、移动端 Sheet 和 Zen 仍在便签工作区内嵌套编辑。
 
-Widgets 窗口布局按登录用户保存在当前设备 IndexedDB（`searcher:desktop-layout:v1:<userId>`），包括打开的窗口、正常尺寸、模式和层级。刷新或切回 Widgets 时恢复并按当前安全区域约束，切换账号不继承布局；退出只清运行态。无记录、损坏或不支持的版本回到空桌面；IndexedDB 不可用时继续使用内存态。几何不写入服务端 `note_layouts`，不跨设备同步，也不转换 Zen FloatingNotes 坐标。
+Widgets 窗口布局按登录用户保存在当前设备 IndexedDB（key 仍为 `searcher:desktop-layout:v1:<userId>`，payload v4），包括打开的窗口、正常/还原尺寸、模式和层级。旧 v1–v3 布局自动迁移到 viewport 坐标。普通窗口可贴近视口边界、正文可延伸到 Dock 下方，但标题栏始终可操作；Snap/最大化填满 Header 与 Dock 之间的区域，不保留外围 gap。刷新或切回 Widgets 时按当前视口恢复，切换账号不继承布局；退出只清运行态。无记录、损坏或不支持的版本回到空桌面；IndexedDB 不可用时继续使用内存态，读取失败不覆写旧记录。几何不写入服务端 `note_layouts`，不跨设备同步，也不转换 Zen FloatingNotes 坐标。
+
+Widgets >=1024 的独立长文笔记窗口可通过标题栏“进入沉浸式”覆盖应用视口，保留原编辑器、文档保存流程和窗口布局；便签、Zen、受限窗口与移动 Sheet 不提供此模式。顶部可退出、查看保存/上传状态及最小化/关闭，其他编辑操作仍可访问。底边 12px 热区或可 Tab 聚焦的“显示 Dock”按钮呼出原 Dock；选当前笔记继续编辑，选其他窗口或总览先退出。Escape 先关闭内部弹窗/菜单，再退出沉浸；刷新、账号或 Host 变化不恢复沉浸状态。
 
 首页「随手便签」有两张及以上固定便签时，可拖动把手调整顺序；键盘聚焦把手后按 Space 拿起，方向键移动，Space 放下，Escape 取消。排序立即显示并通过现有 `sortOrder` 同步，刷新或重新登录后保持；仅重排当前可见的固定便签，不改变普通便签与未展示固定便签的相对顺序，也不改变置顶、内容或 Zen 坐标。不能排序的便签展示不提供可操作拖拽把手。
 
@@ -115,6 +121,7 @@ deno task test:routing
 `deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序、Bento、workspace-contract 与 workspace-matrix 及 Notes Live/Source 两套编辑实页回归（无副作用切换、IME、选区、undo/redo、任务列表、409 和恢复），使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的 A–F 分层响应式、主题、壁纸、窗口、持久化与 tablet contract；不会使用真实账户或开发数据库。
 
 `deno task test:documents` 构建生产前端，使用隔离服务、内存数据库和临时图片执行 Documents 的 390×844、768×1024、1024×768、1440×900 × Zen/Widgets × light/dark 三模式矩阵、Library 网络隔离与摘要契约、短屏输入保存，以及 100k Markdown / 200 headings / 50 images / 20 tables / 30 PageBreak 的大文档完整性验收；Bundle CI 自动运行同一套测试。390×400 短屏用于模拟软键盘缩小可用视口，不替代真机输入法测试。
+专项门禁同时覆盖文档沉浸的实例/窗口语义、Dock 与 Escape、保存错误/409/上传，以及页面模式的竖向纸张与单一滚动 owner。设置 `E2E_EVIDENCE_DIR=/tmp/searcher-documents-evidence` 后，响应式矩阵在字体与布局完成后保存各 Host/主题/模式的实页截图；截图仍需人工检查，不替代行为断言。
 
 `deno task test:wallpaper` 构建生产前端并运行壁纸 Playwright 链路：偏左/偏右主体构图、双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL 草稿、同步故障恢复、匿名持久化与 reduced-motion。使用隔离数据库和临时资源目录；PR/main CI 自动执行该链路、`deno task test` 与既有 UI 门禁。
 ## UI Contract 与门禁

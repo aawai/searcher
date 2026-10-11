@@ -74,40 +74,75 @@ export function DocumentEntityWindow(
                 onClose={requestClose}
                 immersive={immersive}
                 background={background}
-                headerMenu={rect.usable ? (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="desktop-window-chrome-btn"
-                        aria-label="进入沉浸式"
-                        title="进入沉浸式"
-                        data-immersive-enter
-                        onClick={onEnterImmersive}
-                    >
-                        <Expand className="desktop-window-chrome-icon" />
-                    </Button>
-                ) : undefined}
-                chrome={immersive ? (
-                    <div className="desktop-window-chrome desktop-immersive-chrome" role="toolbar" aria-label={`沉浸式笔记：${title}`}>
-                        <Button variant="ghost" size="sm" data-immersive-exit onClick={onExitImmersive}>
-                            <Minimize2 className="desktop-window-chrome-icon" />
-                            退出沉浸式
+                headerMenu={rect.usable
+                    ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="desktop-window-chrome-btn"
+                            aria-label="进入沉浸式"
+                            title="进入沉浸式"
+                            data-immersive-enter
+                            onClick={onEnterImmersive}
+                        >
+                            <Expand className="desktop-window-chrome-icon" />
                         </Button>
-                        <h2 className="desktop-window-chrome-title">{title}</h2>
-                        <span className="desktop-immersive-save-status" role="status">{saveStatus}</span>
-                        <div className="desktop-window-chrome-controls">
-                            <Button variant="ghost" size="icon" aria-label="最小化窗口" className="desktop-window-chrome-btn" onClick={() => {
-                                onExitImmersive();
-                                dispatch({ type: "MINIMIZE", id: window.id });
-                            }}>
-                                <Minus className="desktop-window-chrome-icon" />
+                    )
+                    : undefined}
+                chrome={immersive
+                    ? (
+                        <div
+                            className="desktop-window-chrome desktop-immersive-chrome"
+                            role="toolbar"
+                            aria-label={`沉浸式笔记：${title}`}
+                        >
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                data-immersive-exit
+                                onClick={onExitImmersive}
+                            >
+                                <Minimize2 className="desktop-window-chrome-icon" />
+                                退出沉浸式
                             </Button>
-                            <Button variant="ghost" size="icon" aria-label="关闭笔记" className="desktop-window-chrome-btn" onClick={requestClose}>
-                                <X className="desktop-window-chrome-icon" />
-                            </Button>
+                            <h2 className="desktop-window-chrome-title">
+                                {title}
+                            </h2>
+                            <span
+                                className="desktop-immersive-save-status"
+                                role="status"
+                            >
+                                {saveStatus}
+                            </span>
+                            <div className="desktop-window-chrome-controls">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="最小化窗口"
+                                    className="desktop-window-chrome-btn"
+                                    onClick={() => {
+                                        onExitImmersive();
+                                        dispatch({
+                                            type: "MINIMIZE",
+                                            id: window.id,
+                                        });
+                                    }}
+                                >
+                                    <Minus className="desktop-window-chrome-icon" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="关闭笔记"
+                                    className="desktop-window-chrome-btn"
+                                    onClick={requestClose}
+                                >
+                                    <X className="desktop-window-chrome-icon" />
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                ) : undefined}
+                    )
+                    : undefined}
             >
                 <Suspense
                     fallback={

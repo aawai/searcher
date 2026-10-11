@@ -7,7 +7,11 @@ import {
     useRef,
     useState,
 } from "react";
-import type { Frame, ResizeDirection, DesktopGeometry } from "./desktop-geometry.ts";
+import type {
+    DesktopGeometry,
+    Frame,
+    ResizeDirection,
+} from "./desktop-geometry.ts";
 import { clampFrame, resizeFrame } from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 

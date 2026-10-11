@@ -9,8 +9,8 @@ import {
 } from "./desktop-persistence.ts";
 import type { DesktopState } from "./desktop-state.ts";
 import {
-    desktopGeometry,
     type DesktopGeometry,
+    desktopGeometry,
     snapFrame,
 } from "./desktop-geometry.ts";
 
@@ -881,10 +881,13 @@ Deno.test("desktop-persistence: legacy v1-v3 use safeRect while v4 uses viewport
             }],
         }, offsetSafeGeometry);
         assertNotEquals(migrated, null);
-        assertEquals(migrated!.windows[0].frame, snapFrame(
-            "maximize",
-            offsetSafeGeometry.workRect,
-        ));
+        assertEquals(
+            migrated!.windows[0].frame,
+            snapFrame(
+                "maximize",
+                offsetSafeGeometry.workRect,
+            ),
+        );
         assertEquals(migrated!.windows[0].restoreFrame, {
             x: 302,
             y: 221,
@@ -908,10 +911,13 @@ Deno.test("desktop-persistence: legacy v1-v3 use safeRect while v4 uses viewport
         }],
     }, offsetSafeGeometry);
     assertNotEquals(current, null);
-    assertEquals(current!.windows[0].frame, snapFrame(
-        "maximize",
-        offsetSafeGeometry.workRect,
-    ));
+    assertEquals(
+        current!.windows[0].frame,
+        snapFrame(
+            "maximize",
+            offsetSafeGeometry.workRect,
+        ),
+    );
     assertEquals(current!.windows[0].restoreFrame, {
         x: 288,
         y: 180,
@@ -933,44 +939,56 @@ Deno.test("desktop-persistence: document identity support follows schema version
         snap: null,
     };
     for (const version of [1, 2] as const) {
-        assertEquals(decodeDesktopLayout({
-            version,
-            windows: [documentWindow],
-        }, rect1440), null);
+        assertEquals(
+            decodeDesktopLayout({
+                version,
+                windows: [documentWindow],
+            }, rect1440),
+            null,
+        );
     }
     for (const version of [3, 4] as const) {
-        assertNotEquals(decodeDesktopLayout({
-            version,
-            windows: [documentWindow],
-        }, rect1440), null);
+        assertNotEquals(
+            decodeDesktopLayout({
+                version,
+                windows: [documentWindow],
+            }, rect1440),
+            null,
+        );
     }
 
-    assertEquals(decodeDesktopLayout({
-        version: 1,
-        windows: [{
-            id: "documents",
-            kind: "documents",
-            entityId: null,
-            frame,
-            mode: "normal",
-            zOrder: 1,
-            snap: null,
-        }],
-    }, rect1440), null);
-    for (const version of [2, 3, 4] as const) {
-        assertNotEquals(decodeDesktopLayout({
-            version,
+    assertEquals(
+        decodeDesktopLayout({
+            version: 1,
             windows: [{
                 id: "documents",
                 kind: "documents",
                 entityId: null,
                 frame,
-                restoreFrame: null,
                 mode: "normal",
                 zOrder: 1,
                 snap: null,
             }],
-        }, rect1440), null);
+        }, rect1440),
+        null,
+    );
+    for (const version of [2, 3, 4] as const) {
+        assertNotEquals(
+            decodeDesktopLayout({
+                version,
+                windows: [{
+                    id: "documents",
+                    kind: "documents",
+                    entityId: null,
+                    frame,
+                    restoreFrame: null,
+                    mode: "normal",
+                    zOrder: 1,
+                    snap: null,
+                }],
+            }, rect1440),
+            null,
+        );
     }
 });
 
@@ -989,38 +1007,74 @@ Deno.test("desktop-persistence: v4 requires complete restore and snap semantics"
         activeId: "apps",
     });
 
-    assertNotEquals(decodeDesktopLayout(payload({
-        ...base,
-        restoreFrame: null,
-        mode: "normal",
-    }), rect1440), null);
-    assertEquals(decodeDesktopLayout(payload({
-        ...base,
-        mode: "normal",
-    }), rect1440), null);
-    assertEquals(decodeDesktopLayout(payload({
-        ...base,
-        restoreFrame: base.frame,
-        mode: "maximized",
-    }), rect1440), null);
-    assertEquals(decodeDesktopLayout(payload({
-        ...base,
-        restoreFrame: base.frame,
-        mode: "snapped",
-        snap: "maximize",
-    }), rect1440), null);
-    assertNotEquals(decodeDesktopLayout(payload({
-        ...base,
-        restoreFrame: base.frame,
-        mode: "snapped",
-        snap: "left",
-    }), rect1440), null);
-    assertNotEquals(decodeDesktopLayout(payload({
-        ...base,
-        restoreFrame: base.frame,
-        mode: "maximized",
-        snap: "maximize",
-    }), rect1440), null);
+    assertNotEquals(
+        decodeDesktopLayout(
+            payload({
+                ...base,
+                restoreFrame: null,
+                mode: "normal",
+            }),
+            rect1440,
+        ),
+        null,
+    );
+    assertEquals(
+        decodeDesktopLayout(
+            payload({
+                ...base,
+                mode: "normal",
+            }),
+            rect1440,
+        ),
+        null,
+    );
+    assertEquals(
+        decodeDesktopLayout(
+            payload({
+                ...base,
+                restoreFrame: base.frame,
+                mode: "maximized",
+            }),
+            rect1440,
+        ),
+        null,
+    );
+    assertEquals(
+        decodeDesktopLayout(
+            payload({
+                ...base,
+                restoreFrame: base.frame,
+                mode: "snapped",
+                snap: "maximize",
+            }),
+            rect1440,
+        ),
+        null,
+    );
+    assertNotEquals(
+        decodeDesktopLayout(
+            payload({
+                ...base,
+                restoreFrame: base.frame,
+                mode: "snapped",
+                snap: "left",
+            }),
+            rect1440,
+        ),
+        null,
+    );
+    assertNotEquals(
+        decodeDesktopLayout(
+            payload({
+                ...base,
+                restoreFrame: base.frame,
+                mode: "maximized",
+                snap: "maximize",
+            }),
+            rect1440,
+        ),
+        null,
+    );
 });
 
 Deno.test("desktop-persistence: unusable geometry and corrupt loads do not replace saved layouts", async () => {

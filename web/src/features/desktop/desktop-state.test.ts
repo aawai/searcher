@@ -201,7 +201,10 @@ Deno.test("desktop-state: MAXIMIZE saves restoreFrame, and RESTORE_FRAME clamps 
     const maximizedWin = state.windows[0];
     assertEquals(maximizedWin.mode, "maximized");
     assertEquals(maximizedWin.restoreFrame, initialFrame);
-    assertEquals(maximizedWin.frame, snapFrame("maximize", sampleRect.workRect));
+    assertEquals(
+        maximizedWin.frame,
+        snapFrame("maximize", sampleRect.workRect),
+    );
 
     // Restore frame in a smaller viewport rect -> clamps restoreFrame
     const smallerRect = desktopGeometry(600, 500, 48, 452, 16, 48, 0);

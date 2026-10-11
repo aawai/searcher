@@ -6,8 +6,8 @@
 import {
     clampFrame,
     defaultFrame,
-    type Frame,
     type DesktopGeometry,
+    type Frame,
     snapFrame,
     type SnapMode,
     type WindowKind,
@@ -161,7 +161,10 @@ export function desktopReducer(
                             windows: bringToTop(state.windows, action.id, {
                                 mode: "maximized",
                                 snap: "maximize",
-                                frame: snapFrame("maximize", action.rect.workRect),
+                                frame: snapFrame(
+                                    "maximize",
+                                    action.rect.workRect,
+                                ),
                             }),
                             activeId: action.id,
                         };
@@ -170,7 +173,10 @@ export function desktopReducer(
                             windows: bringToTop(state.windows, action.id, {
                                 mode: "snapped",
                                 snap: existing.snap,
-                                frame: snapFrame(existing.snap, action.rect.workRect),
+                                frame: snapFrame(
+                                    existing.snap,
+                                    action.rect.workRect,
+                                ),
                             }),
                             activeId: action.id,
                         };

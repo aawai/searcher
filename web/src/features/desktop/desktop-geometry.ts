@@ -250,7 +250,8 @@ export function resizeFrame(
     chromeHeight = geometry.chromeHeight,
 ): Frame {
     const base = clampFrame(frame, geometry, kind, chromeHeight);
-    const { viewportRect: viewport, chromeBottom: topLimit, dockTop } = geometry;
+    const { viewportRect: viewport, chromeBottom: topLimit, dockTop } =
+        geometry;
     const min = minimumSize(kind ?? "note", {
         ...viewport,
         height: Math.max(0, viewport.height - topLimit),
@@ -289,13 +290,28 @@ export function snapFrame(mode: SnapMode, rect: SafeRect): Frame {
         case "left":
             return { x: rect.x, y: rect.y, width: halfW, height: safeH };
         case "right":
-            return { x: rect.x + halfW, y: rect.y, width: safeW - halfW, height: safeH };
+            return {
+                x: rect.x + halfW,
+                y: rect.y,
+                width: safeW - halfW,
+                height: safeH,
+            };
         case "top-left":
             return { x: rect.x, y: rect.y, width: halfW, height: halfH };
         case "top-right":
-            return { x: rect.x + halfW, y: rect.y, width: safeW - halfW, height: halfH };
+            return {
+                x: rect.x + halfW,
+                y: rect.y,
+                width: safeW - halfW,
+                height: halfH,
+            };
         case "bottom-left":
-            return { x: rect.x, y: rect.y + halfH, width: halfW, height: safeH - halfH };
+            return {
+                x: rect.x,
+                y: rect.y + halfH,
+                width: halfW,
+                height: safeH - halfH,
+            };
         case "bottom-right":
             return {
                 x: rect.x + halfW,

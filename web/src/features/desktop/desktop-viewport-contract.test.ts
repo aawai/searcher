@@ -1,9 +1,5 @@
 import { assertEquals } from "@std/assert";
-import {
-    clampFrame,
-    desktopGeometry,
-    snapFrame,
-} from "./desktop-geometry.ts";
+import { clampFrame, desktopGeometry, snapFrame } from "./desktop-geometry.ts";
 import {
     decodeDesktopLayout,
     encodeDesktopLayout,

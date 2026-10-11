@@ -1426,7 +1426,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         dockStyle?.display !== "none" &&
                         dockBounds.width > 0 && dockBounds.height > 0
                     ? dockBounds.top
-                    : window.innerHeight;
+                    : globalThis.innerHeight;
                 return { chromeBottom, dockTop };
             });
             const workBox = {
@@ -1593,14 +1593,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             getComputedStyle(dock).display !== "none" &&
                             dockBounds.width > 0 && dockBounds.height > 0
                         ? dockBounds.top
-                        : window.innerHeight;
+                        : globalThis.innerHeight;
                     return bounds.x >= 0 &&
                         bounds.y >= chromeBottom &&
-                        bounds.right <= window.innerWidth &&
-                        bounds.bottom <= window.innerHeight &&
+                        bounds.right <= globalThis.innerWidth &&
+                        bounds.bottom <= globalThis.innerHeight &&
                         closeBounds.width > 0 && closeBounds.height > 0 &&
                         closeBounds.x >= 0 &&
-                        closeBounds.right <= window.innerWidth &&
+                        closeBounds.right <= globalThis.innerWidth &&
                         closeBounds.bottom <= dockTop + 1;
                 });
             }
@@ -1635,7 +1635,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await page.mouse.up();
             await waitForTinyPresentation();
-            assertEquals(await appsWin.getAttribute("data-window-mode"), "normal");
+            assertEquals(
+                await appsWin.getAttribute("data-window-mode"),
+                "normal",
+            );
             await page.setViewportSize({ width: 1440, height: 900 });
             await waitForWindowFrame(expectedRestoreFrame);
 
@@ -1851,18 +1854,35 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await dragTitleTo(720, workBox.y + 150);
             await page.waitForFunction((dockTop) => {
-                const element = document.querySelector('[data-window-id="apps"]');
-                return !!element && element.getBoundingClientRect().bottom < dockTop;
+                const element = document.querySelector(
+                    '[data-window-id="apps"]',
+                );
+                return !!element &&
+                    element.getBoundingClientRect().bottom < dockTop;
             }, measuredBounds.dockTop);
-            for (const direction of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]) {
-                const handle = appsWin.locator(`[data-direction="${direction}"]`);
+            for (
+                const direction of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
+            ) {
+                const handle = appsWin.locator(
+                    `[data-direction="${direction}"]`,
+                );
                 const before = await measureBox(appsWin);
                 const handleBounds = await measureBox(handle);
-                const dx = direction.includes("w") ? 12 : direction.includes("e") ? -12 : 0;
-                const dy = direction.includes("n") ? 12 : direction.includes("s") ? -12 : 0;
+                const dx = direction.includes("w")
+                    ? 12
+                    : direction.includes("e")
+                    ? -12
+                    : 0;
+                const dy = direction.includes("n")
+                    ? 12
+                    : direction.includes("s")
+                    ? -12
+                    : 0;
                 const pointer = {
-                    x: direction === "s" ? handleBounds.x + handleBounds.width - 12
-                        : handleBounds.x + (direction === "n" ? 12 : handleBounds.width / 2),
+                    x: direction === "s"
+                        ? handleBounds.x + handleBounds.width - 12
+                        : handleBounds.x +
+                            (direction === "n" ? 12 : handleBounds.width / 2),
                     y: handleBounds.y + handleBounds.height / 2,
                 };
                 const expected = {
@@ -1873,18 +1893,33 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 };
                 await page.mouse.move(pointer.x, pointer.y);
                 await page.mouse.down();
-                await page.mouse.move(pointer.x + dx, pointer.y + dy, { steps: 4 });
+                await page.mouse.move(pointer.x + dx, pointer.y + dy, {
+                    steps: 4,
+                });
                 await page.mouse.up();
-                await page.waitForFunction((expected) => {
-                    const element = document.querySelector('[data-window-id="apps"]');
-                    if (!element) return false;
-                    const frame = element.getBoundingClientRect();
-                    return Math.abs(frame.x - expected.x) <= 1 &&
-                        Math.abs(frame.y - expected.y) <= 1 &&
-                        Math.abs(frame.width - expected.width) <= 1 &&
-                        Math.abs(frame.height - expected.height) <= 1;
-                }, expected, { timeout: 5000 }).catch(async (error: unknown) => {
-                    throw new Error(`${direction} resize: before=${JSON.stringify(before)} expected=${JSON.stringify(expected)} actual=${JSON.stringify(await measureBox(appsWin))}`, { cause: error });
+                await page.waitForFunction(
+                    (expected) => {
+                        const element = document.querySelector(
+                            '[data-window-id="apps"]',
+                        );
+                        if (!element) return false;
+                        const frame = element.getBoundingClientRect();
+                        return Math.abs(frame.x - expected.x) <= 1 &&
+                            Math.abs(frame.y - expected.y) <= 1 &&
+                            Math.abs(frame.width - expected.width) <= 1 &&
+                            Math.abs(frame.height - expected.height) <= 1;
+                    },
+                    expected,
+                    { timeout: 5000 },
+                ).catch(async (error: unknown) => {
+                    throw new Error(
+                        `${direction} resize: before=${
+                            JSON.stringify(before)
+                        } expected=${JSON.stringify(expected)} actual=${
+                            JSON.stringify(await measureBox(appsWin))
+                        }`,
+                        { cause: error },
+                    );
                 });
                 const after = await measureBox(appsWin);
                 assertNear(after.x, expected.x, 1);

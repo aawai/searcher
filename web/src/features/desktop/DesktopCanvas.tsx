@@ -5,7 +5,7 @@ import {
     useState,
 } from "react";
 import type { DesktopAction } from "./desktop-state.ts";
-import { desktopGeometry, type DesktopGeometry } from "./desktop-geometry.ts";
+import { type DesktopGeometry, desktopGeometry } from "./desktop-geometry.ts";
 import "./desktop.css";
 
 function sameGeometry(a: DesktopGeometry, b: DesktopGeometry): boolean {
@@ -64,7 +64,9 @@ export function useDesktopGeometry(
                 const style = getComputedStyle(element);
                 if (style.display === "none") continue;
                 const bounds = element.getBoundingClientRect();
-                if (bounds.width > 0 && bounds.height > 0 && bounds.bottom > 0) {
+                if (
+                    bounds.width > 0 && bounds.height > 0 && bounds.bottom > 0
+                ) {
                     chromeBottom = Math.max(chromeBottom, bounds.bottom);
                 }
             }
@@ -159,8 +161,10 @@ export function DesktopCanvas(
     },
 ) {
     useLayoutEffect(() => {
-        if (rect.usable && rect.viewportRect.width > 0 &&
-            rect.viewportRect.height > 0) {
+        if (
+            rect.usable && rect.viewportRect.width > 0 &&
+            rect.viewportRect.height > 0
+        ) {
             dispatch({ type: "CLAMP", rect });
         }
     }, [rect, dispatch]);

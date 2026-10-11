@@ -111,7 +111,8 @@ function isValidRuntimeLayout(
         if (
             !window || typeof window.id !== "string" ||
             window.id.length === 0 || seenIds.has(window.id) ||
-            !isFiniteFrame(window.frame) || !fitsViewport(window.frame, geometry) ||
+            !isFiniteFrame(window.frame) ||
+            !fitsViewport(window.frame, geometry) ||
             (window.restoreFrame !== null &&
                 (!isFiniteFrame(window.restoreFrame) ||
                     !fitsViewport(window.restoreFrame, geometry))) ||
@@ -433,9 +434,8 @@ export function decodeDesktopLayout(
         }
         if (raw.version === 4) {
             const hasRestoreFrame = rawRestoreFrame !== null;
-            const invalidModeSnap =
-                (mode === "normal" &&
-                    (w.snap !== null || hasRestoreFrame)) ||
+            const invalidModeSnap = (mode === "normal" &&
+                (w.snap !== null || hasRestoreFrame)) ||
                 (mode === "snapped" &&
                     (w.snap === null || w.snap === "maximize" ||
                         !hasRestoreFrame)) ||

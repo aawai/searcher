@@ -640,7 +640,6 @@ export function DocumentEditor({
         );
     }
 
-
     return (
         <div
             className="document-editor-container"

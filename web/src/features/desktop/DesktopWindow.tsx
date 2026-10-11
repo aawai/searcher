@@ -74,7 +74,9 @@ export function DesktopWindow({
         }
     };
 
-    const frame = rect.usable ? win.frame : clampFrame(win.frame, rect, win.kind);
+    const frame = rect.usable
+        ? win.frame
+        : clampFrame(win.frame, rect, win.kind);
 
     const isMinimized = win.mode === "minimized";
     const isMaximized = win.mode === "maximized";
@@ -111,38 +113,43 @@ export function DesktopWindow({
                     ? "translate3d(0, 0, 0)"
                     : `translate3d(${frame.x}px, ${frame.y}px, 0)`,
                 width: `${immersive ? rect.viewportRect.width : frame.width}px`,
-                height: `${immersive ? rect.viewportRect.height : frame.height}px`,
+                height: `${
+                    immersive ? rect.viewportRect.height : frame.height
+                }px`,
                 zIndex: win.zOrder,
             }}
             tabIndex={-1}
             onPointerDownCapture={handlePointerDownCapture}
         >
-            {chrome ?? <WindowChrome
-                window={win}
-                title={title}
-                rect={rect}
-                active={active}
-                dispatch={dispatch}
-                windowRef={windowRef}
-                disableDrag={disableDrag}
-                showMinimize={showMinimize}
-                showMaximize={showMaximize}
-                closeLabel={closeLabel}
-                backLabel={backLabel}
-                onClose={onClose}
-                onBack={onBack}
-                leading={leading}
-                headerMenu={headerMenu}
-                closeBtnRef={closeBtnRef}
-                backBtnRef={backBtnRef}
-                showWindowMenu={showWindowMenu}
-            />}
+            {chrome ?? (
+                <WindowChrome
+                    window={win}
+                    title={title}
+                    rect={rect}
+                    active={active}
+                    dispatch={dispatch}
+                    windowRef={windowRef}
+                    disableDrag={disableDrag}
+                    showMinimize={showMinimize}
+                    showMaximize={showMaximize}
+                    closeLabel={closeLabel}
+                    backLabel={backLabel}
+                    onClose={onClose}
+                    onBack={onBack}
+                    leading={leading}
+                    headerMenu={headerMenu}
+                    closeBtnRef={closeBtnRef}
+                    backBtnRef={backBtnRef}
+                    showWindowMenu={showWindowMenu}
+                />
+            )}
 
             <div className="desktop-window-content">
                 {children}
             </div>
 
-            {!immersive && !disableResize && !isMaximized && !isMinimized && !isSnapped && (
+            {!immersive && !disableResize && !isMaximized && !isMinimized &&
+                !isSnapped && (
                 <WindowResizeHandles
                     window={win}
                     rect={rect}

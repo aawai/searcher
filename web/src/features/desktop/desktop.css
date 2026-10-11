@@ -77,10 +77,8 @@
     white-space: nowrap;
 }
 
-:root:not([data-document-immersive])
-    .app-shell:has(.desktop-canvas) > .topbar,
-:root:not([data-document-immersive])
-    .app-shell:has(.desktop-canvas) > .connection-banner {
+:root:not([data-document-immersive]) .app-shell:has(.desktop-canvas) > .topbar,
+:root:not([data-document-immersive]) .app-shell:has(.desktop-canvas) > .connection-banner {
     position: relative;
     z-index: var(--elevation-desktop-dock);
 }

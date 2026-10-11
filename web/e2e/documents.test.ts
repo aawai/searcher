@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";
+import { waitForDocument } from "./helpers/document-state.ts";
 
 Deno.test("Documents production responsive modes and large-document integrity (#102 M7)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -17,6 +18,26 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         viewport: { width: 1440, height: 900 },
     });
     const page = await context.newPage();
+    const evidenceDirectory = Deno.env.get("E2E_EVIDENCE_DIR");
+    async function captureMode(name: string) {
+        if (!evidenceDirectory) return;
+        await Deno.mkdir(evidenceDirectory, { recursive: true });
+        await page.evaluate(async () => {
+            await document.fonts.ready;
+            await Promise.all(
+                document.getAnimations().filter((animation) =>
+                    animation.effect?.getComputedTiming().iterations !==
+                        Infinity
+                ).map((animation) => animation.finished.catch(() => {})),
+            );
+            await new Promise<void>((resolve) =>
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => resolve())
+                )
+            );
+        });
+        await page.screenshot({ path: `${evidenceDirectory}/${name}.png` });
+    }
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     const requestedJs: string[] = [];
@@ -157,6 +178,9 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                                 await editor.textContent() ?? "",
                                 "内容锚点",
                             );
+                            await captureMode(
+                                `${width}x${height}-${style}-${theme}-continuous`,
+                            );
                             const element = await editor.elementHandle();
                             assert(element);
                             await page.getByRole("button", {
@@ -175,6 +199,9 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                                 ),
                                 "mode switch must retain the editing instance",
                             );
+                            await captureMode(
+                                `${width}x${height}-${style}-${theme}-page`,
+                            );
                             await page.getByRole("button", {
                                 name: "源码",
                                 exact: true,
@@ -187,6 +214,9 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             assertEquals(
                                 await source.inputValue(),
                                 initialBody.body,
+                            );
+                            await captureMode(
+                                `${width}x${height}-${style}-${theme}-source`,
                             );
                             await page.getByRole("button", {
                                 name: "连续",
@@ -249,11 +279,11 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 await page.keyboard.press("Control+End");
                 await page.keyboard.insertText("短屏输入锚点");
                 await page.keyboard.press("Control+s");
-                await page.waitForFunction(async (id) => {
-                    const { data } = await (await fetch("/api/documents/" + id))
-                        .json();
-                    return data.body.endsWith("短屏输入锚点");
-                }, doc.id);
+                await waitForDocument(
+                    page,
+                    doc.id,
+                    (document) => document.body.endsWith("短屏输入锚点"),
+                );
                 assertStringIncludes(
                     (await request<DocumentDto>("/api/documents/" + doc.id))
                         .body,
@@ -295,9 +325,9 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         { method: "POST", body: form },
                     );
                     if (!response.ok) throw new Error(await response.text());
-                    return (await response.json()).data as { id: string };
+                    return (await response.json()).data as { assetId: string };
                 }, large.id);
-                const body = largeDocumentMarkdown(asset.id);
+                const body = largeDocumentMarkdown(asset.assetId);
                 assert(body.length >= 100000);
                 await request(`/api/documents/${large.id}`, "PATCH", {
                     body,
@@ -326,11 +356,12 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         ?.endsWith("长文编辑锚点")
                 );
                 await page.keyboard.press("Control+s");
-                await page.waitForFunction(async (id) => {
-                    const { data } = await (await fetch(`/api/documents/${id}`))
-                        .json();
-                    return data.body.endsWith("长文编辑锚点");
-                }, large.id);
+                await waitForDocument(
+                    page,
+                    large.id,
+                    (document) =>
+                        document.body.trimEnd().endsWith("长文编辑锚点"),
+                );
                 const saved = await request<DocumentDto>(
                     `/api/documents/${large.id}`,
                 );

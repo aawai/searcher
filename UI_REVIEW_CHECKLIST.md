@@ -1897,3 +1897,73 @@
       Print 不适用本阶段；留至对应阶段而非宣称已经覆盖。
 - [x] 已知限制与 M5 接入路径记录于
       MARKDOWN_EDITOR_M0A.md；本报告不冒充正式业务页面验收。
+
+## #147 Desktop viewport 几何与 Document Immersion / 竖向分页
+
+- [x] M0 使用独立 worktree `feat/issue-147`，基于 main
+      `f5d84249766f86c155907c8021174d1ef8c75b66`。保存真实 390×844 / 768×1024 /
+      1024×768 / 1440×900 × Zen/Widgets × light/dark
+      连续/页面截图、双页/三页横向基线及 Chrome/Dock/window geometry； 本地证据
+      `/tmp/issue147-evidence/m0/`。
+- [x] viewport geometry Red 4 项、沉浸入口 Red、双页竖向 geometry Red
+      均在旧实现失败；不是仅比较源码、CSS 字符串或 mock forwarding。
+- [x] M1/M2 focused Desktop module 73 项通过。生产 workspace-shell 1 test / 9
+      steps、workspace-matrix 1 test / 7 steps 分批通过； 八方向真实
+      resize、拖拽 preview/release、Snap/maximize/restore/reload、 v1–v4
+      迁移、零尺寸/读取失败不覆写、账号隔离均有契约证据。
+- [x] M3A 实页保留同一窗口和富文本实例；连续/页面各 20 次沉浸循环保留
+      selection/history，Source 往返保留 canonical/version。纯 presentation
+      无正文 PATCH；dirty blur 与普通窗口控制路径均只保存一次。 dialog Escape
+      优先、键盘/12px 底边同一 Dock、自身/其他窗口/Overview、
+      最小化/关闭/刷新/768 响应式退出、保存失败重试、409 与真实 PNG 上传通过。
+- [x] 1024×200 受限 Surface 的关闭入口真实命中；正文容器 wheel 可滚动， 原
+      snapped semantic 不被受限 frame 覆写；恢复可用视口后还原原 frame。 HTTP
+      logout 后 History 请求 401 清除沉浸/账号 Surface，重新登录不恢复
+      session-only flag。此扩展 focused trace 1 test 通过。
+- [x] M3B 代表 fixtures 使用真实 Chromium `141.0.7390.37`、Linux x86_64、
+      1440×900、DPR 1.25；UA 的 Chrome150/Windows 字符串仅为固定 fixture
+      override， 不当作实际浏览器/OS 证据。每组 warm-up 3 次、测量 20 次；
+      不可变横向基线为
+      `web/src/spikes/editable-pagination/issue147-horizontal-baseline.json`，
+      后续生产 cutover 不再把当前 owner 冒称横向基线。
+- [x] 单一 editable DOM/state 的三页竖向 wheel、真实跨页鼠标拖选、
+      Shift-click/copy/cut/paste、Enter/Backspace/Delete/history、 composition
+      延期、A4/Letter 两方向、自动段落/代码/多行表格、 2000×3000 PNG、390
+      同实例缩放字形/图像边界均取得实测。 打印 PDF 五个短夹具页数
+      1/2/2/2/3，起始/连续/尾部空白位置实读验证。 原 writing-mode 候选失败与成功
+      prototype 保存在 `.artifacts/issue-147/pagination/verified-m3b.tgz`。
+- [x] 超高单个 table row 的追加边界 Red→Green：两列一短一长，prototype 曾有 18
+      个字形落入 margin/gap；生产 owner 在原 cell 内独立分片， 274 个真实 Range
+      字形、7 页实读未越界，canonical 不变。
+- [x] M4 实验适配器已删除 prototype 分页算法，仅挂载生产 owner。
+      同一冻结环境下生产 10/30 页 median 为 0.60/1.85ms，max 为 1.40/2.20ms； 30
+      页低于横向基线 2.80ms 的两倍门槛。生产 PDF 五个夹具仍为 1/2/2/2/3
+      页，起始/连续/末尾空白位置实读正确。
+- [x] 第三页真实鼠标/键盘输入后 scrollTop 保持 2200、caret top 210.625，
+      未因重新分页收缩为单页或跳回顶部。布局交易不进入历史；
+      两步编辑撤销恢复原文、两步重做恢复修改，EditorView 身份不变。
+- [x] 生产竖排构建后的沉浸完整 focused trace 再次通过（1 test，31s）。
+- Safari、真实触屏与 OS IME 在当前环境不可用；合成 CompositionEvent + Chromium
+  insertText 只证明 composition/layout 延期，不冒充 OS IME 验收。
+
+### #147 分页技术决策与复现
+
+- 选择普通竖向 DOM flow + 单个 ProseMirror DecorationSet，而不是 writing-mode
+  多列或每页独立编辑器。纸张背景按 `height + gap` 定位；真实 DOM Range 行框和
+  `view.posAtDOM` 映射到同一文档位置，手动 PageBreak 强制下一页。
+- 超高 table row 保留原 tr/td；各 cell 内独立插入不可编辑间隙，后续正文只累加
+  该 row 的最大高度增长。短 cell 不复制内容，也不补整页填充。
+- doc、paper、scale 改变时，在同一 RAF 清除旧 Decoration、测量并提交新布局；
+  保留旧纸张栈直到提交，避免 scroll owner 短暂收缩。仅补偿原本可见的 caret，
+  不把离屏选区拉回视口。signature 收敛触发后续测量；IME 期间延期。
+- `decoration-flow-repro.ts` 仅为生产 owner 的 fixture mount。先运行
+  `deno task dev --host 127.0.0.1 --port 5173`，再运行
+  `deno run -A web/src/spikes/editable-pagination/m3b-browser-experiment.ts http://127.0.0.1:5173 /tmp/issue147-pagination decorations`。
+  原始性能 JSON、截图与五个 PDF 写入指定目录；冻结基线同时校验 engine、viewport、
+  DPR 与 UA fixture，30 页超过两倍 median 时命令失败。
+- 原失败候选与成功 prototype 原始归档保存在生成证据集
+  `pagination/verified-m3b.tgz`；生产 cutover 后不保留第二个可执行分页 owner。
+  生成证据已移出源码 worktree，发布链接由 PR 提供。
+- 回滚：M1+M2 必须整体回滚，不能独立降级坐标或 payload writer；旧 v3 runtime
+  不识别 v4 设备窗口缓存时会按安全回退重建窗口，不影响服务器笔记/资产或设备草稿。
+  M3A/M4 可分别整体 revert 对应 UI/布局 owner 增量；无数据库 migration。

@@ -63,9 +63,15 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   document:<id> 标识，复用 DesktopWindow、geometry、Snap、Dock transient 与
   Overview，不增加另一套 chrome/editor core。768–1023px 和移动端仍由 Host 的
   constrained surface / Sheet 展示 nested editor；Zen 展开现有 Panel。
-- 笔记内容外层滚动区提供可聚焦 region；页面模式的独立水平纸张 viewport
-  同样提供键盘滚动入口。窗口标题、Dock 和总览消费服务端派生标题；Library
-  保存后重取当前 scope/query 的摘要，不拉取全部正文。
+- 笔记内容外层滚动区提供可聚焦 region；页面模式由同一 scroll owner 自上而下
+  展示居中的纸张，禁止横向 strip 或第二个正文滚动区。纸张尺寸与 margin 保持
+  物理规格，窄 Host 只统一缩放纸张与可编辑 DOM，不缩小正文 Typography Token。
+  窗口标题、Dock 和总览消费服务端派生标题；Library 保存后重取当前 scope/query
+  的摘要，不拉取全部正文。
+- 竖向分页复用唯一 ProseMirror EditorView/State；自动断页是临时 Decoration，
+  不写 canonical Markdown、历史或保存队列。手动 PageBreak 保留语义；跨页长文本、
+  code、table cell 在原 DOM
+  中分片，纸张间隙不可编辑。纸张背景不建立第二个编辑器。
 - 正文最低可读高度由
   `--editor-min-content-height`（240px，约十行正文）拥有；header/toolbar
   超出可用高度时，editor container 滚动 chrome，而不是把正文 flex viewport
@@ -326,11 +332,14 @@ AlertDialog）具有严格不同的交互与视觉语义：
   safe-height)；fullscreen = safe rect。
 - Task Dock 负责窗口导航与空间管理：Apps/Notes root closed → Open、visible →
   Focus、minimized → Restore + Focus；>=1024 增加 Overview 与 running note
-  item，始终可见，无 CRUD、无 footer switcher。Bento 只保留打开网站、
-  打开便签和新建便签等内容级动作，不加入重复 root workspace navigation。
-- Canvas safe rect 顶部避让 Topbar/connection banner，底部避让 Dock；打开 window
-  不推动 Search/Bento。 Pointer activation 不抢夺 input/textarea focus；Dock
-  键盘打开/恢复聚焦 root Close 或 nested Back。应用窗口由领域 Escape policy
+  item，普通窗口下始终可见，文档沉浸时由底边入口临时呼出；无 CRUD、无 footer
+  switcher。Bento 只保留打开网站、 打开便签和新建便签等内容级动作，不加入重复
+  root workspace navigation。
+- Canvas 固定覆盖 viewport，打开 window 不推动 Search/Bento；默认 frame 的 safe
+  rect 避让 Topbar/connection banner 与 Dock，并保留 gap；Snap/最大化使用无 gap
+  的 work rect。 普通窗口正文可被 Dock 遮挡，但整条标题栏始终处于 Header 与 Dock
+  之间。 Pointer activation 不抢夺 input/textarea focus；Dock 键盘打开/恢复聚焦
+  root Close 或 nested Back。应用窗口由领域 Escape policy
   逐层消费菜单、query、整理、文件夹、表单返回、工作区关闭，且只作用于 active
   window；IME 不消费。其他 >=1024 普通窗口不因 Escape 关闭，保留既有语义。
   关闭后聚焦对应 Dock item。
@@ -338,10 +347,11 @@ AlertDialog）具有严格不同的交互与视觉语义：
   restore。<1024 与 Zen 的 `openNote` 仍使用 Notes nested editor，不创建 entity
   window。
 - Widgets geometry 通过 `local.ts` 的 IndexedDB IO 保存于
-  `searcher:desktop-layout:v1:<userId>`：schema version、open
-  identity、normalized normal frame、mode、snap semantic、z-order、active
-  id。恢复转换为 px 后必须 clamp； pointermove/resize 期间不写入，稳定 reducer
-  commit 与 lifecycle 时保存。
+  `searcher:desktop-layout:v1:<userId>`：payload v4 保留 open identity、以
+  viewport 归一化的 normal/restore frame、mode、snap semantic、z-order、active
+  id。 v1–v3 先按旧 safe-local 坐标解码，再加当前 safe rect
+  原点；成功恢复后的稳定 commit 才写回
+  v4。加载失败或无有效几何时不覆写旧记录；pointermove/resize 期间不写入。
 - 无记录、unsupported version 或 corrupt payload 默认空桌面；stale note
   自动丢弃。 IndexedDB read/write 失败不得阻塞窗口或回滚 runtime state，本
   session 使用内存态。 logout 清 runtime，保留用户
@@ -355,26 +365,31 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - WorkspaceSurface 负责 Panel/Sheet semantic chrome 和滚动容器；window 的
   titlebar、Back/Close、drag region 及空间操作仅由 DesktopWindow/WindowChrome
   负责，不嵌套第二层 Workspace titlebar，也不复制 Apps/Notes content。
-- `DesktopCanvas` 是 viewport-fixed、背景 pointer-events:none 的唯一坐标
-  owner。frame x/y 相对 safe rect；顶边为可见 Topbar/connection banner 下边界加
-  `--space-window-gap`， 左右为 viewport 加 gap，底边为 viewport 减 gap；可提供
-  bottomElement 在 Widgets 中避让 Task Dock。
+- `DesktopCanvas` 是覆盖完整 viewport、背景 pointer-events:none 的唯一坐标
+  owner。 frame、restoreFrame、手势与 preview 的 x/y 均为 viewport CSS px。几何
+  owner 测量 Chrome 下沿 T、正常 Dock 上沿 D、gap G；work rect 为
+  (0,T,V.width,D-T)，safe rect 为其向内 G 的默认窗口区域。沉浸的视觉隐藏不改变
+  T/D；真实 viewport resize 才重测。 work/safe
+  几何不可用时停止手势与状态写入；已打开窗口仅使用 viewport 内的受限
+  presentation，保留可命中的标题栏关闭入口和内容自身滚动，不覆写原 frame/mode。
+  真实视口恢复可用后按原 semantic 恢复，而不是持久化受限尺寸。
 - window 使用 `--window-surface/border`、`--shadow-window`、`--radius-window`、
   `--window-elevation`、`--window-chrome-height` 与
   `--window-resize-hit`；不叠加 blur。
 - 默认 Apps/Notes/Note 尺寸分别为 min(760,72%)/min(720,78%)、
   min(640,62%)/min(680,74%)、min(560,54%)/min(600,68%)，以 safe rect
   为基准居中。 同类窗口按 24px cascade，触边循环到居中起点；min size 分别为
-  480×360、400×320、 320×240，最终均受 safe rect 限制。
+  480×360、400×320、320×240；普通尺寸最小值按 viewport 可用面积缩减，不应用于
+  Snap。
 - 仅标题栏拖动；>=1024 八向 resize；Pointer capture + rAF 只更新临时 DOM 几何，
-  pointerup/cancel 才 commit frame，safe rect 变化也终止手势并 clamp。
+  pointerup/cancel 才 commit frame，真实 geometry 变化也终止手势并 clamp。
   标题栏方向键移动、把手方向键 resize；reduce-motion 不参与几何正确性。
   窗口标题为 h2、业务 subsection 为 h3；toolbar 使用允许该 role 的容器。 Resize
-  separator 提供当前尺寸的 aria-valuetext 与 safe rect 内的百分比值，
+  separator 提供当前尺寸的 aria-valuetext 与 viewport bounds 内的百分比值，
   键盘提交后同步更新；不以静态 ARIA 值掩盖可调整控件。
 - minimize 保留 mounted content；snap/maximize 首次保存 restoreFrame，切换模式
-  不覆写。七种 semantic：left/right、四角、maximize；按 safe rect
-  半宽/半高计算， 不用 normal minimum size 扩大分屏。viewport resize
+  不覆写。七种 semantic：left/right、四角、maximize；按无 gap 的 work rect
+  半宽/半高计算，不用 normal minimum size 扩大分屏。viewport resize
   与设备恢复重新按 semantic 算 geometry，restoreFrame 保持原 normal
   frame（必要时 clamp）。
 - `WindowChrome` 拖拽边缘显示不捕获指针的 Canvas preview，release 用最终指针位置
@@ -392,6 +407,26 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - `DesktopDock` running note item 随 open/close 增删，click restore/focus；标题
   ellipsis + 完整 accessible label，overflow 在 running group 内滚动，无 CRUD。
   <1024 不显示 Overview 或 running items；每次提层 normalize 到 1..N。
+
+#### Document Immersion（仅 Widgets >=1024）
+
+- Host 的 `immersiveDocumentId` 只属于当前账号会话，不进入 reducer 或持久化。
+  同一 `DesktopWindow` / `DocumentEditor` 使用 viewport presentation；退出恢复原
+  normal/maximized/snapped semantic，不重排后台窗口或新建 EditorView。
+- Compact chrome 保留退出、标题、保存/上传状态及最小化/关闭。原编辑操作仍由
+  DocumentEditor 提供；Header、后台窗和未呼出的原 Dock 保留 DOM、视觉隐藏并
+  inert。
+- `--elevation-document-immersive`、`--elevation-immersive-dock`、
+  `--elevation-immersive-trigger` 依次承载文档、原 Dock 与底边入口，均低于
+  overlay。 `--immersive-dock-trigger-height: 12px` 定义 hover 热区；同一“显示
+  Dock”Button 可 Tab/Enter/Space 操作，focus-visible 使用 touch target，不另造
+  Dock。
+- Dock 选当前文档只聚焦编辑器；选其他窗口或 Overview 先退出。最小化、关闭、
+  Host/账号变化清理沉浸；刷新只恢复普通布局。Escape 先交由 dialog/menu/popover
+  消费，再退出沉浸；普通窗口不关闭。退出焦点回到原“进入沉浸式”入口。
+- 连续/页面切换与沉浸变化保留富文本实例和历史；Source 的原生命周期允许重建。 纯
+  presentation 不派发内容编辑；dirty blur/autosave、保存错误、409
+  和上传继续原流程。
 
 #### Workspace Root layout contract
 
