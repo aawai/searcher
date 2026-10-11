@@ -2145,3 +2145,14 @@
   原始期限与到期消失断言，不重发失败场景或延长产品期限。
   受控时钟下在删除前推进菜单调度，不使用真实 sleep；修正后完整模块 1 test / 6
   steps 通过，撤销到期语义不变。
+- 第三轮 CI 的 Apps 模块全部通过；Workspace 22 tests / 133 steps 通过、 1 step
+  失败于 right→top-left Snap 的 x=20（期望0）。 原等待仅检查
+  mode/snap/width，两种 Snap 宽度相同，未检查完整 DOM frame。
+  现复用已有真实几何等待，同时验证 x/y/width/height（误差<=1px）； 原
+  Snap/preview/restore/resize 断言保留，不增加 sleep、重试或更宽容差。
+- 本地追加诊断捕获 resize 未变化：760×569，点击位置的 elementFromPoint 为 Home
+  main，而非 SE handle。fixture 现在先由标准 hover 等待真实 handle
+  可交互，再读取坐标并验证 SE 命中；八向 resize 均保留原尺寸与锚点断言。 Dock
+  键盘域切换也按“搜索应用/搜索便签”可观察标签等待，避免共用 input selector 在旧
+  active Surface 上输入。没有 force、固定 sleep 或重发手势。 修正后的 Workspace
+  shell 完整模块 1 test / 9 steps、fmt/lint 各 1 file 通过。

@@ -723,14 +723,20 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await visit("/");
             await page.locator(appsTrigger).focus();
             await page.keyboard.press("Enter");
-            await search().waitFor();
-            await search().fill("State");
+            const appsSearch = panel.getByRole("searchbox", {
+                name: "搜索应用",
+                exact: true,
+            });
+            await appsSearch.fill("State");
             await page.locator(
                 '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
-            await search().fill("Shell");
+            await panel.getByRole("searchbox", {
+                name: "搜索便签",
+                exact: true,
+            }).fill("Shell");
             const expand = panel.getByRole("button", {
                 name: "展开",
                 exact: true,
@@ -753,12 +759,24 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             )
                 .focus();
             await page.keyboard.press("Enter");
-            assertEquals(await search().inputValue(), "State");
-            await search().fill("");
+            assertEquals(await appsSearch.inputValue(), "State");
+            await appsSearch.fill("");
             await panel.getByRole("button", {
                 name: "打开 Edited Alpha",
                 exact: true,
-            }).focus();
+            }).focus().catch(async (cause) => {
+                throw new Error(
+                    `Apps keyboard fixture: ${
+                        JSON.stringify({
+                            activeSurface: await panel.innerText(),
+                            apps: await page.evaluate(async () =>
+                                (await fetch("/api/webapps")).json()
+                            ),
+                        })
+                    }`,
+                    { cause },
+                );
+            });
             await page.keyboard.press("Shift+F10");
             await page.getByRole("menu").waitFor();
             await page.keyboard.press("Escape");
@@ -1494,6 +1512,19 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     },
                     [mode, snap, expectedWidth],
                 );
+                await waitForWindowFrame({
+                    x: workBox.x +
+                        (["right", "top-right", "bottom-right"].includes(snap)
+                            ? halfW
+                            : 0),
+                    y: workBox.y + (snap.startsWith("bottom-") ? halfH : 0),
+                    width: expectedWidth,
+                    height: snap.startsWith("top-")
+                        ? halfH
+                        : snap.startsWith("bottom-")
+                        ? workBox.height - halfH
+                        : workBox.height,
+                });
             }
             async function waitForWindowFrame(
                 expected: Pick<ElementBox, "x" | "y" | "width" | "height">,
@@ -1842,13 +1873,24 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             const seHandle = appsWin.locator(
                 ".desktop-window-resize-handle--se",
             );
-            await seHandle.waitFor({ state: "visible" });
+            await seHandle.hover();
             const handleBox = await measureBox(seHandle);
             const boxBeforeResize = await measureBox(appsWin);
             await page.mouse.move(
                 handleBox.x + handleBox.width / 2,
                 handleBox.y + handleBox.height / 2,
             );
+            const resizeTarget = await page.evaluate(
+                ({ x, y }) =>
+                    document.elementFromPoint(x, y)?.closest(
+                        ".desktop-window-resize-handle",
+                    )?.getAttribute("data-direction"),
+                {
+                    x: handleBox.x + handleBox.width / 2,
+                    y: handleBox.y + handleBox.height / 2,
+                },
+            );
+            assertEquals(resizeTarget, "se", "Resize must hit the real handle");
             await page.mouse.down();
             await page.mouse.move(
                 handleBox.x + handleBox.width / 2 - 50,
@@ -1866,13 +1908,28 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             1;
                 },
                 boxBeforeResize.width,
-            );
+            ).catch(async (cause) => {
+                throw new Error(
+                    `SE resize: ${
+                        JSON.stringify({
+                            before: boxBeforeResize,
+                            after: await measureBox(appsWin),
+                            target: resizeTarget,
+                            handle: handleBox,
+                            currentHandle: await measureBox(seHandle),
+                            style: await appsWin.getAttribute("style"),
+                        })
+                    }`,
+                    { cause },
+                );
+            });
             for (
                 const direction of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
             ) {
                 const handle = appsWin.locator(
                     `[data-direction="${direction}"]`,
                 );
+                await handle.hover();
                 const before = await measureBox(appsWin);
                 const handleBounds = await measureBox(handle);
                 const dx = direction.includes("w")
