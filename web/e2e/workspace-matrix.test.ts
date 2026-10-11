@@ -1558,6 +1558,11 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             );
             assertEquals(zenPreferences.style, "zen");
             await visit("/");
+            // A detached Dock alone can be a transient navigation state.
+            // Wait for the actual Zen presenter before checking absence.
+            await page.locator("main.home-zen").waitFor({
+                state: "visible",
+            });
             await page.locator(".desktop-dock").waitFor({
                 state: "detached",
                 timeout: 3000,

@@ -494,10 +494,32 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
 - 文件夹标题只有返回、名称、count、更多一组。搜索按原匹配规则分组为文件夹/
   应用，应用 row 的打开与更多为 sibling Button，显示两行名称、hostname 与所属
   文件夹；完整名称由 accessible name、菜单和细指针 Tooltip 提供。
-- coarse/no-hover 控件消费 `--control-touch-target`（44px）；launcher
-  square-cell 消费
-  `--launcher-touch-cell-size`，文件夹标签与图标共享入口。Button、Tab、 menu
-  item 的 touch hit geometry 由 primitives owner 统一定义，不以负边距扩大。
+- coarse/no-hover 控件消费
+  `--control-touch-target`（44px），这是实际可点击面积下限， 不是图标或 grid
+  track 的尺寸下限。Button、Tab、menu item 的 hit geometry 由 primitives owner
+  定义。
+- Apps 非搜索网格由 `launcher.css` 的 `.launcher-grid--workspace` 拥有 68×68px
+  square tracks 与 4px 双向间距；coarse/no-hover 可视 app glyph 为 40×40px，完整
+  app/small-folder tile 为 68×68px hit area。这个 owner
+  同时标记根网格、文件夹内容和 portaled DragOverlay，不依赖 DOM 祖先继承。
+  列数由 ResizeObserver 实测可用内容宽度计算，不能按 viewport 写死； 358px
+  内容宽度容纳 5 列，窄容器自然减少。
+- 大文件夹仍占 2×2 tracks（140×140px）；触屏 Apps 预览最多四个 44×44px
+  可交互按钮，glyph 与 hit area 分离，剩余数量显示 +N，
+  全部成员通过文件夹详情访问。预览局部几何留出底部完整 44px 高的
+  文件夹打开区域，名称不盖住按钮；相邻 tile 与 preview hit area 不重叠。
+  移动触屏 Zen 首页 `.pinned-area .launcher-grid--home` 和 Widgets Quick
+  `.launcher-grid--quick` 与 Apps 使用相同的 68×68px 轨道及 4px 双向间距，
+  维持完整 tile ≥44px 命中区；仅在 `<768px` 的 coarse/no-hover 条件生效。
+  两种首页的 `webAppIconSize` 均控制 40/42/44px 可视 glyph，不改变轨道。 Quick
+  移动网格居中于卡片内容区；名称在单元内居中，隐藏名称时 glyph
+  水平、垂直居中。卡片内边距不变，列数仍按实际内容宽计算： 390px 下 Zen 的 358px
+  可用宽排 5 列，Quick 的 332px 可用宽排 4 列。 首页的 portaled DragOverlay
+  使用独立 `.launcher-overlay--home` owner， 与 tile 共享触屏轨道、间距及 glyph
+  尺寸，且独立设置垂直居中， 不依赖首页祖先继承。Quick 的现有管理入口仍进入 Apps
+  Workspace， 不为统一尺寸新增首页整理模式。
+  > =768px touch、fine-pointer Home/Quick 原有密度、九项大文件夹预览
+  > 与非空搜索列表不变。
 - `useAppsLayoutPersistence` 位于 presenter 之上，保留并发乐观重排和现有 API，
   所有已发出的布局请求 settled 后读取服务端确认 snapshot。新的操作使旧
   reconciliation version 失效；不使用旧数组整体 rollback 覆盖新排序。

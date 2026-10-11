@@ -4,6 +4,105 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## 移动端首页固定应用密度回归（2026-10-10）
+
+- [x] 根因与最终范围：#149 仅恢复 Apps；本次移动 coarse/no-hover `<768px` 的 Zen
+      与 Widgets Quick 统一为 68×68px tracks、4px 双向 gap、 40/42/44px
+      glyph。Apps、fine-pointer 与 >=768px touch 保持原有布局。 Quick 卡片
+      padding 不变，网格在实际内容区居中。
+- [x] Zen 生产页面触屏 E2E（`home-launcher-density.test.ts`）：375px 4
+      列，390px（358px 内容宽）5 列，430px 5 列。 测 computed 轨道/间距、tile
+      行数、hit-test、无重叠与横向溢出； 检查三个图标尺寸、显示/隐藏名称、真实
+      CDP 触屏拖拽的 overlay 68px/4px 与 42px 默认 glyph，比较原始 tile 与
+      portaled overlay 的 glyph 相对 X/Y
+      坐标，验证隐藏名称时两者均居中；触屏长按进入整理，
+      并断言排序保存、刷新后顺序持久化。页面加载、尺寸切换及设置重载后，
+      额外等待 ResizeObserver 列数与实测首行几何一致再断言。 更新后的 Home
+      density suite 已单独通过；原 Apps density 的移动首页 及 767/768
+      断点预期同步更新。
+- [x] Widgets Quick 375/390/430px 首行分别 4/4/5 个，实际区域 68×68px， gap
+      4px；六种 glyph/名称组合均验证水平居中、隐藏名称时垂直居中、 网格中心偏差
+      <1px 和按钮 hit-test。更新后的 Home density E2E 通过； 首次回归在 88≠68
+      失败，随后居中回归发现 16.5px 偏移，修正后通过。 fine-pointer Zen Home 仍
+      64px/6px。
+- [x] 最终生产构建的 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共
+      12 组实页截图与几何验证，无页面或网格横向溢出。 截图矩阵媒体实测均为
+      coarse/no-hover，不冒充 fine-pointer； fine-pointer 由独立 Playwright
+      context 的 E2E 验证。 390px Quick 内容宽 332px、4 列，Zen 内容宽 358px、5
+      列； 两者均 68px track / 4px gap / 42px 默认 glyph，移动网格中心偏差为 0。
+      390×640 Quick 另采集 light/dark × 三种图标尺寸 × 名称开关共 12 张；
+      图标与名称整体（或单独 glyph）在单元内水平、垂直中心偏差均为 0。 1/3/5/6
+      个固定应用实页复查网格中心偏差均为 0。 截图
+      `/tmp/pr151-unified-*.png`，报告 `/tmp/pr151-unified-report.json`； 浏览器
+      errors 为空。矩阵脚本首次误用卡片外宽计算列数导致等待超时，
+      改为按实际内容区验收并重新采集全部最终矩阵，不修改卡片 padding。
+- [x] 本地 build、受影响 TypeScript check/lint 与四个源文件 fmt 通过。
+      `check:ui` 使用 `/tmp/searcher-pr151-acceptance` 路径别名避开 `.omp`
+      绝对路径排除：ownership 实扫 194 文件、visual 实扫 141 文件，
+      violations/allowances 均为 0。
+- [x] 最终代码本地完整 `deno task test:workspace` 通过： 23 passed（134 steps）/
+      0 failed；包含生产构建、更新后的 Home/Apps density、Bento、launcher 及全部
+      Workspace 回归，不复用旧提交 CI。
+- [ ] 真实 iOS/Android、Safari 与真实软键盘未验证；本次触屏为 Chromium 模拟与
+      CDP 输入。未执行独立 axe；不将历史验收冒充本次结果。
+
+**历史区分**：下面 #149 记录的「Home/Quick 仍为 88px」仅描述 #149
+合并时的状态；此次最终范围包含移动 Zen 与 Widgets Quick 的 68px 统一。
+
+## Issue #149 触屏应用网格密度（2026-10-09）
+
+- [x] 沿用 Apps Workspace archetype；`launcher.css` 拥有视觉轨道和局部预览，
+      `WebAppLauncher` 将 workspace 标记带到根网格、文件夹内容与 portaled
+      overlay。 不改共享 88px
+      Token、布局算法、排序规则、API、Sheet、表单或搜索列表。
+- [x] 修复前生产构建的 coarse/no-hover 390px 实页：实际内容宽 356px， 88px
+      tracks / 4px gap / 3 列；修复后为 68px square tracks / 4px 双向 gap / 40px
+      glyph / 5 列。新增 E2E 修复前在 88px track 断言失败。
+- [x] 实测列数按 `floor((contentWidth + 4) / 72)`，不从 viewport 硬编码。
+      两种主题的结果一致；768px Host 切换后按各自容器自然重排：
+
+| Viewport    | Apps 内容宽（CSS px） | 列数 |
+| ----------- | --------------------- | ---- |
+| 375         | 341                   | 4    |
+| 390         | 356                   | 5    |
+| 430         | 396                   | 5    |
+| 767         | 733                   | 10   |
+| 768 Zen     | 366                   | 5    |
+| 768 Widgets | 540.08                | 7    |
+
+- [x] app / small folder 为 68×68px hit area，大文件夹为 140×140px； preview
+      buttons 与管理入口至少 44×44px，中心 hit-test 均可达。 大文件夹底部另用
+      44px 区域的中心与四角 hit-test 验证独立 opener，
+      名称不拦截它；预览最多四个可操作按钮，+N 与详情保留剩余成员访问。 1/2/4/10
+      成员的大文件夹预览不溢出、不遮挡标题。
+- [x] 真实生产构建页：375×812、390×640/844、430×932、767×1024、 768×1024 ×
+      light/dark × Zen/Widgets 共 24 个 touch 场景； 1440×900 fine-pointer 共 4
+      个场景。computed tracks/gaps、实际 bounding
+      boxes、首行、行距、无重叠/横向溢出与短屏真实滚动均通过。 45 张
+      root/detail/arrange/management/preview 截图及 report.json、 另两张手动
+      before/after 截图保存在
+      [独立证据分支](https://github.com/aawai/searcher/tree/evidence/issue-149/evidence/issue-149)，
+      不将图片并入 main。
+- [x] 390→375→430→767→768 不刷新重排仍保留混排顺序； app 68px overlay
+      对齐触摸落点并成功移入文件夹，服务端及 Home pin order 保留。 大文件夹
+      140px overlay 对齐真实 touchMove，取消后仍可继续整理；
+      既有键盘混排、文件夹内排序、移出、长按、刷新持久化回归通过。
+- [x] Home/Quick touch 仍为 88px tracks，gap 分别 6/8px； fine-pointer 仍为 64px
+      Home/Quick tracks、68px Apps tracks； Apps 非空搜索保留 A9 列表。#141
+      草稿、Undo、Escape、管理入口与应用排序回归通过。
+- [x] `deno task build`、相关 7 个布局单测、`deno task test`（643 tests / 51
+      steps）、`deno task test:workspace`（22 suites / 134 steps）通过。
+      完整命令之后仅调整 density fixture 的稳定截图等待与 CDP 复用，
+      最终单独复验 density suite 通过；其余 suites 无改动，复用既有结果。
+- [x] fixture 校准：修正菜单名称与相对 selector，等待 Host 恢复、主题、字体、
+      有限动效和两个稳定 frame；拖拽激活后再测实际移动。 短屏 Widgets 的
+      fullPage 截图后曾丢失 coarse/no-hover 模拟， 改为实际 viewport
+      截图并重新采集全部 45 张证据；不修改产品来掩盖脚本问题。
+- [x] `check:ui` ownership A–M、visual violations 与 allowances 均为 0； 受影响
+      TypeScript 的 check/lint 与受影响文件 fmt 门禁通过。
+- [x] 本次为 Chromium 触屏模拟与 CDP 输入，不冒充真实手机验证； 真实
+      iOS/Android、Safari、真实软键盘与独立 axe 未验证。
+
 ## Issue #145 便签颜色入口（2026-10-09）
 
 - [x] 沿用 Home / Workspace archetype，唯一 presentation owner 为
@@ -117,6 +216,10 @@
 | 细指针桌面 tile                 | 68×68 px     | 68×68 px     |
 | 细指针桌面网格列数 / gap        | 10 / 4 px    | 10 / 4 px    |
 | coarse/no-hover tile / 同宽列数 | 68×68 px / 9 | 88×88 px / 7 |
+
+以上为 #141 合并时的历史测量；其中 coarse/no-hover 的 88px Apps 轨道是 #149
+修复的密度回归，不是当前设计要求。当前 Apps 网格与 hit-area 契约见本文件 #149
+验收记录；Home/Quick 的 88px 触屏轨道不受此次修改影响。
 
 - [x] 取舍限定：触屏为 44px mini/完整 tile 增加纵向占用与减少列数，
       不改细指针桌面密度；图标折叠增加一次展开，搜索列表用较低横向密度换取

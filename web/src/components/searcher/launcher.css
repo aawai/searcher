@@ -687,6 +687,8 @@
     --launcher-col-w: 68px;
     --launcher-gap-x: var(--space-1);
     --launcher-gap-y: var(--launcher-gap-x);
+}
+.launcher-grid.launcher-grid--workspace {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -731,5 +733,58 @@
     }
     .launcher-folder-item--large .launcher-folder-preview--sparse {
         grid-template-rows: var(--control-touch-target);
+    }
+    /* Workspace track density is independent of the 44px hit-target floor.
+       The same owner travels with folder contents and the portaled overlay. */
+    :is(.launcher-grid, .launcher-folder-contents, .launcher-overlay).launcher-grid--workspace {
+        --launcher-col-w: 68px;
+        --launcher-gap-x: var(--space-1);
+        --launcher-icon: 40px;
+    }
+    .launcher-grid--workspace .launcher-folder-item--large .launcher-folder-surface {
+        overflow: visible;
+    }
+    .launcher-grid--workspace .launcher-folder-item--large .launcher-folder-background {
+        top: calc(-1 * var(--launcher-pad-t) - 1px);
+        left: calc(-1 * var(--space-7) / 2 - 1px);
+        width: calc(2 * var(--launcher-col-w) + var(--launcher-gap-x));
+        height: calc(2 * var(--launcher-row-h) + var(--launcher-gap-y));
+    }
+    .launcher-grid--workspace .launcher-folder-item--large .launcher-folder-preview {
+        align-content: start;
+        gap: var(--space-launcher-icon-gap) var(--space-1);
+        padding: 0;
+    }
+    .launcher-grid--workspace .launcher-folder-item--large .launcher-folder-mini-glyph {
+        width: min(100%, var(--launcher-icon));
+    }
+    .launcher-grid--workspace .launcher-folder-name,
+    .launcher-grid--workspace .launcher-folder-more {
+        pointer-events: none;
+    }
+}
+
+/* Mobile Home presenters and their portaled preview share touch geometry. */
+@media (max-width: 767px) and (pointer: coarse),
+    (max-width: 767px) and (hover: none) {
+    :is(.pinned-area .launcher-grid--home, .launcher-grid--quick, .launcher-overlay.launcher-overlay--home) {
+        --launcher-col-w: 68px;
+        --launcher-gap-x: var(--space-1);
+        --launcher-icon: 42px;
+        --launcher-pad-t: 0px;
+        --launcher-pad-b: 0px;
+    }
+    .launcher-grid--quick {
+        --launcher-justify: center;
+    }
+    /* Portal previews do not inherit the Home grid's icon alignment. */
+    .launcher-overlay.launcher-overlay--home .webapp-icon {
+        justify-content: center;
+    }
+    :is(.pinned-area .launcher-grid--home, .launcher-grid--quick, .launcher-overlay.launcher-overlay--home).launcher-grid--compact {
+        --launcher-icon: 40px;
+    }
+    :is(.pinned-area .launcher-grid--home, .launcher-grid--quick, .launcher-overlay.launcher-overlay--home).launcher-grid--large {
+        --launcher-icon: 44px;
     }
 }
