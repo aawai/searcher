@@ -437,7 +437,16 @@ async function dragMouse(
 }
 
 async function moveWindowToInset(fixture: Fixture): Promise<void> {
-    const canvas = await box(fixture.page.locator(".desktop-canvas"));
+    const chromeBottom = await fixture.page.evaluate(() =>
+        Math.max(
+            0,
+            ...Array.from(
+                document.querySelectorAll(".topbar, .connection-banner"),
+            )
+                .filter((element) => element.getClientRects().length > 0)
+                .map((element) => element.getBoundingClientRect().bottom),
+        )
+    );
     const frame = await box(fixture.root);
     const title = await box(
         fixture.root.locator(".desktop-window-chrome-title"),
@@ -447,8 +456,8 @@ async function moveWindowToInset(fixture: Fixture): Promise<void> {
         y: title.y + title.height / 2,
     };
     await dragMouse(fixture.page, from, {
-        x: from.x + canvas.x + 48 - frame.x,
-        y: from.y + canvas.y + 48 - frame.y,
+        x: from.x + 48 - frame.x,
+        y: from.y + chromeBottom + 48 - frame.y,
     });
     await fixture.page.mouse.up();
     await fixture.page.waitForFunction(({ x, y }) => {
@@ -460,7 +469,7 @@ async function moveWindowToInset(fixture: Fixture): Promise<void> {
         }
         const rect = root.getBoundingClientRect();
         return Math.abs(rect.x - x) <= 1 && Math.abs(rect.y - y) <= 1;
-    }, { x: canvas.x + 48, y: canvas.y + 48 });
+    }, { x: 48, y: chromeBottom + 48 });
 }
 
 async function resizeWindow(

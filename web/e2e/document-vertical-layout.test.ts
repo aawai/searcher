@@ -1071,7 +1071,8 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     await stableLayout(page);
     assertEquals(await win.locator(".ProseMirror table tr").count(), 3);
     const tallCell = win.locator(".ProseMirror td").filter({
-        hasText: "Tall cell keeps its canonical editable text across physical pages.",
+        hasText:
+            "Tall cell keeps its canonical editable text across physical pages.",
     });
     const renderedTallText = await tallCell.textContent() ?? "";
     assertEquals(

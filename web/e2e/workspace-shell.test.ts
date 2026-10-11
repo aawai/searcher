@@ -766,7 +766,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("aria-label") ===
                     "打开 Edited Alpha"
-            );
+            ).catch(async (cause) => {
+                throw new Error(
+                    `Context menu Escape focus: ${await page.evaluate(() =>
+                        document.activeElement?.outerHTML
+                    )}`,
+                    { cause },
+                );
+            });
             assertEquals(await panel.isVisible(), true);
             await panel.locator(".workspace-footer .workspace-primary").focus();
             await page.keyboard.press("Enter");
@@ -1823,6 +1830,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     !el?.hasAttribute("data-window-snap");
             });
 
+            await dragTitleTo(720, workBox.y + 150);
+            await page.waitForFunction((dockTop) => {
+                const element = document.querySelector(
+                    '[data-window-id="apps"]',
+                );
+                return !!element &&
+                    element.getBoundingClientRect().bottom < dockTop;
+            }, measuredBounds.dockTop);
             // 5. 8-way resize handle active in normal mode
             const seHandle = appsWin.locator(
                 ".desktop-window-resize-handle--se",
@@ -1852,14 +1867,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 },
                 boxBeforeResize.width,
             );
-            await dragTitleTo(720, workBox.y + 150);
-            await page.waitForFunction((dockTop) => {
-                const element = document.querySelector(
-                    '[data-window-id="apps"]',
-                );
-                return !!element &&
-                    element.getBoundingClientRect().bottom < dockTop;
-            }, measuredBounds.dockTop);
             for (
                 const direction of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
             ) {
