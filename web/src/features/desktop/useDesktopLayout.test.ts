@@ -124,6 +124,63 @@ Deno.test("useDesktopLayout: windows opened before empty restoration stay visibl
         harness.unmount();
     }
 });
+
+Deno.test("useDesktopLayout: automatic geometry and host changes never overwrite a rejected payload", async () => {
+    setupMockIndexedDB();
+    const userId = "rejected-layout";
+    const key = desktopLayoutStorageKey(userId);
+    const rejected = { version: 999, windows: [] };
+    await setLocal(key, rejected);
+    const options: UseDesktopLayoutOptions = {
+        userId,
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notes: [],
+        notesLoaded: true,
+    };
+    const harness = renderHook(options);
+    try {
+        act(() => harness.result[1]({ type: "CLAMP", rect: sampleRect }));
+        await act(async () => {
+            await waitTick(30);
+        });
+        assertEquals(await getLocal(key), rejected);
+        harness.rerender({ ...options, layoutStyle: "zen" });
+        await act(async () => {
+            await waitTick(30);
+        });
+        assertEquals(await getLocal(key), rejected);
+        harness.rerender(options);
+        await act(async () => {
+            await waitTick(30);
+        });
+        act(() =>
+            harness.result[1]({
+                type: "OPEN",
+                id: "apps",
+                kind: "apps",
+                rect: sampleRect,
+            })
+        );
+        await act(async () => {
+            await waitTick(30);
+        });
+        const reloaded = renderHook(options);
+        try {
+            await act(async () => {
+                await waitTick(30);
+            });
+            assertEquals(
+                reloaded.result[0].windows.map((window) => window.id),
+                ["apps"],
+            );
+        } finally {
+            reloaded.unmount();
+        }
+    } finally {
+        harness.unmount();
+    }
+});
 Deno.test("useDesktopLayout: guest / logged-out user starts with empty state and does not load from storage", () => {
     setupMockIndexedDB();
 

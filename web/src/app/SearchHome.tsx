@@ -779,7 +779,10 @@ export function SearchHome() {
     function openNote(noteId: string) {
         const constrained = typeof globalThis.window !== "undefined" &&
             isConstrainedViewport(globalThis.innerWidth);
-        if (appearance.style === "zen" || mobile || constrained) {
+        if (
+            appearance.style === "zen" || mobile || constrained ||
+            !geometry.usable
+        ) {
             navigateWorkspace({ view: "notes/edit", id: noteId });
             if (appearance.style === "widgets" && !mobile) {
                 openWorkspace("notes");

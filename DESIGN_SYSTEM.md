@@ -373,6 +373,9 @@ AlertDialog）具有严格不同的交互与视觉语义：
   几何不可用时停止手势与状态写入；已打开窗口仅使用 viewport 内的受限
   presentation，保留可命中的标题栏关闭入口和内容自身滚动，不覆写原 frame/mode。
   真实视口恢复可用后按原 semantic 恢复，而不是持久化受限尺寸。
+  初始视口不可用且没有合法 window 时，复用 WorkspaceShell/WorkspaceSurface，
+  上下沿由正常 Chrome/Dock 实测值限定，正文独立滚动；打开/关闭仅操作 domain
+  route，不写非法 frame。恢复可用视口后才创建普通窗口。
 - window 使用 `--window-surface/border`、`--shadow-window`、`--radius-window`、
   `--window-elevation`、`--window-chrome-height` 与
   `--window-resize-hit`；不叠加 blur。

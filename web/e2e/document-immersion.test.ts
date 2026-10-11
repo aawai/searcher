@@ -737,6 +737,34 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
     cleanup.defer(() => restrictedContext.close());
     const restrictedPage = await restrictedContext.newPage();
     await restrictedPage.goto(app.origin + "/");
+    const restrictedDocument = await restrictedPage.evaluate(async () => {
+        const note = await fetch("/api/notes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: "Initial restricted note",
+                body: "Note editor remains reachable.",
+            }),
+        });
+        if (!note.ok) throw new Error(await note.text());
+        const document = await fetch("/api/documents", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: "Initial restricted document",
+                body: Array.from(
+                    { length: 80 },
+                    (_, index) =>
+                        `Paragraph ${
+                            index + 1
+                        }. Scroll the initial restricted document without creating an illegal window.`,
+                ).join("\n\n"),
+            }),
+        });
+        if (!document.ok) throw new Error(await document.text());
+        return (await document.json()).data as DocumentDto;
+    });
+    await restrictedPage.reload();
     await restrictedPage.locator('.desktop-dock button[data-workspace="apps"]')
         .click();
     const restrictedSurface = restrictedPage.locator(
@@ -744,6 +772,41 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
     );
     await restrictedSurface.waitFor();
     assertEquals(await restrictedPage.locator("[data-window-id]").count(), 0);
+    await restrictedSurface.getByRole("button", {
+        name: "收起工作区",
+        exact: true,
+    }).click();
+    await restrictedSurface.waitFor({ state: "detached" });
+    await restrictedPage.locator('.desktop-dock button[data-workspace="notes"]')
+        .click();
+    await restrictedSurface.locator(".note-title", {
+        hasText: "Initial restricted note",
+    }).click();
+    await restrictedSurface.locator(".note-editor").waitFor();
+    assertEquals(await restrictedPage.locator("[data-window-id]").count(), 0);
+    await restrictedSurface.getByRole("button", {
+        name: "收起工作区",
+        exact: true,
+    }).click();
+    await restrictedSurface.waitFor({ state: "detached" });
+    await restrictedPage.locator(
+        '.desktop-dock button[data-workspace="documents"]',
+    ).click();
+    await restrictedSurface.locator(
+        `[data-document-id="${restrictedDocument.id}"] h4 button`,
+    ).click();
+    await restrictedSurface.locator(".ProseMirror").waitFor();
+    await stableLayout(restrictedPage);
+    assertEquals(await restrictedPage.locator("[data-window-id]").count(), 0);
+    const initialScrollArea = restrictedSurface.locator(
+        ".document-editor-scroll-area",
+    );
+    await initialScrollArea.hover();
+    await restrictedPage.mouse.wheel(0, 500);
+    await restrictedPage.waitForFunction(() =>
+        (document.querySelector(".workspace-panel .document-editor-scroll-area")
+            ?.scrollTop ?? 0) > 0
+    );
     await restrictedSurface.getByRole("button", {
         name: "收起工作区",
         exact: true,

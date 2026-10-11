@@ -78,6 +78,7 @@ export function useDesktopLayout(
         const geometry = "rect" in action ? action.rect : rectRef.current;
         if (
             action.type !== "HYDRATE" && action.type !== "RESET" &&
+            action.type !== "CLAMP" && action.type !== "NORMALIZE" &&
             action.type !== "PRUNE_STALE_NOTES" &&
             hasStableGeometry(geometry)
         ) {
@@ -119,6 +120,7 @@ export function useDesktopLayout(
         const previousUser = lastSavedUserIdRef.current;
         if (
             previousUser && restoredKeyRef.current === previousUser &&
+            writeEnabledKeyRef.current === previousUser &&
             hasStableGeometry(rectRef.current)
         ) {
             void saveDesktopLayout(

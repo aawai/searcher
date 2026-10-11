@@ -240,15 +240,20 @@ export function isDomainValueException(
     const norm = value.trim();
     const p = normalizePath(file);
 
-    // Desktop frames are computed in the sole Canvas safe-rect coordinate system.
+    // Canvas owns viewport V; Window frames are viewport-global, including immersion.
     if (p === "web/src/features/desktop/DesktopCanvas.tsx") {
-        return /^(left|top|width|height)$/.test(prop) &&
-            /^rect\.(x|y|width|height)$/.test(norm);
+        return ((prop === "left" || prop === "top") && norm === "0") ||
+            ((prop === "width" || prop === "height") &&
+                norm === `rect.viewportRect.${prop}`);
     }
     if (p === "web/src/features/desktop/DesktopWindow.tsx") {
+        const compact = norm.replaceAll(/\s+/g, "");
         return (prop === "zIndex" && norm === "win.zOrder") ||
-            (/^(width|height|transform)$/.test(prop) &&
-                norm.includes("win.frame."));
+            ((prop === "width" || prop === "height") &&
+                compact ===
+                    `\`\${immersive?rect.viewportRect.${prop}:frame.${prop}}px\``) ||
+            (prop === "transform" && compact ===
+                    'immersive?"translate3d(0,0,0)":`translate3d(${frame.x}px,${frame.y}px,0)`');
     }
     if (p === "web/src/features/desktop/WindowChrome.tsx") {
         return /^(width|height|transform)$/.test(prop) &&
@@ -341,6 +346,13 @@ export function isDesignSystemAllowed(
     value: string,
 ): boolean {
     const normFile = normalizePath(file);
+    // Physical paper margins are document settings, not application visual spacing.
+    if (normFile === "web/src/features/documents/document-pagination.css") {
+        return prop === "padding" && value.replaceAll(/\s+/g, " ").trim() ===
+                    "var(--page-margin-top) var(--page-margin-right) var(--page-margin-bottom) var(--page-margin-left)" ||
+            ((prop === "margin" || prop === "padding") &&
+                value.trim() === "0 !important");
+    }
 
     if (normFile.endsWith("web/src/design-system/tokens.css")) {
         return prop.startsWith("--") || prop === "color-scheme";
