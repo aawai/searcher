@@ -2138,3 +2138,10 @@
   可见并从该 input 发键盘事件，保留 AlertDialog 与草稿不丢断言。该完整模块 1
   test / 6 steps、fmt/lint 各 1 file 通过； 产品实现与已通过
   Documents/geometry/unit/bundle 结果未改变。
+- 第二轮 CI 的 Sheet 草稿 Escape 场景通过；Workspace 22 tests / 133 steps
+  通过、1 step 失败于撤销期限 fixture：从运行中的 Date.now() 取样再跨进程
+  pauseAt，该目标在慢 runner 上已经成为过去。现从固定初值安装时钟，并在
+  删除操作前暂停；保留跨 Host 同一 live region、3000+300+300+1500ms
+  原始期限与到期消失断言，不重发失败场景或延长产品期限。
+  受控时钟下在删除前推进菜单调度，不使用真实 sleep；修正后完整模块 1 test / 6
+  steps 通过，撤销到期语义不变。

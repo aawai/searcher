@@ -468,17 +468,19 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
         await t.step(
             "moving undo between modal and global hosts preserves its deadline",
             async () => {
-                await page.clock.install();
+                const clockStart = new Date("2030-01-01T00:00:00Z");
+                await page.clock.install({ time: clockStart });
+                await page.clock.pauseAt(
+                    new Date(clockStart.getTime() + 1000),
+                );
                 await root.locator(".apps-search-row").getByRole("button", {
                     name: /的更多操作/,
                 }).click();
+                await page.clock.runFor(300);
                 await page.getByRole("menuitem", { name: "删除", exact: true })
                     .click();
                 const toast = page.locator(".undo-toast");
                 await toast.waitFor();
-                await page.clock.pauseAt(
-                    new Date(await page.evaluate(() => Date.now())),
-                );
                 const liveRegion = await toast.elementHandle();
                 await page.clock.fastForward(3000);
                 await page.getByRole("button", {
