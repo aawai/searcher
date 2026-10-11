@@ -392,6 +392,62 @@ Deno.test("Rule F: css-prefix-ownership - denies feature prefixes defined in una
     assertEquals(violations[3].snippet, ".ask-composer-container");
 });
 
+Deno.test("Rule F: Home code presentation may reference the Widgets ancestor only", () => {
+    const owner = "web/src/components/searcher/notes.css";
+    const scope =
+        ":is(.floating-notes--canvas, .controlled-notes-board) .note-preview.markdown pre";
+    for (
+        const state of [
+            "",
+            " code",
+            ":hover",
+            ":focus-visible",
+            "::-webkit-scrollbar",
+            "::-webkit-scrollbar-track",
+            "::-webkit-scrollbar-thumb",
+            ":hover::-webkit-scrollbar-thumb",
+            ":focus-visible::-webkit-scrollbar-thumb",
+            "::-webkit-scrollbar-thumb:active",
+        ]
+    ) {
+        assertEquals(
+            checkRuleF_CssPrefixOwnership(
+                owner,
+                `${scope}${state} { color: red; }`,
+            ),
+            [],
+        );
+        assertEquals(
+            checkRuleF_CssPrefixOwnership(
+                "web/src/components/searcher/markdown.css",
+                `${scope}${state} { color: red; }`,
+            ).map((violation) => violation.snippet),
+            [".controlled-notes-board"],
+        );
+    }
+    for (
+        const selector of [
+            ".controlled-notes-board",
+            ".controlled-notes-other",
+            ".controlled-notes-board .note-card",
+            scope.replace(" pre", " p"),
+            `${scope} .controlled-notes-board`,
+            `${scope}, .controlled-notes-board`,
+            `${scope}:not(.controlled-notes-board)`,
+        ]
+    ) {
+        assertEquals(
+            checkRuleF_CssPrefixOwnership(owner, `${selector} { color: red; }`)
+                .some(
+                    (violation) =>
+                        violation.snippet.startsWith(".controlled-notes-"),
+                ),
+            true,
+            selector,
+        );
+    }
+});
+
 Deno.test("Rule F: css-prefix-ownership - allows non-prefixed semantic classes in semantic.css", () => {
     const semanticCss = `
 .semantic-section { margin-bottom: 24px; }
