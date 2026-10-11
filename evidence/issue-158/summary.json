@@ -1,0 +1,147 @@
+{
+  "issue": 158,
+  "baseline": "068b104bca58ba5ea6410b7862a926e29844f6fa",
+  "redCommit": "b7965ca",
+  "browser": "Playwright Chromium headless, ignoreDefaultArgs --hide-scrollbars; classic scrollbars",
+  "viewport": {
+    "width": 1024,
+    "height": 1552
+  },
+  "fixture": "# Short\n\nOne static paragraph.",
+  "rootCause": "Scrollbar visibility changes available width, paper zoom changes stack height, overflowing height flips scrollbar visibility.",
+  "fix": "Page-only scrollbar-gutter: stable on existing document-editor-scroll-area scroll owner",
+  "before": {
+    "frames": 121,
+    "reflows": 120,
+    "widths": [
+      851,
+      866
+    ],
+    "zoom": [
+      "1",
+      "0.991558"
+    ],
+    "paper": {
+      "x": {
+        "min": 157,
+        "max": 161.15625
+      },
+      "y": {
+        "min": 386,
+        "max": 386
+      },
+      "width": {
+        "min": 787,
+        "max": 793.6875
+      },
+      "height": {
+        "min": 1113.03125,
+        "max": 1122.515625
+      }
+    },
+    "scrollTop": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "after": {
+    "frames": 121,
+    "reflows": 0,
+    "widths": [
+      851
+    ],
+    "zoom": [
+      "0.991558"
+    ],
+    "paper": {
+      "x": {
+        "min": 157,
+        "max": 157
+      },
+      "y": {
+        "min": 386,
+        "max": 386
+      },
+      "width": {
+        "min": 787,
+        "max": 787
+      },
+      "height": {
+        "min": 1113.03125,
+        "max": 1113.03125
+      }
+    },
+    "scrollTop": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "surfaceNineSeconds": {
+    "frames": 542,
+    "reflows": 0
+  },
+  "closeReopen": [
+    {
+      "cycle": 0,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 1,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 2,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 3,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 4,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 5,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 6,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 7,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 8,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    },
+    {
+      "cycle": 9,
+      "documents": 1,
+      "nodes": 112,
+      "jsEventListeners": 173
+    }
+  ],
+  "video": "Synthetic fixture with test-only baseline scrollbar-gutter:auto override for first three seconds, then final CSS for five seconds. Independent Red commit proves pre-fix code failure.",
+  "privacy": "No user recording, extracted private frames, or real user content included."
+}
