@@ -46,6 +46,7 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
     const browser = await chromium.launch({
         headless: true,
         args: ["--no-sandbox"],
+        ignoreDefaultArgs: ["--hide-scrollbars"],
     });
     cleanup.defer(() => browser.close());
 
@@ -1066,6 +1067,247 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
             // Restore baseline
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.emulateMedia({ colorScheme: "light" });
+        },
+    );
+
+    await t.step(
+        "Home #155: code scrolling stays inside Zen and Widgets notes",
+        async () => {
+            await clearAllNotes();
+            const command = "ssh -L 51121:127.0.0.1:51121 " +
+                "user@long-host.example ".repeat(18) + "END";
+            await createNote({
+                title: "Long SSH command",
+                body:
+                    `Inline \`ssh\` stays inline.\n\n\`\`\`sh\n${command}\n\`\`\``,
+                isHomeFixed: true,
+                sortOrder: 0,
+                layout: { expanded: true },
+            });
+            await createNote({
+                title: "Short multiline code",
+                body: "```sh\nprintf short\nprintf second\n```",
+                isHomeFixed: true,
+                sortOrder: 1,
+                layout: { expanded: true },
+            });
+            for (const width of [390, 768, 1440]) {
+                await page.setViewportSize({
+                    width,
+                    height: width === 390 ? 844 : width === 768 ? 1024 : 900,
+                });
+                for (const theme of ["light", "dark"]) {
+                    const presentations = [];
+                    for (const style of ["zen", "widgets"]) {
+                        await page.evaluate(async (preferences) => {
+                            const response = await fetch("/api/preferences", {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(preferences),
+                            });
+                            if (!response.ok) {
+                                throw new Error(await response.text());
+                            }
+                        }, { style, theme });
+                        await visit("/");
+                        const long = page.locator(".note-card", {
+                            has: page.getByRole("button", {
+                                name: "Long SSH command",
+                                exact: true,
+                            }),
+                        }).locator("pre");
+                        const short = page.locator(".note-card", {
+                            has: page.getByRole("button", {
+                                name: "Short multiline code",
+                                exact: true,
+                            }),
+                        }).locator("pre");
+                        await long.waitFor({ state: "visible" });
+                        await short.waitFor({ state: "visible" });
+                        await page.evaluate(async () => {
+                            await document.fonts.ready;
+                            await Promise.all(
+                                document.getAnimations().filter((animation) =>
+                                    animation.effect?.getComputedTiming()
+                                        .iterations !== Infinity
+                                ).map((animation) =>
+                                    animation.finished.catch(() => {})
+                                ),
+                            );
+                        });
+                        await page.mouse.move(0, 0);
+                        const presentation = await long.evaluate((pre) => {
+                            const css = getComputedStyle(pre);
+                            const code = getComputedStyle(
+                                pre.querySelector("code")!,
+                            );
+                            return {
+                                scoped: pre.closest(
+                                    ".floating-notes--canvas, .controlled-notes-board",
+                                ) !== null,
+                                scrollbarWidth:
+                                    CSS.supports("scrollbar-width", "thin")
+                                        ? css.scrollbarWidth
+                                        : null,
+                                scrollbarColor: CSS.supports(
+                                        "scrollbar-color",
+                                        "transparent transparent",
+                                    )
+                                    ? css.scrollbarColor
+                                    : null,
+                                radius: css.borderRadius,
+                                display: code.display,
+                                padding: code.padding,
+                                background: code.backgroundColor,
+                            };
+                        });
+                        presentations.push(presentation);
+                        if (presentation.scoped) {
+                            assertEquals(
+                                presentation.display,
+                                "block",
+                            );
+                        }
+                        assertEquals(await long.textContent(), command + "\n");
+                        const scrolling = await long.evaluate((element) => {
+                            const pre = element as HTMLElement;
+                            const outer = pre.closest(".note-preview")!;
+                            const card = pre.closest(".note-card")!;
+                            const before = {
+                                outer: outer.scrollLeft,
+                                card: card.scrollLeft,
+                                page: scrollX,
+                            };
+                            pre.scrollLeft = pre.scrollWidth;
+                            const css = getComputedStyle(pre);
+                            const code = pre.querySelector("code")!
+                                .getBoundingClientRect();
+                            const bounds = pre.getBoundingClientRect();
+                            return {
+                                overflow: pre.scrollWidth > pre.clientWidth + 1,
+                                scrollLeft: pre.scrollLeft,
+                                endReachable: code.right <= bounds.right + 1,
+                                whiteSpace: css.whiteSpace,
+                                before,
+                                after: {
+                                    outer: outer.scrollLeft,
+                                    card: card.scrollLeft,
+                                    page: scrollX,
+                                },
+                                pageOverflow:
+                                    document.documentElement.scrollWidth >
+                                        document.documentElement.clientWidth +
+                                            1,
+                            };
+                        });
+                        assertEquals(scrolling.overflow, true);
+                        assertEquals(scrolling.scrollLeft > 0, true);
+                        assertEquals(scrolling.endReachable, true);
+                        assertEquals(scrolling.before, scrolling.after);
+                        assertEquals(scrolling.pageOverflow, false);
+                        assertEquals(
+                            await short.evaluate((pre) =>
+                                pre.scrollWidth <= pre.clientWidth + 1
+                            ),
+                            true,
+                        );
+                        assertEquals(
+                            await page.locator(".note-preview p code").evaluate(
+                                (code) => getComputedStyle(code).display,
+                            ),
+                            "inline",
+                        );
+                        await long.evaluate((pre) => {
+                            pre.scrollLeft = 0;
+                        });
+                        await long.focus();
+                        await page.keyboard.press("Tab");
+                        await page.keyboard.press("Shift+Tab");
+                        assertEquals(
+                            await long.evaluate((pre) =>
+                                document.activeElement === pre
+                            ),
+                            true,
+                        );
+                        await page.keyboard.press("ArrowRight");
+                        await page.waitForFunction(() =>
+                            (document.activeElement as HTMLElement)
+                                ?.scrollLeft > 0
+                        );
+                        if (width === 1440 && theme === "light") {
+                            await long.hover();
+                            const scrollbar = await long.evaluate(
+                                async (pre) => {
+                                    await Promise.all(
+                                        pre.closest(".note-card")!
+                                            .getAnimations().map((animation) =>
+                                                animation.finished
+                                            ),
+                                    );
+                                    pre.scrollLeft = 0;
+                                    const rect = pre.getBoundingClientRect();
+                                    const card = pre.closest(".note-card")!
+                                        .getBoundingClientRect();
+                                    return {
+                                        x: rect.x,
+                                        y: rect.bottom -
+                                            (rect.height - pre.clientHeight) /
+                                                2,
+                                        width: pre.clientWidth,
+                                        card: { x: card.x, y: card.y },
+                                    };
+                                },
+                            );
+                            await page.mouse.move(
+                                scrollbar.x + 25,
+                                scrollbar.y,
+                            );
+                            await page.mouse.down();
+                            await page.mouse.move(
+                                scrollbar.x + scrollbar.width * 0.7,
+                                scrollbar.y,
+                                { steps: 15 },
+                            );
+                            await page.screenshot({
+                                path:
+                                    `${durableScreenshotDir}/code-${style}-active.png`,
+                            });
+                            await page.mouse.up();
+                            await page.waitForFunction(
+                                (pre) => pre!.scrollLeft > 100,
+                                await long.elementHandle(),
+                                { timeout: 3000 },
+                            );
+                            const after = await long.evaluate((pre) => {
+                                const card = pre.closest(".note-card")!
+                                    .getBoundingClientRect();
+                                return {
+                                    card: { x: card.x, y: card.y },
+                                    outer: pre.closest(".note-preview")!
+                                        .scrollLeft,
+                                };
+                            });
+                            assertEquals(after.card, scrollbar.card);
+                            assertEquals(after.outer, 0);
+                        }
+                        await page.screenshot({
+                            path:
+                                `${durableScreenshotDir}/code-${style}-${width}-${theme}.png`,
+                        });
+                    }
+                    if (
+                        presentations.every((presentation) =>
+                            presentation.scoped
+                        )
+                    ) {
+                        assertEquals(
+                            presentations[0],
+                            presentations[1],
+                            `Shared code presentation at ${width}px ${theme}`,
+                        );
+                    }
+                }
+            }
         },
     );
 });

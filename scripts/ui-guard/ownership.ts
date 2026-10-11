@@ -749,6 +749,18 @@ export function checkRuleF_CssPrefixOwnership(
         for (const match of classMatches) {
             const className = match[1];
 
+            // notes.css owns Home pre presentation, not Widgets board geometry.
+            // Permit only the ancestor reference in the shared code selector.
+            if (
+                normPath.endsWith("web/src/components/searcher/notes.css") &&
+                className === "controlled-notes-board" &&
+                match.index === line.indexOf(".controlled-notes-board") &&
+                /^:is\(\.floating-notes--canvas,\s*\.controlled-notes-board\)\s+\.note-preview\.markdown\s+pre(?: code|:(?:hover|focus-visible)(?:::-webkit-scrollbar-thumb)?|::-webkit-scrollbar(?:-track|-thumb(?::active)?)?)?,?$/
+                    .test(line.split("{", 1)[0].trim())
+            ) {
+                continue;
+            }
+
             // 1. Check exact canonical semantic class owners (takes priority over prefix map)
             const canonicalOwners = CANONICAL_SEMANTIC_CLASS_OWNERS[className];
             if (canonicalOwners) {
