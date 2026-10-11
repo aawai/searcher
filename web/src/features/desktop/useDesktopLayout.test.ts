@@ -78,7 +78,7 @@ function renderHook(initialProps: UseDesktopLayoutOptions) {
     };
 }
 
-Deno.test("useDesktopLayout: windows opened while notes load remain visible after restoration", async () => {
+Deno.test("useDesktopLayout: windows opened before empty restoration stay visible and persist across reload", async () => {
     setupMockIndexedDB();
     const options: UseDesktopLayoutOptions = {
         userId: "loading-user",
@@ -104,6 +104,22 @@ Deno.test("useDesktopLayout: windows opened while notes load remain visible afte
             "notes",
         ]);
         assertEquals(harness.result[0].activeId, "notes");
+        const reloaded = renderHook({
+            ...options,
+            notesLoaded: true,
+            notes: [],
+        });
+        try {
+            await act(async () => {
+                await waitTick(30);
+            });
+            assertEquals(
+                reloaded.result[0].windows.map((window) => window.id),
+                ["notes"],
+            );
+        } finally {
+            reloaded.unmount();
+        }
     } finally {
         harness.unmount();
     }

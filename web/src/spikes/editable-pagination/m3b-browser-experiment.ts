@@ -817,13 +817,13 @@ try {
     const specialResults: Record<string, unknown> = {};
     for (const [name, markdown] of Object.entries(FLOAT_FAILURE_FIXTURES)) {
         const source = typeof markdown === "function"
-            ? await page.evaluate(async () => {
-                // Browser-only canvas fixture must load in the page, not the Deno runner.
+            ? await page.evaluate(async (fixtureName) => {
+                // Canvas creation must run in Chromium; a runner-side static import cannot provide its document.
                 const fixturePath =
-                    "/src/spikes/editable-pagination/fixtures.ts";
+                    "/src/spikes/editable-pagination/issue147-fixtures.ts";
                 const fixtures = await import(fixturePath);
-                return fixtures.createOversizedFixtureMarkdown() as string;
-            })
+                return fixtures.FLOAT_FAILURE_FIXTURES[fixtureName]() as string;
+            }, name)
             : markdown;
         const snapshot = await mount(source);
         await page.locator(`${editorSelector} img[src]`).evaluateAll(async (
@@ -833,11 +833,19 @@ try {
         ));
         await settle();
         const details = await geometry();
+        const physicalIntegrity = await integrity();
+        if (candidate === "decorations") {
+            assertEquals(
+                physicalIntegrity.bad,
+                [],
+                `${name}: physical printable boundaries`,
+            );
+        }
         specialResults[name] = {
             snapshot,
             geometry: details,
             sourceLength: source.length,
-            integrity: await integrity(),
+            integrity: physicalIntegrity,
             renderedTextLength: await page.evaluate(() => {
                 const root = (globalThis as typeof globalThis & {
                     __issue147Repro: DecorationFlowRepro;

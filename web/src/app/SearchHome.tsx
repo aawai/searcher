@@ -253,7 +253,7 @@ export function SearchHome() {
                 action: action as DomainWorkspaceAction<DocumentsRoute>,
             });
         }
-        if (appearance.style === "widgets") {
+        if (appearance.style === "widgets" && geometry.usable) {
             if (action.type !== "query") {
                 dispatchDesktop({
                     type: "OPEN",
@@ -295,7 +295,10 @@ export function SearchHome() {
         } else requestWorkspace("documents", { type: "navigate", route });
     }
     function openDocument(id: string) {
-        if (appearance.style === "widgets" && globalThis.innerWidth >= 1024) {
+        if (
+            appearance.style === "widgets" && globalThis.innerWidth >= 1024 &&
+            geometry.usable
+        ) {
             dispatchDesktop({
                 type: "OPEN",
                 id: `document:${id}`,
@@ -358,7 +361,7 @@ export function SearchHome() {
         );
         if (!isOpen) {
             dispatchHost({ type: "open", kind });
-            if (appearance.style === "widgets") {
+            if (appearance.style === "widgets" && geometry.usable) {
                 dispatchDesktop({
                     type: "OPEN",
                     id: kind,
@@ -368,7 +371,7 @@ export function SearchHome() {
             }
         } else {
             dispatchHost({ type: "activate", kind });
-            if (appearance.style === "widgets") {
+            if (appearance.style === "widgets" && geometry.usable) {
                 dispatchDesktop({
                     type: "OPEN",
                     id: kind,
@@ -1010,6 +1013,34 @@ export function SearchHome() {
     };
     const currentWorkspace = host.activeKind ?? "apps";
     const currentRoute = host.models[currentWorkspace].route;
+    const constrainedDesktop = layoutStyle === "widgets" &&
+        globalThis.innerWidth >= 1024 && !geometry.usable;
+    const missingActiveWindow = Boolean(
+        host.activeKind &&
+            !desktop.windows.some((window) => window.id === host.activeKind),
+    );
+    const restrictedWorkspace = constrainedDesktop && missingActiveWindow;
+    const pendingRestrictedWorkspace = useRef<WorkspaceKind | null>(null);
+    useEffect(() => {
+        if (restrictedWorkspace) {
+            pendingRestrictedWorkspace.current = host.activeKind;
+            return;
+        }
+        const kind = pendingRestrictedWorkspace.current;
+        if (!host.activeKind || layoutStyle !== "widgets") {
+            pendingRestrictedWorkspace.current = null;
+            return;
+        }
+        if (!kind || !geometry.usable) return;
+        pendingRestrictedWorkspace.current = null;
+        dispatchDesktop({ type: "OPEN", id: kind, kind, rect: geometry });
+    }, [
+        restrictedWorkspace,
+        host.activeKind,
+        layoutStyle,
+        geometry,
+        dispatchDesktop,
+    ]);
     const isApps = currentWorkspace === "apps";
     const title = currentRoute.view === "apps/create"
         ? "添加应用"
@@ -1147,13 +1178,16 @@ export function SearchHome() {
     useAppsEscape({
         enabled: Boolean(
             user &&
-                (appearance.style === "widgets" && !mobile
+                (appearance.style === "widgets" && !mobile &&
+                        !restrictedWorkspace
                     ? appWindow && appWindow.mode !== "minimized" &&
                         (desktop.activeId ??
                                 getTopmostVisibleWindowId(desktop.windows)) ===
                             "apps"
                     : host.activeKind === "apps"),
         ),
+        isForeground: () =>
+            !document.documentElement.hasAttribute("data-document-immersive"),
         hasDialog: () =>
             Boolean(pendingAction || appSession.current?.hasDialog),
         onDialogEscape: () => {
@@ -1188,85 +1222,91 @@ export function SearchHome() {
                 {layoutStyle === "widgets"
                     ? <WidgetsLayout {...layoutProps} />
                     : <ZenLayout {...layoutProps} />}
-                {user && (layoutStyle === "widgets" && !mobile
-                    ? (
-                        <DesktopWorkspaces
-                            state={desktop}
-                            rect={geometry}
-                            dispatch={dispatchDesktop}
-                            models={host.models}
-                            renderContent={(kind) =>
-                                renderWorkspaceContent(kind, "masonry")}
-                            onOpen={openWorkspace}
-                            onClose={closeWorkspace}
-                            onBack={backWorkspace}
-                            onFinishArrange={() => setAppsArranging(false)}
-                            onCreate={createWorkspaceItem}
-                            onDockElement={setDockElement}
-                            appsArranging={appsArranging}
-                            notes={notes}
-                            onSaveNote={(saved) => {
-                                setNotes((items) =>
-                                    items.map((item) =>
-                                        item.id === saved.id ? saved : item
-                                    )
-                                );
-                            }}
-                            userId={user.id}
-                            documents={documentPreviews}
-                            onOpenDocument={openDocument}
-                            onDocumentChanged={onDocumentChanged}
-                            onDocumentsChanged={onDocumentsChanged}
-                        />
-                    )
-                    : (
-                        <>
-                            {layoutStyle === "widgets" && (
-                                <WorkspaceNavigation
-                                    variant="mobile"
-                                    onSelect={openWorkspace}
-                                />
-                            )}
-                            <WorkspaceShell
-                                open={Boolean(host.activeKind)}
-                                state={currentRoute}
-                                title={title}
-                                style={layoutStyle}
-                                appsArranging={appsArranging}
-                                navigate={navigateWorkspace}
-                                onBack={() => backWorkspace()}
-                                onClose={() => closeWorkspace()}
-                                onEscape={() => escapeWorkspace()}
+                {user && (
+                    <>
+                        {layoutStyle === "widgets" && !mobile && (
+                            <DesktopWorkspaces
+                                state={desktop}
+                                rect={geometry}
+                                dispatch={dispatchDesktop}
+                                models={host.models}
+                                renderContent={(kind) =>
+                                    renderWorkspaceContent(kind, "masonry")}
+                                onOpen={openWorkspace}
+                                onClose={closeWorkspace}
+                                onBack={backWorkspace}
                                 onFinishArrange={() => setAppsArranging(false)}
-                                feedback={
-                                    <>
-                                        {error && (
-                                            <StatusBanner
-                                                tone="error"
-                                                density="compact"
-                                            >
-                                                {error}
-                                            </StatusBanner>
-                                        )}
-                                    </>
-                                }
-                                onFeedbackHost={setFeedbackHost}
-                                onCreate={host.activeKind &&
-                                        host.activeKind !== "documents"
-                                    ? () =>
-                                        createWorkspaceItem(
-                                            host.activeKind as "apps" | "notes",
+                                onCreate={createWorkspaceItem}
+                                onDockElement={setDockElement}
+                                appsArranging={appsArranging}
+                                notes={notes}
+                                onSaveNote={(saved) => {
+                                    setNotes((items) =>
+                                        items.map((item) =>
+                                            item.id === saved.id ? saved : item
                                         )
-                                    : undefined}
-                            >
-                                {host.activeKind &&
-                                    renderWorkspaceContent(
-                                        host.activeKind,
-                                        "single-column",
+                                    );
+                                }}
+                                userId={user.id}
+                                documents={documentPreviews}
+                                onOpenDocument={openDocument}
+                                onDocumentChanged={onDocumentChanged}
+                                onDocumentsChanged={onDocumentsChanged}
+                            />
+                        )}
+                        {layoutStyle === "widgets" && mobile && (
+                            <WorkspaceNavigation
+                                variant="mobile"
+                                onSelect={openWorkspace}
+                            />
+                        )}
+                        <WorkspaceShell
+                            open={Boolean(host.activeKind)}
+                            viewportInsets={restrictedWorkspace
+                                ? {
+                                    top: geometry.chromeBottom,
+                                    bottom: geometry.viewportRect.height -
+                                        geometry.dockTop,
+                                }
+                                : undefined}
+                            state={currentRoute}
+                            title={title}
+                            style={layoutStyle}
+                            appsArranging={appsArranging}
+                            navigate={navigateWorkspace}
+                            onBack={() => backWorkspace()}
+                            onClose={() => closeWorkspace()}
+                            onEscape={() => escapeWorkspace()}
+                            onFinishArrange={() => setAppsArranging(false)}
+                            feedback={
+                                <>
+                                    {error && (
+                                        <StatusBanner
+                                            tone="error"
+                                            density="compact"
+                                        >
+                                            {error}
+                                        </StatusBanner>
                                     )}
-                            </WorkspaceShell>
-                        </>
-                    ))}
+                                </>
+                            }
+                            onFeedbackHost={setFeedbackHost}
+                            onCreate={host.activeKind &&
+                                    host.activeKind !== "documents"
+                                ? () =>
+                                    createWorkspaceItem(
+                                        host.activeKind as "apps" | "notes",
+                                    )
+                                : undefined}
+                        >
+                            {host.activeKind &&
+                                renderWorkspaceContent(
+                                    host.activeKind,
+                                    "single-column",
+                                )}
+                        </WorkspaceShell>
+                    </>
+                )}
                 {undoFeedback}
                 <AlertDialog
                     open={Boolean(pendingAction)}

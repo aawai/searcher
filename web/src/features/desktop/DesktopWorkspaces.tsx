@@ -193,7 +193,11 @@ export function DesktopWorkspaces({
         globalThis.addEventListener("resize", handleResize);
         return () => globalThis.removeEventListener("resize", handleResize);
     }, []);
-    const immersion = useDocumentImmersion(state, userId, !isMobile && !isConstrained && rect.usable);
+    const immersion = useDocumentImmersion(
+        state,
+        userId,
+        !isMobile && !isConstrained && rect.usable,
+    );
     const immersiveId = immersion.immersiveDocumentId;
 
     // DesktopState.windows is the single source of truth for window visibility
@@ -347,7 +351,8 @@ export function DesktopWorkspaces({
         if (id === immersiveId) {
             requestAnimationFrame(() =>
                 document.getElementById(`desktop-window-${id}`)
-                    ?.querySelector<HTMLElement>(".ProseMirror, textarea")?.focus({ preventScroll: true })
+                    ?.querySelector<HTMLElement>(".ProseMirror, textarea")
+                    ?.focus({ preventScroll: true })
             );
             return;
         }
@@ -427,17 +432,23 @@ export function DesktopWorkspaces({
                                 key={`${userId}:${win.id}`}
                                 window={win}
                                 rect={rect}
-                                active={immersiveId ? immersiveId === win.id : state.activeId === win.id}
+                                active={immersiveId
+                                    ? immersiveId === win.id
+                                    : state.activeId === win.id}
                                 dispatch={dispatch}
                                 immersive={immersiveId === win.id}
-                                background={Boolean(immersiveId && immersiveId !== win.id)}
+                                background={Boolean(
+                                    immersiveId && immersiveId !== win.id,
+                                )}
                                 onEnterImmersive={() => immersion.enter(win.id)}
                                 onExitImmersive={() => immersion.exit()}
                                 userId={userId}
                                 title={previews.find((p) => p.id === win.id)
                                     ?.title ?? "笔记"}
                                 onOpenDocument={(id) => {
-                                    if (`document:${id}` !== immersiveId) immersion.exit(false);
+                                    if (
+                                        `document:${id}` !== immersiveId
+                                    ) immersion.exit(false);
                                     onOpenDocument(id);
                                 }}
                                 onDocumentChanged={onDocumentChanged}
@@ -583,9 +594,14 @@ export function DesktopWorkspaces({
                     onPointerEnter={immersion.onEdgeEnter}
                     onPointerLeave={immersion.onEdgeLeave}
                     onFocus={immersion.showDock}
+                    onBlur={immersion.onDockBlur}
                     onClick={() => {
                         immersion.showDock();
-                        requestAnimationFrame(() => dockNavRef.current?.querySelector<HTMLElement>("button")?.focus());
+                        requestAnimationFrame(() =>
+                            dockNavRef.current?.querySelector<HTMLElement>(
+                                "button",
+                            )?.focus()
+                        );
                     }}
                 >
                     显示 Dock

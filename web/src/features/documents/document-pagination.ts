@@ -419,11 +419,31 @@ export function createDocumentPagination(
 
         const appendTextLines = (element: HTMLElement): FlowEvent[] => {
             const lineEvents = new Map<number, FlowEvent>();
+            const inlineEvents: FlowEvent[] = [];
             const walker = document.createTreeWalker(
                 element,
-                window?.NodeFilter.SHOW_TEXT ?? 4,
+                (window?.NodeFilter.SHOW_TEXT ?? 4) |
+                    (window?.NodeFilter.SHOW_ELEMENT ?? 1),
             );
             while (walker.nextNode()) {
+                const inline = asHTMLElement(walker.currentNode);
+                if (inline) {
+                    const isImage = inline.tagName === "IMG" &&
+                        inline.hasAttribute("src");
+                    if (isImage || inline.tagName === "BR") {
+                        const rect = inline.getBoundingClientRect();
+                        measurements++;
+                        if (rect.height > 0) {
+                            inlineEvents.push({
+                                kind: isImage ? "image" : "line",
+                                pos: view.posAtDOM(inline, 0),
+                                top: rect.top,
+                                height: rect.height,
+                            });
+                        }
+                    }
+                    continue;
+                }
                 const textNode = walker.currentNode as Text;
                 const range = document.createRange();
                 range.selectNodeContents(textNode);
@@ -463,7 +483,7 @@ export function createDocumentPagination(
                     }
                 }
             }
-            return [...lineEvents.values()];
+            return [...lineEvents.values(), ...inlineEvents];
         };
 
         const collectTextBlock = (
@@ -474,22 +494,15 @@ export function createDocumentPagination(
             if (!element) return [];
             const rect = element.getBoundingClientRect();
             measurements++;
-            if (node.textContent.length === 0) {
-                return [{
-                    kind: "empty",
-                    pos,
-                    top: rect.top,
-                    height: rect.height,
-                }];
-            }
             if (
                 rect.height >
                     currentMetrics.contentHeight * pageScale + 0.5
             ) {
-                return appendTextLines(element);
+                const inlineFlow = appendTextLines(element);
+                if (inlineFlow.length > 0) return inlineFlow;
             }
             return [{
-                kind: "block",
+                kind: node.textContent.length === 0 ? "empty" : "block",
                 pos,
                 top: rect.top,
                 height: rect.height,
@@ -538,6 +551,28 @@ export function createDocumentPagination(
                                             cellPos + 1 + childOffset,
                                         ),
                                     );
+                                    return false;
+                                }
+                                if (child.isLeaf && child.isBlock) {
+                                    const leafPos = cellPos + 1 + childOffset;
+                                    const leaf = asHTMLElement(
+                                        view.nodeDOM(leafPos),
+                                    );
+                                    if (leaf) {
+                                        const bounds = leaf
+                                            .getBoundingClientRect();
+                                        measurements++;
+                                        cellEvents.push({
+                                            kind:
+                                                child.type.name === "pagebreak"
+                                                    ? "manual"
+                                                    : "block",
+                                            pos: leafPos,
+                                            top: bounds.top,
+                                            height: bounds.height,
+                                            nodeSize: child.nodeSize,
+                                        });
+                                    }
                                     return false;
                                 }
                                 return true;
@@ -597,6 +632,20 @@ export function createDocumentPagination(
                 const element = asHTMLElement(view.nodeDOM(pos));
                 if (!element || element.closest("table")) return false;
                 events.push(...collectTextBlock(node, pos));
+                return false;
+            }
+            if (node.isLeaf && node.isBlock) {
+                const element = asHTMLElement(view.nodeDOM(pos));
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    measurements++;
+                    events.push({
+                        kind: "block",
+                        pos,
+                        top: rect.top,
+                        height: rect.height,
+                    });
+                }
                 return false;
             }
 
@@ -723,7 +772,11 @@ export function createDocumentPagination(
                 flowOffset: number,
                 applyDelta: (delta: number) => void,
             ): void => {
-                const relativeTop = event.top - viewportRect.top + flowOffset;
+                const ownScrollOffset = scrollContainer === viewport
+                    ? viewport.scrollTop * pageScale
+                    : 0;
+                const relativeTop = event.top - viewportRect.top +
+                    ownScrollOffset + flowOffset;
                 const pageIndex = Math.max(
                     0,
                     Math.floor((relativeTop - pageTopMargin) / pitch),

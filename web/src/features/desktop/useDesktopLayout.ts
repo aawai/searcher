@@ -4,7 +4,14 @@
  * Zen/Widgets lifecycle transitions, and stale note cleanup.
  */
 
-import { type Dispatch, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import {
+    type Dispatch,
+    useCallback,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+} from "react";
 import {
     type DesktopAction,
     desktopReducer,
@@ -157,7 +164,6 @@ export function useDesktopLayout(
 
                 restoredKeyRef.current = targetUserId;
                 if (!restored) {
-                    writeEnabledKeyRef.current = null;
                     dispatch({ type: "HYDRATE", state: stateRef.current });
                     return;
                 }

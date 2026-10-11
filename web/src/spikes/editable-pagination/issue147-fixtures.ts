@@ -1,4 +1,7 @@
-import { createOversizedFixtureMarkdown } from "./fixtures.ts";
+import {
+    createOversizedFixtureMarkdown,
+    generateOversizedPngDataUrl,
+} from "./fixtures.ts";
 
 export const SHORT_PAGEBREAK_FIXTURES = {
     empty: "",
@@ -56,4 +59,13 @@ export const FLOAT_FAILURE_FIXTURES = {
         ).join("\n") +
         "\n```",
     image: () => createOversizedFixtureMarkdown(),
+    adjacentImages: () => {
+        const image = generateOversizedPngDataUrl();
+        return `![First](${image})![Second](${image})`;
+    },
+    inlineImage: () =>
+        `Before ![Inline](${generateOversizedPngDataUrl()}) After`,
+    cellImage: () =>
+        `| Cell |\n| --- |\n| Before ![Cell](${generateOversizedPngDataUrl()}) After |`,
+    horizontalRules: Array.from({ length: 100 }, () => "---").join("\n\n"),
 };

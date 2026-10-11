@@ -87,5 +87,21 @@ export function measureFlowIntegrity(
             naturalHeight: image.naturalHeight,
         };
     });
+    for (const element of repro.root.querySelectorAll("hr, br")) {
+        const rect = element.getBoundingClientRect();
+        if (rect.height <= 0) continue;
+        const local = (rect.top - origin) % pitch;
+        if (
+            local < metrics.top * scale - 2 ||
+            local + rect.height > (metrics.height - metrics.bottom) * scale + 2
+        ) {
+            bad.push({
+                text: element.tagName,
+                top: rect.top,
+                height: rect.height,
+                local,
+            });
+        }
+    }
     return { fragments, bad, imageSizes };
 }
