@@ -1,0 +1,27 @@
+{
+  "build": "passed",
+  "homeNotesOrder": {
+    "tests": 1,
+    "steps": 8
+  },
+  "homeNotesPersistence": {
+    "tests": 1,
+    "steps": 7
+  },
+  "ownership": {
+    "tests": 65
+  },
+  "checkUI": {
+    "ownershipScanned": 200,
+    "visualScanned": 141,
+    "violations": 0,
+    "allowances": 0
+  },
+  "nativeDrag": "Passed in Playwright Chromium 141 with --hide-scrollbars excluded, both layouts; card geometry and outer scroll unchanged.",
+  "matrix": "12 stable Host/theme scenes; no page overflow; first matrix replaced after readiness calibration.",
+  "limitations": [
+    "Firefox not installed; Safari/Edge and physical touchpad/mobile not available.",
+    "Managed Chromium 150 hides native scrollbars; its mouse-drag screenshots do not prove native drag. Use native-*-active.png from production Playwright fixture."
+  ],
+  "scopeApproval": "User approved narrow Rule F change and contract tests; no broad prefix authorization."
+}

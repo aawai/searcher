@@ -1,0 +1,22 @@
+[
+  {
+    "width": 216,
+    "scrollWidth": 3523,
+    "scrollbarWidth": "thin",
+    "scrollbarColor": "rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)",
+    "codeDisplay": "block",
+    "scrollLeft": 100,
+    "outer": 0,
+    "pageOverflow": false
+  },
+  {
+    "width": 840,
+    "scrollWidth": 3178,
+    "scrollbarWidth": "auto",
+    "scrollbarColor": "auto",
+    "codeDisplay": "inline",
+    "scrollLeft": 100,
+    "outer": 0,
+    "pageOverflow": false
+  }
+]

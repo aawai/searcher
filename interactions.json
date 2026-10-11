@@ -1,0 +1,32 @@
+[
+  {
+    "style": "zen",
+    "drag": {
+      "scrollLeft": 0,
+      "outer": 0
+    },
+    "focus": {
+      "focused": true,
+      "color": "rgba(120, 120, 120, 0.45) rgba(0, 0, 0, 0)"
+    },
+    "wheel": {
+      "scrollLeft": 300,
+      "outer": 0
+    }
+  },
+  {
+    "style": "widgets",
+    "drag": {
+      "scrollLeft": 0,
+      "outer": 0
+    },
+    "focus": {
+      "focused": true,
+      "color": "rgba(120, 120, 120, 0.45) rgba(0, 0, 0, 0)"
+    },
+    "wheel": {
+      "scrollLeft": 300,
+      "outer": 0
+    }
+  }
+]

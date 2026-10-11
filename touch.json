@@ -1,0 +1,20 @@
+[
+  {
+    "style": "zen",
+    "scrollLeft": 155,
+    "outer": 0,
+    "cardX": 16,
+    "cardY": 348.796875,
+    "coarse": true,
+    "pageOverflow": false
+  },
+  {
+    "style": "widgets",
+    "scrollLeft": 155,
+    "outer": 0,
+    "cardX": 29,
+    "cardY": 401.796875,
+    "coarse": true,
+    "pageOverflow": false
+  }
+]
