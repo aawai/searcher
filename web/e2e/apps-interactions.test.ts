@@ -396,11 +396,15 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                         "编辑中的未保存草稿",
                     );
                     await page.setViewportSize({ width: 390, height: 844 });
+                    const mobileName = page.locator(
+                        '.workspace-panel[data-presentation="sheet"] #app-name-input',
+                    );
+                    await mobileName.waitFor({ state: "visible" });
                     assertEquals(
-                        await page.locator("#app-name-input").inputValue(),
+                        await mobileName.inputValue(),
                         "编辑中的未保存草稿",
                     );
-                    await page.keyboard.press("Escape");
+                    await mobileName.press("Escape");
                     await page.getByRole("alertdialog").waitFor();
                     await page.keyboard.press("Escape");
                     await page.getByRole("alertdialog").waitFor({

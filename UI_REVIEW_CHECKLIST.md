@@ -2131,3 +2131,10 @@
   `deno lint` 仍有 9 项既有失败（api/local/search），全仓库 fmt 的
   `WORKSPACE_FINAL_REFACTOR_PLAN.md` 与 `scripts/ui-guard/baseline.json`
   仍为既有不规范文件；不修改无关代码、不增加忽略规则或声称全仓库通过。
+- PR #152 首轮 CI：UI / Bundle+route / Docker / Wallpaper / Notes 通过；
+  Workspace formatter 通过，E2E 22 tests / 130 steps 通过、1 step 失败。 Apps
+  脏稿从 Window 切换到 Sheet 时，旧 fixture 在 viewport resize 后 仍可能读取旧
+  input 并立即发 Escape，未等待真正的新 Host。 现等待实际 Sheet 内 input
+  可见并从该 input 发键盘事件，保留 AlertDialog 与草稿不丢断言。该完整模块 1
+  test / 6 steps、fmt/lint 各 1 file 通过； 产品实现与已通过
+  Documents/geometry/unit/bundle 结果未改变。
