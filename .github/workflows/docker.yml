@@ -124,6 +124,32 @@ jobs:
 
                   docker exec searcher-smoke sh -c 'test ! -e /app/node_modules'
                   docker image inspect "$SMOKE_IMAGE" --format 'Runtime image size: {{.Size}} bytes'
+                  docker exec searcher-smoke deno eval --allow-read=/app/web/dist/index.html --allow-net=localhost:34567 '
+                  const base = "http://localhost:34567";
+                  const html = await Deno.readTextFile("/app/web/dist/index.html");
+                  const js = html.match(/src="(\/assets\/[^"]+\.js)"/)?.[1];
+                  const css = html.match(/href="(\/assets\/[^"]+\.css)"/)?.[1];
+                  if (!js || !css) throw new Error("Could not find JS and CSS asset paths in index.html");
+                  for (const path of [js, css]) {
+                    const response = await fetch(new URL(path, base));
+                    if (response.status !== 200) throw new Error(`${path}: expected 200, got ${response.status}`);
+                    const cacheControl = response.headers.get("cache-control");
+                    if (cacheControl !== "public, max-age=31536000, immutable") {
+                      throw new Error(`${path}: unexpected Cache-Control ${cacheControl}`);
+                    }
+                  }
+                  const home = await fetch(`${base}/`);
+                  if (home.status !== 200) throw new Error(`/ expected 200, got ${home.status}`);
+                  if (home.headers.get("cache-control") !== "no-cache") {
+                    throw new Error(`/ unexpected Cache-Control ${home.headers.get("cache-control")}`);
+                  }
+                  const homeBody = await home.text();
+                  const missing = await fetch(`${base}/assets/missing.js`);
+                  const missingBody = await missing.text();
+                  if (missing.status !== 404 || missingBody === html || missingBody === homeBody) {
+                    throw new Error(`/assets/missing.js must return 404, not SPA HTML (status ${missing.status})`);
+                  }
+                  '
 
             - name: Publish tested image
               if: github.event_name != 'pull_request'

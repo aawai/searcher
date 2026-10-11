@@ -86,7 +86,28 @@ export function createApp(
     registerWebAppIconsRoutes(routes, sharedDeps);
     registerSystemRoutes(routes, sharedDeps, systemService);
     routes.mount(app, [createSessionMiddleware(deps.auth)]);
-    app.on(["GET", "HEAD"], "/assets/*", serveStatic({ root: staticRoot }));
+    app.on(
+        ["GET", "HEAD"],
+        "/assets/*",
+        serveStatic({
+            root: staticRoot,
+            onFound: (_path, c) => {
+                // Vite's default content hashes use base64url characters.
+                const filename = c.req.path.slice(
+                    c.req.path.lastIndexOf("/") + 1,
+                );
+                const versioned =
+                    /^.+-[A-Za-z0-9_-]{8,}\.(?:js|css|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf)$/
+                        .test(filename);
+                c.header(
+                    "Cache-Control",
+                    versioned
+                        ? "public, max-age=31536000, immutable"
+                        : "no-cache",
+                );
+            },
+        }),
+    );
     app.all("/assets/*", (c) => c.text("Not Found", 404));
     app.all("/assets", (c) => c.text("Not Found", 404));
 

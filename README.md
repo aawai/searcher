@@ -232,6 +232,21 @@ Key。`SEARXNG_URL`（可选）配置启用了 JSON 格式输出的 SearXNG 实�
 `DATABASE_PATH=/app/data/searcher.sqlite`，运行时只需持久化 `/app/data`，
 并提供生产环境所需的 `APP_ORIGIN` 与稳定的 `ENCRYPTION_KEY`。最终 runtime 镜像不包含项目级 `node_modules` 或测试文件；Docker 专用的 `deno.runtime.jsonc` 只保留后端运行依赖映射。`scripts/runtime-lock.ts` 校验这些映射与主配置一致，从主 `deno.lock` 提取运行映射及两个入口 module graph 的依赖闭包，保留已锁定的版本与 integrity，再使用 `--frozen` 安装到 Deno 全局 cache。运行时以 `--cached-only` 离线启动，Vite、React、Playwright、Tailwind、shadcn CLI 等前端/构建依赖不会进入 runtime dependency layer。
 
+生产 Hono 仅对已找到的 `/assets/*` 构建文件设置浏览器缓存：文件名以
+`-<至少 8 位 base64url 内容哈希>.<扩展名>` 结尾，且扩展名为
+`js/css/png/jpg/jpeg/gif/svg/webp/avif/ico/woff/woff2/ttf/otf` 时，返回
+`Cache-Control: public, max-age=31536000, immutable`；其余静态文件返回
+`no-cache`。该目录只应包含受控 Vite 构建产物，不应放置用户上传文件。
+SPA HTML 保持 `no-cache`，缺失 assets 保持 404；API、私有壁纸和应用图标的策略不变。
+
+Docker workflow 的 runtime Smoke 从镜像内 `index.html` 提取真实 JS/CSS
+路径并检查强缓存、HTML 与静态 404，失败会阻止同一 workflow 发布镜像，
+不构成其他独立 workflow 的发布门禁。部署后在 Chrome Network 关闭
+`Disable cache`，首次访问后在同一会话新标签页访问，检查哈希 JS/CSS 的
+memory/disk cache 或等效缓存来源；HTML/API 仍可请求网络。升级镜像后普通导航应取得
+新的 HTML 引用并能加载变化的哈希资源；使用反向代理/CDN 时，应比对容器直连与
+正式域名的 `Cache-Control`，避免代理覆盖源站策略。
+
 本仓库保持 Private；GitHub Actions 在 PR、`main`、`v*` tag 和手动触发时均构建并 smoke-test `linux/amd64` 镜像，只有非 PR 事件会在验证成功后发布同一镜像到
 `ghcr.io/aawai/searcher`；同一 ref 的新运行会取消旧运行，防止旧构建覆盖 `latest`。GHCR 首次创建 package 时默认是 Private；首次成功发布后，
 在 GitHub 的 `searcher` package 设置中将 **Change visibility** 改为 **Public**。

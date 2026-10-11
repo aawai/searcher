@@ -233,6 +233,7 @@ Deno.test("SPA route boundary: /assets and /assets/* return static 404 not shell
             "/assets/",
             "/assets/not-exists.js",
             "/assets/styles/missing.css",
+            "/assets/missing-AbCd1234.js",
         ];
 
         for (const path of missingAssetPaths) {
@@ -252,11 +253,13 @@ Deno.test("SPA route boundary: /assets and /assets/* return static 404 not shell
                 getRes.headers.get("content-type") ?? "",
                 "text/plain",
             );
+            assertEquals(getRes.headers.get("cache-control"), null);
 
             // HEAD should also return 404 with empty body
             const headRes = await ctx.app.request(path, { method: "HEAD" });
             assertEquals(headRes.status, 404);
             assertEquals(await headRes.text(), "");
+            assertEquals(headRes.headers.get("cache-control"), null);
 
             // POST should also return 404 not shell
             const postRes = await ctx.app.request(path, { method: "POST" });
@@ -317,6 +320,108 @@ Deno.test("SPA route: existing static assets are served properly", async () => {
             "javascript",
         );
         assertEquals(await headRes.text(), "");
+    } finally {
+        await ctx.cleanup();
+    }
+});
+
+Deno.test("Static cache: hashed build assets preserve content, MIME and GET/HEAD headers", async () => {
+    const ctx = await setupTestApp();
+    try {
+        const assets = [
+            {
+                name: "index-AbCd1234.js",
+                body: "export default 1;",
+                mime: "javascript",
+            },
+            {
+                name: "style-XyZ9_765.css",
+                body: "body { color: red; }",
+                mime: "text/css",
+            },
+            {
+                name: "logo-AbCd12-4.svg",
+                body: "<svg></svg>",
+                mime: "image/svg+xml",
+            },
+        ];
+        for (const { name, body, mime } of assets) {
+            await Deno.writeTextFile(`${ctx.tempDir}/assets/${name}`, body);
+            const path = `/assets/${name}?version=ignored`;
+            const get = await ctx.app.request(path);
+            assertEquals(get.status, 200);
+            assertStringIncludes(get.headers.get("content-type") ?? "", mime);
+            assertEquals(await get.text(), body);
+            assertEquals(
+                get.headers.get("cache-control"),
+                "public, max-age=31536000, immutable",
+            );
+            const head = await ctx.app.request(path, { method: "HEAD" });
+            assertEquals(head.status, 200);
+            assertEquals(
+                head.headers.get("cache-control"),
+                get.headers.get("cache-control"),
+            );
+            assertEquals(
+                head.headers.get("content-type"),
+                get.headers.get("content-type"),
+            );
+            assertEquals(await head.text(), "");
+        }
+    } finally {
+        await ctx.cleanup();
+    }
+});
+
+Deno.test("Static cache: unversioned and unsupported files require revalidation", async () => {
+    const ctx = await setupTestApp();
+    try {
+        const paths = [
+            "bundle.js?name=index-AbCd1234.js",
+            "manual.css",
+            "index-AbCd123.js",
+            "index-AbCd1234.js.map",
+            "index-AbCd1234.html",
+            "index-AbCd1234!.js",
+            "logo.svg",
+            "nested-AbCd1234.js/bundle.js",
+        ];
+        await Deno.mkdir(`${ctx.tempDir}/assets/nested-AbCd1234.js`);
+        for (const path of paths) {
+            const filename = path.split("?")[0];
+            await Deno.writeTextFile(
+                `${ctx.tempDir}/assets/${filename}`,
+                "unversioned",
+            );
+            const get = await ctx.app.request(`/assets/${path}`);
+            assertEquals(get.status, 200, path);
+            assertEquals(get.headers.get("cache-control"), "no-cache", path);
+            assertEquals(await get.text(), "unversioned");
+            const head = await ctx.app.request(`/assets/${path}`, {
+                method: "HEAD",
+            });
+            assertEquals(head.status, 200, path);
+            assertEquals(head.headers.get("cache-control"), "no-cache", path);
+            assertEquals(await head.text(), "");
+        }
+    } finally {
+        await ctx.cleanup();
+    }
+});
+
+Deno.test("Static cache: protected API retains authentication and no-store", async () => {
+    const ctx = await setupTestApp();
+    try {
+        const res = await ctx.app.request("/api/webapps");
+        assertEquals(res.status, 401);
+        assertEquals(res.headers.get("cache-control"), "no-store");
+        assertStringIncludes(
+            res.headers.get("content-type") ?? "",
+            "application/json",
+        );
+        const data = await res.json();
+        assertEquals(data.status, false);
+        assertEquals(data.code, 401);
     } finally {
         await ctx.cleanup();
     }
