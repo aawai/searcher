@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- 生产静态构建资源按 Vite 哈希文件名缓存一年并标记 `immutable`，未版本化的
+  assets 与 SPA HTML 需重新验证；缺失文件仍为 404，API、壁纸与图标缓存策略不变。
 - Widgets 桌面窗口统一使用 viewport 坐标；普通窗口可贴边，Snap/最大化取消外围
   gap， Header 与 Dock 保持可操作。设备布局升至 v4，兼容旧布局并保留原存储 key。
   极矮视口改用可关闭、可滚动的受限 Surface，初次打开便签和笔记仍可操作；
