@@ -1,0 +1,100 @@
+{
+  "method": "Native external releasePointerCapture(1) while held, followed by real pointermove and release",
+  "before": {
+    "x": 930,
+    "y": 139,
+    "width": 480,
+    "height": 566,
+    "top": 139,
+    "right": 1410,
+    "bottom": 705,
+    "left": 930
+  },
+  "ended": {
+    "frame": {
+      "x": 930,
+      "y": 139,
+      "width": 480,
+      "height": 566,
+      "top": 139,
+      "right": 1410,
+      "bottom": 705,
+      "left": 930
+    },
+    "active": "true",
+    "capture": false,
+    "dragging": false
+  },
+  "after": {
+    "x": 930,
+    "y": 139,
+    "width": 480,
+    "height": 566,
+    "top": 139,
+    "right": 1410,
+    "bottom": 705,
+    "left": 930
+  },
+  "events": [
+    {
+      "type": "pointerup",
+      "id": 1,
+      "x": 1086,
+      "y": 161.5
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 1,
+      "x": 1086,
+      "y": 161.5
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1051,
+      "y": 161.5
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "x": 1051,
+      "y": 161.5
+    },
+    {
+      "type": "gotpointercapture",
+      "id": 1,
+      "x": 1021,
+      "y": 161.5
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1021,
+      "y": 161.5
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 1,
+      "x": 1011,
+      "y": 231.5
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1011,
+      "y": 231.5
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 981,
+      "y": 251.5
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "x": 981,
+      "y": 251.5
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "method": "Close through actual chrome handler during held drag; move/release then reopen through Dock",
+  "windowCount": 1,
+  "dragging": false,
+  "collisionCount": 0,
+  "frame": {
+    "x": 340,
+    "y": 160,
+    "width": 760,
+    "height": 566,
+    "top": 160,
+    "right": 1100,
+    "bottom": 726,
+    "left": 340
+  },
+  "active": "true"
+}
