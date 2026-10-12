@@ -1,0 +1,38 @@
+Command phase: deno task test:workspace, in the final validation chain.
+Excerpt of the observed failure; the unchanged Notes suite later passed alone (1 test / 6 steps).
+
+  Matrix D: Desktop Window behavior (1024 & 1440 Widgets) ... ok (2s)
+  Matrix E: Persistence, identity isolation, and layout restore (1440 Widgets) ... ok (5s)
+  Matrix F: Tablet constrained contract (768 Widgets) ... ok (986ms)
+production workspace layered matrix E2E (Issue #92) ... ok (21s)
+
+ ERRORS 
+
+Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... restore updates Live and Source without a second PATCH => ./web/e2e/notes-live-editing.test.ts:201:13
+error: TimeoutError: locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.note-history-list button').filter({ hasText: '版本 3 ·' })
+
+Call log:
+  - waiting for locator('.note-history-list button').filter({ hasText: '版本 3 ·' })
+
+    at /home/aawei/searcher/.worktrees/issue-157/web/e2e/notes-live-editing.test.ts:216:16
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async Object.outerWrapped (ext:cli/40_test.js:239:22)
+    at async TestContext.step (ext:cli/40_test.js:855:22)
+    at async file:///home/aawei/searcher/.worktrees/issue-157/web/e2e/notes-live-editing.test.ts:201:5
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+
+    info: This program assigned to Object.prototype.__proto__, which Deno disables by default.
+    hint: If this caused the error, run again with --unsafe-proto to restore it.
+
+ FAILURES 
+
+Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... restore updates Live and Source without a second PATCH => ./web/e2e/notes-live-editing.test.ts:201:13
+
+FAILED | 24 passed (134 steps) | 1 failed (1 step) (6m8s)
+
+error: Test failed

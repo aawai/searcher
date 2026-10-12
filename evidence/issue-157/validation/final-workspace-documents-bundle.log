@@ -1,0 +1,718 @@
+Task test:workspace deno task build && NODE_ENV=test deno test -A web/e2e/workspace.test.ts web/e2e/workspace-shell.test.ts web/e2e/desktop-drag.test.ts web/e2e/launcher.test.ts web/e2e/apps-density.test.ts web/e2e/home-launcher-density.test.ts web/e2e/apps-session.test.ts web/e2e/apps-interactions.test.ts web/e2e/apps-races.test.ts web/e2e/apps-ordering.test.ts web/e2e/apps-ai-session.test.ts web/e2e/notes-workspace.test.ts web/e2e/notes-masonry.test.ts web/e2e/notes-live-preview.test.ts web/e2e/notes-live-editing.test.ts web/e2e/notes-focus.test.ts web/e2e/notes-ux.test.ts web/e2e/notes-history.test.ts web/e2e/notes-menu.test.ts web/e2e/notes-color.test.ts web/e2e/home-notes-order.test.ts web/e2e/bento.test.ts web/e2e/workspace-contract.test.ts web/e2e/workspace-matrix.test.ts
+Task build deno run -A npm:vite@7.1.7 build --config web/vite.config.ts
+vite v7.1.7 building for production...
+transforming...
+✓ 3136 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.91 kB │ gzip:   0.50 kB
+dist/manifest.json                                  11.45 kB │ gzip:   1.58 kB
+dist/bundle-report.json                            518.57 kB │ gzip:  30.40 kB
+dist/assets/structural-Cy9_WDdj.css                  0.30 kB │ gzip:   0.17 kB
+dist/assets/AuthPage-DHZUjKsq.css                    0.56 kB │ gzip:   0.31 kB
+dist/assets/MarkdownEditorSpike-B05I3N0K.css         1.24 kB │ gzip:   0.49 kB
+dist/assets/EditablePaginationSpike-BFSs6Gfo.css     1.33 kB │ gzip:   0.43 kB
+dist/assets/TrashPage-7GkguyJJ.css                   1.45 kB │ gzip:   0.43 kB
+dist/assets/WallpaperMotionInspector-5Hdr6HUV.css    1.54 kB │ gzip:   0.52 kB
+dist/assets/document-print-I2wQRGl3.css              2.32 kB │ gzip:   0.68 kB
+dist/assets/markdown-kZHnkPN1.css                    2.63 kB │ gzip:   0.71 kB
+dist/assets/document-pagination-C-fIR_WI.css         4.36 kB │ gzip:   1.05 kB
+dist/assets/AccountPage-C3jCQPi6.css                 4.56 kB │ gzip:   0.98 kB
+dist/assets/AdminPage-Ci9C7h92.css                   5.04 kB │ gzip:   1.12 kB
+dist/assets/DesignLab-C293bDgI.css                   8.14 kB │ gzip:   1.51 kB
+dist/assets/document-editor-CRWJRP9I.css            14.17 kB │ gzip:   2.70 kB
+dist/assets/SettingsPage-B0wOJP32.css               17.51 kB │ gzip:   3.23 kB
+dist/assets/AskPage-Cm62X1-i.css                    19.87 kB │ gzip:   3.29 kB
+dist/assets/index-C5om9K2Y.css                     170.08 kB │ gzip:  29.39 kB
+dist/assets/index-DU14uucz.js                        0.16 kB │ gzip:   0.14 kB
+dist/assets/paper-CyeXwFU2.js                        0.49 kB │ gzip:   0.33 kB
+dist/assets/runtime-De2biQ3D.js                      0.77 kB │ gzip:   0.48 kB
+dist/assets/task-list-CsEWLaY8.js                    0.87 kB │ gzip:   0.56 kB
+dist/assets/NoteMarkdown-B7sEiF7S.js                 0.94 kB │ gzip:   0.53 kB
+dist/assets/slider-17NiLN5Y.js                       0.94 kB │ gzip:   0.51 kB
+dist/assets/NotFoundPage-qisk629r.js                 0.96 kB │ gzip:   0.60 kB
+dist/assets/note-summary-BuWTMpWV.js                 1.60 kB │ gzip:   0.82 kB
+dist/assets/runtime-BgHdL_tS.js                      2.03 kB │ gzip:   1.05 kB
+dist/assets/NoteLivePreviewEditor-Ckeg341V.js        2.05 kB │ gzip:   0.98 kB
+dist/assets/AuthPage-DsMv9t0B.js                     2.58 kB │ gzip:   1.26 kB
+dist/assets/MarkdownEditorSpike-DBM3x54m.js          3.72 kB │ gzip:   1.88 kB
+dist/assets/WallpaperMotionInspector-_FYI9frD.js     3.76 kB │ gzip:   1.01 kB
+dist/assets/runtime-BC3bkWug.js                      7.20 kB │ gzip:   2.93 kB
+dist/assets/TrashPage-DYnj6BTp.js                    8.13 kB │ gzip:   2.25 kB
+dist/assets/AccountPage-qC7qV3Xo.js                 11.95 kB │ gzip:   4.00 kB
+dist/assets/EditablePaginationSpike-B8_-S1tV.js     14.32 kB │ gzip:   6.48 kB
+dist/assets/editor-extensions-Dt4AIjqr.js           18.69 kB │ gzip:   7.29 kB
+dist/assets/DesignLab-qJsfzFgf.js                   28.16 kB │ gzip:   8.47 kB
+dist/assets/AdminPage-6-7jQ6rZ.js                   39.73 kB │ gzip:  11.41 kB
+dist/assets/DocumentEditor-BACLjH0e.js              45.16 kB │ gzip:  13.29 kB
+dist/assets/markdown-renderer-vendor-DanjsbcM.js    50.51 kB │ gzip:  17.07 kB
+dist/assets/SettingsPage-CKTc49F3.js                54.31 kB │ gzip:  16.17 kB
+dist/assets/AskPage-C9oJU4ZJ.js                     62.22 kB │ gzip:  18.73 kB
+dist/assets/markdown-vendor-BWoQJRHy.js            120.87 kB │ gzip:  35.70 kB
+dist/assets/react-vendor-B0DELUiE.js               219.81 kB │ gzip:  71.43 kB
+dist/assets/ui-vendor-OBZRIqVb.js                  310.49 kB │ gzip:  97.60 kB
+dist/assets/assistant-vendor-enIpA7fE.js           318.33 kB │ gzip:  94.40 kB
+dist/assets/editor-vendor-C5Ec8Nxk.js              332.48 kB │ gzip: 103.70 kB
+dist/assets/index-B_8svUm3.js                      338.81 kB │ gzip: 101.46 kB
+✓ built in 4.83s
+running 1 test from ./web/e2e/workspace.test.ts
+production workspace contracts ...
+  Widgets closed Dock -> Apps/Notes, non-modal desktop no backdrop/no focus trap/layout shift ... ok (125ms)
+  root in-place switch preserving queries ... ok (359ms)
+  nested AppForm dirty Back/Close protection and save ... ok (612ms)
+  Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server ...
+------- output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- output end -----
+  Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server ... ok (5s)
+  Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation ... ok (7s)
+  Home Quick Apps pinned order, icon size and label preferences ... ok (1s)
+  Zen apps notes note edit FloatingNotes preserved desktop layout ... ok (632ms)
+  Mobile focustrap/swipe/escape and focus return ... ok (456ms)
+production workspace contracts ... ok (18s)
+running 1 test from ./web/e2e/workspace-shell.test.ts
+production Workspace state, keyboard and responsive contracts ...
+  loading remains bounded; retry recovers an empty Apps launcher ... ok (304ms)
+  offline stale Apps cache remains browsable and explicit retry refreshes it ... ok (499ms)
+  failed add/edit preserves draft and error; retry saves; delete/undo restores ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  failed add/edit preserves draft and error; retry saves; delete/undo restores ... ok (776ms)
+  viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus ... ok (5s)
+  keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority ... ok (879ms)
+  Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration ... ok (622ms)
+  issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability ... ok (6s)
+  presentation changes preserve Core queries and nested Back; logout clears transient state ... ok (2s)
+  Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence ... ok (5s)
+production Workspace state, keyboard and responsive contracts ... ok (23s)
+running 2 tests from ./web/e2e/desktop-drag.test.ts
+desktop drag preserves immediate reverse movement at all normal bounds ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+desktop drag preserves immediate reverse movement at all normal bounds ... ok (10s)
+desktop drag clips diagonal and single-frame gestures without dragging controls ... ok (2s)
+running 1 test from ./web/e2e/launcher.test.ts
+production launcher contracts - Issue #47 ...
+  0. Empty Launcher Root: blank surface menu available when zero apps or folders ... ok (108ms)
+  1. Unified Launcher Root: defaults directly to complete launcher without legacy IA ... ok (154ms)
+  2. Folder Inline Browse & Back scroll-focus restoration ... ok (130ms)
+  3. Blank space context menu & Keyboard / Touch folder creation ... ok (667ms)
+  4. Folder context actions: resize, rename, delete with confirmation and apps preserved ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  4. Folder context actions: resize, rename, delete with confirmation and apps preserved ... ok (998ms)
+  5. Search deduplication, Folder result click & arrange mode search unbinding ... ok (353ms)
+  6. App Context Menu ownership fallback (move in & out of folder) ... ok (458ms)
+  7. App -> Folder pointer DnD: drop-target feedback and move failure rollback ... ok (438ms)
+  8. App -> Folder pointer DnD: successful move and server reload consistency ... ok (367ms)
+  9. Folder-internal App reorder, scope-local order, and pinnedOrder untouched ... ok (441ms)
+  10. Mixed Root Reorder via KeyboardSensor and atomic PUT persistence ... ok (443ms)
+  11. 375px mobile viewport & real theme system (dataset.theme reactive) ... ok (118ms)
+  12. Folder across App and App across App preserve mixed order on reload ... ok (1s)
+  13. Real touch drag moves App into Folder without changing Home pin order ... ok (6s)
+production launcher contracts - Issue #47 ... ok (13s)
+running 1 test from ./web/e2e/apps-density.test.ts
+apps workspace touch density geometry and hit targets #149 ... ok (39s)
+running 1 test from ./web/e2e/home-launcher-density.test.ts
+Home touch grid density and drag alignment ... ok (4s)
+running 1 test from ./web/e2e/apps-session.test.ts
+apps edit keeps fields and confirmation across hosts and window modes ... ok (3s)
+running 1 test from ./web/e2e/apps-interactions.test.ts
+apps session, modal undo and visible management contracts #141 ...
+  visible folder creation, arranging exit and layered Escape ... ok (1s)
+  all draft fields, icon input and real upload survive host replacement ... ok (1s)
+  cross-folder search context and icon shortcut versus normal edit ... ok (900ms)
+  mobile modal undo is a visible, hittable normal layout row ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  mobile modal undo is a visible, hittable normal layout row ... ok (338ms)
+  moving undo between modal and global hosts preserves its deadline ... ok (285ms)
+  restore failure remains inside the active modal and never restores falsely ... ok (534ms)
+apps session, modal undo and visible management contracts #141 ... ok (6s)
+running 1 test from ./web/e2e/apps-races.test.ts
+apps ignores obsolete fetches and retains failed saves ... ok (3s)
+running 1 test from ./web/e2e/apps-ordering.test.ts
+apps concurrent optimistic sorting converges to confirmed server order #141 ... ok (2s)
+running 1 test from ./web/e2e/apps-ai-session.test.ts
+apps AI snapshot, candidates and selection stay in one session #141 ... ok (2s)
+running 1 test from ./web/e2e/notes-workspace.test.ts
+production notes workspace contracts (#44 & #43) ...
+  Notes #44: Empty state (no notes) and search no result empty state ... ok (297ms)
+  Notes #44: Fixed section deduplication and search deduplication ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Notes #44: Fixed section deduplication and search deduplication ... ok (316ms)
+  Notes #44: Controls isolation (drag, expand, pin, home-fixed, color, delete do not enter editor) ... ok (1s)
+  Notes #44/#109: Inline expand/collapse, card column-width geometry (<=2px), and API write purity ... ok (575ms)
+  Notes #78: toolbar, shortcuts, composite blur, Markdown persistence and newline parity ... ok (5s)
+  Notes Source/Live: coarse-pointer toolbar touch targets and editable tasks ... ok (2s)
+  Notes #44: NoteEditor saving / unsynced / error and retry lifecycle ... ok (719ms)
+  Notes #44: NoteEditor 409 conflict detection, dialog UI, and resolution ... ok (669ms)
+  Notes #44: Version history error handling and display ... ok (616ms)
+  Notes #44: Stale cached notes browse and retry on API failure ... ok (233ms)
+  Notes #44: Long title and many notes overflow contracts across desktop (1440) and mobile (390) ... ok (3s)
+  Notes #44: Zen FloatingNotes opening/closing workspace geometry isolation ... ok (1s)
+  Notes #44: ControlledNotes deterministic spatial layout and narrow fallback ... ok (665ms)
+production notes workspace contracts (#44 & #43) ... ok (18s)
+running 1 test from ./web/e2e/notes-masonry.test.ts
+production notes masonry contracts (#109) ...
+  Content widths 505/506/766/767, max three columns and every desktop window operation are write-free ... ok (9s)
+  768–1023 constrained presets reflow without resetting query, expansion or API order ... ok (3s)
+  Unequal expanded Markdown heights use shortest columns; expand/collapse restores geometry without writes ... ok (3s)
+  Search uses independent nonsortable masonry, prunes filtered geometry and clear restores grouping and expansion ... ok (2s)
+  Pin/home-fixed membership changes preserve expansion; deletion reflows both independent containers ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Pin/home-fixed membership changes preserve expansion; deletion reflows both independent containers ... ok (3s)
+  2-column pointer drop across columns at upper target center persists canonical order ... ok (2s)
+  2-column pointer drop across columns at lower target center persists canonical order ... ok (2s)
+  2-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion ... ok (4s)
+  3-column pointer drop across columns at upper target center persists canonical order ... ok (3s)
+  3-column pointer drop across columns at lower target center persists canonical order ... ok (3s)
+  3-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion ... ok (4s)
+  widgets 390px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  widgets 390px dark: root/search presentation and home isolation with screenshot evidence ... ok (862ms)
+  widgets 768px light: root/search presentation and home isolation with screenshot evidence ... ok (2s)
+  widgets 768px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  widgets 1440px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  widgets 1440px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 390px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 390px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 768px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 768px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+  zen 1440px light: root/search presentation and home isolation with screenshot evidence ...'production notes masonry contracts (#109)' has been running for over (1m0s)
+ ok (1s)
+  zen 1440px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+production notes masonry contracts (#109) ... ok (1m1s)
+running 1 test from ./web/e2e/notes-live-preview.test.ts
+Notes Live Preview: opening and switching preserve canonical Markdown without saves ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes Live Preview: opening and switching preserve canonical Markdown without saves ... ok (4s)
+running 1 test from ./web/e2e/notes-live-editing.test.ts
+Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ...
+  IME does not save or format partial composition; final text autosaves ... ok (3s)
+  selection, undo/redo, local link precedence and manual save ... ok (99ms)
+  toolbar focus stays inside composite and tasks persist checked state ... ok (122ms)
+  use cloud replaces both modes without callback/autosave loop ... ok (1s)
+  long Markdown saves without truncation; over-limit draft survives rejection ...
+------- post-test output -------
+[2026-10-12 17:51:59.036] INFO:
+    method: "PATCH"
+    path: "/api/notes/8e5b27ef-1546-4b22-9c70-dfe01c4f469e"
+    event: "validation-failed"
+----- post-test output end -----
+  long Markdown saves without truncation; over-limit draft survives rejection ... ok (101ms)
+  restore updates Live and Source without a second PATCH ... ok (2s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... ok (10s)
+running 1 test from ./web/e2e/notes-focus.test.ts
+Notes focus boundary preserves network, versions and history ...
+  clean title to body has no PATCH or version/history change ... ok (1s)
+  源码: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown ... ok (2s)
+  源码: dirty title and body autosave together, never a title-only manual snapshot ... ok (1s)
+  所见即所得: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown ... ok (1s)
+  所见即所得: dirty title and body autosave together, never a title-only manual snapshot ... ok (1s)
+  internal focus does not restart the original title debounce ... ok (1s)
+  title-only dirty leave to history flushes exactly once with a manual snapshot ... ok (1s)
+  title-only dirty leave to color flushes exactly once with a manual snapshot ... ok (1s)
+  clean explicit Ctrl+S retains manual save and version semantics ... ok (56ms)
+  title composition blocks Enter, commands and blur; committed title autosaves ... ok (3s)
+  unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer ... ok (5s)
+  failed title flush stays dirty and can retry through real leave ... ok (121ms)
+  older title response cannot delete newer body draft after immediate close ... ok (365ms)
+  two note instances flush only the dirty instance actually left ... ok (4s)
+Notes focus boundary preserves network, versions and history ... ok (30s)
+running 1 test from ./web/e2e/notes-ux.test.ts
+Notes long document actions and history stay reachable without replacing editor ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes long document actions and history stay reachable without replacing editor ... ok (2s)
+running 1 test from ./web/e2e/notes-history.test.ts
+Notes history flush, cancel, restore and failure preserve real server contracts ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes history flush, cancel, restore and failure preserve real server contracts ... ok (3s)
+running 1 test from ./web/e2e/notes-menu.test.ts
+Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands ... ok (7s)
+running 1 test from ./web/e2e/notes-color.test.ts
+Note card color dots have accessible names without visible labels and persist keyboard selection ... ok (1s)
+running 1 test from ./web/e2e/home-notes-order.test.ts
+production home notes manual order E2E (#62) ...
+  Notes #62: Handle rendering and handle click does not open editor ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Notes #62: Handle rendering and handle click does not open editor ... ok (513ms)
+  Notes #62: Pointer drag C->A immediate DOM, reload and relogin persistence, normal notes preserved ... ok (1s)
+  Notes #62: Keyboard equivalent reordering and reload persistence ... ok (852ms)
+  Notes #62: Max 5 slots displayed, hidden sixth+ note preserved in background ... ok (860ms)
+  Notes #62: Fix and unfix notes toggles board presence and sorting capability ... ok (1s)
+  Notes #62: Workspace other notes sorting and search unsortable contract ... ok (787ms)
+  Notes #62: Visual overflow at 375/390/768/1024/1440 light/dark and #40 layout contract ... ok (3s)
+  Home #155: code scrolling stays inside Zen and Widgets notes ... ok (6s)
+production home notes manual order E2E (#62) ... ok (17s)
+running 1 test from ./web/e2e/bento.test.ts
+production Bento contracts & empty expansion matrix (#44) ...
+  Bento Contract: Both have content -> 5:3 double-column & intrinsic height ... ok (365ms)
+  Bento Contract: Apps-only -> Apps card full width, Notes empty moves down compact ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Bento Contract: Apps-only -> Apps card full width, Notes empty moves down compact ... ok (325ms)
+  Bento Contract: Notes-only -> Notes card full width, Apps empty moves down compact ... ok (325ms)
+  Bento Contract: Both empty -> Both entries discoverable, 5:3 side-by-side, no large fixed min-height ... ok (268ms)
+  Bento Tile Centering: 1 to 4 tiles centered (data-few-apps), 5+ start-aligned ... ok (433ms)
+  Bento Geometry: Long app title & long note title do not cause overflow ... ok (122ms)
+  Bento Matrix: 375 mobile (375x667) - light ... ok (199ms)
+  Bento Matrix: 390 mobile standard (390x844) - light ... ok (100ms)
+  Bento Matrix: 768 tablet (768x1024) - light ... ok (127ms)
+  Bento Matrix: 1024 desktop small (1024x768) - light ... ok (141ms)
+  Bento Matrix: 1440 desktop standard (1440x900) - light ... ok (139ms)
+  Bento Matrix: 1920 desktop large (1920x1080) - light ... ok (118ms)
+  Bento Matrix: 375 mobile (375x667) - dark ... ok (133ms)
+  Bento Matrix: 390 mobile standard (390x844) - dark ... ok (93ms)
+  Bento Matrix: 768 tablet (768x1024) - dark ... ok (131ms)
+  Bento Matrix: 1024 desktop small (1024x768) - dark ... ok (125ms)
+  Bento Matrix: 1440 desktop standard (1440x900) - dark ... ok (321ms)
+  Bento Matrix: 1920 desktop large (1920x1080) - dark ... ok (142ms)
+  Bento Notes: compact & expanded state toggles within controlled board ... ok (473ms)
+  Zen Isolation: FloatingNotes & edge trigger work without Bento injection ... ok (87ms)
+production Bento contracts & empty expansion matrix (#44) ... ok (5s)
+running 1 test from ./web/e2e/workspace-contract.test.ts
+production workspace #80 behavioral contracts ...
+  Heading hierarchy contract: h2 panel -> h3 subsection with accessible regions (no skipping levels) ... ok (5s)
+  Typography & spacing contract: Apps and Notes section titles computed styles parity ... ok (73ms)
+  Apps root and empty folder canonical EmptyState contract (h3, compact, footer primary sole action, no competing body button) ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Apps root and empty folder canonical EmptyState contract (h3, compact, footer primary sole action, no competing body button) ... ok (476ms)
+  Count badge and search results contract: visible count and '搜索结果' region in Apps and Notes ... ok (419ms)
+  Empty search action contract: EmptyState with '清空搜索' action clears query and restores items ... ok (150ms)
+  Loading and error live roles + retry contract ... ok (2s)
+  Warning offline cache contract: offline status banner with compact density and retry button ... ok (741ms)
+production workspace #80 behavioral contracts ... ok (10s)
+running 1 test from ./web/e2e/workspace-matrix.test.ts
+production workspace layered matrix E2E (Issue #92) ...
+  Matrix A: 16-combination responsive & visual matrix (4 viewports x 2 themes x 2 styles) ... ok (5s)
+  Matrix B: Wallpaper material, surface boundaries, and active window separation ... ok (527ms)
+  Matrix C: Apps/Notes states (root/nested/empty/loading/error) and Core Domain Independence (390 & 1440) ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+  Matrix C: Apps/Notes states (root/nested/empty/loading/error) and Core Domain Independence (390 & 1440) ... ok (1s)
+  Matrix C: Apps/Notes loading, error and retry at 390 and 1440 ... ok (2s)
+  Matrix D: Desktop Window behavior (1024 & 1440 Widgets) ... ok (2s)
+  Matrix E: Persistence, identity isolation, and layout restore (1440 Widgets) ... ok (5s)
+  Matrix F: Tablet constrained contract (768 Widgets) ... ok (995ms)
+production workspace layered matrix E2E (Issue #92) ... ok (20s)
+
+ok | 25 passed (135 steps) | 0 failed (5m35s)
+
+Task test:documents deno task build && NODE_ENV=test deno test -A web/e2e/documents.test.ts web/e2e/document-immersion.test.ts web/e2e/document-vertical-layout.test.ts web/e2e/document-zen-pagination-stability.test.ts web/e2e/document-host-boundaries.test.ts web/e2e/document-presentation-contracts.test.ts
+Task build deno run -A npm:vite@7.1.7 build --config web/vite.config.ts
+vite v7.1.7 building for production...
+transforming...
+✓ 3136 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.91 kB │ gzip:   0.50 kB
+dist/manifest.json                                  11.45 kB │ gzip:   1.58 kB
+dist/bundle-report.json                            518.57 kB │ gzip:  30.40 kB
+dist/assets/structural-Cy9_WDdj.css                  0.30 kB │ gzip:   0.17 kB
+dist/assets/AuthPage-DHZUjKsq.css                    0.56 kB │ gzip:   0.31 kB
+dist/assets/MarkdownEditorSpike-B05I3N0K.css         1.24 kB │ gzip:   0.49 kB
+dist/assets/EditablePaginationSpike-BFSs6Gfo.css     1.33 kB │ gzip:   0.43 kB
+dist/assets/TrashPage-7GkguyJJ.css                   1.45 kB │ gzip:   0.43 kB
+dist/assets/WallpaperMotionInspector-5Hdr6HUV.css    1.54 kB │ gzip:   0.52 kB
+dist/assets/document-print-I2wQRGl3.css              2.32 kB │ gzip:   0.68 kB
+dist/assets/markdown-kZHnkPN1.css                    2.63 kB │ gzip:   0.71 kB
+dist/assets/document-pagination-C-fIR_WI.css         4.36 kB │ gzip:   1.05 kB
+dist/assets/AccountPage-C3jCQPi6.css                 4.56 kB │ gzip:   0.98 kB
+dist/assets/AdminPage-Ci9C7h92.css                   5.04 kB │ gzip:   1.12 kB
+dist/assets/DesignLab-C293bDgI.css                   8.14 kB │ gzip:   1.51 kB
+dist/assets/document-editor-CRWJRP9I.css            14.17 kB │ gzip:   2.70 kB
+dist/assets/SettingsPage-B0wOJP32.css               17.51 kB │ gzip:   3.23 kB
+dist/assets/AskPage-Cm62X1-i.css                    19.87 kB │ gzip:   3.29 kB
+dist/assets/index-C5om9K2Y.css                     170.08 kB │ gzip:  29.39 kB
+dist/assets/index-DU14uucz.js                        0.16 kB │ gzip:   0.14 kB
+dist/assets/paper-CyeXwFU2.js                        0.49 kB │ gzip:   0.33 kB
+dist/assets/runtime-De2biQ3D.js                      0.77 kB │ gzip:   0.48 kB
+dist/assets/task-list-CsEWLaY8.js                    0.87 kB │ gzip:   0.56 kB
+dist/assets/NoteMarkdown-B7sEiF7S.js                 0.94 kB │ gzip:   0.53 kB
+dist/assets/slider-17NiLN5Y.js                       0.94 kB │ gzip:   0.51 kB
+dist/assets/NotFoundPage-qisk629r.js                 0.96 kB │ gzip:   0.60 kB
+dist/assets/note-summary-BuWTMpWV.js                 1.60 kB │ gzip:   0.82 kB
+dist/assets/runtime-BgHdL_tS.js                      2.03 kB │ gzip:   1.05 kB
+dist/assets/NoteLivePreviewEditor-Ckeg341V.js        2.05 kB │ gzip:   0.98 kB
+dist/assets/AuthPage-DsMv9t0B.js                     2.58 kB │ gzip:   1.26 kB
+dist/assets/MarkdownEditorSpike-DBM3x54m.js          3.72 kB │ gzip:   1.88 kB
+dist/assets/WallpaperMotionInspector-_FYI9frD.js     3.76 kB │ gzip:   1.01 kB
+dist/assets/runtime-BC3bkWug.js                      7.20 kB │ gzip:   2.93 kB
+dist/assets/TrashPage-DYnj6BTp.js                    8.13 kB │ gzip:   2.25 kB
+dist/assets/AccountPage-qC7qV3Xo.js                 11.95 kB │ gzip:   4.00 kB
+dist/assets/EditablePaginationSpike-B8_-S1tV.js     14.32 kB │ gzip:   6.48 kB
+dist/assets/editor-extensions-Dt4AIjqr.js           18.69 kB │ gzip:   7.29 kB
+dist/assets/DesignLab-qJsfzFgf.js                   28.16 kB │ gzip:   8.47 kB
+dist/assets/AdminPage-6-7jQ6rZ.js                   39.73 kB │ gzip:  11.41 kB
+dist/assets/DocumentEditor-BACLjH0e.js              45.16 kB │ gzip:  13.29 kB
+dist/assets/markdown-renderer-vendor-DanjsbcM.js    50.51 kB │ gzip:  17.07 kB
+dist/assets/SettingsPage-CKTc49F3.js                54.31 kB │ gzip:  16.17 kB
+dist/assets/AskPage-C9oJU4ZJ.js                     62.22 kB │ gzip:  18.73 kB
+dist/assets/markdown-vendor-BWoQJRHy.js            120.87 kB │ gzip:  35.70 kB
+dist/assets/react-vendor-B0DELUiE.js               219.81 kB │ gzip:  71.43 kB
+dist/assets/ui-vendor-OBZRIqVb.js                  310.49 kB │ gzip:  97.60 kB
+dist/assets/assistant-vendor-enIpA7fE.js           318.33 kB │ gzip:  94.40 kB
+dist/assets/editor-vendor-C5Ec8Nxk.js              332.48 kB │ gzip: 103.70 kB
+dist/assets/index-B_8svUm3.js                      338.81 kB │ gzip: 101.46 kB
+✓ built in 5.32s
+Check web/e2e/documents.test.ts
+Check web/e2e/document-immersion.test.ts
+Check web/e2e/document-vertical-layout.test.ts
+Check web/e2e/document-zen-pagination-stability.test.ts
+Check web/e2e/document-host-boundaries.test.ts
+Check web/e2e/document-presentation-contracts.test.ts
+running 1 test from ./web/e2e/documents.test.ts
+Documents production responsive modes and large-document integrity (#102 M7) ...
+  Documents Library stays body-free and does not load editor runtime ... ok (72ms)
+  390x844 zen light: modes, overflow and Host boundary ... ok (1s)
+  390x844 zen dark: modes, overflow and Host boundary ... ok (1s)
+  390x844 widgets light: modes, overflow and Host boundary ... ok (1s)
+  390x844 widgets dark: modes, overflow and Host boundary ... ok (1s)
+  768x1024 zen light: modes, overflow and Host boundary ... ok (1s)
+  768x1024 zen dark: modes, overflow and Host boundary ... ok (1s)
+  768x1024 widgets light: modes, overflow and Host boundary ... ok (1s)
+  768x1024 widgets dark: modes, overflow and Host boundary ... ok (1s)
+  1024x768 zen light: modes, overflow and Host boundary ... ok (1s)
+  1024x768 zen dark: modes, overflow and Host boundary ... ok (1s)
+  1024x768 widgets light: modes, overflow and Host boundary ... ok (1s)
+  1024x768 widgets dark: modes, overflow and Host boundary ... ok (1s)
+  1440x900 zen light: modes, overflow and Host boundary ... ok (1s)
+  1440x900 zen dark: modes, overflow and Host boundary ... ok (1s)
+  1440x900 widgets light: modes, overflow and Host boundary ... ok (1s)
+  1440x900 widgets dark: modes, overflow and Host boundary ... ok (1s)
+  short viewport keeps the focused source text visible and saves typed content ... ok (1s)
+  100k Markdown / 200 headings / 50 images / 20 tables / 30 breaks survive input, page and source ... ok (2s)
+Documents production responsive modes and large-document integrity (#102 M7) ... ok (26s)
+running 1 test from ./web/e2e/document-immersion.test.ts
+#147: document immersion preserves the editor and normal window semantics ...
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+#147: document immersion preserves the editor and normal window semantics ... ok (33s)
+running 1 test from ./web/e2e/document-vertical-layout.test.ts
+#147: production page layout, editing, paper settings and print flow ... ok (50s)
+running 1 test from ./web/e2e/document-zen-pagination-stability.test.ts
+#158 Zen page layout reaches an idle fixed point ...
+  short-1440x900-light ... ok (8s)
+  short-1440x900-dark ... ok (8s)
+  short-1024x768-light ... ok (8s)
+  short-1024x768-dark ... ok (8s)
+  short-768x1024-light ... ok (8s)
+  short-768x1024-dark ... ok (8s)
+  short-390x844-light ...'#158 Zen page layout reaches an idle fixed point' has been running for over (1m0s)
+ ok (8s)
+  short-390x844-dark ... ok (8s)
+  short-1024x1552-light ... ok (15s)
+  short-1024x1552-dark ... ok (15s)
+  manual-1440x900-light ... ok (15s)
+  manual-1440x900-dark ...'#158 Zen page layout reaches an idle fixed point' has been running for over (2m0s)
+ ok (15s)
+  manual-1024x768-light ... ok (8s)
+  manual-1024x768-dark ... ok (8s)
+  manual-768x1024-light ... ok (8s)
+  manual-768x1024-dark ... ok (8s)
+  manual-390x844-light ... ok (8s)
+  manual-390x844-dark ... ok (8s)
+  manual-1024x1552-light ... ok (15s)
+  manual-1024x1552-dark ... ok (15s)
+  consecutive-1440x900-light ... ok (8s)
+  consecutive-1440x900-dark ... ok (8s)
+  consecutive-1024x768-light ... ok (8s)
+  consecutive-1024x768-dark ...'#158 Zen page layout reaches an idle fixed point' has been running for over (4m0s)
+ ok (8s)
+  consecutive-768x1024-light ... ok (8s)
+  consecutive-768x1024-dark ... ok (8s)
+  consecutive-390x844-light ... ok (8s)
+  consecutive-390x844-dark ... ok (8s)
+  consecutive-1024x1552-light ... ok (15s)
+  consecutive-1024x1552-dark ... ok (15s)
+  mixed-1440x900-light ... ok (8s)
+  mixed-1440x900-dark ... ok (8s)
+  mixed-1024x768-light ... ok (8s)
+  mixed-1024x768-dark ... ok (8s)
+  mixed-768x1024-light ... ok (8s)
+  mixed-768x1024-dark ... ok (8s)
+  mixed-390x844-light ... ok (8s)
+  mixed-390x844-dark ... ok (8s)
+  mixed-1024x1552-light ... ok (16s)
+  mixed-1024x1552-dark ... ok (16s)
+#158 Zen page layout reaches an idle fixed point ... ok (6m53s)
+running 1 test from ./web/e2e/document-host-boundaries.test.ts
+#158 Zen body owner, short-host access and unrelated lists ...
+  1440x900 ... ok (2s)
+  1024x768 ... ok (2s)
+  768x1024 ... ok (2s)
+  390x844 ... ok (2s)
+  1440x240 ... ok (2s)
+  390x240 ... ok (2s)
+#158 Zen body owner, short-host access and unrelated lists ... ok (15s)
+running 1 test from ./web/e2e/document-presentation-contracts.test.ts
+Zen document presentations preserve editor, layout and save contracts ... ok (17s)
+
+ok | 6 passed (65 steps) | 0 failed (9m18s)
+
+Task check:bundle deno task build && deno run --allow-read --allow-env scripts/check-bundle.ts
+Task build deno run -A npm:vite@7.1.7 build --config web/vite.config.ts
+vite v7.1.7 building for production...
+transforming...
+✓ 3136 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.91 kB │ gzip:   0.50 kB
+dist/manifest.json                                  11.45 kB │ gzip:   1.58 kB
+dist/bundle-report.json                            518.57 kB │ gzip:  30.40 kB
+dist/assets/structural-Cy9_WDdj.css                  0.30 kB │ gzip:   0.17 kB
+dist/assets/AuthPage-DHZUjKsq.css                    0.56 kB │ gzip:   0.31 kB
+dist/assets/MarkdownEditorSpike-B05I3N0K.css         1.24 kB │ gzip:   0.49 kB
+dist/assets/EditablePaginationSpike-BFSs6Gfo.css     1.33 kB │ gzip:   0.43 kB
+dist/assets/TrashPage-7GkguyJJ.css                   1.45 kB │ gzip:   0.43 kB
+dist/assets/WallpaperMotionInspector-5Hdr6HUV.css    1.54 kB │ gzip:   0.52 kB
+dist/assets/document-print-I2wQRGl3.css              2.32 kB │ gzip:   0.68 kB
+dist/assets/markdown-kZHnkPN1.css                    2.63 kB │ gzip:   0.71 kB
+dist/assets/document-pagination-C-fIR_WI.css         4.36 kB │ gzip:   1.05 kB
+dist/assets/AccountPage-C3jCQPi6.css                 4.56 kB │ gzip:   0.98 kB
+dist/assets/AdminPage-Ci9C7h92.css                   5.04 kB │ gzip:   1.12 kB
+dist/assets/DesignLab-C293bDgI.css                   8.14 kB │ gzip:   1.51 kB
+dist/assets/document-editor-CRWJRP9I.css            14.17 kB │ gzip:   2.70 kB
+dist/assets/SettingsPage-B0wOJP32.css               17.51 kB │ gzip:   3.23 kB
+dist/assets/AskPage-Cm62X1-i.css                    19.87 kB │ gzip:   3.29 kB
+dist/assets/index-C5om9K2Y.css                     170.08 kB │ gzip:  29.39 kB
+dist/assets/index-DU14uucz.js                        0.16 kB │ gzip:   0.14 kB
+dist/assets/paper-CyeXwFU2.js                        0.49 kB │ gzip:   0.33 kB
+dist/assets/runtime-De2biQ3D.js                      0.77 kB │ gzip:   0.48 kB
+dist/assets/task-list-CsEWLaY8.js                    0.87 kB │ gzip:   0.56 kB
+dist/assets/NoteMarkdown-B7sEiF7S.js                 0.94 kB │ gzip:   0.53 kB
+dist/assets/slider-17NiLN5Y.js                       0.94 kB │ gzip:   0.51 kB
+dist/assets/NotFoundPage-qisk629r.js                 0.96 kB │ gzip:   0.60 kB
+dist/assets/note-summary-BuWTMpWV.js                 1.60 kB │ gzip:   0.82 kB
+dist/assets/runtime-BgHdL_tS.js                      2.03 kB │ gzip:   1.05 kB
+dist/assets/NoteLivePreviewEditor-Ckeg341V.js        2.05 kB │ gzip:   0.98 kB
+dist/assets/AuthPage-DsMv9t0B.js                     2.58 kB │ gzip:   1.26 kB
+dist/assets/MarkdownEditorSpike-DBM3x54m.js          3.72 kB │ gzip:   1.88 kB
+dist/assets/WallpaperMotionInspector-_FYI9frD.js     3.76 kB │ gzip:   1.01 kB
+dist/assets/runtime-BC3bkWug.js                      7.20 kB │ gzip:   2.93 kB
+dist/assets/TrashPage-DYnj6BTp.js                    8.13 kB │ gzip:   2.25 kB
+dist/assets/AccountPage-qC7qV3Xo.js                 11.95 kB │ gzip:   4.00 kB
+dist/assets/EditablePaginationSpike-B8_-S1tV.js     14.32 kB │ gzip:   6.48 kB
+dist/assets/editor-extensions-Dt4AIjqr.js           18.69 kB │ gzip:   7.29 kB
+dist/assets/DesignLab-qJsfzFgf.js                   28.16 kB │ gzip:   8.47 kB
+dist/assets/AdminPage-6-7jQ6rZ.js                   39.73 kB │ gzip:  11.41 kB
+dist/assets/DocumentEditor-BACLjH0e.js              45.16 kB │ gzip:  13.29 kB
+dist/assets/markdown-renderer-vendor-DanjsbcM.js    50.51 kB │ gzip:  17.07 kB
+dist/assets/SettingsPage-CKTc49F3.js                54.31 kB │ gzip:  16.17 kB
+dist/assets/AskPage-C9oJU4ZJ.js                     62.22 kB │ gzip:  18.73 kB
+dist/assets/markdown-vendor-BWoQJRHy.js            120.87 kB │ gzip:  35.70 kB
+dist/assets/react-vendor-B0DELUiE.js               219.81 kB │ gzip:  71.43 kB
+dist/assets/ui-vendor-OBZRIqVb.js                  310.49 kB │ gzip:  97.60 kB
+dist/assets/assistant-vendor-enIpA7fE.js           318.33 kB │ gzip:  94.40 kB
+dist/assets/editor-vendor-C5Ec8Nxk.js              332.48 kB │ gzip: 103.70 kB
+dist/assets/index-B_8svUm3.js                      338.81 kB │ gzip: 101.46 kB
+✓ built in 5.42s
+============================================================
+ Searcher Bundle Audit & Budget Gate
+============================================================
+Manifest: /home/aawei/searcher/.worktrees/issue-157/web/dist/manifest.json
+Baseline SHA: 1d30c92b61676f5447d06e9e0cdbfb0f033399d9
+
+Application Entry: index.html -> assets/index-B_8svUm3.js
+
+--- Initial Static JS Graph ---
+  assets/index-B_8svUm3.js                        338810 B (330.87 KiB) │ gzip:  100069 B (97.72 KiB)
+  assets/react-vendor-B0DELUiE.js                 219811 B (214.66 KiB) │ gzip:   70657 B (69.00 KiB)
+  assets/ui-vendor-OBZRIqVb.js                    310493 B (303.22 KiB) │ gzip:   96974 B (94.70 KiB)
+Total Initial JS: 869114 B (848.74 KiB) raw │ 267700 B (261.43 KiB) gzip │ 3 requests
+
+--- Dynamic Route Entries ---
+
+Route: src/app/AccountPage.tsx
+  File: assets/AccountPage-qC7qV3Xo.js
+  Route-only JS: 11946 B (11.67 KiB) raw │ 3930 B (3.84 KiB) gzip │ 1 requests
+    + assets/AccountPage-qC7qV3Xo.js                11946 B │ gzip:   3930 B
+
+Route: src/app/AdminPage.tsx
+  File: assets/AdminPage-6-7jQ6rZ.js
+  Route-only JS: 40693 B (39.74 KiB) raw │ 11777 B (11.50 KiB) gzip │ 2 requests
+    + assets/AdminPage-6-7jQ6rZ.js                  39730 B │ gzip:  11181 B
+    + assets/NotFoundPage-qisk629r.js                 963 B │ gzip:    596 B
+
+Route: src/app/AskPage.tsx
+  File: assets/AskPage-C9oJU4ZJ.js
+  Route-only JS: 552870 B (539.91 KiB) raw │ 165118 B (161.25 KiB) gzip │ 5 requests
+    + assets/AskPage-C9oJU4ZJ.js                    62221 B │ gzip:  18510 B
+    + assets/assistant-vendor-enIpA7fE.js          318330 B │ gzip:  93621 B
+    + assets/markdown-renderer-vendor-DanjsbcM.js   50509 B │ gzip:  16998 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+    + assets/slider-17NiLN5Y.js                       942 B │ gzip:    512 B
+
+Route: src/app/AuthPage.tsx
+  File: assets/AuthPage-DsMv9t0B.js
+  Route-only JS: 2583 B (2.52 KiB) raw │ 1251 B (1.22 KiB) gzip │ 1 requests
+    + assets/AuthPage-DsMv9t0B.js                    2583 B │ gzip:   1251 B
+
+Route: src/app/NotFoundPage.tsx
+  File: assets/NotFoundPage-qisk629r.js
+  Route-only JS: 963 B (0.94 KiB) raw │ 596 B (0.58 KiB) gzip │ 1 requests
+    + assets/NotFoundPage-qisk629r.js                 963 B │ gzip:    596 B
+
+Route: src/app/SettingsPage.tsx
+  File: assets/SettingsPage-CKTc49F3.js
+  Route-only JS: 56213 B (54.90 KiB) raw │ 16994 B (16.60 KiB) gzip │ 3 requests
+    + assets/SettingsPage-CKTc49F3.js               54308 B │ gzip:  15886 B
+    + assets/slider-17NiLN5Y.js                       942 B │ gzip:    512 B
+    + assets/NotFoundPage-qisk629r.js                 963 B │ gzip:    596 B
+
+Route: src/app/TrashPage.tsx
+  File: assets/TrashPage-DYnj6BTp.js
+  Route-only JS: 8126 B (7.94 KiB) raw │ 2243 B (2.19 KiB) gzip │ 1 requests
+    + assets/TrashPage-DYnj6BTp.js                   8126 B │ gzip:   2243 B
+
+Route: src/components/searcher/NoteLivePreviewEditor.tsx
+  File: assets/NoteLivePreviewEditor-Ckeg341V.js
+  Route-only JS: 463467 B (452.60 KiB) raw │ 142647 B (139.30 KiB) gzip │ 5 requests
+    + assets/NoteLivePreviewEditor-Ckeg341V.js       2045 B │ gzip:    974 B
+    + assets/runtime-BC3bkWug.js                     7199 B │ gzip:   2936 B
+    + assets/task-list-CsEWLaY8.js                    874 B │ gzip:    556 B
+    + assets/editor-vendor-C5Ec8Nxk.js             332481 B │ gzip: 102704 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+
+Route: src/components/searcher/NoteMarkdown.tsx
+  File: assets/NoteMarkdown-B7sEiF7S.js
+  Route-only JS: 172317 B (168.28 KiB) raw │ 53006 B (51.76 KiB) gzip │ 3 requests
+    + assets/NoteMarkdown-B7sEiF7S.js                 940 B │ gzip:    531 B
+    + assets/markdown-renderer-vendor-DanjsbcM.js   50509 B │ gzip:  16998 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+
+Route: src/design-lab/DesignLab.tsx
+  File: assets/DesignLab-qJsfzFgf.js
+  Route-only JS: 29101 B (28.42 KiB) raw │ 8813 B (8.61 KiB) gzip │ 2 requests
+    + assets/DesignLab-qJsfzFgf.js                  28159 B │ gzip:   8301 B
+    + assets/slider-17NiLN5Y.js                       942 B │ gzip:    512 B
+
+Route: src/dev/WallpaperMotionInspector.tsx
+  File: assets/WallpaperMotionInspector-_FYI9frD.js
+  Route-only JS: 3761 B (3.67 KiB) raw │ 1015 B (0.99 KiB) gzip │ 1 requests
+    + assets/WallpaperMotionInspector-_FYI9frD.js    3761 B │ gzip:   1015 B
+
+Route: src/features/documents/DocumentEditor.tsx
+  File: assets/DocumentEditor-BACLjH0e.js
+  Route-only JS: 525920 B (513.59 KiB) raw │ 162595 B (158.78 KiB) gzip │ 8 requests
+    + assets/DocumentEditor-BACLjH0e.js             45161 B │ gzip:  13185 B
+    + assets/index-DU14uucz.js                        156 B │ gzip:    141 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+    + assets/editor-extensions-Dt4AIjqr.js          18692 B │ gzip:   7274 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/editor-vendor-C5Ec8Nxk.js             332481 B │ gzip: 102704 B
+    + assets/runtime-BC3bkWug.js                     7199 B │ gzip:   2936 B
+    + assets/task-list-CsEWLaY8.js                    874 B │ gzip:    556 B
+
+Route: src/features/markdown-editor/runtime.ts
+  File: assets/runtime-BC3bkWug.js
+  Route-only JS: 460548 B (449.75 KiB) raw │ 141117 B (137.81 KiB) gzip │ 3 requests
+    + assets/runtime-BC3bkWug.js                     7199 B │ gzip:   2936 B
+    + assets/editor-vendor-C5Ec8Nxk.js             332481 B │ gzip: 102704 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+
+Route: src/features/workspace/note-summary.ts
+  File: assets/note-summary-BuWTMpWV.js
+  Route-only JS: 455104 B (444.44 KiB) raw │ 139142 B (135.88 KiB) gzip │ 4 requests
+    + assets/note-summary-BuWTMpWV.js                1599 B │ gzip:    820 B
+    + assets/index-DU14uucz.js                        156 B │ gzip:    141 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+    + assets/editor-vendor-C5Ec8Nxk.js             332481 B │ gzip: 102704 B
+
+Route: src/spikes/editable-pagination/EditablePaginationSpike.tsx
+  File: assets/EditablePaginationSpike-B8_-S1tV.js
+  Route-only JS: 14806 B (14.46 KiB) raw │ 6583 B (6.43 KiB) gzip │ 2 requests
+    + assets/EditablePaginationSpike-B8_-S1tV.js    14317 B │ gzip:   6261 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+
+Route: src/spikes/editable-pagination/runtime.ts
+  File: assets/runtime-De2biQ3D.js
+  Route-only JS: 481370 B (470.09 KiB) raw │ 149745 B (146.24 KiB) gzip │ 7 requests
+    + assets/runtime-De2biQ3D.js                      767 B │ gzip:    476 B
+    + assets/runtime-BC3bkWug.js                     7199 B │ gzip:   2936 B
+    + assets/editor-extensions-Dt4AIjqr.js          18692 B │ gzip:   7274 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/editor-vendor-C5Ec8Nxk.js             332481 B │ gzip: 102704 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+    + assets/task-list-CsEWLaY8.js                    874 B │ gzip:    556 B
+
+Route: src/spikes/markdown-editor/MarkdownEditorSpike.tsx
+  File: assets/MarkdownEditorSpike-DBM3x54m.js
+  Route-only JS: 3716 B (3.63 KiB) raw │ 1853 B (1.81 KiB) gzip │ 1 requests
+    + assets/MarkdownEditorSpike-DBM3x54m.js         3716 B │ gzip:   1853 B
+
+Route: src/spikes/markdown-editor/runtime.ts
+  File: assets/runtime-BgHdL_tS.js
+  Route-only JS: 462575 B (451.73 KiB) raw │ 142166 B (138.83 KiB) gzip │ 4 requests
+    + assets/runtime-BgHdL_tS.js                     2027 B │ gzip:   1049 B
+    + assets/runtime-BC3bkWug.js                     7199 B │ gzip:   2936 B
+    + assets/editor-vendor-C5Ec8Nxk.js             332481 B │ gzip: 102704 B
+    + assets/markdown-vendor-BWoQJRHy.js           120868 B │ gzip:  35477 B
+
+--- Notes Live Preview Budget (#108) ---
+Shared editor async runtime: 460548 B raw / 141117 B gzip (limit 153600 B)
+  assets/runtime-BC3bkWug.js: 7199 B raw / 2936 B gzip
+  assets/markdown-vendor-BWoQJRHy.js: 120868 B raw / 35477 B gzip
+  assets/editor-vendor-C5Ec8Nxk.js: 332481 B raw / 102704 B gzip
+Notes-only editor increment: 2919 B raw / 1530 B gzip (limit 40960 B)
+  assets/NoteLivePreviewEditor-Ckeg341V.js: 2045 B raw / 974 B gzip
+  assets/task-list-CsEWLaY8.js: 874 B raw / 556 B gzip
+
+--- Largest JS Chunks in Build ---
+  assets/index-B_8svUm3.js                        338810 B (330.87 KiB) │ gzip:  100069 B (97.72 KiB)
+  assets/editor-vendor-C5Ec8Nxk.js                332481 B (324.69 KiB) │ gzip:  102704 B (100.30 KiB)
+  assets/assistant-vendor-enIpA7fE.js             318330 B (310.87 KiB) │ gzip:   93621 B (91.43 KiB)
+  assets/ui-vendor-OBZRIqVb.js                    310493 B (303.22 KiB) │ gzip:   96974 B (94.70 KiB)
+  assets/react-vendor-B0DELUiE.js                 219811 B (214.66 KiB) │ gzip:   70657 B (69.00 KiB)
+  assets/markdown-vendor-BWoQJRHy.js              120868 B (118.04 KiB) │ gzip:   35477 B (34.65 KiB)
+  assets/AskPage-C9oJU4ZJ.js                       62221 B ( 60.76 KiB) │ gzip:   18510 B (18.08 KiB)
+  assets/SettingsPage-CKTc49F3.js                  54308 B ( 53.04 KiB) │ gzip:   15886 B (15.51 KiB)
+
+============================================================
+ Budget Verification vs Frozen Baseline
+============================================================
+Baseline Raw Bytes:  1463817 B (1429.51 KiB)
+Current Initial Raw: 869114 B (848.74 KiB) │ Reduction: 40.63%
+Baseline Gzip Bytes: 439373 B (429.08 KiB)
+Current Initial Gzip:267700 B (261.43 KiB) │ Reduction: 39.07%
+
+[Gate 1] Initial Raw <= 1024000 B (1000.00 KiB): PASS (848.74 KiB)
+[Gate 2] Initial Gzip <= 307200 B (300.00 KiB): PASS (261.43 KiB)
+[Gate 3] Initial Gzip Reduction >= 30.00%: PASS (39.07% reduction)
+[Gate 4] Forbidden Dependencies Check: PASS (clean static entry)
+============================================================
+✅ BUNDLE AUDIT PASSED: All budget and invariant gates satisfied!
+============================================================
+
