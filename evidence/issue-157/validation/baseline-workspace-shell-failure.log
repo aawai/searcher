@@ -1,0 +1,49 @@
+Check web/e2e/workspace-shell.test.ts
+running 1 test from ./web/e2e/workspace-shell.test.ts
+production Workspace state, keyboard and responsive contracts ...
+  loading remains bounded; retry recovers an empty Apps launcher ... ok (341ms)
+  offline stale Apps cache remains browsable and explicit retry refreshes it ... ok (572ms)
+  failed add/edit preserves draft and error; retry saves; delete/undo restores ...
+------- output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- output end -----
+  failed add/edit preserves draft and error; retry saves; delete/undo restores ... ok (741ms)
+  viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus ... ok (6s)
+  keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority ... FAILED (30s)
+  Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration ... ok (723ms)
+  issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability ... ok (6s)
+  presentation changes preserve Core queries and nested Back; logout clears transient state ... ok (2s)
+  Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence ... ok (5s)
+production Workspace state, keyboard and responsive contracts ... FAILED (due to 1 failed step) (54s)
+
+ ERRORS 
+
+production Workspace state, keyboard and responsive contracts ... keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority => ./web/e2e/workspace-shell.test.ts:718:13
+error: Error: Context menu Escape focus: <button type="button" tabindex="0" data-slot="button" data-workspace="apps" data-state="closed" data-active="false" data-open="false" data-minimized="false" aria-label="应用工作区" aria-pressed="false" class="button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--ghost desktop-dock-item"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg><span>应用</span></button>
+                throw new Error(
+                      ^
+    at file:///home/aawei/searcher/.worktrees/issue-157/web/e2e/workspace-shell.test.ts:788:23
+    at async file:///home/aawei/searcher/.worktrees/issue-157/web/e2e/workspace-shell.test.ts:784:13
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async Object.outerWrapped [as fn] (ext:cli/40_test.js:239:22)
+    at async TestContext.step (ext:cli/40_test.js:855:22)
+    at async file:///home/aawei/searcher/.worktrees/issue-157/web/e2e/workspace-shell.test.ts:718:5
+Caused by: TimeoutError: page.waitForFunction: Timeout 30000ms exceeded.
+    at /home/aawei/searcher/.worktrees/issue-157/web/e2e/workspace-shell.test.ts:784:24
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async Object.outerWrapped (ext:cli/40_test.js:239:22)
+    at async TestContext.step (ext:cli/40_test.js:855:22)
+    at async file:///home/aawei/searcher/.worktrees/issue-157/web/e2e/workspace-shell.test.ts:718:5
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+
+ FAILURES 
+
+production Workspace state, keyboard and responsive contracts ... keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority => ./web/e2e/workspace-shell.test.ts:718:13
+
+FAILED | 0 passed (8 steps) | 1 failed (1 step) (54s)
+
+error: Test failed
