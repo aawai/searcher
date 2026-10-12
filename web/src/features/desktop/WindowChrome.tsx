@@ -45,9 +45,14 @@ export interface WindowChromeProps {
     showWindowMenu?: boolean;
 }
 
+type CollisionEdge = "left" | "right" | "top" | "bottom";
+const COLLISION_DURATION_MS = 140;
+
 interface DragSession {
     startX: number;
     startY: number;
+    previousX: number;
+    previousY: number;
     startFrame: Frame;
     currentFrame: Frame;
     pointerId: number;
@@ -55,6 +60,8 @@ interface DragSession {
     isInitialSnapped: boolean;
     hasMoved: boolean;
     restoreFrame: Frame | null;
+    blockedX: CollisionEdge | null;
+    blockedY: CollisionEdge | null;
 }
 
 export function WindowChrome({
@@ -83,6 +90,19 @@ export function WindowChrome({
     const [isDragging, setIsDragging] = useState(false);
     const [activeSnapMode, setActiveSnapMode] = useState<SnapMode | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [collision, setCollision] = useState<
+        { edge: CollisionEdge; sequence: number } | null
+    >(null);
+    const collisionSequenceRef = useRef(0);
+    const collisionTimerRef = useRef<number | null>(null);
+
+    const clearCollision = (updateState = true) => {
+        if (collisionTimerRef.current !== null) {
+            clearTimeout(collisionTimerRef.current);
+            collisionTimerRef.current = null;
+        }
+        if (updateState) setCollision(null);
+    };
 
     const [isDesktop, setIsDesktop] = useState(() => {
         if (typeof globalThis.window === "undefined") return true;
@@ -99,20 +119,57 @@ export function WindowChrome({
         return () => mq.removeEventListener("change", handler);
     }, []);
 
-    // Cancel pending rAF and clean on unmount
-    useEffect(() => {
-        return () => {
-            if (rafIdRef.current !== null) {
-                cancelAnimationFrame(rafIdRef.current);
-                rafIdRef.current = null;
+    const finishDrag = (updateState = true) => {
+        const session = dragSessionRef.current;
+        dragSessionRef.current = null;
+        clearCollision(updateState);
+        if (rafIdRef.current !== null) {
+            cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = null;
+        }
+        if (session?.chromeEl.hasPointerCapture(session.pointerId)) {
+            try {
+                session.chromeEl.releasePointerCapture(session.pointerId);
+            } catch {
+                // The browser may already have ended this pointer.
             }
-        };
+        }
+        if (updateState) {
+            setIsDragging(false);
+            setActiveSnapMode(null);
+        }
+        return session;
+    };
+
+    useEffect(() => () => {
+        finishDrag(false);
     }, []);
 
-    // A geometry change ends the current gesture in the updated coordinate system.
+    // Safe/default placement changes do not invalidate normal drag bounds.
+    const restoreFallback = !win.restoreFrame &&
+            (win.mode === "snapped" || win.mode === "maximized")
+        ? defaultFrame(win.kind, rect)
+        : null;
     useEffect(() => {
         if (dragSessionRef.current) handlePointerCancel();
-    }, [rect]);
+    }, [
+        rect.viewportRect.width,
+        rect.viewportRect.height,
+        rect.chromeBottom,
+        rect.dockTop,
+        rect.chromeHeight,
+        rect.usable,
+        rect.workRect.x,
+        rect.workRect.y,
+        rect.workRect.width,
+        rect.workRect.height,
+        restoreFallback?.width,
+        restoreFallback?.height,
+    ]);
+
+    useEffect(() => {
+        if (disableDrag || win.mode === "minimized") finishDrag();
+    }, [disableDrag, win.mode]);
 
     const presentationFrame = rect.usable
         ? win.frame
@@ -138,6 +195,7 @@ export function WindowChrome({
         if (!e.currentTarget.contains(e.target as Node)) return;
         // Only primary mouse/pointer button
         if (e.button !== 0) return;
+        if (dragSessionRef.current) return;
 
         // Only titlebar draggable excluding button/input/etc.
         const target = e.target as HTMLElement | null;
@@ -161,13 +219,16 @@ export function WindowChrome({
         const pointerId = e.pointerId;
         try {
             chromeEl.setPointerCapture(pointerId);
+            if (!chromeEl.hasPointerCapture(pointerId)) return;
         } catch {
-            // ignore
+            return;
         }
 
         dragSessionRef.current = {
             startX: e.clientX,
             startY: e.clientY,
+            previousX: e.clientX,
+            previousY: e.clientY,
             startFrame: { ...win.frame },
             currentFrame: { ...win.frame },
             pointerId,
@@ -176,37 +237,40 @@ export function WindowChrome({
                 win.mode === "maximized",
             hasMoved: false,
             restoreFrame: win.restoreFrame ? { ...win.restoreFrame } : null,
+            blockedX: null,
+            blockedY: null,
         };
         setIsDragging(true);
     };
 
     const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
         const session = dragSessionRef.current;
-        if (!session) return;
+        if (!session || e.pointerId !== session.pointerId) return;
         if (!rect.usable) {
             handlePointerCancel();
             return;
         }
 
-        const dx = e.clientX - session.startX;
-        const dy = e.clientY - session.startY;
+        const wasMoving = session.hasMoved;
+        const dx = e.clientX - (wasMoving ? session.previousX : session.startX);
+        const dy = e.clientY - (wasMoving ? session.previousY : session.startY);
 
-        // Threshold check to avoid changing state on click without move
-        if (!session.hasMoved) {
+        // Activation uses the full initial displacement; subsequent events
+        // integrate from the latest legal frame, discarding boundary overrun.
+        if (!wasMoving) {
             if (Math.hypot(dx, dy) < 4) {
                 return;
             }
             session.hasMoved = true;
         }
 
-        let clamped: Frame;
-        if (session.isInitialSnapped) {
+        let candidate: Frame;
+        if (session.isInitialSnapped && !wasMoving) {
             // 拖拽 snapped 恢复原 frame 并正确保存 restoreFrame
-            const fallbackFrame = defaultFrame(win.kind, rect);
-            const restoredWidth = session.restoreFrame?.width ??
-                fallbackFrame.width;
-            const restoredHeight = session.restoreFrame?.height ??
-                fallbackFrame.height;
+            const restored = session.restoreFrame ??
+                defaultFrame(win.kind, rect);
+            const restoredWidth = restored.width;
+            const restoredHeight = restored.height;
             const grabOffsetX = session.startX - session.startFrame.x;
             const ratio = session.startFrame.width > 0
                 ? grabOffsetX / session.startFrame.width
@@ -221,28 +285,31 @@ export function WindowChrome({
                 32,
             );
 
-            const candidate: Frame = {
+            candidate = {
                 x: session.startX - restoredGrabOffsetX + dx,
                 y: session.startY - restoredGrabOffsetY + dy,
                 width: restoredWidth,
                 height: restoredHeight,
             };
-            clamped = clampFrame(candidate, rect, win.kind);
         } else {
-            const candidate: Frame = {
-                ...session.startFrame,
-                x: session.startFrame.x + dx,
-                y: session.startFrame.y + dy,
+            const base = wasMoving ? session.currentFrame : session.startFrame;
+            candidate = {
+                ...base,
+                x: base.x + dx,
+                y: base.y + dy,
             };
-            clamped = clampFrame(candidate, rect, win.kind);
         }
+        const clamped = clampFrame(candidate, rect, win.kind);
         session.currentFrame = clamped;
+        session.previousX = e.clientX;
+        session.previousY = e.clientY;
 
         // Transient transform via rAF
         if (rafIdRef.current !== null) {
             cancelAnimationFrame(rafIdRef.current);
         }
         rafIdRef.current = requestAnimationFrame(() => {
+            rafIdRef.current = null;
             const winEl = windowRef.current ??
                 (session.chromeEl.closest(".desktop-window") as
                     | HTMLElement
@@ -260,27 +327,40 @@ export function WindowChrome({
             ? snapTarget(e.clientX, e.clientY, rect.workRect)
             : null;
         setActiveSnapMode(targetSnap);
+
+        let blockedX: CollisionEdge | null = null;
+        let blockedY: CollisionEdge | null = null;
+        if (candidate.x < clamped.x) blockedX = "left";
+        else if (candidate.x > clamped.x) blockedX = "right";
+        else if (dx === 0) blockedX = session.blockedX;
+        if (candidate.y < clamped.y) blockedY = "top";
+        else if (candidate.y > clamped.y) blockedY = "bottom";
+        else if (dy === 0) blockedY = session.blockedY;
+
+        // One pulse per newly contacted edge; X wins simultaneous collisions.
+        let edge: CollisionEdge | null = null;
+        if (blockedX && blockedX !== session.blockedX) edge = blockedX;
+        else if (blockedY && blockedY !== session.blockedY) edge = blockedY;
+        session.blockedX = blockedX;
+        session.blockedY = blockedY;
+        if (targetSnap) {
+            clearCollision();
+        } else if (edge) {
+            clearCollision();
+            setCollision({ edge, sequence: ++collisionSequenceRef.current });
+            const view: Window = globalThis.window;
+            collisionTimerRef.current = view.setTimeout(() => {
+                collisionTimerRef.current = null;
+                setCollision(null);
+            }, COLLISION_DURATION_MS);
+        }
     };
 
     const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-        const session = dragSessionRef.current;
+        const pending = dragSessionRef.current;
+        if (!pending || e.pointerId !== pending.pointerId) return;
+        const session = finishDrag();
         if (!session) return;
-        dragSessionRef.current = null;
-        setIsDragging(false);
-        setActiveSnapMode(null);
-
-        try {
-            if (session.chromeEl.hasPointerCapture(session.pointerId)) {
-                session.chromeEl.releasePointerCapture(session.pointerId);
-            }
-        } catch {
-            // ignore
-        }
-
-        if (rafIdRef.current !== null) {
-            cancelAnimationFrame(rafIdRef.current);
-            rafIdRef.current = null;
-        }
 
         const winEl = windowRef.current ??
             (session.chromeEl.closest(".desktop-window") as HTMLElement | null);
@@ -350,25 +430,11 @@ export function WindowChrome({
         });
     };
 
-    const handlePointerCancel = () => {
-        const session = dragSessionRef.current;
+    const handlePointerCancel = (e?: ReactPointerEvent<HTMLDivElement>) => {
+        const pending = dragSessionRef.current;
+        if (!pending || (e && e.pointerId !== pending.pointerId)) return;
+        const session = finishDrag();
         if (!session) return;
-        dragSessionRef.current = null;
-        setIsDragging(false);
-        setActiveSnapMode(null);
-
-        try {
-            if (session.chromeEl.hasPointerCapture(session.pointerId)) {
-                session.chromeEl.releasePointerCapture(session.pointerId);
-            }
-        } catch {
-            // ignore
-        }
-
-        if (rafIdRef.current !== null) {
-            cancelAnimationFrame(rafIdRef.current);
-            rafIdRef.current = null;
-        }
 
         const winEl = windowRef.current ??
             (session.chromeEl.closest(".desktop-window") as HTMLElement | null);
@@ -512,6 +578,14 @@ export function WindowChrome({
 
     return (
         <>
+            {collision && isDragging && !activeSnapMode && (
+                <div
+                    key={collision.sequence}
+                    aria-hidden="true"
+                    className="desktop-window-collision"
+                    data-collision-edge={collision.edge}
+                />
+            )}
             <div
                 role="toolbar"
                 tabIndex={0}

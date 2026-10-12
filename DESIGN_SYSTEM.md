@@ -392,6 +392,20 @@ AlertDialog）具有严格不同的交互与视觉语义：
   窗口标题为 h2、业务 subsection 为 h3；toolbar 使用允许该 role 的容器。 Resize
   separator 提供当前尺寸的 aria-valuetext 与 viewport bounds 内的百分比值，
   键盘提交后同步更新；不以静态 ARIA 值掩盖可调整控件。
+- `WindowChrome` 自由拖拽在 4px 阈值激活后，以最新合法 frame 积分相邻指针位移；
+  越界位移不累计为反向死区。首次 Snap/最大化拖出保留原 grab ratio、offset 与
+  restoreFrame。捕获成功才建立单指针会话；非匹配指针事件不影响手势，不锁定系统光标。
+  viewport、Header/Dock、标题栏及 Snap 有效边界变化安全取消；只影响默认摆放的
+  safeRect/gap 变化不取消 normal 拖拽。卸载、最小化或禁用拖拽清除临时状态。
+- 拖拽碰撞反馈的唯一 owner 为 `WindowChrome` / `desktop.css`：
+  `.desktop-window-collision` 是绝对定位、inset 0、aria-hidden、
+  pointer-events:none 的窗口内装饰层；接触边以 accent 绘制
+  `calc(--space-1 / 2)`（2px）内侧边框，opacity 0.8→0、140ms ease-out。
+  同边连续施力只触发一次，退出再碰撞可重触发；对角新接触由 X 轴优先，
+  单帧最多一个反馈。Snap preview 始终优先；release/cancel/卸载立即清理。
+  reduce-motion 使用同样 140ms 的静态描边，不播放动画。
+  此交互反馈属于桌面操作动效预算：不改变窗口 transform、尺寸、命中、 scroll
+  geometry、activeId 或持久化，不用于键盘移动、Resize 或沉浸界面。
 - minimize 保留 mounted content；snap/maximize 首次保存 restoreFrame，切换模式
   不覆写。七种 semantic：left/right、四角、maximize；按无 gap 的 work rect
   半宽/半高计算，不用 normal minimum size 扩大分屏。viewport resize

@@ -779,6 +779,12 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             });
             await page.keyboard.press("Shift+F10");
             await page.getByRole("menu").waitFor();
+            // A mounted popup can precede Base UI's keyboard focus handoff.
+            await page.waitForFunction(() =>
+                document.querySelector('[role="menu"]')?.contains(
+                    document.activeElement,
+                ) === true
+            );
             await page.keyboard.press("Escape");
             await page.getByRole("menu").waitFor({ state: "detached" });
             await page.waitForFunction(() =>
@@ -1471,10 +1477,20 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             ) {
                 const titleEl = appsWin.locator(".desktop-window-chrome-title");
                 await titleEl.waitFor({ state: "visible" });
+                await titleEl.hover();
                 const titleBox = await measureBox(titleEl);
                 const startX = titleBox.x + titleBox.width / 2;
                 const startY = titleBox.y + titleBox.height / 2;
                 await page.mouse.move(startX, startY);
+                const hit = await page.evaluate(({ x, y }) => {
+                    const element = document.elementFromPoint(x, y);
+                    return {
+                        titlebar: !!element?.closest("[data-window-chrome]"),
+                        resize: element?.closest("[data-direction]")
+                            ?.getAttribute("data-direction"),
+                    };
+                }, { x: startX, y: startY });
+                assert(hit.titlebar && !hit.resize, JSON.stringify(hit));
                 await page.mouse.down();
                 await page.mouse.move(toX, toY, { steps: 10 });
                 if (release) {
@@ -1861,6 +1877,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     !el?.hasAttribute("data-window-snap");
             });
 
+            const beforeResizeReposition = await measureBox(appsWin);
             await dragTitleTo(720, workBox.y + 150);
             await page.waitForFunction((dockTop) => {
                 const element = document.querySelector(
@@ -1868,7 +1885,31 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
                 return !!element &&
                     element.getBoundingClientRect().bottom < dockTop;
-            }, measuredBounds.dockTop);
+            }, measuredBounds.dockTop).catch(async (cause) => {
+                throw new Error(
+                    `Normal resize fixture reposition: ${
+                        JSON.stringify({
+                            before: beforeResizeReposition,
+                            after: await measureBox(appsWin),
+                            mode: await appsWin.getAttribute(
+                                "data-window-mode",
+                            ),
+                            chrome: await appsWin.locator(
+                                "[data-window-chrome]",
+                            )
+                                .evaluate((chrome) => ({
+                                    dragging: chrome.classList.contains(
+                                        "desktop-window-chrome--dragging",
+                                    ),
+                                    capture: chrome.hasPointerCapture(1),
+                                    bounds: chrome.getBoundingClientRect()
+                                        .toJSON(),
+                                })),
+                        })
+                    }`,
+                    { cause },
+                );
+            });
             // 5. 8-way resize handle active in normal mode
             const seHandle = appsWin.locator(
                 ".desktop-window-resize-handle--se",
