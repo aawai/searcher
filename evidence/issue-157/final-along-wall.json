@@ -1,0 +1,132 @@
+{
+  "asset": [
+    "http://127.0.0.1:31577/assets/index-B_8svUm3.js"
+  ],
+  "samples": [
+    {
+      "label": "contact",
+      "x": 960,
+      "y": 134,
+      "pulses": 1,
+      "capture": true,
+      "active": "true",
+      "snap": false
+    },
+    {
+      "label": "outward-after-along-wall",
+      "x": 960,
+      "y": 139,
+      "pulses": 1,
+      "capture": true,
+      "active": "true",
+      "snap": false
+    },
+    {
+      "label": "reverse5",
+      "x": 955,
+      "y": 139,
+      "pulses": 1,
+      "capture": true,
+      "active": "true",
+      "snap": false
+    },
+    {
+      "label": "recontact",
+      "x": 960,
+      "y": 139,
+      "pulses": 2,
+      "capture": true,
+      "active": "true",
+      "snap": false
+    },
+    {
+      "label": "release",
+      "x": 960,
+      "y": 139,
+      "pulses": 2,
+      "capture": false,
+      "active": "true",
+      "snap": false
+    }
+  ],
+  "trace": {
+    "additions": [
+      {
+        "edge": "right",
+        "time": 182
+      },
+      {
+        "edge": "right",
+        "time": 346.19999999552965
+      }
+    ],
+    "events": [
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 91,
+        "y": 156.5
+      },
+      {
+        "type": "pointerdown",
+        "id": 1,
+        "x": 91,
+        "y": 156.5
+      },
+      {
+        "type": "gotpointercapture",
+        "id": 1,
+        "x": 1071,
+        "y": 156.5
+      },
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 1071,
+        "y": 156.5
+      },
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 1076,
+        "y": 156.5
+      },
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 1076,
+        "y": 161.5
+      },
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 1081,
+        "y": 161.5
+      },
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 1076,
+        "y": 161.5
+      },
+      {
+        "type": "pointermove",
+        "id": 1,
+        "x": 1086,
+        "y": 161.5
+      },
+      {
+        "type": "pointerup",
+        "id": 1,
+        "x": 1086,
+        "y": 161.5
+      },
+      {
+        "type": "lostpointercapture",
+        "id": 1,
+        "x": 1086,
+        "y": 161.5
+      }
+    ]
+  }
+}
