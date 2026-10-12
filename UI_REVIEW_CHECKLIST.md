@@ -4,6 +4,50 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #157 Widgets 拖拽边界
+
+- [x] 复用 DesktopWindow / WindowChrome；不改共享 geometry、state、persistence、
+      Canvas、ResizeHandles、Dock、布局 schema 或编辑器。实施基线为 `b30fee8`。
+- [x] M0 的 1440×900 / 1024×768 × 四边真实 Chromium 手势：越界后反向 5/10px
+      不移动窗口，但 capture 与应用 active 保持；不将鼠标离开标题栏等同失焦。
+      首次 Playwright 红测在八个边界场景均观察到死区。
+- [x] M1 由实证触发：真实 pointerId 1 被注入的 pointercancel 99 错误终止；
+      safeRect-only gap 测量变化也曾释放 capture。修复后非匹配事件不驱动手势，
+      默认摆放变化不取消 normal drag，真实 Header/Dock/viewport 变化仍安全取消。
+      另实页验证 capture 失败不启动手势、外部原生失捕保存最后有效 frame、
+      拖拽期间关闭再由 Dock 打开无 ghost 状态。
+- [x] M2 四边反向 5px 即合法内移 5px；连续往返、斜向裁剪、单个大步长事件与 rAF
+      前释放、Snap/最大化恢复、4px 阈值及五类窗口均由真实交互保护。 pointermove
+      没有 API 或布局写入；合法 FOCUS 与 release 保存单独统计。
+- [x] M3 唯一装饰层绝对定位、aria-hidden、pointer-events:none，只有内侧 accent
+      边框的 140ms opacity pulse；不改变权威 transform、尺寸、scroll geometry
+      或命中。 同墙持续施力及沿墙移动不重触发；反向退出再碰撞可触发，Snap
+      preview 优先。 reduced-motion 无运行中的动画，release/cancel/unmount
+      清理状态。
+- [x] 390×844 / 768×1024 / 1024×768 / 1440×900 × light/dark × Widgets/Zen 的 16
+      组实页截图和几何数据；另以字体就绪、两帧完成条件复查固定尺寸的六组 Widgets
+      实页，768px 两种主题的真实拖动均保持 constrained frame 不变。 15.5 秒
+      H.264 录屏覆盖普通拖动、边界、回转与 Snap。
+- [x] 最终完整 `deno task test`：663 tests / 51 steps；
+      `deno task test:workspace`：25 tests / 135 steps；
+      `deno task test:documents`：6 tests / 65 steps；均 0 failed。
+      build、check:bundle、TypeScript check 通过；check:ui 实扫 200 / 141 文件，
+      violations 与 allowances 均为 0。
+- [x] 验收校准保留失败证据：shell 等待菜单键盘焦点交接，并以稳定 hover +
+      hit-test 确认真实标题栏而非 resize handle；Notes
+      历史用例曾超时，单独及最终完整回归 均通过，未修改 Notes
+      实现或测试。碰撞沿墙重武装另有修复前失败/修复后通过证据。
+- [x] 本次变更文件 fmt/lint 通过。全仓库已有格式失败在
+      `WORKSPACE_FINAL_REFACTOR_PLAN.md`、`scripts/ui-guard/baseline.json`；
+      lint 的 9 项失败在 `web/src/lib/{api,local}.ts` 与
+      `src/features/search/{search.route.ts,search.route.test.ts,service.ts}`，
+      不扩展本 Issue 修复这些文件。
+- [x] [独立证据分支](https://github.com/aawai/searcher/tree/evidence/issue-157/evidence/issue-157)
+      包含捕获/激活/frame trace、截图、录屏、环境及实际失败日志，不合并媒体至
+      main。
+- [ ] 真实 Safari / iOS / Android 未验证。Chromium touch emulation 在右边界发出
+      pointercancel / lostpointercapture 并安全结束；不声称触控全程保持捕获。
+
 ## Issue #158 Zen 页面模式稳定性
 
 - [x] 复用 Documents Editor archetype；唯一样式改动为页面模式正文 scroll owner

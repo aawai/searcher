@@ -105,6 +105,44 @@
     will-change: transform, width, height;
 }
 
+/* Drag-only edge feedback; inset decoration never changes window geometry. */
+.desktop-window-collision {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    box-sizing: border-box;
+    border: calc(var(--space-1) / 2) solid transparent;
+    border-radius: inherit;
+    opacity: 0.8;
+    animation: desktop-window-collision-pulse 140ms ease-out both;
+}
+.desktop-window-collision[data-collision-edge="left"] {
+    border-left-color: var(--accent);
+}
+.desktop-window-collision[data-collision-edge="right"] {
+    border-right-color: var(--accent);
+}
+.desktop-window-collision[data-collision-edge="top"] {
+    border-top-color: var(--accent);
+}
+.desktop-window-collision[data-collision-edge="bottom"] {
+    border-bottom-color: var(--accent);
+}
+@keyframes desktop-window-collision-pulse {
+    from {
+        opacity: 0.8;
+    }
+    to {
+        opacity: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .desktop-window-collision {
+        animation: none;
+    }
+}
+
 .desktop-window--active {
     box-shadow: var(--shadow-l3);
     border-color: var(--accent);
