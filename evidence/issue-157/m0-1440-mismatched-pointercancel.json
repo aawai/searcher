@@ -1,0 +1,1180 @@
+{
+  "scenario": "M0 mismatched pointerId test: real captured mouse pointer 1 followed by synthetic pointercancel 99",
+  "method": "Actual page.mouse pointerdown/move; one untrusted synthetic PointerEvent only for nonmatching cancel; isolated storage context",
+  "before": {
+    "hasCapture1": true,
+    "frame": {
+      "x": 364,
+      "y": 160,
+      "width": 760,
+      "height": 566,
+      "top": 160,
+      "right": 1124,
+      "bottom": 726,
+      "left": 364
+    },
+    "active": "true"
+  },
+  "mismatch": {
+    "type": "pointercancel",
+    "pointerId": 99,
+    "isTrusted": false
+  },
+  "after": {
+    "hasCapture1": false,
+    "active": "true",
+    "frame": {
+      "x": 364,
+      "y": 160,
+      "width": 760,
+      "height": 566,
+      "top": 160,
+      "right": 1124,
+      "bottom": 726,
+      "left": 364
+    },
+    "draggingClass": false
+  },
+  "final": {
+    "at": 1825,
+    "geometry": {
+      "viewportRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "workRect": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 758
+      },
+      "safeRect": {
+        "x": 16,
+        "y": 80,
+        "width": 1408,
+        "height": 726
+      },
+      "chromeBottom": 64,
+      "dockTop": 822,
+      "windowGap": 16,
+      "chromeHeight": 44,
+      "usable": true
+    },
+    "windows": [
+      {
+        "id": "apps",
+        "kind": "apps",
+        "active": "true",
+        "mode": "normal",
+        "snap": null,
+        "zIndex": "1",
+        "frame": {
+          "x": 364,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 1124,
+          "bottom": 726
+        },
+        "chrome": {
+          "x": 365,
+          "y": 161,
+          "width": 758,
+          "height": 44,
+          "top": 161,
+          "right": 1123,
+          "bottom": 205,
+          "left": 365
+        },
+        "styleTransform": "translate3d(364px, 160px, 0px)"
+      }
+    ],
+    "activeId": "apps",
+    "focus": {
+      "tag": "DIV",
+      "id": "",
+      "className": "desktop-window-chrome desktop-window-chrome--draggable",
+      "ariaLabel": "窗口标题栏：应用"
+    },
+    "snapPreview": null,
+    "scroll": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "events": [
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 0,
+      "xy": {
+        "x": 796,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": false,
+      "hasCaptureForMouseId1": false,
+      "snapshot": {
+        "at": 1466.9000000059605,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1100,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 341,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1099,
+              "bottom": 205,
+              "left": 341
+            },
+            "styleTransform": "translate3d(340px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "BUTTON",
+          "id": "",
+          "className": "button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost button--icon desktop-window-chrome-btn desktop-window-chrome-btn--close",
+          "ariaLabel": "收起工作区"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointerdown",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 1,
+      "xy": {
+        "x": 796,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": false,
+      "hasCaptureForMouseId1": false,
+      "snapshot": {
+        "at": 1468.1000000014901,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1100,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 341,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1099,
+              "bottom": 205,
+              "left": 341
+            },
+            "styleTransform": "translate3d(340px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "BUTTON",
+          "id": "",
+          "className": "button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost button--icon desktop-window-chrome-btn desktop-window-chrome-btn--close",
+          "ariaLabel": "收起工作区"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "focusout",
+      "target": {
+        "tag": "BUTTON",
+        "id": "",
+        "className": "button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost button--icon desktop-window-chrome-btn desktop-window-chrome-btn--close"
+      },
+      "snapshot": {
+        "at": 1469.5,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1100,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 341,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1099,
+              "bottom": 205,
+              "left": 341
+            },
+            "styleTransform": "translate3d(340px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "BODY",
+          "id": "",
+          "className": "",
+          "ariaLabel": null
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "focusin",
+      "target": {
+        "tag": "DIV",
+        "id": "",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "snapshot": {
+        "at": 1469.7000000029802,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1100,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 341,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1099,
+              "bottom": 205,
+              "left": 341
+            },
+            "styleTransform": "translate3d(340px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "gotpointercapture",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 1,
+      "xy": {
+        "x": 802,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": true,
+      "hasCaptureForMouseId1": true,
+      "snapshot": {
+        "at": 1482.9000000059605,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1100,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 341,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1099,
+              "bottom": 205,
+              "left": 341
+            },
+            "styleTransform": "translate3d(340px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 1,
+      "xy": {
+        "x": 802,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": true,
+      "hasCaptureForMouseId1": true,
+      "snapshot": {
+        "at": 1483.1000000014901,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1100,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 341,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1099,
+              "bottom": 205,
+              "left": 341
+            },
+            "styleTransform": "translate3d(340px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 1,
+      "xy": {
+        "x": 808,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": true,
+      "hasCaptureForMouseId1": true,
+      "snapshot": {
+        "at": 1499.6000000014901,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 346,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1106,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 347,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1105,
+              "bottom": 205,
+              "left": 347
+            },
+            "styleTransform": "translate3d(346px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 1,
+      "xy": {
+        "x": 814,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": true,
+      "hasCaptureForMouseId1": true,
+      "snapshot": {
+        "at": 1516.2000000029802,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 352,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1112,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 353,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1111,
+              "bottom": 205,
+              "left": 353
+            },
+            "styleTransform": "translate3d(352px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 1,
+      "xy": {
+        "x": 820,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": true,
+      "hasCaptureForMouseId1": true,
+      "snapshot": {
+        "at": 1533,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 358,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1118,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 359,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1117,
+              "bottom": 205,
+              "left": 359
+            },
+            "styleTransform": "translate3d(358px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointercancel",
+      "pointerId": 99,
+      "trusted": false,
+      "buttons": 1,
+      "xy": {
+        "x": 700,
+        "y": 300
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+      "hit": {
+        "tag": "DIV",
+        "className": "workspace-section-label",
+        "windowId": "apps",
+        "isChrome": false
+      },
+      "hasCaptureForEventId": false,
+      "hasCaptureForMouseId1": true,
+      "snapshot": {
+        "at": 1615.9000000059605,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 364,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1124,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 365,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1123,
+              "bottom": 205,
+              "left": 365
+            },
+            "styleTransform": "translate3d(364px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "lostpointercapture",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 0,
+      "xy": {
+        "x": 820,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": false,
+      "hasCaptureForMouseId1": false,
+      "snapshot": {
+        "at": 1722.7000000029802,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 364,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1124,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 365,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1123,
+              "bottom": 205,
+              "left": 365
+            },
+            "styleTransform": "translate3d(364px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    },
+    {
+      "type": "pointerup",
+      "pointerId": 1,
+      "trusted": true,
+      "buttons": 0,
+      "xy": {
+        "x": 820,
+        "y": 204
+      },
+      "targetWindowId": "apps",
+      "targetClass": "desktop-window-chrome desktop-window-chrome--draggable",
+      "hit": {
+        "tag": "DIV",
+        "className": "desktop-window-chrome desktop-window-chrome--draggable",
+        "windowId": "apps",
+        "isChrome": true
+      },
+      "hasCaptureForEventId": false,
+      "hasCaptureForMouseId1": false,
+      "snapshot": {
+        "at": 1723.1000000014901,
+        "geometry": {
+          "viewportRect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 900
+          },
+          "workRect": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 758
+          },
+          "safeRect": {
+            "x": 16,
+            "y": 80,
+            "width": 1408,
+            "height": 726
+          },
+          "chromeBottom": 64,
+          "dockTop": 822,
+          "windowGap": 16,
+          "chromeHeight": 44,
+          "usable": true
+        },
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "mode": "normal",
+            "snap": null,
+            "zIndex": "1",
+            "frame": {
+              "x": 364,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "right": 1124,
+              "bottom": 726
+            },
+            "chrome": {
+              "x": 365,
+              "y": 161,
+              "width": 758,
+              "height": 44,
+              "top": 161,
+              "right": 1123,
+              "bottom": 205,
+              "left": 365
+            },
+            "styleTransform": "translate3d(364px, 160px, 0px)"
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "DIV",
+          "id": "",
+          "className": "desktop-window-chrome desktop-window-chrome--draggable",
+          "ariaLabel": "窗口标题栏：应用"
+        },
+        "snapPreview": null,
+        "scroll": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        }
+      }
+    }
+  ],
+  "diagnosis": "Baseline handlePointerCancel accepted synthetic pointercancel pointerId 99 and ended the live pointerId 1 session; see actual lostpointercapture pointerId 1 and class/capture state in events."
+}

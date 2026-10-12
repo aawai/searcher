@@ -1,0 +1,525 @@
+{
+  "baseline": "b30fee8b7eef87108d8d08e8e0fc27d166c5e6f8",
+  "rightReverse": {
+    "1024": {
+      "before": 264,
+      "after": 264
+    },
+    "1440": {
+      "before": 680,
+      "after": 680
+    }
+  },
+  "trace": [
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 771,
+      "y": 356.5,
+      "capture": false,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "x": 771,
+      "y": 356.5,
+      "capture": false,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "gotpointercapture",
+      "id": 1,
+      "x": 1350,
+      "y": 356.5,
+      "capture": true,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1350,
+      "y": 356.5,
+      "capture": true,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1400,
+      "y": 356.5,
+      "capture": true,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1395,
+      "y": 356.5,
+      "capture": true,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 1395,
+      "y": 780,
+      "capture": true,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "x": 1395,
+      "y": 780,
+      "capture": true,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 1,
+      "x": 1395,
+      "y": 780,
+      "capture": false,
+      "frame": {
+        "x": 680,
+        "y": 334,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 822
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 355,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "x": 355,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "gotpointercapture",
+      "id": 1,
+      "x": 940,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 940,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 990,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 985,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "x": 985,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 1,
+      "x": 985,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 355,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "x": 355,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "gotpointercapture",
+      "id": 1,
+      "x": 345,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 345,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 264,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointercancel",
+      "id": 99,
+      "x": 0,
+      "y": 0,
+      "capture": false,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 1,
+      "x": 345,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "x": 345,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 345,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "x": 345,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "gotpointercapture",
+      "id": 1,
+      "x": 335,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointermove",
+      "id": 1,
+      "x": 335,
+      "y": 224.5,
+      "capture": true,
+      "frame": {
+        "x": 254,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 1,
+      "x": 335,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 244,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "x": 335,
+      "y": 224.5,
+      "capture": false,
+      "frame": {
+        "x": 244,
+        "y": 202,
+        "width": 760,
+        "height": 566
+      },
+      "active": "true",
+      "domFocus": "窗口标题栏：应用",
+      "header": 64,
+      "dock": 690
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "frameCount": 127,
+  "durationMs": 15504,
+  "effectiveFps": 8.191434468524251,
+  "frameDir": "/tmp/issue157-evidence/final-video-frames",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "sequence": [
+    "normal drag",
+    "right boundary contact",
+    "reverse 5px",
+    "reverse 10px",
+    "exit edge and release",
+    "top Snap preview and release"
+  ]
+}

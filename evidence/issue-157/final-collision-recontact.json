@@ -1,0 +1,458 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "selectedBefore": {
+    "theme": [
+      "浅色",
+      "默认"
+    ],
+    "style": [
+      {
+        "text": "极简呼吸\nArc / Notion 质感",
+        "checked": "false",
+        "selected": null,
+        "className": "layout-mode-card"
+      },
+      {
+        "text": "空间轻桌面\nmacOS / iPadOS",
+        "checked": "true",
+        "selected": null,
+        "className": "layout-mode-card"
+      }
+    ],
+    "bodyClass": ""
+  },
+  "themeClick": {
+    "x": 1081,
+    "y": 327,
+    "text": "浅色",
+    "attrs": {
+      "role": "tab",
+      "ariaChecked": null,
+      "ariaSelected": "true",
+      "className": "relative inline-flex h-[calc(100%-2px)] flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--control-radius)-2px)] px-2.5 py-1 text-sm font-medium whitespace-nowrap text-[var(--muted)] transition-all group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-[var(--foreground)] focus-visible:outline-2 focus-visible:outline-[var(--ring)] focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active]:bg-[var(--surface-solid)] data-[active]:text-[var(--foreground)] data-[active]:shadow-sm cursor-pointer"
+    }
+  },
+  "styleClick": {
+    "x": 1007.5,
+    "y": 831.34375,
+    "text": "空间轻桌面\nmacOS / iPadOS 质感 · Bento 毛玻璃卡片 · 便签看板 · 流光 Dock",
+    "attrs": {
+      "role": "radio",
+      "ariaChecked": "true",
+      "ariaSelected": null,
+      "className": "layout-mode-card"
+    }
+  },
+  "initial": {
+    "frame": {
+      "x": 340,
+      "y": 160,
+      "width": 760,
+      "height": 566,
+      "right": 1100,
+      "bottom": 726
+    },
+    "title": "应用",
+    "grab": {
+      "x": 431,
+      "y": 182.5,
+      "rect": {
+        "x": 417,
+        "y": 171.515625,
+        "width": 28,
+        "height": 21.96875
+      }
+    },
+    "windowCount": 1,
+    "bodyClass": ""
+  },
+  "geometry": {
+    "rightBound": 680,
+    "expectedWorkTop": 64,
+    "snapRightThreshold": 1408,
+    "snapTopThreshold": 96
+  },
+  "stages": {
+    "initial": {
+      "label": "initial",
+      "pointer": {
+        "x": 431,
+        "y": 183
+      },
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "windowCount": 1,
+      "active": "true",
+      "pointerCapture": false,
+      "collision": null,
+      "collisionCount": 0,
+      "snapCount": 0,
+      "snapClasses": [],
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "first": {
+      "label": "first-oversized-contact",
+      "pointer": {
+        "x": 781,
+        "y": 183,
+        "candidateX": 690,
+        "boundX": 680
+      },
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440,
+        "bottom": 726
+      },
+      "windowCount": 1,
+      "active": "true",
+      "pointerCapture": true,
+      "collision": {
+        "edge": "right",
+        "ariaHidden": "true",
+        "pointerEvents": "none",
+        "opacity": "0.8",
+        "animationName": "desktop-window-collision-pulse",
+        "rect": {
+          "x": 681,
+          "y": 161,
+          "width": 758,
+          "height": 564
+        }
+      },
+      "collisionCount": 1,
+      "snapCount": 0,
+      "snapClasses": [],
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "held": {
+      "label": "same-edge-held-after-pulse-expired",
+      "pointer": {
+        "x": 791,
+        "y": 183,
+        "candidateX": 690,
+        "boundX": 680
+      },
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440,
+        "bottom": 726
+      },
+      "windowCount": 1,
+      "active": "true",
+      "pointerCapture": true,
+      "collision": null,
+      "collisionCount": 0,
+      "snapCount": 0,
+      "snapClasses": [],
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "exit": {
+      "label": "reverse-five-exits-edge",
+      "pointer": {
+        "x": 786,
+        "y": 183,
+        "candidateX": 675,
+        "boundX": 680
+      },
+      "frame": {
+        "x": 675,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1435,
+        "bottom": 726
+      },
+      "windowCount": 1,
+      "active": "true",
+      "pointerCapture": true,
+      "collision": null,
+      "collisionCount": 0,
+      "snapCount": 0,
+      "snapClasses": [],
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "reentry": {
+      "label": "outward-ten-recontacts-edge",
+      "pointer": {
+        "x": 796,
+        "y": 183,
+        "candidateX": 685,
+        "boundX": 680,
+        "snapThreshold": 1408,
+        "rawYThreshold": 96
+      },
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440,
+        "bottom": 726
+      },
+      "windowCount": 1,
+      "active": "true",
+      "pointerCapture": true,
+      "collision": {
+        "edge": "right",
+        "ariaHidden": "true",
+        "pointerEvents": "none",
+        "opacity": "0.8",
+        "animationName": "desktop-window-collision-pulse",
+        "rect": {
+          "x": 681,
+          "y": 161,
+          "width": 758,
+          "height": 564
+        }
+      },
+      "collisionCount": 1,
+      "snapCount": 0,
+      "snapClasses": [],
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "released": {
+      "label": "released",
+      "pointer": {
+        "x": 796,
+        "y": 183
+      },
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440,
+        "bottom": 726
+      },
+      "windowCount": 1,
+      "active": "true",
+      "pointerCapture": false,
+      "collision": null,
+      "collisionCount": 0,
+      "snapCount": 0,
+      "snapClasses": [],
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  "eventTrace": [
+    {
+      "type": "pointermove",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 431,
+      "y": 182.5,
+      "buttons": 0,
+      "hasCapture": false,
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100
+      }
+    },
+    {
+      "type": "pointerdown",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 431,
+      "y": 182.5,
+      "buttons": 1,
+      "hasCapture": false,
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100
+      }
+    },
+    {
+      "type": "gotpointercapture",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 781,
+      "y": 182.5,
+      "buttons": 1,
+      "hasCapture": true,
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100
+      }
+    },
+    {
+      "type": "pointermove",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 781,
+      "y": 182.5,
+      "buttons": 1,
+      "hasCapture": true,
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100
+      }
+    },
+    {
+      "type": "pointermove",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 791,
+      "y": 182.5,
+      "buttons": 1,
+      "hasCapture": true,
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440
+      }
+    },
+    {
+      "type": "pointermove",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 786,
+      "y": 182.5,
+      "buttons": 1,
+      "hasCapture": true,
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440
+      }
+    },
+    {
+      "type": "pointermove",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 796,
+      "y": 182.5,
+      "buttons": 1,
+      "hasCapture": true,
+      "frame": {
+        "x": 675,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1435
+      }
+    },
+    {
+      "type": "pointerup",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 796,
+      "y": 182.5,
+      "buttons": 0,
+      "hasCapture": true,
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440
+      }
+    },
+    {
+      "type": "lostpointercapture",
+      "isTrusted": true,
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "x": 796,
+      "y": 182.5,
+      "buttons": 0,
+      "hasCapture": false,
+      "frame": {
+        "x": 680,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1440
+      }
+    }
+  ],
+  "interpretation": "Actual page.mouse trusted mouse events: first/second right-edge candidates exceed the normal right bound while raw coordinates stay outside Snap thresholds; same-edge hold does not retrigger after pulse expiry, reverse 5 exits, outward 10 recontacts and emits a new pulse.",
+  "restoredPreferences": {
+    "themeSelected": [
+      "跟随系统",
+      "默认"
+    ],
+    "styles": [
+      {
+        "label": "极简呼吸\nArc / Notion 质感",
+        "checked": "true",
+        "pressed": null,
+        "className": "layout-mode-card"
+      },
+      {
+        "label": "空间轻桌面\nmacOS / iPadOS",
+        "checked": "false",
+        "pressed": null,
+        "className": "layout-mode-card"
+      }
+    ]
+  }
+}

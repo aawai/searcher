@@ -1,0 +1,1165 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "theme": "light",
+  "layout": "widgets",
+  "asset": "index-CBOubYLI.js",
+  "cssCollisionLoaded": true,
+  "initialFrame": {
+    "x": 340,
+    "y": 160,
+    "width": 760,
+    "height": 566,
+    "right": 1100,
+    "bottom": 726
+  },
+  "firstCollision": {
+    "frame": {
+      "x": 680,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1440,
+      "bottom": 736
+    },
+    "collision": {
+      "edge": "right",
+      "ariaHidden": "true",
+      "pointerEvents": "none",
+      "opacity": "0.8",
+      "animationName": "desktop-window-collision-pulse",
+      "animationDuration": "0.14s",
+      "rect": {
+        "x": 681,
+        "y": 171,
+        "width": 758,
+        "height": 564
+      },
+      "hitTest": {
+        "tag": "DIV",
+        "className": "desktop-window-resize-handle desktop-window-resize-handle--e",
+        "isCollision": false
+      }
+    },
+    "collisionCount": 1,
+    "snap": {
+      "mode": null,
+      "classes": null,
+      "count": 0
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "collisionFrame": {
+    "x": 680,
+    "y": 170,
+    "width": 760,
+    "height": 566,
+    "right": 1440,
+    "bottom": 736
+  },
+  "afterPulse": {
+    "frame": {
+      "x": 680,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1440,
+      "bottom": 736
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": null,
+      "classes": null,
+      "count": 0
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "heldSameEdge": {
+    "frame": {
+      "x": 680,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1440,
+      "bottom": 736
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": "right",
+      "classes": "desktop-snap-preview desktop-snap-preview--right",
+      "count": 1
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "reverse5": {
+    "frame": {
+      "x": 675,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1435,
+      "bottom": 736
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": "right",
+      "classes": "desktop-snap-preview desktop-snap-preview--right",
+      "count": 1
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "reverse10": {
+    "frame": {
+      "x": 665,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1425,
+      "bottom": 736
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": "right",
+      "classes": "desktop-snap-preview desktop-snap-preview--right",
+      "count": 1
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "afterExit": {
+    "frame": {
+      "x": 612,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1372,
+      "bottom": 736
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": null,
+      "classes": null,
+      "count": 0
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "afterRelease": {
+    "frame": {
+      "x": 612,
+      "y": 170,
+      "width": 760,
+      "height": 566,
+      "right": 1372,
+      "bottom": 736
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": null,
+      "classes": null,
+      "count": 0
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "snapPriority": {
+    "frame": {
+      "x": 500,
+      "y": 64,
+      "width": 760,
+      "height": 566,
+      "right": 1260,
+      "bottom": 630
+    },
+    "collision": null,
+    "collisionCount": 0,
+    "snap": {
+      "mode": "maximize",
+      "classes": "desktop-snap-preview desktop-snap-preview--maximize",
+      "count": 1
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    },
+    "windowCount": 1
+  },
+  "finalGeometry": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "chromeBottom": 64,
+    "dockTop": 822,
+    "canvas": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 900
+    },
+    "scroll": {
+      "width": 1440,
+      "height": 900,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "video": {
+    "path": "/tmp/issue157-evidence/final-drag-sequence.mp4",
+    "frameCount": 127,
+    "durationMs": 15504,
+    "effectiveFps": 8.191434468524251,
+    "encodedFps": 8.2,
+    "resolution": "1440x900",
+    "codec": "H.264",
+    "framesDir": "/tmp/issue157-evidence/final-video-frames"
+  },
+  "eventTrace": [
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "BUTTON",
+        "cls": "button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost button--icon desktop-window-chrome-btn desktop-window-chrome-btn--close"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointerdown",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "BUTTON",
+        "cls": "button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost button--icon desktop-window-chrome-btn desktop-window-chrome-btn--close"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "gotpointercapture",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 357.5,
+        "y": 165,
+        "width": 760,
+        "height": 566,
+        "right": 1117.5,
+        "bottom": 731
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointerup",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 375,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1135,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "lostpointercapture",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 375,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1135,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 375,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1135,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointerdown",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 375,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1135,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "gotpointercapture",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 375,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1135,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 375,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1135,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 680,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1440,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 680,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1440,
+        "bottom": 736
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 675,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1435,
+        "bottom": 736
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 665,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1425,
+        "bottom": 736
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointerup",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 612,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1372,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "lostpointercapture",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 612,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1372,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 612,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1372,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointerdown",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 612,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1372,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "gotpointercapture",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 612,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1372,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 612,
+        "y": 170,
+        "width": 760,
+        "height": 566,
+        "right": 1372,
+        "bottom": 736
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 600.7999877929688,
+        "y": 150.8000030517578,
+        "width": 760.0000610351562,
+        "height": 566,
+        "right": 1360.800048828125,
+        "bottom": 716.8000030517578
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 589.5999755859375,
+        "y": 131.60000610351562,
+        "width": 760,
+        "height": 566,
+        "right": 1349.5999755859375,
+        "bottom": 697.6000061035156
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 578.4000244140625,
+        "y": 112.39999389648438,
+        "width": 760,
+        "height": 566,
+        "right": 1338.4000244140625,
+        "bottom": 678.3999938964844
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 567.2000122070312,
+        "y": 93.19999694824219,
+        "width": 759.9999389648438,
+        "height": 566,
+        "right": 1327.199951171875,
+        "bottom": 659.1999969482422
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 556,
+        "y": 74,
+        "width": 760,
+        "height": 566,
+        "right": 1316,
+        "bottom": 640
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 544.7999877929688,
+        "y": 64,
+        "width": 760.0000610351562,
+        "height": 566,
+        "right": 1304.800048828125,
+        "bottom": 630
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 533.5999755859375,
+        "y": 64,
+        "width": 760,
+        "height": 566,
+        "right": 1293.5999755859375,
+        "bottom": 630
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 522.4000244140625,
+        "y": 64,
+        "width": 760,
+        "height": 566,
+        "right": 1282.4000244140625,
+        "bottom": 630
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointermove",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 511.20001220703125,
+        "y": 64,
+        "width": 759.9999389648438,
+        "height": 566,
+        "right": 1271.199951171875,
+        "bottom": 630
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "pointerup",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": true,
+      "active": "true",
+      "frame": {
+        "x": 500,
+        "y": 64,
+        "width": 760,
+        "height": 566,
+        "right": 1260,
+        "bottom": 630
+      },
+      "snap": "true",
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "lostpointercapture",
+      "pointerId": 1,
+      "pointerType": "mouse",
+      "isTrusted": true,
+      "capture": false,
+      "active": "true",
+      "frame": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 758,
+        "right": 1440,
+        "bottom": 822
+      },
+      "snap": null,
+      "collision": null,
+      "focus": {
+        "tag": "DIV",
+        "cls": "desktop-window-chrome desktop-window-chrome--draggable"
+      },
+      "scroll": {
+        "width": 1440,
+        "height": 900,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "eventTraceProvenance": "Pointer event trace is a separate real-browser diagnostic capture of the same normal/boundary/reverse/Snap sequence; the 15.504s MP4 is a separate longer screen capture."
+}

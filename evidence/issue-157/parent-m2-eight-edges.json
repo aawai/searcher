@@ -1,0 +1,146 @@
+[
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "edge": "left",
+    "before": {
+      "x": 0,
+      "y": 202
+    },
+    "after": {
+      "x": 5,
+      "y": 202
+    },
+    "capture": true,
+    "dx": 5,
+    "dy": 0
+  },
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "edge": "right",
+    "before": {
+      "x": 264,
+      "y": 177.5
+    },
+    "after": {
+      "x": 259,
+      "y": 177.5
+    },
+    "capture": true,
+    "dx": -5,
+    "dy": 0
+  },
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "edge": "top",
+    "before": {
+      "x": 0,
+      "y": 64
+    },
+    "after": {
+      "x": 0,
+      "y": 69
+    },
+    "capture": true,
+    "dx": 0,
+    "dy": 5
+  },
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "edge": "bottom",
+    "before": {
+      "x": 264,
+      "y": 202
+    },
+    "after": {
+      "x": 264,
+      "y": 197
+    },
+    "capture": true,
+    "dx": 0,
+    "dy": -5
+  },
+  {
+    "size": {
+      "width": 1440,
+      "height": 900
+    },
+    "edge": "left",
+    "before": {
+      "x": 0,
+      "y": 64
+    },
+    "after": {
+      "x": 5,
+      "y": 64
+    },
+    "capture": true,
+    "dx": 5,
+    "dy": 0
+  },
+  {
+    "size": {
+      "width": 1440,
+      "height": 900
+    },
+    "edge": "right",
+    "before": {
+      "x": 680,
+      "y": 177.5
+    },
+    "after": {
+      "x": 675,
+      "y": 177.5
+    },
+    "capture": true,
+    "dx": -5,
+    "dy": 0
+  },
+  {
+    "size": {
+      "width": 1440,
+      "height": 900
+    },
+    "edge": "top",
+    "before": {
+      "x": 0,
+      "y": 64
+    },
+    "after": {
+      "x": 0,
+      "y": 69
+    },
+    "capture": true,
+    "dx": 0,
+    "dy": 5
+  },
+  {
+    "size": {
+      "width": 1440,
+      "height": 900
+    },
+    "edge": "bottom",
+    "before": {
+      "x": 629,
+      "y": 334
+    },
+    "after": {
+      "x": 629,
+      "y": 329
+    },
+    "capture": true,
+    "dx": 0,
+    "dy": -5
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "browser": "Managed headless Chromium via functions.eval/browser",
+  "touchEmulation": {
+    "available": true,
+    "profiles": [
+      "iPhone 13",
+      "iPhone 13 Pro",
+      "iPhone SE"
+    ],
+    "status": "Chromium touch emulation completed at 1024x768; trusted pointerId 2 moved the frame to the right boundary, then pointercancel and lostpointercapture fired before touchEnd."
+  },
+  "mediaEmulation": {
+    "colorSchemeLight": true,
+    "reducedMotionReduce": true,
+    "verifiedWithMatchMedia": true
+  },
+  "isolatedIdentity": {
+    "type": "separate local-only test user for final matrix",
+    "initialPreferences": {
+      "theme": "system",
+      "style": "zen"
+    },
+    "freshCookieReplayVerified": true
+  },
+  "tabIsolation": {
+    "freshManagedTabStartedWithEmptyCookieJar": true,
+    "probeClosed": true
+  },
+  "limitations": [
+    "No Safari run or physical-device run is claimed.",
+    "M0 used the existing local authentication identity in isolated browser contexts; the final matrix used a separate local-only test user.",
+    "Chromium touch emulation emitted pointercancel and lostpointercapture before touchEnd; persistent touch-capture support is not claimed."
+  ],
+  "finalMatrixStatus": "complete: 16 states at 390x844, 768x1024, 1024x768, and 1440x900, Widgets/Zen, light/dark; reduced-motion representatives included.",
+  "artifacts": "/tmp/issue157-evidence/"
+}

@@ -1,0 +1,145 @@
+{
+  "reducedMotion": {
+    "frame": {
+      "x": 310,
+      "y": 146,
+      "width": 714,
+      "height": 463,
+      "right": 1024,
+      "bottom": 609
+    },
+    "collision": {
+      "edge": "right",
+      "ariaHidden": "true",
+      "pointerEvents": "none",
+      "opacity": "0.8",
+      "animationName": "none",
+      "animationDuration": "1e-05s",
+      "borderRight": "2px",
+      "hitIsCollision": false
+    },
+    "scroll": {
+      "width": 1024,
+      "height": 768,
+      "x": 0,
+      "y": 0
+    },
+    "reduced": true,
+    "screenshot": "/tmp/issue157-evidence/final-collision-reduced-motion.png"
+  },
+  "touchEmulation": {
+    "events": [
+      {
+        "type": "pointerdown",
+        "pointerId": 2,
+        "pointerType": "touch",
+        "isTrusted": true,
+        "capture": true,
+        "active": "true",
+        "frame": {
+          "x": 155,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 609
+        },
+        "collision": null
+      },
+      {
+        "type": "gotpointercapture",
+        "pointerId": 2,
+        "pointerType": "touch",
+        "isTrusted": true,
+        "capture": true,
+        "active": "true",
+        "frame": {
+          "x": 155,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 609
+        },
+        "collision": null
+      },
+      {
+        "type": "pointermove",
+        "pointerId": 2,
+        "pointerType": "touch",
+        "isTrusted": true,
+        "capture": true,
+        "active": "true",
+        "frame": {
+          "x": 155,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 609
+        },
+        "collision": null
+      },
+      {
+        "type": "pointercancel",
+        "pointerId": 2,
+        "pointerType": "touch",
+        "isTrusted": true,
+        "capture": true,
+        "active": "true",
+        "frame": {
+          "x": 155,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 609
+        },
+        "collision": null
+      },
+      {
+        "type": "lostpointercapture",
+        "pointerId": 2,
+        "pointerType": "touch",
+        "isTrusted": true,
+        "capture": false,
+        "active": "true",
+        "frame": {
+          "x": 310,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 1024,
+          "bottom": 609
+        },
+        "collision": null
+      }
+    ],
+    "frame": {
+      "x": 310,
+      "y": 146,
+      "width": 714,
+      "height": 463,
+      "right": 1024,
+      "bottom": 609
+    },
+    "collision": null,
+    "scroll": {
+      "width": 1024,
+      "height": 768,
+      "x": 0,
+      "y": 0
+    },
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "status": "Trusted touch pointerId 2 moved frame to right boundary, then Chromium emitted pointercancel and lostpointercapture; this emulation result is recorded without claiming physical-device support.",
+    "screenshot": "/tmp/issue157-evidence/final-touch-1024-right.png"
+  },
+  "deviceProfileAvailable": [
+    "iPhone 13",
+    "iPhone 13 Pro",
+    "iPhone SE"
+  ]
+}

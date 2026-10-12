@@ -1,0 +1,17 @@
+{
+  "method": "Main-world evaluateOnNewDocument makes Element.setPointerCapture throw NotFoundError; actual trusted mouse gesture; initializer removed and page reloaded afterward",
+  "before": {
+    "x": 645,
+    "y": 134,
+    "width": 760,
+    "height": 566
+  },
+  "after": {
+    "x": 645,
+    "y": 134,
+    "width": 760,
+    "height": 566
+  },
+  "capture": false,
+  "dragging": false
+}

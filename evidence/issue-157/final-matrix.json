@@ -1,0 +1,858 @@
+{
+  "stage": "M3 final visual matrix",
+  "account": "separate local-only visual test user",
+  "matrix": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "style": "widgets",
+      "reducedMotion": true,
+      "preferences": {
+        "theme": "light",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "light",
+        "windows": [],
+        "panel": {
+          "x": 0,
+          "y": 101.28125,
+          "width": 390,
+          "height": 742.71875,
+          "right": 390,
+          "bottom": 844
+        },
+        "mobileSheet": true,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 390,
+          "height": 844,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": true
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-390x844-light-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "style": "zen",
+      "reducedMotion": true,
+      "preferences": {
+        "theme": "light",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "light",
+        "windows": [],
+        "panel": {
+          "x": 0,
+          "y": 101.28125,
+          "width": 390,
+          "height": 742.71875,
+          "right": 390,
+          "bottom": 844
+        },
+        "mobileSheet": true,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 390,
+          "height": 844,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": true
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-390x844-light-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "style": "widgets",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "dark",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "dark",
+        "windows": [],
+        "panel": {
+          "x": 0,
+          "y": 101.28125,
+          "width": 390,
+          "height": 742.71875,
+          "right": 390,
+          "bottom": 844
+        },
+        "mobileSheet": true,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 390,
+          "height": 844,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-390x844-dark-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "style": "zen",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "dark",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "dark",
+        "windows": [],
+        "panel": {
+          "x": 0,
+          "y": 101.28125,
+          "width": 390,
+          "height": 742.71875,
+          "right": 390,
+          "bottom": 844
+        },
+        "mobileSheet": true,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 390,
+          "height": 844,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-390x844-dark-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "theme": "light",
+      "style": "widgets",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "light",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "theme": "light",
+        "windows": [
+          {
+            "id": "apps",
+            "active": "true",
+            "frame": {
+              "x": 96.95999908447266,
+              "y": 199,
+              "width": 574.078125,
+              "height": 612,
+              "right": 671.0381240844727,
+              "bottom": 811
+            }
+          }
+        ],
+        "panel": null,
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 768,
+          "height": 1024,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-768x1024-light-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "theme": "light",
+      "style": "zen",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "light",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "theme": "light",
+        "windows": [],
+        "panel": {
+          "x": 352,
+          "y": 64,
+          "width": 400,
+          "height": 944,
+          "right": 752,
+          "bottom": 1008
+        },
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 768,
+          "height": 1024,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-768x1024-light-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "theme": "dark",
+      "style": "widgets",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "dark",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "theme": "dark",
+        "windows": [
+          {
+            "id": "apps",
+            "active": "true",
+            "frame": {
+              "x": 96.95999908447266,
+              "y": 199,
+              "width": 574.078125,
+              "height": 612,
+              "right": 671.0381240844727,
+              "bottom": 811
+            }
+          }
+        ],
+        "panel": null,
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 768,
+          "height": 1024,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-768x1024-dark-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "theme": "dark",
+      "style": "zen",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "dark",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "theme": "dark",
+        "windows": [],
+        "panel": {
+          "x": 352,
+          "y": 64,
+          "width": 400,
+          "height": 944,
+          "right": 752,
+          "bottom": 1008
+        },
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 768,
+          "height": 1024,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-768x1024-dark-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "theme": "light",
+      "style": "widgets",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "light",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "theme": "light",
+        "windows": [
+          {
+            "id": "apps",
+            "active": "true",
+            "frame": {
+              "x": 0,
+              "y": 149,
+              "width": 1024,
+              "height": 530,
+              "right": 1024,
+              "bottom": 679
+            }
+          }
+        ],
+        "panel": null,
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1024,
+          "height": 768,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1024x768-light-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "theme": "light",
+      "style": "zen",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "light",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "theme": "light",
+        "windows": [],
+        "panel": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "right": 1008,
+          "bottom": 752
+        },
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1024,
+          "height": 768,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1024x768-light-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "theme": "dark",
+      "style": "widgets",
+      "reducedMotion": true,
+      "preferences": {
+        "theme": "dark",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "theme": "dark",
+        "windows": [
+          {
+            "id": "apps",
+            "active": "true",
+            "frame": {
+              "x": 0,
+              "y": 149,
+              "width": 1024,
+              "height": 530,
+              "right": 1024,
+              "bottom": 679
+            }
+          }
+        ],
+        "panel": null,
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1024,
+          "height": 768,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": true
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1024x768-dark-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "theme": "dark",
+      "style": "zen",
+      "reducedMotion": true,
+      "preferences": {
+        "theme": "dark",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1024,
+          "height": 768
+        },
+        "theme": "dark",
+        "windows": [],
+        "panel": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "right": 1008,
+          "bottom": 752
+        },
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1024,
+          "height": 768,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": true
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1024x768-dark-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "theme": "light",
+      "style": "widgets",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "light",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "light",
+        "windows": [
+          {
+            "id": "apps",
+            "active": "true",
+            "frame": {
+              "x": 0,
+              "y": 175,
+              "width": 1440,
+              "height": 621,
+              "right": 1440,
+              "bottom": 796
+            }
+          }
+        ],
+        "panel": null,
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1440,
+          "height": 900,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1440x900-light-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "theme": "light",
+      "style": "zen",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "light",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "light",
+        "windows": [],
+        "panel": {
+          "x": 1024,
+          "y": 64,
+          "width": 400,
+          "height": 820,
+          "right": 1424,
+          "bottom": 884
+        },
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1440,
+          "height": 900,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": true,
+          "colorSchemeDark": false,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1440x900-light-zen.png"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "theme": "dark",
+      "style": "widgets",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "dark",
+        "style": "widgets"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "dark",
+        "windows": [
+          {
+            "id": "apps",
+            "active": "true",
+            "frame": {
+              "x": 0,
+              "y": 175,
+              "width": 1440,
+              "height": 621,
+              "right": 1440,
+              "bottom": 796
+            }
+          }
+        ],
+        "panel": null,
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1440,
+          "height": 900,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1440x900-dark-widgets.png"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "theme": "dark",
+      "style": "zen",
+      "reducedMotion": false,
+      "preferences": {
+        "theme": "dark",
+        "style": "zen"
+      },
+      "settleMs": 700,
+      "state": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "theme": "dark",
+        "windows": [],
+        "panel": {
+          "x": 1024,
+          "y": 64,
+          "width": 400,
+          "height": 820,
+          "right": 1424,
+          "bottom": 884
+        },
+        "mobileSheet": false,
+        "collisionCss": true,
+        "collisionCount": 0,
+        "snapPreviewCount": 0,
+        "pendingAnimations": 0,
+        "scroll": {
+          "width": 1440,
+          "height": 900,
+          "x": 0,
+          "y": 0
+        },
+        "media": {
+          "colorSchemeLight": false,
+          "colorSchemeDark": true,
+          "reduced": false
+        },
+        "assets": [
+          "http://127.0.0.1:31577/assets/index-CBOubYLI.js",
+          "http://127.0.0.1:31577/assets/index-C5om9K2Y.css"
+        ]
+      },
+      "screenshot": "/tmp/issue157-evidence/final-1440x900-dark-zen.png"
+    }
+  ]
+}

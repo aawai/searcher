@@ -1,0 +1,1456 @@
+{
+  "stage": "M0 baseline",
+  "capturedBeforeM1Build": true,
+  "browser": "Chromium via page.mouse trusted pointer events",
+  "context": "Each trace used a fresh BrowserContext with isolated IndexedDB/storage; runner and context shared current local authenticated test identity. No account or repository changes.",
+  "matrix": [
+    {
+      "viewport": "1440x900",
+      "direction": "left",
+      "initialFrame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "limit": 0,
+      "edgePointer": {
+        "x": 456,
+        "y": 204
+      },
+      "overrunPx": 100,
+      "frame": {
+        "atLimit": {
+          "x": 0,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 760,
+          "bottom": 726
+        },
+        "afterOverrun": {
+          "x": 0,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 760,
+          "bottom": 726
+        },
+        "reverse5": {
+          "x": 0,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 760,
+          "bottom": 726
+        },
+        "reverse10": {
+          "x": 0,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 760,
+          "bottom": 726
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": null,
+        "reverse5": null,
+        "reverse10": null,
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 758
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 1408,
+          "height": 726
+        },
+        "chromeBottom": 64,
+        "dockTop": 822,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1440-left.json",
+        "/tmp/issue157-evidence/m0-1440-left-before.png",
+        "/tmp/issue157-evidence/m0-1440-left-after.png"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "direction": "right",
+      "initialFrame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "limit": 680,
+      "edgePointer": {
+        "x": 1136,
+        "y": 204
+      },
+      "overrunPx": 100,
+      "frame": {
+        "atLimit": {
+          "x": 680,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 1440,
+          "bottom": 726
+        },
+        "afterOverrun": {
+          "x": 680,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 1440,
+          "bottom": 726
+        },
+        "reverse5": {
+          "x": 680,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 1440,
+          "bottom": 726
+        },
+        "reverse10": {
+          "x": 680,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "right": 1440,
+          "bottom": 726
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": null,
+        "reverse5": null,
+        "reverse10": null,
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 758
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 1408,
+          "height": 726
+        },
+        "chromeBottom": 64,
+        "dockTop": 822,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1440-right.json",
+        "/tmp/issue157-evidence/m0-1440-right-before.png",
+        "/tmp/issue157-evidence/m0-1440-right-after.png"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "direction": "top",
+      "initialFrame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "limit": 64,
+      "edgePointer": {
+        "x": 796,
+        "y": 108
+      },
+      "overrunPx": 50,
+      "frame": {
+        "atLimit": {
+          "x": 340,
+          "y": 64,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 630
+        },
+        "afterOverrun": {
+          "x": 340,
+          "y": 64,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 630
+        },
+        "reverse5": {
+          "x": 340,
+          "y": 64,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 630
+        },
+        "reverse10": {
+          "x": 340,
+          "y": 64,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 630
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": "maximize",
+        "reverse5": "maximize",
+        "reverse10": "maximize",
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 758
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 1408,
+          "height": 726
+        },
+        "chromeBottom": 64,
+        "dockTop": 822,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1440-top.json",
+        "/tmp/issue157-evidence/m0-1440-top-before.png",
+        "/tmp/issue157-evidence/m0-1440-top-after.png"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "direction": "bottom",
+      "initialFrame": {
+        "x": 340,
+        "y": 160,
+        "width": 760,
+        "height": 566,
+        "right": 1100,
+        "bottom": 726
+      },
+      "limit": 334,
+      "edgePointer": {
+        "x": 796,
+        "y": 378
+      },
+      "overrunPx": 100,
+      "frame": {
+        "atLimit": {
+          "x": 340,
+          "y": 334,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 900
+        },
+        "afterOverrun": {
+          "x": 340,
+          "y": 334,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 900
+        },
+        "reverse5": {
+          "x": 340,
+          "y": 334,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 900
+        },
+        "reverse10": {
+          "x": 340,
+          "y": 334,
+          "width": 760,
+          "height": 566,
+          "right": 1100,
+          "bottom": 900
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": null,
+        "reverse5": null,
+        "reverse10": null,
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 758
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 1408,
+          "height": 726
+        },
+        "chromeBottom": 64,
+        "dockTop": 822,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1440-bottom.json",
+        "/tmp/issue157-evidence/m0-1440-bottom-before.png",
+        "/tmp/issue157-evidence/m0-1440-bottom-after.png"
+      ]
+    },
+    {
+      "viewport": "1024x768",
+      "direction": "left",
+      "initialFrame": {
+        "x": 155,
+        "y": 146,
+        "width": 714,
+        "height": 463,
+        "right": 869,
+        "bottom": 609
+      },
+      "limit": 0,
+      "edgePointer": {
+        "x": 428.4,
+        "y": 190
+      },
+      "overrunPx": 100,
+      "frame": {
+        "atLimit": {
+          "x": 0,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 714,
+          "bottom": 609
+        },
+        "afterOverrun": {
+          "x": 0,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 714,
+          "bottom": 609
+        },
+        "reverse5": {
+          "x": 0,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 714,
+          "bottom": 609
+        },
+        "reverse10": {
+          "x": 0,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 714,
+          "bottom": 609
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": null,
+        "reverse5": null,
+        "reverse10": null,
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 768
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 626
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 992,
+          "height": 594
+        },
+        "chromeBottom": 64,
+        "dockTop": 690,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1024-left.json",
+        "/tmp/issue157-evidence/m0-1024-left-before.png",
+        "/tmp/issue157-evidence/m0-1024-left-after.png"
+      ]
+    },
+    {
+      "viewport": "1024x768",
+      "direction": "right",
+      "initialFrame": {
+        "x": 155,
+        "y": 146,
+        "width": 714,
+        "height": 463,
+        "right": 869,
+        "bottom": 609
+      },
+      "limit": 310,
+      "edgePointer": {
+        "x": 738.4,
+        "y": 190
+      },
+      "overrunPx": 100,
+      "frame": {
+        "atLimit": {
+          "x": 310,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 1024,
+          "bottom": 609
+        },
+        "afterOverrun": {
+          "x": 310,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 1024,
+          "bottom": 609
+        },
+        "reverse5": {
+          "x": 310,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 1024,
+          "bottom": 609
+        },
+        "reverse10": {
+          "x": 310,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "right": 1024,
+          "bottom": 609
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": null,
+        "reverse5": null,
+        "reverse10": null,
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 768
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 626
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 992,
+          "height": 594
+        },
+        "chromeBottom": 64,
+        "dockTop": 690,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1024-right.json",
+        "/tmp/issue157-evidence/m0-1024-right-before.png",
+        "/tmp/issue157-evidence/m0-1024-right-after.png"
+      ]
+    },
+    {
+      "viewport": "1024x768",
+      "direction": "top",
+      "initialFrame": {
+        "x": 155,
+        "y": 146,
+        "width": 714,
+        "height": 463,
+        "right": 869,
+        "bottom": 609
+      },
+      "limit": 64,
+      "edgePointer": {
+        "x": 583.4,
+        "y": 108
+      },
+      "overrunPx": 50,
+      "frame": {
+        "atLimit": {
+          "x": 155,
+          "y": 64,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 527
+        },
+        "afterOverrun": {
+          "x": 155,
+          "y": 64,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 527
+        },
+        "reverse5": {
+          "x": 155,
+          "y": 64,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 527
+        },
+        "reverse10": {
+          "x": 155,
+          "y": 64,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 527
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": "maximize",
+        "reverse5": "maximize",
+        "reverse10": "maximize",
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 768
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 626
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 992,
+          "height": 594
+        },
+        "chromeBottom": 64,
+        "dockTop": 690,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1024-top.json",
+        "/tmp/issue157-evidence/m0-1024-top-before.png",
+        "/tmp/issue157-evidence/m0-1024-top-after.png"
+      ]
+    },
+    {
+      "viewport": "1024x768",
+      "direction": "bottom",
+      "initialFrame": {
+        "x": 155,
+        "y": 146,
+        "width": 714,
+        "height": 463,
+        "right": 869,
+        "bottom": 609
+      },
+      "limit": 305,
+      "edgePointer": {
+        "x": 583.4,
+        "y": 349
+      },
+      "overrunPx": 100,
+      "frame": {
+        "atLimit": {
+          "x": 155,
+          "y": 305,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 768
+        },
+        "afterOverrun": {
+          "x": 155,
+          "y": 305,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 768
+        },
+        "reverse5": {
+          "x": 155,
+          "y": 305,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 768
+        },
+        "reverse10": {
+          "x": 155,
+          "y": 305,
+          "width": 714,
+          "height": 463,
+          "right": 869,
+          "bottom": 768
+        }
+      },
+      "captureAndActivation": {
+        "pointerId": 1,
+        "captureAtReverse": true,
+        "active": "true",
+        "activeIdAfterLeavingTitle": "apps",
+        "hitOutsideTitle": {
+          "tag": "DIV",
+          "className": "desktop-window desktop-window--active",
+          "isChrome": false
+        }
+      },
+      "snapPreview": {
+        "afterOverrun": null,
+        "reverse5": null,
+        "reverse10": null,
+        "releaseCoordinate": null
+      },
+      "geometry": {
+        "viewportRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 768
+        },
+        "workRect": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 626
+        },
+        "safeRect": {
+          "x": 16,
+          "y": 80,
+          "width": 992,
+          "height": 594
+        },
+        "chromeBottom": 64,
+        "dockTop": 690,
+        "windowGap": 16,
+        "chromeHeight": 44,
+        "usable": true
+      },
+      "eventSequence": [
+        {
+          "type": "pointerdown",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        },
+        {
+          "type": "gotpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": true
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "hasCapture": false
+        }
+      ],
+      "artifacts": [
+        "/tmp/issue157-evidence/m0-1024-bottom.json",
+        "/tmp/issue157-evidence/m0-1024-bottom-before.png",
+        "/tmp/issue157-evidence/m0-1024-bottom-after.png"
+      ]
+    }
+  ],
+  "diagnoses": {
+    "ordinaryEdgeGesture": "Capture pointerId1 persisted through outward movement, reverse movement, titlebar exit and until matching pointerup; activeId stayed apps. Baseline reverse5/reverse10 frame remained clamped, confirming overshoot dead zone.",
+    "topSnap": "Top-center overrun50 entered transient maximize preview; returning to top-boundary pointer before release cleared preview and did not commit Snap.",
+    "mismatchedPointerId": {
+      "before": {
+        "hasCapture1": true,
+        "frame": {
+          "x": 364,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "top": 160,
+          "right": 1124,
+          "bottom": 726,
+          "left": 364
+        },
+        "active": "true"
+      },
+      "synthetic": {
+        "type": "pointercancel",
+        "pointerId": 99,
+        "isTrusted": false
+      },
+      "after": {
+        "hasCapture1": false,
+        "active": "true",
+        "frame": {
+          "x": 364,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "top": 160,
+          "right": 1124,
+          "bottom": 726,
+          "left": 364
+        },
+        "draggingClass": false
+      },
+      "events": [
+        {
+          "type": "pointercancel",
+          "pointerId": 99,
+          "trusted": false,
+          "buttons": 1,
+          "xy": {
+            "x": 700,
+            "y": 300
+          },
+          "targetWindowId": "apps",
+          "targetClass": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+          "hit": {
+            "tag": "DIV",
+            "className": "workspace-section-label",
+            "windowId": "apps",
+            "isChrome": false
+          },
+          "hasCaptureForEventId": false,
+          "hasCaptureForMouseId1": true,
+          "snapshot": {
+            "at": 1615.9000000059605,
+            "geometry": {
+              "viewportRect": {
+                "x": 0,
+                "y": 0,
+                "width": 1440,
+                "height": 900
+              },
+              "workRect": {
+                "x": 0,
+                "y": 64,
+                "width": 1440,
+                "height": 758
+              },
+              "safeRect": {
+                "x": 16,
+                "y": 80,
+                "width": 1408,
+                "height": 726
+              },
+              "chromeBottom": 64,
+              "dockTop": 822,
+              "windowGap": 16,
+              "chromeHeight": 44,
+              "usable": true
+            },
+            "windows": [
+              {
+                "id": "apps",
+                "kind": "apps",
+                "active": "true",
+                "mode": "normal",
+                "snap": null,
+                "zIndex": "1",
+                "frame": {
+                  "x": 364,
+                  "y": 160,
+                  "width": 760,
+                  "height": 566,
+                  "right": 1124,
+                  "bottom": 726
+                },
+                "chrome": {
+                  "x": 365,
+                  "y": 161,
+                  "width": 758,
+                  "height": 44,
+                  "top": 161,
+                  "right": 1123,
+                  "bottom": 205,
+                  "left": 365
+                },
+                "styleTransform": "translate3d(364px, 160px, 0px)"
+              }
+            ],
+            "activeId": "apps",
+            "focus": {
+              "tag": "DIV",
+              "id": "",
+              "className": "desktop-window-chrome desktop-window-chrome--draggable desktop-window-chrome--dragging",
+              "ariaLabel": "窗口标题栏：应用"
+            },
+            "snapPreview": null,
+            "scroll": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 900
+            }
+          }
+        },
+        {
+          "type": "lostpointercapture",
+          "pointerId": 1,
+          "trusted": true,
+          "buttons": 0,
+          "xy": {
+            "x": 820,
+            "y": 204
+          },
+          "targetWindowId": "apps",
+          "targetClass": "desktop-window-chrome desktop-window-chrome--draggable",
+          "hit": {
+            "tag": "DIV",
+            "className": "desktop-window-chrome desktop-window-chrome--draggable",
+            "windowId": "apps",
+            "isChrome": true
+          },
+          "hasCaptureForEventId": false,
+          "hasCaptureForMouseId1": false,
+          "snapshot": {
+            "at": 1722.7000000029802,
+            "geometry": {
+              "viewportRect": {
+                "x": 0,
+                "y": 0,
+                "width": 1440,
+                "height": 900
+              },
+              "workRect": {
+                "x": 0,
+                "y": 64,
+                "width": 1440,
+                "height": 758
+              },
+              "safeRect": {
+                "x": 16,
+                "y": 80,
+                "width": 1408,
+                "height": 726
+              },
+              "chromeBottom": 64,
+              "dockTop": 822,
+              "windowGap": 16,
+              "chromeHeight": 44,
+              "usable": true
+            },
+            "windows": [
+              {
+                "id": "apps",
+                "kind": "apps",
+                "active": "true",
+                "mode": "normal",
+                "snap": null,
+                "zIndex": "1",
+                "frame": {
+                  "x": 364,
+                  "y": 160,
+                  "width": 760,
+                  "height": 566,
+                  "right": 1124,
+                  "bottom": 726
+                },
+                "chrome": {
+                  "x": 365,
+                  "y": 161,
+                  "width": 758,
+                  "height": 44,
+                  "top": 161,
+                  "right": 1123,
+                  "bottom": 205,
+                  "left": 365
+                },
+                "styleTransform": "translate3d(364px, 160px, 0px)"
+              }
+            ],
+            "activeId": "apps",
+            "focus": {
+              "tag": "DIV",
+              "id": "",
+              "className": "desktop-window-chrome desktop-window-chrome--draggable",
+              "ariaLabel": "窗口标题栏：应用"
+            },
+            "snapPreview": null,
+            "scroll": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 900
+            }
+          }
+        },
+        {
+          "type": "pointerup",
+          "pointerId": 1,
+          "trusted": true,
+          "buttons": 0,
+          "xy": {
+            "x": 820,
+            "y": 204
+          },
+          "targetWindowId": "apps",
+          "targetClass": "desktop-window-chrome desktop-window-chrome--draggable",
+          "hit": {
+            "tag": "DIV",
+            "className": "desktop-window-chrome desktop-window-chrome--draggable",
+            "windowId": "apps",
+            "isChrome": true
+          },
+          "hasCaptureForEventId": false,
+          "hasCaptureForMouseId1": false,
+          "snapshot": {
+            "at": 1723.1000000014901,
+            "geometry": {
+              "viewportRect": {
+                "x": 0,
+                "y": 0,
+                "width": 1440,
+                "height": 900
+              },
+              "workRect": {
+                "x": 0,
+                "y": 64,
+                "width": 1440,
+                "height": 758
+              },
+              "safeRect": {
+                "x": 16,
+                "y": 80,
+                "width": 1408,
+                "height": 726
+              },
+              "chromeBottom": 64,
+              "dockTop": 822,
+              "windowGap": 16,
+              "chromeHeight": 44,
+              "usable": true
+            },
+            "windows": [
+              {
+                "id": "apps",
+                "kind": "apps",
+                "active": "true",
+                "mode": "normal",
+                "snap": null,
+                "zIndex": "1",
+                "frame": {
+                  "x": 364,
+                  "y": 160,
+                  "width": 760,
+                  "height": 566,
+                  "right": 1124,
+                  "bottom": 726
+                },
+                "chrome": {
+                  "x": 365,
+                  "y": 161,
+                  "width": 758,
+                  "height": 44,
+                  "top": 161,
+                  "right": 1123,
+                  "bottom": 205,
+                  "left": 365
+                },
+                "styleTransform": "translate3d(364px, 160px, 0px)"
+              }
+            ],
+            "activeId": "apps",
+            "focus": {
+              "tag": "DIV",
+              "id": "",
+              "className": "desktop-window-chrome desktop-window-chrome--draggable",
+              "ariaLabel": "窗口标题栏：应用"
+            },
+            "snapPreview": null,
+            "scroll": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 900
+            }
+          }
+        }
+      ],
+      "artifact": "/tmp/issue157-evidence/m0-1440-mismatched-pointercancel.json"
+    },
+    "activationSwitch": {
+      "before": {
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "zIndex": "1",
+            "mode": "normal",
+            "rect": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "top": 160,
+              "right": 1100,
+              "bottom": 726,
+              "left": 340
+            }
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "BUTTON",
+          "id": "",
+          "ariaLabel": "收起工作区"
+        }
+      },
+      "notes": {
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "false",
+            "zIndex": "1",
+            "mode": "normal",
+            "rect": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "top": 160,
+              "right": 1100,
+              "bottom": 726,
+              "left": 340
+            }
+          },
+          {
+            "id": "notes",
+            "kind": "notes",
+            "active": "true",
+            "zIndex": "2",
+            "mode": "normal",
+            "rect": {
+              "x": 400,
+              "y": 175,
+              "width": 640,
+              "height": 537,
+              "top": 175,
+              "right": 1040,
+              "bottom": 712,
+              "left": 400
+            }
+          }
+        ],
+        "activeId": "notes",
+        "focus": {
+          "tag": "BUTTON",
+          "id": "",
+          "ariaLabel": "收起工作区"
+        }
+      },
+      "apps": {
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "active": "true",
+            "zIndex": "2",
+            "mode": "normal",
+            "rect": {
+              "x": 340,
+              "y": 160,
+              "width": 760,
+              "height": 566,
+              "top": 160,
+              "right": 1100,
+              "bottom": 726,
+              "left": 340
+            }
+          },
+          {
+            "id": "notes",
+            "kind": "notes",
+            "active": "false",
+            "zIndex": "1",
+            "mode": "normal",
+            "rect": {
+              "x": 400,
+              "y": 175,
+              "width": 640,
+              "height": 537,
+              "top": 175,
+              "right": 1040,
+              "bottom": 712,
+              "left": 400
+            }
+          }
+        ],
+        "activeId": "apps",
+        "focus": {
+          "tag": "BUTTON",
+          "id": "",
+          "ariaLabel": "收起工作区"
+        }
+      },
+      "artifact": "/tmp/issue157-evidence/m0-1440-active-switch.json"
+    },
+    "classification": {
+      "A_captureEarlyRelease": "Not observed in any ordinary trusted edge gesture; pointerId1 had capture from gotpointercapture until matching pointerup.",
+      "B_clampedWindowWithCapture": "Observed on all eight normal boundary gestures; frame stayed clamped through 100px outward and reverse5/reverse10 while capture remained true.",
+      "C_applicationActiveIdChange": "No activeId change during boundary drag, titlebar exit, release, or mismatched-cancel repro; activeId changed only after explicit Dock selection between apps and notes.",
+      "D_hoverOnlyChange": "After pointer moved to y=height−1, elementFromPoint hit desktop-window body rather than titlebar; activeId remained apps and capture remained true.",
+      "E_externalViewportEventLoss": "No evidence of viewport event loss: trusted pointermove events continued through the in-viewport gestures and matching pointerup/lostcapture were observed.",
+      "M1Gate": "M1 is warranted by the actual pointerId1 + synthetic nonmatching pointercancel99 trace (and Main’s separate baseline rect/lifecycle trace); ordinary hover loss alone does not justify M1."
+    }
+  },
+  "limitations": [
+    "This is Chromium automation, not a physical mouse/device trace.",
+    "Auth identity was reused within fresh contexts to load Widgets; account identity was not separately provisioned.",
+    "Safari/real-device results are not claimed; final touch-emulation result pending."
+  ],
+  "sourceArtifacts": "/tmp/issue157-evidence/"
+}

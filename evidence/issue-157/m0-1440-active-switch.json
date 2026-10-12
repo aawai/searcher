@@ -1,0 +1,119 @@
+{
+  "scenario": "M0 explicit activation switching between two visible Widgets windows",
+  "method": "Actual dock button clicks; two separate workspace windows; isolated storage context",
+  "initial": {
+    "windows": [
+      {
+        "id": "apps",
+        "kind": "apps",
+        "active": "true",
+        "zIndex": "1",
+        "mode": "normal",
+        "rect": {
+          "x": 340,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "top": 160,
+          "right": 1100,
+          "bottom": 726,
+          "left": 340
+        }
+      }
+    ],
+    "activeId": "apps",
+    "focus": {
+      "tag": "BUTTON",
+      "id": "",
+      "ariaLabel": "收起工作区"
+    }
+  },
+  "afterNotesSelection": {
+    "windows": [
+      {
+        "id": "apps",
+        "kind": "apps",
+        "active": "false",
+        "zIndex": "1",
+        "mode": "normal",
+        "rect": {
+          "x": 340,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "top": 160,
+          "right": 1100,
+          "bottom": 726,
+          "left": 340
+        }
+      },
+      {
+        "id": "notes",
+        "kind": "notes",
+        "active": "true",
+        "zIndex": "2",
+        "mode": "normal",
+        "rect": {
+          "x": 400,
+          "y": 175,
+          "width": 640,
+          "height": 537,
+          "top": 175,
+          "right": 1040,
+          "bottom": 712,
+          "left": 400
+        }
+      }
+    ],
+    "activeId": "notes",
+    "focus": {
+      "tag": "BUTTON",
+      "id": "",
+      "ariaLabel": "收起工作区"
+    }
+  },
+  "afterAppsSelection": {
+    "windows": [
+      {
+        "id": "apps",
+        "kind": "apps",
+        "active": "true",
+        "zIndex": "2",
+        "mode": "normal",
+        "rect": {
+          "x": 340,
+          "y": 160,
+          "width": 760,
+          "height": 566,
+          "top": 160,
+          "right": 1100,
+          "bottom": 726,
+          "left": 340
+        }
+      },
+      {
+        "id": "notes",
+        "kind": "notes",
+        "active": "false",
+        "zIndex": "1",
+        "mode": "normal",
+        "rect": {
+          "x": 400,
+          "y": 175,
+          "width": 640,
+          "height": 537,
+          "top": 175,
+          "right": 1040,
+          "bottom": 712,
+          "left": 400
+        }
+      }
+    ],
+    "activeId": "apps",
+    "focus": {
+      "tag": "BUTTON",
+      "id": "",
+      "ariaLabel": "收起工作区"
+    }
+  }
+}
