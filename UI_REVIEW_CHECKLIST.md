@@ -4,6 +4,39 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #163 Canonical / Presentation Geometry
+
+- [x] M0 真实 Chromium 红测：1440×900 将窗口放到 x=540，缩到 1024×768 后
+      x=264，恢复 1440 后旧实现仍为 x=264；focused E2E 同样失败。
+- [x] 新实现实页：canonical `{x:540,y:160,width:760,height:663}` 缩屏时显示
+      `{x:264,y:105,width:760,height:663}`，恢复视口后原 frame 完整恢复。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Widgets/Zen 的 12
+      组实页截图： Widgets 分别为 Sheet、constrained 和 free Desktop，Zen 为
+      Sheet/Panel； document 横向 overflow 均为 0。900×200 fallback
+      实页的窗口高度为 136px， 标题栏与收起按钮可见。
+- [x] 复用现有窗口与测量 owner；不新增视觉 token、依赖、编辑器树或 Overview
+      geometry preview。basis 仅属于 runtime，v4 payload 与 storage key
+      保持不变。
+- [x] focused Chromium 4 cases：shrink/grow + focus/pagehide 的 v4 frame 保持；
+      1024 下 MOVE/RESIZE 建立新 intent；900 下工作区切换、Dock、preset、
+      收起/重开不污染自由桌面；Snap/最大化/Restore/拖出 grab ratio 保持。 首帧
+      ratio 期望 0.68、实测 0.67999998。
+- [x] 另以真实鼠标将 normal width 设为 1200px，最大化后缩到 1024px 再拖出： 首个
+      normal preview 与最终 commit 的宽度均为 1024px，无超屏首帧； 20% grab
+      的实测 ratio 为 0.205859375（边界 clamp 后）。
+- [x] 审查补强 own-basis 原始比例与边界校验；被 reducer
+      拒绝的操作不授权覆盖旧缓存。 对应回归与完整单测通过。
+- [x] 受限收起保留 mounted state 后，关闭等待改为用户可见的 hidden；
+      不删除键盘/焦点断言。完整回归发现 Dock 焦点未恢复，修正 visibility
+      判断后， focused shell 的 9 steps 与最终完整 Workspace 均通过。
+- [x] 最终 `deno task test`：672 tests / 51 steps；
+      `deno task test:workspace`：29 tests / 135 steps；
+      `deno task test:documents`：6 tests / 65 steps，均 0 failed。
+      build、check:bundle、前端 TypeScript check、fmt/lint 全部通过； UI Guard
+      扫描 200 / 141 文件，violations/allowances 均为 0。
+- [x] 按用户授权最小修复既有 lint 阻断，并归一两个静态文件格式；
+      不改变搜索业务与本地 IO 的 Promise 合同。
+
 ## Issue #157 Widgets 拖拽边界
 
 - [x] 复用 DesktopWindow / WindowChrome；不改共享 geometry、state、persistence、

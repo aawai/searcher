@@ -1,12 +1,50 @@
 import { assertEquals, assertNotEquals } from "@std/assert";
-import { desktopGeometry, snapFrame } from "./desktop-geometry.ts";
+import {
+    desktopGeometry,
+    type Frame,
+    frameBasisForGeometry,
+    resolveWindowPresentationFrame,
+    snapFrame,
+    type SnapMode,
+    type WindowKind,
+} from "./desktop-geometry.ts";
 import {
     desktopReducer,
     type DesktopState,
+    type DesktopWindowState,
     initialDesktopState,
+    type WindowMode,
 } from "./desktop-state.ts";
 
 const sampleRect = desktopGeometry(1440, 900, 64, 820, 16, 48);
+
+function makeWindow(
+    id: string,
+    kind: WindowKind,
+    frame: Frame,
+    zOrder: number,
+    options: {
+        mode?: WindowMode;
+        snap?: SnapMode | null;
+        restoreFrame?: Frame | null;
+    } = {},
+): DesktopWindowState {
+    const restoreFrame = options.restoreFrame ?? null;
+    return {
+        id,
+        kind,
+        entityId: null,
+        frame,
+        frameBasis: frameBasisForGeometry(sampleRect),
+        restoreFrame,
+        restoreFrameBasis: restoreFrame
+            ? frameBasisForGeometry(sampleRect)
+            : null,
+        mode: options.mode ?? "normal",
+        zOrder,
+        snap: options.snap ?? null,
+    };
+}
 
 Deno.test("desktop-state: OPEN creates window, stacks on top, and activates", () => {
     let state = desktopReducer(initialDesktopState, {
@@ -25,6 +63,8 @@ Deno.test("desktop-state: OPEN creates window, stacks on top, and activates", ()
     assertEquals(win1.entityId, "app-entry-1");
     assertEquals(win1.mode, "normal");
     assertEquals(win1.restoreFrame, null);
+    assertEquals(win1.frameBasis, frameBasisForGeometry(sampleRect));
+    assertEquals(win1.restoreFrameBasis, null);
     assertEquals(win1.zOrder, 1);
     assertEquals(win1.frame.width, 760);
 
@@ -55,6 +95,8 @@ Deno.test("desktop-state: OPEN creates window, stacks on top, and activates", ()
     assertEquals(state.activeId, "app-1");
     const win1Refocused = state.windows.find((w) => w.id === "app-1")!;
     assertEquals(win1Refocused.frame, originalFrame);
+    assertEquals(win1Refocused.frameBasis, win1.frameBasis);
+    assertEquals(win1Refocused.restoreFrameBasis, null);
     // Bounded z-order: with 2 windows, topmost is 2, other is 1
     assertEquals(win1Refocused.zOrder, 2);
     assertEquals(state.windows.find((w) => w.id === "note-1")!.zOrder, 1);
@@ -107,12 +149,27 @@ Deno.test("desktop-state: FOCUS elevates stacking and updates activeId", () => {
         rect: sampleRect,
     });
     state = desktopReducer(state, {
+        type: "SNAP",
+        id: "w1",
+        snap: "left",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
         type: "OPEN",
         id: "w2",
         kind: "notes",
         rect: sampleRect,
     });
 
+    const geometryBeforeFocus = state.windows.map((window) => ({
+        id: window.id,
+        frame: window.frame,
+        frameBasis: window.frameBasis,
+        restoreFrame: window.restoreFrame,
+        restoreFrameBasis: window.restoreFrameBasis,
+        mode: window.mode,
+        snap: window.snap,
+    }));
     assertEquals(state.activeId, "w2");
     assertEquals(state.windows.find((w) => w.id === "w1")!.zOrder, 1);
     assertEquals(state.windows.find((w) => w.id === "w2")!.zOrder, 2);
@@ -122,6 +179,18 @@ Deno.test("desktop-state: FOCUS elevates stacking and updates activeId", () => {
     assertEquals(state.activeId, "w1");
     assertEquals(state.windows.find((w) => w.id === "w1")!.zOrder, 2);
     assertEquals(state.windows.find((w) => w.id === "w2")!.zOrder, 1);
+    assertEquals(
+        state.windows.map((window) => ({
+            id: window.id,
+            frame: window.frame,
+            frameBasis: window.frameBasis,
+            restoreFrame: window.restoreFrame,
+            restoreFrameBasis: window.restoreFrameBasis,
+            mode: window.mode,
+            snap: window.snap,
+        })),
+        geometryBeforeFocus,
+    );
 
     // Focusing already-focused topmost window is a no-op
     state = desktopReducer(state, { type: "FOCUS", id: "w1" });
@@ -141,37 +210,47 @@ Deno.test("desktop-state: NORMALIZE compresses z-orders to bounded 1..N preservi
     // Construct state with arbitrary/inflated z-orders
     const inflatedState: DesktopState = {
         windows: [
-            {
-                id: "w1",
-                kind: "apps",
-                entityId: null,
-                frame: { x: 0, y: 0, width: 760, height: 700 },
-                restoreFrame: null,
-                mode: "normal",
-                zOrder: 50,
-            },
-            {
-                id: "w2",
-                kind: "notes",
-                entityId: null,
-                frame: { x: 0, y: 0, width: 640, height: 600 },
-                restoreFrame: null,
-                mode: "normal",
-                zOrder: 500,
-            },
-            {
-                id: "w3",
-                kind: "note",
-                entityId: null,
-                frame: { x: 0, y: 0, width: 560, height: 500 },
-                restoreFrame: null,
-                mode: "normal",
-                zOrder: 12,
-            },
+            makeWindow("w1", "apps", {
+                x: 0,
+                y: 0,
+                width: 760,
+                height: 700,
+            }, 50),
+            makeWindow(
+                "w2",
+                "notes",
+                {
+                    x: 0,
+                    y: 0,
+                    width: 640,
+                    height: 600,
+                },
+                500,
+                {
+                    mode: "maximized",
+                    snap: "maximize",
+                    restoreFrame: { x: 50, y: 50, width: 500, height: 400 },
+                },
+            ),
+            makeWindow("w3", "note", {
+                x: 0,
+                y: 0,
+                width: 560,
+                height: 500,
+            }, 12),
         ],
         activeId: "w2",
     };
 
+    const geometryBeforeNormalize = inflatedState.windows.map((window) => ({
+        id: window.id,
+        frame: window.frame,
+        frameBasis: window.frameBasis,
+        restoreFrame: window.restoreFrame,
+        restoreFrameBasis: window.restoreFrameBasis,
+        mode: window.mode,
+        snap: window.snap,
+    }));
     const normalized = desktopReducer(inflatedState, { type: "NORMALIZE" });
     // Original order by zOrder: w3 (12) < w1 (50) < w2 (500)
     // Normalized: w3 -> 1, w1 -> 2, w2 -> 3
@@ -179,6 +258,18 @@ Deno.test("desktop-state: NORMALIZE compresses z-orders to bounded 1..N preservi
     assertEquals(normalized.windows.find((w) => w.id === "w1")!.zOrder, 2);
     assertEquals(normalized.windows.find((w) => w.id === "w2")!.zOrder, 3);
     assertEquals(normalized.activeId, "w2");
+    assertEquals(
+        normalized.windows.map((window) => ({
+            id: window.id,
+            frame: window.frame,
+            frameBasis: window.frameBasis,
+            restoreFrame: window.restoreFrame,
+            restoreFrameBasis: window.restoreFrameBasis,
+            mode: window.mode,
+            snap: window.snap,
+        })),
+        geometryBeforeNormalize,
+    );
 });
 
 Deno.test("desktop-state: MAXIMIZE saves restoreFrame, and RESTORE_FRAME clamps restored frame", () => {
@@ -201,6 +292,11 @@ Deno.test("desktop-state: MAXIMIZE saves restoreFrame, and RESTORE_FRAME clamps 
     const maximizedWin = state.windows[0];
     assertEquals(maximizedWin.mode, "maximized");
     assertEquals(maximizedWin.restoreFrame, initialFrame);
+    assertEquals(maximizedWin.frameBasis, frameBasisForGeometry(sampleRect));
+    assertEquals(
+        maximizedWin.restoreFrameBasis,
+        frameBasisForGeometry(sampleRect),
+    );
     assertEquals(
         maximizedWin.frame,
         snapFrame("maximize", sampleRect.workRect),
@@ -220,6 +316,8 @@ Deno.test("desktop-state: MAXIMIZE saves restoreFrame, and RESTORE_FRAME clamps 
     // Original width was 760, but smallerRect width is 600 -> clamped to 600
     assertEquals(restoredWin.frame.width, 600);
     assertEquals(restoredWin.frame.x, 0);
+    assertEquals(restoredWin.frameBasis, frameBasisForGeometry(smallerRect));
+    assertEquals(restoredWin.restoreFrameBasis, null);
 });
 
 Deno.test("desktop-state: MINIMIZE transfers focus, and RESTORE preserves prior maximized state", () => {
@@ -237,9 +335,15 @@ Deno.test("desktop-state: MINIMIZE transfers focus, and RESTORE preserves prior 
     });
 
     // 1. Minimize normal window w2 -> focus transfers to w1
+    const normalBeforeMinimize = state.windows.find((w) => w.id === "w2")!;
     state = desktopReducer(state, { type: "MINIMIZE", id: "w2" });
     assertEquals(state.windows.find((w) => w.id === "w2")!.mode, "minimized");
     assertEquals(state.activeId, "w1");
+    const minimizedNormal = state.windows.find((w) => w.id === "w2")!;
+    assertEquals(minimizedNormal.frame, normalBeforeMinimize.frame);
+    assertEquals(minimizedNormal.frameBasis, normalBeforeMinimize.frameBasis);
+    assertEquals(minimizedNormal.restoreFrame, null);
+    assertEquals(minimizedNormal.restoreFrameBasis, null);
 
     // Restoring normal window w2 restores it to "normal" mode and activates it
     state = desktopReducer(state, {
@@ -248,6 +352,14 @@ Deno.test("desktop-state: MINIMIZE transfers focus, and RESTORE preserves prior 
         rect: sampleRect,
     });
     assertEquals(state.windows.find((w) => w.id === "w2")!.mode, "normal");
+    assertEquals(
+        state.windows.find((w) => w.id === "w2")!.frame,
+        normalBeforeMinimize.frame,
+    );
+    assertEquals(
+        state.windows.find((w) => w.id === "w2")!.frameBasis,
+        normalBeforeMinimize.frameBasis,
+    );
     assertEquals(state.activeId, "w2");
 
     // 2. Maximize w2
@@ -260,6 +372,9 @@ Deno.test("desktop-state: MINIMIZE transfers focus, and RESTORE preserves prior 
     const preMinRestoreFrame =
         state.windows.find((w) => w.id === "w2")!.restoreFrame;
     assertNotEquals(preMinRestoreFrame, null);
+    const preMinRestoreFrameBasis =
+        state.windows.find((w) => w.id === "w2")!.restoreFrameBasis;
+    assertNotEquals(preMinRestoreFrameBasis, null);
 
     // Minimize maximized w2
     state = desktopReducer(state, { type: "MINIMIZE", id: "w2" });
@@ -276,6 +391,7 @@ Deno.test("desktop-state: MINIMIZE transfers focus, and RESTORE preserves prior 
     const restoredFromMax = state.windows.find((w) => w.id === "w2")!;
     assertEquals(restoredFromMax.mode, "maximized");
     assertEquals(restoredFromMax.restoreFrame, preMinRestoreFrame);
+    assertEquals(restoredFromMax.restoreFrameBasis, preMinRestoreFrameBasis);
     assertEquals(state.activeId, "w2");
 });
 
@@ -296,6 +412,10 @@ Deno.test("desktop-state: MOVE and RESIZE update frame clamped and un-maximize",
         rect: sampleRect,
     });
     assertEquals(state.windows[0].frame, movedFrame);
+    assertEquals(
+        state.windows[0].frameBasis,
+        frameBasisForGeometry(sampleRect),
+    );
 
     // Move with out-of-bounds coordinates clamps to the viewport while keeping the titlebar above Dock.
     state = desktopReducer(state, {
@@ -330,6 +450,11 @@ Deno.test("desktop-state: MOVE and RESIZE update frame clamped and un-maximize",
         rect: sampleRect,
     });
     assertEquals(state.windows[0].mode, "normal");
+    assertEquals(
+        state.windows[0].frameBasis,
+        frameBasisForGeometry(sampleRect),
+    );
+    assertEquals(state.windows[0].restoreFrameBasis, null);
     assertEquals(state.windows[0].restoreFrame, null);
 
     // RESIZE updates frame and clamps
@@ -345,43 +470,170 @@ Deno.test("desktop-state: MOVE and RESIZE update frame clamped and un-maximize",
         width: 800,
         height: 650,
     });
+    assertEquals(
+        state.windows[0].frameBasis,
+        frameBasisForGeometry(sampleRect),
+    );
+    assertEquals(state.windows[0].restoreFrameBasis, null);
 });
 
-Deno.test("desktop-state: CLAMP bounds normal frames to the viewport and snaps to Work Rect", () => {
+Deno.test("desktop-state: semantic geometry commits record the current viewport basis", () => {
+    const smallRect = desktopGeometry(1024, 768, 56, 688, 16, 48);
+    const mediumRect = desktopGeometry(1280, 800, 64, 740, 16, 48);
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "apps",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    assertEquals(
+        state.windows[0].frameBasis,
+        frameBasisForGeometry(sampleRect),
+    );
+
+    state = desktopReducer(state, {
+        type: "MOVE",
+        id: "apps",
+        frame: { x: 80, y: 100, width: 500, height: 400 },
+        rect: smallRect,
+    });
+    assertEquals(state.windows[0].frameBasis, frameBasisForGeometry(smallRect));
+
+    state = desktopReducer(state, {
+        type: "RESIZE",
+        id: "apps",
+        frame: { x: 100, y: 120, width: 600, height: 500 },
+        rect: mediumRect,
+    });
+    assertEquals(
+        state.windows[0].frameBasis,
+        frameBasisForGeometry(mediumRect),
+    );
+
+    state = desktopReducer(state, {
+        type: "MAXIMIZE",
+        id: "apps",
+        rect: mediumRect,
+    });
+    assertEquals(
+        state.windows[0].restoreFrameBasis,
+        frameBasisForGeometry(mediumRect),
+    );
+    state = desktopReducer(state, {
+        type: "RESTORE",
+        id: "apps",
+        rect: smallRect,
+    });
+    assertEquals(state.windows[0].frameBasis, frameBasisForGeometry(smallRect));
+    assertEquals(state.windows[0].restoreFrameBasis, null);
+
+    state = desktopReducer(state, {
+        type: "MAXIMIZE",
+        id: "apps",
+        rect: smallRect,
+    });
+    state = desktopReducer(state, {
+        type: "RESTORE_FRAME",
+        id: "apps",
+        rect: mediumRect,
+    });
+    assertEquals(
+        state.windows[0].frameBasis,
+        frameBasisForGeometry(mediumRect),
+    );
+    assertEquals(state.windows[0].restoreFrameBasis, null);
+});
+
+Deno.test("desktop-state: changing snap modes preserves the canonical restore pair", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "apps",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "MOVE",
+        id: "apps",
+        frame: { x: 540, y: 160, width: 760, height: 566 },
+        rect: sampleRect,
+    });
+    const normalFrame = state.windows[0].frame;
+    const normalBasis = state.windows[0].frameBasis;
+
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "apps",
+        snap: "left",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "MAXIMIZE",
+        id: "apps",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].restoreFrame, normalFrame);
+    assertEquals(state.windows[0].restoreFrameBasis, normalBasis);
+
+    state = desktopReducer(state, { type: "MINIMIZE", id: "apps" });
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "apps",
+        snap: "bottom-right",
+        rect: sampleRect,
+    });
+    assertEquals(state.windows[0].mode, "snapped");
+    assertEquals(state.windows[0].restoreFrame, normalFrame);
+    assertEquals(state.windows[0].restoreFrameBasis, normalBasis);
+});
+
+Deno.test("desktop-state: presentation shrink and grow preserve normal and restore geometry", () => {
+    const wideRect = sampleRect;
+    const narrowRect = desktopGeometry(1024, 768, 64, 720, 16, 48);
     let state = desktopReducer(initialDesktopState, {
         type: "OPEN",
         id: "w-normal",
         kind: "apps",
-        rect: sampleRect,
+        rect: wideRect,
+    });
+    state = desktopReducer(state, {
+        type: "MOVE",
+        id: "w-normal",
+        frame: { x: 540, y: 160, width: 760, height: 566 },
+        rect: wideRect,
     });
     state = desktopReducer(state, {
         type: "OPEN",
         id: "w-max",
         kind: "notes",
-        rect: sampleRect,
+        rect: wideRect,
     });
     state = desktopReducer(state, {
         type: "MAXIMIZE",
         id: "w-max",
-        rect: sampleRect,
+        rect: wideRect,
     });
+    const canonicalState = structuredClone(state);
+    const normal = state.windows.find((w) => w.id === "w-normal")!;
+    const maximized = state.windows.find((w) => w.id === "w-max")!;
 
-    const shrunkRect = desktopGeometry(700, 500, 40, 460, 16, 48, 0);
-    state = desktopReducer(state, { type: "CLAMP", rect: shrunkRect });
-
-    const normalWin = state.windows.find((w) => w.id === "w-normal")!;
-    const maxWin = state.windows.find((w) => w.id === "w-max")!;
     assertEquals(
-        normalWin.frame.x + normalWin.frame.width <=
-            shrunkRect.viewportRect.width,
-        true,
+        resolveWindowPresentationFrame(normal, narrowRect),
+        { x: 264, y: 160, width: 760, height: 566 },
     );
-    assertEquals(normalWin.frame.y >= shrunkRect.chromeBottom, true);
     assertEquals(
-        normalWin.frame.y + shrunkRect.chromeHeight <= shrunkRect.dockTop,
-        true,
+        resolveWindowPresentationFrame(maximized, narrowRect),
+        snapFrame("maximize", narrowRect.workRect),
     );
-    assertEquals(maxWin.frame, shrunkRect.workRect);
+    assertEquals(state, canonicalState);
+    assertEquals(
+        resolveWindowPresentationFrame(normal, wideRect),
+        normal.frame,
+    );
+    assertEquals(
+        resolveWindowPresentationFrame(maximized, wideRect),
+        wideRect.workRect,
+    );
+    assertEquals(state, canonicalState);
 });
 
 Deno.test("desktop-state: regression - repeated elevations stay strictly bounded 1..N and preserve relative stacking", () => {
@@ -462,26 +714,26 @@ Deno.test("desktop-state: HYDRATE normalizes z-orders and validates activeId", (
         type: "HYDRATE",
         state: {
             windows: [
-                {
-                    id: "w1",
-                    kind: "apps",
-                    entityId: null,
-                    frame: { x: 0, y: 0, width: 600, height: 400 },
-                    restoreFrame: null,
-                    mode: "normal",
-                    zOrder: 10,
-                },
-                {
-                    id: "w2",
-                    kind: "notes",
-                    entityId: null,
-                    frame: { x: 50, y: 50, width: 600, height: 400 },
-                    restoreFrame: null,
-                    mode: "minimized",
-                    zOrder: 20,
-                },
+                makeWindow("w1", "apps", {
+                    x: 0,
+                    y: 0,
+                    width: 600,
+                    height: 400,
+                }, 10),
+                makeWindow(
+                    "w2",
+                    "notes",
+                    {
+                        x: 50,
+                        y: 50,
+                        width: 600,
+                        height: 400,
+                    },
+                    20,
+                    { mode: "minimized" },
+                ),
             ],
-            activeId: "w2", // minimized, should fall back to w1
+            activeId: "w2",
         },
     });
     assertEquals(hydrated.windows.length, 2);
@@ -791,7 +1043,7 @@ Deno.test("desktop-state: MOVE and RESIZE clear snap and restoreFrame, resetting
     assertEquals(state.windows[0].restoreFrame, null);
 });
 
-Deno.test("desktop-state: CLAMP recomputes snapped and maximized frames from Work Rect", () => {
+Deno.test("desktop-state: snapped and maximized presentations follow Work Rect without state writes", () => {
     let state = desktopReducer(initialDesktopState, {
         type: "OPEN",
         id: "w-snapped",
@@ -806,6 +1058,7 @@ Deno.test("desktop-state: CLAMP recomputes snapped and maximized frames from Wor
     });
     const snappedNormalFrame =
         state.windows.find((w) => w.id === "w-snapped")!.frame;
+    const initialBasis = state.windows[0].frameBasis;
 
     state = desktopReducer(state, {
         type: "SNAP",
@@ -818,27 +1071,34 @@ Deno.test("desktop-state: CLAMP recomputes snapped and maximized frames from Wor
         id: "w-max",
         rect: sampleRect,
     });
+    const semanticState = structuredClone(state);
 
     const newRect = desktopGeometry(1200, 800, 64, 740, 16, 48);
-    state = desktopReducer(state, { type: "CLAMP", rect: newRect });
-
     const winSnapped = state.windows.find((w) => w.id === "w-snapped")!;
+    const winMax = state.windows.find((w) => w.id === "w-max")!;
+    assertEquals(
+        resolveWindowPresentationFrame(winSnapped, newRect),
+        snapFrame("right", newRect.workRect),
+    );
     assertEquals(winSnapped.mode, "snapped");
     assertEquals(winSnapped.snap, "right");
-    assertEquals(winSnapped.frame, snapFrame("right", newRect.workRect));
     assertEquals(winSnapped.restoreFrame, snappedNormalFrame);
+    assertEquals(winSnapped.restoreFrameBasis, initialBasis);
 
-    const winMax = state.windows.find((w) => w.id === "w-max")!;
+    assertEquals(
+        resolveWindowPresentationFrame(winMax, newRect),
+        snapFrame("maximize", newRect.workRect),
+    );
     assertEquals(winMax.mode, "maximized");
     assertEquals(winMax.snap, "maximize");
-    assertEquals(winMax.frame, snapFrame("maximize", newRect.workRect));
+    assertEquals(winMax.restoreFrameBasis, initialBasis);
+    assertEquals(state, semanticState);
 });
 
-Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> switch snap -> minimize -> resize -> restore -> un-snap -> maximize -> restore_frame)", () => {
+Deno.test("desktop-state: Snap and Minimize preserve canonical restore geometry across viewport changes", () => {
     const r1440 = desktopGeometry(1440, 900, 64, 820, 16, 48);
     const r1024 = desktopGeometry(1024, 768, 56, 688, 16, 48);
 
-    // 1. Initial normal window
     let state = desktopReducer(initialDesktopState, {
         type: "OPEN",
         id: "w1",
@@ -846,8 +1106,8 @@ Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> sw
         rect: r1440,
     });
     const initialFrame = state.windows[0].frame;
+    const initialBasis = state.windows[0].frameBasis;
 
-    // 2. Snap to "left"
     state = desktopReducer(state, {
         type: "SNAP",
         id: "w1",
@@ -857,8 +1117,8 @@ Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> sw
     assertEquals(state.windows[0].mode, "snapped");
     assertEquals(state.windows[0].snap, "left");
     assertEquals(state.windows[0].restoreFrame, initialFrame);
+    assertEquals(state.windows[0].restoreFrameBasis, initialBasis);
 
-    // 3. Switch snap to "bottom-right" (MUST preserve initial normal restoreFrame)
     state = desktopReducer(state, {
         type: "SNAP",
         id: "w1",
@@ -868,44 +1128,56 @@ Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> sw
     assertEquals(state.windows[0].mode, "snapped");
     assertEquals(state.windows[0].snap, "bottom-right");
     assertEquals(state.windows[0].restoreFrame, initialFrame);
+    assertEquals(state.windows[0].restoreFrameBasis, initialBasis);
 
-    // 4. Minimize
     state = desktopReducer(state, { type: "MINIMIZE", id: "w1" });
+    const minimizedSemantic = structuredClone(state.windows[0]);
     assertEquals(state.windows[0].mode, "minimized");
-    assertEquals(state.windows[0].snap, "bottom-right");
-    assertEquals(state.windows[0].restoreFrame, initialFrame);
-
-    // 5. Viewport resize to 1024x768 while minimized
-    state = desktopReducer(state, { type: "CLAMP", rect: r1024 });
-    assertEquals(state.windows[0].mode, "minimized");
-    assertEquals(state.windows[0].snap, "bottom-right");
     assertEquals(
-        state.windows[0].frame,
+        resolveWindowPresentationFrame(state.windows[0], r1024),
         snapFrame("bottom-right", r1024.workRect),
     );
+    assertEquals(state.windows[0], minimizedSemantic);
 
-    // 6. Restore from minimized: recovers snapped semantic in new resolution!
     state = desktopReducer(state, { type: "RESTORE", id: "w1", rect: r1024 });
     assertEquals(state.windows[0].mode, "snapped");
     assertEquals(state.windows[0].snap, "bottom-right");
+    assertEquals(state.windows[0].frame, minimizedSemantic.frame);
+    assertEquals(state.windows[0].frameBasis, minimizedSemantic.frameBasis);
+    assertEquals(state.windows[0].restoreFrame, initialFrame);
+    assertEquals(state.windows[0].restoreFrameBasis, initialBasis);
     assertEquals(
-        state.windows[0].frame,
+        resolveWindowPresentationFrame(state.windows[0], r1024),
         snapFrame("bottom-right", r1024.workRect),
     );
-    assertNotEquals(state.windows[0].restoreFrame, null);
 
-    // 7. Non-minimized RESTORE: restores to normal mode with restoreFrame
     state = desktopReducer(state, { type: "RESTORE", id: "w1", rect: r1024 });
     assertEquals(state.windows[0].mode, "normal");
     assertEquals(state.windows[0].snap, null);
+    assertEquals(state.windows[0].frame, {
+        x: 264,
+        y: 160,
+        width: 760,
+        height: 565,
+    });
+    assertEquals(state.windows[0].frameBasis, frameBasisForGeometry(r1024));
     assertEquals(state.windows[0].restoreFrame, null);
+    assertEquals(state.windows[0].restoreFrameBasis, null);
 
-    // 8. Maximize window
     state = desktopReducer(state, { type: "MAXIMIZE", id: "w1", rect: r1024 });
     assertEquals(state.windows[0].mode, "maximized");
     assertEquals(state.windows[0].snap, "maximize");
+    assertEquals(state.windows[0].restoreFrame, {
+        x: 264,
+        y: 160,
+        width: 760,
+        height: 565,
+    });
+    assertEquals(
+        state.windows[0].restoreFrameBasis,
+        frameBasisForGeometry(r1024),
+    );
 
-    // 9. RESTORE_FRAME returns to normal mode
     state = desktopReducer(state, {
         type: "RESTORE_FRAME",
         id: "w1",
@@ -913,18 +1185,136 @@ Deno.test("desktop-state: regression - full Snap lifecycle (normal -> snap -> sw
     });
     assertEquals(state.windows[0].mode, "normal");
     assertEquals(state.windows[0].snap, null);
+    assertEquals(state.windows[0].frameBasis, frameBasisForGeometry(r1024));
     assertEquals(state.windows[0].restoreFrame, null);
+    assertEquals(state.windows[0].restoreFrameBasis, null);
 });
-Deno.test("desktop-state: unusable viewport measurements do not change window geometry", () => {
+
+Deno.test("desktop-state: OPEN restores minimized windows without replacing their canonical geometry", () => {
+    let state = desktopReducer(initialDesktopState, {
+        type: "OPEN",
+        id: "normal",
+        kind: "apps",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "MOVE",
+        id: "normal",
+        frame: { x: 540, y: 160, width: 760, height: 566 },
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "snapped",
+        kind: "notes",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "SNAP",
+        id: "snapped",
+        snap: "right",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "maximized",
+        kind: "notes",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, {
+        type: "MAXIMIZE",
+        id: "maximized",
+        rect: sampleRect,
+    });
+    state = desktopReducer(state, { type: "MINIMIZE", id: "normal" });
+    state = desktopReducer(state, { type: "MINIMIZE", id: "snapped" });
+    state = desktopReducer(state, { type: "MINIMIZE", id: "maximized" });
+
+    const canonicalNormal = structuredClone(
+        state.windows.find((w) => w.id === "normal")!,
+    );
+    const canonicalSnapped = structuredClone(
+        state.windows.find((w) => w.id === "snapped")!,
+    );
+    const canonicalMaximized = structuredClone(
+        state.windows.find((w) => w.id === "maximized")!,
+    );
+    const narrowRect = desktopGeometry(1024, 768, 64, 720, 16, 48);
+
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "normal",
+        kind: "apps",
+        rect: narrowRect,
+    });
+    const restoredNormal = state.windows.find((w) => w.id === "normal")!;
+    assertEquals(restoredNormal.mode, "normal");
+    assertEquals(restoredNormal.frame, canonicalNormal.frame);
+    assertEquals(restoredNormal.frameBasis, canonicalNormal.frameBasis);
+    assertEquals(restoredNormal.restoreFrame, null);
+    assertEquals(restoredNormal.restoreFrameBasis, null);
+
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "snapped",
+        kind: "notes",
+        rect: narrowRect,
+    });
+    const restoredSnapped = state.windows.find((w) => w.id === "snapped")!;
+    assertEquals(restoredSnapped.mode, "snapped");
+    assertEquals(restoredSnapped.snap, "right");
+    assertEquals(restoredSnapped.frame, canonicalSnapped.frame);
+    assertEquals(restoredSnapped.frameBasis, canonicalSnapped.frameBasis);
+    assertEquals(restoredSnapped.restoreFrame, canonicalSnapped.restoreFrame);
+    assertEquals(
+        restoredSnapped.restoreFrameBasis,
+        canonicalSnapped.restoreFrameBasis,
+    );
+    assertEquals(
+        resolveWindowPresentationFrame(restoredSnapped, narrowRect),
+        snapFrame("right", narrowRect.workRect),
+    );
+    state = desktopReducer(state, {
+        type: "OPEN",
+        id: "maximized",
+        kind: "notes",
+        rect: narrowRect,
+    });
+    const restoredMaximized = state.windows.find((w) => w.id === "maximized")!;
+    assertEquals(restoredMaximized.mode, "maximized");
+    assertEquals(restoredMaximized.snap, "maximize");
+    assertEquals(restoredMaximized.frame, canonicalMaximized.frame);
+    assertEquals(restoredMaximized.frameBasis, canonicalMaximized.frameBasis);
+    assertEquals(
+        restoredMaximized.restoreFrame,
+        canonicalMaximized.restoreFrame,
+    );
+    assertEquals(
+        restoredMaximized.restoreFrameBasis,
+        canonicalMaximized.restoreFrameBasis,
+    );
+    assertEquals(
+        resolveWindowPresentationFrame(restoredMaximized, narrowRect),
+        snapFrame("maximize", narrowRect.workRect),
+    );
+});
+
+Deno.test("desktop-state: unusable viewport presentation does not write semantic geometry", () => {
     const state = desktopReducer(initialDesktopState, {
         type: "OPEN",
         id: "apps",
         kind: "apps",
         rect: sampleRect,
     });
+    const canonicalState = structuredClone(state);
     const unusable = desktopGeometry(1024, 200, 64, 100, 16, 48);
 
     assertEquals(unusable.usable, false);
+    assertEquals(
+        resolveWindowPresentationFrame(state.windows[0], unusable),
+        { x: 264, y: 64, width: 760, height: 136 },
+    );
+    assertEquals(state, canonicalState);
     assertEquals(
         desktopReducer(initialDesktopState, {
             type: "OPEN",
@@ -933,10 +1323,6 @@ Deno.test("desktop-state: unusable viewport measurements do not change window ge
             rect: unusable,
         }),
         initialDesktopState,
-    );
-    assertEquals(
-        desktopReducer(state, { type: "CLAMP", rect: unusable }),
-        state,
     );
     assertEquals(
         desktopReducer(state, {

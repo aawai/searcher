@@ -176,7 +176,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     ).first();
                     if (await btn.isVisible()) {
                         await btn.click();
-                        await win.waitFor({ state: "detached" });
+                        await win.waitFor({ state: "hidden" });
                     }
                 }
             }
@@ -201,7 +201,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         ).first();
         if (await btn.isVisible()) {
             await btn.click();
-            await panel.waitFor({ state: "detached" });
+            await panel.waitFor({ state: "hidden" });
         }
     };
     async function openApps() {
@@ -667,8 +667,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         if (closingId) {
                             await page.locator(
                                 '[data-window-id="' + closingId + '"]',
-                            ).waitFor({ state: "detached" });
-                        } else await panel.waitFor({ state: "detached" });
+                            ).waitFor({ state: "hidden" });
+                        } else await panel.waitFor({ state: "hidden" });
                         await page.waitForFunction(
                             (expected) =>
                                 document.activeElement?.getAttribute(
@@ -829,7 +829,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.waitForFunction(() => globalThis.innerWidth === 800);
             await page.keyboard.press("Escape");
             await page.locator('.desktop-window[data-window-id="notes"]')
-                .waitFor({ state: "detached" });
+                .waitFor({ state: "hidden" });
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("data-workspace") ===
                     "notes"

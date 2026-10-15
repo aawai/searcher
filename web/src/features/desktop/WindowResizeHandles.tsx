@@ -17,6 +17,7 @@ import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 
 export interface WindowResizeHandlesProps {
     window: DesktopWindowState;
+    presentationFrame: Frame;
     rect: DesktopGeometry;
     active: boolean;
     dispatch: Dispatch<DesktopAction>;
@@ -79,6 +80,7 @@ function useIsDesktopViewport(): boolean {
 export function WindowResizeHandles({
     window: win,
     rect,
+    presentationFrame,
     active,
     dispatch,
     windowRef,
@@ -130,8 +132,8 @@ export function WindowResizeHandles({
             direction,
             startX: e.clientX,
             startY: e.clientY,
-            startFrame: { ...win.frame },
-            currentFrame: { ...win.frame },
+            startFrame: { ...presentationFrame },
+            currentFrame: { ...presentationFrame },
             pointerId,
             handleEl,
         };
@@ -197,7 +199,6 @@ export function WindowResizeHandles({
         const winEl = windowRef.current ??
             (session.handleEl.closest(".desktop-window") as HTMLElement | null);
         if (!rect.usable) {
-            const presentationFrame = clampFrame(win.frame, rect, win.kind);
             if (winEl) {
                 winEl.style.transform =
                     `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
@@ -253,7 +254,6 @@ export function WindowResizeHandles({
         const winEl = windowRef.current ??
             (session.handleEl.closest(".desktop-window") as HTMLElement | null);
         if (!rect.usable) {
-            const presentationFrame = clampFrame(win.frame, rect, win.kind);
             if (winEl) {
                 winEl.style.transform =
                     `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
@@ -318,7 +318,7 @@ export function WindowResizeHandles({
         }
 
         const nextFrame = resizeFrame(
-            win.frame,
+            presentationFrame,
             direction,
             dx,
             dy,
@@ -359,13 +359,13 @@ export function WindowResizeHandles({
                     aria-valuemax={100}
                     aria-valuenow={Math.round(
                         100 * (dir === "n" || dir === "s"
-                            ? win.frame.height /
+                            ? presentationFrame.height /
                                 Math.max(1, rect.viewportRect.height)
-                            : win.frame.width /
+                            : presentationFrame.width /
                                 Math.max(1, rect.viewportRect.width)),
                     )}
-                    aria-valuetext={`${Math.round(win.frame.width)} × ${
-                        Math.round(win.frame.height)
+                    aria-valuetext={`${Math.round(presentationFrame.width)} × ${
+                        Math.round(presentationFrame.height)
                     } 像素`}
                     aria-orientation={dir === "n" || dir === "s"
                         ? "horizontal"

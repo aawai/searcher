@@ -223,7 +223,11 @@ export function SearchHome() {
                 dispatchHost({ type: "activate", kind: null });
             }
             if (appearance.style === "widgets") {
-                dispatchDesktop({ type: "CLOSE", id: kind });
+                dispatchDesktop(
+                    isConstrainedViewport(globalThis.innerWidth)
+                        ? { type: "MINIMIZE", id: kind }
+                        : { type: "CLOSE", id: kind },
+                );
             }
             return;
         }

@@ -3,9 +3,16 @@
  * Safe is only for OPEN/cascade; work is only for Snap; normal may extend behind Dock.
  */
 
+import type { DesktopWindowState } from "./desktop-state.ts";
+
 export interface Frame {
     x: number;
     y: number;
+    width: number;
+    height: number;
+}
+
+export interface FrameBasis {
     width: number;
     height: number;
 }
@@ -26,6 +33,21 @@ export interface DesktopGeometry {
     windowGap: number;
     chromeHeight: number;
     usable: boolean;
+}
+
+export function frameBasisForGeometry(
+    geometry: DesktopGeometry,
+): FrameBasis {
+    const { width, height } = geometry.viewportRect;
+    if (
+        !Number.isFinite(width) || width <= 0 ||
+        !Number.isFinite(height) || height <= 0
+    ) {
+        throw new RangeError(
+            "Frame basis dimensions must be positive and finite",
+        );
+    }
+    return { width, height };
 }
 
 function finite(value: number, fallback = 0): number {
@@ -172,6 +194,31 @@ export function clampFrame(
         width,
         height,
     };
+}
+
+/**
+ * Resolves the current presentation for a semantic window without changing its
+ * canonical frame or restore metadata.
+ */
+export function resolveWindowPresentationFrame(
+    win: DesktopWindowState,
+    geometry: DesktopGeometry,
+): Frame {
+    if (!geometry.usable) {
+        return clampFrame(
+            win.restoreFrame ?? win.frame,
+            geometry,
+            win.kind,
+        );
+    }
+
+    if (win.mode === "maximized" || win.snap === "maximize") {
+        return snapFrame("maximize", geometry.workRect);
+    }
+    if (win.snap) {
+        return snapFrame(win.snap, geometry.workRect);
+    }
+    return clampFrame(win.frame, geometry, win.kind);
 }
 
 export function defaultFrame(

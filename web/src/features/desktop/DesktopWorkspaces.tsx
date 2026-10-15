@@ -25,12 +25,8 @@ import {
     CONSTRAINED_PRESETS,
     type ConstrainedPreset,
 } from "./constrained-geometry.ts";
-import type { DesktopGeometry } from "./desktop-geometry.ts";
-import type {
-    DesktopAction,
-    DesktopState,
-    DesktopWindowState,
-} from "./desktop-state.ts";
+import type { DesktopGeometry, Frame } from "./desktop-geometry.ts";
+import type { DesktopAction, DesktopState } from "./desktop-state.ts";
 import { getTopmostVisibleWindowId } from "./desktop-state.ts";
 import type {
     WorkspaceCoreState,
@@ -221,7 +217,9 @@ export function DesktopWorkspaces({
     useLayoutEffect(() => {
         const frames: number[] = [];
         for (const kind of ["apps", "notes", "documents"] as const) {
-            const open = state.windows.some((win) => win.kind === kind);
+            const open = state.windows.some((win) =>
+                win.kind === kind && win.mode !== "minimized"
+            );
             const view = models[kind].route.view;
             const before = previous.current[kind];
             if (before.open && !open) {
@@ -245,7 +243,7 @@ export function DesktopWorkspaces({
         return () => frames.forEach(cancelAnimationFrame);
         // Pointer activation must not steal focus from domain inputs.
     }, [
-        state.windows.length,
+        state.windows,
         models.apps.route.view,
         models.notes.route.view,
         models.documents.route.view,
@@ -373,7 +371,7 @@ export function DesktopWorkspaces({
 
     return (
         <>
-            <DesktopCanvas rect={rect} dispatch={dispatch}>
+            <DesktopCanvas rect={rect}>
                 {openWindows.map((win) => {
                     if (win.kind === "note") {
                         if (isConstrained) {
@@ -474,23 +472,22 @@ export function DesktopWorkspaces({
                         kind === "documents" && isNested && !presetChosen
                             ? "large"
                             : preset;
-                    const effectiveWindow: DesktopWindowState = isConstrained
-                        ? {
-                            ...win,
-                            frame: computeConstrainedFrame({
+                    const presentationFrameOverride: Frame | undefined =
+                        isConstrained
+                            ? computeConstrainedFrame({
                                 preset: effectivePreset,
                                 rect: rect.safeRect,
-                            }),
-                        }
-                        : win;
+                            })
+                            : undefined;
 
                     const showCreate = isRoot && kind !== "documents";
 
                     return (
                         <DesktopWindow
                             key={win.id}
-                            window={effectiveWindow}
+                            window={win}
                             rect={rect}
+                            presentationFrameOverride={presentationFrameOverride}
                             active={isActive && !isConstrainedHidden}
                             dispatch={dispatch}
                             title={title}

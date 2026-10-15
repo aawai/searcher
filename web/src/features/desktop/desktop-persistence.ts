@@ -8,6 +8,8 @@ import {
     clampFrame,
     type DesktopGeometry,
     type Frame,
+    type FrameBasis,
+    frameBasisForGeometry,
     snapFrame,
     type SnapMode,
     type WindowKind,
@@ -93,29 +95,68 @@ function isFiniteFrame(frame: unknown): frame is Frame {
         Number.isFinite(candidate.height) && candidate.height > 0;
 }
 
-function fitsViewport(frame: Frame, geometry: DesktopGeometry): boolean {
-    const { width, height } = geometry.viewportRect;
-    return frame.x >= 0 && frame.y >= 0 &&
-        frame.x + frame.width <= width &&
-        frame.y + frame.height <= height;
+function isFrameBasis(value: unknown): value is FrameBasis {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+    const basis = value as Record<string, unknown>;
+    return Object.hasOwn(basis, "width") &&
+        typeof basis.width === "number" && Number.isFinite(basis.width) &&
+        basis.width > 0 &&
+        Object.hasOwn(basis, "height") &&
+        typeof basis.height === "number" && Number.isFinite(basis.height) &&
+        basis.height > 0;
 }
 
-function isValidRuntimeLayout(
-    state: DesktopState,
-    geometry: DesktopGeometry,
-): boolean {
-    if (!Array.isArray(state.windows)) return false;
+function isFrameWithinBasis(frame: Frame, basis: FrameBasis): boolean {
+    const normalizedWidth = frame.width / basis.width;
+    const normalizedHeight = frame.height / basis.height;
+    return frame.x >= 0 && frame.y >= 0 &&
+        frame.x + frame.width <= basis.width &&
+        frame.y + frame.height <= basis.height &&
+        frame.x / basis.width <= 1 && frame.y / basis.height <= 1 &&
+        normalizedWidth > 0 && normalizedWidth <= 1 &&
+        normalizedHeight > 0 && normalizedHeight <= 1;
+}
+
+function normalizeFrameForBasis(
+    frame: Frame,
+    basis: FrameBasis,
+): NormalizedFrame {
+    return {
+        x: frame.x / basis.width,
+        y: frame.y / basis.height,
+        width: frame.width / basis.width,
+        height: frame.height / basis.height,
+    };
+}
+
+function isValidRuntimeLayout(state: DesktopState): boolean {
+    if (
+        !state || typeof state !== "object" || Array.isArray(state) ||
+        !Array.isArray(state.windows)
+    ) return false;
     const seenIds = new Set<string>();
 
     for (const window of state.windows) {
         if (
-            !window || typeof window.id !== "string" ||
-            window.id.length === 0 || seenIds.has(window.id) ||
-            !isFiniteFrame(window.frame) ||
-            !fitsViewport(window.frame, geometry) ||
+            !window || typeof window !== "object" || Array.isArray(window) ||
+            typeof window.id !== "string" || window.id.length === 0 ||
+            seenIds.has(window.id) || !isFiniteFrame(window.frame) ||
+            !Object.hasOwn(window, "frameBasis") ||
+            !isFrameBasis(window.frameBasis) ||
+            !isFrameWithinBasis(window.frame, window.frameBasis) ||
+            !Object.hasOwn(window, "restoreFrame") ||
+            !Object.hasOwn(window, "restoreFrameBasis") ||
             (window.restoreFrame !== null &&
                 (!isFiniteFrame(window.restoreFrame) ||
-                    !fitsViewport(window.restoreFrame, geometry))) ||
+                    !isFrameBasis(window.restoreFrameBasis) ||
+                    !isFrameWithinBasis(
+                        window.restoreFrame,
+                        window.restoreFrameBasis,
+                    ))) ||
+            (window.restoreFrame === null &&
+                window.restoreFrameBasis !== null) ||
             typeof window.zOrder !== "number" ||
             !Number.isFinite(window.zOrder)
         ) {
@@ -163,15 +204,22 @@ function isValidRuntimeLayout(
         }
         if (
             (window.mode === "normal" &&
-                (snap !== null || window.restoreFrame !== null)) ||
+                (snap !== null || window.restoreFrame !== null ||
+                    window.restoreFrameBasis !== null)) ||
             (window.mode === "snapped" &&
                 (!snap || snap === "maximize" ||
-                    window.restoreFrame === null)) ||
+                    window.restoreFrame === null ||
+                    window.restoreFrameBasis === null)) ||
             (window.mode === "maximized" &&
-                (snap !== "maximize" || window.restoreFrame === null)) ||
+                (snap !== "maximize" || window.restoreFrame === null ||
+                    window.restoreFrameBasis === null)) ||
             (window.mode === "minimized" &&
-                ((snap === null && window.restoreFrame !== null) ||
-                    (snap !== null && window.restoreFrame === null)))
+                ((snap === null &&
+                    (window.restoreFrame !== null ||
+                        window.restoreFrameBasis !== null)) ||
+                    (snap !== null &&
+                        (window.restoreFrame === null ||
+                            window.restoreFrameBasis === null))))
         ) {
             return false;
         }
@@ -242,18 +290,22 @@ function isNormalizedFrame(value: unknown): value is NormalizedFrame {
         frame.height > 0 && frame.height <= 1;
 }
 
-/** Serializes a layout after the caller has validated its geometry and state. */
+/** Serializes canonical layout geometry using each frame's own viewport basis. */
 function serializeDesktopLayout(
     state: DesktopState,
-    rect: DesktopGeometry,
 ): PersistedDesktopLayout {
     const windows: PersistedWindowLayout[] = state.windows.map((win) => {
-        // Normal frame is the unmaximized frame.
         const normalFrame = win.restoreFrame ?? win.frame;
-        const normalizedNormalFrame = normalizeFrame(normalFrame, rect);
-        const normalizedRestoreFrame = win.restoreFrame
-            ? normalizeFrame(win.restoreFrame, rect)
-            : null;
+        const normalFrameBasis = win.restoreFrame === null
+            ? win.frameBasis
+            : win.restoreFrameBasis!;
+        const normalizedNormalFrame = normalizeFrameForBasis(
+            normalFrame,
+            normalFrameBasis,
+        );
+        const normalizedRestoreFrame = win.restoreFrame === null
+            ? null
+            : normalizeFrameForBasis(win.restoreFrame, win.restoreFrameBasis!);
 
         return {
             id: win.id,
@@ -279,12 +331,11 @@ function serializeDesktopLayout(
  */
 export function encodeDesktopLayout(
     state: DesktopState,
-    rect: DesktopGeometry,
 ): PersistedDesktopLayout {
-    if (!hasUsableGeometry(rect) || !isValidRuntimeLayout(state, rect)) {
+    if (!isValidRuntimeLayout(state)) {
         throw new TypeError("Cannot encode an invalid desktop layout");
     }
-    return serializeDesktopLayout(state, rect);
+    return serializeDesktopLayout(state);
 }
 
 /**
@@ -332,6 +383,8 @@ export function decodeDesktopLayout(
     ) {
         return null;
     }
+
+    const currentFrameBasis = frameBasisForGeometry(rect);
 
     const seenIds = new Set<string>();
     const validWindows: DesktopWindowState[] = [];
@@ -502,7 +555,11 @@ export function decodeDesktopLayout(
             kind: kind as WindowKind,
             entityId,
             frame: finalFrame,
+            frameBasis: currentFrameBasis,
             restoreFrame: finalRestoreFrame,
+            restoreFrameBasis: finalRestoreFrame === null
+                ? null
+                : currentFrameBasis,
             mode,
             zOrder,
             snap: finalSnap,
@@ -565,16 +622,11 @@ export async function loadDesktopLayout(
 export async function saveDesktopLayout(
     userId: string,
     state: DesktopState,
-    rect: DesktopGeometry,
     sessionFallback?: Map<string, PersistedDesktopLayout>,
 ): Promise<void> {
-    if (
-        !hasMeasuredSafeGeometry(rect) ||
-        !isValidRuntimeLayout(state, rect)
-    ) return;
+    if (!isValidRuntimeLayout(state)) return;
     const key = desktopLayoutStorageKey(userId);
-    const payload = serializeDesktopLayout(state, rect);
-    // Keep instance session memory up-to-date
+    const payload = serializeDesktopLayout(state);
     sessionFallback?.set(key, payload);
 
     try {

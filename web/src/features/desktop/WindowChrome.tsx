@@ -26,6 +26,7 @@ import { WindowMenu } from "./WindowMenu.tsx";
 export interface WindowChromeProps {
     window: DesktopWindowState;
     title: string;
+    presentationFrame: Frame;
     rect: DesktopGeometry;
     active: boolean;
     dispatch: Dispatch<DesktopAction>;
@@ -67,6 +68,7 @@ interface DragSession {
 export function WindowChrome({
     window: win,
     title,
+    presentationFrame,
     rect,
     active,
     dispatch,
@@ -171,10 +173,6 @@ export function WindowChrome({
         if (disableDrag || win.mode === "minimized") finishDrag();
     }, [disableDrag, win.mode]);
 
-    const presentationFrame = rect.usable
-        ? win.frame
-        : clampFrame(win.frame, rect, win.kind);
-
     // Keep transient DOM geometry aligned with the rendered presentation frame.
     useLayoutEffect(() => {
         if (!isDragging && windowRef.current) {
@@ -229,8 +227,8 @@ export function WindowChrome({
             startY: e.clientY,
             previousX: e.clientX,
             previousY: e.clientY,
-            startFrame: { ...win.frame },
-            currentFrame: { ...win.frame },
+            startFrame: { ...presentationFrame },
+            currentFrame: { ...presentationFrame },
             pointerId,
             chromeEl,
             isInitialSnapped: win.mode === "snapped" ||
@@ -269,8 +267,9 @@ export function WindowChrome({
             // 拖拽 snapped 恢复原 frame 并正确保存 restoreFrame
             const restored = session.restoreFrame ??
                 defaultFrame(win.kind, rect);
-            const restoredWidth = restored.width;
-            const restoredHeight = restored.height;
+            const restorePresentation = clampFrame(restored, rect, win.kind);
+            const restoredWidth = restorePresentation.width;
+            const restoredHeight = restorePresentation.height;
             const grabOffsetX = session.startX - session.startFrame.x;
             const ratio = session.startFrame.width > 0
                 ? grabOffsetX / session.startFrame.width
@@ -366,7 +365,6 @@ export function WindowChrome({
             (session.chromeEl.closest(".desktop-window") as HTMLElement | null);
 
         if (!rect.usable) {
-            const presentationFrame = clampFrame(win.frame, rect, win.kind);
             if (winEl) {
                 winEl.style.transform =
                     `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
@@ -380,9 +378,9 @@ export function WindowChrome({
         if (!session.hasMoved) {
             if (winEl) {
                 winEl.style.transform =
-                    `translate3d(${win.frame.x}px, ${win.frame.y}px, 0)`;
-                winEl.style.width = `${win.frame.width}px`;
-                winEl.style.height = `${win.frame.height}px`;
+                    `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+                winEl.style.width = `${presentationFrame.width}px`;
+                winEl.style.height = `${presentationFrame.height}px`;
             }
             return;
         }
@@ -440,7 +438,6 @@ export function WindowChrome({
             (session.chromeEl.closest(".desktop-window") as HTMLElement | null);
 
         if (!rect.usable) {
-            const presentationFrame = clampFrame(win.frame, rect, win.kind);
             if (winEl) {
                 winEl.style.transform =
                     `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
@@ -454,9 +451,9 @@ export function WindowChrome({
         if (!session.hasMoved) {
             if (winEl) {
                 winEl.style.transform =
-                    `translate3d(${win.frame.x}px, ${win.frame.y}px, 0)`;
-                winEl.style.width = `${win.frame.width}px`;
-                winEl.style.height = `${win.frame.height}px`;
+                    `translate3d(${presentationFrame.x}px, ${presentationFrame.y}px, 0)`;
+                winEl.style.width = `${presentationFrame.width}px`;
+                winEl.style.height = `${presentationFrame.height}px`;
             }
             return;
         }
@@ -550,9 +547,9 @@ export function WindowChrome({
         }
 
         const nextCandidate: Frame = {
-            ...win.frame,
-            x: win.frame.x + dx,
-            y: win.frame.y + dy,
+            ...presentationFrame,
+            x: presentationFrame.x + dx,
+            y: presentationFrame.y + dy,
         };
         const clamped = clampFrame(nextCandidate, rect, win.kind);
 

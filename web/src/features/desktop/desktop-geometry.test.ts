@@ -1,17 +1,173 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import {
     clampFrame,
     defaultFrame,
     desktopGeometry,
     type Frame,
+    type FrameBasis,
+    frameBasisForGeometry,
     minimumSize,
     resizeFrame,
+    resolveWindowPresentationFrame,
     snapFrame,
+    type SnapMode,
     snapTarget,
 } from "./desktop-geometry.ts";
+import type { DesktopWindowState, WindowMode } from "./desktop-state.ts";
+
+function makeWindowState(
+    frame: Frame,
+    frameBasis: FrameBasis,
+    mode: WindowMode,
+    snap: SnapMode | null,
+    restore: { frame: Frame; basis: FrameBasis } | null,
+): DesktopWindowState {
+    return {
+        id: "window",
+        kind: "apps",
+        entityId: null,
+        frame,
+        frameBasis,
+        restoreFrame: restore?.frame ?? null,
+        restoreFrameBasis: restore?.basis ?? null,
+        mode,
+        zOrder: 1,
+        snap,
+    };
+}
+
+Deno.test("desktop-geometry: normal presentation clamps canonical geometry on shrink and restores it on grow", () => {
+    const wideGeometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
+    const narrowGeometry = desktopGeometry(1024, 768, 64, 720, 16, 48);
+    const window: DesktopWindowState = {
+        id: "apps",
+        kind: "apps",
+        entityId: null,
+        frame: { x: 820, y: 140, width: 560, height: 500 },
+        frameBasis: frameBasisForGeometry(wideGeometry),
+        restoreFrame: null,
+        restoreFrameBasis: null,
+        mode: "normal",
+        zOrder: 1,
+        snap: null,
+    };
+    const canonicalWindow = structuredClone(window);
+
+    assertEquals(
+        resolveWindowPresentationFrame(window, narrowGeometry),
+        { x: 464, y: 140, width: 560, height: 500 },
+    );
+    assertEquals(window, canonicalWindow);
+    assertEquals(window.frameBasis, { width: 1440, height: 900 });
+    assertEquals(
+        resolveWindowPresentationFrame(window, wideGeometry),
+        window.frame,
+    );
+});
+
+Deno.test("desktop-geometry: all snap modes follow current Work Rect without changing canonical restore geometry", () => {
+    const wideGeometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
+    const narrowGeometry = desktopGeometry(1200, 800, 72, 760, 20, 48);
+    const frameBasis = frameBasisForGeometry(wideGeometry);
+    const restore = {
+        frame: { x: 520, y: 150, width: 700, height: 500 },
+        basis: frameBasis,
+    };
+    const snapModes: SnapMode[] = [
+        "left",
+        "right",
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "maximize",
+    ];
+
+    for (const snap of snapModes) {
+        const snapMode: WindowMode = snap === "maximize"
+            ? "maximized"
+            : "snapped";
+        const window = makeWindowState(
+            snapFrame(snap, wideGeometry.workRect),
+            frameBasis,
+            snapMode,
+            snap,
+            restore,
+        );
+        const canonicalWindow = structuredClone(window);
+        assertEquals(
+            resolveWindowPresentationFrame(window, narrowGeometry),
+            snapFrame(snap, narrowGeometry.workRect),
+        );
+        assertEquals(window, canonicalWindow);
+
+        const minimized = makeWindowState(
+            window.frame,
+            window.frameBasis,
+            "minimized",
+            snap,
+            restore,
+        );
+        const minimizedSemantic = structuredClone(minimized);
+        assertEquals(
+            resolveWindowPresentationFrame(minimized, narrowGeometry),
+            snapFrame(snap, narrowGeometry.workRect),
+        );
+        assertEquals(minimized, minimizedSemantic);
+    }
+});
+
+Deno.test("desktop-geometry: unusable viewport falls back to canonical normal geometry without changing mode", () => {
+    const wideGeometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
+    const unusableGeometry = desktopGeometry(1024, 200, 64, 100, 16, 48);
+    const frameBasis = frameBasisForGeometry(wideGeometry);
+    const restore = {
+        frame: { x: 820, y: 140, width: 560, height: 500 },
+        basis: frameBasis,
+    };
+    const normalWindow = makeWindowState(
+        restore.frame,
+        frameBasis,
+        "normal",
+        null,
+        null,
+    );
+    const snappedWindow = makeWindowState(
+        snapFrame("right", wideGeometry.workRect),
+        frameBasis,
+        "snapped",
+        "right",
+        restore,
+    );
+    const maximizedWindow = makeWindowState(
+        snapFrame("maximize", wideGeometry.workRect),
+        frameBasis,
+        "maximized",
+        "maximize",
+        restore,
+    );
+
+    for (const window of [normalWindow, snappedWindow, maximizedWindow]) {
+        const semanticWindow = structuredClone(window);
+        assertEquals(
+            resolveWindowPresentationFrame(window, unusableGeometry),
+            clampFrame(
+                window.restoreFrame ?? window.frame,
+                unusableGeometry,
+                window.kind,
+            ),
+        );
+        assertEquals(window, semanticWindow);
+    }
+});
 
 Deno.test("desktop-geometry: constructs viewport, Work Rect, and Safe Rect from measured bounds", () => {
     const geometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
+    assertEquals(frameBasisForGeometry(geometry), { width: 1440, height: 900 });
+    assertThrows(
+        () => frameBasisForGeometry(desktopGeometry(0, 0)),
+        RangeError,
+    );
 
     assertEquals(geometry.viewportRect, {
         x: 0,

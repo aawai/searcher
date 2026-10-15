@@ -35,6 +35,8 @@ function waitTick(ms = 10): Promise<void> {
 
 const sampleRect = desktopGeometry(1440, 900, 64, 820, 16, 48);
 
+const sampleFrameBasis = { width: 1440, height: 900 };
+
 /** Helper to render and inspect the hook inside a test container */
 function renderHook(initialProps: UseDesktopLayoutOptions) {
     let currentProps = initialProps;
@@ -125,7 +127,7 @@ Deno.test("useDesktopLayout: windows opened before empty restoration stay visibl
     }
 });
 
-Deno.test("useDesktopLayout: automatic geometry and host changes never overwrite a rejected payload", async () => {
+Deno.test("useDesktopLayout: rejected actions and geometry never overwrite a rejected payload", async () => {
     setupMockIndexedDB();
     const userId = "rejected-layout";
     const key = desktopLayoutStorageKey(userId);
@@ -140,7 +142,25 @@ Deno.test("useDesktopLayout: automatic geometry and host changes never overwrite
     };
     const harness = renderHook(options);
     try {
-        act(() => harness.result[1]({ type: "CLAMP", rect: sampleRect }));
+        harness.rerender({
+            ...options,
+            rect: desktopGeometry(1024, 768, 64, 688, 16, 48),
+        });
+        await act(async () => {
+            await waitTick(30);
+        });
+        assertEquals(await getLocal(key), rejected);
+        const unusableRect = desktopGeometry(0, 0);
+        harness.rerender({ ...options, rect: unusableRect });
+        act(() => {
+            harness.result[1]({
+                type: "OPEN",
+                id: "apps",
+                kind: "apps",
+                rect: unusableRect,
+            });
+            globalThis.dispatchEvent(new Event("pagehide"));
+        });
         await act(async () => {
             await waitTick(30);
         });
@@ -207,7 +227,9 @@ Deno.test("useDesktopLayout: restores persisted layout from IndexedDB key search
                 kind: "apps",
                 entityId: null,
                 frame: { x: 100, y: 100, width: 600, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
@@ -215,7 +237,7 @@ Deno.test("useDesktopLayout: restores persisted layout from IndexedDB key search
         activeId: "apps",
     };
 
-    await saveDesktopLayout("user-1", savedState, sampleRect);
+    await saveDesktopLayout("user-1", savedState);
 
     const harness = renderHook({
         userId: "user-1",
@@ -260,14 +282,16 @@ Deno.test("useDesktopLayout: consumer-visible regression - immediate render on u
                 kind: "apps",
                 entityId: null,
                 frame: { x: 100, y: 100, width: 600, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
         ],
         activeId: "apps",
     };
-    await saveDesktopLayout("user-A-imm", userAState, sampleRect);
+    await saveDesktopLayout("user-A-imm", userAState);
 
     const container = win.document.createElement("div");
     win.document.body.appendChild(container);
@@ -345,14 +369,16 @@ Deno.test("useDesktopLayout: user isolation - switching from user-A to user-B cl
                 kind: "notes",
                 entityId: null,
                 frame: { x: 200, y: 200, width: 600, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
         ],
         activeId: "notes",
     };
-    await saveDesktopLayout("user-B-iso", userBState, sampleRect);
+    await saveDesktopLayout("user-B-iso", userBState);
 
     const harness = renderHook({
         userId: "user-A-iso",
@@ -406,14 +432,16 @@ Deno.test("useDesktopLayout: logout isolation - logging out clears runtime state
                 kind: "apps",
                 entityId: null,
                 frame: { x: 100, y: 100, width: 600, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
         ],
         activeId: "apps",
     };
-    await saveDesktopLayout("user-A-logout", userAState, sampleRect);
+    await saveDesktopLayout("user-A-logout", userAState);
 
     const harness = renderHook({
         userId: "user-A-logout",
@@ -518,14 +546,16 @@ Deno.test("useDesktopLayout: regression - restore waits for nonzero measured rec
                 kind: "note",
                 entityId: "note-persisted",
                 frame: { x: 100, y: 100, width: 500, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
         ],
         activeId: "note:note-persisted",
     };
-    await saveDesktopLayout("user-wait-rect", persistedState, sampleRect);
+    await saveDesktopLayout("user-wait-rect", persistedState);
 
     // Initial render with zero rect and notesLoaded false
     const harness = renderHook({
@@ -624,14 +654,16 @@ Deno.test("useDesktopLayout: regression - effect cleanup cancels in-flight resto
                 kind: "apps",
                 entityId: null,
                 frame: { x: 100, y: 100, width: 500, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
         ],
         activeId: "apps",
     };
-    await saveDesktopLayout("user-slow-cancel", slowUserState, sampleRect);
+    await saveDesktopLayout("user-slow-cancel", slowUserState);
 
     const harness = renderHook({
         userId: "user-slow-cancel",
@@ -667,7 +699,9 @@ Deno.test("useDesktopLayout: stale note removal once notes are loaded during act
                 kind: "apps",
                 entityId: null,
                 frame: { x: 50, y: 50, width: 600, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
@@ -676,7 +710,9 @@ Deno.test("useDesktopLayout: stale note removal once notes are loaded during act
                 kind: "note",
                 entityId: "note-valid",
                 frame: { x: 100, y: 100, width: 500, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 2,
             },
@@ -685,14 +721,16 @@ Deno.test("useDesktopLayout: stale note removal once notes are loaded during act
                 kind: "note",
                 entityId: "note-stale",
                 frame: { x: 150, y: 150, width: 500, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 3,
             },
         ],
         activeId: "note:note-stale",
     };
-    await saveDesktopLayout("user-notes-prune", stateWithNotes, sampleRect);
+    await saveDesktopLayout("user-notes-prune", stateWithNotes);
 
     const harness = renderHook({
         userId: "user-notes-prune",
@@ -727,14 +765,16 @@ Deno.test("useDesktopLayout: async restore race - window opened by user during r
                 kind: "apps",
                 entityId: null,
                 frame: { x: 50, y: 50, width: 600, height: 400 },
+                frameBasis: sampleFrameBasis,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
         ],
         activeId: "apps",
     };
-    await saveDesktopLayout("user-race-cond", persistedState, sampleRect);
+    await saveDesktopLayout("user-race-cond", persistedState);
 
     const harness = renderHook({
         userId: "user-race-cond",
@@ -867,4 +907,106 @@ Deno.test("useDesktopLayout: pagehide and visibilitychange lifecycle flushes per
     assertNotEquals(saved, undefined);
 
     harness.unmount();
+});
+Deno.test("useDesktopLayout: shrink, focus, and unusable flush preserve canonical geometry", async () => {
+    setupMockIndexedDB();
+    const userId = "user-canonical-flush";
+    const canonicalFrame = { x: 540, y: 160, width: 760, height: 566 };
+    const initialState: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: canonicalFrame,
+                frameBasis: sampleFrameBasis,
+                restoreFrame: null,
+                restoreFrameBasis: null,
+                mode: "normal",
+                zOrder: 1,
+                snap: null,
+            },
+            {
+                id: "notes",
+                kind: "notes",
+                entityId: null,
+                frame: { x: 100, y: 100, width: 500, height: 400 },
+                frameBasis: sampleFrameBasis,
+                restoreFrame: null,
+                restoreFrameBasis: null,
+                mode: "normal",
+                zOrder: 2,
+                snap: null,
+            },
+        ],
+        activeId: "notes",
+    };
+    await saveDesktopLayout(userId, initialState);
+
+    const harness = renderHook({
+        userId,
+        layoutStyle: "widgets",
+        rect: sampleRect,
+        notesLoaded: true,
+    });
+    try {
+        await act(async () => {
+            await waitTick(20);
+        });
+
+        const narrowedRect = desktopGeometry(1024, 768, 64, 688, 16, 48);
+        harness.rerender({
+            userId,
+            layoutStyle: "widgets",
+            rect: narrowedRect,
+            notesLoaded: true,
+        });
+        assertEquals(
+            harness.result[0].windows.find((window) => window.id === "apps")
+                ?.frame,
+            canonicalFrame,
+        );
+
+        act(() => {
+            harness.result[1]({ type: "FOCUS", id: "apps" });
+        });
+        assertEquals(
+            harness.result[0].windows.find((window) => window.id === "apps")
+                ?.frameBasis,
+            sampleFrameBasis,
+        );
+
+        harness.rerender({
+            userId,
+            layoutStyle: "widgets",
+            rect: desktopGeometry(0, 0),
+            notesLoaded: true,
+        });
+        act(() => {
+            globalThis.dispatchEvent(new Event("pagehide"));
+        });
+        await act(async () => {
+            await waitTick(20);
+        });
+
+        const persisted = await getLocal<{
+            activeId: string | null;
+            windows: Array<{
+                id: string;
+                frame: { x: number; y: number; width: number; height: number };
+            }>;
+        }>(desktopLayoutStorageKey(userId));
+        assertEquals(persisted?.activeId, "apps");
+        assertEquals(
+            persisted?.windows.find((window) => window.id === "apps")?.frame,
+            {
+                x: 540 / 1440,
+                y: 160 / 900,
+                width: 760 / 1440,
+                height: 566 / 900,
+            },
+        );
+    } finally {
+        harness.unmount();
+    }
 });
