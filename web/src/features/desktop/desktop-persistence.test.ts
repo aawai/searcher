@@ -1,5 +1,6 @@
 import { assertEquals, assertNotEquals, assertThrows } from "@std/assert";
 import { setupMockIndexedDB } from "../../lib/test-mock-idb.ts";
+import { getLocal, setLocal } from "../../lib/local.ts";
 import {
     decodeDesktopLayout,
     encodeDesktopLayout,
@@ -26,6 +27,8 @@ const offsetSafeGeometry: DesktopGeometry = desktopGeometry(
     0,
 );
 
+const basis1440 = { width: 1440, height: 900 };
+
 Deno.test("desktop-persistence: normalized normal frames preserve window modes and stacking", () => {
     const state: DesktopState = {
         windows: [
@@ -34,7 +37,9 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
                 kind: "apps",
                 entityId: null,
                 frame: { x: 144, y: 90, width: 720, height: 450 },
+                frameBasis: basis1440,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
@@ -43,7 +48,9 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
                 kind: "notes",
                 entityId: null,
                 frame: { x: 0, y: 0, width: 1440, height: 900 },
+                frameBasis: basis1440,
                 restoreFrame: { x: 288, y: 180, width: 640, height: 400 },
+                restoreFrameBasis: basis1440,
                 mode: "maximized",
                 zOrder: 2,
                 snap: "maximize",
@@ -53,7 +60,9 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
                 kind: "note",
                 entityId: "item-1",
                 frame: { x: 100, y: 100, width: 400, height: 300 },
+                frameBasis: basis1440,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "minimized",
                 zOrder: 3,
             },
@@ -61,7 +70,7 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
         activeId: "notes",
     };
 
-    const encoded = encodeDesktopLayout(state, rect1440);
+    const encoded = encodeDesktopLayout(state);
     assertEquals(encoded.windows.length, 3);
     assertEquals(encoded.version, 4);
     assertEquals(encoded.activeId, "notes");
@@ -73,7 +82,7 @@ Deno.test("desktop-persistence: normalized normal frames preserve window modes a
     assertEquals(encodedNotes.frame.y, 0.2); // 180 / 900
     assertEquals(encodedNotes.snap, "maximize");
     assertEquals(
-        encodeDesktopLayout(decodeDesktopLayout(encoded, rect1440)!, rect1440),
+        encodeDesktopLayout(decodeDesktopLayout(encoded, rect1440)!),
         encoded,
     );
 });
@@ -291,7 +300,9 @@ Deno.test("desktop-persistence: regression - normal -> MAXIMIZE -> MINIMIZE -> r
                 kind: "apps",
                 entityId: null,
                 frame: { x: 144, y: 90, width: 720, height: 450 },
+                frameBasis: basis1440,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
@@ -306,7 +317,9 @@ Deno.test("desktop-persistence: regression - normal -> MAXIMIZE -> MINIMIZE -> r
                 ...state.windows[0],
                 mode: "maximized",
                 frame: { x: 0, y: 0, width: 1440, height: 900 },
+                frameBasis: basis1440,
                 restoreFrame: { x: 144, y: 90, width: 720, height: 450 },
+                restoreFrameBasis: basis1440,
                 snap: "maximize",
             },
         ],
@@ -325,7 +338,7 @@ Deno.test("desktop-persistence: regression - normal -> MAXIMIZE -> MINIMIZE -> r
     };
 
     // 4. Encode & Decode (simulating reload)
-    const encoded = encodeDesktopLayout(state, rect1440);
+    const encoded = encodeDesktopLayout(state);
     // restoreFrame must be non-null in encoded layout to preserve prior max semantic
     assertNotEquals(encoded.windows[0].restoreFrame, null);
 
@@ -366,7 +379,9 @@ Deno.test("desktop-persistence: IndexedDB save, load, and user isolation contrac
                 kind: "apps",
                 entityId: null,
                 frame: { x: 100, y: 100, width: 500, height: 400 },
+                frameBasis: basis1440,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
@@ -381,7 +396,9 @@ Deno.test("desktop-persistence: IndexedDB save, load, and user isolation contrac
                 kind: "notes",
                 entityId: null,
                 frame: { x: 200, y: 200, width: 600, height: 500 },
+                frameBasis: basis1440,
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: 1,
             },
@@ -389,8 +406,8 @@ Deno.test("desktop-persistence: IndexedDB save, load, and user isolation contrac
         activeId: "notes",
     };
 
-    await saveDesktopLayout("user-A", user1State, rect1440);
-    await saveDesktopLayout("user-B", user2State, rect1440);
+    await saveDesktopLayout("user-A", user1State);
+    await saveDesktopLayout("user-B", user2State);
 
     const loadedA = await loadDesktopLayout("user-A", rect1440);
     const loadedB = await loadDesktopLayout("user-B", rect1440);
@@ -420,7 +437,9 @@ Deno.test("desktop-persistence: fallback to instance session memory when Indexed
                     kind: "apps",
                     entityId: null,
                     frame: { x: 100, y: 100, width: 500, height: 400 },
+                    frameBasis: basis1440,
                     restoreFrame: null,
+                    restoreFrameBasis: null,
                     mode: "normal",
                     zOrder: 1,
                 },
@@ -429,12 +448,7 @@ Deno.test("desktop-persistence: fallback to instance session memory when Indexed
         };
 
         // Save into session memory fallback
-        await saveDesktopLayout(
-            "session-user",
-            fallbackState,
-            rect1440,
-            sessionMemory,
-        );
+        await saveDesktopLayout("session-user", fallbackState, sessionMemory);
 
         // Load recovers from instance session memory without error
         const recovered = await loadDesktopLayout(
@@ -468,7 +482,9 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
                 kind: "apps",
                 entityId: null,
                 frame: snapFrame("left", rect1440.workRect),
+                frameBasis: basis1440,
                 restoreFrame: { x: 100, y: 100, width: 600, height: 400 },
+                restoreFrameBasis: basis1440,
                 mode: "snapped",
                 snap: "left",
                 zOrder: 1,
@@ -478,7 +494,9 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
                 kind: "notes",
                 entityId: null,
                 frame: snapFrame("bottom-right", rect1440.workRect),
+                frameBasis: basis1440,
                 restoreFrame: { x: 200, y: 200, width: 500, height: 350 },
+                restoreFrameBasis: basis1440,
                 mode: "snapped",
                 snap: "bottom-right",
                 zOrder: 2,
@@ -488,7 +506,9 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
                 kind: "note",
                 entityId: "item-1",
                 frame: snapFrame("top-left", rect1440.workRect),
+                frameBasis: basis1440,
                 restoreFrame: { x: 50, y: 50, width: 400, height: 300 },
+                restoreFrameBasis: basis1440,
                 mode: "minimized",
                 snap: "top-left",
                 zOrder: 3,
@@ -497,7 +517,7 @@ Deno.test("desktop-persistence: encodeDesktopLayout captures snap semantic and r
         activeId: "notes",
     };
 
-    const encoded = encodeDesktopLayout(state, rect1440);
+    const encoded = encodeDesktopLayout(state);
     assertEquals(encoded.windows.find((w) => w.id === "apps")!.mode, "snapped");
     assertEquals(encoded.windows.find((w) => w.id === "apps")!.snap, "left");
     assertEquals(
@@ -676,21 +696,24 @@ Deno.test("desktop-persistence: serialization rejects invalid identity, frame, a
             kind: "apps",
             entityId: null,
             frame: { x: 100, y: 100, width: 600, height: 400 },
+            frameBasis: basis1440,
             restoreFrame: null,
+            restoreFrameBasis: null,
             mode: "normal",
             zOrder: 1,
             snap: null,
         }],
         activeId: "apps",
     };
-    await saveDesktopLayout(
-        "invalid-runtime-state",
-        validState,
-        rect1440,
-        sessionMemory,
-    );
+    await saveDesktopLayout("invalid-runtime-state", validState, sessionMemory);
     const persisted = sessionMemory.get(key);
     assertNotEquals(persisted, undefined);
+
+    const inheritedBasisWindow = Object.assign(
+        Object.create({ frameBasis: basis1440 }) as object,
+        validState.windows[0],
+    );
+    Reflect.deleteProperty(inheritedBasisWindow, "frameBasis");
 
     const invalidStates: DesktopState[] = [
         {
@@ -714,17 +737,65 @@ Deno.test("desktop-persistence: serialization rejects invalid identity, frame, a
                 snap: "left",
             }],
         },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                frame: { ...validState.windows[0].frame, x: -100 },
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                frame: { ...validState.windows[0].frame, width: 1600 },
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                frame: { ...validState.windows[0].frame, x: 1000, width: 600 },
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                frameBasis: { width: 0, height: 900 },
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                restoreFrameBasis: basis1440,
+            }],
+        },
+        {
+            ...validState,
+            windows: [{
+                ...validState.windows[0],
+                restoreFrame: { x: 0, y: 0, width: 1600, height: 400 },
+                restoreFrameBasis: basis1440,
+                mode: "maximized",
+                snap: "maximize",
+            }],
+        },
+        {
+            ...validState,
+            windows: [inheritedBasisWindow],
+        },
     ];
 
     for (const invalidState of invalidStates) {
         assertThrows(
-            () => encodeDesktopLayout(invalidState, rect1440),
+            () => encodeDesktopLayout(invalidState),
             TypeError,
         );
         await saveDesktopLayout(
             "invalid-runtime-state",
             invalidState,
-            rect1440,
             sessionMemory,
         );
         assertEquals(sessionMemory.get(key), persisted);
@@ -752,7 +823,9 @@ Deno.test("desktop-persistence: v1 Apps/Notes survive migration and v2 Documents
             kind: "documents",
             entityId: null,
             frame: { x: 100, y: 100, width: 760, height: 720 },
+            frameBasis: basis1440,
             restoreFrame: null,
+            restoreFrameBasis: null,
             mode: "normal",
             zOrder: 3,
             snap: null,
@@ -760,7 +833,7 @@ Deno.test("desktop-persistence: v1 Apps/Notes survive migration and v2 Documents
         activeId: "documents",
     };
     const restored = decodeDesktopLayout(
-        encodeDesktopLayout(current, rect1440),
+        encodeDesktopLayout(current),
         rect1024,
     )!;
     assertEquals(
@@ -894,6 +967,8 @@ Deno.test("desktop-persistence: legacy v1-v3 use safeRect while v4 uses viewport
             width: 696,
             height: 372,
         });
+        assertEquals(migrated!.windows[0].frameBasis, basis1440);
+        assertEquals(migrated!.windows[0].restoreFrameBasis, basis1440);
     }
 
     const current = decodeDesktopLayout({
@@ -924,6 +999,8 @@ Deno.test("desktop-persistence: legacy v1-v3 use safeRect while v4 uses viewport
         width: 720,
         height: 450,
     });
+    assertEquals(current!.windows[0].frameBasis, basis1440);
+    assertEquals(current!.windows[0].restoreFrameBasis, basis1440);
 });
 
 Deno.test("desktop-persistence: document identity support follows schema versions", () => {
@@ -1078,6 +1155,7 @@ Deno.test("desktop-persistence: v4 requires complete restore and snap semantics"
 });
 
 Deno.test("desktop-persistence: unusable geometry and corrupt loads do not replace saved layouts", async () => {
+    setupMockIndexedDB();
     const userId = "geometry-fallback-user";
     const key = `searcher:desktop-layout:v1:${userId}`;
     const sessionMemory = new Map<string, PersistedDesktopLayout>();
@@ -1087,14 +1165,16 @@ Deno.test("desktop-persistence: unusable geometry and corrupt loads do not repla
             kind: "apps",
             entityId: null,
             frame: { x: 100, y: 100, width: 600, height: 400 },
+            frameBasis: basis1440,
             restoreFrame: null,
+            restoreFrameBasis: null,
             mode: "normal",
             zOrder: 1,
             snap: null,
         }],
         activeId: "apps",
     };
-    const saved = encodeDesktopLayout(state, rect1440);
+    const saved = encodeDesktopLayout(state);
     sessionMemory.set(key, saved);
 
     for (
@@ -1112,12 +1192,6 @@ Deno.test("desktop-persistence: unusable geometry and corrupt loads do not repla
             ),
             null,
         );
-        await saveDesktopLayout(
-            userId,
-            { windows: [], activeId: null },
-            failedGeometry,
-            sessionMemory,
-        );
         assertEquals(sessionMemory.get(key), saved);
     }
 
@@ -1134,12 +1208,13 @@ Deno.test("desktop-persistence: unusable geometry and corrupt loads do not repla
         }],
         activeId: "apps",
     };
+    await setLocal(key, corrupt);
     sessionMemory.set(key, corrupt);
     assertEquals(
         await loadDesktopLayout(userId, rect1440, undefined, sessionMemory),
         null,
     );
-    assertEquals(sessionMemory.get(key), corrupt);
+    assertEquals(await getLocal(key), corrupt);
 });
 Deno.test("desktop-persistence: zero safeRect does not migrate or overwrite a legacy layout", async () => {
     const userId = "safe-rect-zero-user";
@@ -1151,14 +1226,16 @@ Deno.test("desktop-persistence: zero safeRect does not migrate or overwrite a le
             kind: "apps",
             entityId: null,
             frame: { x: 100, y: 100, width: 600, height: 400 },
+            frameBasis: basis1440,
             restoreFrame: null,
+            restoreFrameBasis: null,
             mode: "normal",
             zOrder: 1,
             snap: null,
         }],
         activeId: "apps",
     };
-    const v4 = encodeDesktopLayout(validState, rect1440);
+    const v4 = encodeDesktopLayout(validState);
     const legacy = { ...v4, version: 3 as const };
     sessionMemory.set(key, legacy);
     const zeroSafeRect = desktopGeometry(1440, 900, 64, 820, 800, 48, 0);
@@ -1170,11 +1247,65 @@ Deno.test("desktop-persistence: zero safeRect does not migrate or overwrite a le
         await loadDesktopLayout(userId, zeroSafeRect, undefined, sessionMemory),
         null,
     );
-    await saveDesktopLayout(
-        userId,
-        validState,
-        zeroSafeRect,
-        sessionMemory,
-    );
     assertEquals(sessionMemory.get(key), legacy);
+});
+Deno.test("desktop-persistence: encoding preserves canonical normalized payload across viewport shrink and focus", () => {
+    const state: DesktopState = {
+        windows: [
+            {
+                id: "apps",
+                kind: "apps",
+                entityId: null,
+                frame: { x: 540, y: 160, width: 760, height: 566 },
+                frameBasis: { width: 1440, height: 900 },
+                restoreFrame: null,
+                restoreFrameBasis: null,
+                mode: "normal",
+                zOrder: 1,
+                snap: null,
+            },
+            {
+                id: "notes",
+                kind: "notes",
+                entityId: null,
+                frame: { x: 100, y: 100, width: 400, height: 300 },
+                frameBasis: { width: 1440, height: 900 },
+                restoreFrame: null,
+                restoreFrameBasis: null,
+                mode: "normal",
+                zOrder: 2,
+                snap: null,
+            },
+        ],
+        activeId: "notes",
+    };
+    const encodedBeforeFocus = encodeDesktopLayout(state);
+    const focusedState: DesktopState = {
+        ...state,
+        windows: state.windows.map((window) => ({
+            ...window,
+            zOrder: window.id === "apps" ? 2 : 3,
+        })),
+        activeId: "apps",
+    };
+
+    const encodedAfterShrinkAndFocus = encodeDesktopLayout(focusedState);
+    const appsLayout = encodedAfterShrinkAndFocus.windows.find((window) =>
+        window.id === "apps"
+    )!;
+
+    assertEquals(appsLayout.frame, {
+        x: 540 / 1440,
+        y: 160 / 900,
+        width: 760 / 1440,
+        height: 566 / 900,
+    });
+    assertEquals(
+        encodedBeforeFocus.windows.find((window) => window.id === "apps")!
+            .frame,
+        appsLayout.frame,
+    );
+    assertEquals(encodedAfterShrinkAndFocus.activeId, "apps");
+    assertEquals(Object.hasOwn(appsLayout, "frameBasis"), false);
+    assertEquals(Object.hasOwn(appsLayout, "restoreFrameBasis"), false);
 });

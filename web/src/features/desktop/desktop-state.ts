@@ -8,6 +8,8 @@ import {
     defaultFrame,
     type DesktopGeometry,
     type Frame,
+    type FrameBasis,
+    frameBasisForGeometry,
     snapFrame,
     type SnapMode,
     type WindowKind,
@@ -20,7 +22,9 @@ export interface DesktopWindowState {
     kind: WindowKind;
     entityId: string | null;
     frame: Frame;
+    frameBasis: FrameBasis;
     restoreFrame: Frame | null;
+    restoreFrameBasis: FrameBasis | null;
     mode: WindowMode;
     zOrder: number;
     snap?: SnapMode | null;
@@ -53,7 +57,6 @@ export type DesktopAction =
     | { type: "RESTORE_FRAME"; id: string; rect: DesktopGeometry }
     | { type: "MOVE"; id: string; frame: Frame; rect: DesktopGeometry }
     | { type: "RESIZE"; id: string; frame: Frame; rect: DesktopGeometry }
-    | { type: "CLAMP"; rect: DesktopGeometry }
     | { type: "NORMALIZE" }
     | { type: "HYDRATE"; state: DesktopState }
     | { type: "RESET" }
@@ -146,54 +149,33 @@ export function desktopReducer(
     state: DesktopState,
     action: DesktopAction,
 ): DesktopState {
-    if ("rect" in action && !action.rect.usable) return state;
+    if (
+        "rect" in action &&
+        !action.rect.usable &&
+        (action.type !== "OPEN" ||
+            !state.windows.some((window) => window.id === action.id))
+    ) return state;
     switch (action.type) {
         case "OPEN": {
             const existing = state.windows.find((w) => w.id === action.id);
             if (existing) {
                 if (existing.mode === "minimized") {
-                    if (
-                        existing.snap === "maximize" ||
+                    const maximized = existing.snap === "maximize" ||
                         (existing.snap == null &&
-                            existing.restoreFrame !== null)
-                    ) {
-                        return {
-                            windows: bringToTop(state.windows, action.id, {
-                                mode: "maximized",
-                                snap: "maximize",
-                                frame: snapFrame(
-                                    "maximize",
-                                    action.rect.workRect,
-                                ),
-                            }),
-                            activeId: action.id,
-                        };
-                    } else if (existing.snap) {
-                        return {
-                            windows: bringToTop(state.windows, action.id, {
-                                mode: "snapped",
-                                snap: existing.snap,
-                                frame: snapFrame(
-                                    existing.snap,
-                                    action.rect.workRect,
-                                ),
-                            }),
-                            activeId: action.id,
-                        };
-                    } else {
-                        return {
-                            windows: bringToTop(state.windows, action.id, {
-                                mode: "normal",
-                                snap: null,
-                                frame: clampFrame(
-                                    existing.frame,
-                                    action.rect,
-                                    existing.kind,
-                                ),
-                            }),
-                            activeId: action.id,
-                        };
-                    }
+                            existing.restoreFrame !== null);
+                    return {
+                        windows: bringToTop(state.windows, action.id, {
+                            mode: maximized
+                                ? "maximized"
+                                : existing.snap
+                                ? "snapped"
+                                : "normal",
+                            snap: maximized
+                                ? "maximize"
+                                : existing.snap ?? null,
+                        }),
+                        activeId: action.id,
+                    };
                 }
 
                 return {
@@ -228,7 +210,9 @@ export function desktopReducer(
                 kind: action.kind,
                 entityId: action.entityId ?? null,
                 frame,
+                frameBasis: frameBasisForGeometry(action.rect),
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 zOrder: state.windows.length + 1,
                 snap: null,
@@ -299,21 +283,23 @@ export function desktopReducer(
             const target = state.windows.find((w) => w.id === action.id);
             if (!target) return state;
 
-            // Avoid overwriting restoreFrame if already snapped, maximized, or minimized
-            const restoreFrame = target.mode === "normal"
-                ? target.frame
-                : (target.restoreFrame ?? target.frame);
+            const restoreFrame = target.restoreFrame ?? target.frame;
+            const restoreFrameBasis = target.restoreFrame === null
+                ? target.frameBasis
+                : target.restoreFrameBasis;
+            if (!restoreFrameBasis) return state;
 
-            const isMaximize = action.snap === "maximize";
-            const mode: WindowMode = isMaximize ? "maximized" : "snapped";
-            const frame = snapFrame(action.snap, action.rect.workRect);
-
+            const mode: WindowMode = action.snap === "maximize"
+                ? "maximized"
+                : "snapped";
             return {
                 windows: bringToTop(state.windows, action.id, {
                     mode,
                     snap: action.snap,
-                    frame,
+                    frame: snapFrame(action.snap, action.rect.workRect),
+                    frameBasis: frameBasisForGeometry(action.rect),
                     restoreFrame,
+                    restoreFrameBasis,
                 }),
                 activeId: action.id,
             };
@@ -323,18 +309,20 @@ export function desktopReducer(
             const target = state.windows.find((w) => w.id === action.id);
             if (!target) return state;
 
-            const restoreFrame = target.mode === "normal"
-                ? target.frame
-                : (target.restoreFrame ?? target.frame);
-
-            const maximizedFrame = snapFrame("maximize", action.rect.workRect);
+            const restoreFrame = target.restoreFrame ?? target.frame;
+            const restoreFrameBasis = target.restoreFrame === null
+                ? target.frameBasis
+                : target.restoreFrameBasis;
+            if (!restoreFrameBasis) return state;
 
             return {
                 windows: bringToTop(state.windows, action.id, {
                     mode: "maximized",
                     snap: "maximize",
-                    frame: maximizedFrame,
+                    frame: snapFrame("maximize", action.rect.workRect),
+                    frameBasis: frameBasisForGeometry(action.rect),
                     restoreFrame,
+                    restoreFrameBasis,
                 }),
                 activeId: action.id,
             };
@@ -344,15 +332,19 @@ export function desktopReducer(
             const target = state.windows.find((w) => w.id === action.id);
             if (!target) return state;
 
-            const rawFrame = target.restoreFrame ?? target.frame;
-            const finalFrame = clampFrame(rawFrame, action.rect, target.kind);
-
+            const finalFrame = clampFrame(
+                target.restoreFrame ?? target.frame,
+                action.rect,
+                target.kind,
+            );
             return {
                 windows: bringToTop(state.windows, action.id, {
                     mode: "normal",
                     snap: null,
                     frame: finalFrame,
+                    frameBasis: frameBasisForGeometry(action.rect),
                     restoreFrame: null,
+                    restoreFrameBasis: null,
                 }),
                 activeId: action.id,
             };
@@ -363,70 +355,41 @@ export function desktopReducer(
             if (!target) return state;
 
             if (target.mode === "minimized") {
-                if (
-                    target.snap === "maximize" ||
-                    (target.snap == null && target.restoreFrame !== null)
-                ) {
-                    return {
-                        windows: bringToTop(state.windows, action.id, {
-                            mode: "maximized",
-                            snap: "maximize",
-                            frame: snapFrame("maximize", action.rect.workRect),
-                        }),
-                        activeId: action.id,
-                    };
-                } else if (target.snap) {
-                    return {
-                        windows: bringToTop(state.windows, action.id, {
-                            mode: "snapped",
-                            snap: target.snap,
-                            frame: snapFrame(target.snap, action.rect.workRect),
-                        }),
-                        activeId: action.id,
-                    };
-                }
-
-                const finalFrame = clampFrame(
-                    target.frame,
-                    action.rect,
-                    target.kind,
-                );
+                const maximized = target.snap === "maximize" ||
+                    (target.snap == null && target.restoreFrame !== null);
                 return {
                     windows: bringToTop(state.windows, action.id, {
-                        mode: "normal",
-                        snap: null,
-                        frame: finalFrame,
+                        mode: maximized
+                            ? "maximized"
+                            : target.snap
+                            ? "snapped"
+                            : "normal",
+                        snap: maximized ? "maximize" : target.snap ?? null,
                     }),
                     activeId: action.id,
                 };
             }
 
-            if (target.mode === "maximized" || target.mode === "snapped") {
-                const rawFrame = target.restoreFrame ?? target.frame;
-                const finalFrame = clampFrame(
-                    rawFrame,
-                    action.rect,
-                    target.kind,
-                );
+            if (target.mode !== "maximized" && target.mode !== "snapped") {
                 return {
-                    windows: bringToTop(state.windows, action.id, {
-                        mode: "normal",
-                        snap: null,
-                        frame: finalFrame,
-                        restoreFrame: null,
-                    }),
+                    windows: bringToTop(state.windows, action.id),
                     activeId: action.id,
                 };
             }
 
             const finalFrame = clampFrame(
-                target.frame,
+                target.restoreFrame ?? target.frame,
                 action.rect,
                 target.kind,
             );
             return {
                 windows: bringToTop(state.windows, action.id, {
+                    mode: "normal",
+                    snap: null,
                     frame: finalFrame,
+                    frameBasis: frameBasisForGeometry(action.rect),
+                    restoreFrame: null,
+                    restoreFrameBasis: null,
                 }),
                 activeId: action.id,
             };
@@ -441,13 +404,14 @@ export function desktopReducer(
                 action.rect,
                 target.kind,
             );
-
             return {
                 windows: bringToTop(state.windows, action.id, {
                     frame: clamped,
+                    frameBasis: frameBasisForGeometry(action.rect),
                     mode: "normal",
                     snap: null,
                     restoreFrame: null,
+                    restoreFrameBasis: null,
                 }),
                 activeId: action.id,
             };
@@ -462,79 +426,16 @@ export function desktopReducer(
                 action.rect,
                 target.kind,
             );
-
             return {
                 windows: bringToTop(state.windows, action.id, {
                     frame: clamped,
+                    frameBasis: frameBasisForGeometry(action.rect),
                     mode: "normal",
                     snap: null,
                     restoreFrame: null,
+                    restoreFrameBasis: null,
                 }),
                 activeId: action.id,
-            };
-        }
-
-        case "CLAMP": {
-            const nextWindows = state.windows.map((w) => {
-                const clampedRestore = w.restoreFrame
-                    ? clampFrame(w.restoreFrame, action.rect, w.kind)
-                    : null;
-
-                if (w.mode === "maximized") {
-                    return {
-                        ...w,
-                        frame: snapFrame("maximize", action.rect.workRect),
-                        restoreFrame: clampedRestore,
-                    };
-                }
-
-                if (w.mode === "snapped") {
-                    const snappedFrame = w.snap
-                        ? snapFrame(w.snap, action.rect.workRect)
-                        : clampFrame(w.frame, action.rect, w.kind);
-                    return {
-                        ...w,
-                        frame: snappedFrame,
-                        restoreFrame: clampedRestore,
-                    };
-                }
-
-                if (w.mode === "minimized") {
-                    if (
-                        w.snap === "maximize" ||
-                        (w.snap == null && w.restoreFrame !== null)
-                    ) {
-                        return {
-                            ...w,
-                            frame: snapFrame("maximize", action.rect.workRect),
-                            restoreFrame: clampedRestore,
-                        };
-                    }
-                    if (w.snap) {
-                        return {
-                            ...w,
-                            frame: snapFrame(w.snap, action.rect.workRect),
-                            restoreFrame: clampedRestore,
-                        };
-                    }
-                    return {
-                        ...w,
-                        frame: clampFrame(w.frame, action.rect, w.kind),
-                        restoreFrame: clampedRestore,
-                    };
-                }
-
-                const clamped = clampFrame(w.frame, action.rect, w.kind);
-                return {
-                    ...w,
-                    frame: clamped,
-                    restoreFrame: clampedRestore,
-                };
-            });
-
-            return {
-                ...state,
-                windows: nextWindows,
             };
         }
 

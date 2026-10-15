@@ -69,27 +69,24 @@ export function useDesktopLayout(
         : null;
 
     const [state, dispatch] = useReducer(desktopReducer, initialDesktopState);
+    const stateRef = useRef(state);
+    stateRef.current = state;
     const currentActiveKeyRef = useRef(currentActiveKey);
     currentActiveKeyRef.current = currentActiveKey;
     const writeEnabledKeyRef = useRef<string | null>(null);
-    const rectRef = useRef(rect);
-    rectRef.current = rect;
     const dispatchAction = useCallback<Dispatch<DesktopAction>>((action) => {
-        const geometry = "rect" in action ? action.rect : rectRef.current;
         if (
             action.type !== "HYDRATE" && action.type !== "RESET" &&
-            action.type !== "CLAMP" && action.type !== "NORMALIZE" &&
-            action.type !== "PRUNE_STALE_NOTES" &&
-            hasStableGeometry(geometry)
+            action.type !== "NORMALIZE" &&
+            action.type !== "PRUNE_STALE_NOTES"
         ) {
-            writeEnabledKeyRef.current = currentActiveKeyRef.current;
+            const currentState = stateRef.current;
+            if (desktopReducer(currentState, action) !== currentState) {
+                writeEnabledKeyRef.current = currentActiveKeyRef.current;
+            }
         }
         dispatch(action);
     }, []);
-
-    // Refs for lifecycle tracking and racing avoidance
-    const stateRef = useRef(state);
-    stateRef.current = state;
 
     const userIdRef = useRef(userId);
     userIdRef.current = userId;
@@ -120,13 +117,11 @@ export function useDesktopLayout(
         const previousUser = lastSavedUserIdRef.current;
         if (
             previousUser && restoredKeyRef.current === previousUser &&
-            writeEnabledKeyRef.current === previousUser &&
-            hasStableGeometry(rectRef.current)
+            writeEnabledKeyRef.current === previousUser
         ) {
             void saveDesktopLayout(
                 previousUser,
                 stateRef.current,
-                rectRef.current,
                 sessionMemoryRef.current,
             );
         }
@@ -225,13 +220,12 @@ export function useDesktopLayout(
         }
     }, [notesLoaded, validNoteIds, state.windows]);
 
-    // Persist only after a successful restore or a stable user-initiated layout action.
+    // Persist only after a successful restore or a user-initiated state action.
     useEffect(() => {
         if (
             !currentActiveKey ||
             writeEnabledKeyRef.current !== currentActiveKey ||
-            restoredKeyRef.current !== currentActiveKey ||
-            !hasStableGeometry(rect)
+            restoredKeyRef.current !== currentActiveKey
         ) {
             return;
         }
@@ -239,10 +233,9 @@ export function useDesktopLayout(
         void saveDesktopLayout(
             currentActiveKey,
             stateRef.current,
-            rectRef.current,
             sessionMemoryRef.current,
         );
-    }, [state, currentActiveKey, rect]);
+    }, [state, currentActiveKey]);
 
     // 4. Lifecycle flush on pagehide, visibilitychange (e.g. reload or tab background) and unmount
     useEffect(() => {
@@ -251,13 +244,11 @@ export function useDesktopLayout(
                 userIdRef.current &&
                 layoutStyleRef.current === "widgets" &&
                 restoredKeyRef.current === userIdRef.current &&
-                writeEnabledKeyRef.current === userIdRef.current &&
-                hasStableGeometry(rectRef.current)
+                writeEnabledKeyRef.current === userIdRef.current
             ) {
                 void saveDesktopLayout(
                     userIdRef.current,
                     stateRef.current,
-                    rectRef.current,
                     sessionMemoryRef.current,
                 );
             }

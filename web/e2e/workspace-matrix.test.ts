@@ -184,7 +184,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             ).first();
             await closeBtn.waitFor({ state: "visible" });
             await closeBtn.click();
-            await win.waitFor({ state: "detached" });
+            await win.waitFor({ state: "hidden" });
         }
     }
 
@@ -1148,7 +1148,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                         name: "关闭便签",
                         exact: true,
                     }).click();
-                    await noteWindow.waitFor({ state: "detached" });
+                    await noteWindow.waitFor({ state: "hidden" });
                 }
                 const minBtnPointerThrough = appsWin.locator(
                     '.desktop-window-chrome-btn--minimize, button[aria-label*="最小化"]',

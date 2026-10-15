@@ -180,7 +180,7 @@ export class SearchService {
     }
 
     async deleteHistoryItem(
-        userId: string,
+        _userId: string,
         id: string,
     ): Promise<boolean> {
         return await this.store.run(async (db) => {

@@ -45,7 +45,7 @@ function enqueue<T>(key: string, fn: () => Promise<T>): Promise<T> {
 }
 
 export async function getLocal<T>(key: string): Promise<T | undefined> {
-    return enqueue(key, async () => {
+    return await enqueue(key, async () => {
         const db = await open();
         const { promise, resolve, reject } = Promise.withResolvers<
             T | undefined
@@ -59,7 +59,7 @@ export async function getLocal<T>(key: string): Promise<T | undefined> {
 }
 
 export async function setLocal(key: string, value: unknown): Promise<void> {
-    return enqueue(key, async () => {
+    await enqueue(key, async () => {
         const db = await open();
         const { promise, resolve, reject } = Promise.withResolvers<void>();
         const tx = db.transaction(store, "readwrite");
@@ -71,7 +71,7 @@ export async function setLocal(key: string, value: unknown): Promise<void> {
 }
 
 export async function deleteLocal(key: string): Promise<void> {
-    return enqueue(key, async () => {
+    await enqueue(key, async () => {
         const db = await open();
         const { promise, resolve, reject } = Promise.withResolvers<void>();
         const tx = db.transaction(store, "readwrite");

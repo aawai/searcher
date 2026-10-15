@@ -2,8 +2,7 @@
 import { assertEquals } from "@std/assert";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
-import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
-import { createApp } from "../../app.ts";
+import { AuthService } from "../auth/service.ts";
 import { Routes } from "@internal/hono/routes.ts";
 import { createSessionMiddleware } from "../auth/middleware.ts";
 import { registerSearchRoutes } from "./search.route.ts";

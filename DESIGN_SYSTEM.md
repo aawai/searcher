@@ -331,7 +331,9 @@ AlertDialog）具有严格不同的交互与视觉语义：
   以保留表单草稿； 不允许自由 drag/resize。三档尺寸以 safe rect 为基准居中：
   medium = min(680px, 78% safe-width) × min(720px, 72% safe-height)； large =
   min(880px, safe-width - 2 × desktop-gap) × min(820px, 88%
-  safe-height)；fullscreen = safe rect。
+  safe-height)；fullscreen = safe rect。 constrained preset
+  与工作区导航只拥有当前 presentation，不得回写自由桌面的 canonical frame 或
+  basis。
 - Task Dock 负责窗口导航与空间管理：Apps/Notes root closed → Open、visible →
   Focus、minimized → Restore + Focus；>=1024 增加 Overview 与 running note
   item，普通窗口下始终可见，文档沉浸时由底边入口临时呼出；无 CRUD、无 footer
@@ -345,15 +347,31 @@ AlertDialog）具有严格不同的交互与视觉语义：
   逐层消费菜单、query、整理、文件夹、表单返回、工作区关闭，且只作用于 active
   window；IME 不消费。其他 >=1024 普通窗口不因 Escape 关闭，保留既有语义。
   关闭后聚焦对应 Dock item。
+- DesktopState 仅保存用户语义 geometry：normal 的 `frame + frameBasis`
+  权威；snapped/maximized（含其 minimized 状态）的 normal geometry 由
+  `restoreFrame + restoreFrameBasis` 拥有，`frame` 只是非权威 cache。 basis
+  必须为提交时 viewport 的正有限宽高，仅属于 runtime，不改变 viewport-global CSS
+  px 坐标。OPEN/MOVE/RESIZE 与显式还原建立当前 basis；FOCUS、测量、 constrained
+  preset 和沉浸式不改写 canonical pair。
+- `resolveWindowPresentationFrame()` 是唯一自由桌面显示几何 owner： normal clamp
+  canonical frame，Snap/最大化从当前 work rect 派生； unusable geometry 优先
+  clamp normal/restore frame，保持语义模式与可访问标题栏。 drag/resize/keyboard
+  从当前 presentation 开始，pointermove 仅写 transient DOM， 结束时才提交新
+  canonical geometry；从 Snap 拖出先 clamp restore presentation， 再按当前标题栏
+  grab ratio 定位。
 - <768 无 DesktopDock；shared Sheet 保留 modal focus trap、swipe、实际 opener
   restore。<1024 与 Zen 的 `openNote` 仍使用 Notes nested editor，不创建 entity
   window。
 - Widgets geometry 通过 `local.ts` 的 IndexedDB IO 保存于
   `searcher:desktop-layout:v1:<userId>`：payload v4 保留 open identity、以
   viewport 归一化的 normal/restore frame、mode、snap semantic、z-order、active
-  id。 v1–v3 先按旧 safe-local 坐标解码，再加当前 safe rect
-  原点；成功恢复后的稳定 commit 才写回
-  v4。加载失败或无有效几何时不覆写旧记录；pointermove/resize 期间不写入。
+  id。编码仅依赖 canonical frame 与其自身 basis，不使用保存时 viewport； basis
+  不进入 payload。v1–v3 先按旧 safe-local 坐标解码，再加当前 safe rect
+  原点；v1–v4 解码建立当前 viewport basis。首次加载仍等待 measured safe
+  geometry。 rect-only 更新不保存；合法 semantic commit 立即保存，生命周期 flush
+  不因当前 geometry
+  暂不可用而丢弃已有合法布局。加载失败不覆写旧记录；pointermove/resize
+  期间不写入。
 - 无记录、unsupported version 或 corrupt payload 默认空桌面；stale note
   自动丢弃。 IndexedDB read/write 失败不得阻塞窗口或回滚 runtime state，本
   session 使用内存态。 logout 清 runtime，保留用户

@@ -1,10 +1,4 @@
-import {
-    type Dispatch,
-    type ReactNode,
-    useLayoutEffect,
-    useState,
-} from "react";
-import type { DesktopAction } from "./desktop-state.ts";
+import { type ReactNode, useLayoutEffect, useState } from "react";
 import { type DesktopGeometry, desktopGeometry } from "./desktop-geometry.ts";
 import "./desktop.css";
 
@@ -154,20 +148,11 @@ export function useDesktopGeometry(
 }
 
 export function DesktopCanvas(
-    { rect, dispatch, children }: {
+    { rect, children }: {
         rect: DesktopGeometry;
-        dispatch: Dispatch<DesktopAction>;
         children: ReactNode;
     },
 ) {
-    useLayoutEffect(() => {
-        if (
-            rect.usable && rect.viewportRect.width > 0 &&
-            rect.viewportRect.height > 0
-        ) {
-            dispatch({ type: "CLAMP", rect });
-        }
-    }, [rect, dispatch]);
     return (
         <div
             className="desktop-canvas"

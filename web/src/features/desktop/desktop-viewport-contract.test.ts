@@ -1,10 +1,20 @@
 import { assertEquals } from "@std/assert";
-import { clampFrame, desktopGeometry, snapFrame } from "./desktop-geometry.ts";
+import {
+    desktopGeometry,
+    type Frame,
+    frameBasisForGeometry,
+    resolveWindowPresentationFrame,
+    snapFrame,
+} from "./desktop-geometry.ts";
 import {
     decodeDesktopLayout,
     encodeDesktopLayout,
 } from "./desktop-persistence.ts";
-import { desktopReducer, initialDesktopState } from "./desktop-state.ts";
+import {
+    desktopReducer,
+    type DesktopWindowState,
+    initialDesktopState,
+} from "./desktop-state.ts";
 
 const geometry = desktopGeometry(1440, 900, 64, 820, 16, 48);
 
@@ -23,23 +33,63 @@ Deno.test("#147 Snap fills Work Rect in viewport coordinates without gap", () =>
     });
 });
 
-Deno.test("#147 normal bounds keep the titlebar visible while Dock covers the body", () => {
-    const frame = clampFrame(
-        { x: -50, y: 1000, width: 600, height: 360 },
-        geometry,
-        "document",
-    );
+Deno.test("#147 normal presentation keeps the titlebar visible while Dock covers the body", () => {
+    const resolveNormalPresentation = (frame: Frame) =>
+        resolveWindowPresentationFrame({
+            id: "document:d1",
+            kind: "document",
+            entityId: "d1",
+            frame,
+            frameBasis: frameBasisForGeometry(geometry),
+            restoreFrame: null,
+            restoreFrameBasis: null,
+            mode: "normal",
+            zOrder: 1,
+            snap: null,
+        }, geometry);
+    const frame = resolveNormalPresentation({
+        x: -50,
+        y: 1000,
+        width: 600,
+        height: 360,
+    });
     assertEquals(frame, { x: 0, y: 540, width: 600, height: 360 });
     assertEquals(frame.y + geometry.chromeHeight <= geometry.dockTop, true);
     assertEquals(frame.y + frame.height > geometry.dockTop, true);
     assertEquals(
-        clampFrame(
-            { x: 0, y: -50, width: 600, height: 360 },
-            geometry,
-            "document",
-        ).y,
+        resolveNormalPresentation({
+            x: 0,
+            y: -50,
+            width: 600,
+            height: 360,
+        }).y,
         geometry.chromeBottom,
     );
+});
+
+Deno.test("#163 chrome and Dock measurements only change normal presentation", () => {
+    const frame = { x: 900, y: 500, width: 500, height: 300 };
+    const window: DesktopWindowState = {
+        id: "note",
+        kind: "note",
+        entityId: "n1",
+        frame,
+        frameBasis: frameBasisForGeometry(geometry),
+        restoreFrame: null,
+        restoreFrameBasis: null,
+        mode: "normal" as const,
+        zOrder: 1,
+        snap: null,
+    };
+    const canonicalWindow = structuredClone(window);
+    const changedChromeAndDock = desktopGeometry(1440, 900, 96, 500, 16, 48);
+
+    assertEquals(resolveWindowPresentationFrame(window, geometry), frame);
+    assertEquals(
+        resolveWindowPresentationFrame(window, changedChromeAndDock),
+        { x: 900, y: 452, width: 500, height: 300 },
+    );
+    assertEquals(window, canonicalWindow);
 });
 
 Deno.test("#147 legacy v3 safe-local document restores to viewport coordinates and encodes as v4", () => {
@@ -64,8 +114,13 @@ Deno.test("#147 legacy v3 safe-local document restores to viewport coordinates a
         width: 704,
         height: 362,
     });
+    assertEquals(
+        restored.windows[0].frameBasis,
+        frameBasisForGeometry(geometry),
+    );
+    assertEquals(restored.windows[0].restoreFrameBasis, null);
 
-    const encoded = encodeDesktopLayout(restored, geometry);
+    const encoded = encodeDesktopLayout(restored);
     assertEquals(encoded.version, 4);
     assertEquals(encoded.windows[0].frame.y, 225 / 900);
 });
@@ -75,17 +130,19 @@ Deno.test("#147 maximize and restore retain the normal viewport frame", () => {
     let state = desktopReducer(initialDesktopState, {
         type: "HYDRATE",
         state: {
-            activeId: "document:d1",
             windows: [{
                 id: "document:d1",
                 kind: "document",
                 entityId: "d1",
                 frame: normal,
+                frameBasis: frameBasisForGeometry(geometry),
                 restoreFrame: null,
+                restoreFrameBasis: null,
                 mode: "normal",
                 snap: null,
                 zOrder: 1,
             }],
+            activeId: "document:d1",
         },
     });
 
@@ -95,6 +152,15 @@ Deno.test("#147 maximize and restore retain the normal viewport frame", () => {
         rect: geometry,
     });
     assertEquals(state.windows[0].frame, geometry.workRect);
+    assertEquals(
+        resolveWindowPresentationFrame(state.windows[0], geometry),
+        geometry.workRect,
+    );
+    assertEquals(state.windows[0].restoreFrame, normal);
+    assertEquals(
+        state.windows[0].restoreFrameBasis,
+        frameBasisForGeometry(geometry),
+    );
 
     state = desktopReducer(state, {
         type: "RESTORE",
@@ -102,4 +168,7 @@ Deno.test("#147 maximize and restore retain the normal viewport frame", () => {
         rect: geometry,
     });
     assertEquals(state.windows[0].frame, normal);
+    assertEquals(state.windows[0].frameBasis, frameBasisForGeometry(geometry));
+    assertEquals(state.windows[0].restoreFrame, null);
+    assertEquals(state.windows[0].restoreFrameBasis, null);
 });

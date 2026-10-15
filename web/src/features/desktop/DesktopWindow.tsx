@@ -5,7 +5,11 @@ import {
     type RefObject,
     useRef,
 } from "react";
-import { clampFrame, type DesktopGeometry } from "./desktop-geometry.ts";
+import {
+    type DesktopGeometry,
+    type Frame,
+    resolveWindowPresentationFrame,
+} from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 import { WindowChrome } from "./WindowChrome.tsx";
 import { WindowResizeHandles } from "./WindowResizeHandles.tsx";
@@ -19,6 +23,8 @@ export interface DesktopWindowProps {
     children: ReactNode;
     title: string;
     className?: string;
+    /** Host-specific presentation only; never committed as DesktopState geometry. */
+    presentationFrameOverride?: Frame;
     disableDrag?: boolean;
     disableResize?: boolean;
     showMinimize?: boolean;
@@ -44,6 +50,7 @@ export function DesktopWindow({
     children,
     title,
     className,
+    presentationFrameOverride,
     disableDrag,
     disableResize,
     showMinimize,
@@ -74,9 +81,9 @@ export function DesktopWindow({
         }
     };
 
-    const frame = rect.usable
-        ? win.frame
-        : clampFrame(win.frame, rect, win.kind);
+    const frame = presentationFrameOverride && rect.usable
+        ? presentationFrameOverride
+        : resolveWindowPresentationFrame(win, rect);
 
     const isMinimized = win.mode === "minimized";
     const isMaximized = win.mode === "maximized";
@@ -126,6 +133,7 @@ export function DesktopWindow({
                     window={win}
                     title={title}
                     rect={rect}
+                    presentationFrame={frame}
                     active={active}
                     dispatch={dispatch}
                     windowRef={windowRef}
@@ -153,6 +161,7 @@ export function DesktopWindow({
                 <WindowResizeHandles
                     window={win}
                     rect={rect}
+                    presentationFrame={frame}
                     active={active}
                     dispatch={dispatch}
                     windowRef={windowRef}

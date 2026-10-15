@@ -29,12 +29,6 @@ const RecordHistorySchema = v.object({
     engineId: EngineSchema,
 });
 
-const IdParamSchema = v.pipe(
-    v.string("ID必须为字符串"),
-    v.trim(),
-    v.minLength(1, "ID不能为空"),
-);
-
 export function registerSearchRoutes(
     routes: Routes<AppEnv>,
     deps: AppDeps,

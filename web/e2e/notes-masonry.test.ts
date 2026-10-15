@@ -94,7 +94,7 @@ async function closeNotes(fixture: Fixture): Promise<void> {
     await fixture.root.locator(
         '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
     ).click();
-    await fixture.root.waitFor({ state: "detached" });
+    await fixture.root.waitFor({ state: "hidden" });
 }
 
 async function createFixture(

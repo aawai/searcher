@@ -4,33 +4,41 @@
 >
 > 适用范围：主页布局模式 `zen`（极简空间工作区）与 `widgets`（空间轻桌面）。
 >
-> 本文是后续 Workspace / Home Spatial UI 重构的唯一计划基线。既有 `WORKSPACE_LAYOUT_REDESIGN_PLAN.md`、#36、#57、#70、#80 等保留为历史背景；当其 presentation 结论与本文冲突时，以本文为准。既有已验证的业务、可访问性、UI ownership 与 Apps/Notes 语义契约继续有效。
+> 本文是后续 Workspace / Home Spatial UI 重构的唯一计划基线。既有
+> `WORKSPACE_LAYOUT_REDESIGN_PLAN.md`、#36、#57、#70、#80 等保留为历史背景；当其
+> presentation 结论与本文冲突时，以本文为准。既有已验证的业务、可访问性、UI
+> ownership 与 Apps/Notes 语义契约继续有效。
 
 ## 1. 最终产品定义
 
 Searcher 只保留两种主页工作区布局模式：
 
-| Style | 中文名称 | 核心心智 | Desktop >=1024 | Tablet 768-1023 | Mobile <768 |
-| --- | --- | --- | --- | --- | --- |
-| `zen` | 极简空间工作区 | 单任务、低干扰、按需展开 | 非模态右侧 Panel | 非模态右侧 Panel | 模态 Bottom Sheet |
-| `widgets` | 空间轻桌面 | 多任务、空间化、窗口与 Dock | 多窗口 Desktop Canvas | 受限单窗口 + Dock | 模态 Bottom Sheet |
+| Style     | 中文名称       | 核心心智                    | Desktop >=1024        | Tablet 768-1023   | Mobile <768       |
+| --------- | -------------- | --------------------------- | --------------------- | ----------------- | ----------------- |
+| `zen`     | 极简空间工作区 | 单任务、低干扰、按需展开    | 非模态右侧 Panel      | 非模态右侧 Panel  | 模态 Bottom Sheet |
+| `widgets` | 空间轻桌面     | 多任务、空间化、窗口与 Dock | 多窗口 Desktop Canvas | 受限单窗口 + Dock | 模态 Bottom Sheet |
 
-两种模式共享 Apps / Notes 的业务能力与内部路由，但**不共享相同的空间 presentation**。
+两种模式共享 Apps / Notes 的业务能力与内部路由，但**不共享相同的空间
+presentation**。
 
 硬性产品边界：
 
-- Search 始终是主页一级任务；任何 Workspace presentation 都不得推动、重排或替代 Search。
+- Search 始终是主页一级任务；任何 Workspace presentation 都不得推动、重排或替代
+  Search。
 - `zen` 不引入自由窗口、常驻 Task Dock、Snap、Overview。
-- `widgets` 不再以固定右侧 WorkspacePanel 作为 desktop 主 presentation；>=1024 使用 Window Manager。
+- `widgets` 不再以固定右侧 WorkspacePanel 作为 desktop 主 presentation；>=1024
+  使用 Window Manager。
 - <768 两种模式统一降级到现有 Bottom Sheet 心智，不在手机上模拟桌面窗口。
 - 本计划不引入 Finder、菜单栏、桌面文件、Spaces、系统托盘或 OS clone。
-- 本计划不把 Ask/AI 强制纳入 Workspace；Apps / Notes 先形成稳定 Core，AI 若未来接入必须消费相同 public contract，另开任务。
+- 本计划不把 Ask/AI 强制纳入 Workspace；Apps / Notes 先形成稳定 Core，AI
+  若未来接入必须消费相同 public contract，另开任务。
 
 ## 2. 术语与唯一职责
 
 ### 2.1 Home Style
 
-`zen | widgets` 只决定 Home / Workspace 的空间组织策略，不改变 Settings、Admin、Account、Trash、Ask 等页面的基础 Design Token。
+`zen | widgets` 只决定 Home / Workspace 的空间组织策略，不改变
+Settings、Admin、Account、Trash、Ask 等页面的基础 Design Token。
 
 ### 2.2 Domain Workspace
 
@@ -70,10 +78,12 @@ type WorkspacePresentation = "panel" | "window" | "sheet";
 ```
 
 - `panel`：Zen >=768。
-- `window`：Widgets >=768；>=1024 为 full desktop window，768-1023 为 constrained window。
+- `window`：Widgets >=768；>=1024 为 full desktop window，768-1023 为
+  constrained window。
 - `sheet`：所有 style <768。
 
-同一个业务视图不得复制成 PanelApps / WindowApps / SheetApps 三套实现。Presenter 只包裹同一份 Workspace content。
+同一个业务视图不得复制成 PanelApps / WindowApps / SheetApps 三套实现。Presenter
+只包裹同一份 Workspace content。
 
 ## 3. 最终组件边界
 
@@ -125,13 +135,14 @@ Desktop-only
 </WorkspaceSurface>
 ```
 
-它负责通用 chrome slot、label、scroll boundary、surface contract；不负责业务 route。
+它负责通用 chrome slot、label、scroll boundary、surface contract；不负责业务
+route。
 
 ## 4. Zen：极简空间工作区标准
 
 ### 4.1 Desktop / Tablet
 
->=768 固定为右侧非模态 Panel：
+> =768 固定为右侧非模态 Panel：
 
 - semantic：`aside` 或等价 complementary region；
 - 默认宽度：`--workspace-width: 400px`；
@@ -177,7 +188,8 @@ Widgets 使用真正 Window Manager：
 - Note editor 为 entity window：`note:<noteId>`；
 - 同一 note 同时最多一个 window；重复打开只 focus/restore；
 - Apps create/edit 继续作为 Apps window 内 nested route，不拆成独立窗口；
-- Notes browser 点击 note 时打开/focus 对应 note window，Notes browser 本身保持存在；
+- Notes browser 点击 note 时打开/focus 对应 note window，Notes browser
+  本身保持存在；
 - Window 可 drag、resize、focus、stack、minimize、maximize；
 - 支持 Snap；
 - 支持 Overview；
@@ -194,7 +206,8 @@ Widgets 使用真正 Window Manager：
 - Note 点击在当前 Notes surface 内进入 nested editor，不创建多 Note window；
 - 不提供 Overview；
 - Dock 仍可 Apps / Notes 原地切换；
-- presentation 仍是 `window`，但 state model 明确标记 constrained，不假装 full desktop。
+- presentation 仍是 `window`，但 state model 明确标记 constrained，不假装 full
+  desktop。
 
 ### 5.3 <768
 
@@ -221,13 +234,19 @@ interface WindowFrame {
 }
 
 interface DesktopWindowState {
-    id: string;                  // apps | notes | note:<id>
+    id: string; // apps | notes | note:<id>
     kind: DesktopWindowKind;
     entityId?: string;
-    frame: WindowFrame;          // runtime px frame
+    frame: WindowFrame; // runtime px frame
     restoreFrame?: WindowFrame;
     mode: DesktopWindowMode;
-    snap?: "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+    snap?:
+        | "left"
+        | "right"
+        | "top-left"
+        | "top-right"
+        | "bottom-left"
+        | "bottom-right";
     zOrder: number;
 }
 ```
@@ -263,11 +282,12 @@ Reducer/action 至少包含：
 - 高频 pointermove 通过 DOM transform / requestAnimationFrame 更新视觉位置。
 - React/reducer 只在 pointerup/cancel 时 commit 最终 frame。
 - 不在 drag 中写 API / localStorage。
-- 内部 Apps/Notes DnD 继续使用 dnd-kit；Window drag 不复用 SortableContext，避免嵌套 sensor 冲突。
+- 内部 Apps/Notes DnD 继续使用 dnd-kit；Window drag 不复用
+  SortableContext，避免嵌套 sensor 冲突。
 
 ### 7.2 Resize
 
->=1024 支持 8 个边/角 resize zone。
+> =1024 支持 8 个边/角 resize zone。
 
 - resize hit area 允许大于可见边界，但不得出现粗重 handle；
 - 每个 window kind 定义正式 minWidth/minHeight；
@@ -291,17 +311,17 @@ DesktopDock 是唯一 desktop-level workspace/task navigation。
 - Apps
 - Notes
 
->=1024 可出现 transient running items：
+> =1024 可出现 transient running items：
 
 - open Note windows
 
 Dock 行为必须固定：
 
-| 当前状态 | 点击固定 Apps/Notes |
-| --- | --- |
-| 未打开 | Open |
-| 已打开且可见 | Focus |
-| 已最小化 | Restore + Focus |
+| 当前状态           | 点击固定 Apps/Notes |
+| ------------------ | ------------------- |
+| 未打开             | Open                |
+| 已打开且可见       | Focus               |
+| 已最小化           | Restore + Focus     |
 | constrained tablet | 切换 active surface |
 
 Note transient item：
@@ -345,7 +365,8 @@ v1 只支持：
 
 ### 10.1 Window geometry 不写 note_layouts
 
-`note_layouts` 继续属于 Zen FloatingNotes / note presentation，不得复用为 Widgets DesktopWindow geometry。
+`note_layouts` 继续属于 Zen FloatingNotes / note presentation，不得复用为
+Widgets DesktopWindow geometry。
 
 原因：两者 coordinate scope、生命周期与 entity 语义不同。
 
@@ -382,7 +403,8 @@ searcher:desktop-layout:v1:<userId>
 
 ### 10.3 Normalized geometry
 
-持久化 frame 使用 0–1 normalized coordinates，restore 时基于 DesktopCanvas 尺寸计算 px 并 clamp。
+持久化 frame 使用 0–1 normalized coordinates，restore 时基于 DesktopCanvas
+尺寸计算 px 并 clamp。
 
 ## 11. Mode Switch 标准
 
@@ -436,7 +458,8 @@ searcher:desktop-layout:v1:<userId>
 - 不新增 > 当前 material taxonomy 明显更大的 blur；
 - 不复制 macOS 三色 traffic-light 作为产品必要元素；
 - WindowChrome 使用 Searcher 自己的 close/minimize/maximize affordance；
-- Search 视觉层级仍高于静态 Bento；active window 可以覆盖 Bento，但不抢占 Home top-level hierarchy；
+- Search 视觉层级仍高于静态 Bento；active window 可以覆盖 Bento，但不抢占 Home
+  top-level hierarchy；
 - light/dark + wallpaper 下均必须保持边界可读。
 
 ## 14. Accessibility 标准
@@ -448,7 +471,8 @@ Desktop Window 不是 modal：
 - 使用有 label 的 region/section 等语义；
 - WindowChrome 所有动作均可键盘 Tab 到达；
 - resize 的等价操作由 Window menu 提供，不要求键盘模拟拖边；
-- Window menu 至少提供：Restore / Minimize / Maximize / Snap Left / Snap Right / Close；
+- Window menu 至少提供：Restore / Minimize / Maximize / Snap Left / Snap Right /
+  Close；
 - 不依赖 hover 才能发现唯一关键操作；
 - `prefers-reduced-motion` 下关闭非必要位移动画。
 
@@ -464,7 +488,8 @@ Escape precedence：
 
 ## 15. Responsive 标准
 
-必须以 CSS/container geometry 为基础，不在业务组件中散布大量 `window.innerWidth` 分支。
+必须以 CSS/container geometry 为基础，不在业务组件中散布大量 `window.innerWidth`
+分支。
 
 唯一产品断点：
 
@@ -576,7 +601,7 @@ M3 只使用 test/demo content 验证窗口引擎，不迁移业务。
 
 ### Zen
 
-- [ ] >=768 仍是 non-modal right panel。
+- [ ] =768 仍是 non-modal right panel。
 - [ ] <768 为 modal sheet。
 - [ ] 无 DesktopDock / Window Manager / Snap / Overview。
 - [ ] FloatingNotes 无回归。
@@ -584,7 +609,7 @@ M3 只使用 test/demo content 验证窗口引擎，不迁移业务。
 
 ### Widgets
 
-- [ ] >=1024 Apps / Notes 可作为独立窗口同时存在。
+- [ ] =1024 Apps / Notes 可作为独立窗口同时存在。
 - [ ] Apps/Notes window 可 drag/resize/focus/stack。
 - [ ] minimize/maximize/restore 正确。
 - [ ] 同一 note 只存在一个 entity window。
@@ -618,7 +643,8 @@ M3 只使用 test/demo content 验证窗口引擎，不迁移业务。
 
 ## 19. 明确禁止的实现捷径
 
-- 不在 `WidgetsLayout.tsx` 直接堆 `position:absolute` + local z-index 形成伪 Window Manager。
+- 不在 `WidgetsLayout.tsx` 直接堆 `position:absolute` + local z-index 形成伪
+  Window Manager。
 - 不复制第二套 Apps / Notes JSX 给 Widgets。
 - 不把整个 DesktopWindow 设为 draggable。
 - 不在 pointermove 过程中调用 API / localStorage。
