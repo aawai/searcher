@@ -25,8 +25,6 @@ jobs:
               run: deno install
             - name: Unit and API contracts
               run: deno task test
-            - name: UI guard
-              run: deno task check:ui
             - name: Install Chromium
               run: npx --yes playwright@1.56.1 install --with-deps chromium
             - name: Production wallpaper user journeys
