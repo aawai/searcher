@@ -6,7 +6,6 @@ Deno.test("apps edit keeps fields and confirmation across hosts and window modes
     const app = await startProductionApp();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
     try {
-        assertEquals(true, false, "Issue #167 intentional CI failure/artifact probe; never merge");
         const page = await browser.newPage({
             viewport: { width: 1440, height: 900 },
         });
