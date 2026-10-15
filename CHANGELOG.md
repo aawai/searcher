@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- CI 在同一 PR 更新时自动取消五个测试 Workflow 的过时运行，不影响其他 PR 或 main
+  运行；移除 Wallpaper 重复的 UI Guard 和已合并历史分支的 Workspace Push
+  触发，保留现有测试、检查名称及 Docker 发布流程。
 - Widgets 桌面临时缩小视口、调整 Header/Dock 或切换平板受限布局时，不再永久改写
   窗口的位置与尺寸；回到原视口恢复最后一次摆放。缩屏后主动移动、调整大小或还原
   窗口则保留新的位置。设备布局仍使用兼容旧版本的 v4 格式。
