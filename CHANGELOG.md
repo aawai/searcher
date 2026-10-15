@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Workspace E2E 默认启用原生文件级并行（`DENO_JOBS` 默认 2，可覆盖），显式
+  `test:workspace:serial` 保留为串行回退；Workspace CI 同步默认并行。
 - 搜索迟到建议不再于失焦后重新弹开；焦点回到输入框仍可正常打开建议。
 - E2E 新增一次生产构建的完整入口 `test:e2e:full`、Workspace
   模块入口与显式串行回退； 执行前检查权威文件清单，防止新增测试遗漏。Workspace

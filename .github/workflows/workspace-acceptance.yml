@@ -53,6 +53,7 @@ jobs:
             - name: Run full Workspace production E2E
               env:
                   E2E_REPORT_DIR: artifacts/e2e/workspace
+                  DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
                   set -o pipefail

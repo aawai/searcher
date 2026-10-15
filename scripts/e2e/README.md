@@ -6,7 +6,7 @@
 
 | Task                      | 覆盖范围                                                                                         |
 | ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `test:workspace`          | 原 Workspace 完整集合，默认串行；见 `suites.ts` 的 `workspace`                                   |
+| `test:workspace`          | 原 Workspace 完整集合，默认原生文件级并行；见 `suites.ts` 的 `workspace`                         |
 | `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                              |
 | `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                   |
 | `test:workspace:apps`     | Workspace 中 `apps-*`、`desktop-*`、`launcher`、`home-launcher-*`                                |
@@ -36,10 +36,9 @@ deno task test:e2e:full
 ```
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
-`t.step`，不共享 Browser、Context、数据库或 session。并行入口未设置 `DENO_JOBS`
-时采用保守值 2。默认 Workspace 与 CI 保持串行：本机实验未证明并行稳定性不下降，
-详见 [#167 实测记录](BENCHMARKS.md)。显式 serial 会移除 `--parallel`，而不是只把
-并发数设为 1。禁止用全局 retry 隐藏失败。
+`t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
+时采用保守值 2；CI 固定该值。默认 Workspace 与 CI 均为并行，显式 serial 会移除
+`--parallel`（而不是只把并发数设为 1）作为回退。禁止用全局 retry 隐藏失败。
 
 默认报告位于唯一的 `artifacts/e2e/<suite>-<timestamp>-<uuid>/`，包含原生
 `junit.xml` 与外层独立计量的 `timings.json`（build/test/wall
