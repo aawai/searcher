@@ -82,6 +82,9 @@ export async function startProductionApp(): Promise<ProductionAppInstance> {
     );
     const origin = `http://127.0.0.1:${(server.addr as Deno.NetAddr).port}`;
     const auth = new AuthService({ store, origin });
+    // A fixture is ready only once AuthService's background initialization ends.
+    // Otherwise an immediately closed fixture leaves PBKDF2 ops in flight.
+    await auth.getDummyHash();
     const app = createApp({
         store,
         auth,

@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assertEquals, assertStringIncludes } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { createApp } from "../../src/app.ts";
@@ -19,8 +20,9 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
     cleanup.defer(() => Deno.remove(files, { recursive: true }));
     const screenshotDir = `${files}/screenshots`;
     await Deno.mkdir(screenshotDir, { recursive: true });
-    const durableScreenshotDir = "./data/screenshots/home-notes-order";
-    await Deno.mkdir(durableScreenshotDir, { recursive: true }).catch(() => {});
+    const durableScreenshotDir = await createEvidenceDirectory(
+        "home-notes-order",
+    );
 
     const store = openDatabase(":memory:");
     cleanup.defer(() => store.close());
@@ -44,6 +46,7 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
         ignoreDefaultArgs: ["--hide-scrollbars"],

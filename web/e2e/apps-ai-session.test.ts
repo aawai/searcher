@@ -6,7 +6,10 @@ import { startProductionApp } from "./helpers/production-app.ts";
 // provider compatibility or successful image generation.
 Deno.test("apps AI snapshot, candidates and selection stay in one session #141", async () => {
     const app = await startProductionApp();
-    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        args: ["--no-sandbox"],
+    });
     try {
         const page = await browser.newPage({
             viewport: { width: 1440, height: 900 },

@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import {
@@ -29,10 +30,10 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
     cleanup.defer(() => app.close());
 
     const user = await app.seedAskFixtureUser();
-    const artifactDir = "artifacts/route-style";
-    await Deno.mkdir(artifactDir, { recursive: true });
+    const artifactDir = await createEvidenceDirectory("route-style");
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

@@ -344,6 +344,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     cleanup.defer(() => app.close());
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

@@ -75,6 +75,7 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

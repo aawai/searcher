@@ -5,6 +5,8 @@ on:
         branches: [main]
         paths:
             - "deno.jsonc"
+            - "deno.lock"
+            - "scripts/e2e/**"
             - "web/**"
             - "src/**"
             - ".github/workflows/workspace-acceptance.yml"
@@ -49,4 +51,20 @@ jobs:
             - name: Install Chromium
               run: npx --yes playwright@1.56.1 install --with-deps chromium
             - name: Run full Workspace production E2E
-              run: deno task test:workspace
+              env:
+                  E2E_REPORT_DIR: artifacts/e2e/workspace
+              run: |
+                  mkdir -p "$E2E_REPORT_DIR"
+                  set -o pipefail
+                  { deno --version; uname -a; lscpu; free -m; } \
+                    | tee "$E2E_REPORT_DIR/environment.txt"
+                  /usr/bin/time -v -o "$E2E_REPORT_DIR/resources.txt" \
+                    deno task test:workspace 2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
+            - name: Upload Workspace E2E reports
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: workspace-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: artifacts/e2e/workspace/
+                  retention-days: 14
+                  if-no-files-found: warn

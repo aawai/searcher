@@ -8,6 +8,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
     cleanup.defer(() => app.close());
     const credentials = await app.seedAskFixtureUser();
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

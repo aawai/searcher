@@ -6,7 +6,10 @@ import { startProductionApp } from "./helpers/production-app.ts";
 // centered glyphs and usable targets, without changing tablet or desktop.
 Deno.test("Home touch grid density and drag alignment", async () => {
     const app = await startProductionApp();
-    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        args: ["--no-sandbox"],
+    });
     try {
         const context = await browser.newContext({
             viewport: { width: 390, height: 844 },

@@ -34,6 +34,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

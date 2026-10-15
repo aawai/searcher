@@ -39,6 +39,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

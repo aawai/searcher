@@ -30,6 +30,7 @@ Deno.test("production search shortcuts respect editable focus and submit command
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
@@ -109,6 +110,60 @@ Deno.test("production search shortcuts respect editable focus and submit command
                     document.activeElement !== element
                 ),
             );
+        },
+    );
+    await t.step(
+        "late suggestions do not reopen the listbox after search loses focus",
+        async () => {
+            const gate = Promise.withResolvers<void>();
+            await page.route(/\/api\/search\/suggestions\?/, async (route) => {
+                await gate.promise;
+                await route.fulfill({
+                    status: 200,
+                    contentType: "application/json",
+                    body: JSON.stringify({
+                        status: true,
+                        data: [
+                            {
+                                text: "late popup regression check",
+                                source: "engine",
+                                engine: "google",
+                            },
+                        ],
+                    }),
+                });
+            });
+            try {
+                const requested = page.waitForRequest(
+                    /\/api\/search\/suggestions\?/,
+                );
+                await search.fill("late popup regression");
+                await requested;
+                await search.evaluate((element) =>
+                    (element as HTMLElement).blur()
+                );
+                const completed = page.waitForResponse(
+                    /\/api\/search\/suggestions\?/,
+                );
+                gate.resolve();
+                await (await completed).finished();
+                assert(
+                    await search.evaluate((element) =>
+                        document.activeElement !== element
+                    ),
+                );
+                // Wait past the production debounce/propagation window so a
+                // fixed component has time to wrongly reopen the listbox.
+                await page.waitForTimeout(240);
+                assertEquals(
+                    await page.getByRole("listbox", { name: "搜索建议" })
+                        .isVisible(),
+                    false,
+                );
+            } finally {
+                gate.resolve();
+                await page.unroute(/\/api\/search\/suggestions\?/);
+            }
         },
     );
     await t.step(

@@ -670,6 +670,7 @@ Deno.test("desktop drag preserves immediate reverse movement at all normal bound
         displayName: "Desktop drag regression",
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
@@ -1878,6 +1879,7 @@ Deno.test("desktop drag clips diagonal and single-frame gestures without draggin
         displayName: "Desktop drag M4",
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

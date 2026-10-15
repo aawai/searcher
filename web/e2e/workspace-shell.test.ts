@@ -30,6 +30,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

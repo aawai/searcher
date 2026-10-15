@@ -35,6 +35,7 @@ Deno.test("production Bento contracts & empty expansion matrix (#44)", async (t)
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

@@ -38,6 +38,7 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
@@ -112,6 +113,10 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
 
             const bodyInput = await sourceEditor(page);
             await bodyInput.waitFor({ state: "visible" });
+            // Strike is a direct tooltip-bearing button only in the wide toolbar.
+            await page.locator('.desktop-window[data-window-kind="note"]')
+                .getByRole("button", { name: "最大化窗口", exact: true })
+                .click();
 
             // Check toolbar button titles
             const boldBtn = page.locator(
@@ -285,7 +290,7 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
 
             // Navigate to Ask page
             await page.goto(origin + "/ask");
-            await page.locator(".ask-workspace-layout, .ask-composer-container")
+            await page.locator(".ask-workspace-layout")
                 .waitFor({ state: "visible" });
 
             const composer = page.locator(".ask-composer__textarea");

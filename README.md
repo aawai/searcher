@@ -122,8 +122,10 @@ deno task test:routing
 
 `deno task test:workspace` 构建生产前端并运行 Workspace、Shell、Unified Launcher、Notes、首页便签排序、Bento、workspace-contract 与 workspace-matrix 及 Notes Live/Source 两套编辑实页回归（无副作用切换、IME、选区、undo/redo、任务列表、409 和恢复），使用独立内存数据库与临时资源目录。覆盖 loading/error/cache retry、表单与 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的 A–F 分层响应式、主题、壁纸、窗口、持久化与 tablet contract；不会使用真实账户或开发数据库。
 
+完整及分层 E2E 入口、权威文件清单、原生并行/串行回退、JUnit 与资源报告、CI 和排障约定见 [Production E2E](scripts/e2e/README.md)。`deno task test:e2e:full` 只构建一次后执行所有现有 E2E 文件的去重并集；`deno task check:e2e` 检查新增文件遗漏。模块入口仅作局部开发辅助，不替代完整 Workspace 回归。
+
 `deno task test:documents` 构建生产前端，使用隔离服务、内存数据库和临时图片执行 Documents 的 390×844、768×1024、1024×768、1440×900 × Zen/Widgets × light/dark 三模式矩阵、Library 网络隔离与摘要契约、短屏输入保存，以及 100k Markdown / 200 headings / 50 images / 20 tables / 30 PageBreak 的大文档完整性验收；Bundle CI 自动运行同一套测试。390×400 短屏用于模拟软键盘缩小可用视口，不替代真机输入法测试。
-专项门禁同时覆盖文档沉浸的实例/窗口语义、Dock 与 Escape、保存错误/409/上传，以及页面模式的竖向纸张与单一滚动 owner。设置 `E2E_EVIDENCE_DIR=/tmp/searcher-documents-evidence` 后，响应式矩阵在字体与布局完成后保存各 Host/主题/模式的实页截图；截图仍需人工检查，不替代行为断言。
+专项门禁同时覆盖文档沉浸的实例/窗口语义、Dock 与 Escape、保存错误/409/上传，以及页面模式的竖向纸张与单一滚动 owner。设置 `E2E_EVIDENCE_DIR=/tmp/searcher-documents-evidence` 后，响应式矩阵在字体与布局完成后保存各 Host/主题/模式的实页截图；每次执行在指定父目录下创建唯一子目录，路径打印到控制台。截图仍需人工检查，不替代行为断言。
 
 `deno task test:wallpaper` 构建生产前端并运行壁纸 Playwright 链路：偏左/偏右主体构图、双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL 草稿、同步故障恢复、匿名持久化与 reduced-motion。使用隔离数据库和临时资源目录；PR/main CI 自动执行该链路、`deno task test` 与既有 UI 门禁。
 ## UI Contract 与门禁

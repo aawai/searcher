@@ -40,6 +40,7 @@ Deno.test("production home notes expand/collapse persistence E2E (#122)", async 
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
         ignoreDefaultArgs: ["--hide-scrollbars"],

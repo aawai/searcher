@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
@@ -121,6 +122,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
@@ -136,13 +138,9 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         globalThis.print = () => {};
     });
     const page = await context.newPage();
-    const evidenceDirectory = Deno.env.get("E2E_EVIDENCE_DIR");
-    const issueEvidenceDirectory = evidenceDirectory
-        ? `${evidenceDirectory}/document-vertical-layout`
+    const issueEvidenceDirectory = Deno.env.get("E2E_EVIDENCE_DIR")
+        ? await createEvidenceDirectory("document-vertical-layout")
         : undefined;
-    if (issueEvidenceDirectory) {
-        await Deno.mkdir(issueEvidenceDirectory, { recursive: true });
-    }
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 

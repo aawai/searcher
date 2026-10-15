@@ -49,6 +49,7 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

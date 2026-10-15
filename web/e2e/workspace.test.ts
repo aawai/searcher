@@ -45,6 +45,7 @@ Deno.test("production workspace contracts", async (t) => {
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

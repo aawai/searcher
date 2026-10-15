@@ -77,6 +77,12 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
         c.src?.endsWith("spikes/markdown-editor/runtime.ts")
     )?.[1]?.file;
     assert(runtimeChunk, "Manifest must contain runtime chunk.");
+    const sharedRuntimeChunk = Object.entries(manifest).find(([k, c]) =>
+        k.endsWith("features/markdown-editor/runtime.ts") ||
+        c.src?.endsWith("features/markdown-editor/runtime.ts")
+    )?.[1]?.file;
+    assert(sharedRuntimeChunk, "Manifest must contain shared editor runtime.");
+    assert(!initialFiles.has(sharedRuntimeChunk));
 
     const spikeHarnessChunk = Object.entries(manifest).find(([k, c]) =>
         k.includes("MarkdownEditorSpike") ||
@@ -128,6 +134,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
@@ -187,9 +194,9 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
         },
     );
 
-    // Scenario 2: Authenticated Home, Apps workspace, Notes root & baseline NoteEditor
+    // Notes summaries may load vendor code, but do not instantiate the runtime.
     await t.step(
-        "Scenario 2: Authenticated Home, Apps workspace, Notes root and baseline NoteEditor never request editor runtime",
+        "Scenario 2: Home/Apps stay vendor-cold; Notes root stays runtime-cold; Live loads on demand and Source does not reload",
         async () => {
             const { page, close } = await createIsolatedPage();
             try {
@@ -225,6 +232,15 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 await appsBtn.click();
                 const workspacePanel = page.locator(".workspace-panel").first();
                 await workspacePanel.waitFor({ state: "visible" });
+                assert(
+                    !requestedJs.includes(editorVendorChunk),
+                    `Home/Apps unexpectedly requested editor-vendor: ${editorVendorChunk}`,
+                );
+                assert(
+                    !requestedJs.includes(runtimeChunk) &&
+                        !requestedJs.includes(sharedRuntimeChunk),
+                    "Auth/Home/Apps must not request editor runtime",
+                );
 
                 // 3. Switch to Notes workspace via panel switcher
                 const notesSwitcher = page.locator(
@@ -232,37 +248,50 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 ).first();
                 await notesSwitcher.waitFor({ state: "visible" });
                 await notesSwitcher.click();
-                await page.waitForTimeout(300);
+                await page.locator(".workspace-panel [data-workspace-search]")
+                    .waitFor({ state: "visible" });
+                assert(
+                    !requestedJs.includes(runtimeChunk) &&
+                        !requestedJs.includes(sharedRuntimeChunk),
+                    "Notes root must not load either spike or shared editor runtime",
+                );
 
-                // 4. Open baseline NoteEditor and assert textarea and toolbar visible
                 const newNoteBtn = page.locator(
                     '.workspace-panel button:has-text("新建便签")',
                 ).first();
-                await newNoteBtn.waitFor({ state: "visible" });
+                const runtimeRequest = page.waitForRequest((request) =>
+                    request.url() === `${origin}/${sharedRuntimeChunk}`
+                );
                 await newNoteBtn.click();
-                const noteTextarea = page.locator(
-                    'textarea[id^="note-editor-"], textarea[placeholder="写下你的想法…"], .note-editor-textarea, textarea',
-                ).first();
-                await noteTextarea.waitFor({ state: "visible" });
-                await noteTextarea.fill(
-                    "测试便签内容，用于验证基础 NoteEditor 渲染与隔离。",
+                const live = page.locator(
+                    '.note-live-editor [contenteditable="true"]',
                 );
-
-                // Assert NoteMarkdownToolbar is present
-                const noteToolbar = page.locator(
-                    '.note-markdown-toolbar, [role="toolbar"]',
-                ).first();
-                await noteToolbar.waitFor({ state: "visible" });
-
-                // 5. Strict invariant: Across Auth, Home, Apps, Notes root, and NoteEditor,
-                // neither editor-vendor nor runtime was EVER requested!
-                assert(
-                    !requestedJs.includes(editorVendorChunk),
-                    `Eager user journey unexpectedly requested editor-vendor: ${editorVendorChunk}`,
-                );
+                await live.waitFor({ state: "visible" });
+                await runtimeRequest;
+                assert(requestedJs.includes(editorVendorChunk));
                 assert(
                     !requestedJs.includes(runtimeChunk),
-                    `Eager user journey unexpectedly requested editor runtime: ${runtimeChunk}`,
+                    "The production Notes editor must not request the spike runtime",
+                );
+                const editorLoads = requestedJs.filter((file) =>
+                    file === editorVendorChunk || file === sharedRuntimeChunk
+                );
+                await page.getByRole("tab", { name: "源码", exact: true })
+                    .click();
+                const source = page.locator("textarea.note-body-textarea");
+                await source.waitFor({ state: "visible" });
+                await source.fill(
+                    "测试便签内容，用于验证 Source 编辑与加载隔离。",
+                );
+                await page.locator(".note-markdown-toolbar")
+                    .waitFor({ state: "visible" });
+                assertEquals(
+                    requestedJs.filter((file) =>
+                        file === editorVendorChunk ||
+                        file === sharedRuntimeChunk
+                    ),
+                    editorLoads,
+                    "Switching to Source must not request editor chunks again",
                 );
             } finally {
                 await close();

@@ -8,6 +8,7 @@ Deno.test("Notes Live Preview: opening and switching preserve canonical Markdown
     cleanup.defer(() => app.close());
     const credentials = await app.seedAskFixtureUser();
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
