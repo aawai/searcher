@@ -1194,18 +1194,25 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
             ) => tile.id);
         for (const width of [390, 375, 430, 767, 768]) {
             await touchPage.setViewportSize({ width, height: 844 });
+            // 767 is mobile Sheet; 768 is the constrained desktop Owner.
+            // Accept either layout's current mount at each width.
             await touchPage.waitForFunction(() => {
-                const grid = document.querySelector<HTMLElement>(
-                    ".apps-workspace-root .launcher-grid--workspace",
+                const grids = Array.from(
+                    document.querySelectorAll<HTMLElement>(
+                        ".apps-workspace-root .launcher-grid--workspace",
+                    ),
+                ).filter((grid) => grid.isConnected);
+                if (grids.length !== 1) return false;
+                const parent = grids[0].parentElement;
+                if (!parent) return false;
+                const parentStyle = getComputedStyle(parent);
+                const available = parent.clientWidth -
+                    Number.parseFloat(parentStyle.paddingLeft) -
+                    Number.parseFloat(parentStyle.paddingRight);
+                const gap = Number.parseFloat(
+                    getComputedStyle(grids[0]).columnGap,
                 );
-                if (!grid?.parentElement) return false;
-                const style = getComputedStyle(grid);
-                const parent = getComputedStyle(grid.parentElement);
-                const available = grid.parentElement.clientWidth -
-                    parseFloat(parent.paddingLeft) -
-                    parseFloat(parent.paddingRight);
-                const gap = parseFloat(style.columnGap);
-                return Number(grid.dataset.columns) ===
+                return Number(grids[0].dataset.columns) ===
                     Math.floor((available + gap) / (68 + gap));
             });
             const metrics = await collectDensityMetrics(touchPage, fixtures);

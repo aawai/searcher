@@ -180,8 +180,13 @@ export function SearcherSearchInput(
                         description: `${c.prefix} · ${c.action}`,
                     }));
                 setSuggestions(commandSuggestions);
-                setIsOpen(true);
                 setSelectedIndex(-1);
+                if (
+                    typeof document === "undefined" ||
+                    document.activeElement === field.current
+                ) {
+                    setIsOpen(true);
+                }
                 return;
             }
         }
@@ -283,7 +288,11 @@ export function SearcherSearchInput(
 
             if (!isCancelled) {
                 setSuggestions(combined);
-                setIsOpen(combined.length > 0);
+                // Late responses must not reopen the listbox after blur.
+                // Focus can return via keyboard/mouse, and onFocus reopens.
+                const focused = typeof document !== "undefined" &&
+                    document.activeElement === field.current;
+                setIsOpen(focused && combined.length > 0);
                 setSelectedIndex(-1);
             }
         }, 120);
@@ -451,6 +460,17 @@ export function SearcherSearchInput(
                         onChange={(e) => setQuery(e.target.value)}
                         onFocus={() => {
                             if (suggestions.length > 0) setIsOpen(true);
+                        }}
+                        onBlur={(event) => {
+                            // Suggestion buttons live inside the container,
+                            // so selecting one keeps the listbox open.
+                            if (
+                                !containerRef.current?.contains(
+                                    event.relatedTarget as Node | null,
+                                )
+                            ) {
+                                setIsOpen(false);
+                            }
                         }}
                         placeholder={mode === "ai"
                             ? "输入问题，开始对话"

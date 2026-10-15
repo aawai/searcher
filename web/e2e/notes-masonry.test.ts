@@ -217,6 +217,15 @@ async function createFixture(
     }
     await page.goto("/");
     await page.locator("main").waitFor({ state: "visible" });
+    // Fixture users have no pinned apps. Notes and apps load in parallel, so
+    // Widgets bento may first mount in the loading placeholder mode.
+    await page.waitForFunction(() => {
+        const mode = document.querySelector(".widgets-bento-container")
+            ?.getAttribute("data-bento-mode");
+        // Zen may not mount widgets bento at all.
+        if (mode === null || mode === undefined) return true;
+        return mode !== "loading";
+    });
     if (options.open !== false) {
         await openNotes(page);
         await page.locator(".notes-workspace .note-list-summary").first()
