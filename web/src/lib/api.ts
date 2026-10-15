@@ -23,7 +23,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
             ? await response.json()
             : undefined;
     if (response.status === 401) {
-        window.dispatchEvent(new Event("searcher:auth-expired"));
+        globalThis.dispatchEvent(new Event("searcher:auth-expired"));
     }
     if (!response.ok || !result?.status) {
         throw new ApiError(
