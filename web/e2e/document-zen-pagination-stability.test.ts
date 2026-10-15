@@ -130,6 +130,7 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
         ignoreDefaultArgs: ["--hide-scrollbars"],

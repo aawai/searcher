@@ -4,7 +4,10 @@ import { startProductionApp } from "./helpers/production-app.ts";
 
 Deno.test("apps edit keeps fields and confirmation across hosts and window modes", async () => {
     const app = await startProductionApp();
-    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        args: ["--no-sandbox"],
+    });
     try {
         const page = await browser.newPage({
             viewport: { width: 1440, height: 900 },

@@ -674,6 +674,7 @@ Deno.test("production notes masonry contracts (#109)", async (t) => {
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

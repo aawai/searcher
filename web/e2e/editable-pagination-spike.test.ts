@@ -30,6 +30,7 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
         icons: new WebAppIconService(`${temp}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
@@ -178,29 +179,55 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                     breaks + 1,
                 );
                 assertEquals(await canonical.textContent(), markdown);
-                await viewport.scrollIntoViewIfNeeded();
+                // The shared renderer is vertical; bring the physical gap, not
+                // the former horizontal strip's midpoint, into the viewport.
                 await viewport.evaluate((node) => {
-                    node.scrollLeft = 0;
+                    const sheets = node.querySelectorAll(
+                        "[data-pagination-page]",
+                    );
+                    const first = sheets[0].getBoundingClientRect();
+                    const second = sheets[1].getBoundingClientRect();
+                    const y = (first.bottom + second.top) / 2;
+                    let scroller: Element | null = node;
+                    while (scroller) {
+                        const style = getComputedStyle(scroller);
+                        if (
+                            /(auto|scroll)/.test(style.overflowY) &&
+                            scroller.scrollHeight > scroller.clientHeight
+                        ) {
+                            const box = scroller.getBoundingClientRect();
+                            scroller.scrollBy({
+                                top: y - box.top - scroller.clientHeight / 2,
+                                behavior: "instant",
+                            });
+                            return;
+                        }
+                        scroller = scroller.parentElement;
+                    }
+                    globalThis.scrollBy({
+                        top: y - innerHeight / 2,
+                        behavior: "instant",
+                    });
                 });
                 const gap = await viewport.evaluate((node) => {
-                    const bounds = node.getBoundingClientRect();
-                    const pages = [
-                        ...node.querySelectorAll("[data-pagination-page]"),
-                    ].map((paper) => paper.getBoundingClientRect());
-                    for (let i = 1; i < pages.length; i++) {
-                        const x = (pages[i - 1].right + pages[i].left) / 2;
-                        if (x > bounds.left && x < bounds.right) {
-                            return {
-                                x,
-                                y: Math.max(bounds.top, pages[i].top) + 100,
-                            };
-                        }
-                    }
-                    return null;
+                    const sheets = node.querySelectorAll(
+                        "[data-pagination-page]",
+                    );
+                    const first = sheets[0].getBoundingClientRect();
+                    const second = sheets[1].getBoundingClientRect();
+                    const x = (first.left + first.right) / 2;
+                    const y = (first.bottom + second.top) / 2;
+                    return {
+                        x,
+                        y,
+                        hitViewport: document.elementFromPoint(x, y)
+                            ?.closest('[data-testid="pagination-viewport"]') ===
+                            node,
+                    };
                 });
                 assert(
-                    gap,
-                    "A page gap must be visible within the local paper viewport",
+                    gap.hitViewport,
+                    "The real page gap must be visible and hit-test inside the pagination viewport",
                 );
                 const beforeSelection = await page.evaluate(() => {
                     const selection = getSelection();
@@ -271,9 +298,12 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                 );
                 await rich.focus();
                 await page.keyboard.press("Control+End");
-                const before = await rich.evaluate((node) =>
-                    getComputedStyle(node).columnWidth
-                );
+                const before = await rich.evaluate((node) => {
+                    const style = getComputedStyle(node);
+                    return node.clientWidth -
+                        Number.parseFloat(style.paddingLeft) -
+                        Number.parseFloat(style.paddingRight);
+                });
                 const client = await context.newCDPSession(page);
                 await client.send("Input.imeSetComposition", {
                     text: "中文分页",
@@ -293,9 +323,12 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                     },
                 );
                 assertEquals(
-                    await rich.evaluate((node) =>
-                        getComputedStyle(node).columnWidth
-                    ),
+                    await rich.evaluate((node) => {
+                        const style = getComputedStyle(node);
+                        return node.clientWidth -
+                            Number.parseFloat(style.paddingLeft) -
+                            Number.parseFloat(style.paddingRight);
+                    }),
                     before,
                 );
                 await client.send("Input.insertText", { text: "中文分页" });
@@ -310,8 +343,11 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                     const node = document.querySelector(
                         '[aria-label="分页正文"]',
                     );
-                    return node &&
-                        getComputedStyle(node).columnWidth !== previous;
+                    if (!(node instanceof HTMLElement)) return false;
+                    const style = getComputedStyle(node);
+                    return node.clientWidth -
+                            Number.parseFloat(style.paddingLeft) -
+                            Number.parseFloat(style.paddingRight) !== previous;
                 }, before);
                 const edited = await canonical.textContent();
                 await page.getByLabel("纸张", { exact: true }).selectOption(
@@ -370,19 +406,54 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                         "img[src]",
                     )!;
                     const imageBounds = image.getBoundingClientRect();
+                    const sheets = Array.from(
+                        node.closest(".pagination-viewport")!
+                            .querySelectorAll("[data-pagination-page]"),
+                        (sheet) => sheet.getBoundingClientRect(),
+                    );
+                    function pagesFor(selector: string): number[][] {
+                        return Array.from(
+                            node.querySelectorAll(selector),
+                            (block) => {
+                                const pages = new Set<number>();
+                                const walker = document.createTreeWalker(
+                                    block,
+                                    NodeFilter.SHOW_TEXT,
+                                );
+                                while (walker.nextNode()) {
+                                    if (
+                                        walker.currentNode.parentElement
+                                            ?.closest(
+                                                '[contenteditable="false"], [data-pagebreak]',
+                                            )
+                                    ) continue;
+                                    const range = document.createRange();
+                                    range.selectNodeContents(
+                                        walker.currentNode,
+                                    );
+                                    for (const rect of range.getClientRects()) {
+                                        if (
+                                            rect.width <= 0 || rect.height <= 0
+                                        ) continue;
+                                        const index = sheets.findIndex((
+                                            sheet,
+                                        ) => rect.top >= sheet.top - 1 &&
+                                            rect.bottom <= sheet.bottom + 1
+                                        );
+                                        if (index >= 0) pages.add(index);
+                                    }
+                                }
+                                return [...pages];
+                            },
+                        );
+                    }
                     return {
                         imageWidth: imageBounds.width,
                         imageHeight: imageBounds.height,
                         naturalRatio: image.naturalWidth / image.naturalHeight,
-                        paragraphs: [...node.querySelectorAll("p")].map((
-                            block,
-                        ) => block.getClientRects().length),
-                        code: [...node.querySelectorAll("pre")].map((block) =>
-                            block.getClientRects().length
-                        ),
-                        tables: [...node.querySelectorAll("table")].map((
-                            block,
-                        ) => block.getClientRects().length),
+                        paragraphs: pagesFor("p"),
+                        code: pagesFor("pre"),
+                        tables: pagesFor("table"),
                     };
                 });
                 assert(geometry.imageWidth <= (210 - 40) * 96 / 25.4 + 1);
@@ -393,9 +464,9 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                             geometry.naturalRatio,
                     ) < 0.01,
                 );
-                assert(geometry.paragraphs.some((fragments) => fragments > 1));
-                assert(geometry.code.some((fragments) => fragments > 1));
-                assert(geometry.tables.some((fragments) => fragments > 1));
+                assert(geometry.paragraphs.some((pages) => pages.length > 1));
+                assert(geometry.code.some((pages) => pages.length > 1));
+                assert(geometry.tables.some((pages) => pages.length > 1));
                 assertEquals(await canonical.textContent(), markdown);
                 assertEquals(
                     await page.evaluate(() =>

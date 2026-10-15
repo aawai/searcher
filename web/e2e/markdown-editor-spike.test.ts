@@ -30,6 +30,7 @@ Deno.test("M0A production React editor lifecycle, source, IME and isolation", as
         icons: new WebAppIconService(`${temp}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

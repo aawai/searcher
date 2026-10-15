@@ -50,6 +50,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

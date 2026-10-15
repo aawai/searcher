@@ -24,6 +24,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

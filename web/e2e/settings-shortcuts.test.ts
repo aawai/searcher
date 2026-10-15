@@ -33,6 +33,7 @@ Deno.test("production settings shortcuts contracts", async (t) => {
         icons: new WebAppIconService(`${files}/icons`),
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

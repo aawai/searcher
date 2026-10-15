@@ -12,7 +12,7 @@
         "admin:reset": "deno run -A src/commands/admin.ts reset",
         "test": "deno test -A src web/src",
         "test:routing": "deno run -A scripts/e2e/run.ts routing",
-        "test:workspace": "deno run -A scripts/e2e/run.ts workspace --parallel",
+        "test:workspace": "deno run -A scripts/e2e/run.ts workspace",
         "test:workspace:serial": "deno run -A scripts/e2e/run.ts workspace --serial",
         "test:workspace:parallel": "deno run -A scripts/e2e/run.ts workspace --parallel",
         "test:workspace:apps": "deno run -A scripts/e2e/run.ts apps",

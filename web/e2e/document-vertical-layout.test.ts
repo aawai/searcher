@@ -122,6 +122,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

@@ -1018,7 +1018,10 @@ async function runDesktopMatrix(
 Deno.test("apps workspace touch density geometry and hit targets #149", async () => {
     const EVIDENCE_DIR = await createEvidenceDirectory("apps-density");
     const app = await startProductionApp();
-    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        args: ["--no-sandbox"],
+    });
     const report: {
         issue: number;
         evidenceDirectory: string;

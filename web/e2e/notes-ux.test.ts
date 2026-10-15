@@ -8,6 +8,7 @@ Deno.test("Notes long document actions and history stay reachable without replac
     cleanup.defer(() => app.close());
     const credentials = await app.seedAskFixtureUser();
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

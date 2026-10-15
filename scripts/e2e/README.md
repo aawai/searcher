@@ -6,7 +6,7 @@
 
 | Task                      | 覆盖范围                                                                                         |
 | ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `test:workspace`          | 原 Workspace 完整集合；见 `suites.ts` 的 `workspace`                                             |
+| `test:workspace`          | 原 Workspace 完整集合，默认串行；见 `suites.ts` 的 `workspace`                                   |
 | `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                              |
 | `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                   |
 | `test:workspace:apps`     | Workspace 中 `apps-*`、`desktop-*`、`launcher`、`home-launcher-*`                                |
@@ -37,8 +37,9 @@ deno task test:e2e:full
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
 `t.step`，不共享 Browser、Context、数据库或 session。并行入口未设置 `DENO_JOBS`
-时采用保守值 2；CI 明确固定该值。发现资源争抢或 flake 时使用 serial， 它会移除
-`--parallel`，而不是只把并发数设为 1。禁止用全局 retry 隐藏失败。
+时采用保守值 2。默认 Workspace 与 CI 保持串行：本机实验未证明并行稳定性不下降，
+详见 [#167 实测记录](BENCHMARKS.md)。显式 serial 会移除 `--parallel`，而不是只把
+并发数设为 1。禁止用全局 retry 隐藏失败。
 
 默认报告位于唯一的 `artifacts/e2e/<suite>-<timestamp>-<uuid>/`，包含原生
 `junit.xml` 与外层独立计量的 `timings.json`（build/test/wall
@@ -72,6 +73,9 @@ concurrency、其他 Workflow 及其覆盖范围保持不变。
 - Deno 2.9.7 实测 `--repeats=2` 表示初始一次加两次，共三轮；控制台/JUnit
   汇总仍按外层用例统计。稳定性报告应记录实际观察轮数，不能将汇总数量当作执行轮数，也不能用同进程
   repeats 代替独立进程运行。
-- 中断执行后检查测试拥有的服务、Chromium
-  与临时目录；不要删除其他并行任务的资源。强制终止和机器断电不保证 fixture
-  finally 执行。
+- Chromium fixture 使用原生 `handleSIGTERM: false`，让 Deno 接收终止信号；
+  Playwright 默认处理会在关闭浏览器后留下仍持有 HTTP listener 的测试进程。
+  受控入口把 SIGINT/SIGTERM 转发给当前子命令，不吞掉失败退出码。
+- 原生中断不保证 fixture finally
+  执行，唯一临时目录可能保留。中断后检查本次拥有的 服务、Chromium
+  与目录；只清理已确认归属的路径，不按宽泛前缀删除其他任务的资源。

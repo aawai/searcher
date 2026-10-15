@@ -11,6 +11,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

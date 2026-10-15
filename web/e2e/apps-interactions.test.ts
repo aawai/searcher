@@ -28,7 +28,10 @@ async function footerVisible(page: Page) {
 
 Deno.test("apps session, modal undo and visible management contracts #141", async (t) => {
     const app = await startProductionApp();
-    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        args: ["--no-sandbox"],
+    });
     try {
         const context = await browser.newContext({
             viewport: { width: 1440, height: 900 },

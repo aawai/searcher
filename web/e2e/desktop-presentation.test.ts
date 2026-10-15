@@ -42,6 +42,7 @@ async function createDesktopFixture(username: string) {
         displayName: "Desktop presentation",
     });
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

@@ -33,6 +33,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
     const artifactDir = await createEvidenceDirectory("route-style");
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

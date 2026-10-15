@@ -49,6 +49,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

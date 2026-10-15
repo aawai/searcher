@@ -46,6 +46,7 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
         ignoreDefaultArgs: ["--hide-scrollbars"],

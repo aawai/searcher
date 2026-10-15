@@ -8,6 +8,7 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
     cleanup.defer(() => app.close());
     const credentials = await app.seedAskFixtureUser();
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

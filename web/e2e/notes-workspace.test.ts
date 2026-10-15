@@ -46,6 +46,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

@@ -39,6 +39,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     });
 
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });

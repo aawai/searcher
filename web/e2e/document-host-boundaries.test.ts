@@ -52,6 +52,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         ignoreDefaultArgs: ["--hide-scrollbars"],
         args: ["--no-sandbox"],
