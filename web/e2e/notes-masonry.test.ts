@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import type { Browser, Locator, Page, Request } from "playwright";
@@ -677,9 +678,7 @@ Deno.test("production notes masonry contracts (#109)", async (t) => {
         args: ["--no-sandbox"],
     });
     cleanup.defer(() => browser.close());
-    const evidenceDir = Deno.env.get("E2E_EVIDENCE_DIR") ??
-        "./data/screenshots/notes-masonry";
-    await Deno.mkdir(evidenceDir, { recursive: true });
+    const evidenceDir = await createEvidenceDirectory("notes-masonry");
 
     await t.step(
         "Content widths 505/506/766/767, max three columns and every desktop window operation are write-free",

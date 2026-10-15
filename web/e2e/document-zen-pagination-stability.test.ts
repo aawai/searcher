@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import type { Page, Request } from "playwright";
@@ -141,8 +142,9 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
     const page = await context.newPage();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    const evidence = Deno.env.get("E2E_EVIDENCE_DIR");
-    if (evidence) await Deno.mkdir(evidence, { recursive: true });
+    const evidence = Deno.env.get("E2E_EVIDENCE_DIR")
+        ? await createEvidenceDirectory("document-zen-pagination-stability")
+        : undefined;
     await page.goto(
         (Deno.env.get("E2E_FRONTEND_ORIGIN") ?? app.origin) + "/register",
     );

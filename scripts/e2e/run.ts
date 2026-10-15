@@ -20,8 +20,8 @@ if (
     );
 }
 const suite = name as Suite;
-// Keep serial until both local and target Runner measurements justify parallel.
 const parallel = mode === "--parallel";
+const jobs = Deno.env.get("DENO_JOBS") ?? "2";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
     `artifacts/e2e/${suite}-${Date.now()}-${crypto.randomUUID()}`;
 await Deno.mkdir(reportDir, { recursive: true });
@@ -34,7 +34,7 @@ const started = performance.now();
 const timings: Record<string, number | string | boolean | string[]> = {
     suite,
     parallel,
-    jobs: parallel ? Deno.env.get("DENO_JOBS") ?? "CPU count" : "serial",
+    jobs: parallel ? jobs : "serial",
     files: suiteFiles(suite),
 };
 
@@ -42,7 +42,9 @@ async function run(phase: string, args: string[]): Promise<number> {
     const start = performance.now();
     const child = new Deno.Command(Deno.execPath(), {
         args,
-        env: phase === "test" ? { NODE_ENV: "test" } : {},
+        env: phase === "test"
+            ? { NODE_ENV: "test", E2E_REPORT_DIR: reportDir, DENO_JOBS: jobs }
+            : {},
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",

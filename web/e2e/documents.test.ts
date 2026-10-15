@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { chromium } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
@@ -18,7 +19,9 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         viewport: { width: 1440, height: 900 },
     });
     const page = await context.newPage();
-    const evidenceDirectory = Deno.env.get("E2E_EVIDENCE_DIR");
+    const evidenceDirectory = Deno.env.get("E2E_EVIDENCE_DIR")
+        ? await createEvidenceDirectory("documents")
+        : undefined;
     async function captureMode(name: string) {
         if (!evidenceDirectory) return;
         await Deno.mkdir(evidenceDirectory, { recursive: true });

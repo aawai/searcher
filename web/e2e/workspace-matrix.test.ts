@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { createApp } from "../../src/app.ts";
@@ -403,12 +404,12 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                             vp.width === 1440 && theme === "light" &&
                             style === "widgets"
                         ) {
-                            await Deno.mkdir("/tmp/issue-92-e2e-screenshots", {
-                                recursive: true,
-                            });
+                            const evidenceDir = await createEvidenceDirectory(
+                                "workspace-matrix",
+                            );
                             await page.screenshot({
                                 path:
-                                    "/tmp/issue-92-e2e-screenshots/matrix-a-1440-widgets-light.png",
+                                    `${evidenceDir}/matrix-a-1440-widgets-light.png`,
                             });
                         }
                         // 5. Presenter check: open and verify presenter type

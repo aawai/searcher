@@ -53,9 +53,12 @@ jobs:
             - name: Run full Workspace production E2E
               env:
                   E2E_REPORT_DIR: artifacts/e2e/workspace
+                  DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
                   set -o pipefail
+                  { deno --version; uname -a; lscpu; free -m; } \
+                    | tee "$E2E_REPORT_DIR/environment.txt"
                   /usr/bin/time -v -o "$E2E_REPORT_DIR/resources.txt" \
                     deno task test:workspace 2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
             - name: Upload Workspace E2E reports

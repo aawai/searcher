@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- E2E 新增一次生产构建的完整入口 `test:e2e:full`、Workspace
+  模块入口与显式串行回退； 执行前检查权威文件清单，防止新增测试遗漏。Workspace
+  CI 保留原完整门禁并上传 JUnit、原始输出与
+  wall-clock/资源报告；调试截图使用每次执行独立目录，避免覆盖。
 - CI 在同一 PR 更新时自动取消五个测试 Workflow 的过时运行，不影响其他 PR 或 main
   运行；移除 Wallpaper 重复的 UI Guard 和已合并历史分支的 Workspace Push
   触发，保留现有测试、检查名称及 Docker 发布流程。

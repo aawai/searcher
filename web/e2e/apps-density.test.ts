@@ -1,3 +1,4 @@
+import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import {
     type BrowserContext,
@@ -60,7 +61,6 @@ type AppFixtures = {
     largeFolderAppCount: number;
 };
 
-const EVIDENCE_DIR = "/tmp/searcher-issue-149-evidence";
 const TOUCH_VIEWPORTS: Viewport[] = [
     { width: 375, height: 812 },
     { width: 390, height: 640 },
@@ -635,7 +635,11 @@ async function runTouchInteractions(
     fixtures: AppFixtures,
     style: Style,
     theme: Theme,
-    report: { screenshots: string[]; interactions: Record<string, unknown>[] },
+    report: {
+        evidenceDirectory: string;
+        screenshots: string[];
+        interactions: Record<string, unknown>[];
+    },
 ) {
     const root = page.locator(".apps-workspace-root");
     const search = root.getByRole("searchbox", {
@@ -755,7 +759,7 @@ async function runTouchInteractions(
     );
     await settlePresentation(page);
     const arrangeScreenshot =
-        `${EVIDENCE_DIR}/arrange-${style}-${theme}-390x844.png`;
+        `${report.evidenceDirectory}/arrange-${style}-${theme}-390x844.png`;
     await page.screenshot({ path: arrangeScreenshot });
     report.screenshots.push(arrangeScreenshot);
     await cdp.send("Input.dispatchTouchEvent", {
@@ -846,7 +850,7 @@ async function runTouchInteractions(
         }
         folderDetails[folder.name] = await appButtons.count();
         const screenshot =
-            `${EVIDENCE_DIR}/detail-${style}-${theme}-${folder.name}-folder.png`;
+            `${report.evidenceDirectory}/detail-${style}-${theme}-${folder.name}-folder.png`;
         await page.screenshot({ path: screenshot });
         report.screenshots.push(screenshot);
         screenshots.push(screenshot);
@@ -856,7 +860,7 @@ async function runTouchInteractions(
     }
 
     const managementScreenshot =
-        `${EVIDENCE_DIR}/management-${style}-${theme}-390x844.png`;
+        `${report.evidenceDirectory}/management-${style}-${theme}-390x844.png`;
     await page.screenshot({ path: managementScreenshot });
     report.screenshots.push(managementScreenshot);
     report.interactions.push({
@@ -918,6 +922,7 @@ async function runDesktopMatrix(
     page: Page,
     fixtures: AppFixtures,
     report: {
+        evidenceDirectory: string;
         screenshots: string[];
         desktop: Record<string, unknown>[];
         homeQuick: Record<string, unknown>[];
@@ -982,7 +987,7 @@ async function runDesktopMatrix(
             await openAppsWorkspace(page);
             const metrics = await collectDensityMetrics(page, fixtures);
             const screenshot =
-                `${EVIDENCE_DIR}/desktop-${style}-${theme}-1440x900.png`;
+                `${report.evidenceDirectory}/desktop-${style}-${theme}-1440x900.png`;
             await page.screenshot({ path: screenshot });
             report.screenshots.push(screenshot);
             report.desktop.push({
@@ -1011,7 +1016,7 @@ async function runDesktopMatrix(
 }
 
 Deno.test("apps workspace touch density geometry and hit targets #149", async () => {
-    await Deno.mkdir(EVIDENCE_DIR, { recursive: true });
+    const EVIDENCE_DIR = await createEvidenceDirectory("apps-density");
     const app = await startProductionApp();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
     const report: {

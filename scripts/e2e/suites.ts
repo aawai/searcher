@@ -1,3 +1,5 @@
+import { walk } from "@std/fs/walk";
+
 // File paths live here once. Workspace order retains the pre-#167 serial order.
 export const suites = {
     workspace: [
@@ -78,9 +80,9 @@ export function suiteFiles(suite: Suite): string[] {
 export async function checkSuites(): Promise<void> {
     const declared = new Set(suiteFiles("full"));
     const actual = new Set<string>();
-    for await (const entry of Deno.readDir("web/e2e")) {
+    for await (const entry of walk("web/e2e", { includeDirs: false })) {
         if (entry.isFile && entry.name.endsWith(".test.ts")) {
-            actual.add(`web/e2e/${entry.name}`);
+            actual.add(entry.path);
         }
     }
     const missing = [...actual].filter((file) => !declared.has(file));

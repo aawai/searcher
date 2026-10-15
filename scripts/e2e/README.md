@@ -36,9 +36,9 @@ deno task test:e2e:full
 ```
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
-`t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
-的显式并行入口采用 Deno 原生 CPU 数默认值；资源受限机器应明确设置 2，发现争抢或
-flake 时使用 serial。禁止用全局 retry 隐藏失败。
+`t.step`，不共享 Browser、Context、数据库或 session。并行入口未设置 `DENO_JOBS`
+时采用保守值 2；CI 明确固定该值。发现资源争抢或 flake 时使用 serial， 它会移除
+`--parallel`，而不是只把并发数设为 1。禁止用全局 retry 隐藏失败。
 
 默认报告位于唯一的 `artifacts/e2e/<suite>-<timestamp>-<uuid>/`，包含原生
 `junit.xml` 与外层独立计量的 `timings.json`（build/test/wall
@@ -46,6 +46,14 @@ flake 时使用 serial。禁止用全局 retry 隐藏失败。
 用例耗时不等于整体 wall-clock，不能简单求和替代计时。可用 `E2E_REPORT_DIR`
 指定目录；同一目录不可供同时执行的进程共享，运行前移除旧 JUnit
 防止陈旧报告假通过。build/test 失败保留非零退出码，成功但 JUnit 缺失同样失败。
+
+持久截图使用 `createEvidenceDirectory`：在 `E2E_EVIDENCE_DIR`、`E2E_REPORT_DIR`
+或默认 `artifacts/e2e/evidence` 下创建带 suite 前缀的唯一子目录，并打印路径；
+并发进程和 repeats 均不覆盖前一轮。应用密度的 `report.json`
+与全部原有截图一起保留， 文档可选截图仍只在设置 `E2E_EVIDENCE_DIR`
+时生成。fixture 的 HTTP、DB 和临时资源目录
+正常完成后关闭/删除；证据目录有意保留供调试，本地确认无需保留后手动删除对应运行目录，
+CI artifact 保留 14 天。不要把保留的证据目录误报为 fixture 资源泄漏。
 
 现有 Workspace CI 固定报告目录 `artifacts/e2e/workspace/`，另保存完整
 `stdout.log` 与 `/usr/bin/time -v` 的资源统计。`upload-artifact@v4`
