@@ -2,6 +2,7 @@ import { checkSuites, Suite, suiteFiles, suites } from "./suites.ts";
 
 // Deliberately delegates scheduling, checking and reporting to Deno test.
 // There is no no-build mode: every public execution starts with a fresh build.
+// Probe-only comment: verify script pushes trigger and supersede this PR's run.
 await checkSuites();
 const [name, mode] = Deno.args;
 if (name === "check" && !mode) {
