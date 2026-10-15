@@ -20,7 +20,9 @@ if (
     );
 }
 const suite = name as Suite;
-const parallel = mode === "--parallel";
+// Only Workspace defaults to parallel; other suites stay serial unless requested.
+const parallel = mode === "--parallel" ||
+    (mode === undefined && suite === "workspace");
 const jobs = Deno.env.get("DENO_JOBS") ?? "2";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
     `artifacts/e2e/${suite}-${Date.now()}-${crypto.randomUUID()}`;
