@@ -1,0 +1,1592 @@
+{
+  "baseline": {
+    "heroY": 64,
+    "heroHeight": 288.1875
+  },
+  "cases": [
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x844-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 276.4453125,
+        "width": 358.796875,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 498.5546875,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 446.5546875,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x844-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 276.4453125,
+        "width": 358.796875,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 498.5546875,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 446.5546875,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x844-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 276.4453125,
+        "width": 358.796875,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 498.5546875,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 446.5546875,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x844-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 276.4453125,
+        "width": 358.796875,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 498.5546875,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 446.5546875,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-768x1024-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 124,
+        "y": 402.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 423,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 529,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 290.796875
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-768x1024-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 124,
+        "y": 402.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 423,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 529,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 290.796875
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-768x1024-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 124,
+        "y": 402.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 423,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 529,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 290.796875
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-768x1024-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 124,
+        "y": 402.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 423,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 529,
+          "y": 552.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 290.796875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x900-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 288.1875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x900-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 288.1875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x900-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 288.1875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x900-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 288.1875
+      }
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-320x640-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 12.8046875,
+        "y": 164.4453125,
+        "width": 294.390625,
+        "height": 311.109375,
+        "scrollHeight": 309,
+        "clientHeight": 309
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 37.8046875,
+          "y": 406.5546875,
+          "width": 244.390625,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 37.8046875,
+          "y": 354.5546875,
+          "width": 244.390625,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 209.1875
+      }
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-320x640-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 12.8046875,
+        "y": 164.4453125,
+        "width": 294.390625,
+        "height": 311.109375,
+        "scrollHeight": 309,
+        "clientHeight": 309
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 37.8046875,
+          "y": 406.5546875,
+          "width": 244.390625,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 37.8046875,
+          "y": 354.5546875,
+          "width": 244.390625,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 209.1875
+      }
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-320x640-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 12.8046875,
+        "y": 164.4453125,
+        "width": 294.390625,
+        "height": 311.109375,
+        "scrollHeight": 309,
+        "clientHeight": 309
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 37.8046875,
+          "y": 406.5546875,
+          "width": 244.390625,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 37.8046875,
+          "y": 354.5546875,
+          "width": 244.390625,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 209.1875
+      }
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-320x640-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 12.8046875,
+        "y": 164.4453125,
+        "width": 294.390625,
+        "height": 311.109375,
+        "scrollHeight": 309,
+        "clientHeight": 309
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 37.8046875,
+          "y": 406.5546875,
+          "width": 244.390625,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 37.8046875,
+          "y": 354.5546875,
+          "width": 244.390625,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 209.1875
+      }
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-430x932-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 17.203125,
+        "y": 320.4453125,
+        "width": 395.59375,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 42.203125,
+          "y": 542.5546875,
+          "width": 345.59375,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 42.203125,
+          "y": 490.5546875,
+          "width": 345.59375,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-430x932-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 17.203125,
+        "y": 320.4453125,
+        "width": 395.59375,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 42.203125,
+          "y": 542.5546875,
+          "width": 345.59375,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 42.203125,
+          "y": 490.5546875,
+          "width": 345.59375,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-430x932-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 17.203125,
+        "y": 320.4453125,
+        "width": 395.59375,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 42.203125,
+          "y": 542.5546875,
+          "width": 345.59375,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 42.203125,
+          "y": 490.5546875,
+          "width": 345.59375,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-430x932-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 17.203125,
+        "y": 320.4453125,
+        "width": 395.59375,
+        "height": 291.109375,
+        "scrollHeight": 289,
+        "clientHeight": 289
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 42.203125,
+          "y": 542.5546875,
+          "width": 345.59375,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 42.203125,
+          "y": 490.5546875,
+          "width": 345.59375,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 236.796875
+      }
+    },
+    {
+      "width": 767,
+      "height": 900,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-767x900-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 123.5,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 422.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 528.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 272.796875
+      }
+    },
+    {
+      "width": 767,
+      "height": 900,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-767x900-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 123.5,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 422.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 528.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 272.796875
+      }
+    },
+    {
+      "width": 767,
+      "height": 900,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-767x900-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 123.5,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 422.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 528.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 272.796875
+      }
+    },
+    {
+      "width": 767,
+      "height": 900,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-767x900-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 123.5,
+        "y": 340.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 422.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 528.5,
+          "y": 490.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 272.796875
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1023x768-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 251.5,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 550.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 656.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.234375
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1023x768-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 251.5,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 550.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 656.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.234375
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1023x768-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 251.5,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 550.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 656.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.234375
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1023x768-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 251.5,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 550.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 656.5,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.234375
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1024x768-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 252,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 551,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 657,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.265625
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1024x768-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 252,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 551,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 657,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.265625
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1024x768-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 252,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 551,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 657,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.265625
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1024x768-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 252,
+        "y": 274.4453125,
+        "width": 520,
+        "height": 219.109375,
+        "scrollHeight": 217,
+        "clientHeight": 217
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 551,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 657,
+          "y": 424.5546875,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 64,
+        "height": 254.265625
+      }
+    },
+    {
+      "width": 390,
+      "height": 240,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x240-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 16,
+        "width": 358.796875,
+        "height": 208,
+        "scrollHeight": 289,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 155.109375,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 103.109375,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 61,
+        "height": 178.796875
+      }
+    },
+    {
+      "width": 390,
+      "height": 240,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x240-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 16,
+        "width": 358.796875,
+        "height": 208,
+        "scrollHeight": 289,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 155.109375,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 103.109375,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": -52,
+        "height": 178.796875
+      }
+    },
+    {
+      "width": 390,
+      "height": 240,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x240-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 16,
+        "width": 358.796875,
+        "height": 208,
+        "scrollHeight": 289,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 155.109375,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 103.109375,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 61,
+        "height": 178.796875
+      }
+    },
+    {
+      "width": 390,
+      "height": 240,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-390x240-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 15.6015625,
+        "y": 16,
+        "width": 358.796875,
+        "height": 208,
+        "scrollHeight": 289,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 40.6015625,
+          "y": 155.109375,
+          "width": 308.796875,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 40.6015625,
+          "y": 103.109375,
+          "width": 308.796875,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": -52,
+        "height": 178.796875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 240,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x240-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 16,
+        "width": 520,
+        "height": 208,
+        "scrollHeight": 217,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 34,
+        "height": 206.1875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 240,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x240-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 16,
+        "width": 520,
+        "height": 208,
+        "scrollHeight": 217,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": -52,
+        "height": 206.1875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 240,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x240-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 16,
+        "width": 520,
+        "height": 208,
+        "scrollHeight": 217,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 34,
+        "height": 206.1875
+      }
+    },
+    {
+      "width": 1440,
+      "height": 240,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-1440x240-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 460,
+        "y": 16,
+        "width": 520,
+        "height": 208,
+        "scrollHeight": 217,
+        "clientHeight": 206
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 759,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 865,
+          "y": 166.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": -52,
+        "height": 206.1875
+      }
+    },
+    {
+      "width": 900,
+      "height": 200,
+      "theme": "light",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-900x200-light-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 190,
+        "y": 16,
+        "width": 520,
+        "height": 168,
+        "scrollHeight": 217,
+        "clientHeight": 166
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 489,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 595,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 8,
+        "height": 191.671875
+      }
+    },
+    {
+      "width": 900,
+      "height": 200,
+      "theme": "light",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-900x200-light-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 190,
+        "y": 16,
+        "width": 520,
+        "height": 168,
+        "scrollHeight": 217,
+        "clientHeight": 166
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 489,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 595,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": -72,
+        "height": 191.671875
+      }
+    },
+    {
+      "width": 900,
+      "height": 200,
+      "theme": "dark",
+      "style": "zen",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-900x200-dark-zen.png",
+      "overflow": 0,
+      "popup": {
+        "x": 190,
+        "y": 16,
+        "width": 520,
+        "height": 168,
+        "scrollHeight": 217,
+        "clientHeight": 166
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 489,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 595,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": 8,
+        "height": 191.671875
+      }
+    },
+    {
+      "width": 900,
+      "height": 200,
+      "theme": "dark",
+      "style": "widgets",
+      "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/logout-900x200-dark-widgets.png",
+      "overflow": 0,
+      "popup": {
+        "x": 190,
+        "y": 16,
+        "width": 520,
+        "height": 168,
+        "scrollHeight": 217,
+        "clientHeight": 166
+      },
+      "buttons": [
+        {
+          "text": "先去同步",
+          "x": 489,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        },
+        {
+          "text": "仍要退出",
+          "x": 595,
+          "y": 139.109375,
+          "width": 90,
+          "height": 44
+        }
+      ],
+      "hero": {
+        "y": -72,
+        "height": 191.671875
+      }
+    }
+  ]
+}

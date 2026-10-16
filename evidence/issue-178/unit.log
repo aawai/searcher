@@ -1,0 +1,2817 @@
+Task test deno test -A src web/src
+Check src/app.test.ts
+Check src/db/ai-workspace-migration.test.ts
+Check src/db/database.test.ts
+Check src/features/ai/ai.route.test.ts
+Check src/features/ai/ai.test.ts
+Check src/features/ai/ask-workspace.test.ts
+Check src/features/ai/attachments.test.ts
+Check src/features/ai/client.test.ts
+Check src/features/ai/images.test.ts
+Check src/features/ai/model-capabilities.test.ts
+Check src/features/ai/provider-adapter.test.ts
+Check src/features/ai/reasoning.test.ts
+Check src/features/ai/tools.test.ts
+Check src/features/audit/audit.test.ts
+Check src/features/auth/auth.test.ts
+Check src/features/bookmarks/bookmarks.test.ts
+Check src/features/bookmarks/migration.test.ts
+Check src/features/documents/assets.test.ts
+Check src/features/documents/documents.route.test.ts
+Check src/features/documents/markdown.test.ts
+Check src/features/documents/notebooks.test.ts
+Check src/features/documents/service.test.ts
+Check src/features/documents/settings.test.ts
+Check src/features/notes/notes.test.ts
+Check src/features/preferences/generation-defaults.test.ts
+Check src/features/preferences/preferences.test.ts
+Check src/features/search/search.route.test.ts
+Check src/features/search/search.test.ts
+Check src/features/system/backup.test.ts
+Check src/features/system/config-import.test.ts
+Check src/features/system/settings-enforcement.test.ts
+Check src/features/system/system.route.test.ts
+Check src/features/users/users.test.ts
+Check src/features/wallpaper/wallpaper.test.ts
+Check src/features/webapp-icons/fetcher.test.ts
+Check src/features/webapp-icons/service.test.ts
+Check src/features/webapp-icons/ssrf.test.ts
+Check src/features/webapp-icons/svg.test.ts
+Check src/features/webapp-icons/validator.test.ts
+Check src/features/webapp-icons/webapp-icons.route.test.ts
+Check src/internal/crypto/vault.test.ts
+Check src/internal/hono/body-limit.test.ts
+Check src/internal/hono/body-policy.test.ts
+Check src/internal/hono/intake-response.test.ts
+Check src/internal/hono/middleware/logger.test.ts
+Check src/internal/hono/route-overlap.test.ts
+Check src/internal/hono/routes.test.ts
+Check src/internal/logger/logger.test.ts
+Check src/internal/validator/hono.test.ts
+Check src/shared/wallpaper-presentation.test.ts
+Check src/shared/wallpaper-temporal.test.ts
+Check src/shared/wallpaper.test.ts
+Check web/src/app/routes.test.ts
+Check web/src/app/state.test.ts
+Check web/src/components/searcher/NoteCard.test.ts
+Check web/src/components/searcher/NoteMarkdown.test.tsx
+Check web/src/components/searcher/SearcherSearchInput.test.ts
+Check web/src/components/searcher/SettingsPresetSlider.test.tsx
+Check web/src/components/searcher/WebAppLauncher.test.ts
+Check web/src/components/searcher/desktopLayout.test.ts
+Check web/src/components/searcher/masonry.test.ts
+Check web/src/components/searcher/note-markdown-edit.test.ts
+Check web/src/components/ui/slider.test.tsx
+Check web/src/components/wallpaper/WallpaperStageContextPreview.test.tsx
+Check web/src/components/wallpaper/WallpaperSurface.test.ts
+Check web/src/components/wallpaper/wallpaper-motion-controller.test.ts
+Check web/src/features/ask/ReasoningSelector.test.ts
+Check web/src/features/ask/SearcherAttachmentAdapter.test.ts
+Check web/src/features/ask/assistant-message-adapter.test.ts
+Check web/src/features/ask/attachment-utils.test.ts
+Check web/src/features/ask/tree-utils.test.ts
+Check web/src/features/ask/useAskStream.test.ts
+Check web/src/features/desktop/constrained-geometry.test.ts
+Check web/src/features/desktop/desktop-geometry.test.ts
+Check web/src/features/desktop/desktop-persistence.test.ts
+Check web/src/features/desktop/desktop-state.test.ts
+Check web/src/features/desktop/desktop-viewport-contract.test.ts
+Check web/src/features/desktop/useDesktopLayout.test.ts
+Check web/src/features/desktop/useDocumentImmersion.test.ts
+Check web/src/features/documents/document-session.test.ts
+Check web/src/features/documents/editor-content.test.ts
+Check web/src/features/documents/editor-extensions.test.ts
+Check web/src/features/home-layouts/controlledNotesLayout.test.ts
+Check web/src/features/home-layouts/noteOrder.test.ts
+Check web/src/features/markdown-editor/commands.test.ts
+Check web/src/features/markdown-editor/runtime.test.ts
+Check web/src/features/notes/local-drafts.test.ts
+Check web/src/features/shortcuts/ShortcutsSettings.test.tsx
+Check web/src/features/shortcuts/shortcut-catalog.test.ts
+Check web/src/features/shortcuts/shortcuts-notes-ask.test.tsx
+Check web/src/features/workspace/note-summary.test.ts
+Check web/src/features/workspace/workspace-host.test.ts
+Check web/src/features/workspace/workspace-state.test.ts
+Check web/src/lib/local.test.ts
+Check web/src/spikes/editable-pagination/runtime.test.ts
+Check web/src/spikes/markdown-editor/runtime.test.ts
+running 11 tests from ./src/app.test.ts
+SPA route integration: all official pages return SPA HTML shell ...
+------- output -------
+[2026-10-16 13:30:12.522] INFO: GET / 200 1ms undefined
+[2026-10-16 13:30:12.526] INFO: GET /ask 200 1ms undefined
+[2026-10-16 13:30:12.526] INFO: GET /login 200 0ms undefined
+[2026-10-16 13:30:12.527] INFO: GET /register 200 0ms undefined
+[2026-10-16 13:30:12.527] INFO: GET /account 200 0ms undefined
+[2026-10-16 13:30:12.528] INFO: GET /trash 200 0ms undefined
+[2026-10-16 13:30:12.528] INFO: GET /settings 200 0ms undefined
+[2026-10-16 13:30:12.528] INFO: GET /settings/appearance 200 0ms undefined
+[2026-10-16 13:30:12.530] INFO: GET /settings/ai 200 1ms undefined
+[2026-10-16 13:30:12.531] INFO: GET /settings/data 200 0ms undefined
+[2026-10-16 13:30:12.531] INFO: GET /admin 200 0ms undefined
+[2026-10-16 13:30:12.531] INFO: GET /admin/users 200 0ms undefined
+[2026-10-16 13:30:12.532] INFO: GET /admin/settings 200 1ms undefined
+[2026-10-16 13:30:12.532] INFO: GET /admin/audit 200 0ms undefined
+[2026-10-16 13:30:12.532] INFO: GET /admin/backup 200 0ms undefined
+[2026-10-16 13:30:12.532] INFO: GET /design-lab 200 0ms undefined
+----- output end -----
+SPA route integration: all official pages return SPA HTML shell ... ok (60ms)
+SPA route integration: unknown regular page returns SPA shell for client 404 ...
+------- output -------
+[2026-10-16 13:30:12.566] INFO: GET /unknown-regular-page 200 0ms undefined
+[2026-10-16 13:30:12.566] INFO: GET /some/nested/unknown/route 200 0ms undefined
+[2026-10-16 13:30:12.567] INFO: GET /settings/unknown-tab 200 0ms undefined
+[2026-10-16 13:30:12.567] INFO: GET /admin/unknown-section 200 0ms undefined
+----- output end -----
+SPA route integration: unknown regular page returns SPA shell for client 404 ... ok (25ms)
+SPA route integration: query parameters and query strings preserve SPA shell ...
+------- output -------
+[2026-10-16 13:30:12.585] INFO: GET /ask 200 0ms undefined
+[2026-10-16 13:30:12.586] INFO: GET /login 200 0ms undefined
+[2026-10-16 13:30:12.586] INFO: GET /trash 200 0ms undefined
+[2026-10-16 13:30:12.586] INFO: GET /settings 200 0ms undefined
+----- output end -----
+SPA route integration: query parameters and query strings preserve SPA shell ... ok (19ms)
+SPA route integration: HEAD requests on critical pages return empty body with headers ...
+------- output -------
+[2026-10-16 13:30:12.605] INFO: HEAD / 200 0ms undefined
+[2026-10-16 13:30:12.605] INFO: HEAD /settings/appearance 200 0ms undefined
+[2026-10-16 13:30:12.606] INFO: HEAD /admin/users 200 1ms undefined
+[2026-10-16 13:30:12.606] INFO: HEAD /ask 200 0ms undefined
+[2026-10-16 13:30:12.606] INFO: HEAD /unknown-regular-page 200 0ms undefined
+----- output end -----
+SPA route integration: HEAD requests on critical pages return empty body with headers ... ok (19ms)
+SPA route boundary: unknown /api or /api/* returns JSON 404 ...
+------- output -------
+[2026-10-16 13:30:12.624] INFO: GET /api 404 0ms undefined
+[2026-10-16 13:30:12.625] INFO: GET /api/ 404 0ms undefined
+[2026-10-16 13:30:12.625] INFO: GET /api/not-exists 404 0ms undefined
+[2026-10-16 13:30:12.625] INFO: GET /api/not-exists/deep/nested 404 0ms undefined
+[2026-10-16 13:30:12.625] INFO: GET /api/settings/not-found 404 0ms undefined
+[2026-10-16 13:30:12.627] INFO: POST /api/not-exists 404 2ms undefined
+----- output end -----
+SPA route boundary: unknown /api or /api/* returns JSON 404 ... ok (20ms)
+SPA route boundary: /assets and /assets/* return static 404 not shell ...
+------- output -------
+[2026-10-16 13:30:12.652] INFO: GET /assets 404 6ms undefined
+[2026-10-16 13:30:12.653] INFO: HEAD /assets 404 1ms undefined
+[2026-10-16 13:30:12.653] INFO: POST /assets 404 0ms undefined
+[2026-10-16 13:30:12.653] INFO: GET /assets/ 404 0ms undefined
+[2026-10-16 13:30:12.654] INFO: HEAD /assets/ 404 1ms undefined
+[2026-10-16 13:30:12.654] INFO: POST /assets/ 404 0ms undefined
+[2026-10-16 13:30:12.654] INFO: GET /assets/not-exists.js 404 0ms undefined
+[2026-10-16 13:30:12.654] INFO: HEAD /assets/not-exists.js 404 0ms undefined
+[2026-10-16 13:30:12.655] INFO: POST /assets/not-exists.js 404 0ms undefined
+[2026-10-16 13:30:12.655] INFO: GET /assets/styles/missing.css 404 0ms undefined
+[2026-10-16 13:30:12.655] INFO: HEAD /assets/styles/missing.css 404 0ms undefined
+[2026-10-16 13:30:12.655] INFO: POST /assets/styles/missing.css 404 0ms undefined
+[2026-10-16 13:30:12.656] INFO: GET /assets/missing-AbCd1234.js 404 1ms undefined
+[2026-10-16 13:30:12.657] INFO: HEAD /assets/missing-AbCd1234.js 404 0ms undefined
+[2026-10-16 13:30:12.657] INFO: POST /assets/missing-AbCd1234.js 404 0ms undefined
+----- output end -----
+SPA route boundary: /assets and /assets/* return static 404 not shell ... ok (31ms)
+SPA route boundary: non-GET/HEAD methods do not fall back to SPA shell ...
+------- output -------
+[2026-10-16 13:30:12.680] INFO: POST /not-exists 404 1ms undefined
+[2026-10-16 13:30:12.680] INFO: POST /settings 404 0ms undefined
+[2026-10-16 13:30:12.680] INFO: PUT /admin/users 404 0ms undefined
+[2026-10-16 13:30:12.680] INFO: DELETE /account 404 0ms undefined
+[2026-10-16 13:30:12.680] INFO: PATCH /ask 404 0ms undefined
+----- output end -----
+SPA route boundary: non-GET/HEAD methods do not fall back to SPA shell ... ok (22ms)
+SPA route: existing static assets are served properly ...
+------- output -------
+[2026-10-16 13:30:12.701] INFO: GET /assets/bundle.js 200 2ms undefined
+[2026-10-16 13:30:12.702] INFO: HEAD /assets/bundle.js 200 0ms undefined
+----- output end -----
+SPA route: existing static assets are served properly ... ok (22ms)
+Static cache: hashed build assets preserve content, MIME and GET/HEAD headers ...
+------- output -------
+[2026-10-16 13:30:12.732] INFO: GET /assets/index-AbCd1234.js 200 2ms undefined
+[2026-10-16 13:30:12.733] INFO: HEAD /assets/index-AbCd1234.js 200 0ms undefined
+[2026-10-16 13:30:12.734] INFO: GET /assets/style-XyZ9_765.css 200 1ms undefined
+[2026-10-16 13:30:12.735] INFO: HEAD /assets/style-XyZ9_765.css 200 0ms undefined
+[2026-10-16 13:30:12.736] INFO: GET /assets/logo-AbCd12-4.svg 200 1ms undefined
+[2026-10-16 13:30:12.736] INFO: HEAD /assets/logo-AbCd12-4.svg 200 0ms undefined
+----- output end -----
+Static cache: hashed build assets preserve content, MIME and GET/HEAD headers ... ok (33ms)
+Static cache: unversioned and unsupported files require revalidation ...
+------- output -------
+[2026-10-16 13:30:12.760] INFO: GET /assets/bundle.js 200 0ms undefined
+[2026-10-16 13:30:12.761] INFO: HEAD /assets/bundle.js 200 1ms undefined
+[2026-10-16 13:30:12.761] INFO: GET /assets/manual.css 200 0ms undefined
+[2026-10-16 13:30:12.761] INFO: HEAD /assets/manual.css 200 0ms undefined
+[2026-10-16 13:30:12.762] INFO: GET /assets/index-AbCd123.js 200 1ms undefined
+[2026-10-16 13:30:12.762] INFO: HEAD /assets/index-AbCd123.js 200 0ms undefined
+[2026-10-16 13:30:12.762] INFO: GET /assets/index-AbCd1234.js.map 200 0ms undefined
+[2026-10-16 13:30:12.763] INFO: HEAD /assets/index-AbCd1234.js.map 200 1ms undefined
+[2026-10-16 13:30:12.763] INFO: GET /assets/index-AbCd1234.html 200 0ms undefined
+[2026-10-16 13:30:12.763] INFO: HEAD /assets/index-AbCd1234.html 200 0ms undefined
+[2026-10-16 13:30:12.764] INFO: GET /assets/index-AbCd1234!.js 200 0ms undefined
+[2026-10-16 13:30:12.764] INFO: HEAD /assets/index-AbCd1234!.js 200 0ms undefined
+[2026-10-16 13:30:12.765] INFO: GET /assets/logo.svg 200 0ms undefined
+[2026-10-16 13:30:12.765] INFO: HEAD /assets/logo.svg 200 0ms undefined
+[2026-10-16 13:30:12.766] INFO: GET /assets/nested-AbCd1234.js/bundle.js 200 0ms undefined
+[2026-10-16 13:30:12.766] INFO: HEAD /assets/nested-AbCd1234.js/bundle.js 200 0ms undefined
+----- output end -----
+Static cache: unversioned and unsupported files require revalidation ... ok (30ms)
+Static cache: protected API retains authentication and no-store ...
+------- output -------
+[2026-10-16 13:30:12.788] INFO: GET /api/webapps 401 0ms undefined
+----- output end -----
+Static cache: protected API retains authentication and no-store ... ok (21ms)
+running 1 test from ./src/db/ai-workspace-migration.test.ts
+AI workspace upgrade preserves Provider data and reconstructs legacy variants ... ok (20ms)
+running 3 tests from ./src/db/database.test.ts
+database: openDatabase with :memory: and migrateDatabase is idempotent ... ok (20ms)
+database: run queue executes in FIFO order with promise coordination ... ok (15ms)
+database: transaction rollback preserves consistency and next FIFO operations succeed ... ok (17ms)
+running 12 tests from ./src/features/ai/ai.route.test.ts
+AI Route: HTTP POST /api/ai/providers creates provider & /models endpoint lists them ... ok (20ms)
+AI Route: HTTP POST /api/ai/chat/stream returns SSE stream without leaking browser key ... ok (16ms)
+AI Route: HTTP POST /api/ai/chat/stream emits meta, token, and error events on provider stream failure ... ok (7ms)
+AI Route: HTTP POST /api/ai/chat/stream propagates request abort to provider and persists partial content ... ok (6ms)
+AI Route: HTTP POST /api/ai/conversations/:id/restore restores deleted conversation ... ok (8ms)
+AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes temporary conversation, messages and blobs (Cache-Control: no-store) ... ok (8ms)
+AI Logo candidates use the requested visible model and return three validated images ... ok (3ms)
+AI Logo candidates route rejects invalid styles before calling provider ...
+------- post-test output -------
+[2026-10-16 13:30:13.374] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+----- post-test output end -----
+AI Logo candidates route rejects invalid styles before calling provider ... ok (6ms)
+AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call ...
+------- post-test output -------
+[2026-10-16 13:30:13.377] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-16 13:30:13.378] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-16 13:30:13.378] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-16 13:30:13.378] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-16 13:30:13.378] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-16 13:30:13.381] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-10-16 13:30:13.382] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+----- post-test output end -----
+AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call ... ok (4ms)
+AI Logo candidates route rejects invalid images and denies unauthenticated or unowned model generation ... ok (5ms)
+AI Logo errors never disclose system credentials to ordinary users ... ok (4ms)
+AI image protocol selection preserves model aliases and text chat ... ok (17ms)
+running 12 tests from ./src/features/ai/ai.test.ts
+AI Crypto: encryptApiKey & decryptApiKey works with mask ... ok (10ms)
+AI ProviderAdapter: discoverProviderModels discovers models correctly ... ok (1ms)
+AI Client: normalizeBaseUrl validates allowed endpoints ... ok (512µs)
+AI Service: Provider creation requires /models discovery & sets default model ... ok (6ms)
+AI Service: Streaming chat persists conversation and messages with history ... ok (16ms)
+AI Provider update and refresh leave database available during model discovery ... ok (4ms)
+AI Service: History disabled (spec 7.4) maintains current context but excluded from history list ... ok (8ms)
+AI Service: Conversation deletion and short Undo restore (spec 17) ... ok (4ms)
+AI Service: Partial token Abort persists interrupted content ... ok (4ms)
+AI Service: 4xx and 5xx responses preserve failed status and error ... ok (5ms)
+AI Service: No silent provider failover when selected provider fails ... ok (3ms)
+AI Service: Target unavailable rejects without silent failover ... ok (4ms)
+running 11 tests from ./src/features/ai/ask-workspace.test.ts
+AskWorkspace Phase 2: Reasoning effort validation rejects unsupported models without DB mutation ... ok (17ms)
+AskWorkspace Phase 2: Manual reasoning override is preserved across provider refresh ... ok (6ms)
+AskWorkspace Phase 3: True parent chain, edit sibling branch, and regenerate variant ... ok (16ms)
+AskWorkspace Phase 4: Token usage, system instruction, search, and export ... ok (4ms)
+AskWorkspace Phase 5: Multi-round tools execution and sources persistence ... ok (5ms)
+AskWorkspace: Empty message allowed on regenerate ... ok (4ms)
+AskWorkspace: Non-vision model rejects image attachments with 400 before DB mutations ... ok (1ms)
+AskWorkspace: Tool call security rejects unknown names and disabled tools ... ok (548µs)
+AskWorkspace: SearXNG URL validation rejects invalid URLs ... ok (977µs)
+AskWorkspace: Live SearXNG HTTP mock smoke test verifies real query/sources/persistence ...Listening on http://0.0.0.0:46015/ (http://localhost:46015/)
+ ok (4ms)
+AskWorkspace: Public DTO strips image base64 data ... ok (3ms)
+running 7 tests from ./src/features/ai/attachments.test.ts
+Attachments: validateAttachments passes valid attachments ... ok (440µs)
+Attachments: validateAttachments rejects more than 4 attachments ... ok (515µs)
+Attachments: validateAttachments rejects image with invalid magic bytes ... ok (97µs)
+Attachments: validateAttachments rejects mismatched declared vs detected MIME type ... ok (809µs)
+Attachments: validateAttachments rejects unsupported MIME type ... ok (104µs)
+Attachments: validateAttachments rejects text larger than 1 MiB ... ok (648µs)
+Attachments: processAndStoreAttachments persists image blobs ... ok (4ms)
+running 7 tests from ./src/features/ai/client.test.ts
+AI Client: provider SSE errors terminate with an error event ... ok (20ms)
+AI Client: fragmented UTF-8 and CRLF SSE preserve text and ignore non-text chunks ... ok (2ms)
+AI Client: malformed SSE returns an error after partial output without throwing ...
+------- post-test output -------
+Could not parse message into JSON:
+From chunk:
+----- post-test output end -----
+AI Client: malformed SSE returns an error after partial output without throwing ... ok (1ms)
+AI Client: unexpected JSON chunks cannot escape the stream boundary ... ok (674µs)
+AI Client: models and chat never retry provider HTTP failures ... ok (2ms)
+AI Client: invalid models responses remain Searcher errors ... ok (1ms)
+AI Client: endpoint policy rejects credentials, query, hash and restricted hosts ... ok (520µs)
+running 3 tests from ./src/features/ai/images.test.ts
+logo prompt keeps untrusted metadata inside quoted context for every style ... ok (12ms)
+logo prompt omits absent and whitespace-only optional metadata ... ok (150µs)
+official Gemini API accepts native endpoint and API key authentication ... ok (2ms)
+running 9 tests from ./src/features/ai/model-capabilities.test.ts
+ModelCapabilities: normalizeRawModelCapabilities extracts known fields without inventing levels ... ok (672µs)
+ModelCapabilities: inference by model name limited to official o-series ... ok (161µs)
+ModelCapabilities: validateModelMetadata validates nested structures at runtime ... ok (197µs)
+ModelCapabilities: resolveEffectiveCapability priority order ... ok (222µs)
+ModelCapabilities: mergeModelMetadata preserves manual overrides on refresh ... ok (118µs)
+ModelCapabilities: applyManualOverride sets or clears override ... ok (137µs)
+ModelCapabilities: populateModelDtoCapabilities generates convenient DTO fields ... ok (161µs)
+ModelCapabilities: discovery without an explicit default preserves Provider defaults ... ok (119µs)
+ModelCapabilities: populateModelDtoCapabilities filters reasoningEfforts strictly by transport ... ok (187µs)
+running 10 tests from ./src/features/ai/provider-adapter.test.ts
+ProviderAdapter: redactSensitiveData redacts api keys and Bearer tokens ... ok (11ms)
+ProviderAdapter: resolveOriginEndpoint resolves to origin root and validates base URL security ... ok (884µs)
+ProviderAdapter: normalizeRawModels honors explicit capability denials before name inference ... ok (291µs)
+ProviderAdapter: hasCLIProxyDiscriminator distinguishes cliproxy from generic capabilities ... ok (123µs)
+ProviderAdapter: OpenAICompatibleAdapter denies credential-bearing redirects on /models ... ok (587µs)
+ProviderAdapter: CLIProxyAPIHomeAdapter denies credential-bearing redirects on /user/models without failing standard discovery ... ok (857µs)
+ProviderAdapter: discoverProviderModels in Auto mode is /models-first and never blind-probes /user/models ... ok (309µs)
+ProviderAdapter: discoverProviderModels in Auto mode with cliproxy URL enriches via /user/models ... ok (274µs)
+ProviderAdapter: CLIProxyAPIHomeAdapter preserves standard models when /user/models fails or is empty ... ok (238µs)
+ProviderAdapter: resolveProviderAdapter respects discovery mode ... ok (78µs)
+running 11 tests from ./src/features/ai/reasoning.test.ts
+Reasoning: canonical levels match contract ... ok (566µs)
+Reasoning: getTransportSupportedLevels exposes supported intersection ... ok (149µs)
+Reasoning: validateReasoningEffort permits undefined for any capability ... ok (75µs)
+Reasoning: validateReasoningEffort throws on unsupported models ... ok (356µs)
+Reasoning: validateReasoningEffort throws on levels not in model capability ... ok (135µs)
+Reasoning: resolveEffectiveReasoningEffort priority order ... ok (95µs)
+Reasoning: normalizeReasoningEffortOnModelSwitch retains compatible levels or falls back ... ok (61µs)
+Reasoning: mapReasoningTransport maps exactly and rejects unmappable values ... ok (280µs)
+Reasoning: buildProviderGenerationParams validates and rejects incompatible sampling ... ok (284µs)
+Reasoning: resolveEffectiveGenerationConfig follows strict precedence hierarchy ... ok (288µs)
+Reasoning: resolveModelSwitchGenerationConfig resolves config cleanly on model switch ... ok (134µs)
+running 5 tests from ./src/features/ai/tools.test.ts
+Tools: getAiCapabilities returns tool and attachment caps ... ok (476µs)
+Tools: buildToolDefinitions respects opt-in flags ... ok (97µs)
+Tools: executeToolCall notes lookup returns read-only notes ... ok (4ms)
+Tools: executeToolCall apps lookup returns read-only apps ... ok (1ms)
+Tools: executeToolCall web search queries SearXNG mock ...Listening on http://0.0.0.0:39819/ (http://localhost:39819/)
+ ok (9ms)
+running 2 tests from ./src/features/audit/audit.test.ts
+AuditService: sanitizes sensitive fields like passwords, tokens, note contents ... ok (512µs)
+AuditService: logs and retrieves audit records ... ok (21ms)
+running 7 tests from ./src/features/auth/auth.test.ts
+auth contract: register, me, logout lifecycle with session cookie ... ok (112ms)
+auth contract: unauthenticated requests to protected endpoints return 401 envelope ... ok (17ms)
+auth contract: account password change increments authVersion and revokes old sessions ... ok (323ms)
+auth security: Origin check and rate limiting boundaries on mutating endpoints ... ok (16ms)
+auth security: optimistic authVersion check prevents stale password overwrite ... ok (246ms)
+auth spec §14: register/login with optional unique email, login by username or email ... ok (316ms)
+auth spec §14: remember-me session duration (7 vs 30 days) and device listing/revocation ... ok (253ms)
+running 5 tests from ./src/features/bookmarks/bookmarks.test.ts
+webapps contract: strict user isolation and duplicate url allowed ...
+------- post-test output -------
+[2026-10-16 13:30:16.684] INFO: POST /api/auth/register 200 84ms undefined
+[2026-10-16 13:30:16.762] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:16.766] INFO: POST /api/webapps 200 3ms undefined
+[2026-10-16 13:30:16.767] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.769] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.770] INFO: GET /api/webapps/6a920068-f183-48a4-8525-3ca1b8abed71 404 1ms undefined
+[2026-10-16 13:30:16.772] INFO: PATCH /api/webapps/6a920068-f183-48a4-8525-3ca1b8abed71 404 1ms undefined
+[2026-10-16 13:30:16.773] INFO: DELETE /api/webapps/6a920068-f183-48a4-8525-3ca1b8abed71 404 1ms undefined
+----- post-test output end -----
+webapps contract: strict user isolation and duplicate url allowed ... ok (209ms)
+webapps & webapp-groups: CRUD, groups, group deletion migration, pin, order, soft-delete, trash and restore ...
+------- post-test output -------
+[2026-10-16 13:30:16.876] INFO: POST /api/auth/register 200 78ms undefined
+[2026-10-16 13:30:16.878] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-10-16 13:30:16.879] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.881] INFO: PATCH /api/webapp-groups/ab14ed5b-355c-428d-813c-b12862f6c510 200 2ms undefined
+[2026-10-16 13:30:16.882] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.883] INFO: GET /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.884] INFO: GET /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.885] INFO: PUT /api/webapps/reorder 200 1ms undefined
+[2026-10-16 13:30:16.886] INFO: DELETE /api/webapps/969e34ae-66fe-4e84-b301-8f1e3507d716 200 0ms undefined
+[2026-10-16 13:30:16.887] INFO: GET /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.888] INFO: GET /api/webapps/trash 200 1ms undefined
+[2026-10-16 13:30:16.889] INFO: POST /api/webapps/969e34ae-66fe-4e84-b301-8f1e3507d716/restore 200 1ms undefined
+[2026-10-16 13:30:16.890] INFO: GET /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.891] INFO: DELETE /api/webapp-groups/ab14ed5b-355c-428d-813c-b12862f6c510 200 1ms undefined
+[2026-10-16 13:30:16.892] INFO: GET /api/webapps/969e34ae-66fe-4e84-b301-8f1e3507d716 200 1ms undefined
+[2026-10-16 13:30:16.894] INFO: DELETE /api/webapps/969e34ae-66fe-4e84-b301-8f1e3507d716/permanent 200 1ms undefined
+[2026-10-16 13:30:16.895] INFO: GET /api/webapps/trash 200 1ms undefined
+----- post-test output end -----
+webapps & webapp-groups: CRUD, groups, group deletion migration, pin, order, soft-delete, trash and restore ... ok (115ms)
+webapps contract: moving webapp out of folder defaults sortOrder to max + 1 (placed at the end) ...
+------- post-test output -------
+[2026-10-16 13:30:16.987] INFO: POST /api/auth/register 200 74ms undefined
+[2026-10-16 13:30:16.989] INFO: POST /api/webapp-groups 200 2ms undefined
+[2026-10-16 13:30:16.990] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-10-16 13:30:16.992] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:16.992] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 13:30:16.993] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 13:30:16.994] INFO: PATCH /api/webapps/a858abad-7781-4204-a1a8-9d7d31914695 200 1ms undefined
+[2026-10-16 13:30:16.995] INFO: PATCH /api/webapps/a858abad-7781-4204-a1a8-9d7d31914695 200 1ms undefined
+----- post-test output end -----
+webapps contract: moving webapp out of folder defaults sortOrder to max + 1 (placed at the end) ... ok (100ms)
+webapps contract: deleting folder migrates members to ungrouped and appends them to end preserving relative order ...
+------- post-test output -------
+[2026-10-16 13:30:17.095] INFO: POST /api/auth/register 200 82ms undefined
+[2026-10-16 13:30:17.097] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-10-16 13:30:17.098] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:17.099] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:17.100] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:17.101] INFO: DELETE /api/webapp-groups/7c59dffd-5813-468a-a563-f305050c9676 200 1ms undefined
+[2026-10-16 13:30:17.102] INFO: GET /api/webapps 200 1ms undefined
+----- post-test output end -----
+webapps contract: deleting folder migrates members to ungrouped and appends them to end preserving relative order ... ok (106ms)
+WebApps mixed root reorder is atomic and owner isolated without changing pinned order ...
+------- post-test output -------
+[2026-10-16 13:30:17.193] INFO: POST /api/auth/register 200 73ms undefined
+[2026-10-16 13:30:17.267] INFO: POST /api/auth/register 200 73ms undefined
+[2026-10-16 13:30:17.269] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 13:30:17.270] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-10-16 13:30:17.271] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-10-16 13:30:17.272] INFO: PUT /api/webapps/reorder 200 1ms undefined
+[2026-10-16 13:30:17.272] INFO: GET /api/webapps 200 0ms undefined
+[2026-10-16 13:30:17.273] INFO: GET /api/webapp-groups 200 0ms undefined
+[2026-10-16 13:30:17.274] INFO: PUT /api/webapps/reorder 404 1ms undefined
+[2026-10-16 13:30:17.275] INFO: GET /api/webapps 200 1ms undefined
+[2026-10-16 13:30:17.276] INFO: PUT /api/webapps/reorder 404 1ms undefined
+[2026-10-16 13:30:17.277] INFO: GET /api/webapps 200 0ms undefined
+[2026-10-16 13:30:17.277] INFO: PUT /api/webapps/reorder 200 0ms undefined
+[2026-10-16 13:30:17.278] INFO: GET /api/webapp-groups 200 1ms undefined
+----- post-test output end -----
+WebApps mixed root reorder is atomic and owner isolated without changing pinned order ... ok (175ms)
+running 2 tests from ./src/features/bookmarks/migration.test.ts
+migration 0005: preserves pre-existing user, session, preference, bookmark, and note data with zero loss ... ok (8ms)
+migration 0010: preserves existing webapp_groups and preferences with folder_size and show_app_labels defaults ... ok (12ms)
+running 6 tests from ./src/features/documents/assets.test.ts
+assets: upload and read round-trip (opaque storageRef, sha256 and bytes) ... ok (31ms)
+assets: owner and docbinding isolation (foreign user, cross-doc access, 404 hidden) ... ok (34ms)
+assets: magic bytes validation (PNG, JPEG, WebP allowed; mismatch, SVG, GIF rejected) ... ok (18ms)
+assets: 10 MiB boundary checks (0 bytes, exact 10 MiB allowed, 10 MiB + 1 byte rejected) ... ok (40ms)
+assets: delete guards (inline image references block delete, code/text allowed, orphan allowed) ... ok (29ms)
+assets: trash retention vs permanent deletion cascade ... ok (17ms)
+running 3 tests from ./src/features/documents/documents.route.test.ts
+Documents HTTP: title/body boundaries and exact 8 MiB create/update intake remain isolated ...
+------- post-test output -------
+[2026-10-16 13:30:18.049] INFO: POST /api/auth/register 200 78ms undefined
+[2026-10-16 13:30:18.129] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:18.252] INFO: POST /api/documents 200 120ms undefined
+[2026-10-16 13:30:18.255] INFO:
+    method: "POST"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-10-16 13:30:18.256] INFO: POST /api/documents 400 2ms undefined
+[2026-10-16 13:30:18.257] INFO:
+    method: "PATCH"
+    path: "/api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94"
+    event: "validation-failed"
+[2026-10-16 13:30:18.257] INFO: PATCH /api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94 400 1ms undefined
+[2026-10-16 13:30:18.270] INFO:
+    method: "POST"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-10-16 13:30:18.271] INFO: POST /api/documents 400 12ms undefined
+[2026-10-16 13:30:18.282] INFO:
+    method: "PATCH"
+    path: "/api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94"
+    event: "validation-failed"
+[2026-10-16 13:30:18.283] INFO: PATCH /api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94 400 7ms undefined
+[2026-10-16 13:30:18.284] INFO:
+    method: "PATCH"
+    path: "/api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94"
+    event: "validation-failed"
+[2026-10-16 13:30:18.284] INFO: PATCH /api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94 400 1ms undefined
+[2026-10-16 13:30:18.306] INFO: POST /api/documents 200 21ms undefined
+[2026-10-16 13:30:18.311] INFO: POST /api/documents 413 4ms undefined
+----- post-test output end -----
+Documents HTTP: title/body boundaries and exact 8 MiB create/update intake remain isolated ... ok (404ms)
+Documents HTTP: notebook library/search, conflict current document and trash restoration are owner-isolated ...
+------- post-test output -------
+[2026-10-16 13:30:18.328] INFO: PATCH /api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94 200 16ms undefined
+[2026-10-16 13:30:18.335] INFO: PATCH /api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94 413 6ms undefined
+[2026-10-16 13:30:18.335] INFO: POST /api/notes 413 0ms undefined
+[2026-10-16 13:30:18.336] INFO: PUT /api/documents/bb8d102a-c6ff-456e-a266-b2863af53d94/settings 413 0ms undefined
+[2026-10-16 13:30:18.450] INFO: POST /api/auth/register 200 87ms undefined
+[2026-10-16 13:30:18.526] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:18.526] INFO: GET /api/documents 401 0ms undefined
+[2026-10-16 13:30:18.528] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-10-16 13:30:18.529] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-10-16 13:30:18.530] INFO: POST /api/document-notebooks 400 1ms undefined
+[2026-10-16 13:30:18.532] INFO: POST /api/document-notebooks/e285054b-433c-4040-b6d1-e1327fc3241f/move 400 2ms undefined
+[2026-10-16 13:30:18.534] INFO: POST /api/documents 200 2ms undefined
+[2026-10-16 13:30:18.535] INFO: GET /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 404 1ms undefined
+[2026-10-16 13:30:18.536] INFO: POST /api/documents 404 1ms undefined
+[2026-10-16 13:30:18.537] INFO: PATCH /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 200 1ms undefined
+[2026-10-16 13:30:18.539] INFO: PATCH /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 409 1ms undefined
+[2026-10-16 13:30:18.541] INFO: GET /api/documents/search 200 2ms undefined
+[2026-10-16 13:30:18.543] INFO: GET /api/documents 200 2ms undefined
+[2026-10-16 13:30:18.543] INFO:
+    method: "GET"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-10-16 13:30:18.544] INFO: GET /api/documents 400 1ms undefined
+[2026-10-16 13:30:18.544] INFO: GET /api/documents/search 200 0ms undefined
+[2026-10-16 13:30:18.545] INFO:
+    method: "POST"
+    path: "/api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb/versions/1junk/restore"
+    event: "validation-failed"
+[2026-10-16 13:30:18.545] INFO: POST /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb/versions/1junk/restore 400 1ms undefined
+[2026-10-16 13:30:18.547] INFO: POST /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb/versions/1/restore 200 2ms undefined
+[2026-10-16 13:30:18.548] INFO: GET /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb/versions 200 1ms undefined
+[2026-10-16 13:30:18.549] INFO:
+    method: "DELETE"
+    path: "/api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb"
+    event: "validation-failed"
+[2026-10-16 13:30:18.549] INFO: DELETE /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 400 1ms undefined
+[2026-10-16 13:30:18.551] INFO: DELETE /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 409 2ms undefined
+[2026-10-16 13:30:18.552] INFO: DELETE /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 200 1ms undefined
+[2026-10-16 13:30:18.553] INFO: PATCH /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 404 1ms undefined
+[2026-10-16 13:30:18.554] INFO: GET /api/documents/search 200 1ms undefined
+[2026-10-16 13:30:18.556] INFO: GET /api/documents/trash 200 2ms undefined
+[2026-10-16 13:30:18.558] INFO: DELETE /api/document-notebooks/e285054b-433c-4040-b6d1-e1327fc3241f 200 2ms undefined
+[2026-10-16 13:30:18.559] INFO: GET /api/document-notebooks 200 1ms undefined
+[2026-10-16 13:30:18.560] INFO: DELETE /api/document-notebooks/7f27f879-0c35-4dd5-af79-66e7aafb628b 200 1ms undefined
+[2026-10-16 13:30:18.561] INFO: POST /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb/restore 200 1ms undefined
+[2026-10-16 13:30:18.563] INFO: DELETE /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb/permanent 200 1ms undefined
+[2026-10-16 13:30:18.564] INFO: GET /api/documents/3a86c3dd-43f7-4a84-bce5-654934d4afeb 404 1ms undefined
+----- post-test output end -----
+Documents HTTP: notebook library/search, conflict current document and trash restoration are owner-isolated ... ok (222ms)
+Documents HTTP: assets bind owner/document, deny referenced deletion and settings expose no presentation state ...
+------- post-test output -------
+[2026-10-16 13:30:18.662] INFO: POST /api/auth/register 200 79ms undefined
+[2026-10-16 13:30:18.736] INFO: POST /api/auth/register 200 74ms undefined
+[2026-10-16 13:30:18.739] INFO: POST /api/documents 200 2ms undefined
+[2026-10-16 13:30:18.740] INFO: POST /api/documents 200 1ms undefined
+[2026-10-16 13:30:18.744] INFO: POST /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets 200 3ms undefined
+[2026-10-16 13:30:18.746] INFO: GET /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets/e7841e94-16ac-43a7-9873-24470f7bc63b 200 2ms undefined
+[2026-10-16 13:30:18.747] INFO: GET /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets/e7841e94-16ac-43a7-9873-24470f7bc63b 404 1ms undefined
+[2026-10-16 13:30:18.748] INFO: GET /api/documents/b83d8cf9-6c3c-4e17-ad01-e69e11184bba/assets/e7841e94-16ac-43a7-9873-24470f7bc63b 404 1ms undefined
+[2026-10-16 13:30:18.751] INFO: PATCH /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd 200 3ms undefined
+[2026-10-16 13:30:18.753] INFO: DELETE /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets/e7841e94-16ac-43a7-9873-24470f7bc63b 400 2ms undefined
+[2026-10-16 13:30:18.755] INFO: PATCH /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd 200 2ms undefined
+[2026-10-16 13:30:18.756] INFO: DELETE /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets/e7841e94-16ac-43a7-9873-24470f7bc63b 200 1ms undefined
+[2026-10-16 13:30:18.757] INFO: GET /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets/e7841e94-16ac-43a7-9873-24470f7bc63b 404 1ms undefined
+[2026-10-16 13:30:18.810] INFO: POST /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/assets 400 46ms undefined
+[2026-10-16 13:30:18.813] INFO: GET /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/settings 200 2ms undefined
+[2026-10-16 13:30:18.814] INFO: PUT /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/settings 200 1ms undefined
+[2026-10-16 13:30:18.815] INFO:
+    method: "PUT"
+    path: "/api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/settings"
+    event: "validation-failed"
+[2026-10-16 13:30:18.815] INFO: PUT /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/settings 400 1ms undefined
+[2026-10-16 13:30:18.816] INFO: GET /api/documents/e2fda5c6-4e7c-4000-8eab-812f15889abd/settings 404 1ms undefined
+----- post-test output end -----
+Documents HTTP: assets bind owner/document, deny referenced deletion and settings expose no presentation state ... ok (251ms)
+running 12 tests from ./src/features/documents/markdown.test.ts
+documentDisplayTitle preserves explicit title precedence and first-block fallback boundary ... ok (18ms)
+documentPlainText - extracts text from headers, paragraphs, and formatting ... ok (1ms)
+documentPlainText - strips HTML tags safely ... ok (1ms)
+documentPlainText - handles lists, blockquotes, tables, and code blocks ... ok (3ms)
+documentSnippet - normalizes whitespace and respects maxLength ... ok (943µs)
+documentSnippet - handles empty or whitespace input ... ok (216µs)
+documentSnippet - guarantees no raw HTML syntax or comment pagebreak ... ok (1ms)
+documentPlainText and documentSnippet - preserve image reference alt text and exclude definition syntax ... ok (2ms)
+documentAssetReferences - extracts direct and reference image asset IDs ... ok (1ms)
+documentAssetReferences - ignores asset:// in code, plain text, and non-image links ... ok (1ms)
+documentAssetReferences - handles case-insensitive reference identifiers ... ok (330µs)
+documentAssetReferences - handles shortcut reference images and nested containers without code leakage ... ok (1ms)
+running 10 tests from ./src/features/documents/notebooks.test.ts
+notebooks depth: create root (0) and child (1) succeed, depth >= 2 rejected ... ok (22ms)
+notebooks depth: move rejecting depth >= 2 and moving root with children to non-root ... ok (18ms)
+notebooks cycle & self: moving notebook to itself or under own child rejected ... ok (17ms)
+notebooks owner isolation: foreign parent, foreign notebook mutations hidden as 404 ... ok (19ms)
+notebooks name: trim nonempty and duplicate name allowed in same parent ... ok (17ms)
+notebooks reorder: exact siblings coverage, rejects duplicate/missing/foreign/outscope ... ok (17ms)
+notebooks move: independent mutation, append to parent scope sortOrder, no-op same parent ... ok (18ms)
+notebooks delete: detaches active and trash documents, promotes children, preserves sortOrder without deduplication ... ok (19ms)
+notebooks delete: child notebook deletion only detaches documents and deletes self ... ok (17ms)
+notebooks delete: non-existent notebook throws DocumentNotFoundError ... ok (15ms)
+running 19 tests from ./src/features/documents/service.test.ts
+Documents summaries derive untitled display title from first readable block without changing canonical title ... ok (60ms)
+DocumentsService - create: establishes version 1, isFavorite false, and initial snapshot ... ok (17ms)
+DocumentsService - create: title & body validation limits ... ok (16ms)
+DocumentsService - create: validates notebook ownership ... ok (16ms)
+DocumentsService - get: owner isolation, foreign document, and deleted document reading ... ok (19ms)
+DocumentsService - update: optimistic version conflict detection ... ok (22ms)
+DocumentsService - update: cannot update soft-deleted document ... ok (18ms)
+DocumentsService - update: notebook validation and unlinking ... ok (18ms)
+DocumentsService - snapshot throttling: autosave < 10min skips, >= 10min inserts snapshot ... ok (18ms)
+DocumentsService - snapshot: unchanged title and body does not snapshot ... ok (17ms)
+DocumentsService - snapshot: manual and conflict_resolution force snapshot immediately ... ok (17ms)
+DocumentsService - snapshot retention: keeps newest 100 'snapshot' rows while preserving other reasons ... ok (24ms)
+DocumentsService - restoreVersion: version monotonically increments ... ok (20ms)
+DocumentsService - softDelete, restore, and permanentDelete lifecycle ... ok (20ms)
+DocumentsService - list: deterministic ordering across scopes and no body in projection ... ok (20ms)
+DocumentsService - list: opaque cursor pagination stability across pages ... ok (19ms)
+DocumentsService - list: cursor validation & tamper resistance ... ok (17ms)
+DocumentsService - search: FTS matches title & body, excludes trash, safe tokenization, and cursor ... ok (20ms)
+DocumentsService - rollback invariant: multi-mutation operations roll back completely on failure ... ok (20ms)
+running 6 tests from ./src/features/documents/settings.test.ts
+settings: owner active 404 guard (missing, foreign user, soft deleted) ... ok (22ms)
+settings: lazy insertion of defaults on get and persistent update upsert ... ok (18ms)
+settings: update upserts if row does not exist prior to update ... ok (16ms)
+settings: strict input validation (paperSize, orientation, margin 5..50 boundaries) ... ok (17ms)
+settings: multi-user isolation (settings do not leak across users) ... ok (17ms)
+settings: permanent document deletion cascades to documentSettings ... ok (17ms)
+running 6 tests from ./src/features/notes/notes.test.ts
+notes realtime: PATCH emits note.updated over SSE events stream ...
+------- post-test output -------
+[2026-10-16 13:30:20.490] INFO: POST /api/auth/register 200 81ms undefined
+[2026-10-16 13:30:20.496] INFO: POST /api/notes 200 3ms undefined
+[2026-10-16 13:30:20.497] INFO: GET /api/notes/events 401 1ms undefined
+[2026-10-16 13:30:20.500] INFO: GET /api/notes/events 200 3ms undefined
+[2026-10-16 13:30:20.503] INFO: PATCH /api/notes/5340725f-c042-42a3-bb12-72082d51f4a3 200 3ms undefined
+----- post-test output end -----
+notes realtime: PATCH emits note.updated over SSE events stream ... ok (132ms)
+notes contract: strict user isolation and account ownership ...
+------- post-test output -------
+[2026-10-16 13:30:20.605] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:20.680] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:20.683] INFO: POST /api/notes 200 2ms undefined
+[2026-10-16 13:30:20.684] INFO: GET /api/notes 200 1ms undefined
+[2026-10-16 13:30:20.686] INFO: PATCH /api/notes/15b3fd0b-25e0-40d9-b2d3-1e78701336f2 404 2ms undefined
+[2026-10-16 13:30:20.687] INFO: DELETE /api/notes/15b3fd0b-25e0-40d9-b2d3-1e78701336f2 404 1ms undefined
+----- post-test output end -----
+notes contract: strict user isolation and account ownership ... ok (177ms)
+notes contract: optimistic locking version conflict returns 409 with current note ...
+------- post-test output -------
+[2026-10-16 13:30:20.784] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:20.786] INFO: POST /api/notes 200 2ms undefined
+[2026-10-16 13:30:20.787] INFO: PATCH /api/notes/f848f2f9-766c-4df5-b04c-72dd5315b9ff 200 1ms undefined
+[2026-10-16 13:30:20.789] INFO: PATCH /api/notes/f848f2f9-766c-4df5-b04c-72dd5315b9ff 409 1ms undefined
+[2026-10-16 13:30:20.790] INFO: DELETE /api/notes/f848f2f9-766c-4df5-b04c-72dd5315b9ff 409 1ms undefined
+[2026-10-16 13:30:20.791] INFO: DELETE /api/notes/f848f2f9-766c-4df5-b04c-72dd5315b9ff 200 1ms undefined
+----- post-test output end -----
+notes contract: optimistic locking version conflict returns 409 with current note ... ok (103ms)
+notes contract: color and pin persistence, default retention, validation, and conflict ...
+------- post-test output -------
+[2026-10-16 13:30:20.885] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:20.887] INFO: POST /api/notes 200 2ms undefined
+[2026-10-16 13:30:20.888] INFO: POST /api/notes 200 1ms undefined
+[2026-10-16 13:30:20.889] INFO:
+    method: "POST"
+    path: "/api/notes"
+    event: "validation-failed"
+[2026-10-16 13:30:20.889] INFO: POST /api/notes 400 1ms undefined
+[2026-10-16 13:30:20.890] INFO: GET /api/notes 200 0ms undefined
+[2026-10-16 13:30:20.892] INFO: PATCH /api/notes/8c59f12f-9de4-421f-bdec-8f1982426c45 200 1ms undefined
+[2026-10-16 13:30:20.893] INFO: PATCH /api/notes/8c59f12f-9de4-421f-bdec-8f1982426c45 200 1ms undefined
+[2026-10-16 13:30:20.893] INFO:
+    method: "PATCH"
+    path: "/api/notes/8c59f12f-9de4-421f-bdec-8f1982426c45"
+    event: "validation-failed"
+[2026-10-16 13:30:20.894] INFO: PATCH /api/notes/8c59f12f-9de4-421f-bdec-8f1982426c45 400 1ms undefined
+[2026-10-16 13:30:20.894] INFO: PATCH /api/notes/8c59f12f-9de4-421f-bdec-8f1982426c45 409 0ms undefined
+----- post-test output end -----
+notes contract: color and pin persistence, default retention, validation, and conflict ... ok (103ms)
+notes advanced: title/body independent pin/home-fixed, layout, snapshot/restore, FTS5 search, soft-delete/trash ...
+------- post-test output -------
+[2026-10-16 13:30:20.989] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:20.991] INFO: POST /api/notes 200 2ms undefined
+[2026-10-16 13:30:20.992] INFO: PUT /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980/layout 200 1ms undefined
+[2026-10-16 13:30:20.994] INFO: GET /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980 200 2ms undefined
+[2026-10-16 13:30:20.996] INFO: PATCH /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980 200 2ms undefined
+[2026-10-16 13:30:20.997] INFO: GET /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980/versions 200 1ms undefined
+[2026-10-16 13:30:20.998] INFO: POST /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980/versions/1/restore 200 1ms undefined
+[2026-10-16 13:30:20.999] INFO: GET /api/notes/search 200 1ms undefined
+[2026-10-16 13:30:21.000] INFO: DELETE /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980 200 1ms undefined
+[2026-10-16 13:30:21.001] INFO: GET /api/notes 200 1ms undefined
+[2026-10-16 13:30:21.001] INFO: GET /api/notes/search 200 0ms undefined
+[2026-10-16 13:30:21.002] INFO: GET /api/notes/trash 200 1ms undefined
+[2026-10-16 13:30:21.003] INFO: POST /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980/restore 200 1ms undefined
+[2026-10-16 13:30:21.004] INFO: GET /api/notes 200 1ms undefined
+[2026-10-16 13:30:21.005] INFO: DELETE /api/notes/bfaa05d8-3717-48ce-9dc3-41a9c94cc980/permanent 200 1ms undefined
+[2026-10-16 13:30:21.006] INFO: GET /api/notes/trash 200 1ms undefined
+----- post-test output end -----
+notes advanced: title/body independent pin/home-fixed, layout, snapshot/restore, FTS5 search, soft-delete/trash ... ok (111ms)
+notes contract: layout expanded toggle and preservation contract (#122) ...
+------- post-test output -------
+[2026-10-16 13:30:21.098] INFO: POST /api/auth/register 200 73ms undefined
+[2026-10-16 13:30:21.101] INFO: POST /api/notes 200 2ms undefined
+[2026-10-16 13:30:21.102] INFO: GET /api/notes/f254a4b2-aeae-4b8e-b213-f1bc428837c2 200 1ms undefined
+[2026-10-16 13:30:21.103] INFO: PUT /api/notes/f254a4b2-aeae-4b8e-b213-f1bc428837c2/layout 200 1ms undefined
+[2026-10-16 13:30:21.104] INFO: GET /api/notes/f254a4b2-aeae-4b8e-b213-f1bc428837c2 200 0ms undefined
+[2026-10-16 13:30:21.106] INFO: PUT /api/notes/f254a4b2-aeae-4b8e-b213-f1bc428837c2/layout 200 1ms undefined
+[2026-10-16 13:30:21.107] INFO: GET /api/notes/f254a4b2-aeae-4b8e-b213-f1bc428837c2 200 1ms undefined
+----- post-test output end -----
+notes contract: layout expanded toggle and preservation contract (#122) ... ok (100ms)
+running 2 tests from ./src/features/preferences/generation-defaults.test.ts
+Preferences: persisted user generation defaults full lifecycle, precedence and validation ...
+------- post-test output -------
+[2026-10-16 13:30:21.483] INFO: POST /api/auth/register 200 82ms undefined
+[2026-10-16 13:30:21.490] INFO: GET /api/preferences 200 4ms undefined
+[2026-10-16 13:30:21.494] INFO: PATCH /api/preferences 200 4ms undefined
+[2026-10-16 13:30:21.496] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:21.498] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:21.500] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:21.501] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:21.501] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:21.502] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:21.503] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:21.503] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:21.504] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:21.504] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:21.505] INFO: PATCH /api/preferences 400 1ms undefined
+----- post-test output end -----
+Preferences: persisted user generation defaults full lifecycle, precedence and validation ... ok (142ms)
+Preferences: user generation defaults applied in chatStream when request params omitted ...
+------- post-test output -------
+[2026-10-16 13:30:21.608] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:21.613] INFO: PATCH /api/preferences 200 2ms undefined
+----- post-test output end -----
+Preferences: user generation defaults applied in chatStream when request params omitted ... ok (114ms)
+running 10 tests from ./src/features/preferences/preferences.test.ts
+preferences: authenticated appearance sync is isolated and partial updates preserve fields ...
+------- post-test output -------
+[2026-10-16 13:30:21.989] INFO: POST /api/auth/register 200 80ms undefined
+[2026-10-16 13:30:22.068] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:22.073] INFO: PATCH /api/preferences 200 5ms undefined
+[2026-10-16 13:30:22.075] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.077] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.079] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.080] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: authenticated appearance sync is isolated and partial updates preserve fields ... ok (207ms)
+preferences: invalid wallpaper and appearance values are rejected ...
+------- post-test output -------
+[2026-10-16 13:30:22.190] INFO: POST /api/auth/register 200 84ms undefined
+[2026-10-16 13:30:22.192] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.193] INFO: PATCH /api/preferences 400 2ms undefined
+[2026-10-16 13:30:22.195] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.195] INFO: PATCH /api/preferences 400 2ms undefined
+[2026-10-16 13:30:22.196] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.196] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.197] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.197] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.198] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.198] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.199] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.199] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.200] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.200] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.201] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.201] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.201] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.202] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.202] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.202] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:22.203] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.203] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:22.204] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.204] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.204] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.205] INFO: PATCH /api/preferences 400 1ms undefined
+----- post-test output end -----
+preferences: invalid wallpaper and appearance values are rejected ... ok (118ms)
+preferences: new user GET and guest GET return canonical defaults including ambient fields and mask 0.36 ...
+------- post-test output -------
+[2026-10-16 13:30:22.223] INFO: GET /api/preferences 200 0ms undefined
+[2026-10-16 13:30:22.298] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:22.299] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: new user GET and guest GET return canonical defaults including ambient fields and mask 0.36 ... ok (94ms)
+preferences: first partial PATCH with accent-only seeds full canonical defaults including system settings ...
+------- post-test output -------
+[2026-10-16 13:30:22.320] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.321] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: first partial PATCH with accent-only seeds full canonical defaults including system settings ... ok (21ms)
+preferences: canvasMotion and presentation fields accept valid stages and reject invalid enums ...
+------- post-test output -------
+[2026-10-16 13:30:22.421] INFO: POST /api/auth/register 200 82ms undefined
+[2026-10-16 13:30:22.423] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.424] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.425] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.427] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.428] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.429] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.431] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.432] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.432] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.432] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.433] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.433] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.433] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:22.434] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.434] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.435] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.435] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.436] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.436] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.436] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.437] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.437] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.437] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:22.438] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.438] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:22.439] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.439] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:22.440] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:22.440] INFO: PATCH /api/preferences 400 1ms undefined
+----- post-test output end -----
+preferences: canvasMotion and presentation fields accept valid stages and reject invalid enums ... ok (119ms)
+preferences: subsequent partial updates preserve existing presentation and canvas motion fields ...
+------- post-test output -------
+[2026-10-16 13:30:22.534] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:22.537] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.539] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.540] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.541] INFO: PATCH /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: subsequent partial updates preserve existing presentation and canvas motion fields ... ok (101ms)
+preferences: upgrade preserves legacy masks and future rows use canonical defaults ...
+------- post-test output -------
+[2026-10-16 13:30:22.570] INFO: GET /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.571] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:22.572] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+preferences: upgrade preserves legacy masks and future rows use canonical defaults ... ok (31ms)
+preferences: legacy DB row with NULL wallpaper_presentations deterministically migrates on GET ...
+------- post-test output -------
+[2026-10-16 13:30:22.595] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: legacy DB row with NULL wallpaper_presentations deterministically migrates on GET ... ok (22ms)
+preferences: clear backgroundImage deactivates wallpaper but retains presentation record ...
+------- post-test output -------
+[2026-10-16 13:30:22.692] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:22.694] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:22.695] INFO: PATCH /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: clear backgroundImage deactivates wallpaper but retains presentation record ... ok (100ms)
+preferences: remote/gradient LRU enforces max 24 limit while uploaded excluded from quota ...
+------- post-test output -------
+[2026-10-16 13:30:22.790] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:22.794] INFO: PATCH /api/preferences 200 3ms undefined
+----- post-test output end -----
+preferences: remote/gradient LRU enforces max 24 limit while uploaded excluded from quota ... ok (98ms)
+running 2 tests from ./src/features/search/search.route.test.ts
+search routes: public suggestions endpoint works ... ok (584ms)
+search routes: history endpoints require auth and follow opt-in ... ok (105ms)
+running 3 tests from ./src/features/search/search.test.ts
+search suggestions: silent degradation on adapter network failure ... ok (20ms)
+search suggestions: returns provider suggestions when successful ... ok (16ms)
+search history: opt-in default off for authenticated user, only records when enabled ... ok (996ms)
+running 10 tests from ./src/features/system/backup.test.ts
+backup prevalidation: valid backup zip with wallpapers and settings passes ... ok (116ms)
+backup prevalidation: focal handling supports old manifest and validates new 0..1 ... ok (140ms)
+backup prevalidation: payload presence and rejects extra unmanifested payloads ... ok (118ms)
+backup prevalidation: enforces payload size and magic bytes content-type consistency ... ok (119ms)
+backup prevalidation: enforces per-user quota limit (max 5 wallpapers) ... ok (102ms)
+backup prevalidation: enforces preference local refs exist AND are owned ... ok (330ms)
+backup restore: validates before restore and fails closed on corrupted backup ... ok (102ms)
+backup smoke: roundtrip full backup and restore preserves wallpaper files and database ... ok (292ms)
+backup prevalidation: validates wallpaperCompositions local references and ownership ... ok (248ms)
+backup concurrency: concurrent backup and delete produces consistent valid backup and ignores transient .deleting files ... ok (118ms)
+running 4 tests from ./src/features/system/config-import.test.ts
+Config Export/Import: validates malformed input gracefully ... ok (28ms)
+Config Export/Import: roundtrip exports and imports settings, system providers and models without secrets ... ok (40ms)
+Config Import: ownership isolation never overwrites user-scoped providers ... ok (17ms)
+Config Import: fails closed when ENCRYPTION_KEY missing without partial settings apply ... ok (16ms)
+running 1 test from ./src/features/system/settings-enforcement.test.ts
+settings-enforcement: registration gating & custom default engine/theme/target ...
+------- post-test output -------
+[2026-10-16 13:30:27.215] INFO: GET /api/auth/register 200 1ms undefined
+[2026-10-16 13:30:27.218] INFO: GET /api/preferences 200 0ms undefined
+[2026-10-16 13:30:27.219] INFO: GET /api/auth/register 200 0ms undefined
+[2026-10-16 13:30:27.221] INFO: POST /api/auth/register 403 2ms undefined
+[2026-10-16 13:30:27.222] INFO: GET /api/preferences 200 0ms undefined
+[2026-10-16 13:30:27.307] INFO: POST /api/auth/register 200 85ms undefined
+[2026-10-16 13:30:27.309] INFO: GET /api/preferences 200 2ms undefined
+[2026-10-16 13:30:27.702] INFO: GET /api/search/suggestions 200 393ms undefined
+----- post-test output end -----
+settings-enforcement: registration gating & custom default engine/theme/target ... ok (524ms)
+running 2 tests from ./src/features/system/system.route.test.ts
+system routes: permissions, overview, settings, config export/import, backup/restore ...
+------- post-test output -------
+[2026-10-16 13:30:27.993] INFO: GET /api/admin/system/overview 403 3ms undefined
+[2026-10-16 13:30:27.997] INFO: GET /api/admin/system/overview 200 2ms undefined
+[2026-10-16 13:30:28.002] INFO: PATCH /api/admin/system/settings 200 4ms undefined
+[2026-10-16 13:30:28.004] INFO: GET /api/admin/system/config/export 200 1ms undefined
+[2026-10-16 13:30:28.005] INFO: POST /api/admin/system/config/import 200 1ms undefined
+[2026-10-16 13:30:28.080] INFO: GET /api/admin/backup/export 200 73ms undefined
+[2026-10-16 13:30:28.083] INFO: PATCH /api/admin/system/settings 200 2ms undefined
+[2026-10-16 13:30:28.098] INFO: POST /api/admin/backup/validate 200 14ms undefined
+[2026-10-16 13:30:28.119] INFO: POST /api/admin/backup/validate 400 6ms undefined
+[2026-10-16 13:30:28.210] INFO: POST /api/admin/backup/restore 200 91ms undefined
+[2026-10-16 13:30:28.212] INFO: GET /api/admin/system/settings 200 1ms undefined
+[2026-10-16 13:30:28.214] INFO: GET /api/admin/audit-logs 200 2ms undefined
+----- post-test output end -----
+system routes: permissions, overview, settings, config export/import, backup/restore ... ok (263ms)
+backup restore persists to SQLite file across restart ... ok (178ms)
+running 2 tests from ./src/features/users/users.test.ts
+users admin contract: role-based access control and user management ... ok (117ms)
+admin spec §15/§16: create, reset password forcing change, two-stage soft delete, and audit logging ... ok (404ms)
+running 17 tests from ./src/features/wallpaper/wallpaper.test.ts
+wallpaper: failed deletion compensation retains staged bytes for recovery ... ok (10ms)
+wallpaper: upload, auth, mime, retrieval, and persistence contract ...
+------- post-test output -------
+[2026-10-16 13:30:29.506] INFO: POST /api/auth/register 200 87ms undefined
+[2026-10-16 13:30:29.588] INFO: POST /api/auth/register 200 79ms undefined
+[2026-10-16 13:30:29.591] INFO: POST /api/wallpaper 401 1ms undefined
+[2026-10-16 13:30:29.592] INFO: POST /api/wallpaper 403 1ms undefined
+[2026-10-16 13:30:29.592] INFO: POST /api/wallpaper 415 0ms undefined
+[2026-10-16 13:30:29.595] INFO: POST /api/wallpaper 400 3ms undefined
+[2026-10-16 13:30:29.598] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:29.600] INFO: GET /api/wallpaper/91db5937-ae62-4089-9ec8-a348face5149 200 2ms undefined
+[2026-10-16 13:30:29.601] INFO: GET /api/wallpaper/91db5937-ae62-4089-9ec8-a348face5149 304 1ms undefined
+[2026-10-16 13:30:29.602] INFO: GET /api/wallpaper/91db5937-ae62-4089-9ec8-a348face5149 404 1ms undefined
+[2026-10-16 13:30:29.605] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-10-16 13:30:29.606] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:29.607] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-10-16 13:30:29.607] INFO: GET /api/wallpaper/91db5937-ae62-4089-9ec8-a348face5149 401 0ms undefined
+[2026-10-16 13:30:29.611] INFO: GET /api/wallpaper/91db5937-ae62-4089-9ec8-a348face5149 200 1ms undefined
+[2026-10-16 13:30:29.613] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:29.614] INFO: GET /api/wallpaper/280c8260-2db2-4231-9564-f60a8b755eed 200 1ms undefined
+[2026-10-16 13:30:29.615] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.616] INFO: GET /api/wallpaper/d2df89a6-c7cb-4813-8696-ff35e044af0c 200 1ms undefined
+[2026-10-16 13:30:29.617] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.618] INFO: GET /api/wallpaper/9b1f9f8c-64fd-40ff-9e31-f949df170466 200 1ms undefined
+[2026-10-16 13:30:29.643] INFO: POST /api/wallpaper 413 22ms undefined
+[2026-10-16 13:30:29.645] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:29.647] INFO: DELETE /api/wallpaper/7514ab1d-b9b3-44fa-a7a2-1c72460aa34a 200 2ms undefined
+[2026-10-16 13:30:29.648] INFO: GET /api/wallpaper/7514ab1d-b9b3-44fa-a7a2-1c72460aa34a 404 1ms undefined
+[2026-10-16 13:30:29.649] INFO: GET /api/wallpaper/91db5937-ae62-4089-9ec8-a348face5149 200 1ms undefined
+----- post-test output end -----
+wallpaper: upload, auth, mime, retrieval, and persistence contract ... ok (260ms)
+wallpaper: concurrent uploads maintain record integrity without dropping ...
+------- post-test output -------
+[2026-10-16 13:30:29.742] INFO: POST /api/auth/register 200 74ms undefined
+[2026-10-16 13:30:29.749] INFO: POST /api/wallpaper 200 6ms undefined
+[2026-10-16 13:30:29.750] INFO: POST /api/wallpaper 200 7ms undefined
+[2026-10-16 13:30:29.750] INFO: POST /api/wallpaper 200 7ms undefined
+[2026-10-16 13:30:29.751] INFO: POST /api/wallpaper 200 8ms undefined
+[2026-10-16 13:30:29.751] INFO: POST /api/wallpaper 200 7ms undefined
+[2026-10-16 13:30:29.752] INFO: POST /api/wallpaper 200 8ms undefined
+[2026-10-16 13:30:29.753] INFO: GET /api/wallpaper/5b42ddd5-d220-4ca9-a477-88259f9ca600 200 1ms undefined
+[2026-10-16 13:30:29.753] INFO: GET /api/wallpaper/3a82ae37-f22a-4cd8-ad10-0b7d4ef5d126 200 0ms undefined
+[2026-10-16 13:30:29.754] INFO: GET /api/wallpaper/a6ee2a03-43f7-40a4-ac45-1cba835bed64 200 0ms undefined
+[2026-10-16 13:30:29.755] INFO: GET /api/wallpaper/4b5cc7fa-dd08-4172-8194-f7104e40d17f 200 1ms undefined
+[2026-10-16 13:30:29.756] INFO: GET /api/wallpaper/4ee05f57-e485-4dfe-87f1-f4f396239e07 200 1ms undefined
+[2026-10-16 13:30:29.756] INFO: GET /api/wallpaper/51dc449a-ab90-4ec4-b51f-6a5c0f341f53 200 0ms undefined
+----- post-test output end -----
+wallpaper: concurrent uploads maintain record integrity without dropping ... ok (107ms)
+wallpaper: per-user quota bounds storage and evicts oldest files cleanly ...
+------- post-test output -------
+[2026-10-16 13:30:29.852] INFO: POST /api/auth/register 200 74ms undefined
+[2026-10-16 13:30:29.855] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-10-16 13:30:29.858] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-10-16 13:30:29.859] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.861] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.862] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.863] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.864] INFO: GET /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.939] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:29.941] INFO: GET /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:29.941] INFO: GET /api/wallpaper 401 0ms undefined
+[2026-10-16 13:30:29.942] INFO: GET /api/wallpaper/68b86680-f41b-4a10-9734-ac70ed4d04c5 404 1ms undefined
+[2026-10-16 13:30:29.943] INFO: GET /api/wallpaper/e65cfbb6-1038-450f-9903-6fb3e00a6eaa 200 1ms undefined
+[2026-10-16 13:30:29.944] INFO: GET /api/wallpaper/275d682b-16f5-4cb8-9d3d-601f208ef997 200 1ms undefined
+[2026-10-16 13:30:29.945] INFO: GET /api/wallpaper/df89e64a-1edb-43ce-ae49-7ea7faf36e6e 200 1ms undefined
+[2026-10-16 13:30:29.946] INFO: GET /api/wallpaper/15d30cc9-a37f-4d17-b54b-9ce991d9a9e4 200 1ms undefined
+[2026-10-16 13:30:29.947] INFO: GET /api/wallpaper/70c47202-67a0-40d9-ae8c-56c8454aa710 200 1ms undefined
+----- post-test output end -----
+wallpaper: per-user quota bounds storage and evicts oldest files cleanly ... ok (190ms)
+wallpaper: malformed manifest fails closed and does not silently wipe ... ok (1ms)
+wallpaper: orphaned payload is deleted if manifest commit fails ... ok (757µs)
+wallpaper: asset record focal defaults from old manifest and updates via API ...
+------- post-test output -------
+[2026-10-16 13:30:30.047] INFO: POST /api/auth/register 200 79ms undefined
+[2026-10-16 13:30:30.120] INFO: POST /api/auth/register 200 72ms undefined
+[2026-10-16 13:30:30.121] INFO: GET /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.123] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.124] INFO: POST /api/wallpaper 400 0ms undefined
+[2026-10-16 13:30:30.125] INFO: POST /api/wallpaper 400 0ms undefined
+[2026-10-16 13:30:30.127] INFO: PATCH /api/wallpaper/fd275249-f863-47a4-8b99-1310daeab1b2 200 1ms undefined
+[2026-10-16 13:30:30.128] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:30.128] INFO: PATCH /api/wallpaper/fd275249-f863-47a4-8b99-1310daeab1b2 404 0ms undefined
+[2026-10-16 13:30:30.129] INFO:
+    method: "PATCH"
+    path: "/api/wallpaper/fd275249-f863-47a4-8b99-1310daeab1b2"
+    event: "validation-failed"
+[2026-10-16 13:30:30.130] INFO: PATCH /api/wallpaper/fd275249-f863-47a4-8b99-1310daeab1b2 400 1ms undefined
+----- post-test output end -----
+wallpaper: asset record focal defaults from old manifest and updates via API ... ok (180ms)
+wallpaper: private no-cache ETag and conditional 304 vs auth isolation ...
+------- post-test output -------
+[2026-10-16 13:30:30.225] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:30.301] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:30.304] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-10-16 13:30:30.305] INFO: GET /api/wallpaper/2515fe6e-63bc-4a0e-afec-3c31bc3afbaa 200 1ms undefined
+[2026-10-16 13:30:30.306] INFO: GET /api/wallpaper/2515fe6e-63bc-4a0e-afec-3c31bc3afbaa 304 1ms undefined
+[2026-10-16 13:30:30.306] INFO: GET /api/wallpaper/2515fe6e-63bc-4a0e-afec-3c31bc3afbaa 404 0ms undefined
+[2026-10-16 13:30:30.307] INFO: GET /api/wallpaper/2515fe6e-63bc-4a0e-afec-3c31bc3afbaa 401 0ms undefined
+----- post-test output end -----
+wallpaper: private no-cache ETag and conditional 304 vs auth isolation ... ok (176ms)
+wallpaper: deletion referential integrity and recoverable rollback on failure ...
+------- post-test output -------
+[2026-10-16 13:30:30.405] INFO: POST /api/auth/register 200 79ms undefined
+[2026-10-16 13:30:30.408] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-10-16 13:30:30.410] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:30.413] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-10-16 13:30:30.414] INFO: DELETE /api/wallpaper/e1501b37-bd14-4b6e-a824-5bdfa0be6cff 200 1ms undefined
+[2026-10-16 13:30:30.415] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:30.439] INFO: DELETE /api/wallpaper/af801b66-de78-437a-aa13-c4da44272296 200 24ms undefined
+[2026-10-16 13:30:30.441] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:30.443] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:30.445] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:30.446] INFO: DELETE /api/wallpaper/7f4ef518-42a7-4fe8-978d-e86a6cadb7c6 500 1ms undefined
+[2026-10-16 13:30:30.446] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+wallpaper: deletion referential integrity and recoverable rollback on failure ... ok (139ms)
+wallpaper: quota eviction prioritizes non-active wallpapers and clears preference if active is evicted ...
+------- post-test output -------
+[2026-10-16 13:30:30.551] INFO: POST /api/auth/register 200 85ms undefined
+[2026-10-16 13:30:30.553] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:30.554] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.556] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.558] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:30.559] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.560] INFO: GET /api/wallpaper/bd65fd75-c629-4c89-8393-d58f38e6d905 404 0ms undefined
+[2026-10-16 13:30:30.561] INFO: GET /api/wallpaper/4ade2dc2-e26e-4362-9c0a-47fd90cf3e1d 200 1ms undefined
+[2026-10-16 13:30:30.562] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: quota eviction prioritizes non-active wallpapers and clears preference if active is evicted ... ok (115ms)
+wallpaper: source validation for HTTPS, uploaded owner, and CSS gradient whitelist ...
+------- post-test output -------
+[2026-10-16 13:30:30.661] INFO: POST /api/auth/register 200 80ms undefined
+[2026-10-16 13:30:30.736] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:30.738] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.740] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:30.742] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-10-16 13:30:30.746] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-10-16 13:30:30.747] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:30.750] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-10-16 13:30:30.753] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:30.754] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-10-16 13:30:30.755] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-10-16 13:30:30.756] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.756] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.756] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.757] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.757] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.758] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.758] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.758] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:30.759] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.759] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.760] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.760] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.760] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.761] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.761] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.761] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-10-16 13:30:30.762] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.762] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.763] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.763] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.764] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-10-16 13:30:30.764] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-10-16 13:30:30.765] INFO: PATCH /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: source validation for HTTPS, uploaded owner, and CSS gradient whitelist ... ok (204ms)
+wallpaper: concurrent select and delete race condition avoids dangling reference ...
+------- post-test output -------
+[2026-10-16 13:30:30.864] INFO: POST /api/auth/register 200 78ms undefined
+[2026-10-16 13:30:30.866] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:30.868] INFO: DELETE /api/wallpaper/30c5615e-f76e-484d-94ec-8bf612066da1 200 2ms undefined
+[2026-10-16 13:30:30.868] INFO: PATCH /api/preferences 404 2ms undefined
+[2026-10-16 13:30:30.869] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: concurrent select and delete race condition avoids dangling reference ... ok (103ms)
+wallpaper: file deletion failure rolls back manifest, preferences, and staged file ...
+------- post-test output -------
+[2026-10-16 13:30:30.965] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:30.969] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-10-16 13:30:30.971] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:30.973] INFO: DELETE /api/wallpaper/25ffc87b-5a63-45de-953a-59d376be7e55 500 2ms undefined
+[2026-10-16 13:30:30.975] INFO: GET /api/preferences 200 2ms undefined
+[2026-10-16 13:30:30.976] INFO: GET /api/wallpaper/25ffc87b-5a63-45de-953a-59d376be7e55 200 1ms undefined
+----- post-test output end -----
+wallpaper: file deletion failure rolls back manifest, preferences, and staged file ... ok (107ms)
+wallpaper: preferences PATCH persists canonical sources and clears legacy raw/uppercase keys on delete ...
+------- post-test output -------
+[2026-10-16 13:30:31.074] INFO: POST /api/auth/register 200 79ms undefined
+[2026-10-16 13:30:31.076] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:31.078] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 13:30:31.079] INFO: GET /api/preferences 200 1ms undefined
+[2026-10-16 13:30:31.080] INFO: DELETE /api/wallpaper/d3138110-10f2-413b-837f-27b933f8a543 200 1ms undefined
+[2026-10-16 13:30:31.081] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: preferences PATCH persists canonical sources and clears legacy raw/uppercase keys on delete ... ok (104ms)
+wallpaper: preferences PATCH validates all keys before mutation (zero partial updates) ...
+------- post-test output -------
+[2026-10-16 13:30:31.176] INFO: POST /api/auth/register 200 78ms undefined
+[2026-10-16 13:30:31.253] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:31.256] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-10-16 13:30:31.257] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:31.258] INFO: PATCH /api/preferences 404 1ms undefined
+----- post-test output end -----
+wallpaper: preferences PATCH validates all keys before mutation (zero partial updates) ... ok (177ms)
+wallpaper: updateWallpaperComposition rolls back manifest on DB preferences failure ...
+------- post-test output -------
+[2026-10-16 13:30:31.353] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:31.355] INFO: POST /api/wallpaper 200 2ms undefined
+----- post-test output end -----
+wallpaper: updateWallpaperComposition rolls back manifest on DB preferences failure ... ok (96ms)
+wallpaper: multi-payload eviction rollback restores unlinked files from in-memory bytes ...
+------- post-test output -------
+[2026-10-16 13:30:31.448] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:31.450] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-10-16 13:30:31.451] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-10-16 13:30:31.453] INFO: POST /api/wallpaper 500 1ms undefined
+[2026-10-16 13:30:31.454] INFO: GET /api/wallpaper/6c0b4926-e4e3-4feb-ac93-ba71cd086ea4 200 0ms undefined
+----- post-test output end -----
+wallpaper: multi-payload eviction rollback restores unlinked files from in-memory bytes ... ok (98ms)
+running 3 tests from ./src/features/webapp-icons/fetcher.test.ts
+extractCandidateIconsFromHtml respects priority: apple-touch-icon -> manifest -> link rel=icon -> favicon.ico ... ok (1ms)
+website quick add derives a readable title from remote HTML without markup ... ok (222µs)
+icon fetch rejects redirects and stops oversized streams before buffering the response ... ok (10ms)
+running 1 test from ./src/features/webapp-icons/service.test.ts
+WebAppIconService saves icon with SHA-256 deduplication and serves it ... ok (5ms)
+running 3 tests from ./src/features/webapp-icons/ssrf.test.ts
+isPrivateOrRestrictedIp identifies IPv4 private/loopback/link-local/special ... ok (2ms)
+isPrivateOrRestrictedIp identifies IPv6 loopback/link-local/unique-local ... ok (153µs)
+validateUrlForSafeFetch rejects non-http/https, localhost, credentials ... ok (910µs)
+running 2 tests from ./src/features/webapp-icons/svg.test.ts
+sanitizeSvg strips script tags, event handlers, and javascript: links ... ok (1ms)
+sanitizeSvg rejects non-SVG text or empty input ... ok (321µs)
+running 1 test from ./src/features/webapp-icons/validator.test.ts
+validateImageBytes accepts valid PNG, JPEG, WebP, AVIF, and safe SVG ... ok (1ms)
+running 1 test from ./src/features/webapp-icons/webapp-icons.route.test.ts
+WebAppIcons routes: upload, fetch, and serve ...
+------- post-test output -------
+[2026-10-16 13:30:32.210] INFO: POST /api/auth/register 200 85ms undefined
+[2026-10-16 13:30:32.214] INFO: GET /api/webapp-icons/non-existent 404 2ms undefined
+[2026-10-16 13:30:32.218] INFO: POST /api/webapp-icons/upload 401 2ms undefined
+[2026-10-16 13:30:32.235] INFO: POST /api/webapp-icons/upload 200 16ms undefined
+[2026-10-16 13:30:32.238] INFO: GET /api/webapp-icons/4c40b1b8-f68f-41eb-81c7-627c7022107d 200 3ms undefined
+[2026-10-16 13:30:32.255] INFO: POST /api/webapp-icons/upload 413 13ms undefined
+[2026-10-16 13:30:32.257] INFO: POST /api/webapp-icons/upload 403 1ms undefined
+[2026-10-16 13:30:32.257] INFO: POST /api/webapp-icons/upload 415 0ms undefined
+[2026-10-16 13:30:32.258] INFO: POST /api/auth/login 413 0ms undefined
+----- post-test output end -----
+WebAppIcons routes: upload, fetch, and serve ... ok (174ms)
+running 8 tests from ./src/internal/crypto/vault.test.ts
+CryptoVault: passwords.hash 与 passwords.verify 正确验证与防碰撞 ... ok (64ms)
+CryptoVault: fields.encrypt 与 fields.decrypt 保证加解密正确性与 UTF-8 支持 ... ok (1ms)
+CryptoVault: fields.decrypt 拒绝篡改密文与非法格式 ... ok (1ms)
+CryptoVault: fields.blindIndex 提供确定性索引供可搜索加密查询与独立密钥缓存隔离 ... ok (561µs)
+CryptoVault: HMAC 盲索引密钥与 AES 密钥在环境变量动态切换时互不污染 ... ok (505µs)
+CryptoVault: 默认从 APP_KEY 环境变量解析 masterKey 并支持开箱即用单例 ... ok (176µs)
+CryptoVault: 缺少 APP_KEY/APP_SECRET 且未显式指定 masterKey 时抛错（拒绝回退到 JWT_SECRET） ... ok (375µs)
+CryptoVault: 拒绝非规范迭代次数及超限密码记录 ... ok (121ms)
+running 1 test from ./src/internal/hono/body-limit.test.ts
+body limit 在解析前拒绝有长度及无长度的超限请求 ... ok (12ms)
+running 14 tests from ./src/internal/hono/body-policy.test.ts
+Contract: POST /api/ai/chat/stream with body > 64 KiB (e.g. 100 KiB) is allowed ...
+------- post-test output -------
+[2026-10-16 13:30:33.058] INFO: POST /api/auth/register 200 82ms undefined
+[2026-10-16 13:30:33.066] INFO: POST /api/ai/chat/stream 400 5ms undefined
+----- post-test output end -----
+Contract: POST /api/ai/chat/stream with body > 64 KiB (e.g. 100 KiB) is allowed ... ok (127ms)
+Contract: Normal endpoint > 64 KiB rejected with 413 and unified message ...
+------- post-test output -------
+[2026-10-16 13:30:33.169] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:33.170] INFO: POST /api/preferences 413 0ms undefined
+----- post-test output end -----
+Contract: Normal endpoint > 64 KiB rejected with 413 and unified message ... ok (97ms)
+Contract: POST /api/ai/chat/stream exceeding 32 MiB rejected with 413 and AI message ...
+------- post-test output -------
+[2026-10-16 13:30:33.267] INFO: POST /api/auth/register 200 78ms undefined
+[2026-10-16 13:30:33.268] INFO: POST /api/ai/chat/stream 413 0ms undefined
+----- post-test output end -----
+Contract: POST /api/ai/chat/stream exceeding 32 MiB rejected with 413 and AI message ... ok (97ms)
+Contract: Without Content-Length (streamed), normal endpoint > 64 KiB rejected with 413 ...
+------- post-test output -------
+[2026-10-16 13:30:33.364] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:33.365] INFO: POST /api/preferences 413 0ms undefined
+----- post-test output end -----
+Contract: Without Content-Length (streamed), normal endpoint > 64 KiB rejected with 413 ... ok (97ms)
+Contract: Wrong Origin rejected with 403 ...
+------- post-test output -------
+[2026-10-16 13:30:33.469] INFO: POST /api/auth/register 200 85ms undefined
+[2026-10-16 13:30:33.470] INFO: POST /api/ai/chat/stream 403 0ms undefined
+----- post-test output end -----
+Contract: Wrong Origin rejected with 403 ... ok (104ms)
+Contract: AI chat still requires JSON Content-Type ...
+------- post-test output -------
+[2026-10-16 13:30:33.562] INFO: POST /api/auth/register 200 73ms undefined
+[2026-10-16 13:30:33.562] INFO: POST /api/ai/chat/stream 415 0ms undefined
+----- post-test output end -----
+Contract: AI chat still requires JSON Content-Type ... ok (91ms)
+Contract: Wrong Content-Type on Upload endpoint rejected with 415 ...
+------- post-test output -------
+[2026-10-16 13:30:33.654] INFO: POST /api/auth/register 200 73ms undefined
+[2026-10-16 13:30:33.655] INFO: POST /api/webapp-icons/upload 415 0ms undefined
+----- post-test output end -----
+Contract: Wrong Content-Type on Upload endpoint rejected with 415 ... ok (92ms)
+Contract: WebApp Icons upload: > 2 MiB + 64 KiB rejected at bodyLimit level ...
+------- post-test output -------
+[2026-10-16 13:30:33.761] INFO: POST /api/auth/register 200 88ms undefined
+[2026-10-16 13:30:33.761] INFO: POST /api/webapp-icons/upload 413 0ms undefined
+----- post-test output end -----
+Contract: WebApp Icons upload: > 2 MiB + 64 KiB rejected at bodyLimit level ... ok (106ms)
+Contract: WebApp Icons upload: within bodyLimit but icon file > 2 MiB rejected with business message ...
+------- post-test output -------
+[2026-10-16 13:30:33.853] INFO: POST /api/auth/register 200 73ms undefined
+[2026-10-16 13:30:33.866] INFO: POST /api/webapp-icons/upload 413 10ms undefined
+----- post-test output end -----
+Contract: WebApp Icons upload: within bodyLimit but icon file > 2 MiB rejected with business message ... ok (104ms)
+Contract: Wallpaper upload: > 50 MiB rejected at bodyLimit level ...
+------- post-test output -------
+[2026-10-16 13:30:33.961] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:33.961] INFO: POST /api/wallpaper 413 0ms undefined
+----- post-test output end -----
+Contract: Wallpaper upload: > 50 MiB rejected at bodyLimit level ... ok (94ms)
+Contract: Wallpaper upload: within 50 MiB but wallpaper file > 5 MiB rejected with business message ...
+------- post-test output -------
+[2026-10-16 13:30:34.055] INFO: POST /api/auth/register 200 76ms undefined
+[2026-10-16 13:30:34.082] INFO: POST /api/wallpaper 413 24ms undefined
+----- post-test output end -----
+Contract: Wallpaper upload: within 50 MiB but wallpaper file > 5 MiB rejected with business message ... ok (120ms)
+Contract: Admin backup upload: > 50 MiB rejected at bodyLimit level ...
+------- post-test output -------
+[2026-10-16 13:30:34.177] INFO: POST /api/auth/register 200 77ms undefined
+[2026-10-16 13:30:34.177] INFO: POST /api/admin/backup/validate 413 0ms undefined
+----- post-test output end -----
+Contract: Admin backup upload: > 50 MiB rejected at bodyLimit level ... ok (95ms)
+Contract: Without Content-Length (streamed), AI chat stream > 64 KiB is allowed ...
+------- post-test output -------
+[2026-10-16 13:30:34.284] INFO: POST /api/auth/register 200 88ms undefined
+[2026-10-16 13:30:34.285] INFO: POST /api/ai/chat/stream 400 1ms undefined
+----- post-test output end -----
+Contract: Without Content-Length (streamed), AI chat stream > 64 KiB is allowed ... ok (107ms)
+Contract: streamed AI body above 32 MiB is rejected without Content-Length ...
+------- post-test output -------
+[2026-10-16 13:30:34.381] INFO: POST /api/auth/register 200 75ms undefined
+[2026-10-16 13:30:34.382] INFO: POST /api/ai/chat/stream 413 0ms undefined
+----- post-test output end -----
+Contract: streamed AI body above 32 MiB is rejected without Content-Length ... ok (97ms)
+running 8 tests from ./src/internal/hono/intake-response.test.ts
+responseMiddleware c.success 与 c.fail 返回准确 typed JSON 结构 ... ok (10ms)
+failResponse 统一构建 4xx/5xx typed envelope ... ok (343µs)
+errorResponse 对未知错误不泄露内部信息 ...
+------- post-test output -------
+[2026-10-16 13:30:34.562] ERROR:
+    method: "GET"
+    path: "/unknown-error"
+    status: 500
+    errorType: "unknown"
+----- post-test output end -----
+errorResponse 对未知错误不泄露内部信息 ... ok (3ms)
+c.fail 在 runtime 拒绝非法非 4xx/5xx 状态码（覆盖 204/205/100/200/600/NaN） ... ok (1ms)
+errorResponse 对 HonoHTTPException 保留挑战头等语义响应头并过滤旧表示头与 content headers ...
+------- post-test output -------
+[2026-10-16 13:30:34.566] INFO:
+    method: "GET"
+    path: "/auth-challenge"
+    status: 401
+    errorType: "http"
+----- post-test output end -----
+errorResponse 对 HonoHTTPException 保留挑战头等语义响应头并过滤旧表示头与 content headers ... ok (1ms)
+notFoundResponse 提供标准的 404 envelope 响应 ... ok (221µs)
+validator 品牌与编译期类型保护 ... ok (278µs)
+createRequestIntake 与 Handler/HandlerData 支持自定义 Env 和类型保护 ...
+------- post-test output -------
+[2026-10-16 13:30:34.569] INFO:
+    method: "GET"
+    path: "/p"
+    event: "validation-failed"
+----- post-test output end -----
+createRequestIntake 与 Handler/HandlerData 支持自定义 Env 和类型保护 ... ok (1ms)
+running 6 tests from ./src/internal/hono/middleware/logger.test.ts
+logger 在无 Deno 连接信息的 app.request 下仍成功执行下游且不伪造 IP ...
+------- post-test output -------
+[2026-10-16 13:30:34.698] INFO: GET /ping 200 1ms undefined
+----- post-test output end -----
+logger 在无 Deno 连接信息的 app.request 下仍成功执行下游且不伪造 IP ... ok (13ms)
+logger 记录元数据且不暴露 query/body/headers/token/password ...
+------- post-test output -------
+[2026-10-16 13:30:34.708] INFO: POST /login 201 0ms 192.168.1.100
+----- post-test output end -----
+logger 记录元数据且不暴露 query/body/headers/token/password ... ok (1ms)
+logger 优先使用直接连接地址且不信任代理头 ...
+------- post-test output -------
+[2026-10-16 13:30:34.709] INFO: GET /test-ip 200 0ms 172.16.0.5
+----- post-test output end -----
+logger 优先使用直接连接地址且不信任代理头 ... ok (969µs)
+logger 规范化 options 不修改已冻结调用方对象 ... ok (529µs)
+logger 传入 false 明确禁用，直接穿透 next ... ok (287µs)
+logger 不主动读取或解析 request body，保持 body 未读契约 ...
+------- post-test output -------
+[2026-10-16 13:30:34.711] INFO: POST /stream 200 0ms 127.0.0.1
+----- post-test output end -----
+logger 不主动读取或解析 request body，保持 body 未读契约 ... ok (920µs)
+running 7 tests from ./src/internal/hono/route-overlap.test.ts
+route-overlap: 静态与参数路径重叠 ... ok (765µs)
+route-overlap: 独立通配符与嵌入通配符 ... ok (110µs)
+route-overlap: 可选参数分支重叠 ... ok (77µs)
+route-overlap: 复杂正则与跨段正则保守拒绝 ... ok (40µs)
+route-overlap: HTTP method 相交性 ... ok (58µs)
+route-overlap: compareRouteSpecificity 静态 > 参数 > 通配符 ... ok (156µs)
+route-overlap: hasAmbiguousOverlap 检测不可靠定序重叠 ... ok (115µs)
+running 25 tests from ./src/internal/hono/routes.test.ts
+Routes 按访问策略挂载认证中间件 ... ok (11ms)
+Routes 挂载后禁止继续注册 ... ok (518µs)
+Routes 在挂载时拒绝重复的 method 和 path ... ok (322µs)
+Routes 重复路由校验失败时不挂载任何路由 ... ok (451µs)
+Routes 挂载后禁止重复 mount ... ok (188µs)
+Routes 挂载 protected 路由时缺失 authMiddleware 抛错 ... ok (103µs)
+Routes 在挂载时拒绝同 path 下 ALL 与具体 Method 冲突 ... ok (129µs)
+Routes 冲突路由校验失败时不挂载任何路由 ... ok (351µs)
+Routes 注册时自动包装普通 handler，并交给全局 errorResponse ...
+------- post-test output -------
+[2026-10-16 13:30:34.940] INFO:
+    method: "GET"
+    path: "/error"
+    status: 400
+    errorType: "BadRequest"
+----- post-test output end -----
+Routes 注册时自动包装普通 handler，并交给全局 errorResponse ... ok (4ms)
+Routes 将 Hono 与普通异常交给全局 error handler ...
+------- post-test output -------
+[2026-10-16 13:30:34.943] INFO:
+    method: "GET"
+    path: "/forbidden"
+    status: 403
+    errorType: "http"
+----- post-test output end -----
+Routes 将 Hono 与普通异常交给全局 error handler ... ok (1ms)
+Routes 将 Handler 异常交给应用级 error handler ...
+------- post-test output -------
+[2026-10-16 13:30:34.944] ERROR:
+    method: "GET"
+    path: "/error"
+    status: 500
+    errorType: "unknown"
+----- post-test output end -----
+Routes 将 Handler 异常交给应用级 error handler ... ok (482µs)
+Routes 原生 Response 不被 Request Intake 二次包装 ... ok (155µs)
+Routes 注册时自动包装 Validator 并在校验通过时注入数据 ... ok (1ms)
+Routes 注册时自动拦截 Validator 校验失败并返回 400 envelope ...
+------- post-test output -------
+[2026-10-16 13:30:34.946] INFO:
+    method: "GET"
+    path: "/greet"
+    event: "validation-failed"
+----- post-test output end -----
+Routes 注册时自动拦截 Validator 校验失败并返回 400 envelope ... ok (643µs)
+Routes 支持前置路由中间件与 Validator 及普通 Handler 组合 ... ok (403µs)
+Routes 在挂载前拒绝 public /users/:id 与 protected /users/admin 跨 access 重叠 ... ok (199µs)
+Routes 跨 access 重叠校验失败时原子拒绝挂载（无部分挂载） ... ok (308µs)
+Routes 跨 access 通配符与 ALL 重叠拒绝 ... ok (632µs)
+Routes 跨 access 可选参数重叠拒绝 ... ok (155µs)
+Routes 跨 access 复杂正则（含跨段/特殊字符）与嵌入通配符在 mount 前保守拒绝重叠 ... ok (176µs)
+Routes 允许合法的非相交跨 access 路由共存并成功挂载 ... ok (1ms)
+Routes 支持自定义 Env 类型传播并在编译期检查 ... ok (58µs)
+Routes 按照特异度排序：普通 static 优于 param 优于 wildcard ... ok (996µs)
+Routes 挂载前拒绝同 access 无法可靠定序的复杂歧义路由 ... ok (234µs)
+Routes 歧义路由拒绝时原子保证零挂载 ... ok (173µs)
+running 1 test from ./src/internal/logger/logger.test.ts
+双输出遵循 logger 级别，支持运行时调整与自定义级别 ... ok (107ms)
+running 15 tests from ./src/internal/validator/hono.test.ts
+validator 校验 query 并传递字段数据 ... ok (11ms)
+validator query 失败返回 400 JSON envelope ...
+------- post-test output -------
+[2026-10-16 13:30:35.308] INFO:
+    method: "GET"
+    path: "/invalid-query"
+    event: "validation-failed"
+----- post-test output end -----
+validator query 失败返回 400 JSON envelope ... ok (3ms)
+validator 保留 JSON false 值 ... ok (1ms)
+validator JSON 不依赖 Content-Length ... ok (398µs)
+validator malformed JSON 返回固定 400 envelope ...
+------- post-test output -------
+[2026-10-16 13:30:35.313] INFO:
+    method: "POST"
+    path: "/json-malformed"
+    status: 400
+    errorType: "http"
+----- post-test output end -----
+validator malformed JSON 返回固定 400 envelope ... ok (911µs)
+validator 缺少 JSON Content-Type 返回 Valibot 400 ...
+------- post-test output -------
+[2026-10-16 13:30:35.314] INFO:
+    method: "POST"
+    path: "/json-missing-content-type"
+    event: "validation-failed"
+----- post-test output end -----
+validator 缺少 JSON Content-Type 返回 Valibot 400 ... ok (716µs)
+validator query 支持数组字段 ... ok (471µs)
+validator queries 将单值 query 参数归一化为数组 ... ok (358µs)
+validator JSON 类型失败返回 400 issue ...
+------- post-test output -------
+[2026-10-16 13:30:35.316] INFO:
+    method: "POST"
+    path: "/json-invalid-type"
+    event: "validation-failed"
+----- post-test output end -----
+validator JSON 类型失败返回 400 issue ... ok (593µs)
+logger 与 validator 共享 JSON body cache ...
+------- post-test output -------
+[2026-10-16 13:30:35.318] INFO: POST /json-with-logger 200 1ms 127.0.0.1
+----- post-test output end -----
+logger 与 validator 共享 JSON body cache ... ok (1ms)
+validator 校验 param 并传递字段数据 ... ok (1ms)
+validator 校验 urlencoded form 并保留重复字段 ... ok (1ms)
+validator 校验 header 与 cookie 并保留 source key 大小写 ... ok (552µs)
+validator 解析 FormData 失败时返回固定错误消息且不泄漏底层错误细节 ...
+------- post-test output -------
+[2026-10-16 13:30:35.322] INFO:
+    method: "POST"
+    path: "/form-malformed"
+    status: 400
+    errorType: "http"
+----- post-test output end -----
+validator 解析 FormData 失败时返回固定错误消息且不泄漏底层错误细节 ... ok (975µs)
+validator 解析 catch 保留已有的 413 HTTPException ...
+------- post-test output -------
+[2026-10-16 13:30:35.322] INFO:
+    method: "POST"
+    path: "/json-large"
+    status: 413
+    errorType: "http"
+----- post-test output end -----
+validator 解析 catch 保留已有的 413 HTTPException ... ok (706µs)
+running 15 tests from ./src/shared/wallpaper-presentation.test.ts
+wallpaper-presentation: resolveWallpaperPresentation resolves exact numeric values for all semantic stages ... ok (951µs)
+wallpaper-presentation: normalizeWallpaperPresentation handles valid and fallback inputs ... ok (221µs)
+wallpaper-presentation: migrateLegacyWallpaperPresentation nearest visual mappings ... ok (261µs)
+wallpaper-presentation: migration idempotence ... ok (72µs)
+wallpaper-presentation: wallpaperPresentation lookup and defaults ... ok (1ms)
+wallpaper-presentation: normalizeWallpaperPresentations migration and retention ... ok (837µs)
+wallpaper-presentation: touchWallpaperPresentation and purgeWallpaperPresentation ... ok (145µs)
+wallpaper-presentation: resolveWallpaperPresentation output and theme handling ... ok (71µs)
+wallpaper-presentation: resolveWallpaperPresentation Tone x Ambient composition rules ... ok (85µs)
+wallpaper-presentation: resolveWallpaperPresentation substrate behavior ... ok (101µs)
+wallpaper-presentation: resolveWallpaperPresentation reducedMotion behavior ... ok (58µs)
+wallpaper-presentation: calculateWallpaperOverscan drift and zoom derivations ... ok (57µs)
+wallpaper-presentation: exhaustive matrix satisfies Global Motion Budget v2 invariants ... ok (11ms)
+wallpaper-presentation: stage monotonicity across all stages ... ok (138µs)
+wallpaper-presentation: ambient envelopes never extinguish a field ... ok (59µs)
+running 7 tests from ./src/shared/wallpaper-temporal.test.ts
+wallpaper-temporal: WALLPAPER_TEMPORAL_BUDGET contains frozen canonical gates ... ok (483µs)
+wallpaper-temporal: canonical profiles have monotonically non-decreasing offsets and closed seams ... ok (201µs)
+wallpaper-temporal: Drift C1 source curve satisfies heading continuity, speed profile, and seam gates ... ok (227µs)
+wallpaper-temporal: Zoom smooth turnaround satisfies peak velocity and seam gates ... ok (111µs)
+wallpaper-temporal: normalized channel mapping maps exactly across all dimensions ... ok (126µs)
+wallpaper-temporal: wall-clock ambient recurrence computes LCM 1036s and top overlap windows ... ok (2ms)
+wallpaper-temporal: full wall-clock anti-breathing worst-case tests across entire 1036s horizon ... ok (1ms)
+running 3 tests from ./src/shared/wallpaper.test.ts
+wallpaper shared: parseWallpaperSource validates uploaded, remote, and gradient ... ok (3ms)
+wallpaper shared: normalizeWallpaperCompositions parses and clamps focal points ... ok (181µs)
+wallpaper shared: wallpaperComposition resolves composition with default fallback ... ok (116µs)
+running 1 test from ./web/src/app/routes.test.ts
+auth return destination preserves page context and rejects external redirects ... ok (1ms)
+running 9 tests from ./web/src/app/state.test.ts
+AppState: 401 error results in anonymous user and NO connectionError ... ok (11ms)
+AppState: 503 error flags connectionError without wiping existing user ... ok (136µs)
+AppState: Network error flags connectionError for anonymous visitor ... ok (84µs)
+AppState: Recovery after connectionError restores normal state ... ok (57µs)
+Appearance: old device preferences migrate to semantic wallpaper presentations and canvas motion ... ok (694µs)
+Appearance: invalid canvas motion cache values fall back while valid boundaries survive ... ok (132µs)
+Appearance: switching cached wallpapers restores their own presentation and composition ... ok (280µs)
+Appearance: guest image cache keeps only the current local asset and rejects oversized images ... ok (2ms)
+Appearance: malformed presentation records normalize to canonical defaults safely ... ok (144µs)
+running 6 tests from ./web/src/components/searcher/NoteCard.test.ts
+isNoteCompact logic handles explicit mode and layout expanded fallback for 展开 and 折叠 ... ok (12ms)
+getNoteDisplayTitle returns explicit title if present ... ok (117µs)
+getNoteDisplayTitle extracts stripped first line when title is empty ... ok (163µs)
+NoteCard renders NoteMarkdown preview with shared breaks and markdown in full mode ... ok (49ms)
+NoteCard renders placeholder when note body is empty or whitespace ... ok (789µs)
+NoteCard omits preview in compact mode ... ok (459µs)
+running 6 tests from ./web/src/components/searcher/NoteMarkdown.test.tsx
+NoteMarkdown: renders single newline as br tag (remark-breaks) ... ok (22ms)
+NoteMarkdown: renders GFM task lists with disabled checkboxes ... ok (4ms)
+NoteMarkdown: renders table with tabIndex for keyboard scrolling ... ok (2ms)
+NoteMarkdown: sanitizes unsafe HTML and javascript links ... ok (2ms)
+NoteMarkdown: applies safe external link props (target=_blank, rel=noopener noreferrer) ... ok (963µs)
+NoteMarkdown: renders code block with tabIndex for keyboard scrolling ... ok (1ms)
+running 2 tests from ./web/src/components/searcher/SearcherSearchInput.test.ts
+SearcherSearchInput: parseCommandPrefix accurately extracts command, target engine, and rest query without pollution ... ok (12ms)
+suggestion label highlights every actual match, preserving the visible text ... ok (377µs)
+running 3 tests from ./web/src/components/searcher/SettingsPresetSlider.test.tsx
+SettingsPresetSlider: renders range input with semantic snap points and aria-valuetext ... ok (28ms)
+SettingsPresetSlider: stages without detail format aria-valuetext with label only ... ok (1ms)
+SettingsPresetSlider: disabled prop disables root, input, and marks ... ok (1ms)
+running 5 tests from ./web/src/components/searcher/WebAppLauncher.test.ts
+grouped apps form one folder with every current member in app order ... ok (13ms)
+sorting a filtered desktop preserves hidden apps in canonical order ... ok (137µs)
+a large folder leaves first-row space for following websites ... ok (240µs)
+empty folders participate in root mixed layout and explicit sortOrder ... ok (149µs)
+reorderRootTiles normalizes sequential ranks across apps and folders ... ok (225µs)
+running 2 tests from ./web/src/components/searcher/desktopLayout.test.ts
+large folder leaves its second-row neighbors available to apps ... ok (777µs)
+mixed folders fit without overlap, overflow or persistent holes after resizing ... ok (238µs)
+running 6 tests from ./web/src/components/searcher/masonry.test.ts
+calculateMasonryLayout: basic shortest column placement fills gaps below shorter cards ... ok (12ms)
+calculateMasonryLayout: extreme height in one column does not block other columns ... ok (147µs)
+calculateMasonryLayout: responsive column calculation adapts to container width ... ok (115µs)
+calculateMasonryLayout: column boundaries and maximum preserve available width ... ok (120µs)
+calculateMasonryLayout: changed heights and removed items reflow without reordering ... ok (240µs)
+calculateMasonryLayout: handles zero width or empty items gracefully ... ok (56µs)
+running 25 tests from ./web/src/components/searcher/note-markdown-edit.test.ts
+Bold wrap selection ... ok (611µs)
+Bold unwrap ... ok (68µs)
+Empty selection caret placement ... ok (111µs)
+Italic ... ok (108µs)
+Strike ... ok (117µs)
+Inline code ... ok (84µs)
+Unicode / 中文 selection index ... ok (81µs)
+单行 heading ... ok (411µs)
+heading switch H1 -> H2 ... ok (77µs)
+same heading toggle off ... ok (73µs)
+多行 bullet ... ok (116µs)
+bullet toggle off ... ok (91µs)
+ordered numbering ... ok (134µs)
+task list ... ok (115µs)
+checked task 不被错误重置 ... ok (67µs)
+blockquote multi-line ... ok (111µs)
+selection starts/ends in mid line 此时处理整行 ... ok (56µs)
+link selection ... ok (75µs)
+link empty selection ... ok (41µs)
+fenced code selected ... ok (75µs)
+fenced code empty ... ok (40µs)
+horizontal rule spacing ... ok (82µs)
+table template ... ok (69µs)
+heading multi-line mixed levels independent toggle and switch ... ok (50µs)
+line command at index 0 when text starts with newline ... ok (43µs)
+running 5 tests from ./web/src/components/ui/slider.test.tsx
+Slider: scalar value renders exactly 1 thumb with accessible label ... ok (25ms)
+Slider: scalar defaultValue renders exactly 1 thumb ... ok (1ms)
+Slider: range value renders multiple thumbs with indexed labels ... ok (1ms)
+Slider: custom getAriaLabel applies to multiple thumbs ... ok (1ms)
+Slider: custom getAriaValueText formats aria-valuetext ... ok (888µs)
+running 1 test from ./web/src/components/wallpaper/WallpaperStageContextPreview.test.tsx
+WallpaperStageContextPreview: strictly non-interactive and aria-hidden presentation ... ok (19ms)
+running 4 tests from ./web/src/components/wallpaper/WallpaperSurface.test.ts
+WallpaperSurface: formatWallpaperCss escapes URLs and rejects unsupported sources ... ok (12ms)
+WallpaperSurface: photo compensation does not leak into gradients or invalid sources ... ok (10ms)
+WallpaperSurface: focal editing freezes motion without mutating stored intent ... ok (349µs)
+WallpaperSurface: mono canvas does not retain an accent-colored root ... ok (356µs)
+running 6 tests from ./web/src/components/wallpaper/wallpaper-motion-controller.test.ts
+WallpaperMotionController: state machine precedence and transitions ... ok (1ms)
+WallpaperMotionController: one-writer invariant across transitions and handoffs ... ok (265µs)
+WallpaperMotionController: same-mode retarget preserves normalized phase ... ok (112µs)
+WallpaperMotionController: rapid-intent latest-wins without accumulating queued handoffs ... ok (237µs)
+WallpaperMotionController: cross-mode handoff matrix maintains single writer ... ok (160µs)
+WallpaperMotionController: overscan grow-before-motion and shrink-after-motion sequencing ... ok (355ms)
+running 5 tests from ./web/src/features/ask/ReasoningSelector.test.ts
+ReasoningSelector: returns undefined if model does not support reasoning ... ok (12ms)
+ReasoningSelector: preserves currentChoice if supported by new model ... ok (86µs)
+ReasoningSelector: falls back to user preference if currentChoice is unsupported ... ok (49µs)
+ReasoningSelector: falls back to model default if user preference is unsupported ... ok (38µs)
+ReasoningSelector: falls back to undefined if all fallbacks fail ... ok (49µs)
+running 5 tests from ./web/src/features/ask/SearcherAttachmentAdapter.test.ts
+SearcherAttachmentAdapter: prevents count leak if processFileToAttachment fails and preserves 4-file limit ... ok (16ms)
+SearcherAttachmentAdapter: remove decrements count and prevents double-decrement ... ok (3ms)
+SearcherAttachmentAdapter: reset clears count and active tracking ... ok (11ms)
+SearcherAttachmentAdapter: updates accept filter based on vision capability ... ok (65µs)
+SearcherAttachmentAdapter: invokes onError callback when validation or processing fails ... ok (291µs)
+running 3 tests from ./web/src/features/ask/assistant-message-adapter.test.ts
+assistant-message-adapter: ExportedMessageRepository accepts converted user and system messages without blank-UI status rejection ... ok (13ms)
+assistant-message-adapter: ExportedMessageRepository preserves assistant streaming, complete, interrupted, and failed status snapshots ... ok (400µs)
+assistant-message-adapter: satisfies ExportedMessageRepository canonical branch repository contract and branch switching ... ok (257µs)
+running 5 tests from ./web/src/features/ask/attachment-utils.test.ts
+attachment-utils: rejects image if vision not supported ... ok (848µs)
+attachment-utils: accepts image if vision is supported and under 5MiB ... ok (157µs)
+attachment-utils: rejects image if over 5MiB ... ok (3ms)
+attachment-utils: accepts text documents under 1MiB ... ok (99µs)
+attachment-utils: rejects when max files reached ... ok (88µs)
+running 6 tests from ./web/src/features/ask/tree-utils.test.ts
+tree-utils: getActiveBranchMessages with legacy linear messages without parentMessageId ... ok (646µs)
+tree-utils: getActiveBranchMessages follows parent chain to active leaf ... ok (193µs)
+tree-utils: getMessageSiblings returns all siblings with correct index ... ok (153µs)
+tree-utils: getMessageSiblings handles assistant variantGroupId ... ok (56µs)
+tree-utils: resolveLeafForSibling navigates down subtree to latest leaf ... ok (101µs)
+tree-utils: getMessageSiblings handles editing root prompt (first user message) ... ok (88µs)
+running 8 tests from ./web/src/features/ask/useAskStream.test.ts
+useAskStream: parseSseBlock parses valid SSE events ... ok (12ms)
+useAskStream: parseSseBlock handles invalid or missing data ... ok (296µs)
+useAskStream: applySseEvent updates accumulator correctly ... ok (227µs)
+useAskStream: createOptimisticStreamSnapshot builds new conversation and messages ... ok (205µs)
+useAskStream: createOptimisticStreamSnapshot preserves interrupted status on abort ... ok (131µs)
+useAskStream: createOptimisticStreamSnapshot handles editMessageId and preserves parent tree ... ok (160µs)
+useAskStream: createOptimisticStreamSnapshot handles regenerateMessageId variant grouping ... ok (82µs)
+useAskStream: shouldApplyCanonicalConversation preserves client snapshot when aborted and backend still streaming ... ok (107µs)
+running 4 tests from ./web/src/features/desktop/constrained-geometry.test.ts
+constrained geometry: medium caps dimensions and returns viewport-global coordinates ... ok (635µs)
+constrained geometry: large preserves gap and caps width and height ... ok (101µs)
+constrained geometry: fullscreen fills the safe rect in viewport coordinates ... ok (57µs)
+constrained geometry: tiny and zero safe rects remain bounded ... ok (59µs)
+running 13 tests from ./web/src/features/desktop/desktop-geometry.test.ts
+desktop-geometry: normal presentation clamps canonical geometry on shrink and restores it on grow ... ok (882µs)
+desktop-geometry: all snap modes follow current Work Rect without changing canonical restore geometry ... ok (443µs)
+desktop-geometry: unusable viewport falls back to canonical normal geometry without changing mode ... ok (142µs)
+desktop-geometry: constructs viewport, Work Rect, and Safe Rect from measured bounds ... ok (398µs)
+desktop-geometry: minimumSize preserves kind minima and bounds them to available space ... ok (76µs)
+desktop-geometry: normal frames use viewport bounds and keep the titlebar above Dock ... ok (98µs)
+desktop-geometry: unusable viewport still has a titlebar-reachable presentation frame ... ok (62µs)
+desktop-geometry: defaultFrame opens within safeRect in viewport coordinates ... ok (129µs)
+desktop-geometry: defaultFrame cascades by 24px and wraps within safeRect ... ok (64µs)
+desktop-geometry: resizeFrame keeps opposite edges anchored in all eight directions ... ok (180µs)
+desktop-geometry: empty viewport geometry produces finite empty frames ... ok (47µs)
+desktop-geometry: snapFrame covers all seven modes in the Work Rect ... ok (70µs)
+desktop-geometry: snapTarget maps pointer edges to the matching Work Rect snap ... ok (112µs)
+running 19 tests from ./web/src/features/desktop/desktop-persistence.test.ts
+desktop-persistence: normalized normal frames preserve window modes and stacking ... ok (2ms)
+desktop-persistence: decodeDesktopLayout clamps geometry across resolution changes (1440x900 -> 1024x768) ... ok (219µs)
+desktop-persistence: decodeDesktopLayout drops stale note IDs when validNoteIds is provided ... ok (189µs)
+desktop-persistence: decodeDesktopLayout strictly rejects corrupt payloads and defaults entire desktop ... ok (155µs)
+desktop-persistence: regression - normal -> MAXIMIZE -> MINIMIZE -> reload -> RESTORE -> unmaximize preserves normal geometry ... ok (203µs)
+desktop-persistence: IndexedDB save, load, and user isolation contracts ... ok (563µs)
+desktop-persistence: fallback to instance session memory when IndexedDB is unavailable ... ok (225µs)
+desktop-persistence: encodeDesktopLayout captures snap semantic and restores across save/load for 7 modes ... ok (204µs)
+desktop-persistence: backward compatibility with legacy schema v1 fixtures without snap property ... ok (113µs)
+desktop-persistence: strict validation rejects invalid snap values or corrupt mode-snap combinations ... ok (96µs)
+desktop-persistence: serialization rejects invalid identity, frame, and snap state ... ok (443µs)
+desktop-persistence: v1 Apps/Notes survive migration and v2 Documents root restores without entity confusion ... ok (155µs)
+desktop-persistence: document entity windows survive refresh without losing legacy workspaces ... ok (122µs)
+desktop-persistence: legacy v1-v3 use safeRect while v4 uses viewport geometry ... ok (119µs)
+desktop-persistence: document identity support follows schema versions ... ok (98µs)
+desktop-persistence: v4 requires complete restore and snap semantics ... ok (110µs)
+desktop-persistence: unusable geometry and corrupt loads do not replace saved layouts ... ok (148µs)
+desktop-persistence: zero safeRect does not migrate or overwrite a legacy layout ... ok (80µs)
+desktop-persistence: encoding preserves canonical normalized payload across viewport shrink and focus ... ok (98µs)
+running 25 tests from ./web/src/features/desktop/desktop-state.test.ts
+desktop-state: OPEN creates window, stacks on top, and activates ... ok (1ms)
+desktop-state: CLOSE removes window and falls back activeId to topmost visible window ... ok (185µs)
+desktop-state: FOCUS elevates stacking and updates activeId ... ok (284µs)
+desktop-state: NORMALIZE compresses z-orders to bounded 1..N preserving stacking ... ok (166µs)
+desktop-state: MAXIMIZE saves restoreFrame, and RESTORE_FRAME clamps restored frame ... ok (202µs)
+desktop-state: MINIMIZE transfers focus, and RESTORE preserves prior maximized state ... ok (210µs)
+desktop-state: MOVE and RESIZE update frame clamped and un-maximize ... ok (163µs)
+desktop-state: semantic geometry commits record the current viewport basis ... ok (107µs)
+desktop-state: changing snap modes preserves the canonical restore pair ... ok (94µs)
+desktop-state: presentation shrink and grow preserve normal and restore geometry ... ok (357µs)
+desktop-state: regression - repeated elevations stay strictly bounded 1..N and preserve relative stacking ... ok (645µs)
+desktop-state: HYDRATE normalizes z-orders and validates activeId ... ok (97µs)
+desktop-state: RESET clears all windows and activeId ... ok (44µs)
+desktop-state: PRUNE_STALE_NOTES closes deleted note windows and preserves other windows ... ok (123µs)
+desktop-state: SNAP action handles 7 modes, captures restoreFrame from normal, and does not overwrite restoreFrame on snap change ... ok (93µs)
+desktop-state: MAXIMIZE sets snap='maximize' and preserves existing restoreFrame from snapped mode ... ok (85µs)
+desktop-state: RESTORE on snapped window restores to normal mode and clears snap and restoreFrame ... ok (57µs)
+desktop-state: MINIMIZE on snapped window retains snap; RESTORE recovers original snapped semantic ... ok (104µs)
+desktop-state: RESTORE_FRAME on snapped window restores to normal mode and clears snap ... ok (57µs)
+desktop-state: MOVE and RESIZE clear snap and restoreFrame, resetting to normal mode ... ok (66µs)
+desktop-state: snapped and maximized presentations follow Work Rect without state writes ... ok (162µs)
+desktop-state: Snap and Minimize preserve canonical restore geometry across viewport changes ... ok (159µs)
+desktop-state: OPEN restores minimized windows without replacing their canonical geometry ... ok (240µs)
+desktop-state: unusable viewport presentation does not write semantic geometry ... ok (103µs)
+desktop-state: unusable safe inset rejects a new window ... ok (42µs)
+running 5 tests from ./web/src/features/desktop/desktop-viewport-contract.test.ts
+#147 Snap fills Work Rect in viewport coordinates without gap ... ok (674µs)
+#147 normal presentation keeps the titlebar visible while Dock covers the body ... ok (233µs)
+#163 chrome and Dock measurements only change normal presentation ... ok (285µs)
+#147 legacy v3 safe-local document restores to viewport coordinates and encodes as v4 ... ok (610µs)
+#147 maximize and restore retain the normal viewport frame ... ok (428µs)
+running 16 tests from ./web/src/features/desktop/useDesktopLayout.test.ts
+useDesktopLayout: windows opened before empty restoration stay visible and persist across reload ... ok (73ms)
+useDesktopLayout: rejected actions and geometry never overwrite a rejected payload ... ok (193ms)
+useDesktopLayout: guest / logged-out user starts with empty state and does not load from storage ... ok (946µs)
+useDesktopLayout: restores persisted layout from IndexedDB key searcher:desktop-layout:v1:<userId> ... ok (22ms)
+useDesktopLayout: consumer-visible regression - immediate render on user switch never exposes previous state ... ok (33ms)
+useDesktopLayout: user isolation - switching from user-A to user-B clears runtime state, flushes user-A, and loads user-B ... ok (33ms)
+useDesktopLayout: logout isolation - logging out clears runtime state without overwriting user record in IndexedDB ... ok (34ms)
+useDesktopLayout: mode switch - widgets -> zen flushes save and resets runtime state; zen -> widgets restores ... ok (65ms)
+useDesktopLayout: regression - restore waits for nonzero measured rect and notesLoaded before validating notes ... ok (55ms)
+useDesktopLayout: waits for safe bounds before migrating a v3 layout ... ok (55ms)
+useDesktopLayout: regression - effect cleanup cancels in-flight restore when user or mode changes ... ok (42ms)
+useDesktopLayout: stale note removal once notes are loaded during active runtime ... ok (33ms)
+useDesktopLayout: async restore race - window opened by user during restore is preserved and kept on top ... ok (32ms)
+useDesktopLayout: immediate persistence on committed state updates preserves drag/resize on reload ... ok (57ms)
+useDesktopLayout: pagehide and visibilitychange lifecycle flushes persistence ... ok (33ms)
+useDesktopLayout: shrink, focus, and unusable flush preserve canonical geometry ... ok (44ms)
+running 1 test from ./web/src/features/desktop/useDocumentImmersion.test.ts
+document immersion rejects other domains and clears on user, host, visibility and entity changes ... ok (19ms)
+running 23 tests from ./web/src/features/documents/document-session.test.ts
+Session initialization and snapshot immutability contract ... ok (5ms)
+load() GET body once and deduplicates concurrent calls ... ok (262µs)
+load() handles error and allows retry ... ok (395µs)
+Draft isolation: keys include userId and documentId ... ok (150µs)
+Draft validation rejects missing identity or corrupt versions/timestamps ... ok (235µs)
+Equal draft clears on load; stale/newer draft offers recover ... ok (120µs)
+Stale draft apply enters conflict without autosave PATCH to protect server body ... ok (364µs)
+Equal/newer draft apply marks dirty and schedules autosave ... ok (266µs)
+Edits during conflict preserve conflict saveStatus and do not schedule autosave ... ok (350µs)
+Autosave 1500ms debounce and blur flush ... ok (187µs)
+IME composition holds autosave until composition finishes ... ok (155µs)
+Manual save creates version even when unchanged; autosave unchanged is no-op ... ok (106µs)
+Consumer data-loss guard: save() never returns true on conflict or error ... ok (194µs)
+In-flight edits during save are not lost and automatically debounced ... ok (154µs)
+Conflict 409 preserves local draft in storage and sets conflict state ... ok (185µs)
+Conflict resolution: 'server' choice ... ok (178µs)
+Conflict resolution: 'local' choice with origin conflict_resolution ... ok (207µs)
+In-flight edits during resolveConflict local are preserved as dirty without data loss ... ok (256µs)
+Conflict resolution: 'new' choice performs POST and resets session ... ok (233µs)
+listVersions() returns sorted newest first ... ok (145µs)
+restoreVersion() dirty guard: aborts restore if current edits fail to save ... ok (290µs)
+restoreVersion() POST version current, handles 409 and updates editor ... ok (171µs)
+destroy() clears listeners immediately, flushes or safely persists to draft ... ok (270µs)
+running 8 tests from ./web/src/features/documents/editor-content.test.ts
+editor-content: formatting preserves word boundaries while blocks separate words ... ok (18ms)
+editor-content: empty and whitespace-only content ... ok (164µs)
+editor-content: outline extracts H1-H6 with sequential indices and formatting stripped ... ok (1ms)
+editor-content: empty or whitespace-only headings fallback to 未命名标题 ... ok (1ms)
+editor-content: word count excludes Markdown syntax, comments, and images ... ok (2ms)
+editor-content: word count handles CJK characters, English words, and mixed text deterministically ... ok (67µs)
+editor-content: reading minutes boundary values ... ok (39µs)
+editor-content: full document analysis with tables and code blocks ... ok (2ms)
+running 11 tests from ./web/src/features/documents/editor-extensions.test.ts
+editor-extensions: resolveDocumentImageSrc resolves internal assets safely ... ok (688µs)
+editor-extensions: pagebreak parses exact <!-- pagebreak --> and serializes back ... ok (28ms)
+editor-extensions: pagebreak negative variants remain raw comments ... ok (14ms)
+editor-extensions: insertDocumentPageBreak inserts node and moves caret ... ok (6ms)
+editor-extensions: image NodeView renders authenticated asset URL while preserving canonical schema src ... ok (5ms)
+editor-extensions: non-image paste is NOT intercepted ... ok (2ms)
+editor-extensions: invalid MIME and oversized images are rejected with onError ... ok (3ms)
+editor-extensions: valid image paste uploads and maps bookmark across typing ... ok (6ms)
+editor-extensions: destroyed editor during upload handles safely without error ... ok (4ms)
+editor-extensions: task checkbox updates canonical Markdown and undo restores completion ... ok (7ms)
+editor-extensions: programmatic uploadAndInsertDocumentImage works cleanly ... ok (3ms)
+running 5 tests from ./web/src/features/home-layouts/controlledNotesLayout.test.ts
+Home notes: only explicit home-fixed notes occupy slots ... ok (12ms)
+Home notes: five slots use sort order and id tie-break without mutating source ... ok (249µs)
+buildToggledNoteLayout: undefined layout yields desktop skeleton with expanded=false and zIndex=1 (compact) ... ok (143µs)
+buildToggledNoteLayout: existing layout strictly preserves x, y, width, zIndex, sortOrder, deviceClass, and updatedAt ... ok (90µs)
+buildToggledNoteLayout: explicit nextExpanded override is honored while preserving existing attributes ... ok (86µs)
+running 5 tests from ./web/src/features/home-layouts/noteOrder.test.ts
+mergeNoteOrder: interleaved regular and fixed notes preserve regular relative order and positions ... ok (718µs)
+mergeNoteOrder: >5 fixed hidden tail notes are retained in stable canonical positions ... ok (147µs)
+mergeNoteOrder: ties in sortOrder are stable via id ASC tie-breaking ... ok (216µs)
+mergeNoteOrder: pure helper never mutates input arrays or note objects ... ok (310µs)
+mergeNoteOrder: stale, unknown, or duplicate subset safely yields canonical order ... ok (207µs)
+running 16 tests from ./web/src/features/markdown-editor/commands.test.ts
+commands - bold toggle on selection and undo/redo ... ok (34ms)
+commands - italic toggle on selection and undo/redo ... ok (6ms)
+commands - strike toggle on selection and undo/redo ... ok (6ms)
+commands - inlineCode toggle on selection and undo/redo ... ok (4ms)
+commands - heading levels 1/2/3 and toggle back to paragraph ... ok (7ms)
+commands - blockquote toggle and lift ... ok (4ms)
+commands - list matrix: bulletList -> taskList -> orderedList -> lift ... ok (6ms)
+commands - task list toggle off when already a task list ... ok (4ms)
+commands - link command with typed object arguments and remove link ... ok (5ms)
+commands - link command with href object and collapsed cursor ... ok (5ms)
+commands - cursor updates and removes the whole link across inline marks ... ok (6ms)
+commands - codeBlock with language and toggle to paragraph ... ok (4ms)
+commands - horizontalRule insertion and undo/redo ... ok (5ms)
+commands - table insertion with custom dimensions and undo ... ok (6ms)
+commands - IME composition safety prevents command execution ... ok (3ms)
+commands - multi-instance isolation across concurrent editors ... ok (7ms)
+running 5 tests from ./web/src/features/markdown-editor/runtime.test.ts
+Notes-compatible foundation preserves soft/hard breaks and supported Markdown ...
+  empty-document ... ok (22ms)
+  paragraphs ... ok (7ms)
+  headings-1-to-6 ... ok (10ms)
+  chinese-rich-text ... ok (9ms)
+  emoji-text ... ok (5ms)
+  inline-formatting ... ok (5ms)
+  fenced-code-blocks ... ok (4ms)
+  fenced-code-without-lang ... ok (2ms)
+  unordered-list ... ok (4ms)
+  unordered-list-star-normalization ... ok (4ms)
+  ordered-list ... ok (4ms)
+  nested-lists ... ok (4ms)
+  task-lists ... ok (4ms)
+  blockquotes ... ok (3ms)
+  links ... ok (6ms)
+  images-standard-and-asset ... ok (4ms)
+  horizontal-rules ... ok (2ms)
+  gfm-tables ... ok (10ms)
+  line-breaks ... ok (3ms)
+  long-content ... ok (14ms)
+  raw-html-inline ... ok (4ms)
+  soft-newlines ... ok (4ms)
+  notes-9500-characters ... ok (236ms)
+Notes-compatible foundation preserves soft/hard breaks and supported Markdown ... ok (378ms)
+Phase 1: Event origins, no user dirty on init, and replace appended origin preserved ... ok (8ms)
+Phase 1: Undo and Redo operations ... ok (4ms)
+Phase 1: Multi-instance independence ... ok (5ms)
+Phase 2: Semantic roundtrip across shared fixtures via AST equality ...
+  roundtrip: empty-document (structure) ... ok (2ms)
+  roundtrip: paragraphs (blocks) ... ok (4ms)
+  roundtrip: headings-1-to-6 (headings) ... ok (4ms)
+  roundtrip: chinese-rich-text (chinese) ... ok (3ms)
+  roundtrip: emoji-text (emoji) ... ok (3ms)
+  roundtrip: inline-formatting (inlines) ... ok (2ms)
+  roundtrip: fenced-code-blocks (code) ... ok (4ms)
+  roundtrip: fenced-code-without-lang (code) ... ok (2ms)
+  roundtrip: unordered-list (lists) ... ok (2ms)
+  roundtrip: unordered-list-star-normalization (lists) ... ok (2ms)
+  roundtrip: ordered-list (lists) ... ok (2ms)
+  roundtrip: nested-lists (lists) ... ok (3ms)
+  roundtrip: task-lists (tasks) ... ok (3ms)
+  roundtrip: blockquotes (quotes) ... ok (2ms)
+  roundtrip: links (inlines) ... ok (3ms)
+  roundtrip: images-standard-and-asset (images) ... ok (2ms)
+  roundtrip: horizontal-rules (rules) ... ok (2ms)
+  roundtrip: gfm-tables (tables) ... ok (3ms)
+  roundtrip: line-breaks (breaks) ... ok (2ms)
+  roundtrip: long-content (stress) ... ok (14ms)
+  roundtrip: raw-html-inline (html) ... ok (3ms)
+Phase 2: Semantic roundtrip across shared fixtures via AST equality ... ok (71ms)
+running 1 test from ./web/src/features/notes/local-drafts.test.ts
+notes/local-drafts: account-scoped recovery, migration, and exit discovery ... ok (8ms)
+running 5 tests from ./web/src/features/shortcuts/ShortcutsSettings.test.tsx
+routes: shortcuts settings tab routes and resolution contract ... ok (27ms)
+ShortcutsSettings: renders all 5 required sections with proper headings ... ok (14ms)
+ShortcutsSettings: macOS keycaps and screen reader text format correctly ... ok (5ms)
+ShortcutsSettings: Non-macOS (other) keycaps and screen reader text format correctly ... ok (4ms)
+ShortcutsSettings: screen reader accessible text is provided for every entry ... ok (3ms)
+running 4 tests from ./web/src/features/shortcuts/shortcut-catalog.test.ts
+catalog identifiers cannot hide shortcuts or ambiguous command prefixes ... ok (528µs)
+platform presentation keeps stable modifier order and readable accessible keys ... ok (147µs)
+shortcut matching normalizes key case but excludes extra modifiers and handled/composing events ... ok (124µs)
+command parsing preserves boundaries whitespace case and all canonical targets ... ok (224µs)
+running 1 test from ./web/src/features/shortcuts/shortcuts-notes-ask.test.tsx
+Ask ConversationHeader renders platform-specific search hints ... ok (41ms)
+running 2 tests from ./web/src/features/workspace/note-summary.test.ts
+Notes readable summaries preserve link text, code and lists but not HTML or URLs ... ok (21ms)
+Notes source-only queries remain visible and Unicode snippets keep whole code points ... ok (1ms)
+running 7 tests from ./web/src/features/workspace/workspace-host.test.ts
+Workspace Host: simultaneous domains retain nested routes, query, scope and Back independently across all 3 domains ... ok (1ms)
+Workspace Host: normal close and reopen retains root positioning, query, and scope for all domains ... ok (264µs)
+Workspace Host: opening an already-open workspace only activates and does not reset nested route across domains ... ok (173µs)
+Workspace Host: opening a closed workspace normalizes route to root and clears stack ... ok (193µs)
+Workspace Host: documents scope is independent of query and backstack, defaulting to all ... ok (290µs)
+Workspace Host: domain reset silently resets domain route/stack/query/scope without altering host open state ... ok (220µs)
+Workspace Host: auth reset clears all domains and resets documents scope to all ... ok (263µs)
+running 12 tests from ./web/src/features/workspace/workspace-state.test.ts
+Workspace: independent domains maintain routes, stacks and queries separately across all three domains ... ok (757µs)
+Workspace: apps/create returns to apps/root on Back ... ok (96µs)
+Workspace: apps/edit returns to apps/root on Back ... ok (73µs)
+Workspace: notes/edit returns to notes/root on Back ... ok (44µs)
+Workspace: documents/create returns to documents/root on Back ... ok (68µs)
+Workspace: documents/edit returns to documents/root on Back while preserving scope ... ok (66µs)
+Workspace: parentWorkspaceRoute safe fallback provides correct defaults across all three domains ... ok (96µs)
+Workspace: navigating to domain root clears navigation stack while retaining query and scope ... ok (78µs)
+Workspace: navigating to an existing stack route safely unwinds the stack ... ok (43µs)
+Workspace: areWorkspaceRoutesEqual discriminates routes accurately across domains ... ok (49µs)
+Workspace: documents scope is preserved across query, navigate, and back operations ... ok (90µs)
+Workspace: independent reset resets only the target domain to initial state across all three domains ... ok (79µs)
+running 4 tests from ./web/src/lib/local.test.ts
+web/local: fails fast when IndexedDB is unavailable and does not silently succeed ... ok (933µs)
+web/local: preserves FIFO queue ordering across sequential writes, gets, and deletes ... ok (686µs)
+web/local: handles rapid write/delete races without dropping final state ... ok (172µs)
+web/local: listLocalKeys returns only keys with the given prefix ... ok (290µs)
+running 6 tests from ./web/src/spikes/editable-pagination/runtime.test.ts
+M0B semantic boundary: trailing PageBreak normalization ensures editable blank page without auto bytes ... ok (45ms)
+M0B semantic boundary: start, consecutive, and end manual PageBreak boundary round-trip AST equality ...
+  start-pagebreak ... ok (11ms)
+  consecutive-pagebreaks ... ok (8ms)
+  end-pagebreak ... ok (6ms)
+M0B semantic boundary: start, consecutive, and end manual PageBreak boundary round-trip AST equality ... ok (27ms)
+M0B mode toggling: single PM state, view, and selection preserved without re-parse ... ok (10ms)
+M0B live IME composition queue: defer paper geometry updates until compositionend ... ok (5ms)
+M0B physical geometry edges: A4, Letter, orientation, and extreme margins ... ok (148µs)
+M0B insertPageBreak: manual break insertion and teardown lifecycle ... ok (5ms)
+running 8 tests from ./web/src/spikes/markdown-editor/runtime.test.ts
+M0A consumer PageBreak roundtrip across boundary fixtures via AST equality ...
+  roundtrip: pagebreak-standalone (pagebreak) ... ok (35ms)
+  roundtrip: pagebreak-consecutive (pagebreak) ... ok (10ms)
+  roundtrip: pagebreak-document-start (pagebreak) ... ok (7ms)
+  roundtrip: pagebreak-document-end (pagebreak) ... ok (6ms)
+M0A consumer PageBreak roundtrip across boundary fixtures via AST equality ... ok (60ms)
+M0A PageBreak must be strict exact custom node and preserve negative variants as raw HTML ... ok (21ms)
+M0A PageBreak Backspace navigation across node ... ok (3ms)
+M0A Unsupported structural HTML: preserve raw without silent loss (not arbitrary DOM injection) ... ok (3ms)
+M0A Pagination decorations are purely presentational in single PM state ... ok (5ms)
+M0A Programmatic replace and initialization distinguish from user transactions (regression: count 0 on open) ... ok (5ms)
+M0A Undo and Redo execution ... ok (4ms)
+M0A Multi-instance independence ... ok (6ms)
+
+ok | 673 passed (51 steps) | 0 failed (30s)
+
+Check scripts/ui-guard/baseline.test.ts
+Check scripts/ui-guard/css-scanner.test.ts
+Check scripts/ui-guard/exceptions.test.ts
+Check scripts/ui-guard/ownership.test.ts
+Check scripts/ui-guard/regression.test.ts
+Check scripts/ui-guard/scanner.test.ts
+Check scripts/ui-guard/tsx-scanner.test.ts
+running 5 tests from ./scripts/ui-guard/baseline.test.ts
+baseline - builds deterministic baseline with exact counts ... ok (6ms)
+baseline - passes when current violations exactly match baseline ... ok (283µs)
+baseline - fails on new violations (in existing or new files) ... ok (116µs)
+baseline - fails on same-file increased violation count ... ok (108µs)
+baseline - fails on stale allowances when violations are cleaned up ... ok (145µs)
+running 5 tests from ./scripts/ui-guard/css-scanner.test.ts
+css-scanner - detects raw box-shadow ... ok (8ms)
+css-scanner - detects raw font-size ... ok (210µs)
+css-scanner - detects raw border-radius ... ok (138µs)
+css-scanner - detects raw spacing literals in presentation CSS ... ok (266µs)
+css-scanner - respects documented rules for tokens.css and global reset ... ok (119µs)
+running 7 tests from ./scripts/ui-guard/exceptions.test.ts
+wallpaper runtime variables are allowed only in WallpaperSurface ... ok (8ms)
+runtime exceptions - image drag transform and denial of unrelated transforms ... ok (147µs)
+runtime exceptions - masonry layout geometry and denial of arbitrary geometry ... ok (121µs)
+runtime exceptions - domain values and denial of arbitrary dynamic colors ... ok (137µs)
+documented rules - primitives owning geometry ... ok (78µs)
+documented rules - design system token definitions ... ok (72µs)
+viewport and physical paper exceptions reject unrelated visual values ... ok (105µs)
+running 65 tests from ./scripts/ui-guard/ownership.test.ts
+Rule A: feature-selector-in-global - denies feature prefix in global.css ... ok (7ms)
+Rule A: feature-selector-in-global - ignores non-global css files ... ok (74µs)
+Rule A: feature-selector-in-global - allows non-feature selectors and comments in global.css ... ok (97µs)
+Rule B: legacy-page-layout - denies PageShell using legacy 'page' class in TSX ... ok (6ms)
+Rule B: legacy-page-layout - allows PageShell without 'page' class and non-PageShell elements in TSX ... ok (496µs)
+Rule B: legacy-page-layout - denies legacy .page geometry and simulated page geometry in CSS ... ok (393µs)
+Rule B: legacy-page-layout - allows canonical PageShell CSS in semantic.css ... ok (42µs)
+Rule C: undefined-css-token - allows tokens defined in tokens.css, locally, or in runtime registry ... ok (207µs)
+Rule C: undefined-css-token - denies undefined tokens in CSS files ... ok (81µs)
+Rule D: native-destructive-confirm - denies confirm, globalThis.confirm, window.confirm in ts/tsx ... ok (1ms)
+Rule D: native-destructive-confirm - allows non-native confirm calls, properties and comments ... ok (1ms)
+Rule D: native-destructive-confirm - skips test files ... ok (40µs)
+Rule E: forbidden-legacy-ui-class - denies forbidden legacy classes in TSX ... ok (676µs)
+Rule E: forbidden-legacy-ui-class - denies forbidden legacy classes in CSS ... ok (653µs)
+Rule E: forbidden-legacy-ui-class - allows modern classes and similar substrings ... ok (410µs)
+Rule F: css-prefix-ownership - allows prefixes in authorized owner files ... ok (217µs)
+Rule F: css-prefix-ownership - denies feature prefixes defined in unauthorized CSS files ... ok (88µs)
+Rule F: Home code presentation may reference the Widgets ancestor only ... ok (648µs)
+Rule F: css-prefix-ownership - allows non-prefixed semantic classes in semantic.css ... ok (71µs)
+Rule F: css-prefix-ownership - allows canonical semantic classes like settings-card/row in semantic.css ... ok (42µs)
+Ownership scanner - scanOwnership aggregates violations across files and ignores tests ... ok (6ms)
+Ownership scanner - clean directory passes with 0 violations ... ok (1ms)
+Ownership integration - runCheck fails when ownership violations exist ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    2
+  Rule A (feature-selector-in-global):    1
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          1
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[FAIL] OWNERSHIP VIOLATIONS DETECTED (Absolute rules; no baseline bypass):
+
+  [feature-selector-in-global] web/src/styles/global.css:1:1
+    Feature selector '.trash-header' with prefix 'trash-' is forbidden in global.css. It must belong to its designated feature owner stylesheet.
+    Snippet: .trash-header
+
+  [css-prefix-ownership] web/src/styles/global.css:1:1
+    CSS selector '.trash-header' with prefix 'trash-' is defined in 'web/src/styles/global.css', but is only authorized in: web/src/app/trash.css.
+    Snippet: .trash-header
+
+============================================================
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    2
+  Rule A (feature-selector-in-global):    1
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          1
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[FAIL] OWNERSHIP VIOLATIONS DETECTED (Absolute rules; no baseline bypass):
+
+  [feature-selector-in-global] web/src/styles/global.css:1:1
+    Feature selector '.trash-header' with prefix 'trash-' is forbidden in global.css. It must belong to its designated feature owner stylesheet.
+    Snippet: .trash-header
+
+  [css-prefix-ownership] web/src/styles/global.css:1:1
+    CSS selector '.trash-header' with prefix 'trash-' is defined in 'web/src/styles/global.css', but is only authorized in: web/src/app/trash.css.
+    Snippet: .trash-header
+
+============================================================
+----- post-test output end -----
+Ownership integration - runCheck fails when ownership violations exist ... ok (2ms)
+Ownership integration - runCheck passes when code has zero ownership and visual violations ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+[PASS] UI Guard: No baseline file found, and 0 violations detected across 1 files.
+----- post-test output end -----
+Ownership integration - runCheck passes when code has zero ownership and visual violations ... ok (2ms)
+ownership detects computed native confirm without matching strings ... ok (482µs)
+canonical classes cannot acquire a second feature owner ... ok (117µs)
+legacy classes are rejected in JSX expressions, not prose ... ok (549µs)
+shared feedback cannot be redefined by a feature stylesheet ... ok (91µs)
+Issue 80 P6 Negative Fixture: apps defining workspace (.workspace-foo) is denied by Rule F ... ok (75µs)
+Issue 80 P6 Negative Fixture: notes defining apps (.apps-workspace-foo) is denied by Rule F ... ok (70µs)
+Issue 80 P6 Negative Fixture: global.css defining workspace (.workspace-foo) is denied by Rule A ... ok (78µs)
+Issue 80 P6 Negative Fixture: legacy apps workspace banner error and variants are denied by Rule E ... ok (353µs)
+Issue 80 P6 Negative Fixture: workspace-empty and apps-workspace-empty are denied by Rule E ... ok (379µs)
+Issue 80 P6 Negative Fixture: legacy section and count clones are denied by Rule E ... ok (367µs)
+Issue 80 P6 Positive Fixture: authorized workspace CSS prefixes pass Rule F ... ok (90µs)
+Issue 109: masonry selectors stay in the notes workspace CSS owner ... ok (152µs)
+Issue 80 P6 Positive Fixture: shared feedback in workspace views passes ownership rules ... ok (256µs)
+Issue 80 P6 Positive Fixture: domain-specific launcher and notes layout pass prefix ownership ... ok (114µs)
+Issue 80 P6 Integration: scanOwnership detects workspace negative fixtures and passes clean workspace ... ok (2ms)
+Rule G: workspace-core-isolation - denies desktop geometry module imports in Core ... ok (615µs)
+Rule G: workspace-core-isolation - denies spatial geometry symbols in Core ... ok (651µs)
+Rule G: workspace-core-isolation - denies 'closed' route view definition in Core ... ok (574µs)
+Rule G: workspace-core-isolation - allows independent domain routes without geometry or closed view ... ok (410µs)
+Rule H: desktop-persistence-boundary - denies browser localStorage in desktop ... ok (460µs)
+Rule H: desktop-persistence-boundary - denies note_layouts reference in desktop ... ok (273µs)
+Rule H: desktop-persistence-boundary - denies raw indexedDB.open in desktop ... ok (347µs)
+Rule H: desktop-persistence-boundary - allows desktop persistence reusing local.ts ... ok (757µs)
+Rule I: canvas-coordinate-owner - denies competing geometry hooks measuring DOM for SafeRect outside DesktopCanvas.tsx ... ok (668µs)
+Rule I: canvas-coordinate-owner - allows legitimate pure geometry functions and constrained presets ... ok (348µs)
+Rule I: canvas-coordinate-owner - allows useDesktopSafeRect in DesktopCanvas.tsx ... ok (53µs)
+Rule J: home-document-token - denies Home CSS overriding protected global tokens on :root and combined root selectors ... ok (148µs)
+Rule J: home-document-token - denies Home TSX mutating documentElement style directly ... ok (212µs)
+Rule J: home-document-token - allows scoped layout classes and feature semantic tokens ... ok (53µs)
+Rule K: widgets-no-adhoc-window - denies importing desktop window components with or without aliases in WidgetsLayout ... ok (355µs)
+Rule K: widgets-no-adhoc-window - denies ad-hoc window container classes in WidgetsLayout ... ok (184µs)
+Rule K: widgets-no-adhoc-window - denies inline style simulating window frame with position: absolute and zIndex ... ok (300µs)
+Rule K: widgets-no-adhoc-window - allows normal layout positioning and canonical WidgetsLayout content ... ok (247µs)
+Rule L: forbidden-legacy-path - denies abolished demo and panel files ... ok (49µs)
+Rule E extension: denies legacy desktop and workspace panel classes ... ok (110µs)
+Rule F extension: presenter single-owner classes enforced across stylesheets ... ok (60µs)
+Issue 92 Full Integration: scanOwnership detects multiple Issue 92 violations and passes clean architecture ... ok (6ms)
+Rule M: primitive-feature-cascade-order - denies bare class overriding structural property on RadioGroup ... ok (496µs)
+Rule M: primitive-feature-cascade-order - allows slot-aware compound selector on RadioGroup ... ok (244µs)
+Rule M: primitive-feature-cascade-order - denies bare class overriding button styles and allows slot-aware ... ok (291µs)
+Rule M: primitive-feature-cascade-order - ignores non-hard-gate properties like text/line-height/cursor ... ok (128µs)
+running 7 tests from ./scripts/ui-guard/regression.test.ts
+regression - new violations in new or existing files are denied ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+------------------------------------------------------------
+[INFO] UI Guard: Baseline initialized successfully!
+Baseline file:    /tmp/ui-reg-new-48a99668d34bd8c4/baseline.json
+Total files:      1
+Total allowances: 1
+------------------------------------------------------------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 2
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+============================================================
+Searcher UI Guard - Visual Contract Verification
+============================================================
+Scanned files:       2
+Total violations:    2
+Matched allowances:  1
+New violations:      1
+Increased count:     0
+Stale allowances:    0
+------------------------------------------------------------
+
+[VIOLATION] NEW VIOLATIONS DETECTED (Strictly forbidden in Phase 9):
+  web/src/components/Drift.tsx:1:48
+    [raw-box-shadow] boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+
+[ERROR] UI Guard check failed. Please fix violations or update baseline if intentional.
+============================================================
+
+----- post-test output end -----
+regression - new violations in new or existing files are denied ... ok (26ms)
+regression - same-file additions (increased violation count) are denied ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+------------------------------------------------------------
+[INFO] UI Guard: Baseline initialized successfully!
+Baseline file:    /tmp/ui-reg-same-7384af9a1f2efda2/baseline.json
+Total files:      1
+Total allowances: 1
+------------------------------------------------------------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+============================================================
+Searcher UI Guard - Visual Contract Verification
+============================================================
+Scanned files:       1
+Total violations:    2
+Matched allowances:  1
+New violations:      1
+Increased count:     1
+Stale allowances:    0
+------------------------------------------------------------
+
+[VIOLATION] NEW VIOLATIONS DETECTED (Strictly forbidden in Phase 9):
+  web/src/components/Existing.tsx:5:40
+    [raw-font-size] fontSize: 14
+
+[INCREASED] INCREASED VIOLATION COUNTS DETECTED:
+  web/src/components/Existing.tsx: [raw-font-size] fontSize: 14
+    Allowed count: 1, Actual count: 2 (+1)
+
+[ERROR] UI Guard check failed. Please fix violations or update baseline if intentional.
+============================================================
+
+----- post-test output end -----
+regression - same-file additions (increased violation count) are denied ... ok (4ms)
+regression - update is shrink-only and refuses to absorb new drift ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+------------------------------------------------------------
+[INFO] UI Guard: Baseline initialized successfully!
+Baseline file:    /tmp/ui-reg-shrink-83b026c1b8a04050/baseline.json
+Total files:      1
+Total allowances: 1
+------------------------------------------------------------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+------------------------------------------------------------
+[ERROR] Cannot update baseline: new violations or increased counts detected.
+Baseline update is strictly shrink-only to lock in resolved debt.
+New visual drift must be resolved, not absorbed into baseline.
+------------------------------------------------------------
+New violations (1):
+  [VIOLATION] web/src/components/Stable.tsx:4:40 [inline-visual-style] color: "red"
+----- post-test output end -----
+regression - update is shrink-only and refuses to absorb new drift ... ok (3ms)
+regression - baseline content/count changes: stale allowances fail until update shrinks ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+------------------------------------------------------------
+[INFO] UI Guard: Baseline initialized successfully!
+Baseline file:    /tmp/ui-reg-stale-98c5bb0c7f1a0f97/baseline.json
+Total files:      1
+Total allowances: 1
+------------------------------------------------------------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+============================================================
+Searcher UI Guard - Visual Contract Verification
+============================================================
+Scanned files:       1
+Total violations:    0
+Matched allowances:  0
+New violations:      0
+Increased count:     0
+Stale allowances:    1
+------------------------------------------------------------
+
+[STALE] STALE ALLOWANCES DETECTED (Violations were fixed! Baseline must shrink):
+  web/src/components/ToClean.tsx: [raw-border-radius] borderRadius: "8px"
+    Expected: 1, Actual: 0 (Fixed: 1)
+
+To lock in cleanups and update the baseline, run:
+  deno task check:ui --update
+
+[ERROR] UI Guard check failed. Please fix violations or update baseline if intentional.
+============================================================
+
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+------------------------------------------------------------
+[SHRINK] Baseline updated successfully (shrink-only):
+Previous allowances: 1
+New allowances:      0
+Reduced debt:        -1
+------------------------------------------------------------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 1
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+============================================================
+Searcher UI Guard - Visual Contract Verification
+============================================================
+Scanned files:       1
+Total violations:    0
+Matched allowances:  0
+New violations:      0
+Increased count:     0
+Stale allowances:    0
+------------------------------------------------------------
+
+[PASS] All UI visual presentations match the baseline contract. 0 new drift.
+============================================================
+
+----- post-test output end -----
+regression - baseline content/count changes: stale allowances fail until update shrinks ... ok (5ms)
+regression - consumer-visible denials for unrelated dynamic styling ...
+------- post-test output -------
+[ERROR] UI Guard: No baseline file found at /tmp/ui-reg-denials-fd29e6eed95c8f5c/baseline.json
+Detected 3 violations across 3 files.
+To initialize baseline allowlist, run with explicit bootstrap option:
+  deno run -A scripts/check-ui.ts --initialize
+----- post-test output end -----
+regression - consumer-visible denials for unrelated dynamic styling ... ok (4ms)
+regression - runtime exception safety: wallpaper, drag, masonry, domain values accepted without allowances ...
+------- post-test output -------
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 4
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+[PASS] UI Guard: No baseline file found, and 0 violations detected across 4 files.
+----- post-test output end -----
+regression - runtime exception safety: wallpaper, drag, masonry, domain values accepted without allowances ... ok (7ms)
+regression - real CLI throwaway fixture verification (deno run scripts/check-ui.ts) ... ok (549ms)
+running 1 test from ./scripts/ui-guard/scanner.test.ts
+scanner - scans directory with TSX and CSS files, ignoring tests ... ok (18ms)
+running 10 tests from ./scripts/ui-guard/tsx-scanner.test.ts
+tsx-scanner - detects raw box-shadow in style and className ... ok (15ms)
+tsx-scanner - detects raw font-size in style and className ... ok (2ms)
+tsx-scanner - detects raw border-radius in style and className ... ok (849µs)
+tsx-scanner - detects raw spacing literals in style and className ... ok (671µs)
+tsx-scanner - detects forbidden TSX inline visual styles ... ok (458µs)
+tsx-scanner - detects arbitrary Tailwind classes ... ok (324µs)
+tsx-scanner - allows valid tokens, semantic classes, and runtime exceptions on designated owners ... ok (2ms)
+tsx-scanner - allows measured NotesWorkspace masonry geometry ... ok (2ms)
+tsx-scanner - NotesWorkspace masonry does not exempt static visuals or other coordinates ... ok (593µs)
+tsx-scanner - NotesWorkspace masonry expressions stay at their exact owner ... ok (1ms)
+
+ok | 100 passed | 0 failed (2s)
+
+Check web/src/main.tsx
+Check src/main.ts
+Task check:ui deno run -A scripts/check-ui.ts
+============================================================
+Searcher UI Guard - Ownership & Boundary Enforcement (Issue #79 & #92)
+============================================================
+Total scanned files: 201
+Total violations:    0
+  Rule A (feature-selector-in-global):    0
+  Rule B (legacy-page-layout):            0
+  Rule C (undefined-css-token):           0
+  Rule D (native-destructive-confirm):    0
+  Rule E (forbidden-legacy-ui-class):     0
+  Rule F (css-prefix-ownership):          0
+  Rule G (workspace-core-isolation):      0
+  Rule H (desktop-persistence-boundary):  0
+  Rule I (canvas-coordinate-owner):       0
+  Rule J (home-document-token):           0
+  Rule K (widgets-no-adhoc-window):       0
+  Rule L (forbidden-legacy-path):         0
+  Rule M (primitive-feature-cascade-order): 0
+------------------------------------------------------------
+
+[PASS] All ownership rules verified! 0 architectural drift.
+============================================================
+============================================================
+Searcher UI Guard - Visual Contract Verification
+============================================================
+Scanned files:       141
+Total violations:    0
+Matched allowances:  0
+New violations:      0
+Increased count:     0
+Stale allowances:    0
+------------------------------------------------------------
+
+[PASS] All UI visual presentations match the baseline contract. 0 new drift.
+============================================================
+
+============================================================
+ Searcher Bundle Audit & Budget Gate
+============================================================
+Manifest: /home/aawei/searcher/.worktrees/issue-178/web/dist/manifest.json
+Baseline SHA: 1d30c92b61676f5447d06e9e0cdbfb0f033399d9
+
+Application Entry: index.html -> assets/index-C_PmGunw.js
+
+--- Initial Static JS Graph ---
+  assets/index-C_PmGunw.js                        346026 B (337.92 KiB) │ gzip:  102493 B (100.09 KiB)
+  assets/react-vendor-D8mvmE0C.js                 267731 B (261.46 KiB) │ gzip:   85994 B (83.98 KiB)
+  assets/ui-vendor-3VZK0TOr.js                    310493 B (303.22 KiB) │ gzip:   96973 B (94.70 KiB)
+Total Initial JS: 924250 B (902.59 KiB) raw │ 285460 B (278.77 KiB) gzip │ 3 requests
+
+--- Dynamic Route Entries ---
+
+Route: src/app/AccountPage.tsx
+  File: assets/AccountPage-D9y6MMdn.js
+  Route-only JS: 11946 B (11.67 KiB) raw │ 3929 B (3.84 KiB) gzip │ 1 requests
+    + assets/AccountPage-D9y6MMdn.js                11946 B │ gzip:   3929 B
+
+Route: src/app/AdminPage.tsx
+  File: assets/AdminPage-Bc9i31sN.js
+  Route-only JS: 40693 B (39.74 KiB) raw │ 11777 B (11.50 KiB) gzip │ 2 requests
+    + assets/AdminPage-Bc9i31sN.js                  39730 B │ gzip:  11182 B
+    + assets/NotFoundPage-DVYJAOQT.js                 963 B │ gzip:    595 B
+
+Route: src/app/AskPage.tsx
+  File: assets/AskPage-CtvL5hay.js
+  Route-only JS: 552870 B (539.91 KiB) raw │ 165118 B (161.25 KiB) gzip │ 5 requests
+    + assets/AskPage-CtvL5hay.js                    62221 B │ gzip:  18512 B
+    + assets/assistant-vendor-Ccc4AY_0.js          318330 B │ gzip:  93621 B
+    + assets/markdown-renderer-vendor-y7yV4joj.js   50509 B │ gzip:  16998 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+    + assets/slider-2WCRv9JH.js                       942 B │ gzip:    510 B
+
+Route: src/app/AuthPage.tsx
+  File: assets/AuthPage-Avg1qMHO.js
+  Route-only JS: 2583 B (2.52 KiB) raw │ 1251 B (1.22 KiB) gzip │ 1 requests
+    + assets/AuthPage-Avg1qMHO.js                    2583 B │ gzip:   1251 B
+
+Route: src/app/NotFoundPage.tsx
+  File: assets/NotFoundPage-DVYJAOQT.js
+  Route-only JS: 963 B (0.94 KiB) raw │ 595 B (0.58 KiB) gzip │ 1 requests
+    + assets/NotFoundPage-DVYJAOQT.js                 963 B │ gzip:    595 B
+
+Route: src/app/SettingsPage.tsx
+  File: assets/SettingsPage-BmmoL-Dk.js
+  Route-only JS: 56213 B (54.90 KiB) raw │ 16993 B (16.59 KiB) gzip │ 3 requests
+    + assets/SettingsPage-BmmoL-Dk.js               54308 B │ gzip:  15888 B
+    + assets/slider-2WCRv9JH.js                       942 B │ gzip:    510 B
+    + assets/NotFoundPage-DVYJAOQT.js                 963 B │ gzip:    595 B
+
+Route: src/app/TrashPage.tsx
+  File: assets/TrashPage-Bmw2xEAX.js
+  Route-only JS: 8126 B (7.94 KiB) raw │ 2243 B (2.19 KiB) gzip │ 1 requests
+    + assets/TrashPage-Bmw2xEAX.js                   8126 B │ gzip:   2243 B
+
+Route: src/components/searcher/NoteLivePreviewEditor.tsx
+  File: assets/NoteLivePreviewEditor-CR3CWwcb.js
+  Route-only JS: 463467 B (452.60 KiB) raw │ 142641 B (139.30 KiB) gzip │ 5 requests
+    + assets/NoteLivePreviewEditor-CR3CWwcb.js       2045 B │ gzip:    971 B
+    + assets/runtime-DqRXLP6V.js                     7199 B │ gzip:   2934 B
+    + assets/task-list-DdaDcdyz.js                    874 B │ gzip:    557 B
+    + assets/editor-vendor-CsbJvWv7.js             332481 B │ gzip: 102702 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+
+Route: src/components/searcher/NoteMarkdown.tsx
+  File: assets/NoteMarkdown-D3iVYqxb.js
+  Route-only JS: 172317 B (168.28 KiB) raw │ 53006 B (51.76 KiB) gzip │ 3 requests
+    + assets/NoteMarkdown-D3iVYqxb.js                 940 B │ gzip:    531 B
+    + assets/markdown-renderer-vendor-y7yV4joj.js   50509 B │ gzip:  16998 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+
+Route: src/design-lab/DesignLab.tsx
+  File: assets/DesignLab-Ccod_Yw9.js
+  Route-only JS: 29101 B (28.42 KiB) raw │ 8812 B (8.61 KiB) gzip │ 2 requests
+    + assets/DesignLab-Ccod_Yw9.js                  28159 B │ gzip:   8302 B
+    + assets/slider-2WCRv9JH.js                       942 B │ gzip:    510 B
+
+Route: src/dev/WallpaperMotionInspector.tsx
+  File: assets/WallpaperMotionInspector-Bu66xjmE.js
+  Route-only JS: 3761 B (3.67 KiB) raw │ 1015 B (0.99 KiB) gzip │ 1 requests
+    + assets/WallpaperMotionInspector-Bu66xjmE.js    3761 B │ gzip:   1015 B
+
+Route: src/features/documents/DocumentEditor.tsx
+  File: assets/DocumentEditor-Dtb4pEDJ.js
+  Route-only JS: 525920 B (513.59 KiB) raw │ 162588 B (158.78 KiB) gzip │ 8 requests
+    + assets/DocumentEditor-Dtb4pEDJ.js             45161 B │ gzip:  13184 B
+    + assets/index-BGccvJQd.js                        156 B │ gzip:    140 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+    + assets/editor-extensions-BTNweoJZ.js          18692 B │ gzip:   7272 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/editor-vendor-CsbJvWv7.js             332481 B │ gzip: 102702 B
+    + assets/runtime-DqRXLP6V.js                     7199 B │ gzip:   2934 B
+    + assets/task-list-DdaDcdyz.js                    874 B │ gzip:    557 B
+
+Route: src/features/markdown-editor/runtime.ts
+  File: assets/runtime-DqRXLP6V.js
+  Route-only JS: 460548 B (449.75 KiB) raw │ 141113 B (137.81 KiB) gzip │ 3 requests
+    + assets/runtime-DqRXLP6V.js                     7199 B │ gzip:   2934 B
+    + assets/editor-vendor-CsbJvWv7.js             332481 B │ gzip: 102702 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+
+Route: src/features/workspace/note-summary.ts
+  File: assets/note-summary-Ceu0EQcW.js
+  Route-only JS: 455104 B (444.44 KiB) raw │ 139135 B (135.87 KiB) gzip │ 4 requests
+    + assets/note-summary-Ceu0EQcW.js                1599 B │ gzip:    816 B
+    + assets/index-BGccvJQd.js                        156 B │ gzip:    140 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+    + assets/editor-vendor-CsbJvWv7.js             332481 B │ gzip: 102702 B
+
+Route: src/spikes/editable-pagination/EditablePaginationSpike.tsx
+  File: assets/EditablePaginationSpike-BB4hAjzZ.js
+  Route-only JS: 14806 B (14.46 KiB) raw │ 6580 B (6.43 KiB) gzip │ 2 requests
+    + assets/EditablePaginationSpike-BB4hAjzZ.js    14317 B │ gzip:   6258 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+
+Route: src/spikes/editable-pagination/runtime.ts
+  File: assets/runtime-CBqH1aeN.js
+  Route-only JS: 481370 B (470.09 KiB) raw │ 149738 B (146.23 KiB) gzip │ 7 requests
+    + assets/runtime-CBqH1aeN.js                      767 B │ gzip:    474 B
+    + assets/runtime-DqRXLP6V.js                     7199 B │ gzip:   2934 B
+    + assets/editor-extensions-BTNweoJZ.js          18692 B │ gzip:   7272 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/editor-vendor-CsbJvWv7.js             332481 B │ gzip: 102702 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+    + assets/task-list-DdaDcdyz.js                    874 B │ gzip:    557 B
+
+Route: src/spikes/markdown-editor/MarkdownEditorSpike.tsx
+  File: assets/MarkdownEditorSpike-BM5cGXbt.js
+  Route-only JS: 3716 B (3.63 KiB) raw │ 1852 B (1.81 KiB) gzip │ 1 requests
+    + assets/MarkdownEditorSpike-BM5cGXbt.js         3716 B │ gzip:   1852 B
+
+Route: src/spikes/markdown-editor/runtime.ts
+  File: assets/runtime-C2-92cnu.js
+  Route-only JS: 462575 B (451.73 KiB) raw │ 142159 B (138.83 KiB) gzip │ 4 requests
+    + assets/runtime-C2-92cnu.js                     2027 B │ gzip:   1046 B
+    + assets/runtime-DqRXLP6V.js                     7199 B │ gzip:   2934 B
+    + assets/editor-vendor-CsbJvWv7.js             332481 B │ gzip: 102702 B
+    + assets/markdown-vendor-CblA-raB.js           120868 B │ gzip:  35477 B
+
+--- Notes Live Preview Budget (#108) ---
+Shared editor async runtime: 460548 B raw / 141113 B gzip (limit 153600 B)
+  assets/runtime-DqRXLP6V.js: 7199 B raw / 2934 B gzip
+  assets/markdown-vendor-CblA-raB.js: 120868 B raw / 35477 B gzip
+  assets/editor-vendor-CsbJvWv7.js: 332481 B raw / 102702 B gzip
+Notes-only editor increment: 2919 B raw / 1528 B gzip (limit 40960 B)
+  assets/NoteLivePreviewEditor-CR3CWwcb.js: 2045 B raw / 971 B gzip
+  assets/task-list-DdaDcdyz.js: 874 B raw / 557 B gzip
+
+--- Largest JS Chunks in Build ---
+  assets/index-C_PmGunw.js                        346026 B (337.92 KiB) │ gzip:  102493 B (100.09 KiB)
+  assets/editor-vendor-CsbJvWv7.js                332481 B (324.69 KiB) │ gzip:  102702 B (100.29 KiB)
+  assets/assistant-vendor-Ccc4AY_0.js             318330 B (310.87 KiB) │ gzip:   93621 B (91.43 KiB)
+  assets/ui-vendor-3VZK0TOr.js                    310493 B (303.22 KiB) │ gzip:   96973 B (94.70 KiB)
+  assets/react-vendor-D8mvmE0C.js                 267731 B (261.46 KiB) │ gzip:   85994 B (83.98 KiB)
+  assets/markdown-vendor-CblA-raB.js              120868 B (118.04 KiB) │ gzip:   35477 B (34.65 KiB)
+  assets/AskPage-CtvL5hay.js                       62221 B ( 60.76 KiB) │ gzip:   18512 B (18.08 KiB)
+  assets/SettingsPage-BmmoL-Dk.js                  54308 B ( 53.04 KiB) │ gzip:   15888 B (15.52 KiB)
+
+============================================================
+ Budget Verification vs Frozen Baseline
+============================================================
+Baseline Raw Bytes:  1463817 B (1429.51 KiB)
+Current Initial Raw: 924250 B (902.59 KiB) │ Reduction: 36.86%
+Baseline Gzip Bytes: 439373 B (429.08 KiB)
+Current Initial Gzip:285460 B (278.77 KiB) │ Reduction: 35.03%
+
+[Gate 1] Initial Raw <= 1024000 B (1000.00 KiB): PASS (902.59 KiB)
+[Gate 2] Initial Gzip <= 307200 B (300.00 KiB): PASS (278.77 KiB)
+[Gate 3] Initial Gzip Reduction >= 30.00%: PASS (35.03% reduction)
+[Gate 4] Forbidden Dependencies Check: PASS (clean static entry)
+============================================================
+✅ BUNDLE AUDIT PASSED: All budget and invariant gates satisfied!
+============================================================
+

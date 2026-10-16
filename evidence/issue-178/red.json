@@ -1,0 +1,9 @@
+{
+  "baseline": "cc1cf90",
+  "command": "deno test -A web/e2e/notes-drafts.test.ts --filter 'notes draft survives editor unmount and logout, then restores'",
+  "result": "0 passed, 1 failed",
+  "failure": "TimeoutError at notes-drafts.test.ts:206: waiting for heading 有未同步的便签草稿 to be visible",
+  "beforeFailurePassed": ["local draft committed after editor unmount", "PATCH request count is zero", "server title, body and version unchanged"],
+  "observedRequest": "POST /api/auth/logout 200",
+  "baselineHero": {"y":64,"height":288.1875}
+}

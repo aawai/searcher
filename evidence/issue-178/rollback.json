@@ -1,0 +1,26 @@
+{
+  "backup": {
+    "canonical": {
+      "key": "note:draft:83271173-0a13-4c13-a97b-665a13714b0c:921f9614-f31c-4954-8f91-bb6c87471b95",
+      "value": {
+        "body": "退出检查与恢复保持账号隔离。",
+        "title": "本地已提交但云端未同步",
+        "version": 1,
+        "updatedAt": 1792157339391
+      }
+    },
+    "legacy": {
+      "key": "note:draft:921f9614-f31c-4954-8f91-bb6c87471b95",
+      "value": null
+    }
+  },
+  "oldReader": {
+    "body": "退出检查与恢复保持账号隔离。",
+    "title": "本地已提交但云端未同步",
+    "version": 1,
+    "updatedAt": 1792157339391
+  },
+  "canonicalRetained": true,
+  "verifiedOwner": "83271173-0a13-4c13-a97b-665a13714b0c",
+  "serverVersion": 1
+}

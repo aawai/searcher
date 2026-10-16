@@ -1,0 +1,17 @@
+{
+  "baseline": "cc1cf90",
+  "focusedDomainAndLocal": {"passed":5,"failed":0},
+  "unit": {"command":"deno task test","passed":673,"steps":51,"failed":0},
+  "fixtureScopeRecheck": {"passed":40,"failed":0,"scope":["notes/local-drafts","local","desktop-persistence","useDesktopLayout"]},
+  "originalLocalTestsRetained": {"passed":4,"failed":0},
+  "uiGuardTests": {"passed":100,"failed":0},
+  "typecheck": "deno check web/src/main.tsx src/main.ts passed; full E2E checked all 45 files",
+  "uiGuard": {"ownershipFiles":201,"visualFiles":141,"violations":0,"allowances":0},
+  "bundle": {"passed":true,"initialRawKiB":902.59,"initialGzipKiB":278.77},
+  "draftE2EFirstRun": {"passed":3,"failed":1,"cause":"Epoch test used full-document loginAndVisit while server cookie remained authenticated; redirected away from login. Corrected to SPA Link to preserve the pending AppState check."},
+  "epochFocusedAfterCorrection": {"passed":1,"failed":0},
+  "productionFull": {"command":"E2E_REPORT_DIR=artifacts/issue-178/full DENO_JOBS=2 deno task test:e2e:full --parallel","files":45,"passed":62,"steps":291,"failed":0,"seconds":670.67,"builds":1},
+  "browser": {"logoutCases":44,"editorHostCases":12,"screenshots":56,"horizontalOverflow":0,"popupOutsideViewport":0,"hero1440":{"y":64,"height":288.1875},"shortScreenCapture":"viewport, not full page"},
+  "rollback": "Exported original keys and full values, verified authenticated ownership, copied canonical to legacy, awaited transaction completion and re-read equal values; canonical retained. Old service version was not deployed.",
+  "unverified": ["real Safari/iOS/Android","real soft keyboard","OS IME","screen-reader speech","cross-tab locking (not introduced)"]
+}

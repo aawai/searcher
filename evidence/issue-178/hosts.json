@@ -1,0 +1,134 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "style": "zen",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-390x844-light-zen.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "sheet workspace-panel workspace-panel--mobile"
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "style": "widgets",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-390x844-light-widgets.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "sheet workspace-panel workspace-panel--mobile"
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "style": "zen",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-390x844-dark-zen.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "sheet workspace-panel workspace-panel--mobile"
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "style": "widgets",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-390x844-dark-widgets.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "sheet workspace-panel workspace-panel--mobile"
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "theme": "light",
+    "style": "zen",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-768x1024-light-zen.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "workspace-panel"
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "theme": "light",
+    "style": "widgets",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-768x1024-light-widgets.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "desktop-window desktop-window--active"
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "theme": "dark",
+    "style": "zen",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-768x1024-dark-zen.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "workspace-panel"
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "theme": "dark",
+    "style": "widgets",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-768x1024-dark-widgets.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "desktop-window desktop-window--active"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "light",
+    "style": "zen",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-1440x900-light-zen.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "workspace-panel"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "light",
+    "style": "widgets",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-1440x900-light-widgets.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "desktop-window desktop-window--active"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "dark",
+    "style": "zen",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-1440x900-dark-zen.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "workspace-panel"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "dark",
+    "style": "widgets",
+    "path": "/home/aawei/searcher/.worktrees/issue-178/artifacts/issue-178/screenshots/editor-1440x900-dark-widgets.png",
+    "overflow": 0,
+    "editors": 1,
+    "title": "本地已提交但云端未同步",
+    "host": "desktop-window desktop-window--active"
+  }
+]
