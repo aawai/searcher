@@ -1,0 +1,13 @@
+{
+  "hero": {
+    "x": 0,
+    "y": 64,
+    "width": 1440,
+    "height": 288.1875,
+    "top": 64,
+    "right": 1440,
+    "bottom": 352.1875,
+    "left": 0
+  },
+  "overflow": 0
+}

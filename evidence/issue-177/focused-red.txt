@@ -1,0 +1,5 @@
+Baseline commit: 910e25b
+Worktree: /home/aawei/searcher/.worktrees/issue-177
+Command: NODE_ENV=test deno test -A --filter "Widgets home feedback keeps Notes pending" web/e2e/ui-feedback.test.ts
+Result: failed at ui-feedback.test.ts:1218, timeout 5000ms waiting for visible role=status loading feedback within Widgets homepage Notes card while GET /api/notes was gated.
+Reported by FeedbackRegression agent; independent actual browser reproduction saved baseline-feedback.json and baseline-notes-pending.png.

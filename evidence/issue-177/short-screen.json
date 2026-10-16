@@ -1,0 +1,41 @@
+[
+  {
+    "width": 390,
+    "height": 240,
+    "hit": {
+      "x": 278,
+      "y": 97.765625,
+      "width": 52.015625,
+      "height": 44,
+      "hit": true
+    },
+    "realRetry": true,
+    "path": "/tmp/searcher-issue177-evidence/short-retry-390x240.png"
+  },
+  {
+    "width": 1440,
+    "height": 240,
+    "hit": {
+      "x": 889.5,
+      "y": 98.15625,
+      "width": 52.015625,
+      "height": 44,
+      "hit": true
+    },
+    "realRetry": true,
+    "path": "/tmp/searcher-issue177-evidence/short-retry-1440x240.png"
+  },
+  {
+    "width": 900,
+    "height": 200,
+    "hit": {
+      "x": 612,
+      "y": 77.640625,
+      "width": 52.015625,
+      "height": 44,
+      "hit": true
+    },
+    "realRetry": true,
+    "path": "/tmp/searcher-issue177-evidence/short-retry-900x200.png"
+  }
+]

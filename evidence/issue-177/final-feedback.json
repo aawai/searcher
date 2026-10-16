@@ -1,0 +1,13 @@
+{
+  "fixture": "Real local API account with 9 pinned apps and 3 fixed notes; production Vite build; no workspace initially open",
+  "notesPending": {"loadingRole": "status", "empty": false},
+  "notes503WithCache": {"alert": "加载便签失败：便签服务暂时不可用", "cards": 3, "empty": false},
+  "notesRetry": {"realNetworkRequest": true, "alertCleared": true, "cards": 3},
+  "appsNetworkAbort": {"status": "当前离线，显示此账户上次保存的应用列表。", "launchers": 9},
+  "appsRetry": {"realNetworkRequest": true, "offlineCleared": true, "launchers": 9},
+  "focusedRegression": {"passed": 1, "steps": 10, "failed": 0},
+  "visualMatrix": {"scenarios": 44, "documentHorizontalOverflow": 0, "cardHorizontalOverflow": 0},
+  "errorOfflineMatrix": {"scenarios": 6, "documentHorizontalOverflow": 0, "cardHorizontalOverflow": 0},
+  "searchAnchor1440": {"before": {"y":64,"height":288.1875}, "after": {"y":64,"height":288.1875}},
+  "limitations": ["Chromium automation, not real Safari/iOS/Android", "No real soft-keyboard or OS IME verification", "44 homepage visual cases do not claim full business interactions at every size"]
+}

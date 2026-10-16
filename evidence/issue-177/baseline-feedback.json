@@ -1,0 +1,9 @@
+{
+  "commit": "910e25b",
+  "notesPendingWithoutCache": {"actual": "暂无固定在首页的便签", "loadingStatus": false},
+  "notes503WithoutCache": {"actual": "暂无固定在首页的便签", "alert": false},
+  "notes503WithCache": {"cards": 3, "alert": false},
+  "appsNetworkAbortWithCache": {"pinnedApps": 9, "offlineText": false},
+  "method": "Actual browser request interception on production Vite build; separate real API fixture account, no workspace open",
+  "unitBaseline": "deno task test: 672 passed (51 steps), 0 failed"
+}

@@ -1,0 +1,1608 @@
+[
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 236.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 320.796875,
+            "width": 366,
+            "height": 279.96875,
+            "top": 320.796875,
+            "right": 378,
+            "bottom": 600.765625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 616.765625,
+            "width": 366,
+            "height": 715,
+            "top": 616.765625,
+            "right": 378,
+            "bottom": 1331.765625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-390x844.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 768,
+        "height": 290.796875,
+        "top": 64,
+        "right": 768,
+        "bottom": 354.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 16,
+            "y": 382.796875,
+            "width": 447.5,
+            "height": 359.96875,
+            "top": 382.796875,
+            "right": 463.5,
+            "bottom": 742.765625,
+            "left": 16
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 483.5,
+            "y": 382.796875,
+            "width": 268.5,
+            "height": 769,
+            "top": 382.796875,
+            "right": 752,
+            "bottom": 1151.796875,
+            "left": 483.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-768x1024.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 288.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 352.1875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 256,
+            "y": 380.1875,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 380.1875,
+            "right": 823.5,
+            "bottom": 644.15625,
+            "left": 256
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 843.5,
+            "y": 380.1875,
+            "width": 340.5,
+            "height": 413,
+            "top": 380.1875,
+            "right": 1184,
+            "bottom": 793.1875,
+            "left": 843.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-1440x900.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 320,
+    "height": 640,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 320,
+        "height": 209.1875,
+        "top": 64,
+        "right": 320,
+        "bottom": 273.1875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 293.1875,
+            "width": 296,
+            "height": 279.96875,
+            "top": 293.1875,
+            "right": 308,
+            "bottom": 573.15625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 589.15625,
+            "width": 296,
+            "height": 715,
+            "top": 589.15625,
+            "right": 308,
+            "bottom": 1304.15625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-320x640.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 430,
+    "height": 932,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 430,
+        "height": 236.796875,
+        "top": 64,
+        "right": 430,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 320.796875,
+            "width": 406,
+            "height": 207.96875,
+            "top": 320.796875,
+            "right": 418,
+            "bottom": 528.765625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 544.765625,
+            "width": 406,
+            "height": 715,
+            "top": 544.765625,
+            "right": 418,
+            "bottom": 1259.765625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-430x932.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 767,
+    "height": 900,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 767,
+        "height": 272.796875,
+        "top": 64,
+        "right": 767,
+        "bottom": 336.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 16,
+            "y": 364.796875,
+            "width": 446.875,
+            "height": 219.96875,
+            "top": 364.796875,
+            "right": 462.875,
+            "bottom": 584.765625,
+            "left": 16
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 482.875,
+            "y": 364.796875,
+            "width": 268.125,
+            "height": 793,
+            "top": 364.796875,
+            "right": 751,
+            "bottom": 1157.796875,
+            "left": 482.875
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-767x900.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 1023,
+    "height": 768,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1023,
+        "height": 254.234375,
+        "top": 64,
+        "right": 1023,
+        "bottom": 318.234375,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 47.5,
+            "y": 346.234375,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 346.234375,
+            "right": 615,
+            "bottom": 610.203125,
+            "left": 47.5
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 635,
+            "y": 346.234375,
+            "width": 340.5,
+            "height": 413,
+            "top": 346.234375,
+            "right": 975.5,
+            "bottom": 759.234375,
+            "left": 635
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-1023x768.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 1024,
+    "height": 768,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1024,
+        "height": 254.265625,
+        "top": 64,
+        "right": 1024,
+        "bottom": 318.265625,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 48,
+            "y": 346.265625,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 346.265625,
+            "right": 615.5,
+            "bottom": 610.234375,
+            "left": 48
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 635.5,
+            "y": 346.265625,
+            "width": 340.5,
+            "height": 413,
+            "top": 346.265625,
+            "right": 976,
+            "bottom": 759.265625,
+            "left": 635.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-1024x768.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 390,
+    "height": 240,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 178.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 242.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 262.796875,
+            "width": 366,
+            "height": 279.96875,
+            "top": 262.796875,
+            "right": 378,
+            "bottom": 542.765625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 558.765625,
+            "width": 366,
+            "height": 715,
+            "top": 558.765625,
+            "right": 378,
+            "bottom": 1273.765625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-390x240.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 1440,
+    "height": 240,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 206.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 270.1875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 256,
+            "y": 298.1875,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 298.1875,
+            "right": 823.5,
+            "bottom": 562.15625,
+            "left": 256
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 843.5,
+            "y": 298.1875,
+            "width": 340.5,
+            "height": 413,
+            "top": 298.1875,
+            "right": 1184,
+            "bottom": 711.1875,
+            "left": 843.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-1440x240.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 900,
+    "height": 200,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 900,
+        "height": 191.671875,
+        "top": 64,
+        "right": 900,
+        "bottom": 255.671875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 16,
+            "y": 283.671875,
+            "width": 530,
+            "height": 263.96875,
+            "top": 283.671875,
+            "right": 546,
+            "bottom": 547.640625,
+            "left": 16
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 566,
+            "y": 283.671875,
+            "width": 318,
+            "height": 703,
+            "top": 283.671875,
+            "right": 884,
+            "bottom": 986.671875,
+            "left": 566
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-light-900x200.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 236.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 320.796875,
+            "width": 366,
+            "height": 279.96875,
+            "top": 320.796875,
+            "right": 378,
+            "bottom": 600.765625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 616.765625,
+            "width": 366,
+            "height": 715,
+            "top": 616.765625,
+            "right": 378,
+            "bottom": 1331.765625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-390x844.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 768,
+        "height": 290.796875,
+        "top": 64,
+        "right": 768,
+        "bottom": 354.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 16,
+            "y": 382.796875,
+            "width": 447.5,
+            "height": 359.96875,
+            "top": 382.796875,
+            "right": 463.5,
+            "bottom": 742.765625,
+            "left": 16
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 483.5,
+            "y": 382.796875,
+            "width": 268.5,
+            "height": 769,
+            "top": 382.796875,
+            "right": 752,
+            "bottom": 1151.796875,
+            "left": 483.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-768x1024.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 288.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 352.1875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 256,
+            "y": 380.1875,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 380.1875,
+            "right": 823.5,
+            "bottom": 644.15625,
+            "left": 256
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 843.5,
+            "y": 380.1875,
+            "width": 340.5,
+            "height": 413,
+            "top": 380.1875,
+            "right": 1184,
+            "bottom": 793.1875,
+            "left": 843.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-1440x900.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 320,
+    "height": 640,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 320,
+        "height": 209.1875,
+        "top": 64,
+        "right": 320,
+        "bottom": 273.1875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 293.1875,
+            "width": 296,
+            "height": 279.96875,
+            "top": 293.1875,
+            "right": 308,
+            "bottom": 573.15625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 589.15625,
+            "width": 296,
+            "height": 715,
+            "top": 589.15625,
+            "right": 308,
+            "bottom": 1304.15625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-320x640.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 430,
+    "height": 932,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 430,
+        "height": 236.796875,
+        "top": 64,
+        "right": 430,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 320.796875,
+            "width": 406,
+            "height": 207.96875,
+            "top": 320.796875,
+            "right": 418,
+            "bottom": 528.765625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 544.765625,
+            "width": 406,
+            "height": 715,
+            "top": 544.765625,
+            "right": 418,
+            "bottom": 1259.765625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-430x932.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 767,
+    "height": 900,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 767,
+        "height": 272.796875,
+        "top": 64,
+        "right": 767,
+        "bottom": 336.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 16,
+            "y": 364.796875,
+            "width": 446.875,
+            "height": 219.96875,
+            "top": 364.796875,
+            "right": 462.875,
+            "bottom": 584.765625,
+            "left": 16
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 482.875,
+            "y": 364.796875,
+            "width": 268.125,
+            "height": 793,
+            "top": 364.796875,
+            "right": 751,
+            "bottom": 1157.796875,
+            "left": 482.875
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-767x900.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 1023,
+    "height": 768,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1023,
+        "height": 254.234375,
+        "top": 64,
+        "right": 1023,
+        "bottom": 318.234375,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 47.5,
+            "y": 346.234375,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 346.234375,
+            "right": 615,
+            "bottom": 610.203125,
+            "left": 47.5
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 635,
+            "y": 346.234375,
+            "width": 340.5,
+            "height": 413,
+            "top": 346.234375,
+            "right": 975.5,
+            "bottom": 759.234375,
+            "left": 635
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-1023x768.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 1024,
+    "height": 768,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1024,
+        "height": 254.265625,
+        "top": 64,
+        "right": 1024,
+        "bottom": 318.265625,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 48,
+            "y": 346.265625,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 346.265625,
+            "right": 615.5,
+            "bottom": 610.234375,
+            "left": 48
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 635.5,
+            "y": 346.265625,
+            "width": 340.5,
+            "height": 413,
+            "top": 346.265625,
+            "right": 976,
+            "bottom": 759.265625,
+            "left": 635.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-1024x768.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 390,
+    "height": 240,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 178.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 242.796875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 262.796875,
+            "width": 366,
+            "height": 279.96875,
+            "top": 262.796875,
+            "right": 378,
+            "bottom": 542.765625,
+            "left": 12
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 12,
+            "y": 558.765625,
+            "width": 366,
+            "height": 715,
+            "top": 558.765625,
+            "right": 378,
+            "bottom": 1273.765625,
+            "left": 12
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-390x240.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 1440,
+    "height": 240,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 206.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 270.1875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 256,
+            "y": 298.1875,
+            "width": 567.5,
+            "height": 263.96875,
+            "top": 298.1875,
+            "right": 823.5,
+            "bottom": 562.15625,
+            "left": 256
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 843.5,
+            "y": 298.1875,
+            "width": 340.5,
+            "height": 413,
+            "top": 298.1875,
+            "right": 1184,
+            "bottom": 711.1875,
+            "left": 843.5
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-1440x240.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 900,
+    "height": 200,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 900,
+        "height": 191.671875,
+        "top": 64,
+        "right": 900,
+        "bottom": 255.671875,
+        "left": 0
+      },
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "rect": {
+            "x": 16,
+            "y": 283.671875,
+            "width": 530,
+            "height": 263.96875,
+            "top": 283.671875,
+            "right": 546,
+            "bottom": 547.640625,
+            "left": 16
+          }
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "rect": {
+            "x": 566,
+            "y": 283.671875,
+            "width": 318,
+            "height": 703,
+            "top": 283.671875,
+            "right": 884,
+            "bottom": 986.671875,
+            "left": 566
+          }
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/widgets-dark-900x200.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 236.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-390x844.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 768,
+        "height": 290.796875,
+        "top": 64,
+        "right": 768,
+        "bottom": 354.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-768x1024.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 288.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 352.1875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-1440x900.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 320,
+    "height": 640,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 320,
+        "height": 209.1875,
+        "top": 64,
+        "right": 320,
+        "bottom": 273.1875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-320x640.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 430,
+    "height": 932,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 430,
+        "height": 236.796875,
+        "top": 64,
+        "right": 430,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-430x932.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 767,
+    "height": 900,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 767,
+        "height": 272.796875,
+        "top": 64,
+        "right": 767,
+        "bottom": 336.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-767x900.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 1023,
+    "height": 768,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1023,
+        "height": 254.234375,
+        "top": 64,
+        "right": 1023,
+        "bottom": 318.234375,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-1023x768.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 1024,
+    "height": 768,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1024,
+        "height": 254.265625,
+        "top": 64,
+        "right": 1024,
+        "bottom": 318.265625,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-1024x768.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 390,
+    "height": 240,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 178.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 242.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-390x240.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 1440,
+    "height": 240,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 206.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 270.1875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-1440x240.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 900,
+    "height": 200,
+    "metrics": {
+      "theme": "light",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 900,
+        "height": 191.671875,
+        "top": 64,
+        "right": 900,
+        "bottom": 255.671875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-light-900x200.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 236.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-390x844.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 768,
+        "height": 290.796875,
+        "top": 64,
+        "right": 768,
+        "bottom": 354.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-768x1024.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 288.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 352.1875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-1440x900.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 320,
+    "height": 640,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 320,
+        "height": 209.1875,
+        "top": 64,
+        "right": 320,
+        "bottom": 273.1875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-320x640.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 430,
+    "height": 932,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 430,
+        "height": 236.796875,
+        "top": 64,
+        "right": 430,
+        "bottom": 300.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-430x932.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 767,
+    "height": 900,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 767,
+        "height": 272.796875,
+        "top": 64,
+        "right": 767,
+        "bottom": 336.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-767x900.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 1023,
+    "height": 768,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1023,
+        "height": 254.234375,
+        "top": 64,
+        "right": 1023,
+        "bottom": 318.234375,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-1023x768.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 1024,
+    "height": 768,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1024,
+        "height": 254.265625,
+        "top": 64,
+        "right": 1024,
+        "bottom": 318.265625,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-1024x768.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 390,
+    "height": 240,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 390,
+        "height": 178.796875,
+        "top": 64,
+        "right": 390,
+        "bottom": 242.796875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-390x240.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 1440,
+    "height": 240,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 206.1875,
+        "top": 64,
+        "right": 1440,
+        "bottom": 270.1875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-1440x240.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 900,
+    "height": 200,
+    "metrics": {
+      "theme": "dark",
+      "overflow": 0,
+      "hero": {
+        "x": 0,
+        "y": 64,
+        "width": 900,
+        "height": 191.671875,
+        "top": 64,
+        "right": 900,
+        "bottom": 255.671875,
+        "left": 0
+      },
+      "cards": []
+    },
+    "path": "/tmp/searcher-issue177-evidence/zen-dark-900x200.png"
+  }
+]

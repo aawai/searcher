@@ -1,0 +1,152 @@
+[
+  {
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "当前离线，显示此账户上次保存的应用列表。重试",
+          "notes": 0
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "加载便签失败：便签服务暂时不可用重试",
+          "notes": 3
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/states-light-390.png"
+  },
+  {
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "当前离线，显示此账户上次保存的应用列表。重试",
+          "notes": 0
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "加载便签失败：便签服务暂时不可用重试",
+          "notes": 3
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/states-light-768.png"
+  },
+  {
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "当前离线，显示此账户上次保存的应用列表。重试",
+          "notes": 0
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "加载便签失败：便签服务暂时不可用重试",
+          "notes": 3
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/states-light-1440.png"
+  },
+  {
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "当前离线，显示此账户上次保存的应用列表。重试",
+          "notes": 0
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "加载便签失败：便签服务暂时不可用重试",
+          "notes": 3
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/states-dark-390.png"
+  },
+  {
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "当前离线，显示此账户上次保存的应用列表。重试",
+          "notes": 0
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "加载便签失败：便签服务暂时不可用重试",
+          "notes": 3
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/states-dark-768.png"
+  },
+  {
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "当前离线，显示此账户上次保存的应用列表。重试",
+          "notes": 0
+        },
+        {
+          "kind": "notes",
+          "overflow": 0,
+          "empty": false,
+          "feedback": "加载便签失败：便签服务暂时不可用重试",
+          "notes": 3
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/states-dark-1440.png"
+  }
+]

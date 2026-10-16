@@ -1,0 +1,36 @@
+Command: `NODE_ENV=test deno test -A --filter "Widgets home feedback keeps Notes pending" web/e2e/ui-feedback.test.ts`
+Working directory: `/home/aawei/searcher/.worktrees/issue-177`
+
+Check web/e2e/ui-feedback.test.ts
+running 1 test from ./web/e2e/ui-feedback.test.ts
+Widgets home feedback keeps Notes pending out of the ready-empty state ... FAILED (5s)
+
+ ERRORS 
+
+Widgets home feedback keeps Notes pending out of the ready-empty state => ./web/e2e/ui-feedback.test.ts:1129:6
+error: TimeoutError: locator.waitFor: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator('.widgets-bento-card[data-bento-card="notes"]').getByRole('status').filter({ hasText: /加载便签/ }) to be visible
+
+Call log:
+  - waiting for locator('.widgets-bento-card[data-bento-card="notes"]').getByRole('status').filter({ hasText: /加载便签/ }) to be visible
+
+    at /home/aawei/searcher/.worktrees/issue-177/web/e2e/ui-feedback.test.ts:1218:16
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+
+    info: This program assigned to Object.prototype.__proto__, which Deno disables by default.
+    hint: If this caused the error, run again with --unsafe-proto to restore it.
+
+ FAILURES 
+
+Widgets home feedback keeps Notes pending out of the ready-empty state => ./web/e2e/ui-feedback.test.ts:1129:6
+
+FAILED | 0 passed | 1 failed | 1 filtered out (5s)
+
+error: Test failed
+
+Wall time: 9.32 seconds
+
+Command exited with code 1
