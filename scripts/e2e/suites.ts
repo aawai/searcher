@@ -22,6 +22,7 @@ export const suites = {
         "notes-focus",
         "notes-ux",
         "notes-history",
+        "notes-drafts",
         "notes-menu",
         "notes-color",
         "home-notes-order",

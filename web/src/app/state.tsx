@@ -30,12 +30,8 @@ import {
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { api, ApiError, json } from "../lib/api.ts";
-import {
-    deleteLocal,
-    getLocal,
-    listLocalKeys,
-    setLocal,
-} from "../lib/local.ts";
+import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
+import { hasUnsyncedNoteDrafts } from "../features/notes/local-drafts.ts";
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
@@ -172,8 +168,11 @@ export function normalizeAppearance(raw: unknown): Appearance {
     }
     return result;
 }
+type AuthSession = { userId: string | null; isCurrent: () => boolean };
+
 type State = {
     user: UserDto | null;
+    authSession: AuthSession;
     ready: boolean;
     syncFailed: boolean;
     connectionError: boolean;
@@ -204,6 +203,22 @@ export function AppState({ children }: { children: ReactNode }) {
     const [syncFailed, setSyncFailed] = useState(false);
     const [connectionError, setConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
+    const sessionRef = useRef<AuthSession>({
+        userId: null,
+        isCurrent: () => false,
+    });
+    // Object identity is the auth epoch, renewed even when the same account logs in again.
+    const updateUser = useCallback((next: UserDto | null, renew = false) => {
+        if (renew || userRef.current?.id !== next?.id) {
+            const session: AuthSession = {
+                userId: next?.id ?? null,
+                isCurrent: () => sessionRef.current === session,
+            };
+            sessionRef.current = session;
+        }
+        userRef.current = next;
+        setUser(next);
+    }, []);
     const sync = useRef({
         owner: null as string | null,
         tail: Promise.resolve(),
@@ -211,7 +226,6 @@ export function AppState({ children }: { children: ReactNode }) {
         reconciled: {} as Record<string, unknown>,
     });
     const appearanceRevision = useRef(0);
-    userRef.current = user;
     useEffect(() => {
         // 旧缓存未关联用户，不能作为匿名或账号偏好继续使用。
         try {
@@ -223,27 +237,30 @@ export function AppState({ children }: { children: ReactNode }) {
     }, []);
 
     const checkAuth = useCallback(async () => {
+        const session = sessionRef.current;
         try {
             const { user } = await api<{ user: UserDto }>("/api/auth/me", {
                 signal: AbortSignal.timeout(5000),
             });
+            if (sessionRef.current !== session) return;
             const next = handleAuthCheckResult(
                 { user: userRef.current, connectionError: false },
                 { type: "success", user },
             );
-            setUser(next.user);
+            updateUser(next.user);
             setConnectionError(next.connectionError);
         } catch (error) {
+            if (sessionRef.current !== session) return;
             const next = handleAuthCheckResult(
                 { user: userRef.current, connectionError: true },
                 { type: "error", error },
             );
-            setUser(next.user);
+            updateUser(next.user);
             setConnectionError(next.connectionError);
         } finally {
             setReady(true);
         }
-    }, []);
+    }, [updateUser]);
 
     useEffect(() => {
         void checkAuth();
@@ -321,14 +338,14 @@ export function AppState({ children }: { children: ReactNode }) {
         const expired = () => {
             if (userRef.current) setValue(initial);
             setAppearanceOwner(null);
-            setUser(null);
+            updateUser(null);
             setSyncFailed(false);
             setConnectionError(false);
         };
         globalThis.addEventListener("searcher:auth-expired", expired);
         return () =>
             globalThis.removeEventListener("searcher:auth-expired", expired);
-    }, []);
+    }, [updateUser]);
 
     useEffect(() => {
         const media = matchMedia("(prefers-color-scheme: dark)");
@@ -453,16 +470,27 @@ export function AppState({ children }: { children: ReactNode }) {
     };
 
     const logout = async (options?: { force?: boolean }) => {
-        if (!options?.force && user) {
+        const session = sessionRef.current;
+        if (!session.userId) return true;
+        if (!options?.force) {
             try {
-                const keys = await listLocalKeys("draft:" + user.id + ":");
-                if (keys.length > 0) return false;
+                const hasDrafts = await hasUnsyncedNoteDrafts(
+                    session.userId,
+                    session.isCurrent,
+                );
+                if (!session.isCurrent()) return true;
+                if (hasDrafts) return false;
             } catch {
-                // IndexedDB 不可用时降级放行
+                if (!session.isCurrent()) return true;
+                throw new Error(
+                    "未能检查本地便签草稿，尚未退出登录；请重试退出。",
+                );
             }
         }
+        if (!session.isCurrent()) return true;
         await api("/api/auth/logout", { method: "POST" });
-        setUser(null);
+        if (!session.isCurrent()) return true;
+        updateUser(null);
         setAppearanceOwner(null);
         setValue(initial);
         return true;
@@ -472,6 +500,7 @@ export function AppState({ children }: { children: ReactNode }) {
         <Context.Provider
             value={{
                 user,
+                authSession: sessionRef.current,
                 ready,
                 syncFailed,
                 connectionError,
@@ -479,7 +508,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 appearance,
                 setAppearance,
                 settleAppearanceSync: () => sync.current.tail,
-                login: setUser,
+                login: (user) => updateUser(user, true),
                 logout,
             }}
         >
