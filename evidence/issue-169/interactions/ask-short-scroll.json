@@ -1,0 +1,34 @@
+{
+  "before": {
+    "top": 0,
+    "height": 234,
+    "scrollHeight": 284,
+    "dock": {
+      "x": 17,
+      "y": 201,
+      "width": 356,
+      "height": 224,
+      "top": 201,
+      "right": 373,
+      "bottom": 425,
+      "left": 17
+    }
+  },
+  "after": {
+    "top": 50,
+    "height": 234,
+    "scrollHeight": 284,
+    "dock": {
+      "x": 17,
+      "y": 151,
+      "width": 356,
+      "height": 224,
+      "top": 151,
+      "right": 373,
+      "bottom": 375,
+      "left": 17
+    }
+  },
+  "viewportHeight": 400,
+  "mechanism": "actual wheel on outer ask-thread short-height fallback; not a native soft-keyboard test"
+}

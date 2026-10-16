@@ -1,0 +1,46 @@
+{
+  "restoredReload169": {
+    "mode": "snapped",
+    "rect": {
+      "x": 0,
+      "y": 64,
+      "width": 720,
+      "height": 758,
+      "top": 64,
+      "right": 720,
+      "bottom": 822,
+      "left": 0
+    },
+    "count": 1
+  },
+  "canonicalBefore169": {
+    "x": 420,
+    "y": 200,
+    "width": 805,
+    "height": 591,
+    "top": 200,
+    "right": 1225,
+    "bottom": 791,
+    "left": 420
+  },
+  "canonicalSmall169": {
+    "x": 219,
+    "y": 177,
+    "width": 805,
+    "height": 591,
+    "top": 177,
+    "right": 1024,
+    "bottom": 768,
+    "left": 219
+  },
+  "canonicalAfter169": {
+    "x": 420,
+    "y": 200,
+    "width": 805,
+    "height": 591,
+    "top": 200,
+    "right": 1225,
+    "bottom": 791,
+    "left": 420
+  }
+}

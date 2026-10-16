@@ -1,0 +1,43 @@
+{
+  "before": {
+    "rect": {
+      "x": 340,
+      "y": 160,
+      "width": 760,
+      "height": 566,
+      "top": 160,
+      "right": 1100,
+      "bottom": 726,
+      "left": 340
+    },
+    "mode": "normal"
+  },
+  "moved": {
+    "rect": {
+      "x": 420,
+      "y": 200,
+      "width": 760,
+      "height": 566,
+      "top": 200,
+      "right": 1180,
+      "bottom": 766,
+      "left": 420
+    },
+    "mode": "normal"
+  },
+  "resized": {
+    "rect": {
+      "x": 420,
+      "y": 200,
+      "width": 805,
+      "height": 591,
+      "top": 200,
+      "right": 1225,
+      "bottom": 791,
+      "left": 420
+    },
+    "mode": "normal"
+  },
+  "dragOriginHit": true,
+  "resizeHandleHit": true
+}

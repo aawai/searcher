@@ -1,0 +1,15 @@
+{
+  "before": {
+    "name": "复审应用草稿保留",
+    "url": "https://example.invalid/draft169"
+  },
+  "settings": {
+    "url": "http://127.0.0.1:36639/settings",
+    "dialogs": 0
+  },
+  "after": {
+    "name": "",
+    "url": ""
+  },
+  "navigation": "actual topbar Settings Link, then actual Home Link, reopen create form"
+}

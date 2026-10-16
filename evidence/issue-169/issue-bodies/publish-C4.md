@@ -1,0 +1,43 @@
+## 背景与证据
+#169 重新审计，基线 main@0c8d36d2f0203f5289ab981bad0913d8bc241b29，2026-10-15。优先级 **P2**，负责人未分配。属于审计报告 **C4**；持久证据见 [REPORT](https://github.com/aawai/searcher/blob/evidence/issue-169/evidence/issue-169/REPORT.md)。
+
+## 范围、非目标与方案选择
+只修复C4这一个根因，不重建Workspace/Window，不搭载其他审计项。优先现有领域/Host seam上的最小完整修复；具体步骤明确涉及的必要架构调整，禁止借机全局重构。
+
+## 目标文件/模块
+app/SearchHome.tsx、App.tsx顶部chrome；features/workspace/WorkspaceSurface.tsx、workspace.css；desktop现有chrome测量/相关Host tests
+
+## 按序实施
+1. 以初始auth/me网络失败→恢复网络实际登录→768×1024开Apps重现red，断言Retry的实际hit target及click效果。
+2. 梳理当前chromeBottom测量的所有权，将可变顶部下缘作为共享Host inset输入；ZenPanel top消费max(既有64px语义inset, 实际chromeBottom)，复用现有测量，不新增独立visualViewport监听。
+3. 连接提示出现/消失更新inset和可用高度，保持Panel内部唯一scroll owner、关闭/返回可达与focus恢复；不要全局提高banner z-index覆盖工作区。
+4. 回放无banner、banner重试清除、768/900/1440与窄屏Sheet，确认Search flow和桌面canonical frame不被写回。
+
+## 测试与验收矩阵
+Panel打开时Retry真实可点击，移除banner后Panel正确回到基线；无banner几何不变；短屏内部可滚动且顶/底动作不裁切。
+
+## 依赖与风险
+#87 Panel契约；与C1共享Host文件但无语义前置依赖，合并后互验。
+
+## 回滚
+独立回滚chrome inset传递与Panel消费，保持现有measurement owner和storage不变。
+
+## 兼容约束与验证阶梯
+禁止破坏：搜索纵向锚点、320–430px移动Apps网格、Workspace导航/焦点/未保存保护、桌面canonical/presentation几何与v4持久化/Dock、编辑器撤销/版本/滚动、Documents分页、壁纸/reduced-motion、路由懒加载、账号与匿名隔离。优先复用现有组件和owner；不接受全局CSS重构或第二套viewport校正。
+
+先focused契约red→green，再相关module/E2E、typecheck、lint/format、`deno task check:ui`；实际浏览器验证390/768/1440×light/dark×Zen/Widgets（行为集中于受影响路径，不在每个视觉组合机械重复）。适用的受限/短屏与上下断点必须单独验收。完整build与依赖产物E2E不可并发替换。更新CHANGELOG与实际contract文档、填写UI checklist，报告精确执行结果；真机不可用列未验证，不能声称软键盘通过。
+
+## 完成定义
+- [ ] 根因修复，无特判、无第二套owner或未完成分支。
+- [ ] 本文全部验收路径实际执行，focused regression修复前失败/后通过。
+- [ ] 通用禁止回归与UI门禁通过，证据可追溯，docs/changelog同步。
+- [ ] 兼容迁移与回滚经检查；不覆盖已有用户数据。
+
+## 经运行复核的具体证据
+
+### C4 / P2：Zen Panel 遮挡全局连接提示 Retry
+- 步骤：初始 /api/auth/me 网络失败；恢复网络并实际登录，使连接提示仍在；768×1024 打开 Apps Panel。
+- Expected：顶部连接提示及 Retry 仍可操作；Actual：banner bottom125，Panel top64，Retry center 命中 workspace-title；关闭 Panel 后 Retry 点击可清除提示。
+- 证据：`zen-banner.json/png`、`zen-banner-retry.json`。
+- 根因：固定 workspace inset64 没有消费可变顶栏下缘；Panel z45 在 banner z10 之上。应用现有 chrome measurement，不新增独立 visualViewport 修正。
+

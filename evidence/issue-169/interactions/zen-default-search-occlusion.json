@@ -1,0 +1,119 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "searchRect": {
+    "x": 360,
+    "y": 296.1875,
+    "width": 720,
+    "height": 56,
+    "top": 296.1875,
+    "right": 1080,
+    "bottom": 352.1875,
+    "left": 360
+  },
+  "submit": {
+    "rect": {
+      "x": 1031,
+      "y": 304.1875,
+      "width": 40,
+      "height": 40,
+      "top": 304.1875,
+      "right": 1071,
+      "bottom": 344.1875,
+      "left": 1031
+    },
+    "disabled": false
+  },
+  "hit": {
+    "html": "<div class=\"note-preview markdown\"><h1>标题</h1>\n<p>可滚动长内容与选择。</p>\n<p>可滚动长内容与选择。</p>\n<p>可滚动长内容与选择。</p>\n<pre tabindex=\"0\"><code class=\"language-typescript\">const longLine = \"long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_long_code_\";\n</code></pre></div>",
+    "card": "⋮⋮审计便签 2标题\n可滚动长内容与选择。\n可滚动长内容与选择。\n可滚动长内容与选择。\nconst longLine = \"long_code_long_code_long_code_long_cod"
+  },
+  "clickable": false,
+  "positions": [
+    {
+      "rect": {
+        "x": 1130,
+        "y": 200,
+        "width": 250,
+        "height": 315,
+        "top": 200,
+        "right": 1380,
+        "bottom": 515,
+        "left": 1130
+      },
+      "title": "审计：关闭后仍未同步的草稿"
+    },
+    {
+      "rect": {
+        "x": 850,
+        "y": 200,
+        "width": 250,
+        "height": 299.75,
+        "top": 200,
+        "right": 1100,
+        "bottom": 499.75,
+        "left": 850
+      },
+      "title": "审计便签 2"
+    },
+    {
+      "rect": {
+        "x": 1130,
+        "y": 380,
+        "width": 250,
+        "height": 299.75,
+        "top": 380,
+        "right": 1380,
+        "bottom": 679.75,
+        "left": 1130
+      },
+      "title": "审计便签 3"
+    }
+  ],
+  "serverLayouts": [
+    {
+      "title": "审计：关闭后仍未同步的草稿",
+      "isHomeFixed": true,
+      "layout": {
+        "deviceClass": "desktop",
+        "x": null,
+        "y": null,
+        "width": null,
+        "zIndex": 0,
+        "expanded": true,
+        "sortOrder": null,
+        "updatedAt": 1792067784329
+      }
+    },
+    {
+      "title": "审计便签 2",
+      "isHomeFixed": true,
+      "layout": {
+        "deviceClass": "desktop",
+        "x": null,
+        "y": null,
+        "width": null,
+        "zIndex": 0,
+        "expanded": true,
+        "sortOrder": null,
+        "updatedAt": 1792067784325
+      }
+    },
+    {
+      "title": "审计便签 3",
+      "isHomeFixed": true,
+      "layout": {
+        "deviceClass": "desktop",
+        "x": null,
+        "y": null,
+        "width": null,
+        "zIndex": 0,
+        "expanded": true,
+        "sortOrder": null,
+        "updatedAt": 1792067784319
+      }
+    }
+  ]
+}

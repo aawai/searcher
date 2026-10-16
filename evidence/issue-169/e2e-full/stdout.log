@@ -1,0 +1,647 @@
+Task build deno run -A npm:vite@7.1.7 build --config web/vite.config.ts
+vite v7.1.7 building for production...
+transforming...
+✓ 3136 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.91 kB │ gzip:   0.50 kB
+dist/manifest.json                                  11.45 kB │ gzip:   1.58 kB
+dist/bundle-report.json                            518.57 kB │ gzip:  30.41 kB
+dist/assets/structural-Cy9_WDdj.css                  0.30 kB │ gzip:   0.17 kB
+dist/assets/AuthPage-DHZUjKsq.css                    0.56 kB │ gzip:   0.31 kB
+dist/assets/MarkdownEditorSpike-B05I3N0K.css         1.24 kB │ gzip:   0.49 kB
+dist/assets/EditablePaginationSpike-BFSs6Gfo.css     1.33 kB │ gzip:   0.43 kB
+dist/assets/TrashPage-7GkguyJJ.css                   1.45 kB │ gzip:   0.43 kB
+dist/assets/WallpaperMotionInspector-5Hdr6HUV.css    1.54 kB │ gzip:   0.52 kB
+dist/assets/document-print-I2wQRGl3.css              2.32 kB │ gzip:   0.68 kB
+dist/assets/markdown-kZHnkPN1.css                    2.63 kB │ gzip:   0.71 kB
+dist/assets/document-pagination-C-fIR_WI.css         4.36 kB │ gzip:   1.05 kB
+dist/assets/AccountPage-C3jCQPi6.css                 4.56 kB │ gzip:   0.98 kB
+dist/assets/AdminPage-Ci9C7h92.css                   5.04 kB │ gzip:   1.12 kB
+dist/assets/DesignLab-C293bDgI.css                   8.14 kB │ gzip:   1.51 kB
+dist/assets/document-editor-CRWJRP9I.css            14.17 kB │ gzip:   2.70 kB
+dist/assets/SettingsPage-B0wOJP32.css               17.51 kB │ gzip:   3.23 kB
+dist/assets/AskPage-Cm62X1-i.css                    19.87 kB │ gzip:   3.29 kB
+dist/assets/index-C5om9K2Y.css                     170.08 kB │ gzip:  29.39 kB
+dist/assets/index-DU14uucz.js                        0.16 kB │ gzip:   0.14 kB
+dist/assets/paper-CyeXwFU2.js                        0.49 kB │ gzip:   0.33 kB
+dist/assets/runtime-COAy0MoB.js                      0.77 kB │ gzip:   0.47 kB
+dist/assets/task-list-CsEWLaY8.js                    0.87 kB │ gzip:   0.56 kB
+dist/assets/NoteMarkdown-B7sEiF7S.js                 0.94 kB │ gzip:   0.53 kB
+dist/assets/slider-B14UMGlv.js                       0.94 kB │ gzip:   0.51 kB
+dist/assets/NotFoundPage-CVOl-nrI.js                 0.96 kB │ gzip:   0.59 kB
+dist/assets/note-summary-BuWTMpWV.js                 1.60 kB │ gzip:   0.82 kB
+dist/assets/runtime-BgHdL_tS.js                      2.03 kB │ gzip:   1.05 kB
+dist/assets/NoteLivePreviewEditor-vYkfb-d7.js        2.05 kB │ gzip:   0.97 kB
+dist/assets/AuthPage-BwIR5dJp.js                     2.58 kB │ gzip:   1.25 kB
+dist/assets/MarkdownEditorSpike-BOw-ycKC.js          3.72 kB │ gzip:   1.88 kB
+dist/assets/WallpaperMotionInspector-_FYI9frD.js     3.76 kB │ gzip:   1.01 kB
+dist/assets/runtime-BC3bkWug.js                      7.20 kB │ gzip:   2.93 kB
+dist/assets/TrashPage-B7vSl6-j.js                    8.13 kB │ gzip:   2.25 kB
+dist/assets/AccountPage-BmmdQt_R.js                 11.95 kB │ gzip:   3.99 kB
+dist/assets/EditablePaginationSpike-N3LwYBg2.js     14.32 kB │ gzip:   6.48 kB
+dist/assets/editor-extensions-C2fOqlzJ.js           18.69 kB │ gzip:   7.29 kB
+dist/assets/DesignLab-C_qP0Tzj.js                   28.16 kB │ gzip:   8.47 kB
+dist/assets/AdminPage-iOJCglTP.js                   39.73 kB │ gzip:  11.41 kB
+dist/assets/DocumentEditor-KBLDbWs8.js              45.16 kB │ gzip:  13.29 kB
+dist/assets/markdown-renderer-vendor-DanjsbcM.js    50.51 kB │ gzip:  17.07 kB
+dist/assets/SettingsPage-ASMIStnl.js                54.31 kB │ gzip:  16.16 kB
+dist/assets/AskPage-Ck837dpg.js                     62.22 kB │ gzip:  18.72 kB
+dist/assets/markdown-vendor-BWoQJRHy.js            120.87 kB │ gzip:  35.70 kB
+dist/assets/react-vendor-B0DELUiE.js               219.81 kB │ gzip:  71.43 kB
+dist/assets/ui-vendor-OBZRIqVb.js                  310.49 kB │ gzip:  97.60 kB
+dist/assets/assistant-vendor-enIpA7fE.js           318.33 kB │ gzip:  94.40 kB
+dist/assets/editor-vendor-C5Ec8Nxk.js              332.48 kB │ gzip: 103.70 kB
+dist/assets/index-maouDAlu.js                      339.11 kB │ gzip: 101.61 kB
+✓ built in 4.99s
+Check web/e2e/workspace.test.ts
+Check web/e2e/workspace-shell.test.ts
+Check web/e2e/desktop-drag.test.ts
+Check web/e2e/desktop-presentation.test.ts
+Check web/e2e/launcher.test.ts
+Check web/e2e/apps-density.test.ts
+Check web/e2e/home-launcher-density.test.ts
+Check web/e2e/apps-session.test.ts
+Check web/e2e/apps-interactions.test.ts
+Check web/e2e/apps-races.test.ts
+Check web/e2e/apps-ordering.test.ts
+Check web/e2e/apps-ai-session.test.ts
+Check web/e2e/notes-workspace.test.ts
+Check web/e2e/notes-masonry.test.ts
+Check web/e2e/notes-live-preview.test.ts
+Check web/e2e/notes-live-editing.test.ts
+Check web/e2e/notes-focus.test.ts
+Check web/e2e/notes-ux.test.ts
+Check web/e2e/notes-history.test.ts
+Check web/e2e/notes-menu.test.ts
+Check web/e2e/notes-color.test.ts
+Check web/e2e/home-notes-order.test.ts
+Check web/e2e/bento.test.ts
+Check web/e2e/workspace-contract.test.ts
+Check web/e2e/workspace-matrix.test.ts
+Check web/e2e/navigation.test.ts
+Check web/e2e/documents.test.ts
+Check web/e2e/document-immersion.test.ts
+Check web/e2e/document-vertical-layout.test.ts
+Check web/e2e/document-zen-pagination-stability.test.ts
+Check web/e2e/document-host-boundaries.test.ts
+Check web/e2e/document-presentation-contracts.test.ts
+Check web/e2e/wallpaper.test.ts
+Check web/e2e/bundle-loading.test.ts
+Check web/e2e/route-style-stability.test.ts
+Check web/e2e/home-notes-persistence.test.ts
+Check web/e2e/ui-ownership.test.ts
+Check web/e2e/settings-shortcuts.test.ts
+Check web/e2e/shortcuts-notes-ask.test.ts
+Check web/e2e/shortcuts-search.test.ts
+Check web/e2e/ui-feedback.test.ts
+Check web/e2e/editable-pagination-spike.test.ts
+Check web/e2e/markdown-editor-loading.test.ts
+Check web/e2e/markdown-editor-spike.test.ts
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... loading remains bounded; retry recovers an empty Apps launcher ... ok (315ms)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... offline stale Apps cache remains browsable and explicit retry refreshes it ... ok (480ms)
+------- output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- output end -----
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... failed add/edit preserves draft and error; retry saves; delete/undo restores ... ok (801ms)
+./web/e2e/workspace.test.ts => production workspace contracts ... Widgets closed Dock -> Apps/Notes, non-modal desktop no backdrop/no focus trap/layout shift ... ok (169ms)
+./web/e2e/workspace.test.ts => production workspace contracts ... root in-place switch preserving queries ... ok (427ms)
+./web/e2e/workspace.test.ts => production workspace contracts ... nested AppForm dirty Back/Close protection and save ... ok (1s)
+------- output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- output end -----
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus ... ok (6s)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority ... ok (943ms)
+./web/e2e/workspace.test.ts => production workspace contracts ... Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server ... ok (5s)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration ... ok (797ms)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability ... ok (7s)
+./web/e2e/workspace.test.ts => production workspace contracts ... Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation ... ok (8s)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... presentation changes preserve Core queries and nested Back; logout clears transient state ... ok (2s)
+./web/e2e/workspace.test.ts => production workspace contracts ... Home Quick Apps pinned order, icon size and label preferences ... ok (2s)
+./web/e2e/workspace.test.ts => production workspace contracts ... Zen apps notes note edit FloatingNotes preserved desktop layout ... ok (681ms)
+./web/e2e/workspace.test.ts => production workspace contracts ... Mobile focustrap/swipe/escape and focus return ... ok (480ms)
+./web/e2e/workspace.test.ts => production workspace contracts ... ok (22s)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence ... ok (5s)
+./web/e2e/workspace-shell.test.ts => production Workspace state, keyboard and responsive contracts ... ok (26s)
+------- post-test output -------
+DESKTOP_PRESENTATION {"case":"shrink-grow-pagehide","before":{"x":540,"y":160,"width":760,"height":569},"constrained":{"x":264,"y":160,"width":760,"height":569},"grown":{"x":540,"y":160,"width":760,"height":569},"reopened":{"x":540,"y":160,"width":760,"height":569},"persistedV4":{"x":0.375,"y":0.17777777777777778,"width":0.5277777777777778,"height":0.6322222222222222}}
+./web/e2e/desktop-presentation.test.ts => desktop presentation restores the free-desktop frame after an uncommitted shrink-grow ...----- post-test output end -----
+./web/e2e/desktop-presentation.test.ts => desktop presentation restores the free-desktop frame after an uncommitted shrink-grow ... ok (2s)
+./web/e2e/desktop-presentation.test.ts => MOVE and RESIZE at 1024 become the new free-desktop intent ... ok (2s)
+------- post-test output -------
+DESKTOP_PRESENTATION {"case":"constrained-roundtrip","viewport":{"width":900,"height":900},"notesFreeDesktopFrame":{"x":400,"y":175,"width":640,"height":540},"notesAfterMinimize":{"x":0.2777777777777778,"y":0.19444444444444445,"width":0.4444444444444444,"height":0.6},"notesAfterOpen":{"x":0.2777777777777778,"y":0.19444444444444445,"width":0.4444444444444444,"height":0.6},"shortHostGeometry":{"window":{"x":260,"y":64,"width":640,"height":136},"titlebar":{"x":261,"y":65,"width":638,"height":44},"close":{"x":847,"y":68.5,"width":36,"height":36}},"presets":{"medium":{"x":111.4800033569336,"y":182.1999969482422,"width":639.9999771118164,"height":540.0000152587891},"large":{"x":32,"y":123.80000305175781,"width":836,"height":642.3906097412109},"fullscreen":{"x":16,"y":80,"width":868,"height":730},"mediumAfterPresets":{"x":111.4800033569336,"y":182.1999969482422,"width":677.0312271118164,"height":525.5937652587891}}}
+./web/e2e/desktop-presentation.test.ts => constrained workspace presets and measured chrome preserve free-desktop geometry ...----- post-test output end -----
+./web/e2e/desktop-presentation.test.ts => constrained workspace presets and measured chrome preserve free-desktop geometry ... ok (2s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/desktop-drag.test.ts => desktop drag preserves immediate reverse movement at all normal bounds ...----- post-test output end -----
+./web/e2e/desktop-drag.test.ts => desktop drag preserves immediate reverse movement at all normal bounds ... ok (11s)
+------- post-test output -------
+DESKTOP_PRESENTATION {"case":"snap-maximize-drag-out","normal":{"x":420,"y":170,"width":760,"height":569},"maximizedBeforeDragOut":{"x":0,"y":64,"width":1024,"height":630},"firstNormalPreview":{"x":199.52000427246094,"y":72,"width":760.0000152587891,"height":569},"committedNormal":{"x":227.52000427246094,"y":80,"width":760.0000152587891,"height":569},"grabRatio":{"expected":0.68,"actual":0.6799999807257406}}
+./web/e2e/desktop-presentation.test.ts => Snap, maximize, restore, and drag-out resolve current presentation geometry ...----- post-test output end -----
+./web/e2e/desktop-presentation.test.ts => Snap, maximize, restore, and drag-out resolve current presentation geometry ... ok (2s)
+./web/e2e/desktop-drag.test.ts => desktop drag clips diagonal and single-frame gestures without dragging controls ... ok (2s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/apps-density-88cd2c7f804c7d53
+----- post-test output end -----
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 0. Empty Launcher Root: blank surface menu available when zero apps or folders ... ok (124ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 1. Unified Launcher Root: defaults directly to complete launcher without legacy IA ... ok (194ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 2. Folder Inline Browse & Back scroll-focus restoration ... ok (151ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 3. Blank space context menu & Keyboard / Touch folder creation ... ok (680ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 4. Folder context actions: resize, rename, delete with confirmation and apps preserved ... ok (1s)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 5. Search deduplication, Folder result click & arrange mode search unbinding ... ok (392ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 6. App Context Menu ownership fallback (move in & out of folder) ... ok (460ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 7. App -> Folder pointer DnD: drop-target feedback and move failure rollback ... ok (434ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 8. App -> Folder pointer DnD: successful move and server reload consistency ... ok (426ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 9. Folder-internal App reorder, scope-local order, and pinnedOrder untouched ... ok (511ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 10. Mixed Root Reorder via KeyboardSensor and atomic PUT persistence ... ok (472ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 11. 375px mobile viewport & real theme system (dataset.theme reactive) ... ok (131ms)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 12. Folder across App and App across App preserve mixed order on reload ... ok (1s)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... 13. Real touch drag moves App into Folder without changing Home pin order ... ok (6s)
+./web/e2e/launcher.test.ts => production launcher contracts - Issue #47 ... ok (13s)
+./web/e2e/home-launcher-density.test.ts => Home touch grid density and drag alignment ... ok (4s)
+./web/e2e/apps-session.test.ts => apps edit keeps fields and confirmation across hosts and window modes ... ok (3s)
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... visible folder creation, arranging exit and layered Escape ... ok (1s)
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... all draft fields, icon input and real upload survive host replacement ... ok (1s)
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... cross-folder search context and icon shortcut versus normal edit ... ok (1s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... mobile modal undo is a visible, hittable normal layout row ... ok (600ms)
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... moving undo between modal and global hosts preserves its deadline ... ok (293ms)
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... restore failure remains inside the active modal and never restores falsely ... ok (498ms)
+./web/e2e/apps-interactions.test.ts => apps session, modal undo and visible management contracts #141 ... ok (6s)
+./web/e2e/apps-races.test.ts => apps ignores obsolete fetches and retains failed saves ... ok (3s)
+./web/e2e/apps-ordering.test.ts => apps concurrent optimistic sorting converges to confirmed server order #141 ... ok (1s)
+./web/e2e/apps-ai-session.test.ts => apps AI snapshot, candidates and selection stay in one session #141 ... ok (2s)
+./web/e2e/apps-density.test.ts => apps workspace touch density geometry and hit targets #149 ... ok (39s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/notes-masonry-eda3bc8a0d372672
+----- post-test output end -----
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Empty state (no notes) and search no result empty state ... ok (275ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Fixed section deduplication and search deduplication ... ok (331ms)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Controls isolation (drag, expand, pin, home-fixed, color, delete do not enter editor) ... ok (1s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44/#109: Inline expand/collapse, card column-width geometry (<=2px), and API write purity ... ok (495ms)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #78: toolbar, shortcuts, composite blur, Markdown persistence and newline parity ... ok (5s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... Content widths 505/506/766/767, max three columns and every desktop window operation are write-free ... ok (9s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes Source/Live: coarse-pointer toolbar touch targets and editable tasks ... ok (2s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: NoteEditor saving / unsynced / error and retry lifecycle ... ok (1s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: NoteEditor 409 conflict detection, dialog UI, and resolution ... ok (822ms)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Version history error handling and display ... ok (699ms)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Stale cached notes browse and retry on API failure ... ok (339ms)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 768–1023 constrained presets reflow without resetting query, expansion or API order ... ok (4s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Long title and many notes overflow contracts across desktop (1440) and mobile (390) ... ok (3s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... Unequal expanded Markdown heights use shortest columns; expand/collapse restores geometry without writes ... ok (3s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: Zen FloatingNotes opening/closing workspace geometry isolation ... ok (1s)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... Notes #44: ControlledNotes deterministic spatial layout and narrow fallback ... ok (801ms)
+./web/e2e/notes-workspace.test.ts => production notes workspace contracts (#44 & #43) ... ok (20s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... Search uses independent nonsortable masonry, prunes filtered geometry and clear restores grouping and expansion ... ok (3s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/notes-live-preview.test.ts => Notes Live Preview: opening and switching preserve canonical Markdown without saves ...----- post-test output end -----
+./web/e2e/notes-live-preview.test.ts => Notes Live Preview: opening and switching preserve canonical Markdown without saves ... ok (4s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... Pin/home-fixed membership changes preserve expansion; deletion reflows both independent containers ... ok (4s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 2-column pointer drop across columns at upper target center persists canonical order ... ok (2s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 2-column pointer drop across columns at lower target center persists canonical order ... ok (2s)
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... IME does not save or format partial composition; final text autosaves ... ok (3s)
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... selection, undo/redo, local link precedence and manual save ... ok (86ms)
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... toolbar focus stays inside composite and tasks persist checked state ... ok (134ms)
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... use cloud replaces both modes without callback/autosave loop ... ok (1s)
+------- post-test output -------
+[2026-10-15 12:34:01.403] INFO:
+    method: "PATCH"
+    path: "/api/notes/e8b39bb7-b492-431a-b485-f4f17d401177"
+    event: "validation-failed"
+----- post-test output end -----
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... long Markdown saves without truncation; over-limit draft survives rejection ... ok (143ms)
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... restore updates Live and Source without a second PATCH ... ok (2s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ...----- post-test output end -----
+./web/e2e/notes-live-editing.test.ts => Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore ... ok (10s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 2-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion ... ok (4s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 3-column pointer drop across columns at upper target center persists canonical order ... ok (3s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... clean title to body has no PATCH or version/history change ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 3-column pointer drop across columns at lower target center persists canonical order ... ok (2s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... 源码: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown ... ok (2s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... 源码: dirty title and body autosave together, never a title-only manual snapshot ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... 3-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion ... ok (4s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... 所见即所得: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... widgets 390px light: root/search presentation and home isolation with screenshot evidence ... ok (893ms)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... widgets 390px dark: root/search presentation and home isolation with screenshot evidence ... ok (957ms)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... 所见即所得: dirty title and body autosave together, never a title-only manual snapshot ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... widgets 768px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... internal focus does not restart the original title debounce ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... widgets 768px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... title-only dirty leave to history flushes exactly once with a manual snapshot ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... widgets 1440px light: root/search presentation and home isolation with screenshot evidence ... ok (2s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... title-only dirty leave to color flushes exactly once with a manual snapshot ... ok (1s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... clean explicit Ctrl+S retains manual save and version semantics ... ok (82ms)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... widgets 1440px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... zen 390px light: root/search presentation and home isolation with screenshot evidence ... ok (825ms)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... zen 390px dark: root/search presentation and home isolation with screenshot evidence ... ok (932ms)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... title composition blocks Enter, commands and blur; committed title autosaves ... ok (3s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... zen 768px light: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+'production notes masonry contracts (#109)' has been running for over (1m0s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... zen 768px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... zen 1440px light: root/search presentation and home isolation with screenshot evidence ... ok (886ms)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... zen 1440px dark: root/search presentation and home isolation with screenshot evidence ... ok (1s)
+./web/e2e/notes-masonry.test.ts => production notes masonry contracts (#109) ... ok (1m1s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer ... ok (5s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... failed title flush stays dirty and can retry through real leave ... ok (119ms)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... older title response cannot delete newer body draft after immediate close ... ok (398ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/notes-ux.test.ts => Notes long document actions and history stay reachable without replacing editor ...----- post-test output end -----
+./web/e2e/notes-ux.test.ts => Notes long document actions and history stay reachable without replacing editor ... ok (2s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... two note instances flush only the dirty instance actually left ... ok (4s)
+./web/e2e/notes-focus.test.ts => Notes focus boundary preserves network, versions and history ... ok (31s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/notes-history.test.ts => Notes history flush, cancel, restore and failure preserve real server contracts ...----- post-test output end -----
+./web/e2e/notes-history.test.ts => Notes history flush, cancel, restore and failure preserve real server contracts ... ok (3s)
+./web/e2e/notes-color.test.ts => Note card color dots have accessible names without visible labels and persist keyboard selection ... ok (2s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/home-notes-order-76831bbe5227099b
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Handle rendering and handle click does not open editor ... ok (585ms)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Pointer drag C->A immediate DOM, reload and relogin persistence, normal notes preserved ... ok (1s)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/notes-menu.test.ts => Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands ...----- post-test output end -----
+./web/e2e/notes-menu.test.ts => Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands ... ok (7s)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Keyboard equivalent reordering and reload persistence ... ok (860ms)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Max 5 slots displayed, hidden sixth+ note preserved in background ... ok (927ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Contract: Both have content -> 5:3 double-column & intrinsic height ... ok (467ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Fix and unfix notes toggles board presence and sorting capability ... ok (1s)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Contract: Apps-only -> Apps card full width, Notes empty moves down compact ... ok (319ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Contract: Notes-only -> Notes card full width, Apps empty moves down compact ... ok (435ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Contract: Both empty -> Both entries discoverable, 5:3 side-by-side, no large fixed min-height ... ok (307ms)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Workspace other notes sorting and search unsortable contract ... ok (862ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Tile Centering: 1 to 4 tiles centered (data-few-apps), 5+ start-aligned ... ok (642ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Geometry: Long app title & long note title do not cause overflow ... ok (171ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 375 mobile (375x667) - light ... ok (233ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 390 mobile standard (390x844) - light ... ok (122ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 768 tablet (768x1024) - light ... ok (179ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 1024 desktop small (1024x768) - light ... ok (164ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 1440 desktop standard (1440x900) - light ... ok (179ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 1920 desktop large (1920x1080) - light ... ok (206ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 375 mobile (375x667) - dark ... ok (191ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 390 mobile standard (390x844) - dark ... ok (213ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 768 tablet (768x1024) - dark ... ok (165ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 1024 desktop small (1024x768) - dark ... ok (161ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 1440 desktop standard (1440x900) - dark ... ok (433ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Matrix: 1920 desktop large (1920x1080) - dark ... ok (229ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Bento Notes: compact & expanded state toggles within controlled board ... ok (592ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... Zen Isolation: FloatingNotes & edge trigger work without Bento injection ... ok (159ms)
+./web/e2e/bento.test.ts => production Bento contracts & empty expansion matrix (#44) ... ok (7s)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Notes #62: Visual overflow at 375/390/768/1024/1440 light/dark and #40 layout contract ... ok (4s)
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Heading hierarchy contract: h2 panel -> h3 subsection with accessible regions (no skipping levels) ... ok (5s)
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Typography & spacing contract: Apps and Notes section titles computed styles parity ... ok (116ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Apps root and empty folder canonical EmptyState contract (h3, compact, footer primary sole action, no competing body button) ... ok (507ms)
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Count badge and search results contract: visible count and '搜索结果' region in Apps and Notes ... ok (585ms)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... Home #155: code scrolling stays inside Zen and Widgets notes ... ok (7s)
+./web/e2e/home-notes-order.test.ts => production home notes manual order E2E (#62) ... ok (19s)
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Empty search action contract: EmptyState with '清空搜索' action clears query and restores items ... ok (180ms)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/workspace-matrix-e4551431cdddd343
+----- post-test output end -----
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Loading and error live roles + retry contract ... ok (3s)
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... Warning offline cache contract: offline status banner with compact density and retry button ... ok (909ms)
+./web/e2e/workspace-contract.test.ts => production workspace #80 behavioral contracts ... ok (12s)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix A: 16-combination responsive & visual matrix (4 viewports x 2 themes x 2 styles) ... ok (5s)
+./web/e2e/navigation.test.ts => production navigation contracts ... auth surfaces retain responsive geometry in both themes ... ok (1s)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix B: Wallpaper material, surface boundaries, and active window separation ... ok (504ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/navigation.test.ts => production navigation contracts ... settings direct-entry, refresh, canonicalization and one-step Back ... ok (1s)
+./web/e2e/navigation.test.ts => production navigation contracts ... anonymous device appearance survives reload without an account ... ok (350ms)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix C: Apps/Notes states (root/nested/empty/loading/error) and Core Domain Independence (390 & 1440) ... ok (1s)
+./web/e2e/navigation.test.ts => production navigation contracts ... unknown pages and workspace children render the same recoverable 404 ... ok (578ms)
+./web/e2e/navigation.test.ts => production navigation contracts ... register after a guest CTA retains destination through auth mode switching ... ok (1s)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix C: Apps/Notes loading, error and retry at 390 and 1440 ... ok (3s)
+./web/e2e/navigation.test.ts => production navigation contracts ... account appearance survives reload and syncs without leaking on logout or expiry ... ok (2s)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix D: Desktop Window behavior (1024 & 1440 Widgets) ... ok (2s)
+./web/e2e/navigation.test.ts => production navigation contracts ... login restores ask, trash and account queries; direct and external next return home ... ok (3s)
+./web/e2e/navigation.test.ts => production navigation contracts ... admin exact children, tab Back and AI Provider workspace entry ... ok (954ms)
+./web/e2e/navigation.test.ts => production navigation contracts ... admin dialog keyboard close restores focus to its opener ... ok (174ms)
+./web/e2e/navigation.test.ts => production navigation contracts ... mobile breadcrumbs remain visible within viewport ... ok (557ms)
+./web/e2e/navigation.test.ts => production navigation contracts ... ok (12s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/documents-ebc3436f05358c38
+----- post-test output end -----
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... Documents Library stays body-free and does not load editor runtime ... ok (126ms)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix E: Persistence, identity isolation, and layout restore (1440 Widgets) ... ok (5s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 390x844 zen light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... Matrix F: Tablet constrained contract (768 Widgets) ... ok (1s)
+./web/e2e/workspace-matrix.test.ts => production workspace layered matrix E2E (Issue #92) ... ok (21s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 390x844 zen dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 390x844 widgets light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 390x844 widgets dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 768x1024 zen light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 768x1024 zen dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 768x1024 widgets light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 768x1024 widgets dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1024x768 zen light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1024x768 zen dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1024x768 widgets light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1024x768 widgets dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1440x900 zen light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1440x900 zen dark: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1440x900 widgets light: modes, overflow and Host boundary ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 1440x900 widgets dark: modes, overflow and Host boundary ... ok (2s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... short viewport keeps the focused source text visible and saves typed content ... ok (1s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... 100k Markdown / 200 headings / 50 images / 20 tables / 30 breaks survive input, page and source ... ok (3s)
+./web/e2e/documents.test.ts => Documents production responsive modes and large-document integrity (#102 M7) ... ok (33s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/document-vertical-layout-32029d81c15663a5
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+./web/e2e/document-immersion.test.ts => #147: document immersion preserves the editor and normal window semantics ...----- post-test output end -----
+./web/e2e/document-immersion.test.ts => #147: document immersion preserves the editor and normal window semantics ... ok (35s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/document-zen-pagination-stability-f8321e4df496d04b
+----- post-test output end -----
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-1440x900-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-1440x900-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-1024x768-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-1024x768-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-768x1024-light ... ok (8s)
+./web/e2e/document-vertical-layout.test.ts => #147: production page layout, editing, paper settings and print flow ... ok (51s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... 1440x900 ... ok (2s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... 1024x768 ... ok (1s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-768x1024-dark ... ok (8s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... 768x1024 ... ok (2s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... 390x844 ... ok (2s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... 1440x240 ... ok (2s)
+'#158 Zen page layout reaches an idle fixed point' has been running for over (1m0s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... 390x240 ... ok (2s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-390x844-light ... ok (8s)
+./web/e2e/document-host-boundaries.test.ts => #158 Zen body owner, short-host access and unrelated lists ... ok (14s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-390x844-dark ... ok (8s)
+./web/e2e/document-presentation-contracts.test.ts => Zen document presentations preserve editor, layout and save contracts ... ok (16s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... off-center subjects survive desktop/mobile preview, apply and refresh ... ok (2s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-1024x1552-light ... ok (15s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... short-1024x1552-dark ... ok (15s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... motion presets cover focal extremes without exposing canvas edges ... ok (19s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... fresh device login restores cloud selection and asset-specific composition ... ok (441ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... history primary action previews, menu selects, clear does not delete ... ok (429ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... delete failure preserves selection; non-current and current deletion have distinct consequences ... ok (791ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... URL draft does not PATCH; failed sync recovers and rapid changes retain the latest value ... ok (786ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... reduced-motion disables background animations and displays settings notice ... ok (412ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... anonymous gradient and local upload survive reload without touching cloud preferences ... ok (1s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... preset sliders respond to keyboard Arrow, Home and End with semantic aria values and style updates ... ok (912ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... real pointer move preview updates thumbnail filter and mask with zero PATCH, and pointer release commits exactly one sync ... ok (343ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... per-wallpaper presentation restore across uploaded, remote, and gradient sources and reload ... ok (2s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... turning motion off preserves motion level, and clearing wallpaper restricts motion to off and ambient ... ok (747ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... focal composition dialog forces runtime motion off while preserving persisted drift or zoom ... ok (1s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... real-page mono transparent-gradient regression verifies neutral sRGB channels and neutral ambient color ... ok (917ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... Settings live preview plays motion, immediately updates CSS variables without reload, and prevents PATCH flooding during drag ... ok (651ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... substrate contract validates canvas, gradient, and image ambient calibration and layering ... ok (991ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... embedded and fullscreen ambient motion use their own container geometry ... ok (678ms)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... drift and zoom satisfy deterministic onset deadlines with at least 10% geometric progress ... ok (1s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-1440x900-light ... ok (15s)
+'#158 Zen page layout reaches an idle fixed point' has been running for over (2m0s)
+------- post-test output -------
+[PERCEPTIBILITY] subtle median: 1.0884895833333332 min: 1.0884895833333332 samples: [
+  1.0884895833333332,
+  1.0884895833333332,
+  1.0884895833333332,
+  1.0884895833333332,
+  1.0884895833333332
+]
+[PERCEPTIBILITY] soft median: 1.8197395833333334 min: 1.8197395833333334 samples: [
+  1.8197395833333334,
+  1.8197395833333334,
+  1.8197395833333334,
+  1.8197395833333334,
+  1.8197395833333334
+]
+[PERCEPTIBILITY] standard median: 2.5691145833333335 min: 2.5691145833333335 samples: [
+  2.5691145833333335,
+  2.5691145833333335,
+  2.5691145833333335,
+  2.5691145833333335,
+  2.5691145833333335
+]
+[PERCEPTIBILITY] pronounced median: 4.0575 min: 4.0575 samples: [ 4.0575, 4.0575, 4.0575, 4.0575, 4.0575 ]
+----- post-test output end -----
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... fixed gray texture: frozen ROI lower bounds and adjacent stage separation ... ok (12s)
+------- post-test output -------
+[LUMINANCE] {
+  peaks: [ 0.35, 0.55 ],
+  means: [
+    158.3283767115349,
+    158.1764152008174,
+    158.23595167825573,
+    157.9777890920361,
+    158.03676857562405,
+    158.34547012677942
+  ],
+  swing: 0.3676810347433275
+}
+----- post-test output end -----
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... ambient peaks are separated and actual full-frame luminance does not breathe ... ok (1s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-1440x900-dark ... ok (15s)
+------- post-test output -------
+[RECURRENCE WORST-CASE SWING] {
+  worstMeans: [
+    158.22154259359144,
+    158.2218834982213,
+    158.2219190502309,
+    158.2218522698352,
+    158.22153734930774,
+    158.22177364946447
+  ],
+  worstSwing: 0.0003817009231568136
+}
+----- post-test output end -----
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... wall-clock ambient recurrence: top-6 worst overlap windows aggregate luminance swing <= budget ... ok (1s)
+------- post-test output -------
+[RASTER] {
+  level: "subtle",
+  readability: "clear",
+  compositeMaximum: 0.058823529411764705,
+  afterMaskMaximum: 0.050980392156862744
+}
+'production wallpaper composition, lifecycle and sync E2E' has been running for over (1m0s)
+[RASTER] {
+  level: "soft",
+  readability: "clear",
+  compositeMaximum: 0.0784313725490196,
+  afterMaskMaximum: 0.06666666666666667
+}
+----- post-test output end -----
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-1024x768-light ... ok (8s)
+------- post-test output -------
+[RASTER] {
+  level: "standard",
+  readability: "clear",
+  compositeMaximum: 0.09803921568627451,
+  afterMaskMaximum: 0.08235294117647059
+}
+[RASTER] {
+  level: "pronounced",
+  readability: "clear",
+  compositeMaximum: 0.11764705882352941,
+  afterMaskMaximum: 0.10196078431372549
+}
+[RASTER] {
+  level: "subtle",
+  readability: "balanced",
+  compositeMaximum: 0.058823529411764705,
+  afterMaskMaximum: 0.043137254901960784
+}
+----- post-test output end -----
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-1024x768-dark ... ok (8s)
+------- post-test output -------
+[RASTER] {
+  level: "soft",
+  readability: "balanced",
+  compositeMaximum: 0.0784313725490196,
+  afterMaskMaximum: 0.058823529411764705
+}
+[RASTER] {
+  level: "standard",
+  readability: "balanced",
+  compositeMaximum: 0.09803921568627451,
+  afterMaskMaximum: 0.07450980392156863
+}
+[RASTER] {
+  level: "pronounced",
+  readability: "balanced",
+  compositeMaximum: 0.11764705882352941,
+  afterMaskMaximum: 0.08627450980392157
+}
+----- post-test output end -----
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... actual raster composite: all stages, clear/balanced, fixed cycle phases ... ok (23s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... capture visual evidence for Main verification ... ok (407ms)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-768x1024-light ... ok (8s)
+./web/e2e/wallpaper.test.ts => production wallpaper composition, lifecycle and sync E2E ... ok (1m20s)
+./web/e2e/bundle-loading.test.ts => production bundle loading and route isolation contracts ... Scenario 1: Home page initial load only requests initial static graph ... ok (201ms)
+./web/e2e/bundle-loading.test.ts => production bundle loading and route isolation contracts ... Scenario 2: Suspense observable fallback & SPA navigation to Ask without full reload ... ok (187ms)
+./web/e2e/bundle-loading.test.ts => production bundle loading and route isolation contracts ... Scenario 3: Direct visit to async routes resolves Suspense ... ok (3s)
+./web/e2e/bundle-loading.test.ts => production bundle loading and route isolation contracts ... Scenario 4: Lazy route chunk failure caught by RouteErrorBoundary with recovery ... ok (323ms)
+./web/e2e/bundle-loading.test.ts => production bundle loading and route isolation contracts ... Scenario 5: Motion Inspector diagnostic dynamic boundary ... ok (264ms)
+./web/e2e/bundle-loading.test.ts => production bundle loading and route isolation contracts ... ok (4s)
+------- post-test output -------
+E2E evidence: /tmp/audit-169-final/e2e-evidence/route-style-2bef7dbe1a7ec619
+----- post-test output end -----
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-768x1024-dark ... ok (8s)
+./web/e2e/route-style-stability.test.ts => Production Route Style Stability E2E Suite ... 1440x900: Settings Appearance, Motion level, and Ask geometry hard gates ... ok (1s)
+./web/e2e/route-style-stability.test.ts => Production Route Style Stability E2E Suite ... 2048x1152: Ask Wide-screen Responsive Geometry Hard Gates ... ok (2s)
+./web/e2e/route-style-stability.test.ts => Production Route Style Stability E2E Suite ... 390x844: Mobile Layout, Touch Targets, and Drawer Contracts ... ok (2s)
+./web/e2e/route-style-stability.test.ts => Production Route Style Stability E2E Suite ... ok (6s)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Scenario A: compact note -> toggle expand -> reload persists full (#122) ... ok (561ms)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Scenario B: full note -> toggle collapse -> reload persists compact (#122) ... ok (440ms)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Scenario C: cross-session logout and re-login retains expanded state from backend (#122) ... ok (622ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Scenario D: legacy note without layout defaults to expanded, collapses and persists (#122) ... ok (516ms)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-390x844-light ... ok (8s)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Failure rollback: PUT 500 error rolls back optimistic UI to compact and shows error (#122) ... ok (582ms)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Zen / FloatingNotes: toggle mode produces exactly 1 PUT and persists across reload (#122) ... ok (538ms)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... Zen code block native scrollbar remains draggable (#138) ... ok (633ms)
+./web/e2e/home-notes-persistence.test.ts => production home notes expand/collapse persistence E2E (#122) ... ok (5s)
+./web/e2e/ui-ownership.test.ts => UI Ownership and style scoping contracts ... Admin login fixture establishes authenticated session ... ok (140ms)
+./web/e2e/ui-ownership.test.ts => UI Ownership and style scoping contracts ... Home style zen vs widgets switching isolates Settings/Admin/Account/Trash/Ask ... ok (2s)
+./web/e2e/ui-ownership.test.ts => UI Ownership and style scoping contracts ... Global theme, accent, and search shape preferences remain effective globally ... ok (996ms)
+./web/e2e/ui-ownership.test.ts => UI Ownership and style scoping contracts ... Utility/Management/Workbench/Search geometry has no overflow across 390/768/1440 x light/dark ... ok (2s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-390x844-dark ... ok (8s)
+./web/e2e/ui-ownership.test.ts => UI Ownership and style scoping contracts ... Canonical rendering and semantic feedback without checking source classes ... ok (778ms)
+./web/e2e/ui-ownership.test.ts => UI Ownership and style scoping contracts ... ok (7s)
+./web/e2e/settings-shortcuts.test.ts => production settings shortcuts contracts ... guest direct access, active tab state, and refresh persistence ... ok (1s)
+./web/e2e/settings-shortcuts.test.ts => production settings shortcuts contracts ... settings 404 for unknown shortcut routes and recovery ... ok (156ms)
+./web/e2e/settings-shortcuts.test.ts => production settings shortcuts contracts ... macOS and other platform keycaps and screen reader accessibility ... ok (1s)
+./web/e2e/settings-shortcuts.test.ts => production settings shortcuts contracts ... responsive geometry across 390 / 768 / 1440 widths and light/dark themes without horizontal overflow ... ok (470ms)
+./web/e2e/settings-shortcuts.test.ts => production settings shortcuts contracts ... ok (2s)
+./web/e2e/shortcuts-notes-ask.test.ts => production shortcuts for Notes and Ask (#103) ... Notes toolbar displays unified shortcut format in tooltips ... ok (343ms)
+./web/e2e/shortcuts-notes-ask.test.ts => production shortcuts for Notes and Ask (#103) ... Note K inserts link and does not steal focus to global search ... ok (89ms)
+./web/e2e/shortcuts-notes-ask.test.ts => production shortcuts for Notes and Ask (#103) ... Note B, I, strike (Shift+X), and S shortcuts execute correctly in editor ... ok (190ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/shortcuts-notes-ask.test.ts => production shortcuts for Notes and Ask (#103) ... Ask F opens conversation search dialog from composer and non-Ask does not register ... ok (569ms)
+./web/e2e/shortcuts-notes-ask.test.ts => production shortcuts for Notes and Ask (#103) ... ok (2s)
+./web/e2e/shortcuts-search.test.ts => production search shortcuts respect editable focus and submit command targets ... global focus yields to input textarea select contenteditable and textbox descendants ... ok (50ms)
+./web/e2e/shortcuts-search.test.ts => production search shortcuts respect editable focus and submit command targets ... plain global bindings focus search but extra modifiers do not ... ok (62ms)
+./web/e2e/shortcuts-search.test.ts => production search shortcuts respect editable focus and submit command targets ... late suggestions do not reopen the listbox after search loses focus ... ok (398ms)
+./web/e2e/shortcuts-search.test.ts => production search shortcuts respect editable focus and submit command targets ... all quick commands select their target without query pollution ... ok (1s)
+./web/e2e/shortcuts-search.test.ts => production search shortcuts respect editable focus and submit command targets ... mod Enter opens the stripped engine query in a new tab ... ok (97ms)
+./web/e2e/shortcuts-search.test.ts => production search shortcuts respect editable focus and submit command targets ... ok (1s)
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... Account: 当前设备退出 / 其他设备退出 dialog contracts (Cancel/Escape no mutation, Confirm 1 mutation, pending disabled, focus recovery) ... ok (747ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... Trash: 永久删除 dialog contracts on Desktop & Mobile (Escape/Cancel no mutation, Confirm 1 mutation, pending disabled, EmptyState after delete) ... ok (1s)
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... Provider: 删除 Provider dialog contracts (Cancel/Escape no mutation, focus restoration, Confirm 1 mutation, pending disabled) ... ok (567ms)
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... AppForm: 重复应用添加确认与图标覆盖确认 (Escape/Cancel no mutation, focus recovery, Confirm 1 mutation, pending disabled) ... ok (1s)
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... UndoToast: Home app/note 删除撤销恢复与 Ask conversation 删除撤销恢复无需真实模型 ... ok (1s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-1024x1552-light ... ok (16s)
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... Workspace: Apps/Notes initial loading, error, empty (首次空结果不闪空态) 及可读 warning ... ok (1s)
+./web/e2e/ui-feedback.test.ts => UI feedback, confirmation dialogs, and undo contracts ... ok (7s)
+./web/e2e/editable-pagination-spike.test.ts => M0B production editable pagination preserves state, boundaries and IME ... runtime loads only on open; continuous/page keep DOM, selection and history ... ok (1s)
+./web/e2e/editable-pagination-spike.test.ts => M0B production editable pagination preserves state, boundaries and IME ... manual start/consecutive/end breaks retain blank pages; gaps cannot receive a caret ... ok (136ms)
+./web/e2e/editable-pagination-spike.test.ts => M0B production editable pagination preserves state, boundaries and IME ... copy/paste preserves semantic PageBreak without copying page decoration ... ok (36ms)
+./web/e2e/editable-pagination-spike.test.ts => M0B production editable pagination preserves state, boundaries and IME ... physical paper and margins reflow only after Chinese composition commits ... ok (91ms)
+./web/e2e/editable-pagination-spike.test.ts => M0B production editable pagination preserves state, boundaries and IME ... oversized text/code/table fragment and PNG fits printable box proportionally ... ok (503ms)
+./web/e2e/editable-pagination-spike.test.ts => M0B production editable pagination preserves state, boundaries and IME ... ok (2s)
+./web/e2e/markdown-editor-loading.test.ts => production browser network isolation: editor runtime lazy boundary contracts ... Scenario 1: Anonymous Home visit never requests editor-vendor or runtime ... ok (164ms)
+------- post-test output -------
+Deno.serve: request.signal aborts on successful responses (legacy behavior). To detect when a request has been fully delivered use the `completed` promise on the handler's info argument. Move cleanup to the handler's return path, or opt in to the new behavior with --unstable-no-legacy-abort. See https://docs.deno.com/go/unstable-no-legacy-abort
+----- post-test output end -----
+./web/e2e/markdown-editor-loading.test.ts => production browser network isolation: editor runtime lazy boundary contracts ... Scenario 2: Home/Apps stay vendor-cold; Notes root stays runtime-cold; Live loads on demand and Source does not reload ... ok (2s)
+./web/e2e/markdown-editor-loading.test.ts => production browser network isolation: editor runtime lazy boundary contracts ... Scenario 3: /design-lab/markdown-editor route shell loads without editor runtime ... ok (900ms)
+./web/e2e/markdown-editor-loading.test.ts => production browser network isolation: editor runtime lazy boundary contracts ... Scenario 4: Clicking '打开编辑器' on demand requests runtime and editor-vendor ... ok (1s)
+./web/e2e/markdown-editor-loading.test.ts => production browser network isolation: editor runtime lazy boundary contracts ... ok (4s)
+./web/e2e/markdown-editor-spike.test.ts => M0A production React editor lifecycle, source, IME and isolation ... ok (1s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... manual-1024x1552-dark ... ok (15s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-1440x900-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-1440x900-dark ... ok (8s)
+'#158 Zen page layout reaches an idle fixed point' has been running for over (4m0s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-1024x768-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-1024x768-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-768x1024-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-768x1024-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-390x844-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-390x844-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-1024x1552-light ... ok (16s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... consecutive-1024x1552-dark ... ok (15s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-1440x900-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-1440x900-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-1024x768-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-1024x768-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-768x1024-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-768x1024-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-390x844-light ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-390x844-dark ... ok (8s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-1024x1552-light ... ok (15s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... mixed-1024x1552-dark ... ok (15s)
+./web/e2e/document-zen-pagination-stability.test.ts => #158 Zen page layout reaches an idle fixed point ... ok (6m57s)
+
+ok | 48 passed (281 steps) | 0 failed (10m44s)
+
+E2E reports: /tmp/audit-169-final/e2e-full

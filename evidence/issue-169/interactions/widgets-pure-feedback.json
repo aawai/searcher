@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "windowCount": 0,
+    "cardText": "常用应用加载常用网站中...",
+    "live": [
+      {
+        "role": "status",
+        "live": "assertive",
+        "text": ""
+      }
+    ],
+    "cardLive": null
+  },
+  "error": {
+    "windowCount": 0,
+    "cardText": "常用应用加载失败：请求失败重试",
+    "live": [
+      {
+        "role": "status",
+        "live": "assertive",
+        "text": ""
+      }
+    ],
+    "cardLive": null
+  },
+  "injectedStatus": 503
+}

@@ -1,0 +1,245 @@
+{
+  "emulation": "desktop Chromium viewport resizing; not physical mobile keyboard",
+  "rows": [
+    {
+      "width": 1440,
+      "height": 900,
+      "conversationLoaded": true,
+      "visual": {
+        "height": 900,
+        "width": 1440,
+        "offsetTop": 0
+      },
+      "thread": {
+        "x": 341,
+        "y": 133,
+        "width": 1018,
+        "height": 750,
+        "top": 133,
+        "right": 1359,
+        "bottom": 883,
+        "left": 341
+      },
+      "inlineMaxHeight": "767px",
+      "scrollViewport": {
+        "x": 341,
+        "y": 133,
+        "width": 1018,
+        "height": 574,
+        "top": 133,
+        "right": 1359,
+        "bottom": 707,
+        "left": 341
+      },
+      "dock": {
+        "x": 341,
+        "y": 707,
+        "width": 1018,
+        "height": 176,
+        "top": 707,
+        "right": 1359,
+        "bottom": 883,
+        "left": 341
+      },
+      "rootOverflow": 0,
+      "workspaceSheetPresent": false,
+      "scrollOwner": {
+        "height": 574,
+        "scrollHeight": 1040,
+        "overflow": "auto"
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "conversationLoaded": true,
+      "visual": {
+        "height": 1024,
+        "width": 768,
+        "offsetTop": 0
+      },
+      "thread": {
+        "x": 33,
+        "y": 133,
+        "width": 702,
+        "height": 874,
+        "top": 133,
+        "right": 735,
+        "bottom": 1007,
+        "left": 33
+      },
+      "inlineMaxHeight": "891px",
+      "scrollViewport": {
+        "x": 33,
+        "y": 133,
+        "width": 702,
+        "height": 698,
+        "top": 133,
+        "right": 735,
+        "bottom": 831,
+        "left": 33
+      },
+      "dock": {
+        "x": 33,
+        "y": 831,
+        "width": 702,
+        "height": 176,
+        "top": 831,
+        "right": 735,
+        "bottom": 1007,
+        "left": 33
+      },
+      "rootOverflow": 0,
+      "workspaceSheetPresent": false,
+      "scrollOwner": {
+        "height": 698,
+        "scrollHeight": 1086,
+        "overflow": "auto"
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "conversationLoaded": true,
+      "visual": {
+        "height": 844,
+        "width": 390,
+        "offsetTop": 0
+      },
+      "thread": {
+        "x": 17,
+        "y": 141,
+        "width": 356,
+        "height": 678,
+        "top": 141,
+        "right": 373,
+        "bottom": 819,
+        "left": 17
+      },
+      "inlineMaxHeight": "703px",
+      "scrollViewport": {
+        "x": 17,
+        "y": 141,
+        "width": 356,
+        "height": 454,
+        "top": 141,
+        "right": 373,
+        "bottom": 595,
+        "left": 17
+      },
+      "dock": {
+        "x": 17,
+        "y": 595,
+        "width": 356,
+        "height": 224,
+        "top": 595,
+        "right": 373,
+        "bottom": 819,
+        "left": 17
+      },
+      "rootOverflow": 0,
+      "workspaceSheetPresent": false,
+      "scrollOwner": {
+        "height": 454,
+        "scrollHeight": 1205,
+        "overflow": "auto"
+      }
+    },
+    {
+      "width": 390,
+      "height": 400,
+      "conversationLoaded": true,
+      "visual": {
+        "height": 400,
+        "width": 390,
+        "offsetTop": 0
+      },
+      "thread": {
+        "x": 17,
+        "y": 141,
+        "width": 356,
+        "height": 234,
+        "top": 141,
+        "right": 373,
+        "bottom": 375,
+        "left": 17
+      },
+      "inlineMaxHeight": "259px",
+      "scrollViewport": {
+        "x": 17,
+        "y": 141,
+        "width": 356,
+        "height": 60,
+        "top": 141,
+        "right": 373,
+        "bottom": 201,
+        "left": 17
+      },
+      "dock": {
+        "x": 17,
+        "y": 201,
+        "width": 356,
+        "height": 224,
+        "top": 201,
+        "right": 373,
+        "bottom": 425,
+        "left": 17
+      },
+      "rootOverflow": 0,
+      "workspaceSheetPresent": false,
+      "scrollOwner": {
+        "height": 60,
+        "scrollHeight": 1205,
+        "overflow": "auto"
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "conversationLoaded": true,
+      "visual": {
+        "height": 390,
+        "width": 844,
+        "offsetTop": 0
+      },
+      "thread": {
+        "x": 33,
+        "y": 133,
+        "width": 778,
+        "height": 240,
+        "top": 133,
+        "right": 811,
+        "bottom": 373,
+        "left": 33
+      },
+      "inlineMaxHeight": "257px",
+      "scrollViewport": {
+        "x": 33,
+        "y": 133,
+        "width": 778,
+        "height": 64,
+        "top": 133,
+        "right": 811,
+        "bottom": 197,
+        "left": 33
+      },
+      "dock": {
+        "x": 33,
+        "y": 197,
+        "width": 778,
+        "height": 176,
+        "top": 197,
+        "right": 811,
+        "bottom": 373,
+        "left": 33
+      },
+      "rootOverflow": 0,
+      "workspaceSheetPresent": false,
+      "scrollOwner": {
+        "height": 64,
+        "scrollHeight": 1063,
+        "overflow": "auto"
+      }
+    }
+  ]
+}

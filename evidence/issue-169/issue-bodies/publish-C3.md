@@ -1,0 +1,43 @@
+## 背景与证据
+#169 重新审计，基线 main@0c8d36d2f0203f5289ab981bad0913d8bc241b29，2026-10-15。优先级 **P1**，负责人未分配。属于审计报告 **C3**；持久证据见 [REPORT](https://github.com/aawai/searcher/blob/evidence/issue-169/evidence/issue-169/REPORT.md)。
+
+## 范围、非目标与方案选择
+只修复C3这一个根因，不重建Workspace/Window，不搭载其他审计项。优先现有领域/Host seam上的最小完整修复；具体步骤明确涉及的必要架构调整，禁止借机全局重构。
+
+## 目标文件/模块
+components/searcher/FloatingNotes.tsx、notes.css；app/SearchHome.tsx及home布局测量；home-notes-order/bento E2E
+
+## 按序实施
+1. 增加两个以上固定展开便签、null note_layouts坐标的1440×900失败场景；输入搜索并真实点击submit，证明hit target被便签挡住。
+2. 由主页现有layout owner测量Search实际bounds，向FloatingNotes传入默认放置的exclusion rect；将默认无坐标位置选择提取为纯放置逻辑，选择不与Search相交且在当前可用区内的位置。
+3. 只调整尚无用户坐标的默认布局；保留手动保存的坐标/拖拽、note_layouts账号隔离及桌面布局。空间不足按已有窄屏流式策略回流，不叠新fixed层或硬编码搜索Y值。
+4. 验证首屏、字体就绪、resize和两种theme；不通过抬高Search全局z-index或降低全部便签z-index解决，也不改搜索纵向anchor。
+
+## 测试与验收矩阵
+1440/1024宽默认多便签不遮搜索输入或submit，真实点击进入受控本地搜索目标；已保存坐标不被自动重排；320–960现有flow、展开/折叠和drag保存不变。
+
+## 依赖与风险
+#85 Search-first、#20搜索锚点、#155长代码滚动。无其他修复依赖。
+
+## 回滚
+独立回滚默认placement与新增bounds prop；不得持久化覆盖既有用户坐标，因此无数据迁移。
+
+## 兼容约束与验证阶梯
+禁止破坏：搜索纵向锚点、320–430px移动Apps网格、Workspace导航/焦点/未保存保护、桌面canonical/presentation几何与v4持久化/Dock、编辑器撤销/版本/滚动、Documents分页、壁纸/reduced-motion、路由懒加载、账号与匿名隔离。优先复用现有组件和owner；不接受全局CSS重构或第二套viewport校正。
+
+先focused契约red→green，再相关module/E2E、typecheck、lint/format、`deno task check:ui`；实际浏览器验证390/768/1440×light/dark×Zen/Widgets（行为集中于受影响路径，不在每个视觉组合机械重复）。适用的受限/短屏与上下断点必须单独验收。完整build与依赖产物E2E不可并发替换。更新CHANGELOG与实际contract文档、填写UI checklist，报告精确执行结果；真机不可用列未验证，不能声称软键盘通过。
+
+## 完成定义
+- [ ] 根因修复，无特判、无第二套owner或未完成分支。
+- [ ] 本文全部验收路径实际执行，focused regression修复前失败/后通过。
+- [ ] 通用禁止回归与UI门禁通过，证据可追溯，docs/changelog同步。
+- [ ] 兼容迁移与回滚经检查；不覆盖已有用户数据。
+
+## 经运行复核的具体证据
+
+### C3 / P1：Zen 默认固定便签遮挡主搜索提交按钮
+- 步骤：1440×900，Zen，有两张以上展开固定便签，note_layouts 坐标为空（非用户手动摆放），输入搜索词，点击提交。
+- Expected：默认布局不遮挡主搜索；Actual：submit rect(1031,304.19,40,40)，第二张 note rect(850,200,250,299.75) 覆盖；elementFromPoint 命中 note-preview，真实 click 被拒。
+- 证据：`zen-default-search-occlusion.json/png`、`zen-search-click.json`；包含服务端 null 坐标。
+- 根因：`FloatingNotes.tsx:16–35` 默认摆放 y=200、交错 x，没有 Search exclusion；note canvas z25。不能全局抬高搜索 z-index 掩盖默认布局问题。
+

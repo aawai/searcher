@@ -1,0 +1,34 @@
+{
+  "loading": {
+    "cardText": "常用应用加载常用网站中...",
+    "live": [
+      {
+        "role": "status",
+        "live": "assertive",
+        "text": ""
+      }
+    ],
+    "cardLive": null
+  },
+  "error": {
+    "cardText": "常用应用加载失败：请求失败重试",
+    "live": [
+      {
+        "role": "status",
+        "live": "assertive",
+        "text": ""
+      },
+      {
+        "role": "alert",
+        "live": null,
+        "text": "应用加载失败：请求失败重试"
+      }
+    ],
+    "cardLive": null
+  },
+  "injectedEndpoints": [
+    "http://127.0.0.1:36639/api/webapps",
+    "http://127.0.0.1:36639/api/webapp-groups"
+  ],
+  "injectedStatus": 503
+}

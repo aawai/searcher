@@ -1,0 +1,17 @@
+{
+  "style": "zen",
+  "viewport": [
+    1440,
+    900
+  ],
+  "switchMethod": "keyboard focus + Enter on existing edge trigger",
+  "retained": {
+    "name": "复审应用草稿保留",
+    "url": "https://example.invalid/draft169"
+  },
+  "closeDialog": "放弃未保存的应用修改？\n\n返回或收起工作区后，当前未保存的表单内容将丢失。\n\n继续编辑\n放弃修改",
+  "cancelRetains": {
+    "name": "复审应用草稿保留",
+    "url": "https://example.invalid/draft169"
+  }
+}

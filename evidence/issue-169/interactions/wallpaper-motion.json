@@ -1,0 +1,4875 @@
+{
+  "source": "linear-gradient(135deg, #334d70, #bfd8e8)",
+  "result": [
+    {
+      "mode": "off",
+      "reduced": false,
+      "frames": 112,
+      "uniqueTransforms": 2,
+      "layoutStable": true,
+      "runningAnimationsMax": 0,
+      "rows": [
+        {
+          "t": 162.13,
+          "dt": -13.769999976158147,
+          "image": null,
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 178.9,
+          "dt": 3.0000000238418636,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 245.5,
+          "dt": 69.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 262.2,
+          "dt": 86.30000002384185,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 295.5,
+          "dt": 119.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 362.2,
+          "dt": 186.30000002384185,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 378.9,
+          "dt": 203.00000002384184,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 412.1,
+          "dt": 236.20000002384188,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 428.8,
+          "dt": 252.90000002384187,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 445.5,
+          "dt": 269.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 462.1,
+          "dt": 286.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 478.8,
+          "dt": 302.90000002384187,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 495.5,
+          "dt": 319.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 512.1,
+          "dt": 336.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 545.5,
+          "dt": 369.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 578.8,
+          "dt": 402.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 595.5,
+          "dt": 419.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 612.1,
+          "dt": 436.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 628.8,
+          "dt": 452.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 645.5,
+          "dt": 469.60000002384186,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 662.1,
+          "dt": 486.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 678.8,
+          "dt": 502.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 695.5,
+          "dt": 519.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 712.1,
+          "dt": 536.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 728.8,
+          "dt": 552.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 745.5,
+          "dt": 569.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 762.1,
+          "dt": 586.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 778.8,
+          "dt": 602.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 795.5,
+          "dt": 619.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 812.1,
+          "dt": 636.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 828.8,
+          "dt": 652.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 845.5,
+          "dt": 669.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 862.1,
+          "dt": 686.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 878.8,
+          "dt": 702.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 895.5,
+          "dt": 719.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 912.2,
+          "dt": 736.3000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 928.8,
+          "dt": 752.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 945.4,
+          "dt": 769.5000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 962.1,
+          "dt": 786.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 978.8,
+          "dt": 802.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 995.5,
+          "dt": 819.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1012.1,
+          "dt": 836.2000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1028.8,
+          "dt": 852.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1045.5,
+          "dt": 869.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1062.1,
+          "dt": 886.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1078.8,
+          "dt": 902.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1095.4,
+          "dt": 919.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1112.1,
+          "dt": 936.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1128.7,
+          "dt": 952.8000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1145.5,
+          "dt": 969.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1162.2,
+          "dt": 986.3000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1178.8,
+          "dt": 1002.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1195.5,
+          "dt": 1019.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1212.1,
+          "dt": 1036.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1228.7,
+          "dt": 1052.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1245.4,
+          "dt": 1069.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1262.1,
+          "dt": 1086.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1278.7,
+          "dt": 1102.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1295.4,
+          "dt": 1119.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1312.1,
+          "dt": 1136.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1328.7,
+          "dt": 1152.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1345.5,
+          "dt": 1169.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1362.1,
+          "dt": 1186.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1378.7,
+          "dt": 1202.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1395.4,
+          "dt": 1219.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1412.1,
+          "dt": 1236.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1428.8,
+          "dt": 1252.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1445.4,
+          "dt": 1269.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1462.1,
+          "dt": 1286.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1478.7,
+          "dt": 1302.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1495.4,
+          "dt": 1319.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1512.2,
+          "dt": 1336.300000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1528.7,
+          "dt": 1352.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1545.5,
+          "dt": 1369.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1562.1,
+          "dt": 1386.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1578.8,
+          "dt": 1402.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1595.4,
+          "dt": 1419.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1612.1,
+          "dt": 1436.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1628.8,
+          "dt": 1452.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1645.5,
+          "dt": 1469.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1662.1,
+          "dt": 1486.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1678.8,
+          "dt": 1502.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1695.5,
+          "dt": 1519.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1712.1,
+          "dt": 1536.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1728.8,
+          "dt": 1552.9000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1745.5,
+          "dt": 1569.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1762.1,
+          "dt": 1586.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1778.7,
+          "dt": 1602.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1795.4,
+          "dt": 1619.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1812.1,
+          "dt": 1636.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1828.7,
+          "dt": 1652.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1845.5,
+          "dt": 1669.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1862.1,
+          "dt": 1686.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1878.7,
+          "dt": 1702.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1895.5,
+          "dt": 1719.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1912,
+          "dt": 1736.1000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1928.7,
+          "dt": 1752.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1945.4,
+          "dt": 1769.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1962.1,
+          "dt": 1786.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1978.7,
+          "dt": 1802.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1995.5,
+          "dt": 1819.6000000238419,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2012.1,
+          "dt": 1836.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2028.7,
+          "dt": 1852.800000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2045.4,
+          "dt": 1869.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2062.1,
+          "dt": 1886.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2078.7,
+          "dt": 1902.8000000238417,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2095.4,
+          "dt": 1919.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2112.1,
+          "dt": 1936.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2128.8,
+          "dt": 1952.900000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2145.4,
+          "dt": 1969.500000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2162.1,
+          "dt": 1986.2000000238418,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2178.8,
+          "dt": 2002.900000023842,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "mode": "ambient",
+      "reduced": false,
+      "frames": 82,
+      "uniqueTransforms": 82,
+      "layoutStable": true,
+      "runningAnimationsMax": 2,
+      "rows": [
+        {
+          "t": 120.5,
+          "dt": 24,
+          "image": "none",
+          "fieldA": "matrix(1.02521, 0, 0, 1.02521, 84.7039, -84.7039)",
+          "fieldB": "matrix(1.0071, 0, 0, 1.0071, -23.8556, 23.8556)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 153.8,
+          "dt": 57.30000000000001,
+          "image": "none",
+          "fieldA": "matrix(1.02533, 0, 0, 1.02533, 85.1093, -85.1093)",
+          "fieldB": "matrix(1.00717, 0, 0, 1.00717, -24.0953, 24.0953)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 170.4,
+          "dt": 73.9,
+          "image": "none",
+          "fieldA": "matrix(1.02539, 0, 0, 1.02539, 85.3091, -85.3091)",
+          "fieldB": "matrix(1.00721, 0, 0, 1.00721, -24.215, 24.215)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 187.1,
+          "dt": 90.6,
+          "image": "none",
+          "fieldA": "matrix(1.02545, 0, 0, 1.02545, 85.5087, -85.5087)",
+          "fieldB": "matrix(1.00724, 0, 0, 1.00724, -24.3358, 24.3358)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 220.5,
+          "dt": 124,
+          "image": "none",
+          "fieldA": "matrix(1.02557, 0, 0, 1.02557, 85.904, -85.904)",
+          "fieldB": "matrix(1.00731, 0, 0, 1.00731, -24.5781, 24.5781)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 237.1,
+          "dt": 140.6,
+          "image": "none",
+          "fieldA": "matrix(1.02562, 0, 0, 1.02562, 86.0984, -86.0984)",
+          "fieldB": "matrix(1.00735, 0, 0, 1.00735, -24.6989, 24.6989)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 270.4,
+          "dt": 173.89999999999998,
+          "image": "none",
+          "fieldA": "matrix(1.02574, 0, 0, 1.02574, 86.4843, -86.4843)",
+          "fieldB": "matrix(1.00742, 0, 0, 1.00742, -24.9422, 24.9422)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 287.1,
+          "dt": 190.60000000000002,
+          "image": "none",
+          "fieldA": "matrix(1.0258, 0, 0, 1.0258, 86.6758, -86.6758)",
+          "fieldB": "matrix(1.00746, 0, 0, 1.00746, -25.0646, 25.0646)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 303.8,
+          "dt": 207.3,
+          "image": "none",
+          "fieldA": "matrix(1.02585, 0, 0, 1.02585, 86.8659, -86.8659)",
+          "fieldB": "matrix(1.0075, 0, 0, 1.0075, -25.1872, 25.1872)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 337.2,
+          "dt": 240.7,
+          "image": "none",
+          "fieldA": "matrix(1.02596, 0, 0, 1.02596, 87.2421, -87.2421)",
+          "fieldB": "matrix(1.00757, 0, 0, 1.00757, -25.4334, 25.4334)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 353.8,
+          "dt": 257.3,
+          "image": "none",
+          "fieldA": "matrix(1.02602, 0, 0, 1.02602, 87.427, -87.427)",
+          "fieldB": "matrix(1.00761, 0, 0, 1.00761, -25.5561, 25.5561)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 387.1,
+          "dt": 290.6,
+          "image": "none",
+          "fieldA": "matrix(1.02613, 0, 0, 1.02613, 87.7939, -87.7939)",
+          "fieldB": "matrix(1.00768, 0, 0, 1.00768, -25.8032, 25.8032)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 403.8,
+          "dt": 307.3,
+          "image": "none",
+          "fieldA": "matrix(1.02618, 0, 0, 1.02618, 87.9758, -87.9758)",
+          "fieldB": "matrix(1.00772, 0, 0, 1.00772, -25.9274, 25.9274)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 420.4,
+          "dt": 323.9,
+          "image": "none",
+          "fieldA": "matrix(1.02624, 0, 0, 1.02624, 88.1553, -88.1553)",
+          "fieldB": "matrix(1.00775, 0, 0, 1.00775, -26.0512, 26.0512)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 453.8,
+          "dt": 357.3,
+          "image": "none",
+          "fieldA": "matrix(1.02634, 0, 0, 1.02634, 88.5124, -88.5124)",
+          "fieldB": "matrix(1.00783, 0, 0, 1.00783, -26.3011, 26.3011)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 470.5,
+          "dt": 374,
+          "image": "none",
+          "fieldA": "matrix(1.0264, 0, 0, 1.0264, 88.6888, -88.6888)",
+          "fieldB": "matrix(1.00787, 0, 0, 1.00787, -26.4265, 26.4265)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 520.4,
+          "dt": 423.9,
+          "image": "none",
+          "fieldA": "matrix(1.02655, 0, 0, 1.02655, 89.208, -89.208)",
+          "fieldB": "matrix(1.00798, 0, 0, 1.00798, -26.8026, 26.8026)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 537.1,
+          "dt": 440.6,
+          "image": "none",
+          "fieldA": "matrix(1.0266, 0, 0, 1.0266, 89.379, -89.379)",
+          "fieldB": "matrix(1.00801, 0, 0, 1.00801, -26.929, 26.929)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 570.4,
+          "dt": 473.9,
+          "image": "none",
+          "fieldA": "matrix(1.0267, 0, 0, 1.0267, 89.7159, -89.7159)",
+          "fieldB": "matrix(1.00809, 0, 0, 1.00809, -27.1818, 27.1818)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 587.1,
+          "dt": 490.6,
+          "image": "none",
+          "fieldA": "matrix(1.02675, 0, 0, 1.02675, 89.8828, -89.8828)",
+          "fieldB": "matrix(1.00813, 0, 0, 1.00813, -27.309, 27.309)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 620.5,
+          "dt": 524,
+          "image": "none",
+          "fieldA": "matrix(1.02685, 0, 0, 1.02685, 90.2125, -90.2125)",
+          "fieldB": "matrix(1.0082, 0, 0, 1.0082, -27.5641, 27.5641)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 637.1,
+          "dt": 540.6,
+          "image": "none",
+          "fieldA": "matrix(1.0269, 0, 0, 1.0269, 90.3744, -90.3744)",
+          "fieldB": "matrix(1.00824, 0, 0, 1.00824, -27.6913, 27.6913)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 670.4,
+          "dt": 573.9,
+          "image": "none",
+          "fieldA": "matrix(1.02699, 0, 0, 1.02699, 90.695, -90.695)",
+          "fieldB": "matrix(1.00832, 0, 0, 1.00832, -27.9471, 27.9471)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 703.7,
+          "dt": 607.2,
+          "image": "none",
+          "fieldA": "matrix(1.02709, 0, 0, 1.02709, 91.0101, -91.0101)",
+          "fieldB": "matrix(1.00839, 0, 0, 1.00839, -28.204, 28.204)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 737.1,
+          "dt": 640.6,
+          "image": "none",
+          "fieldA": "matrix(1.02718, 0, 0, 1.02718, 91.3208, -91.3208)",
+          "fieldB": "matrix(1.00847, 0, 0, 1.00847, -28.4627, 28.4627)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 753.7,
+          "dt": 657.2,
+          "image": "none",
+          "fieldA": "matrix(1.02722, 0, 0, 1.02722, 91.4732, -91.4732)",
+          "fieldB": "matrix(1.00851, 0, 0, 1.00851, -28.5916, 28.5916)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 787.1,
+          "dt": 690.6,
+          "image": "none",
+          "fieldA": "matrix(1.02731, 0, 0, 1.02731, 91.7758, -91.7758)",
+          "fieldB": "matrix(1.00859, 0, 0, 1.00859, -28.8517, 28.8517)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 803.7,
+          "dt": 707.2,
+          "image": "none",
+          "fieldA": "matrix(1.02736, 0, 0, 1.02736, 91.9242, -91.9242)",
+          "fieldB": "matrix(1.00863, 0, 0, 1.00863, -28.9814, 28.9814)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 837.1,
+          "dt": 740.6,
+          "image": "none",
+          "fieldA": "matrix(1.02745, 0, 0, 1.02745, 92.2187, -92.2187)",
+          "fieldB": "matrix(1.0087, 0, 0, 1.0087, -29.2429, 29.2429)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 853.7,
+          "dt": 757.2,
+          "image": "none",
+          "fieldA": "matrix(1.02749, 0, 0, 1.02749, 92.363, -92.363)",
+          "fieldB": "matrix(1.00874, 0, 0, 1.00874, -29.3733, 29.3733)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 887.1,
+          "dt": 790.6,
+          "image": "none",
+          "fieldA": "matrix(1.02757, 0, 0, 1.02757, 92.6494, -92.6494)",
+          "fieldB": "matrix(1.00882, 0, 0, 1.00882, -29.6363, 29.6363)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 903.8,
+          "dt": 807.3,
+          "image": "none",
+          "fieldA": "matrix(1.02762, 0, 0, 1.02762, 92.7906, -92.7906)",
+          "fieldB": "matrix(1.00886, 0, 0, 1.00886, -29.7682, 29.7682)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 937.1,
+          "dt": 840.6,
+          "image": "none",
+          "fieldA": "matrix(1.0277, 0, 0, 1.0277, 93.0681, -93.0681)",
+          "fieldB": "matrix(1.00894, 0, 0, 1.00894, -30.0319, 30.0319)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 953.8,
+          "dt": 857.3,
+          "image": "none",
+          "fieldA": "matrix(1.02774, 0, 0, 1.02774, 93.2053, -93.2053)",
+          "fieldB": "matrix(1.00898, 0, 0, 1.00898, -30.1645, 30.1645)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 987.1,
+          "dt": 890.6,
+          "image": "none",
+          "fieldA": "matrix(1.02782, 0, 0, 1.02782, 93.4749, -93.4749)",
+          "fieldB": "matrix(1.00906, 0, 0, 1.00906, -30.4295, 30.4295)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1003.8,
+          "dt": 907.3,
+          "image": "none",
+          "fieldA": "matrix(1.02786, 0, 0, 1.02786, 93.608, -93.608)",
+          "fieldB": "matrix(1.0091, 0, 0, 1.0091, -30.5628, 30.5628)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1037.1,
+          "dt": 940.5999999999999,
+          "image": "none",
+          "fieldA": "matrix(1.02794, 0, 0, 1.02794, 93.8697, -93.8697)",
+          "fieldB": "matrix(1.00918, 0, 0, 1.00918, -30.8292, 30.8292)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1053.8,
+          "dt": 957.3,
+          "image": "none",
+          "fieldA": "matrix(1.02798, 0, 0, 1.02798, 93.9989, -93.9989)",
+          "fieldB": "matrix(1.00922, 0, 0, 1.00922, -30.9632, 30.9632)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1087.1,
+          "dt": 990.5999999999999,
+          "image": "none",
+          "fieldA": "matrix(1.02805, 0, 0, 1.02805, 94.2526, -94.2526)",
+          "fieldB": "matrix(1.00929, 0, 0, 1.00929, -31.231, 31.231)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1103.7,
+          "dt": 1007.2,
+          "image": "none",
+          "fieldA": "matrix(1.02809, 0, 0, 1.02809, 94.3771, -94.3771)",
+          "fieldB": "matrix(1.00933, 0, 0, 1.00933, -31.3648, 31.3648)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1137.1,
+          "dt": 1040.6,
+          "image": "none",
+          "fieldA": "matrix(1.02816, 0, 0, 1.02816, 94.6237, -94.6237)",
+          "fieldB": "matrix(1.00942, 0, 0, 1.00942, -31.6348, 31.6348)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1153.7,
+          "dt": 1057.2,
+          "image": "none",
+          "fieldA": "matrix(1.0282, 0, 0, 1.0282, 94.7443, -94.7443)",
+          "fieldB": "matrix(1.00946, 0, 0, 1.00946, -31.7692, 31.7692)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1187.1,
+          "dt": 1090.6,
+          "image": "none",
+          "fieldA": "matrix(1.02827, 0, 0, 1.02827, 94.9831, -94.9831)",
+          "fieldB": "matrix(1.00954, 0, 0, 1.00954, -32.0405, 32.0405)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1220.5,
+          "dt": 1124,
+          "image": "none",
+          "fieldA": "matrix(1.02834, 0, 0, 1.02834, 95.2166, -95.2166)",
+          "fieldB": "matrix(1.00962, 0, 0, 1.00962, -32.3126, 32.3126)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1237.1,
+          "dt": 1140.6,
+          "image": "none",
+          "fieldA": "matrix(1.02837, 0, 0, 1.02837, 95.3307, -95.3307)",
+          "fieldB": "matrix(1.00966, 0, 0, 1.00966, -32.4482, 32.4482)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1270.5,
+          "dt": 1174,
+          "image": "none",
+          "fieldA": "matrix(1.02844, 0, 0, 1.02844, 95.5565, -95.5565)",
+          "fieldB": "matrix(1.00974, 0, 0, 1.00974, -32.7215, 32.7215)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1287.1,
+          "dt": 1190.6,
+          "image": "none",
+          "fieldA": "matrix(1.02847, 0, 0, 1.02847, 95.6668, -95.6668)",
+          "fieldB": "matrix(1.00978, 0, 0, 1.00978, -32.8577, 32.8577)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1303.7,
+          "dt": 1207.2,
+          "image": "none",
+          "fieldA": "matrix(1.0285, 0, 0, 1.0285, 95.7758, -95.7758)",
+          "fieldB": "matrix(1.00982, 0, 0, 1.00982, -32.9941, 32.9941)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1337.1,
+          "dt": 1240.6,
+          "image": "none",
+          "fieldA": "matrix(1.02857, 0, 0, 1.02857, 95.9914, -95.9914)",
+          "fieldB": "matrix(1.0099, 0, 0, 1.0099, -33.2692, 33.2692)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1353.7,
+          "dt": 1257.2,
+          "image": "none",
+          "fieldA": "matrix(1.0286, 0, 0, 1.0286, 96.0966, -96.0966)",
+          "fieldB": "matrix(1.00994, 0, 0, 1.00994, -33.4062, 33.4062)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1387.1,
+          "dt": 1290.6,
+          "image": "none",
+          "fieldA": "matrix(1.02866, 0, 0, 1.02866, 96.3045, -96.3045)",
+          "fieldB": "matrix(1.01002, 0, 0, 1.01002, -33.6825, 33.6825)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1403.7,
+          "dt": 1307.2,
+          "image": "none",
+          "fieldA": "matrix(1.02869, 0, 0, 1.02869, 96.4059, -96.4059)",
+          "fieldB": "matrix(1.01007, 0, 0, 1.01007, -33.8201, 33.8201)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1437.1,
+          "dt": 1340.6,
+          "image": "none",
+          "fieldA": "matrix(1.02875, 0, 0, 1.02875, 96.6062, -96.6062)",
+          "fieldB": "matrix(1.01015, 0, 0, 1.01015, -34.0976, 34.0976)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1453.7,
+          "dt": 1357.2,
+          "image": "none",
+          "fieldA": "matrix(1.02878, 0, 0, 1.02878, 96.7038, -96.7038)",
+          "fieldB": "matrix(1.01019, 0, 0, 1.01019, -34.2357, 34.2357)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1487,
+          "dt": 1390.5,
+          "image": "none",
+          "fieldA": "matrix(1.02884, 0, 0, 1.02884, 96.896, -96.896)",
+          "fieldB": "matrix(1.01027, 0, 0, 1.01027, -34.5136, 34.5136)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1503.7,
+          "dt": 1407.2,
+          "image": "none",
+          "fieldA": "matrix(1.02887, 0, 0, 1.02887, 96.9905, -96.9905)",
+          "fieldB": "matrix(1.01031, 0, 0, 1.01031, -34.6532, 34.6532)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1537.1,
+          "dt": 1440.6,
+          "image": "none",
+          "fieldA": "matrix(1.02892, 0, 0, 1.02892, 97.1758, -97.1758)",
+          "fieldB": "matrix(1.0104, 0, 0, 1.0104, -34.9329, 34.9329)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1553.7,
+          "dt": 1457.2,
+          "image": "none",
+          "fieldA": "matrix(1.02895, 0, 0, 1.02895, 97.266, -97.266)",
+          "fieldB": "matrix(1.01044, 0, 0, 1.01044, -35.0723, 35.0723)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1587,
+          "dt": 1490.5,
+          "image": "none",
+          "fieldA": "matrix(1.029, 0, 0, 1.029, 97.4433, -97.4433)",
+          "fieldB": "matrix(1.01052, 0, 0, 1.01052, -35.3523, 35.3523)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1603.7,
+          "dt": 1507.2,
+          "image": "none",
+          "fieldA": "matrix(1.02903, 0, 0, 1.02903, 97.5304, -97.5304)",
+          "fieldB": "matrix(1.01056, 0, 0, 1.01056, -35.4931, 35.4931)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1620.4,
+          "dt": 1523.9,
+          "image": "none",
+          "fieldA": "matrix(1.02905, 0, 0, 1.02905, 97.6162, -97.6162)",
+          "fieldB": "matrix(1.01061, 0, 0, 1.01061, -35.634, 35.634)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1637,
+          "dt": 1540.5,
+          "image": "none",
+          "fieldA": "matrix(1.02908, 0, 0, 1.02908, 97.7003, -97.7003)",
+          "fieldB": "matrix(1.01065, 0, 0, 1.01065, -35.7742, 35.7742)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1653.7,
+          "dt": 1557.2,
+          "image": "none",
+          "fieldA": "matrix(1.0291, 0, 0, 1.0291, 97.7837, -97.7837)",
+          "fieldB": "matrix(1.01069, 0, 0, 1.01069, -35.9155, 35.9155)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1670.4,
+          "dt": 1573.9,
+          "image": "none",
+          "fieldA": "matrix(1.02913, 0, 0, 1.02913, 97.8659, -97.8659)",
+          "fieldB": "matrix(1.01073, 0, 0, 1.01073, -36.0569, 36.0569)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1703.8,
+          "dt": 1607.3,
+          "image": "none",
+          "fieldA": "matrix(1.02917, 0, 0, 1.02917, 98.0266, -98.0266)",
+          "fieldB": "matrix(1.01082, 0, 0, 1.01082, -36.3403, 36.3403)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1720.4,
+          "dt": 1623.9,
+          "image": "none",
+          "fieldA": "matrix(1.0292, 0, 0, 1.0292, 98.1047, -98.1047)",
+          "fieldB": "matrix(1.01086, 0, 0, 1.01086, -36.4814, 36.4814)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1737,
+          "dt": 1640.5,
+          "image": "none",
+          "fieldA": "matrix(1.02922, 0, 0, 1.02922, 98.1816, -98.1816)",
+          "fieldB": "matrix(1.0109, 0, 0, 1.0109, -36.6227, 36.6227)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1770.4,
+          "dt": 1673.9,
+          "image": "none",
+          "fieldA": "matrix(1.02927, 0, 0, 1.02927, 98.3327, -98.3327)",
+          "fieldB": "matrix(1.01098, 0, 0, 1.01098, -36.9075, 36.9075)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1787,
+          "dt": 1690.5,
+          "image": "none",
+          "fieldA": "matrix(1.02929, 0, 0, 1.02929, 98.406, -98.406)",
+          "fieldB": "matrix(1.01103, 0, 0, 1.01103, -37.0493, 37.0493)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1803.7,
+          "dt": 1707.2,
+          "image": "none",
+          "fieldA": "matrix(1.02931, 0, 0, 1.02931, 98.4786, -98.4786)",
+          "fieldB": "matrix(1.01107, 0, 0, 1.01107, -37.1921, 37.1921)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1837.1,
+          "dt": 1740.6,
+          "image": "none",
+          "fieldA": "matrix(1.02935, 0, 0, 1.02935, 98.6201, -98.6201)",
+          "fieldB": "matrix(1.01115, 0, 0, 1.01115, -37.4781, 37.4781)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1853.7,
+          "dt": 1757.2,
+          "image": "none",
+          "fieldA": "matrix(1.02937, 0, 0, 1.02937, 98.6887, -98.6887)",
+          "fieldB": "matrix(1.0112, 0, 0, 1.0112, -37.6206, 37.6206)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1887,
+          "dt": 1790.5,
+          "image": "none",
+          "fieldA": "matrix(1.02941, 0, 0, 1.02941, 98.8228, -98.8228)",
+          "fieldB": "matrix(1.01128, 0, 0, 1.01128, -37.9067, 37.9067)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1903.7,
+          "dt": 1807.2,
+          "image": "none",
+          "fieldA": "matrix(1.02943, 0, 0, 1.02943, 98.8883, -98.8883)",
+          "fieldB": "matrix(1.01132, 0, 0, 1.01132, -38.0505, 38.0505)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1920.3,
+          "dt": 1823.8,
+          "image": "none",
+          "fieldA": "matrix(1.02945, 0, 0, 1.02945, 98.9522, -98.9522)",
+          "fieldB": "matrix(1.01137, 0, 0, 1.01137, -38.1935, 38.1935)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1953.8,
+          "dt": 1857.3,
+          "image": "none",
+          "fieldA": "matrix(1.02949, 0, 0, 1.02949, 99.0778, -99.0778)",
+          "fieldB": "matrix(1.01145, 0, 0, 1.01145, -38.4826, 38.4826)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1970.4,
+          "dt": 1873.9,
+          "image": "none",
+          "fieldA": "matrix(1.02951, 0, 0, 1.02951, 99.1382, -99.1382)",
+          "fieldB": "matrix(1.0115, 0, 0, 1.0115, -38.6261, 38.6261)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1987.1,
+          "dt": 1890.6,
+          "image": "none",
+          "fieldA": "matrix(1.02952, 0, 0, 1.02952, 99.1979, -99.1979)",
+          "fieldB": "matrix(1.01154, 0, 0, 1.01154, -38.7706, 38.7706)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2020.4,
+          "dt": 1923.9,
+          "image": "none",
+          "fieldA": "matrix(1.02956, 0, 0, 1.02956, 99.3135, -99.3135)",
+          "fieldB": "matrix(1.01162, 0, 0, 1.01162, -39.0592, 39.0592)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2037.1,
+          "dt": 1940.6,
+          "image": "none",
+          "fieldA": "matrix(1.02957, 0, 0, 1.02957, 99.3697, -99.3697)",
+          "fieldB": "matrix(1.01167, 0, 0, 1.01167, -39.2041, 39.2041)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2087,
+          "dt": 1990.5,
+          "image": "none",
+          "fieldA": "matrix(1.02962, 0, 0, 1.02962, 99.5309, -99.5309)",
+          "fieldB": "matrix(1.0118, 0, 0, 1.0118, -39.638, 39.638)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2103.7,
+          "dt": 2007.1999999999998,
+          "image": "none",
+          "fieldA": "matrix(1.02964, 0, 0, 1.02964, 99.5826, -99.5826)",
+          "fieldB": "matrix(1.01184, 0, 0, 1.01184, -39.7835, 39.7835)",
+          "animations": 2,
+          "searchTop": 296.1875,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "mode": "drift",
+      "reduced": false,
+      "frames": 78,
+      "uniqueTransforms": 77,
+      "layoutStable": true,
+      "runningAnimationsMax": 1,
+      "rows": [
+        {
+          "t": 138.2,
+          "dt": 4.099999976158131,
+          "image": "matrix(1, 0, 0, 1, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 155,
+          "dt": 20.899999976158142,
+          "image": "matrix(1, 0, 0, 1, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 238.3,
+          "dt": 104.19999997615815,
+          "image": "matrix(1, 0, 0, 1, 0.194251, 0.114425)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 254.9,
+          "dt": 120.79999997615815,
+          "image": "matrix(1, 0, 0, 1, 0.232942, 0.137216)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 288.3,
+          "dt": 154.19999997615815,
+          "image": "matrix(1, 0, 0, 1, 0.310789, 0.183073)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 305,
+          "dt": 170.89999997615814,
+          "image": "matrix(1, 0, 0, 1, 0.349713, 0.206001)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 338.3,
+          "dt": 204.19999997615815,
+          "image": "matrix(1, 0, 0, 1, 0.427328, 0.25172)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 354.9,
+          "dt": 220.79999997615812,
+          "image": "matrix(1, 0, 0, 1, 0.466019, 0.274511)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 388.2,
+          "dt": 254.09999997615813,
+          "image": "matrix(1, 0, 0, 1, 0.543633, 0.320231)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 405,
+          "dt": 270.89999997615814,
+          "image": "matrix(1, 0, 0, 1, 0.58279, 0.343296)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 438.3,
+          "dt": 304.19999997615815,
+          "image": "matrix(1, 0, 0, 1, 0.660405, 0.389016)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 455,
+          "dt": 320.89999997615814,
+          "image": "matrix(1, 0, 0, 1, 0.699328, 0.411944)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 488.3,
+          "dt": 354.19999997615815,
+          "image": "matrix(1, 0, 0, 1, 0.776943, 0.457664)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 504.9,
+          "dt": 370.7999999761581,
+          "image": "matrix(1, 0, 0, 1, 0.815634, 0.480455)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 538.3,
+          "dt": 404.1999999761581,
+          "image": "matrix(1, 0, 0, 1, 0.893481, 0.526311)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 555,
+          "dt": 420.89999997615814,
+          "image": "matrix(1, 0, 0, 1, 0.932405, 0.54924)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 571.6,
+          "dt": 437.49999997615816,
+          "image": "matrix(1, 0, 0, 1, 0.971096, 0.572031)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 605,
+          "dt": 470.89999997615814,
+          "image": "matrix(1, 0, 0, 1, 1.04894, 0.617888)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 621.6,
+          "dt": 487.49999997615816,
+          "image": "matrix(1, 0, 0, 1, 1.08763, 0.640679)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 655,
+          "dt": 520.8999999761581,
+          "image": "matrix(1, 0, 0, 1, 1.16548, 0.686535)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 671.7,
+          "dt": 537.5999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.20441, 0.709464)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 705,
+          "dt": 570.8999999761581,
+          "image": "matrix(1, 0, 0, 1, 1.28202, 0.755183)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 721.6,
+          "dt": 587.4999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.32071, 0.777974)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 754.9,
+          "dt": 620.7999999761581,
+          "image": "matrix(1, 0, 0, 1, 1.39833, 0.823693)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 771.6,
+          "dt": 637.4999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.43725, 0.846622)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 821.6,
+          "dt": 687.4999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.55379, 0.91527)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 838.3,
+          "dt": 704.1999999761581,
+          "image": "matrix(1, 0, 0, 1, 1.59271, 0.938198)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 871.6,
+          "dt": 737.4999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.67033, 0.983917)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 888.2,
+          "dt": 754.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.70869, 1.00594)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 921.6,
+          "dt": 787.4999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.78578, 1.05004)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 954.9,
+          "dt": 820.7999999761581,
+          "image": "matrix(1, 0, 0, 1, 1.86265, 1.09401)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 971.6,
+          "dt": 837.4999999761582,
+          "image": "matrix(1, 0, 0, 1, 1.90119, 1.11606)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1004.9,
+          "dt": 870.7999999761581,
+          "image": "matrix(1, 0, 0, 1, 1.97805, 1.16002)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1038.3,
+          "dt": 904.1999999761581,
+          "image": "matrix(1, 0, 0, 1, 2.05515, 1.20412)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1071.6,
+          "dt": 937.499999976158,
+          "image": "matrix(1, 0, 0, 1, 2.13201, 1.24808)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1088.3,
+          "dt": 954.1999999761581,
+          "image": "matrix(1, 0, 0, 1, 2.17056, 1.27013)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1121.6,
+          "dt": 987.499999976158,
+          "image": "matrix(1, 0, 0, 1, 2.24742, 1.3141)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1154.9,
+          "dt": 1020.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.32428, 1.35806)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1171.6,
+          "dt": 1037.499999976158,
+          "image": "matrix(1, 0, 0, 1, 2.36283, 1.38011)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1204.9,
+          "dt": 1070.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.43969, 1.42408)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1221.6,
+          "dt": 1087.499999976158,
+          "image": "matrix(1, 0, 0, 1, 2.47824, 1.44612)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1254.9,
+          "dt": 1120.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.5551, 1.49009)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1271.6,
+          "dt": 1137.499999976158,
+          "image": "matrix(1, 0, 0, 1, 2.59365, 1.51214)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1304.9,
+          "dt": 1170.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.67051, 1.5561)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1321.5,
+          "dt": 1187.3999999761581,
+          "image": "matrix(1, 0, 0, 1, 2.70882, 1.57802)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1338.2,
+          "dt": 1204.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.74737, 1.60007)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1354.9,
+          "dt": 1220.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.78592, 1.62212)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1388.2,
+          "dt": 1254.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.86278, 1.66608)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1421.6,
+          "dt": 1287.499999976158,
+          "image": "matrix(1, 0, 0, 1, 2.93987, 1.71018)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1438.2,
+          "dt": 1304.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 2.97819, 1.7321)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1471.6,
+          "dt": 1337.499999976158,
+          "image": "matrix(1, 0, 0, 1, 3.05528, 1.77619)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1488.2,
+          "dt": 1354.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.0936, 1.79811)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1521.5,
+          "dt": 1387.3999999761581,
+          "image": "matrix(1, 0, 0, 1, 3.17046, 1.84207)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1538.2,
+          "dt": 1404.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.20901, 1.86412)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1571.6,
+          "dt": 1437.499999976158,
+          "image": "matrix(1, 0, 0, 1, 3.2861, 1.90822)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1588.3,
+          "dt": 1454.199999976158,
+          "image": "matrix(1, 0, 0, 1, 3.32465, 1.93027)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1604.9,
+          "dt": 1470.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.36241, 1.9509)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1638.2,
+          "dt": 1504.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.43778, 1.99141)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1654.9,
+          "dt": 1520.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.47558, 2.01173)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1688.2,
+          "dt": 1554.0999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.55095, 2.05225)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1704.9,
+          "dt": 1570.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.58875, 2.07257)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1738.3,
+          "dt": 1604.199999976158,
+          "image": "matrix(1, 0, 0, 1, 3.66435, 2.11321)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1754.9,
+          "dt": 1620.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.70193, 2.1334)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1771.5,
+          "dt": 1637.3999999761581,
+          "image": "matrix(1, 0, 0, 1, 3.7395, 2.1536)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1804.9,
+          "dt": 1670.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.8151, 2.19424)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1821.6,
+          "dt": 1687.499999976158,
+          "image": "matrix(1, 0, 0, 1, 3.8529, 2.21456)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1854.9,
+          "dt": 1720.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 3.92827, 2.25508)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1871.5,
+          "dt": 1737.3999999761581,
+          "image": "matrix(1, 0, 0, 1, 3.96585, 2.27527)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1904.9,
+          "dt": 1770.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 4.04145, 2.31591)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1921.6,
+          "dt": 1787.499999976158,
+          "image": "matrix(1, 0, 0, 1, 4.07925, 2.33623)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1954.9,
+          "dt": 1820.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 4.15462, 2.37675)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1971.6,
+          "dt": 1837.499999976158,
+          "image": "matrix(1, 0, 0, 1, 4.19242, 2.39707)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2021.6,
+          "dt": 1887.499999976158,
+          "image": "matrix(1, 0, 0, 1, 4.3056, 2.4579)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2054.9,
+          "dt": 1920.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 4.38097, 2.49842)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2071.5,
+          "dt": 1937.3999999761581,
+          "image": "matrix(1, 0, 0, 1, 4.41854, 2.51862)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2104.8,
+          "dt": 1970.6999999761583,
+          "image": "matrix(1, 0, 0, 1, 4.49392, 2.55913)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2121.5,
+          "dt": 1987.3999999761581,
+          "image": "matrix(1, 0, 0, 1, 4.53172, 2.57945)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2154.9,
+          "dt": 2020.7999999761582,
+          "image": "matrix(1, 0, 0, 1, 4.60732, 2.62009)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "mode": "zoom",
+      "reduced": false,
+      "frames": 91,
+      "uniqueTransforms": 91,
+      "layoutStable": true,
+      "runningAnimationsMax": 1,
+      "rows": [
+        {
+          "t": 214.528,
+          "dt": 13.82800001192092,
+          "image": "matrix(1.00005, 0, 0, 1.00005, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 231.1,
+          "dt": 30.400000011920923,
+          "image": "matrix(1.00006, 0, 0, 1.00006, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 247.9,
+          "dt": 47.200000011920935,
+          "image": "matrix(1.00007, 0, 0, 1.00007, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 264.5,
+          "dt": 63.80000001192093,
+          "image": "matrix(1.00008, 0, 0, 1.00008, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 281.2,
+          "dt": 80.50000001192092,
+          "image": "matrix(1.0001, 0, 0, 1.0001, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 314.6,
+          "dt": 113.90000001192095,
+          "image": "matrix(1.00012, 0, 0, 1.00012, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 331.1,
+          "dt": 130.40000001192095,
+          "image": "matrix(1.00013, 0, 0, 1.00013, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 347.9,
+          "dt": 147.2000000119209,
+          "image": "matrix(1.00015, 0, 0, 1.00015, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 381.2,
+          "dt": 180.50000001192092,
+          "image": "matrix(1.00017, 0, 0, 1.00017, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 397.9,
+          "dt": 197.2000000119209,
+          "image": "matrix(1.00018, 0, 0, 1.00018, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 414.5,
+          "dt": 213.80000001192093,
+          "image": "matrix(1.00019, 0, 0, 1.00019, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 447.8,
+          "dt": 247.10000001192094,
+          "image": "matrix(1.00022, 0, 0, 1.00022, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 464.5,
+          "dt": 263.80000001192093,
+          "image": "matrix(1.00023, 0, 0, 1.00023, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 497.8,
+          "dt": 297.10000001192094,
+          "image": "matrix(1.00025, 0, 0, 1.00025, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 514.5,
+          "dt": 313.80000001192093,
+          "image": "matrix(1.00027, 0, 0, 1.00027, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 564.6,
+          "dt": 363.90000001192095,
+          "image": "matrix(1.0003, 0, 0, 1.0003, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 597.9,
+          "dt": 397.2000000119209,
+          "image": "matrix(1.00033, 0, 0, 1.00033, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 614.5,
+          "dt": 413.80000001192093,
+          "image": "matrix(1.00034, 0, 0, 1.00034, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 631.1,
+          "dt": 430.40000001192095,
+          "image": "matrix(1.00035, 0, 0, 1.00035, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 664.5,
+          "dt": 463.80000001192093,
+          "image": "matrix(1.00038, 0, 0, 1.00038, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 681.2,
+          "dt": 480.500000011921,
+          "image": "matrix(1.00039, 0, 0, 1.00039, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 697.8,
+          "dt": 497.1000000119209,
+          "image": "matrix(1.0004, 0, 0, 1.0004, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 731.2,
+          "dt": 530.500000011921,
+          "image": "matrix(1.00042, 0, 0, 1.00042, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 747.9,
+          "dt": 547.2000000119209,
+          "image": "matrix(1.00044, 0, 0, 1.00044, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 764.5,
+          "dt": 563.8000000119209,
+          "image": "matrix(1.00045, 0, 0, 1.00045, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 781.2,
+          "dt": 580.500000011921,
+          "image": "matrix(1.00046, 0, 0, 1.00046, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 797.8,
+          "dt": 597.1000000119209,
+          "image": "matrix(1.00047, 0, 0, 1.00047, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 814.5,
+          "dt": 613.8000000119209,
+          "image": "matrix(1.00048, 0, 0, 1.00048, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 831.2,
+          "dt": 630.500000011921,
+          "image": "matrix(1.0005, 0, 0, 1.0005, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 864.5,
+          "dt": 663.8000000119209,
+          "image": "matrix(1.00054, 0, 0, 1.00054, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 881.2,
+          "dt": 680.500000011921,
+          "image": "matrix(1.00057, 0, 0, 1.00057, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 897.8,
+          "dt": 697.1000000119209,
+          "image": "matrix(1.00059, 0, 0, 1.00059, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 914.5,
+          "dt": 713.8000000119209,
+          "image": "matrix(1.00062, 0, 0, 1.00062, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 947.8,
+          "dt": 747.1000000119209,
+          "image": "matrix(1.00067, 0, 0, 1.00067, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 964.5,
+          "dt": 763.8000000119209,
+          "image": "matrix(1.0007, 0, 0, 1.0007, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 981.1,
+          "dt": 780.400000011921,
+          "image": "matrix(1.00072, 0, 0, 1.00072, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 997.8,
+          "dt": 797.1000000119209,
+          "image": "matrix(1.00075, 0, 0, 1.00075, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1031.2,
+          "dt": 830.500000011921,
+          "image": "matrix(1.0008, 0, 0, 1.0008, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1047.8,
+          "dt": 847.1000000119209,
+          "image": "matrix(1.00082, 0, 0, 1.00082, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1064.5,
+          "dt": 863.8000000119209,
+          "image": "matrix(1.00085, 0, 0, 1.00085, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1081.1,
+          "dt": 880.4000000119208,
+          "image": "matrix(1.00088, 0, 0, 1.00088, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1114.5,
+          "dt": 913.8000000119209,
+          "image": "matrix(1.00093, 0, 0, 1.00093, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1131.1,
+          "dt": 930.4000000119208,
+          "image": "matrix(1.00095, 0, 0, 1.00095, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1147.8,
+          "dt": 947.1000000119209,
+          "image": "matrix(1.00098, 0, 0, 1.00098, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1164.4,
+          "dt": 963.700000011921,
+          "image": "matrix(1.001, 0, 0, 1.001, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1197.9,
+          "dt": 997.200000011921,
+          "image": "matrix(1.00105, 0, 0, 1.00105, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1214.5,
+          "dt": 1013.8000000119209,
+          "image": "matrix(1.00108, 0, 0, 1.00108, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1231.2,
+          "dt": 1030.500000011921,
+          "image": "matrix(1.0011, 0, 0, 1.0011, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1247.9,
+          "dt": 1047.200000011921,
+          "image": "matrix(1.00113, 0, 0, 1.00113, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1281.2,
+          "dt": 1080.500000011921,
+          "image": "matrix(1.00118, 0, 0, 1.00118, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1297.8,
+          "dt": 1097.1000000119209,
+          "image": "matrix(1.00121, 0, 0, 1.00121, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1314.4,
+          "dt": 1113.700000011921,
+          "image": "matrix(1.00123, 0, 0, 1.00123, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1331.2,
+          "dt": 1130.500000011921,
+          "image": "matrix(1.00126, 0, 0, 1.00126, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1347.8,
+          "dt": 1147.1000000119209,
+          "image": "matrix(1.00128, 0, 0, 1.00128, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1381.2,
+          "dt": 1180.500000011921,
+          "image": "matrix(1.00133, 0, 0, 1.00133, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1397.9,
+          "dt": 1197.200000011921,
+          "image": "matrix(1.00136, 0, 0, 1.00136, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1414.5,
+          "dt": 1213.800000011921,
+          "image": "matrix(1.00139, 0, 0, 1.00139, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1431.1,
+          "dt": 1230.4000000119208,
+          "image": "matrix(1.00141, 0, 0, 1.00141, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1464.5,
+          "dt": 1263.800000011921,
+          "image": "matrix(1.00146, 0, 0, 1.00146, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1481.1,
+          "dt": 1280.4000000119208,
+          "image": "matrix(1.00149, 0, 0, 1.00149, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1497.8,
+          "dt": 1297.1000000119209,
+          "image": "matrix(1.00151, 0, 0, 1.00151, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1514.5,
+          "dt": 1313.800000011921,
+          "image": "matrix(1.00154, 0, 0, 1.00154, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1547.8,
+          "dt": 1347.1000000119209,
+          "image": "matrix(1.0016, 0, 0, 1.0016, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1564.5,
+          "dt": 1363.800000011921,
+          "image": "matrix(1.00163, 0, 0, 1.00163, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1581.1,
+          "dt": 1380.4000000119208,
+          "image": "matrix(1.00166, 0, 0, 1.00166, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1597.8,
+          "dt": 1397.1000000119209,
+          "image": "matrix(1.00169, 0, 0, 1.00169, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1647.8,
+          "dt": 1447.1000000119209,
+          "image": "matrix(1.00178, 0, 0, 1.00178, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1664.4,
+          "dt": 1463.700000011921,
+          "image": "matrix(1.0018, 0, 0, 1.0018, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1697.9,
+          "dt": 1497.200000011921,
+          "image": "matrix(1.00187, 0, 0, 1.00187, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1714.4,
+          "dt": 1513.700000011921,
+          "image": "matrix(1.00189, 0, 0, 1.00189, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1747.8,
+          "dt": 1547.1000000119209,
+          "image": "matrix(1.00195, 0, 0, 1.00195, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1764.5,
+          "dt": 1563.800000011921,
+          "image": "matrix(1.00198, 0, 0, 1.00198, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1781.1,
+          "dt": 1580.4000000119208,
+          "image": "matrix(1.00201, 0, 0, 1.00201, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1814.5,
+          "dt": 1613.800000011921,
+          "image": "matrix(1.00207, 0, 0, 1.00207, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1831.1,
+          "dt": 1630.4000000119208,
+          "image": "matrix(1.0021, 0, 0, 1.0021, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1864.4,
+          "dt": 1663.700000011921,
+          "image": "matrix(1.00216, 0, 0, 1.00216, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1881.1,
+          "dt": 1680.4000000119208,
+          "image": "matrix(1.00219, 0, 0, 1.00219, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1914.4,
+          "dt": 1713.700000011921,
+          "image": "matrix(1.00225, 0, 0, 1.00225, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1931.1,
+          "dt": 1730.4000000119208,
+          "image": "matrix(1.00228, 0, 0, 1.00228, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1964.5,
+          "dt": 1763.800000011921,
+          "image": "matrix(1.00234, 0, 0, 1.00234, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1981.1,
+          "dt": 1780.4000000119208,
+          "image": "matrix(1.00237, 0, 0, 1.00237, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 1997.8,
+          "dt": 1797.1000000119209,
+          "image": "matrix(1.0024, 0, 0, 1.0024, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2031.1,
+          "dt": 1830.4000000119208,
+          "image": "matrix(1.00246, 0, 0, 1.00246, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2047.8,
+          "dt": 1847.1000000119209,
+          "image": "matrix(1.00249, 0, 0, 1.00249, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2081.2,
+          "dt": 1880.5000000119207,
+          "image": "matrix(1.00255, 0, 0, 1.00255, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2097.8,
+          "dt": 1897.100000011921,
+          "image": "matrix(1.00258, 0, 0, 1.00258, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2114.4,
+          "dt": 1913.700000011921,
+          "image": "matrix(1.00261, 0, 0, 1.00261, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2147.8,
+          "dt": 1947.100000011921,
+          "image": "matrix(1.00267, 0, 0, 1.00267, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2164.4,
+          "dt": 1963.700000011921,
+          "image": "matrix(1.0027, 0, 0, 1.0027, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2197.8,
+          "dt": 1997.100000011921,
+          "image": "matrix(1.00276, 0, 0, 1.00276, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2214.5,
+          "dt": 2013.800000011921,
+          "image": "matrix(1.00279, 0, 0, 1.00279, 0, 0)",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 1,
+          "searchTop": 296.1875,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "mode": "zoom",
+      "reduced": true,
+      "frames": 119,
+      "uniqueTransforms": 1,
+      "layoutStable": true,
+      "runningAnimationsMax": 0,
+      "rows": [
+        {
+          "t": 2597.8,
+          "dt": 20.399999964237395,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2614.4,
+          "dt": 36.999999964237304,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2647.7,
+          "dt": 70.29999996423703,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2664.4,
+          "dt": 86.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2681.1,
+          "dt": 103.69999996423712,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2697.8,
+          "dt": 120.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2714.5,
+          "dt": 137.0999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2731.1,
+          "dt": 153.69999996423712,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2747.8,
+          "dt": 170.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2764.4,
+          "dt": 186.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2781.1,
+          "dt": 203.69999996423712,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2797.8,
+          "dt": 220.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2814.4,
+          "dt": 236.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2831.1,
+          "dt": 253.69999996423712,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2847.8,
+          "dt": 270.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2864.5,
+          "dt": 287.0999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2881.1,
+          "dt": 303.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2897.7,
+          "dt": 320.29999996423703,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2914.4,
+          "dt": 336.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2931.1,
+          "dt": 353.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2947.8,
+          "dt": 370.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2964.5,
+          "dt": 387.0999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2981.1,
+          "dt": 403.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 2997.8,
+          "dt": 420.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3014.4,
+          "dt": 436.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3031.1,
+          "dt": 453.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3047.8,
+          "dt": 470.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3064.5,
+          "dt": 487.0999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3081,
+          "dt": 503.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3097.7,
+          "dt": 520.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3114.4,
+          "dt": 536.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3131.1,
+          "dt": 553.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3147.7,
+          "dt": 570.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3164.4,
+          "dt": 586.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3181.1,
+          "dt": 603.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3197.7,
+          "dt": 620.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3214.4,
+          "dt": 636.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3231,
+          "dt": 653.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3247.7,
+          "dt": 670.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3264.4,
+          "dt": 686.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3281.1,
+          "dt": 703.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3297.8,
+          "dt": 720.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3314.5,
+          "dt": 737.0999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3331.1,
+          "dt": 753.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3347.7,
+          "dt": 770.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3364.5,
+          "dt": 787.0999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3381.1,
+          "dt": 803.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3397.8,
+          "dt": 820.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3414.4,
+          "dt": 836.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3431,
+          "dt": 853.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3447.7,
+          "dt": 870.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3464.4,
+          "dt": 886.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3481,
+          "dt": 903.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3497.7,
+          "dt": 920.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3514.4,
+          "dt": 936.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3531.1,
+          "dt": 953.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3547.7,
+          "dt": 970.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3564.4,
+          "dt": 986.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3581.1,
+          "dt": 1003.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3597.7,
+          "dt": 1020.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3614.4,
+          "dt": 1036.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3631.1,
+          "dt": 1053.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3647.8,
+          "dt": 1070.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3664.4,
+          "dt": 1086.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3681,
+          "dt": 1103.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3697.7,
+          "dt": 1120.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3714.4,
+          "dt": 1136.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3731.1,
+          "dt": 1153.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3747.7,
+          "dt": 1170.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3764.4,
+          "dt": 1186.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3781.1,
+          "dt": 1203.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3797.7,
+          "dt": 1220.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3814.4,
+          "dt": 1236.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3831.1,
+          "dt": 1253.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3847.7,
+          "dt": 1270.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3864.4,
+          "dt": 1286.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3881.1,
+          "dt": 1303.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3897.8,
+          "dt": 1320.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3914.4,
+          "dt": 1336.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3931.1,
+          "dt": 1353.6999999642371,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3947.8,
+          "dt": 1370.3999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3964.4,
+          "dt": 1386.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3981,
+          "dt": 1403.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 3997.7,
+          "dt": 1420.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4014.4,
+          "dt": 1436.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4031,
+          "dt": 1453.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4047.7,
+          "dt": 1470.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4064.4,
+          "dt": 1486.9999999642373,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4081,
+          "dt": 1503.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4097.7,
+          "dt": 1520.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4114.4,
+          "dt": 1536.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4131,
+          "dt": 1553.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4147.7,
+          "dt": 1570.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4164.4,
+          "dt": 1586.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4181.1,
+          "dt": 1603.6999999642376,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4197.7,
+          "dt": 1620.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4214.4,
+          "dt": 1636.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4231,
+          "dt": 1653.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4247.7,
+          "dt": 1670.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4264.4,
+          "dt": 1686.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4281.1,
+          "dt": 1703.6999999642376,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4297.7,
+          "dt": 1720.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4314.3,
+          "dt": 1736.8999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4331,
+          "dt": 1753.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4347.7,
+          "dt": 1770.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4364.4,
+          "dt": 1786.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4381,
+          "dt": 1803.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4397.7,
+          "dt": 1820.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4414.4,
+          "dt": 1836.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4431,
+          "dt": 1853.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4447.7,
+          "dt": 1870.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4464.3,
+          "dt": 1886.8999999642374,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4481,
+          "dt": 1903.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4497.7,
+          "dt": 1920.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4514.4,
+          "dt": 1936.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4531.1,
+          "dt": 1953.6999999642376,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4547.7,
+          "dt": 1970.299999964237,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4564.4,
+          "dt": 1986.9999999642368,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        },
+        {
+          "t": 4581,
+          "dt": 2003.5999999642372,
+          "image": "none",
+          "fieldA": null,
+          "fieldB": null,
+          "animations": 0,
+          "searchTop": 296.1875,
+          "overflow": 0
+        }
+      ]
+    }
+  ]
+}

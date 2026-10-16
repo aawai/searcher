@@ -1,0 +1,23 @@
+{
+  "loading": {
+    "cardText": "随手便签新建暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。",
+    "roleText": [
+      {
+        "role": "status",
+        "text": ""
+      }
+    ],
+    "noteCards": 0
+  },
+  "error": {
+    "cardText": "随手便签新建暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。",
+    "roleText": [
+      {
+        "role": "status",
+        "text": ""
+      }
+    ],
+    "noteCards": 0
+  },
+  "injectedStatus": 503
+}

@@ -1,0 +1,20 @@
+{
+  "minimize169": {
+    "mode": "minimized",
+    "display": "none"
+  },
+  "restore169": {
+    "mode": "snapped",
+    "rect": {
+      "x": 0,
+      "y": 64,
+      "width": 720,
+      "height": 758,
+      "top": 64,
+      "right": 720,
+      "bottom": 822,
+      "left": 0
+    },
+    "focus": "收起工作区"
+  }
+}

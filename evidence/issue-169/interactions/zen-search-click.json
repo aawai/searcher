@@ -1,0 +1,4 @@
+{
+  "clicked": false,
+  "error": "ToolError: tab.click(\".search-submit\") blocked: covered by <div.note-preview.markdown>"
+}

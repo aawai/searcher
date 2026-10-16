@@ -1,0 +1,5251 @@
+{
+  "planned": [
+    {
+      "key": "widgets-light-320-568",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-320-568",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-320-568",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-320-568",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-640-800",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-640-800",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-700-800",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-700-800",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-767-900",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-767-900",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-769-900",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-769-900",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-900-700",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-900-700",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-959-900",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-959-900",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-960-900",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-960-900",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-961-900",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-961-900",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-1023-768",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-1023-768",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-1025-768",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-1025-768",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-900-200",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-900-200",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-900-200",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-900-200",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "documents"
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "home"
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "apps"
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "notes"
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "documents"
+    }
+  ],
+  "records": [
+    {
+      "key": "widgets-light-320-568",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-320-568-home.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": 209.671875,
+          "width": 288,
+          "height": 52,
+          "top": 209.671875,
+          "right": 304,
+          "bottom": 261.671875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-320-568",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-320-568-apps.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -1032.328125,
+          "width": 288,
+          "height": 52,
+          "top": -1032.328125,
+          "right": 304,
+          "bottom": -980.328125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 68.171875,
+          "width": 320,
+          "height": 499.828125,
+          "top": 68.171875,
+          "right": 320,
+          "bottom": 568,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 259,
+              "y": 93.171875,
+              "width": 44,
+              "height": 44,
+              "top": 93.171875,
+              "right": 303,
+              "bottom": 137.171875,
+              "left": 259
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 154.171875,
+              "width": 318,
+              "height": 284.828125,
+              "top": 154.171875,
+              "right": 319,
+              "bottom": 439,
+              "left": 1
+            },
+            "height": 285,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-320-568",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-320-568-notes.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -1032.328125,
+          "width": 288,
+          "height": 52,
+          "top": -1032.328125,
+          "right": 304,
+          "bottom": -980.328125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 68.171875,
+          "width": 320,
+          "height": 499.828125,
+          "top": 68.171875,
+          "right": 320,
+          "bottom": 568,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 259,
+              "y": 93.171875,
+              "width": 44,
+              "height": 44,
+              "top": 93.171875,
+              "right": 303,
+              "bottom": 137.171875,
+              "left": 259
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 154.171875,
+              "width": 318,
+              "height": 284.828125,
+              "top": 154.171875,
+              "right": 319,
+              "bottom": 439,
+              "left": 1
+            },
+            "height": 285,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-320-568",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-320-568-documents.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -1032.328125,
+          "width": 288,
+          "height": 52,
+          "top": -1032.328125,
+          "right": 304,
+          "bottom": -980.328125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 68.171875,
+          "width": 320,
+          "height": 499.828125,
+          "top": 68.171875,
+          "right": 320,
+          "bottom": 568,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 259,
+              "y": 93.171875,
+              "width": 44,
+              "height": 44,
+              "top": 93.171875,
+              "right": 303,
+              "bottom": 137.171875,
+              "left": 259
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 154.171875,
+              "width": 318,
+              "height": 340.828125,
+              "top": 154.171875,
+              "right": 319,
+              "bottom": 495,
+              "left": 1
+            },
+            "height": 341,
+            "scrollHeight": 471,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-360-800-home.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 328,
+          "height": 52,
+          "top": 246.796875,
+          "right": 344,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-360-800-apps.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -800.203125,
+          "width": 328,
+          "height": 52,
+          "top": -800.203125,
+          "right": 344,
+          "bottom": -748.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 360,
+          "height": 704,
+          "top": 96,
+          "right": 360,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 299,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 343,
+              "bottom": 165,
+              "left": 299
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 358,
+              "height": 489,
+              "top": 182,
+              "right": 359,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 489,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-360-800-notes.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -800.203125,
+          "width": 328,
+          "height": 52,
+          "top": -800.203125,
+          "right": 344,
+          "bottom": -748.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 360,
+          "height": 704,
+          "top": 96,
+          "right": 360,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 299,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 343,
+              "bottom": 165,
+              "left": 299
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 358,
+              "height": 489,
+              "top": 182,
+              "right": 359,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-360-800",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-360-800-documents.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -800.203125,
+          "width": 328,
+          "height": 52,
+          "top": -800.203125,
+          "right": 344,
+          "bottom": -748.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 360,
+          "height": 704,
+          "top": 96,
+          "right": 360,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 299,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 343,
+              "bottom": 165,
+              "left": 299
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 358,
+              "height": 545,
+              "top": 182,
+              "right": 359,
+              "bottom": 727,
+              "left": 1
+            },
+            "height": 545,
+            "scrollHeight": 545,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-430-932-home.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": 248.796875,
+          "width": 398,
+          "height": 52,
+          "top": 248.796875,
+          "right": 414,
+          "bottom": 300.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-430-932-apps.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -596.203125,
+          "width": 398,
+          "height": 52,
+          "top": -596.203125,
+          "right": 414,
+          "bottom": -544.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 112,
+          "width": 430,
+          "height": 820,
+          "top": 112,
+          "right": 430,
+          "bottom": 932,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 369,
+              "y": 137,
+              "width": 44,
+              "height": 44,
+              "top": 137,
+              "right": 413,
+              "bottom": 181,
+              "left": 369
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 198,
+              "width": 428,
+              "height": 605,
+              "top": 198,
+              "right": 429,
+              "bottom": 803,
+              "left": 1
+            },
+            "height": 605,
+            "scrollHeight": 605,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-430-932-notes.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -596.203125,
+          "width": 398,
+          "height": 52,
+          "top": -596.203125,
+          "right": 414,
+          "bottom": -544.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 112,
+          "width": 430,
+          "height": 820,
+          "top": 112,
+          "right": 430,
+          "bottom": 932,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 369,
+              "y": 137,
+              "width": 44,
+              "height": 44,
+              "top": 137,
+              "right": 413,
+              "bottom": 181,
+              "left": 369
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 198,
+              "width": 428,
+              "height": 605,
+              "top": 198,
+              "right": 429,
+              "bottom": 803,
+              "left": 1
+            },
+            "height": 605,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-430-932",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-430-932-documents.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -596.203125,
+          "width": 398,
+          "height": 52,
+          "top": -596.203125,
+          "right": 414,
+          "bottom": -544.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 112,
+          "width": 430,
+          "height": 820,
+          "top": 112,
+          "right": 430,
+          "bottom": 932,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 369,
+              "y": 137,
+              "width": 44,
+              "height": 44,
+              "top": 137,
+              "right": 413,
+              "bottom": 181,
+              "left": 369
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 198,
+              "width": 428,
+              "height": 661,
+              "top": 198,
+              "right": 429,
+              "bottom": 859,
+              "left": 1
+            },
+            "height": 661,
+            "scrollHeight": 661,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-640-800",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 640,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-640-800-home.png",
+      "geometry": {
+        "width": 640,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 608,
+          "height": 52,
+          "top": 246.796875,
+          "right": 624,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 800,
+          "width": 640,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-640-800",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 640,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-640-800-apps.png",
+      "geometry": {
+        "width": 640,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -728.203125,
+          "width": 608,
+          "height": 52,
+          "top": -728.203125,
+          "right": 624,
+          "bottom": -676.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 640,
+          "height": 704,
+          "top": 96,
+          "right": 640,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 640,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 579,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 623,
+              "bottom": 165,
+              "left": 579
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 638,
+              "height": 489,
+              "top": 182,
+              "right": 639,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 489,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-700-800",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 700,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-700-800-home.png",
+      "geometry": {
+        "width": 700,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 668,
+          "height": 52,
+          "top": 246.796875,
+          "right": 684,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 800,
+          "width": 700,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-700-800",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 700,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-700-800-apps.png",
+      "geometry": {
+        "width": 700,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -772.203125,
+          "width": 668,
+          "height": 52,
+          "top": -772.203125,
+          "right": 684,
+          "bottom": -720.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 700,
+          "height": 704,
+          "top": 96,
+          "right": 700,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 700,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 639,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 683,
+              "bottom": 165,
+              "left": 639
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 698,
+              "height": 489,
+              "top": 182,
+              "right": 699,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 489,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-767-900",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 767,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-767-900-home.png",
+      "geometry": {
+        "width": 767,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 23.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 743.5,
+          "bottom": 336.796875,
+          "left": 23.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 767,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-767-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 767,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-767-900-apps.png",
+      "geometry": {
+        "width": 767,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 23.5,
+          "y": -436.203125,
+          "width": 720,
+          "height": 56,
+          "top": -436.203125,
+          "right": 743.5,
+          "bottom": -380.203125,
+          "left": 23.5
+        },
+        "surface": {
+          "x": 0,
+          "y": 108,
+          "width": 767,
+          "height": 792,
+          "top": 108,
+          "right": 767,
+          "bottom": 900,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 767,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 706,
+              "y": 133,
+              "width": 44,
+              "height": 44,
+              "top": 133,
+              "right": 750,
+              "bottom": 177,
+              "left": 706
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 194,
+              "width": 765,
+              "height": 577,
+              "top": 194,
+              "right": 766,
+              "bottom": 771,
+              "left": 1
+            },
+            "height": 577,
+            "scrollHeight": 577,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-769-900",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 769,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-769-900-home.png",
+      "geometry": {
+        "width": 769,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 24.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 744.5,
+          "bottom": 336.796875,
+          "left": 24.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 235.5,
+          "y": 822,
+          "width": 298,
+          "height": 62,
+          "top": 822,
+          "right": 533.5,
+          "bottom": 884,
+          "left": 235.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 769,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-769-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 769,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-769-900-apps.png",
+      "geometry": {
+        "width": 769,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 24.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 744.5,
+          "bottom": 336.796875,
+          "left": 24.5
+        },
+        "surface": {
+          "x": 97.06999969482422,
+          "y": 181.63999938964844,
+          "width": 574.859375,
+          "height": 522.71875,
+          "top": 181.63999938964844,
+          "right": 671.9293746948242,
+          "bottom": 704.3587493896484,
+          "left": 97.06999969482422
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 228.5,
+          "y": 822,
+          "width": 312,
+          "height": 62,
+          "top": 822,
+          "right": 540.5,
+          "bottom": 884,
+          "left": 228.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 769,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 114.06999969482422,
+              "y": 182.13999938964844,
+              "width": 44.00000762939453,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 158.07000732421875,
+              "bottom": 226.13999938964844,
+              "left": 114.06999969482422
+            },
+            "hit": false,
+            "disabled": true
+          },
+          {
+            "label": "窗口尺寸",
+            "rect": {
+              "x": 562.9293823242188,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 606.9293823242188,
+              "bottom": 226.13999938964844,
+              "left": 562.9293823242188
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 610.9293823242188,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 654.9293823242188,
+              "bottom": 226.13999938964844,
+              "left": 610.9293823242188
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 98.06999969482422,
+              "y": 226.63999938964844,
+              "width": 572.859375,
+              "height": 395.71875,
+              "top": 226.63999938964844,
+              "right": 670.9293746948242,
+              "bottom": 622.3587493896484,
+              "left": 98.06999969482422
+            },
+            "height": 396,
+            "scrollHeight": 396,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-900-700",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 900,
+        "height": 700,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-900-700-home.png",
+      "geometry": {
+        "width": 900,
+        "height": 700,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 90,
+          "y": 245.671875,
+          "width": 720,
+          "height": 56,
+          "top": 245.671875,
+          "right": 810,
+          "bottom": 301.671875,
+          "left": 90
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 301,
+          "y": 622,
+          "width": 298,
+          "height": 62,
+          "top": 622,
+          "right": 599,
+          "bottom": 684,
+          "left": 301
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 700,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-900-700",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 900,
+        "height": 700,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-900-700-apps.png",
+      "geometry": {
+        "width": 900,
+        "height": 700,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 90,
+          "y": 245.671875,
+          "width": 720,
+          "height": 56,
+          "top": 245.671875,
+          "right": 810,
+          "bottom": 301.671875,
+          "left": 90
+        },
+        "surface": {
+          "x": 111.4800033569336,
+          "y": 153.63999938964844,
+          "width": 677.03125,
+          "height": 378.71875,
+          "top": 153.63999938964844,
+          "right": 788.5112533569336,
+          "bottom": 532.3587493896484,
+          "left": 111.4800033569336
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 294,
+          "y": 622,
+          "width": 312,
+          "height": 62,
+          "top": 622,
+          "right": 606,
+          "bottom": 684,
+          "left": 294
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 700,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 128.48001098632812,
+              "y": 154.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 154.13999938964844,
+              "right": 172.48001098632812,
+              "bottom": 198.13999938964844,
+              "left": 128.48001098632812
+            },
+            "hit": false,
+            "disabled": true
+          },
+          {
+            "label": "窗口尺寸",
+            "rect": {
+              "x": 679.51123046875,
+              "y": 154.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 154.13999938964844,
+              "right": 723.51123046875,
+              "bottom": 198.13999938964844,
+              "left": 679.51123046875
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 727.51123046875,
+              "y": 154.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 154.13999938964844,
+              "right": 771.51123046875,
+              "bottom": 198.13999938964844,
+              "left": 727.51123046875
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 112.4800033569336,
+              "y": 198.63999938964844,
+              "width": 675.03125,
+              "height": 251.71876525878906,
+              "top": 198.63999938964844,
+              "right": 787.5112533569336,
+              "bottom": 450.3587646484375,
+              "left": 112.4800033569336
+            },
+            "height": 252,
+            "scrollHeight": 252,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-959-900",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 959,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-959-900-home.png",
+      "geometry": {
+        "width": 959,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 119.5,
+          "y": 283.75,
+          "width": 720,
+          "height": 56,
+          "top": 283.75,
+          "right": 839.5,
+          "bottom": 339.75,
+          "left": 119.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 330.5,
+          "y": 822,
+          "width": 298,
+          "height": 62,
+          "top": 822,
+          "right": 628.5,
+          "bottom": 884,
+          "left": 330.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 959,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-959-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 959,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-959-900-apps.png",
+      "geometry": {
+        "width": 959,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 119.5,
+          "y": 283.75,
+          "width": 720,
+          "height": 56,
+          "top": 283.75,
+          "right": 839.5,
+          "bottom": 339.75,
+          "left": 119.5
+        },
+        "surface": {
+          "x": 139.5,
+          "y": 181.63999938964844,
+          "width": 680,
+          "height": 522.71875,
+          "top": 181.63999938964844,
+          "right": 819.5,
+          "bottom": 704.3587493896484,
+          "left": 139.5
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 323.5,
+          "y": 822,
+          "width": 312,
+          "height": 62,
+          "top": 822,
+          "right": 635.5,
+          "bottom": 884,
+          "left": 323.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 959,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 156.5,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 200.5,
+              "bottom": 226.13999938964844,
+              "left": 156.5
+            },
+            "hit": false,
+            "disabled": true
+          },
+          {
+            "label": "窗口尺寸",
+            "rect": {
+              "x": 710.5,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 754.5,
+              "bottom": 226.13999938964844,
+              "left": 710.5
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 758.5,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 802.5,
+              "bottom": 226.13999938964844,
+              "left": 758.5
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 140.5,
+              "y": 226.63999938964844,
+              "width": 678,
+              "height": 395.71875,
+              "top": 226.63999938964844,
+              "right": 818.5,
+              "bottom": 622.3587493896484,
+              "left": 140.5
+            },
+            "height": 396,
+            "scrollHeight": 396,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-960-900",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 960,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-960-900-home.png",
+      "geometry": {
+        "width": 960,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 120,
+          "y": 283.78125,
+          "width": 720,
+          "height": 56,
+          "top": 283.78125,
+          "right": 840,
+          "bottom": 339.78125,
+          "left": 120
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 331,
+          "y": 822,
+          "width": 298,
+          "height": 62,
+          "top": 822,
+          "right": 629,
+          "bottom": 884,
+          "left": 331
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 960,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-960-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 960,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-960-900-apps.png",
+      "geometry": {
+        "width": 960,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 120,
+          "y": 283.78125,
+          "width": 720,
+          "height": 56,
+          "top": 283.78125,
+          "right": 840,
+          "bottom": 339.78125,
+          "left": 120
+        },
+        "surface": {
+          "x": 140,
+          "y": 181.63999938964844,
+          "width": 680,
+          "height": 522.71875,
+          "top": 181.63999938964844,
+          "right": 820,
+          "bottom": 704.3587493896484,
+          "left": 140
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 324,
+          "y": 822,
+          "width": 312,
+          "height": 62,
+          "top": 822,
+          "right": 636,
+          "bottom": 884,
+          "left": 324
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 960,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 157,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 201,
+              "bottom": 226.13999938964844,
+              "left": 157
+            },
+            "hit": false,
+            "disabled": true
+          },
+          {
+            "label": "窗口尺寸",
+            "rect": {
+              "x": 711,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 755,
+              "bottom": 226.13999938964844,
+              "left": 711
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 759,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 803,
+              "bottom": 226.13999938964844,
+              "left": 759
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 141,
+              "y": 226.63999938964844,
+              "width": 678,
+              "height": 395.71875,
+              "top": 226.63999938964844,
+              "right": 819,
+              "bottom": 622.3587493896484,
+              "left": 141
+            },
+            "height": 396,
+            "scrollHeight": 396,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-961-900",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 961,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-961-900-home.png",
+      "geometry": {
+        "width": 961,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 120.5,
+          "y": 283.8125,
+          "width": 720,
+          "height": 56,
+          "top": 283.8125,
+          "right": 840.5,
+          "bottom": 339.8125,
+          "left": 120.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 331.5,
+          "y": 822,
+          "width": 298,
+          "height": 62,
+          "top": 822,
+          "right": 629.5,
+          "bottom": 884,
+          "left": 331.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 961,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-961-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 961,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-961-900-apps.png",
+      "geometry": {
+        "width": 961,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 120.5,
+          "y": 283.8125,
+          "width": 720,
+          "height": 56,
+          "top": 283.8125,
+          "right": 840.5,
+          "bottom": 339.8125,
+          "left": 120.5
+        },
+        "surface": {
+          "x": 140.5,
+          "y": 181.63999938964844,
+          "width": 680,
+          "height": 522.71875,
+          "top": 181.63999938964844,
+          "right": 820.5,
+          "bottom": 704.3587493896484,
+          "left": 140.5
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 324.5,
+          "y": 822,
+          "width": 312,
+          "height": 62,
+          "top": 822,
+          "right": 636.5,
+          "bottom": 884,
+          "left": 324.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 961,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 157.5,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 201.5,
+              "bottom": 226.13999938964844,
+              "left": 157.5
+            },
+            "hit": false,
+            "disabled": true
+          },
+          {
+            "label": "窗口尺寸",
+            "rect": {
+              "x": 711.5,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 755.5,
+              "bottom": 226.13999938964844,
+              "left": 711.5
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 759.5,
+              "y": 182.13999938964844,
+              "width": 44,
+              "height": 44,
+              "top": 182.13999938964844,
+              "right": 803.5,
+              "bottom": 226.13999938964844,
+              "left": 759.5
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 141.5,
+              "y": 226.63999938964844,
+              "width": 678,
+              "height": 395.71875,
+              "top": 226.63999938964844,
+              "right": 819.5,
+              "bottom": 622.3587493896484,
+              "left": 141.5
+            },
+            "height": 396,
+            "scrollHeight": 396,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1023-768",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1023,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-1023-768-home.png",
+      "geometry": {
+        "width": 1023,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 151.5,
+          "y": 262.234375,
+          "width": 720,
+          "height": 56,
+          "top": 262.234375,
+          "right": 871.5,
+          "bottom": 318.234375,
+          "left": 151.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 362.5,
+          "y": 690,
+          "width": 298,
+          "height": 62,
+          "top": 690,
+          "right": 660.5,
+          "bottom": 752,
+          "left": 362.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1023,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1023-768",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1023,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-1023-768-apps.png",
+      "geometry": {
+        "width": 1023,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 151.5,
+          "y": 262.234375,
+          "width": 720,
+          "height": 56,
+          "top": 262.234375,
+          "right": 871.5,
+          "bottom": 318.234375,
+          "left": 151.5
+        },
+        "surface": {
+          "x": 171.5,
+          "y": 163.16000366210938,
+          "width": 680,
+          "height": 427.6719055175781,
+          "top": 163.16000366210938,
+          "right": 851.5,
+          "bottom": 590.8319091796875,
+          "left": 171.5
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 355.5,
+          "y": 690,
+          "width": 312,
+          "height": 62,
+          "top": 690,
+          "right": 667.5,
+          "bottom": 752,
+          "left": 355.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1023,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 188.5,
+              "y": 163.66000366210938,
+              "width": 44,
+              "height": 44,
+              "top": 163.66000366210938,
+              "right": 232.5,
+              "bottom": 207.66000366210938,
+              "left": 188.5
+            },
+            "hit": false,
+            "disabled": true
+          },
+          {
+            "label": "窗口尺寸",
+            "rect": {
+              "x": 742.5,
+              "y": 163.66000366210938,
+              "width": 44,
+              "height": 44,
+              "top": 163.66000366210938,
+              "right": 786.5,
+              "bottom": 207.66000366210938,
+              "left": 742.5
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 790.5,
+              "y": 163.66000366210938,
+              "width": 44,
+              "height": 44,
+              "top": 163.66000366210938,
+              "right": 834.5,
+              "bottom": 207.66000366210938,
+              "left": 790.5
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 172.5,
+              "y": 208.16000366210938,
+              "width": 678,
+              "height": 300.671875,
+              "top": 208.16000366210938,
+              "right": 850.5,
+              "bottom": 508.8318786621094,
+              "left": 172.5
+            },
+            "height": 301,
+            "scrollHeight": 301,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-768-home.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 315,
+          "y": 690,
+          "width": 394,
+          "height": 62,
+          "top": 690,
+          "right": 709,
+          "bottom": 752,
+          "left": 315
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-768-apps.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": {
+          "x": 155,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "top": 146,
+          "right": 869,
+          "bottom": 609,
+          "left": 155
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 308,
+          "y": 690,
+          "width": 408,
+          "height": 62,
+          "top": 690,
+          "right": 716,
+          "bottom": 752,
+          "left": 308
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 172,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 216,
+              "bottom": 190.5,
+              "left": 172
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最小化窗口",
+            "rect": {
+              "x": 712,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 756,
+              "bottom": 190.5,
+              "left": 712
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最大化窗口",
+            "rect": {
+              "x": 760,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 804,
+              "bottom": 190.5,
+              "left": 760
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 808,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 852,
+              "bottom": 190.5,
+              "left": 808
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 156,
+              "y": 191,
+              "width": 712,
+              "height": 336,
+              "top": 191,
+              "right": 868,
+              "bottom": 527,
+              "left": 156
+            },
+            "height": 336,
+            "scrollHeight": 336,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-768-notes.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": {
+          "x": 205,
+          "y": 157,
+          "width": 615,
+          "height": 440,
+          "top": 157,
+          "right": 820,
+          "bottom": 597,
+          "left": 205
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 308,
+          "y": 690,
+          "width": 408,
+          "height": 62,
+          "top": 690,
+          "right": 716,
+          "bottom": 752,
+          "left": 308
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 222,
+              "y": 157.5,
+              "width": 44,
+              "height": 44,
+              "top": 157.5,
+              "right": 266,
+              "bottom": 201.5,
+              "left": 222
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最小化窗口",
+            "rect": {
+              "x": 663,
+              "y": 157.5,
+              "width": 44,
+              "height": 44,
+              "top": 157.5,
+              "right": 707,
+              "bottom": 201.5,
+              "left": 663
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最大化窗口",
+            "rect": {
+              "x": 711,
+              "y": 157.5,
+              "width": 44,
+              "height": 44,
+              "top": 157.5,
+              "right": 755,
+              "bottom": 201.5,
+              "left": 711
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 759,
+              "y": 157.5,
+              "width": 44,
+              "height": 44,
+              "top": 157.5,
+              "right": 803,
+              "bottom": 201.5,
+              "left": 759
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 206,
+              "y": 202,
+              "width": 613,
+              "height": 313,
+              "top": 202,
+              "right": 819,
+              "bottom": 515,
+              "left": 206
+            },
+            "height": 313,
+            "scrollHeight": 482,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-768",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-768-documents.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": {
+          "x": 155,
+          "y": 146,
+          "width": 714,
+          "height": 463,
+          "top": 146,
+          "right": 869,
+          "bottom": 609,
+          "left": 155
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 308,
+          "y": 690,
+          "width": 408,
+          "height": 62,
+          "top": 690,
+          "right": 716,
+          "bottom": 752,
+          "left": 308
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 172,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 216,
+              "bottom": 190.5,
+              "left": 172
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最小化窗口",
+            "rect": {
+              "x": 712,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 756,
+              "bottom": 190.5,
+              "left": 712
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最大化窗口",
+            "rect": {
+              "x": 760,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 804,
+              "bottom": 190.5,
+              "left": 760
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 808,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 852,
+              "bottom": 190.5,
+              "left": 808
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 156,
+              "y": 191,
+              "width": 712,
+              "height": 405,
+              "top": 191,
+              "right": 868,
+              "bottom": 596,
+              "left": 156
+            },
+            "height": 405,
+            "scrollHeight": 405,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1025-768",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1025,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-1025-768-home.png",
+      "geometry": {
+        "width": 1025,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152.5,
+          "y": 262.3125,
+          "width": 720,
+          "height": 56,
+          "top": 262.3125,
+          "right": 872.5,
+          "bottom": 318.3125,
+          "left": 152.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 315.5,
+          "y": 690,
+          "width": 394,
+          "height": 62,
+          "top": 690,
+          "right": 709.5,
+          "bottom": 752,
+          "left": 315.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1025,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1025-768",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1025,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "widgets-light-1025-768-apps.png",
+      "geometry": {
+        "width": 1025,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152.5,
+          "y": 262.3125,
+          "width": 720,
+          "height": 56,
+          "top": 262.3125,
+          "right": 872.5,
+          "bottom": 318.3125,
+          "left": 152.5
+        },
+        "surface": {
+          "x": 155,
+          "y": 146,
+          "width": 715,
+          "height": 463,
+          "top": 146,
+          "right": 870,
+          "bottom": 609,
+          "left": 155
+        },
+        "surfaceVisible": true,
+        "presentation": "window",
+        "dock": {
+          "x": 308.5,
+          "y": 690,
+          "width": 408,
+          "height": 62,
+          "top": 690,
+          "right": 716.5,
+          "bottom": 752,
+          "left": 308.5
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1025,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "窗口系统菜单",
+            "rect": {
+              "x": 172,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 216,
+              "bottom": 190.5,
+              "left": 172
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最小化窗口",
+            "rect": {
+              "x": 713,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 757,
+              "bottom": 190.5,
+              "left": 713
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "最大化窗口",
+            "rect": {
+              "x": 761,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 805,
+              "bottom": 190.5,
+              "left": 761
+            },
+            "hit": true,
+            "disabled": false
+          },
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 809,
+              "y": 146.5,
+              "width": 44,
+              "height": 44,
+              "top": 146.5,
+              "right": 853,
+              "bottom": 190.5,
+              "left": 809
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 156,
+              "y": 191,
+              "width": 713,
+              "height": 336,
+              "top": 191,
+              "right": 869,
+              "bottom": 527,
+              "left": 156
+            },
+            "height": 336,
+            "scrollHeight": 336,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-390-400-home.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": 190.796875,
+          "width": 358,
+          "height": 52,
+          "top": 190.796875,
+          "right": 374,
+          "bottom": 242.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-390-400-apps.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -1200.203125,
+          "width": 358,
+          "height": 52,
+          "top": -1200.203125,
+          "right": 374,
+          "bottom": -1148.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 48,
+          "width": 390,
+          "height": 352,
+          "top": 48,
+          "right": 390,
+          "bottom": 400,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 329,
+              "y": 73,
+              "width": 44,
+              "height": 44,
+              "top": 73,
+              "right": 373,
+              "bottom": 117,
+              "left": 329
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 134,
+              "width": 388,
+              "height": 137,
+              "top": 134,
+              "right": 389,
+              "bottom": 271,
+              "left": 1
+            },
+            "height": 137,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-390-400-notes.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -1200.203125,
+          "width": 358,
+          "height": 52,
+          "top": -1200.203125,
+          "right": 374,
+          "bottom": -1148.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 48,
+          "width": 390,
+          "height": 352,
+          "top": 48,
+          "right": 390,
+          "bottom": 400,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 329,
+              "y": 73,
+              "width": 44,
+              "height": 44,
+              "top": 73,
+              "right": 373,
+              "bottom": 117,
+              "left": 329
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 134,
+              "width": 388,
+              "height": 137,
+              "top": 134,
+              "right": 389,
+              "bottom": 271,
+              "left": 1
+            },
+            "height": 137,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-390-400",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-390-400-documents.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 16,
+          "y": -1200.203125,
+          "width": 358,
+          "height": 52,
+          "top": -1200.203125,
+          "right": 374,
+          "bottom": -1148.203125,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 48,
+          "width": 390,
+          "height": 352,
+          "top": 48,
+          "right": 390,
+          "bottom": 400,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 329,
+              "y": 73,
+              "width": 44,
+              "height": 44,
+              "top": 73,
+              "right": 373,
+              "bottom": 117,
+              "left": 329
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 134,
+              "width": 388,
+              "height": 193,
+              "top": 134,
+              "right": 389,
+              "bottom": 327,
+              "left": 1
+            },
+            "height": 193,
+            "scrollHeight": 427,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-900-200",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 900,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-900-200-home.png",
+      "geometry": {
+        "width": 900,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 90,
+          "y": 199.671875,
+          "width": 720,
+          "height": 56,
+          "top": 199.671875,
+          "right": 810,
+          "bottom": 255.671875,
+          "left": 90
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 301,
+          "y": 122,
+          "width": 298,
+          "height": 62,
+          "top": 122,
+          "right": 599,
+          "bottom": 184,
+          "left": 301
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 200,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-200-home.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 315,
+          "y": 122,
+          "width": 394,
+          "height": 62,
+          "top": 122,
+          "right": 709,
+          "bottom": 184,
+          "left": 315
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-200-apps.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 58,
+          "top": 64,
+          "right": 1024,
+          "bottom": 122,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": {
+          "x": 315,
+          "y": 122,
+          "width": 394,
+          "height": 62,
+          "top": 122,
+          "right": 709,
+          "bottom": 184,
+          "left": 315
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 963,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1007,
+              "bottom": 125,
+              "left": 963
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 142,
+              "width": 1022,
+              "height": 32,
+              "top": 142,
+              "right": 1023,
+              "bottom": 174,
+              "left": 1
+            },
+            "height": 32,
+            "scrollHeight": 224,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-200-notes.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 58,
+          "top": 64,
+          "right": 1024,
+          "bottom": 122,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": {
+          "x": 315,
+          "y": 122,
+          "width": 394,
+          "height": 62,
+          "top": 122,
+          "right": 709,
+          "bottom": 184,
+          "left": 315
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 963,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1007,
+              "bottom": 125,
+              "left": 963
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 142,
+              "width": 1022,
+              "height": 32,
+              "top": 142,
+              "right": 1023,
+              "bottom": 174,
+              "left": 1
+            },
+            "height": 32,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1024-200",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1024-200-documents.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": {
+          "x": 0,
+          "y": 64,
+          "width": 1024,
+          "height": 58,
+          "top": 64,
+          "right": 1024,
+          "bottom": 122,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": {
+          "x": 315,
+          "y": 122,
+          "width": 394,
+          "height": 62,
+          "top": 122,
+          "right": 709,
+          "bottom": 184,
+          "left": 315
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 963,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1007,
+              "bottom": 125,
+              "left": 963
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 142,
+              "width": 1022,
+              "height": 32,
+              "top": 142,
+              "right": 1023,
+              "bottom": 174,
+              "left": 1
+            },
+            "height": 32,
+            "scrollHeight": 299,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1440-240-home.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 523,
+          "y": 162,
+          "width": 394,
+          "height": 62,
+          "top": 162,
+          "right": 917,
+          "bottom": 224,
+          "left": 523
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "apps",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1440-240-apps.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 98,
+          "top": 64,
+          "right": 1440,
+          "bottom": 162,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": {
+          "x": 523,
+          "y": 162,
+          "width": 394,
+          "height": 62,
+          "top": 162,
+          "right": 917,
+          "bottom": 224,
+          "left": 523
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 1379,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1423,
+              "bottom": 125,
+              "left": 1379
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 142,
+              "width": 1438,
+              "height": 32,
+              "top": 142,
+              "right": 1439,
+              "bottom": 174,
+              "left": 1
+            },
+            "height": 32,
+            "scrollHeight": 224,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "notes",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1440-240-notes.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 98,
+          "top": 64,
+          "right": 1440,
+          "bottom": 162,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": {
+          "x": 523,
+          "y": 162,
+          "width": 394,
+          "height": 62,
+          "top": 162,
+          "right": 917,
+          "bottom": 224,
+          "left": 523
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 1379,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1423,
+              "bottom": 125,
+              "left": 1379
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 142,
+              "width": 1438,
+              "height": 32,
+              "top": 142,
+              "right": 1439,
+              "bottom": 174,
+              "left": 1
+            },
+            "height": 32,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-1440-240",
+      "kind": "documents",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-1440-240-documents.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": {
+          "x": 0,
+          "y": 64,
+          "width": 1440,
+          "height": 98,
+          "top": 64,
+          "right": 1440,
+          "bottom": 162,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": {
+          "x": 523,
+          "y": 162,
+          "width": 394,
+          "height": 62,
+          "top": 162,
+          "right": 917,
+          "bottom": 224,
+          "left": 523
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 1379,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1423,
+              "bottom": 125,
+              "left": 1379
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 142,
+              "width": 1438,
+              "height": 32,
+              "top": 142,
+              "right": 1439,
+              "bottom": 174,
+              "left": 1
+            },
+            "height": 32,
+            "scrollHeight": 299,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "home",
+      "scenario": {
+        "style": "widgets",
+        "theme": "light",
+        "width": 844,
+        "height": 390,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "widgets-light-844-390-home.png",
+      "geometry": {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets",
+        "search": {
+          "x": 62,
+          "y": 198.796875,
+          "width": 720,
+          "height": 56,
+          "top": 198.796875,
+          "right": 782,
+          "bottom": 254.796875,
+          "left": 62
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": {
+          "x": 273,
+          "y": 312,
+          "width": 298,
+          "height": 62,
+          "top": 312,
+          "right": 571,
+          "bottom": 374,
+          "left": 273
+        },
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 390,
+          "width": 844,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    }
+  ],
+  "errors": [
+    {
+      "key": "widgets-light-900-200",
+      "kind": "apps",
+      "stage": "open",
+      "message": "mh: Waiting failed: 15000ms exceeded",
+      "stack": "mh: Waiting failed: 15000ms exceeded\n    at new yi (/$bunfs/root/chunks/cli-x2f68day.js:7855:23)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:8001:21)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:6705:37)\n    at f (/$bunfs/root/chunks/cli-z4y4s8hb.js:261:34)\n    at <anonymous> (browser-run-15a732dd13f924bd.js:89:35)\n    at async <anonymous> (browser-run-15a732dd13f924bd.js:127:2)\n    at async Eae (/$bunfs/root/chunks/cli-q4trftgd.js:14:17)\n    at async <anonymous> (/$bunfs/root/chunks/cli-j8dbdcm9.js:431:30)\n    at async run (/$bunfs/root/chunks/cli-j8dbdcm9.js:419:31)"
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "apps",
+      "stage": "open",
+      "message": "mh: Waiting failed: 15000ms exceeded",
+      "stack": "mh: Waiting failed: 15000ms exceeded\n    at new yi (/$bunfs/root/chunks/cli-x2f68day.js:7855:23)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:8001:21)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:6705:37)\n    at f (/$bunfs/root/chunks/cli-z4y4s8hb.js:261:34)\n    at <anonymous> (browser-run-15a732dd13f924bd.js:89:35)\n    at unknown\n    at async Eae (/$bunfs/root/chunks/cli-q4trftgd.js:14:17)\n    at async <anonymous> (/$bunfs/root/chunks/cli-j8dbdcm9.js:431:30)\n    at async run (/$bunfs/root/chunks/cli-j8dbdcm9.js:419:31)"
+    }
+  ]
+}

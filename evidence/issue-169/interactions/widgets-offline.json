@@ -1,0 +1,15 @@
+{
+  "networkFailures": [
+    "http://127.0.0.1:36639/api/webapps",
+    "http://127.0.0.1:36639/api/webapp-groups"
+  ],
+  "state": {
+    "cardText": "常用应用9审审计应用 9审审计应用 8审审计应用 7审审计应用 6审审计应用 5审审计应用 4审审计应用 3审审计应用 2长长应用名称—检验网格与截断\n    To pick up a draggable item, press the space bar.\n    While dragging, use the arrow keys to move the item.\n    Press space again to drop the item in its new position, or press escape to cancel.\n  ",
+    "tileCount": 9,
+    "offlineNotice": false,
+    "live": [
+      "",
+      ""
+    ]
+  }
+}

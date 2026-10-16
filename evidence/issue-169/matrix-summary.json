@@ -1,0 +1,83 @@
+{
+  "planned": 160,
+  "captured": 154,
+  "errors": [
+    {
+      "key": "widgets-light-900-200",
+      "kind": "apps",
+      "stage": "open",
+      "message": "mh: Waiting failed: 15000ms exceeded",
+      "stack": "mh: Waiting failed: 15000ms exceeded\n    at new yi (/$bunfs/root/chunks/cli-x2f68day.js:7855:23)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:8001:21)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:6705:37)\n    at f (/$bunfs/root/chunks/cli-z4y4s8hb.js:261:34)\n    at <anonymous> (browser-run-15a732dd13f924bd.js:89:35)\n    at async <anonymous> (browser-run-15a732dd13f924bd.js:127:2)\n    at async Eae (/$bunfs/root/chunks/cli-q4trftgd.js:14:17)\n    at async <anonymous> (/$bunfs/root/chunks/cli-j8dbdcm9.js:431:30)\n    at async run (/$bunfs/root/chunks/cli-j8dbdcm9.js:419:31)"
+    },
+    {
+      "key": "widgets-light-844-390",
+      "kind": "apps",
+      "stage": "open",
+      "message": "mh: Waiting failed: 15000ms exceeded",
+      "stack": "mh: Waiting failed: 15000ms exceeded\n    at new yi (/$bunfs/root/chunks/cli-x2f68day.js:7855:23)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:8001:21)\n    at waitForFunction (/$bunfs/root/chunks/cli-x2f68day.js:6705:37)\n    at f (/$bunfs/root/chunks/cli-z4y4s8hb.js:261:34)\n    at <anonymous> (browser-run-15a732dd13f924bd.js:89:35)\n    at unknown\n    at async Eae (/$bunfs/root/chunks/cli-q4trftgd.js:14:17)\n    at async <anonymous> (/$bunfs/root/chunks/cli-j8dbdcm9.js:431:30)\n    at async run (/$bunfs/root/chunks/cli-j8dbdcm9.js:419:31)"
+    }
+  ],
+  "geometryViolations": [],
+  "anchors": [
+    {
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "tops": {
+        "widgets": 248.796875,
+        "zen": 248.796875
+      },
+      "delta": 0
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "height": 1024,
+      "tops": {
+        "zen": 298.796875,
+        "widgets": 298.796875
+      },
+      "delta": 0
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "tops": {
+        "zen": 296.1875,
+        "widgets": 296.1875
+      },
+      "delta": 0
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "tops": {
+        "zen": 248.796875,
+        "widgets": 248.796875
+      },
+      "delta": 0
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "height": 1024,
+      "tops": {
+        "zen": 298.796875,
+        "widgets": 298.796875
+      },
+      "delta": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "tops": {
+        "zen": 296.1875,
+        "widgets": 296.1875
+      },
+      "delta": 0
+    }
+  ]
+}

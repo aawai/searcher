@@ -1,0 +1,40 @@
+{
+  "viewport": {
+    "width": 768,
+    "height": 1024
+  },
+  "banner": {
+    "x": 0,
+    "y": 64,
+    "width": 768,
+    "height": 61,
+    "top": 64,
+    "right": 768,
+    "bottom": 125,
+    "left": 0
+  },
+  "panel": {
+    "x": 361.9893493652344,
+    "y": 64,
+    "width": 400.0000305175781,
+    "height": 944,
+    "top": 64,
+    "right": 761.9893798828125,
+    "bottom": 1008,
+    "left": 361.9893493652344
+  },
+  "retry": {
+    "x": 461.5,
+    "y": 72,
+    "width": 52.015625,
+    "height": 44,
+    "top": 72,
+    "right": 513.515625,
+    "bottom": 116,
+    "left": 461.5
+  },
+  "retryHit": "<h2 class=\"workspace-title\">应用</h2>",
+  "unoccluded": false,
+  "overlap": true,
+  "mode": "page-shell home home-zen"
+}

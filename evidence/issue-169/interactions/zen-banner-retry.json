@@ -1,0 +1,10 @@
+{
+  "whilePanelOpen": {
+    "clicked": false,
+    "error": "ToolError: tab.click(\".connection-banner button\") blocked: covered by <h2.workspace-title>"
+  },
+  "afterPanelClose": {
+    "retryClicked": true,
+    "bannerRemoved": true
+  }
+}

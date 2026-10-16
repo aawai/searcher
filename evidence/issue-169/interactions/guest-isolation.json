@@ -1,0 +1,70 @@
+[
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 390,
+    "observed": {
+      "home": "page-shell home home-zen",
+      "theme": "light",
+      "userMenu": false,
+      "loginLink": true,
+      "workspaceEntrances": 0,
+      "appTiles": 0,
+      "noteCards": 0,
+      "dock": false,
+      "horizontalOverflow": 0
+    },
+    "preferenceSurvivesReload": true
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 1440,
+    "observed": {
+      "home": "page-shell home home-zen",
+      "theme": "light",
+      "userMenu": false,
+      "loginLink": true,
+      "workspaceEntrances": 0,
+      "appTiles": 0,
+      "noteCards": 0,
+      "dock": false,
+      "horizontalOverflow": 0
+    },
+    "preferenceSurvivesReload": true
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 390,
+    "observed": {
+      "home": "page-shell home home-widgets",
+      "theme": "dark",
+      "userMenu": false,
+      "loginLink": true,
+      "workspaceEntrances": 0,
+      "appTiles": 0,
+      "noteCards": 0,
+      "dock": false,
+      "horizontalOverflow": 0
+    },
+    "preferenceSurvivesReload": true
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 1440,
+    "observed": {
+      "home": "page-shell home home-widgets",
+      "theme": "dark",
+      "userMenu": false,
+      "loginLink": true,
+      "workspaceEntrances": 0,
+      "appTiles": 0,
+      "noteCards": 0,
+      "dock": false,
+      "horizontalOverflow": 0
+    },
+    "preferenceSurvivesReload": true
+  }
+]

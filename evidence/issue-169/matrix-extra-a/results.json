@@ -1,0 +1,5254 @@
+{
+  "planned": [
+    {
+      "key": "zen-light-320-568",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-320-568",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-320-568",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-320-568",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-640-800",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-640-800",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-700-800",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-700-800",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-767-900",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-767-900",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-769-900",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-769-900",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-900-700",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-900-700",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-959-900",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-959-900",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-960-900",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-960-900",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-961-900",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-961-900",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-1023-768",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-1023-768",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-1025-768",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-1025-768",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "documents"
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "home"
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "apps"
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "notes"
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "documents"
+    }
+  ],
+  "records": [
+    {
+      "key": "zen-light-320-568",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-320-568-home.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 209.671875,
+          "width": 288,
+          "height": 52,
+          "top": 209.671875,
+          "right": 304,
+          "bottom": 261.671875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-320-568",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-320-568-apps.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 209.671875,
+          "width": 288,
+          "height": 52,
+          "top": 209.671875,
+          "right": 304,
+          "bottom": 261.671875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 68.171875,
+          "width": 320,
+          "height": 499.828125,
+          "top": 68.171875,
+          "right": 320,
+          "bottom": 568,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 259,
+              "y": 93.171875,
+              "width": 44,
+              "height": 44,
+              "top": 93.171875,
+              "right": 303,
+              "bottom": 137.171875,
+              "left": 259
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 154.171875,
+              "width": 318,
+              "height": 284.828125,
+              "top": 154.171875,
+              "right": 319,
+              "bottom": 439,
+              "left": 1
+            },
+            "height": 285,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-320-568",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-320-568-notes.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 209.671875,
+          "width": 288,
+          "height": 52,
+          "top": 209.671875,
+          "right": 304,
+          "bottom": 261.671875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 68.171875,
+          "width": 320,
+          "height": 499.828125,
+          "top": 68.171875,
+          "right": 320,
+          "bottom": 568,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 259,
+              "y": 93.171875,
+              "width": 44,
+              "height": 44,
+              "top": 93.171875,
+              "right": 303,
+              "bottom": 137.171875,
+              "left": 259
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 154.171875,
+              "width": 318,
+              "height": 284.828125,
+              "top": 154.171875,
+              "right": 319,
+              "bottom": 439,
+              "left": 1
+            },
+            "height": 285,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-320-568",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-320-568-documents.png",
+      "geometry": {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 209.671875,
+          "width": 288,
+          "height": 52,
+          "top": 209.671875,
+          "right": 304,
+          "bottom": 261.671875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 68.171875,
+          "width": 320,
+          "height": 499.828125,
+          "top": 68.171875,
+          "right": 320,
+          "bottom": 568,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 568,
+          "width": 320,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 259,
+              "y": 93.171875,
+              "width": 44,
+              "height": 44,
+              "top": 93.171875,
+              "right": 303,
+              "bottom": 137.171875,
+              "left": 259
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 154.171875,
+              "width": 318,
+              "height": 340.828125,
+              "top": 154.171875,
+              "right": 319,
+              "bottom": 495,
+              "left": 1
+            },
+            "height": 341,
+            "scrollHeight": 471,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-360-800-home.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 328,
+          "height": 52,
+          "top": 246.796875,
+          "right": 344,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-360-800-apps.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 328,
+          "height": 52,
+          "top": 246.796875,
+          "right": 344,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 360,
+          "height": 704,
+          "top": 96,
+          "right": 360,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 299,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 343,
+              "bottom": 165,
+              "left": 299
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 358,
+              "height": 489,
+              "top": 182,
+              "right": 359,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 489,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-360-800-notes.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 328,
+          "height": 52,
+          "top": 246.796875,
+          "right": 344,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 360,
+          "height": 704,
+          "top": 96,
+          "right": 360,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 299,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 343,
+              "bottom": 165,
+              "left": 299
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 358,
+              "height": 489,
+              "top": 182,
+              "right": 359,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-360-800",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 360,
+        "height": 800,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-360-800-documents.png",
+      "geometry": {
+        "width": 360,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 328,
+          "height": 52,
+          "top": 246.796875,
+          "right": 344,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 360,
+          "height": 704,
+          "top": 96,
+          "right": 360,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 360,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 299,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 343,
+              "bottom": 165,
+              "left": 299
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 358,
+              "height": 545,
+              "top": 182,
+              "right": 359,
+              "bottom": 727,
+              "left": 1
+            },
+            "height": 545,
+            "scrollHeight": 545,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-430-932-home.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 248.796875,
+          "width": 398,
+          "height": 52,
+          "top": 248.796875,
+          "right": 414,
+          "bottom": 300.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-430-932-apps.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 248.796875,
+          "width": 398,
+          "height": 52,
+          "top": 248.796875,
+          "right": 414,
+          "bottom": 300.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 112,
+          "width": 430,
+          "height": 820,
+          "top": 112,
+          "right": 430,
+          "bottom": 932,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 369,
+              "y": 137,
+              "width": 44,
+              "height": 44,
+              "top": 137,
+              "right": 413,
+              "bottom": 181,
+              "left": 369
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 198,
+              "width": 428,
+              "height": 605,
+              "top": 198,
+              "right": 429,
+              "bottom": 803,
+              "left": 1
+            },
+            "height": 605,
+            "scrollHeight": 605,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-430-932-notes.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 248.796875,
+          "width": 398,
+          "height": 52,
+          "top": 248.796875,
+          "right": 414,
+          "bottom": 300.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 112,
+          "width": 430,
+          "height": 820,
+          "top": 112,
+          "right": 430,
+          "bottom": 932,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 369,
+              "y": 137,
+              "width": 44,
+              "height": 44,
+              "top": 137,
+              "right": 413,
+              "bottom": 181,
+              "left": 369
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 198,
+              "width": 428,
+              "height": 605,
+              "top": 198,
+              "right": 429,
+              "bottom": 803,
+              "left": 1
+            },
+            "height": 605,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-430-932",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 430,
+        "height": 932,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-430-932-documents.png",
+      "geometry": {
+        "width": 430,
+        "height": 932,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 248.796875,
+          "width": 398,
+          "height": 52,
+          "top": 248.796875,
+          "right": 414,
+          "bottom": 300.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 112,
+          "width": 430,
+          "height": 820,
+          "top": 112,
+          "right": 430,
+          "bottom": 932,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 932,
+          "width": 430,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 369,
+              "y": 137,
+              "width": 44,
+              "height": 44,
+              "top": 137,
+              "right": 413,
+              "bottom": 181,
+              "left": 369
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 198,
+              "width": 428,
+              "height": 661,
+              "top": 198,
+              "right": 429,
+              "bottom": 859,
+              "left": 1
+            },
+            "height": 661,
+            "scrollHeight": 661,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-640-800",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 640,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-640-800-home.png",
+      "geometry": {
+        "width": 640,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 608,
+          "height": 52,
+          "top": 246.796875,
+          "right": 624,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 800,
+          "width": 640,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-640-800",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 640,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-640-800-apps.png",
+      "geometry": {
+        "width": 640,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 608,
+          "height": 52,
+          "top": 246.796875,
+          "right": 624,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 640,
+          "height": 704,
+          "top": 96,
+          "right": 640,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 640,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 579,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 623,
+              "bottom": 165,
+              "left": 579
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 638,
+              "height": 489,
+              "top": 182,
+              "right": 639,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 489,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-700-800",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 700,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-700-800-home.png",
+      "geometry": {
+        "width": 700,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 668,
+          "height": 52,
+          "top": 246.796875,
+          "right": 684,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 800,
+          "width": 700,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-700-800",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 700,
+        "height": 800,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-700-800-apps.png",
+      "geometry": {
+        "width": 700,
+        "height": 800,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 246.796875,
+          "width": 668,
+          "height": 52,
+          "top": 246.796875,
+          "right": 684,
+          "bottom": 298.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 96,
+          "width": 700,
+          "height": 704,
+          "top": 96,
+          "right": 700,
+          "bottom": 800,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 800,
+          "width": 700,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 639,
+              "y": 121,
+              "width": 44,
+              "height": 44,
+              "top": 121,
+              "right": 683,
+              "bottom": 165,
+              "left": 639
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 182,
+              "width": 698,
+              "height": 489,
+              "top": 182,
+              "right": 699,
+              "bottom": 671,
+              "left": 1
+            },
+            "height": 489,
+            "scrollHeight": 489,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-767-900",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 767,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-767-900-home.png",
+      "geometry": {
+        "width": 767,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 23.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 743.5,
+          "bottom": 336.796875,
+          "left": 23.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 767,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-767-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 767,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-767-900-apps.png",
+      "geometry": {
+        "width": 767,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 23.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 743.5,
+          "bottom": 336.796875,
+          "left": 23.5
+        },
+        "surface": {
+          "x": 0,
+          "y": 108,
+          "width": 767,
+          "height": 792,
+          "top": 108,
+          "right": 767,
+          "bottom": 900,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 767,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 706,
+              "y": 133,
+              "width": 44,
+              "height": 44,
+              "top": 133,
+              "right": 750,
+              "bottom": 177,
+              "left": 706
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 194,
+              "width": 765,
+              "height": 577,
+              "top": 194,
+              "right": 766,
+              "bottom": 771,
+              "left": 1
+            },
+            "height": 577,
+            "scrollHeight": 577,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-769-900",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 769,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-769-900-home.png",
+      "geometry": {
+        "width": 769,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 24.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 744.5,
+          "bottom": 336.796875,
+          "left": 24.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 769,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-769-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 769,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-769-900-apps.png",
+      "geometry": {
+        "width": 769,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 24.5,
+          "y": 280.796875,
+          "width": 720,
+          "height": 56,
+          "top": 280.796875,
+          "right": 744.5,
+          "bottom": 336.796875,
+          "left": 24.5
+        },
+        "surface": {
+          "x": 353,
+          "y": 64,
+          "width": 400,
+          "height": 820,
+          "top": 64,
+          "right": 753,
+          "bottom": 884,
+          "left": 353
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 769,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 692,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 736,
+              "bottom": 125,
+              "left": 692
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 354,
+              "y": 142,
+              "width": 398,
+              "height": 616,
+              "top": 142,
+              "right": 752,
+              "bottom": 758,
+              "left": 354
+            },
+            "height": 616,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-900-700",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 900,
+        "height": 700,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-900-700-home.png",
+      "geometry": {
+        "width": 900,
+        "height": 700,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 90,
+          "y": 245.671875,
+          "width": 720,
+          "height": 56,
+          "top": 245.671875,
+          "right": 810,
+          "bottom": 301.671875,
+          "left": 90
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 700,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-900-700",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 900,
+        "height": 700,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-900-700-apps.png",
+      "geometry": {
+        "width": 900,
+        "height": 700,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 90,
+          "y": 245.671875,
+          "width": 720,
+          "height": 56,
+          "top": 245.671875,
+          "right": 810,
+          "bottom": 301.671875,
+          "left": 90
+        },
+        "surface": {
+          "x": 484,
+          "y": 64,
+          "width": 400,
+          "height": 620,
+          "top": 64,
+          "right": 884,
+          "bottom": 684,
+          "left": 484
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 700,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 823,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 867,
+              "bottom": 125,
+              "left": 823
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 485,
+              "y": 142,
+              "width": 398,
+              "height": 416,
+              "top": 142,
+              "right": 883,
+              "bottom": 558,
+              "left": 485
+            },
+            "height": 416,
+            "scrollHeight": 416,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-959-900",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 959,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-959-900-home.png",
+      "geometry": {
+        "width": 959,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 119.5,
+          "y": 283.75,
+          "width": 720,
+          "height": 56,
+          "top": 283.75,
+          "right": 839.5,
+          "bottom": 339.75,
+          "left": 119.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 959,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-959-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 959,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-959-900-apps.png",
+      "geometry": {
+        "width": 959,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 119.5,
+          "y": 283.75,
+          "width": 720,
+          "height": 56,
+          "top": 283.75,
+          "right": 839.5,
+          "bottom": 339.75,
+          "left": 119.5
+        },
+        "surface": {
+          "x": 543,
+          "y": 64,
+          "width": 400,
+          "height": 820,
+          "top": 64,
+          "right": 943,
+          "bottom": 884,
+          "left": 543
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 959,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 882,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 926,
+              "bottom": 125,
+              "left": 882
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 544,
+              "y": 142,
+              "width": 398,
+              "height": 616,
+              "top": 142,
+              "right": 942,
+              "bottom": 758,
+              "left": 544
+            },
+            "height": 616,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-960-900",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 960,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-960-900-home.png",
+      "geometry": {
+        "width": 960,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 120,
+          "y": 283.78125,
+          "width": 720,
+          "height": 56,
+          "top": 283.78125,
+          "right": 840,
+          "bottom": 339.78125,
+          "left": 120
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 960,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-960-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 960,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-960-900-apps.png",
+      "geometry": {
+        "width": 960,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 120,
+          "y": 283.78125,
+          "width": 720,
+          "height": 56,
+          "top": 283.78125,
+          "right": 840,
+          "bottom": 339.78125,
+          "left": 120
+        },
+        "surface": {
+          "x": 544,
+          "y": 64,
+          "width": 400,
+          "height": 820,
+          "top": 64,
+          "right": 944,
+          "bottom": 884,
+          "left": 544
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 960,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 883,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 927,
+              "bottom": 125,
+              "left": 883
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 545,
+              "y": 142,
+              "width": 398,
+              "height": 616,
+              "top": 142,
+              "right": 943,
+              "bottom": 758,
+              "left": 545
+            },
+            "height": 616,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-961-900",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 961,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-961-900-home.png",
+      "geometry": {
+        "width": 961,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 120.5,
+          "y": 283.8125,
+          "width": 720,
+          "height": 56,
+          "top": 283.8125,
+          "right": 840.5,
+          "bottom": 339.8125,
+          "left": 120.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 900,
+          "width": 961,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-961-900",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 961,
+        "height": 900,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-961-900-apps.png",
+      "geometry": {
+        "width": 961,
+        "height": 900,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 120.5,
+          "y": 283.8125,
+          "width": 720,
+          "height": 56,
+          "top": 283.8125,
+          "right": 840.5,
+          "bottom": 339.8125,
+          "left": 120.5
+        },
+        "surface": {
+          "x": 545,
+          "y": 64,
+          "width": 400,
+          "height": 820,
+          "top": 64,
+          "right": 945,
+          "bottom": 884,
+          "left": 545
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 900,
+          "width": 961,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 884,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 928,
+              "bottom": 125,
+              "left": 884
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 546,
+              "y": 142,
+              "width": 398,
+              "height": 616,
+              "top": 142,
+              "right": 944,
+              "bottom": 758,
+              "left": 546
+            },
+            "height": 616,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1023-768",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1023,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-1023-768-home.png",
+      "geometry": {
+        "width": 1023,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 151.5,
+          "y": 262.234375,
+          "width": 720,
+          "height": 56,
+          "top": 262.234375,
+          "right": 871.5,
+          "bottom": 318.234375,
+          "left": 151.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1023,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1023-768",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1023,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-1023-768-apps.png",
+      "geometry": {
+        "width": 1023,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 151.5,
+          "y": 262.234375,
+          "width": 720,
+          "height": 56,
+          "top": 262.234375,
+          "right": 871.5,
+          "bottom": 318.234375,
+          "left": 151.5
+        },
+        "surface": {
+          "x": 607,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "top": 64,
+          "right": 1007,
+          "bottom": 752,
+          "left": 607
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1023,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 946,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 990,
+              "bottom": 125,
+              "left": 946
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 608,
+              "y": 142,
+              "width": 398,
+              "height": 484,
+              "top": 142,
+              "right": 1006,
+              "bottom": 626,
+              "left": 608
+            },
+            "height": 484,
+            "scrollHeight": 484,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-768-home.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-768-apps.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "top": 64,
+          "right": 1008,
+          "bottom": 752,
+          "left": 608
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 947,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 991,
+              "bottom": 125,
+              "left": 947
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 609,
+              "y": 142,
+              "width": 398,
+              "height": 484,
+              "top": 142,
+              "right": 1007,
+              "bottom": 626,
+              "left": 609
+            },
+            "height": 484,
+            "scrollHeight": 484,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-768-notes.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "top": 64,
+          "right": 1008,
+          "bottom": 752,
+          "left": 608
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 947,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 991,
+              "bottom": 125,
+              "left": 947
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 609,
+              "y": 142,
+              "width": 398,
+              "height": 484,
+              "top": 142,
+              "right": 1007,
+              "bottom": 626,
+              "left": 609
+            },
+            "height": 484,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-768",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 768,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-768-documents.png",
+      "geometry": {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 262.265625,
+          "width": 720,
+          "height": 56,
+          "top": 262.265625,
+          "right": 872,
+          "bottom": 318.265625,
+          "left": 152
+        },
+        "surface": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "top": 64,
+          "right": 1008,
+          "bottom": 752,
+          "left": 608
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 947,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 991,
+              "bottom": 125,
+              "left": 947
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 609,
+              "y": 142,
+              "width": 398,
+              "height": 540,
+              "top": 142,
+              "right": 1007,
+              "bottom": 682,
+              "left": 609
+            },
+            "height": 540,
+            "scrollHeight": 540,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1025-768",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1025,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-1025-768-home.png",
+      "geometry": {
+        "width": 1025,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152.5,
+          "y": 262.3125,
+          "width": 720,
+          "height": 56,
+          "top": 262.3125,
+          "right": 872.5,
+          "bottom": 318.3125,
+          "left": 152.5
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1025,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1025-768",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1025,
+        "height": 768,
+        "kinds": [
+          "apps"
+        ]
+      },
+      "screenshot": "zen-light-1025-768-apps.png",
+      "geometry": {
+        "width": 1025,
+        "height": 768,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152.5,
+          "y": 262.3125,
+          "width": 720,
+          "height": 56,
+          "top": 262.3125,
+          "right": 872.5,
+          "bottom": 318.3125,
+          "left": 152.5
+        },
+        "surface": {
+          "x": 609,
+          "y": 64,
+          "width": 400,
+          "height": 688,
+          "top": 64,
+          "right": 1009,
+          "bottom": 752,
+          "left": 609
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 768,
+          "width": 1025,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 948,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 992,
+              "bottom": 125,
+              "left": 948
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 610,
+              "y": 142,
+              "width": 398,
+              "height": 484,
+              "top": 142,
+              "right": 1008,
+              "bottom": 626,
+              "left": 610
+            },
+            "height": 484,
+            "scrollHeight": 484,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-390-400-home.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 190.796875,
+          "width": 358,
+          "height": 52,
+          "top": 190.796875,
+          "right": 374,
+          "bottom": 242.796875,
+          "left": 16
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-390-400-apps.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 190.796875,
+          "width": 358,
+          "height": 52,
+          "top": 190.796875,
+          "right": 374,
+          "bottom": 242.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 48,
+          "width": 390,
+          "height": 352,
+          "top": 48,
+          "right": 390,
+          "bottom": 400,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 329,
+              "y": 73,
+              "width": 44,
+              "height": 44,
+              "top": 73,
+              "right": 373,
+              "bottom": 117,
+              "left": 329
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 134,
+              "width": 388,
+              "height": 137,
+              "top": 134,
+              "right": 389,
+              "bottom": 271,
+              "left": 1
+            },
+            "height": 137,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-390-400-notes.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 190.796875,
+          "width": 358,
+          "height": 52,
+          "top": 190.796875,
+          "right": 374,
+          "bottom": 242.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 48,
+          "width": 390,
+          "height": 352,
+          "top": 48,
+          "right": 390,
+          "bottom": 400,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 329,
+              "y": 73,
+              "width": 44,
+              "height": 44,
+              "top": 73,
+              "right": 373,
+              "bottom": 117,
+              "left": 329
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 134,
+              "width": 388,
+              "height": 137,
+              "top": 134,
+              "right": 389,
+              "bottom": 271,
+              "left": 1
+            },
+            "height": 137,
+            "scrollHeight": 616,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-390-400",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 390,
+        "height": 400,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-390-400-documents.png",
+      "geometry": {
+        "width": 390,
+        "height": 400,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 16,
+          "y": 190.796875,
+          "width": 358,
+          "height": 52,
+          "top": 190.796875,
+          "right": 374,
+          "bottom": 242.796875,
+          "left": 16
+        },
+        "surface": {
+          "x": 0,
+          "y": 48,
+          "width": 390,
+          "height": 352,
+          "top": 48,
+          "right": 390,
+          "bottom": 400,
+          "left": 0
+        },
+        "surfaceVisible": true,
+        "presentation": "sheet",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 400,
+          "width": 390,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 329,
+              "y": 73,
+              "width": 44,
+              "height": 44,
+              "top": 73,
+              "right": 373,
+              "bottom": 117,
+              "left": 329
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1,
+              "y": 134,
+              "width": 388,
+              "height": 193,
+              "top": 134,
+              "right": 389,
+              "bottom": 327,
+              "left": 1
+            },
+            "height": 193,
+            "scrollHeight": 427,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 900,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-900-200-home.png",
+      "geometry": {
+        "width": 900,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 90,
+          "y": 199.671875,
+          "width": 720,
+          "height": 56,
+          "top": 199.671875,
+          "right": 810,
+          "bottom": 255.671875,
+          "left": 90
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 200,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 900,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-900-200-apps.png",
+      "geometry": {
+        "width": 900,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 90,
+          "y": 199.671875,
+          "width": 720,
+          "height": 56,
+          "top": 199.671875,
+          "right": 810,
+          "bottom": 255.671875,
+          "left": 90
+        },
+        "surface": {
+          "x": 484,
+          "y": 64,
+          "width": 400,
+          "height": 120,
+          "top": 64,
+          "right": 884,
+          "bottom": 184,
+          "left": 484
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 823,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 867,
+              "bottom": 125,
+              "left": 823
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 485,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 883,
+              "bottom": 174,
+              "left": 485
+            },
+            "height": 32,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 900,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-900-200-notes.png",
+      "geometry": {
+        "width": 900,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 90,
+          "y": 199.671875,
+          "width": 720,
+          "height": 56,
+          "top": 199.671875,
+          "right": 810,
+          "bottom": 255.671875,
+          "left": 90
+        },
+        "surface": {
+          "x": 484,
+          "y": 64,
+          "width": 400,
+          "height": 120,
+          "top": 64,
+          "right": 884,
+          "bottom": 184,
+          "left": 484
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 823,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 867,
+              "bottom": 125,
+              "left": 823
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 485,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 883,
+              "bottom": 174,
+              "left": 485
+            },
+            "height": 32,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-900-200",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 900,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-900-200-documents.png",
+      "geometry": {
+        "width": 900,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 90,
+          "y": 199.671875,
+          "width": 720,
+          "height": 56,
+          "top": 199.671875,
+          "right": 810,
+          "bottom": 255.671875,
+          "left": 90
+        },
+        "surface": {
+          "x": 484,
+          "y": 64,
+          "width": 400,
+          "height": 120,
+          "top": 64,
+          "right": 884,
+          "bottom": 184,
+          "left": 484
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 900,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 823,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 867,
+              "bottom": 125,
+              "left": 823
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 485,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 883,
+              "bottom": 174,
+              "left": 485
+            },
+            "height": 32,
+            "scrollHeight": 427,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-200-home.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-200-apps.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 120,
+          "top": 64,
+          "right": 1008,
+          "bottom": 184,
+          "left": 608
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 947,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 991,
+              "bottom": 125,
+              "left": 947
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 609,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 1007,
+              "bottom": 174,
+              "left": 609
+            },
+            "height": 32,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-200-notes.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 120,
+          "top": 64,
+          "right": 1008,
+          "bottom": 184,
+          "left": 608
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 947,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 991,
+              "bottom": 125,
+              "left": 947
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 609,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 1007,
+              "bottom": 174,
+              "left": 609
+            },
+            "height": 32,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1024-200",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1024,
+        "height": 200,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1024-200-documents.png",
+      "geometry": {
+        "width": 1024,
+        "height": 200,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 152,
+          "y": 204.03125,
+          "width": 720,
+          "height": 56,
+          "top": 204.03125,
+          "right": 872,
+          "bottom": 260.03125,
+          "left": 152
+        },
+        "surface": {
+          "x": 608,
+          "y": 64,
+          "width": 400,
+          "height": 120,
+          "top": 64,
+          "right": 1008,
+          "bottom": 184,
+          "left": 608
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 200,
+          "width": 1024,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 947,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 991,
+              "bottom": 125,
+              "left": 947
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 609,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 1007,
+              "bottom": 174,
+              "left": 609
+            },
+            "height": 32,
+            "scrollHeight": 427,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1440-240-home.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1440-240-apps.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": {
+          "x": 1024,
+          "y": 64,
+          "width": 400,
+          "height": 160,
+          "top": 64,
+          "right": 1424,
+          "bottom": 224,
+          "left": 1024
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 1363,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1407,
+              "bottom": 125,
+              "left": 1363
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1025,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 1423,
+              "bottom": 174,
+              "left": 1025
+            },
+            "height": 32,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1440-240-notes.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": {
+          "x": 1024,
+          "y": 64,
+          "width": 400,
+          "height": 160,
+          "top": 64,
+          "right": 1424,
+          "bottom": 224,
+          "left": 1024
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 1363,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1407,
+              "bottom": 125,
+              "left": 1363
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1025,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 1423,
+              "bottom": 174,
+              "left": 1025
+            },
+            "height": 32,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-1440-240",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 1440,
+        "height": 240,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-1440-240-documents.png",
+      "geometry": {
+        "width": 1440,
+        "height": 240,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 360,
+          "y": 214.1875,
+          "width": 720,
+          "height": 56,
+          "top": 214.1875,
+          "right": 1080,
+          "bottom": 270.1875,
+          "left": 360
+        },
+        "surface": {
+          "x": 1024,
+          "y": 64,
+          "width": 400,
+          "height": 160,
+          "top": 64,
+          "right": 1424,
+          "bottom": 224,
+          "left": 1024
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 240,
+          "width": 1440,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 1363,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 1407,
+              "bottom": 125,
+              "left": 1363
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 1025,
+              "y": 142,
+              "width": 398,
+              "height": 32,
+              "top": 142,
+              "right": 1423,
+              "bottom": 174,
+              "left": 1025
+            },
+            "height": 32,
+            "scrollHeight": 427,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "home",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 844,
+        "height": 390,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-844-390-home.png",
+      "geometry": {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 62,
+          "y": 198.796875,
+          "width": 720,
+          "height": 56,
+          "top": 198.796875,
+          "right": 782,
+          "bottom": 254.796875,
+          "left": 62
+        },
+        "surface": null,
+        "surfaceVisible": false,
+        "presentation": null,
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BODY",
+          "label": null
+        },
+        "viewport": {
+          "height": 390,
+          "width": 844,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [],
+        "scrolls": []
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "apps",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 844,
+        "height": 390,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-844-390-apps.png",
+      "geometry": {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 62,
+          "y": 198.796875,
+          "width": 720,
+          "height": 56,
+          "top": 198.796875,
+          "right": 782,
+          "bottom": 254.796875,
+          "left": 62
+        },
+        "surface": {
+          "x": 428,
+          "y": 64,
+          "width": 400,
+          "height": 310,
+          "top": 64,
+          "right": 828,
+          "bottom": 374,
+          "left": 428
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 390,
+          "width": 844,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 767,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 811,
+              "bottom": 125,
+              "left": 767
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 429,
+              "y": 142,
+              "width": 398,
+              "height": 106,
+              "top": 142,
+              "right": 827,
+              "bottom": 248,
+              "left": 429
+            },
+            "height": 106,
+            "scrollHeight": 296,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "notes",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 844,
+        "height": 390,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-844-390-notes.png",
+      "geometry": {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 62,
+          "y": 198.796875,
+          "width": 720,
+          "height": 56,
+          "top": 198.796875,
+          "right": 782,
+          "bottom": 254.796875,
+          "left": 62
+        },
+        "surface": {
+          "x": 428,
+          "y": 64,
+          "width": 400,
+          "height": 310,
+          "top": 64,
+          "right": 828,
+          "bottom": 374,
+          "left": 428
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 390,
+          "width": 844,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 767,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 811,
+              "bottom": 125,
+              "left": 767
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 429,
+              "y": 142,
+              "width": 398,
+              "height": 106,
+              "top": 142,
+              "right": 827,
+              "bottom": 248,
+              "left": 429
+            },
+            "height": 106,
+            "scrollHeight": 592,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    },
+    {
+      "key": "zen-light-844-390",
+      "kind": "documents",
+      "scenario": {
+        "style": "zen",
+        "theme": "light",
+        "width": 844,
+        "height": 390,
+        "kinds": [
+          "apps",
+          "notes",
+          "documents"
+        ]
+      },
+      "screenshot": "zen-light-844-390-documents.png",
+      "geometry": {
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "homeClass": "page-shell home home-zen",
+        "search": {
+          "x": 62,
+          "y": 198.796875,
+          "width": 720,
+          "height": 56,
+          "top": 198.796875,
+          "right": 782,
+          "bottom": 254.796875,
+          "left": 62
+        },
+        "surface": {
+          "x": 428,
+          "y": 64,
+          "width": 400,
+          "height": 310,
+          "top": 64,
+          "right": 828,
+          "bottom": 374,
+          "left": 428
+        },
+        "surfaceVisible": true,
+        "presentation": "panel",
+        "dock": null,
+        "documentOverflow": 0,
+        "bodyOverflow": 0,
+        "active": {
+          "tag": "BUTTON",
+          "label": "收起工作区"
+        },
+        "viewport": {
+          "height": 390,
+          "width": 844,
+          "offsetTop": 0,
+          "scale": 1
+        },
+        "safeArea": {
+          "top": "0px",
+          "right": "0px",
+          "bottom": "0px",
+          "left": "0px"
+        },
+        "controls": [
+          {
+            "label": "收起工作区",
+            "rect": {
+              "x": 767,
+              "y": 81,
+              "width": 44,
+              "height": 44,
+              "top": 81,
+              "right": 811,
+              "bottom": 125,
+              "left": 767
+            },
+            "hit": true,
+            "disabled": false
+          }
+        ],
+        "scrolls": [
+          {
+            "class": "workspace-body",
+            "rect": {
+              "x": 429,
+              "y": 142,
+              "width": 398,
+              "height": 162,
+              "top": 142,
+              "right": 827,
+              "bottom": 304,
+              "left": 429
+            },
+            "height": 162,
+            "scrollHeight": 427,
+            "scrollTop": 0,
+            "overflow": "auto"
+          }
+        ]
+      },
+      "checks": {
+        "noHorizontalOverflow": true,
+        "presenterMatches": true,
+        "visibleSurface": true,
+        "chromeControlsHit": true
+      }
+    }
+  ],
+  "errors": []
+}
