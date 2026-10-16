@@ -96,6 +96,10 @@ export interface ExtendedWebApp extends WebAppItem {
     groupId?: string | null;
 }
 
+const EMPTY_APPS: ExtendedWebApp[] = [];
+const EMPTY_GROUPS: WebAppGroup[] = [];
+const EMPTY_NOTES: NoteItem[] = [];
+
 type WorkspaceAction =
     | DomainWorkspaceAction<AppsRoute>
     | DomainWorkspaceAction<NotesRoute>
@@ -132,6 +136,14 @@ export function SearchHome() {
     const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
     const [appsOwnerId, setAppsOwnerId] = useState<string | null>(null);
     const [reloadApps, setReloadApps] = useState(0);
+    const ownsCurrentUserData = Boolean(user && appsOwnerId === user.id);
+    const currentApps = ownsCurrentUserData ? apps : EMPTY_APPS;
+    const currentGroups = ownsCurrentUserData ? groups : EMPTY_GROUPS;
+    const currentNotes = ownsCurrentUserData ? notes : EMPTY_NOTES;
+    const currentAppsStatus = ownsCurrentUserData ? appsStatus : "loading";
+    const currentAppsError = ownsCurrentUserData ? appsError : "";
+    const currentNotesLoading = !ownsCurrentUserData || notesLoading;
+    const currentNotesError = ownsCurrentUserData ? notesError : "";
     const appLayout = useAppsLayoutPersistence(user?.id, setApps, setGroups);
     const appSession = useRef<AppSessionNavigation | null>(null);
     const [host, dispatchHost] = useReducer(
@@ -144,8 +156,8 @@ export function SearchHome() {
         userId: user?.id,
         layoutStyle,
         rect: geometry,
-        notes,
-        notesLoaded: !notesLoading,
+        notes: currentNotes,
+        notesLoaded: !currentNotesLoading,
     });
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
@@ -515,16 +527,15 @@ export function SearchHome() {
                 appRoute.view === "apps/edit" ? appRoute.id : ""
             }`
             : "",
-        editingApp:
-            user && appsOwnerId === user.id && appRoute.view === "apps/edit"
-                ? apps.find((app) => app.id === appRoute.id) ?? null
-                : null,
+        editingApp: user && appRoute.view === "apps/edit"
+            ? currentApps.find((app) => app.id === appRoute.id) ?? null
+            : null,
         defaultGroupId: appRoute.view === "apps/create"
             ? appRoute.groupId || activeFolderId || ""
             : "",
-        groups: appsOwnerId === user?.id ? groups : [],
+        groups: currentGroups,
         appearance,
-        existingApps: appsOwnerId === user?.id ? apps : [],
+        existingApps: currentApps,
         expandIcon: appRoute.view === "apps/edit" && appRoute.expandIcon,
         onSaved: (saved, isEdit) => {
             setApps((items) =>
@@ -545,22 +556,25 @@ export function SearchHome() {
             .catch(() => {});
     }, []);
 
+    // Account changes clear old data; same-account reloads retain it.
     useEffect(() => {
-        if (!user) {
-            setApps([]);
-            setGroups([]);
-            setLoadedUserId(null);
-            setAppsOwnerId(null);
-            return;
-        }
-        let active = true;
-        const userId = user.id;
-        setAppsOwnerId(userId);
-        setAppsStatus("loading");
-        setAppsError("");
         setApps([]);
         setGroups([]);
+        setNotes([]);
         setLoadedUserId(null);
+        setAppsOwnerId(user?.id ?? null);
+        setAppsStatus("loading");
+        setAppsError("");
+        setNotesLoading(Boolean(user));
+        setNotesError("");
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!user) return;
+        let active = true;
+        const userId = user.id;
+        setAppsStatus("loading");
+        setAppsError("");
         Promise.all([
             api<ExtendedWebApp[]>("/api/webapps"),
             api<WebAppGroup[]>("/api/webapp-groups"),
@@ -618,17 +632,35 @@ export function SearchHome() {
     }, [user?.id, reloadApps]);
 
     useEffect(() => {
-        if (user && loadedUserId === user.id && appsStatus === "ready") {
+        if (
+            user && ownsCurrentUserData && loadedUserId === user.id &&
+            appsStatus === "ready"
+        ) {
             void setLocal("webapps:" + user.id, { apps, groups }).catch(
                 () => {},
             );
         }
-    }, [user?.id, loadedUserId, appsStatus, apps, groups]);
+    }, [
+        user?.id,
+        ownsCurrentUserData,
+        loadedUserId,
+        appsStatus,
+        apps,
+        groups,
+    ]);
     useEffect(() => {
-        if (user && !notesLoading && !notesError) {
+        if (
+            user && ownsCurrentUserData && !notesLoading && !notesError
+        ) {
             void setLocal("notes:" + user.id, notes).catch(() => {});
         }
-    }, [user?.id, notes, notesLoading, notesError]);
+    }, [
+        user?.id,
+        ownsCurrentUserData,
+        notes,
+        notesLoading,
+        notesError,
+    ]);
 
     async function checkConnections() {
         setIsCheckingConnections(true);
@@ -717,7 +749,7 @@ export function SearchHome() {
     // Desktop and mobile use the same pinned order.
     const pinned = useMemo(
         () =>
-            apps
+            currentApps
                 .filter((item) => item.isPinned)
                 .sort((a, b) =>
                     (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0)
@@ -728,7 +760,7 @@ export function SearchHome() {
                         ? undefined
                         : appearance.webAppHomeLimit,
                 ),
-        [apps, appearance.webAppHomeLimit],
+        [currentApps, appearance.webAppHomeLimit],
     );
     async function reorderPinned(ids: string[]) {
         const updates = ids.map((id, pinnedSortOrder) => ({
@@ -751,9 +783,10 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
-    const fixedNotes = useMemo(() => notes.filter((note) => note.isHomeFixed), [
-        notes,
-    ]);
+    const fixedNotes = useMemo(
+        () => currentNotes.filter((note) => note.isHomeFixed),
+        [currentNotes],
+    );
     function openAddModal() {
         navigateWorkspace({ view: "apps/create" });
     }
@@ -1021,6 +1054,48 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
+    const constrainedDesktop = layoutStyle === "widgets" &&
+        globalThis.innerWidth >= 1024 && !geometry.usable;
+    const missingActiveWindow = Boolean(
+        host.activeKind &&
+            !desktop.windows.some((window) => window.id === host.activeKind),
+    );
+    const restrictedWorkspace = constrainedDesktop && missingActiveWindow;
+    const workspaceWindows = useMemo(
+        () => desktop.windows.filter((window) => isWorkspaceKind(window.kind)),
+        [desktop.windows],
+    );
+    const constrainedViewport = isConstrainedViewport(globalThis.innerWidth);
+    const activeWindowId = constrainedViewport
+        ? desktop.activeId ?? getTopmostVisibleWindowId(workspaceWindows)
+        : null;
+    let effectiveActiveWindowId = activeWindowId;
+    if (constrainedViewport && activeWindowId?.startsWith("document:")) {
+        effectiveActiveWindowId = "documents";
+    } else if (
+        constrainedViewport && activeWindowId?.startsWith("note:")
+    ) {
+        effectiveActiveWindowId = "notes";
+    }
+    const activeWorkspaceWindow = constrainedViewport
+        ? workspaceWindows.find((window) =>
+            window.id === effectiveActiveWindowId
+        ) ?? workspaceWindows[0]
+        : undefined;
+    function isWorkspaceVisible(kind: WorkspaceKind): boolean {
+        if (layoutStyle !== "widgets") return false;
+        if (mobile) return host.activeKind === kind;
+        if (restrictedWorkspace && host.activeKind === kind) return true;
+        if (constrainedViewport) {
+            return activeWorkspaceWindow?.kind === kind &&
+                activeWorkspaceWindow.mode !== "minimized";
+        }
+        return workspaceWindows.some((window) =>
+            window.kind === kind && window.mode !== "minimized"
+        );
+    }
+    const announceAppsFeedback = !isWorkspaceVisible("apps");
+    const announceNotesFeedback = !isWorkspaceVisible("notes");
     const layoutProps: HomeLayoutProps = {
         user,
         appearance,
@@ -1032,14 +1107,18 @@ export function SearchHome() {
         isCheckingConnections,
         onCheckConnections: checkConnections,
         search,
-        apps,
+        apps: currentApps,
         pinned,
-        groups,
-        appsStatus,
-        appsError,
+        groups: currentGroups,
+        appsStatus: currentAppsStatus,
+        appsError: currentAppsError,
         onReloadApps: () => setReloadApps((count) => count + 1),
-        notes,
+        notes: currentNotes,
         fixedNotes,
+        notesLoading: currentNotesLoading,
+        notesError: currentNotesError,
+        announceAppsFeedback,
+        announceNotesFeedback,
         reorderNotes,
         isManagingApps,
         setIsManagingApps,
@@ -1063,13 +1142,6 @@ export function SearchHome() {
     };
     const currentWorkspace = host.activeKind ?? "apps";
     const currentRoute = host.models[currentWorkspace].route;
-    const constrainedDesktop = layoutStyle === "widgets" &&
-        globalThis.innerWidth >= 1024 && !geometry.usable;
-    const missingActiveWindow = Boolean(
-        host.activeKind &&
-            !desktop.windows.some((window) => window.id === host.activeKind),
-    );
-    const restrictedWorkspace = constrainedDesktop && missingActiveWindow;
     const pendingRestrictedWorkspace = useRef<WorkspaceKind | null>(null);
     useEffect(() => {
         if (restrictedWorkspace) {
@@ -1117,7 +1189,7 @@ export function SearchHome() {
     ) {
         if (!user) return null;
         if (kind === "apps") {
-            if (appsOwnerId !== user.id) return null;
+            if (!ownsCurrentUserData) return null;
             const model = host.models.apps;
             return (
                 <AppsWorkspace
@@ -1125,8 +1197,8 @@ export function SearchHome() {
                     navigate={navigateWorkspace}
                     activeFolderId={activeFolderId}
                     onFolderChange={setActiveFolderId}
-                    apps={apps}
-                    groups={groups}
+                    apps={currentApps}
+                    groups={currentGroups}
                     setApps={setApps}
                     setGroups={setGroups}
                     persistLayout={appLayout.persist}
@@ -1143,8 +1215,8 @@ export function SearchHome() {
                             action: { type: "query", value },
                         });
                     }}
-                    status={appsStatus}
-                    error={appsError}
+                    status={currentAppsStatus}
+                    error={currentAppsError}
                     onRetry={layoutProps.onReloadApps}
                     onOpen={openApp}
                     onPin={togglePinApp}
@@ -1188,7 +1260,7 @@ export function SearchHome() {
             <NotesWorkspace
                 listLayout={noteListLayout}
                 state={model.route}
-                notes={notes}
+                notes={currentNotes}
                 userId={user.id}
                 query={model.query}
                 onQueryChange={(value) =>
@@ -1203,8 +1275,8 @@ export function SearchHome() {
                     )}
                 onReorder={reorderNotes}
                 actions={layoutProps}
-                loading={notesLoading}
-                error={notesError}
+                loading={currentNotesLoading}
+                error={currentNotesError}
                 onRetry={layoutProps.onReloadApps}
             />
         );
@@ -1290,7 +1362,7 @@ export function SearchHome() {
                                 onCreate={createWorkspaceItem}
                                 onDockElement={setDockElement}
                                 appsArranging={appsArranging}
-                                notes={notes}
+                                notes={currentNotes}
                                 onSaveNote={(saved) => {
                                     setNotes((items) =>
                                         items.map((item) =>

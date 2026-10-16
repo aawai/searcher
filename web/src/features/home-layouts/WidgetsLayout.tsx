@@ -3,6 +3,11 @@ import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 import { ControlledNotes } from "./ControlledNotes.tsx";
+import {
+    EmptyState,
+    LoadingState,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
 
 export function WidgetsLayout(props: HomeLayoutProps) {
@@ -23,6 +28,10 @@ export function WidgetsLayout(props: HomeLayoutProps) {
         appsStatus,
         appsError,
         onReloadApps,
+        notesLoading,
+        notesError,
+        announceAppsFeedback,
+        announceNotesFeedback,
         fixedNotes,
         reorderNotes,
         openApp,
@@ -39,10 +48,12 @@ export function WidgetsLayout(props: HomeLayoutProps) {
         updateNoteLayout,
     } = props;
 
-    const hasApps = (appsStatus === "ready" || appsStatus === "offline")
-        ? pinned.length > 0
-        : true;
+    const hasResolvedApps = appsStatus === "ready" ||
+        appsStatus === "offline";
+    const hasApps = hasResolvedApps ? pinned.length > 0 : true;
+    const appsAreEmpty = hasResolvedApps && pinned.length === 0;
     const hasNotes = fixedNotes.length > 0;
+    const notesAreEmpty = !notesLoading && !notesError && !hasNotes;
 
     const bentoMode = hasApps && hasNotes
         ? "both"
@@ -131,13 +142,25 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                             </div>
 
                             {appsStatus === "loading" && (
-                                <p className="text-xs text-[var(--muted)]">
-                                    加载常用网站中...
-                                </p>
+                                <LoadingState
+                                    density="compact"
+                                    announce={announceAppsFeedback}
+                                >
+                                    正在加载应用…
+                                </LoadingState>
                             )}
                             {appsStatus === "error" && (
-                                <div className="text-xs text-[var(--danger)]">
-                                    加载失败：{appsError}
+                                <StatusBanner
+                                    tone="error"
+                                    density="compact"
+                                    role={announceAppsFeedback
+                                        ? "alert"
+                                        : "presentation"}
+                                    aria-live={announceAppsFeedback
+                                        ? "assertive"
+                                        : "off"}
+                                >
+                                    <span>加载失败：{appsError}</span>
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -146,38 +169,58 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                     >
                                         重试
                                     </Button>
-                                </div>
+                                </StatusBanner>
                             )}
-                            {(appsStatus === "ready" ||
-                                appsStatus === "offline") &&
-                                (pinned.length > 0
-                                    ? (
-                                        <WebAppLauncher
-                                            presentation="quick"
-                                            onManage={openEditModal}
-                                            apps={pinned}
-                                            groups={groups}
-                                            showFolders={false}
-                                            size={appearance.webAppIconSize}
-                                            showAppLabels={appearance
-                                                .showAppLabels}
-                                            managing={false}
-                                            onOpen={openApp}
-                                            onEdit={openEditModal}
-                                            onPin={togglePinApp}
-                                            onDelete={softDeleteApp}
-                                            onMove={moveAppGroup}
-                                            onReorder={reorderPinned}
-                                            onAdd={openAddModal}
-                                        />
-                                    )
-                                    : (
-                                        <div className="widgets-bento-empty">
-                                            <p className="widgets-bento-empty-text">
-                                                暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。
-                                            </p>
-                                        </div>
-                                    ))}
+                            {appsStatus === "offline" && (
+                                <StatusBanner
+                                    tone="warning"
+                                    density="compact"
+                                    role={announceAppsFeedback
+                                        ? "status"
+                                        : "presentation"}
+                                    aria-live={announceAppsFeedback
+                                        ? "polite"
+                                        : "off"}
+                                >
+                                    <span>
+                                        当前离线，显示此账户上次保存的应用列表。
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={onReloadApps}
+                                        className="ml-2"
+                                    >
+                                        重试
+                                    </Button>
+                                </StatusBanner>
+                            )}
+                            {pinned.length > 0 && (
+                                <WebAppLauncher
+                                    presentation="quick"
+                                    onManage={openEditModal}
+                                    apps={pinned}
+                                    groups={groups}
+                                    showFolders={false}
+                                    size={appearance.webAppIconSize}
+                                    showAppLabels={appearance.showAppLabels}
+                                    managing={false}
+                                    onOpen={openApp}
+                                    onEdit={openEditModal}
+                                    onPin={togglePinApp}
+                                    onDelete={softDeleteApp}
+                                    onMove={moveAppGroup}
+                                    onReorder={reorderPinned}
+                                    onAdd={openAddModal}
+                                />
+                            )}
+                            {appsAreEmpty && (
+                                <EmptyState
+                                    description="暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+                                    density="compact"
+                                    className="widgets-bento-empty"
+                                />
+                            )}
                         </div>
 
                         {/* Bento Card 2: 随手便签 (Controlled Notes) */}
@@ -224,33 +267,62 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                 </div>
                             </div>
 
-                            {fixedNotes.length > 0
-                                ? (
-                                    <ControlledNotes
-                                        notes={fixedNotes}
-                                        onReorder={reorderNotes}
-                                        onOpen={editNote}
-                                        onUpdateLayout={updateNoteLayout}
-                                        onTogglePin={(n) =>
-                                            void updateNote(n, {
-                                                isPinned: !n.isPinned,
-                                            })}
-                                        onToggleHomeFixed={(n) =>
-                                            void updateNote(n, {
-                                                isHomeFixed: !n.isHomeFixed,
-                                            })}
-                                        onChangeColor={(n, color) =>
-                                            void updateNote(n, { color })}
-                                        onDelete={(n) => void deleteNote(n)}
-                                    />
-                                )
-                                : (
-                                    <div className="widgets-bento-empty">
-                                        <p className="widgets-bento-empty-text">
-                                            暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。
-                                        </p>
-                                    </div>
-                                )}
+                            {notesLoading && (
+                                <LoadingState
+                                    density="compact"
+                                    announce={announceNotesFeedback}
+                                >
+                                    正在加载便签…
+                                </LoadingState>
+                            )}
+                            {!notesLoading && notesError && (
+                                <StatusBanner
+                                    tone="error"
+                                    density="compact"
+                                    role={announceNotesFeedback
+                                        ? "alert"
+                                        : "presentation"}
+                                    aria-live={announceNotesFeedback
+                                        ? "assertive"
+                                        : "off"}
+                                >
+                                    <span>加载便签失败：{notesError}</span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={onReloadApps}
+                                        className="ml-2"
+                                    >
+                                        重试
+                                    </Button>
+                                </StatusBanner>
+                            )}
+                            {fixedNotes.length > 0 && (
+                                <ControlledNotes
+                                    notes={fixedNotes}
+                                    onReorder={reorderNotes}
+                                    onOpen={editNote}
+                                    onUpdateLayout={updateNoteLayout}
+                                    onTogglePin={(n) =>
+                                        void updateNote(n, {
+                                            isPinned: !n.isPinned,
+                                        })}
+                                    onToggleHomeFixed={(n) =>
+                                        void updateNote(n, {
+                                            isHomeFixed: !n.isHomeFixed,
+                                        })}
+                                    onChangeColor={(n, color) =>
+                                        void updateNote(n, { color })}
+                                    onDelete={(n) => void deleteNote(n)}
+                                />
+                            )}
+                            {notesAreEmpty && (
+                                <EmptyState
+                                    description="暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+                                    density="compact"
+                                    className="widgets-bento-empty"
+                                />
+                            )}
                         </div>
                     </div>
                 </div>

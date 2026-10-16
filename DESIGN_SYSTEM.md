@@ -846,6 +846,18 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
     下通过正式 Token `--layout-bento-columns: 5fr 3fr`
     呈现不对称列比（应用/便签）；卡片高度由内部内容决定，不强制等高。空态与少量应用展开通过同一
     Token 约束列比与溢出边界；底部居中 Dock（`.workspace-dock`）作为工作区入口。
+  - 首页状态直接消费 `SearchHome` 的 Apps load state 和 Notes loading/error，
+    使用 compact `LoadingState` / `StatusBanner` /
+    `EmptyState`。仅加载完成且无错误、 无固定内容时显示
+    ready-empty；已有内容在同账号重试和错误期间保持可用。 Apps
+    的真实网络失败且有账号缓存时显示 warning 离线提示；HTTP 错误仍为 error，
+    不更改现有缓存回退政策。两域复用已有 reload 回调，不创建第二套重试或状态
+    owner。
+  - 首页与同域可见 Workspace 只有一个 live-region owner：可见 Workspace 优先，
+    关闭、最小化或 constrained Host 隐藏后恢复首页播报。首页提示仍可阅读，
+    仅取消其 live role；`LoadingState announce={false}` 对应普通呈现与
+    `aria-live=off`。 每域独立裁决，不能只用 desktop activeKind
+    代替多窗口实际可见性。
 - **首页职责收敛与 QuickLaunch 移除**：
   - 首页专注于“使用内容”，完全移除 QuickLaunch
     管理模式切换、管理条（`.home-managing-bar`）及卡片内竞争的启动管理按钮。所有应用新建、编辑、分组管理及便签编辑统一下沉至
@@ -944,7 +956,9 @@ WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 Conte
   aria-live=polite。Consumer 显式维护 loading 与
   initialized，不用“无数据”推断首次加载完成。
 - `EmptyState`：通过 headingLevel 与 density 表达页面或 Workspace 空态；compact
-  不建立第二套 card surface。
+  不建立第二套 card surface。 已有区域标题的上下文空态可以省略 title，仅传
+  description，避免重复标题把 compact 容器撑高；不新增首页专用 typography 或空态
+  primitive。
 - `UndoToast`：message、onUndo、可选 onClose；timeout 与恢复业务由 consumer
   持有，浮层位置、surface 与按钮几何只有 semantic owner。Home 应用 / 便签和 Ask
   对话共用。
