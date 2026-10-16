@@ -1,0 +1,74 @@
+[
+  {
+    "number": 173,
+    "title": "[Withdrawn] viewport-fit 缺失不构成已证实 safe-area 缺陷",
+    "state": "closed",
+    "state_reason": "not_planned",
+    "url": "https://github.com/aawai/searcher/issues/173",
+    "planSectionsVerified": false
+  },
+  {
+    "number": 174,
+    "title": "fix(apps): 在真实 SPA 路由离开前保护未保存的应用表单",
+    "state": "open",
+    "state_reason": null,
+    "url": "https://github.com/aawai/searcher/issues/174",
+    "planSectionsVerified": true
+  },
+  {
+    "number": 175,
+    "title": "[Withdrawn] 自由窗口 Escape 不关闭符合既有契约",
+    "state": "closed",
+    "state_reason": "not_planned",
+    "url": "https://github.com/aawai/searcher/issues/175",
+    "planSectionsVerified": false
+  },
+  {
+    "number": 176,
+    "title": "[Withdrawn] Ask 与 Home 的分路由 viewport owner 不构成重复校正",
+    "state": "closed",
+    "state_reason": "not_planned",
+    "url": "https://github.com/aawai/searcher/issues/176",
+    "planSectionsVerified": false
+  },
+  {
+    "number": 177,
+    "title": "fix(widgets): 完整呈现首页 Apps/Notes 加载错误与离线反馈",
+    "state": "open",
+    "state_reason": null,
+    "url": "https://github.com/aawai/searcher/issues/177",
+    "planSectionsVerified": true
+  },
+  {
+    "number": 178,
+    "title": "fix(notes): 按当前账号发现未同步草稿并恢复退出提醒",
+    "state": "open",
+    "state_reason": null,
+    "url": "https://github.com/aawai/searcher/issues/178",
+    "planSectionsVerified": true
+  },
+  {
+    "number": 179,
+    "title": "fix(zen): 让 Workspace Panel 避让可变顶部连接提示",
+    "state": "open",
+    "state_reason": null,
+    "url": "https://github.com/aawai/searcher/issues/179",
+    "planSectionsVerified": true
+  },
+  {
+    "number": 180,
+    "title": "fix(zen): 让默认固定便签布局避开主搜索操作区",
+    "state": "open",
+    "state_reason": null,
+    "url": "https://github.com/aawai/searcher/issues/180",
+    "planSectionsVerified": true
+  },
+  {
+    "number": 181,
+    "title": "fix(workspace): 修复 Widgets 短受限视口从全关闭状态无法打开工作区",
+    "state": "open",
+    "state_reason": null,
+    "url": "https://github.com/aawai/searcher/issues/181",
+    "planSectionsVerified": true
+  }
+]
