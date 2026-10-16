@@ -74,6 +74,7 @@ import {
 import {
     type AppSessionNavigation,
     AppSessionProvider,
+    type AppSessionRouteIntent,
 } from "../components/searcher/AppSessionProvider.tsx";
 import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
 import { appsEscapeIntent } from "../features/workspace/apps-dismiss.ts";
@@ -94,6 +95,16 @@ export interface ExtendedWebApp extends WebAppItem {
     openMode?: "global" | "current" | "new_tab";
     groupId?: string | null;
 }
+
+type WorkspaceAction =
+    | DomainWorkspaceAction<AppsRoute>
+    | DomainWorkspaceAction<NotesRoute>
+    | DomainWorkspaceAction<DocumentsRoute>
+    | { type: "close" };
+
+type PendingAction =
+    | { kind: WorkspaceKind; action: WorkspaceAction }
+    | { kind: "route"; intent: AppSessionRouteIntent };
 
 export function SearchHome() {
     const { user, appearance } = useAppState();
@@ -166,17 +177,38 @@ export function SearchHome() {
     const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
     const initialSyncDoneRef = useRef(false);
-    const [pendingAction, setPendingAction] = useState<
-        | {
-            kind: WorkspaceKind;
-            action:
-                | DomainWorkspaceAction<AppsRoute>
-                | DomainWorkspaceAction<NotesRoute>
-                | DomainWorkspaceAction<DocumentsRoute>
-                | { type: "close" };
-        }
-        | null
-    >(null);
+    const [pendingAction, setPendingAction] = useState<PendingAction | null>(
+        null,
+    );
+    const pendingActionRef = useRef<PendingAction | null>(null);
+
+    const updatePendingAction = useCallback(
+        (action: PendingAction | null) => {
+            pendingActionRef.current = action;
+            setPendingAction(action);
+        },
+        [],
+    );
+    const cancelPendingAction = useCallback(() => {
+        const pending = pendingActionRef.current;
+        updatePendingAction(null);
+        if (pending?.kind === "route") pending.intent.reset();
+    }, [updatePendingAction]);
+    const onRouteBlocked = useCallback(
+        (intent: AppSessionRouteIntent | null) => {
+            const pending = pendingActionRef.current;
+            if (!intent) {
+                if (pending?.kind === "route") updatePendingAction(null);
+                return;
+            }
+            if (pending && pending.kind !== "route") {
+                intent.reset();
+                return;
+            }
+            updatePendingAction({ kind: "route", intent });
+        },
+        [updatePendingAction],
+    );
     const appEntryFocus = useRef<string>("");
     function focusApps(selector = appEntryFocus.current) {
         requestAnimationFrame(() =>
@@ -270,12 +302,9 @@ export function SearchHome() {
     }
     function requestWorkspace(
         kind: WorkspaceKind,
-        action:
-            | DomainWorkspaceAction<AppsRoute>
-            | DomainWorkspaceAction<NotesRoute>
-            | DomainWorkspaceAction<DocumentsRoute>
-            | { type: "close" },
+        action: WorkspaceAction,
     ) {
+        if (pendingActionRef.current) return;
         const leavingApps = kind === "apps" || mobile ||
             appearance.style === "zen";
         if (leavingApps && appSession.current?.isSubmitting) return;
@@ -286,10 +315,24 @@ export function SearchHome() {
             (dirtyForm.current &&
                 (kind === "documents" || appearance.style === "zen"))
         ) {
-            setPendingAction({ kind, action });
+            updatePendingAction({ kind, action });
             return;
         }
         applyWorkspace(kind, action);
+    }
+    function confirmPendingAction() {
+        const action = pendingActionRef.current;
+        if (!action) return;
+        updatePendingAction(null);
+        if (action.kind === "route") {
+            action.intent.proceed();
+            return;
+        }
+        if (
+            action.kind === "documents" || mobile ||
+            appearance.style === "zen"
+        ) dirtyForm.current = false;
+        applyWorkspace(action.kind, action.action);
     }
     function navigateWorkspace(route: WorkspaceRoute) {
         if (isAppsWorkspaceView(route)) {
@@ -444,7 +487,7 @@ export function SearchHome() {
         dirtyForm.current = false;
         initialSyncDoneRef.current = false;
         dispatchHost({ type: "reset" });
-        setPendingAction(null);
+        cancelPendingAction();
         setAppsArranging(false);
         setActiveFolderId(null);
         setIsManagingApps(false);
@@ -453,7 +496,7 @@ export function SearchHome() {
         setError("");
         setUndoApp(null);
         setNoteUndo(null);
-    }, [user?.id]);
+    }, [user?.id, cancelPendingAction]);
     const [error, setError] = useState("");
     const [noteUndo, setNoteUndo] = useState<
         { note: NoteItem; timer: ReturnType<typeof setTimeout> } | null
@@ -1198,7 +1241,7 @@ export function SearchHome() {
         hasDialog: () =>
             Boolean(pendingAction || appSession.current?.hasDialog),
         onDialogEscape: () => {
-            if (pendingAction) setPendingAction(null);
+            if (pendingAction) cancelPendingAction();
             else appSession.current?.dismissDialog();
         },
         onEscape: () => escapeWorkspace("apps"),
@@ -1207,6 +1250,7 @@ export function SearchHome() {
         <AppSessionProvider
             options={appSessionOptions}
             navigationRef={appSession}
+            onRouteBlocked={onRouteBlocked}
         >
             <PageShell
                 archetype="search"
@@ -1318,33 +1362,25 @@ export function SearchHome() {
                 <AlertDialog
                     open={Boolean(pendingAction)}
                     onOpenChange={(open) => {
-                        if (!open) setPendingAction(null);
+                        if (!open) cancelPendingAction();
                     }}
                 >
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>
-                                {pendingAction?.kind === "apps"
+                                {pendingAction?.kind === "apps" ||
+                                        pendingAction?.kind === "route"
                                     ? "放弃未保存的应用修改？"
                                     : "放弃未保存的修改？"}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                                返回或收起工作区后，当前未保存的表单内容将丢失。
+                                离开当前页面或工作区后，当前未保存的表单内容将丢失。
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>继续编辑</AlertDialogCancel>
                             <AlertDialogAction
-                                onClick={() => {
-                                    if (!pendingAction) return;
-                                    const action = pendingAction;
-                                    if (
-                                        action.kind === "documents" || mobile ||
-                                        appearance.style === "zen"
-                                    ) dirtyForm.current = false;
-                                    setPendingAction(null);
-                                    applyWorkspace(action.kind, action.action);
-                                }}
+                                onClick={confirmPendingAction}
                             >
                                 放弃修改
                             </AlertDialogAction>

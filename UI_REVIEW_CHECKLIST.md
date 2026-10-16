@@ -4,6 +4,41 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #174 Apps 真实 SPA 离开保护
+
+- [x] 撤回“Zen edge 切换丢草稿”的归因。main `0c8d36d` 实页的 edge Notes→Apps
+      与关闭后取消均保留字段；真实 Settings Link 无确认且返回后草稿为空。
+      focused regression 修复前等待 alertdialog 超时，修复后通过。
+- [x] Data router 保留 AppState / Layout / descendant Routes 与懒加载边界。
+      AppSession 生命周期只有一个 blocker，路由与 Workspace 复用原确认 owner；
+      无 Link 特判、history patch、第二套 Router 或跨刷新草稿存储。
+- [x] 最终生产构建的 Apps session E2E：10 passed / 0 failed。 覆盖 Settings
+      Link、真实 Ask 程序化跳转、Back/Forward、clean、取消/放弃、 edge/Presenter
+      保留、关闭取消、并发确认、beforeunload 与提交中拒绝离开。 URL 变化不是
+      render 完成条件；目标页渲染与旧 dialog/form 卸载分别等待。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 的 12
+      组稳定几何实页截图：document 横向溢出为 0，Footer 均在 viewport 内。
+      另验收 767/768、1023/1024 断点与 390×240 短屏。无新增 CSS/token，
+      不修改窗口 canonical geometry、v4 数据或账号/匿名缓存。
+- [x] `deno task test`：672 tests / 51 steps。完整生产 E2E 首轮为 54 passed /
+      280 steps，3 failed / 1 failed step；Apps density、Documents
+      selection、Workspace keyboard 三个失败文件在独立 baseline
+      和最终分支串行比较 均为 3 passed / 9
+      steps，原断言未修改。分批结果不描述为完整命令一次通过。
+- [x] 最终 build、bundle budget、前端与新增 E2E typecheck、变更文件 fmt/lint
+      通过；`check:ui` 实扫 ownership 200 / visual 141 文件，均为 0 violations。
+      路由 canonical/404、lazy CSS/bundle、搜索锚点、编辑器/分页、壁纸与隔离的
+      既有生产用例已在上述完整执行中覆盖。
+- [x] 独立 router seam 提交与 blocker cutover 可一起回滚；无 schema、storage
+      key、持久数据迁移或兼容 shim。媒体及原始失败报告存于
+      [evidence/issue-174](https://github.com/aawai/searcher/tree/evidence/issue-174/evidence/issue-174)。
+- [ ] 极短屏既有边界不记为通过：Widgets 900×200 的 Apps 无法打开、 1024×200
+      fallback 的 Cancel 被 hero 覆盖，独立 `0c8d36d` baseline
+      实页同样复现。本次不搭载 viewport/Window 重建。Zen 900×200 的 Cancel
+      可经键盘 focus 滚入可见区域。详见证据报告。
+- [ ] 真实 Safari / iOS / Android、软键盘与 OS IME 未验证；不以 Chromium 模拟
+      冒充真机。
+
 ## Issue #163 Canonical / Presentation Geometry
 
 - [x] M0 真实 Chromium 红测：1440×900 将窗口放到 x=540，缩到 1024×768 后
