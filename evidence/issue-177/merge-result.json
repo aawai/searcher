@@ -1,0 +1,19 @@
+{
+  "pr": "https://github.com/aawai/searcher/pull/184",
+  "headCommit": "417e6ef90977ad4eea53a9c55a96f2dcd5371588",
+  "mergeCommit": "cc1cf90807a2dffac608a011f9c9bfaa23d2c068",
+  "mergedAt": "2026-10-16T12:03:42Z",
+  "issue": "https://github.com/aawai/searcher/issues/177",
+  "issueState": "CLOSED",
+  "issueClosedAt": "2026-10-16T12:03:43Z",
+  "ci": {
+    "Full production Workspace E2E": "passed, 4m43s, https://github.com/aawai/searcher/actions/runs/38897298738/job/116960739393",
+    "notes-regression": "passed, 3m30s",
+    "wallpaper": "passed, 3m5s",
+    "Build container image": "passed, 1m24s",
+    "Production Bundle Audit & Budget Gate": "passed, 23s",
+    "Production E2E Bundle Loading & Route Isolation": "passed, 1m37s",
+    "UI Ownership & Visual Presentation Guard": "passed, 17s",
+    "Workspace touched-source Deno format check": "passed, 6s"
+  }
+}
