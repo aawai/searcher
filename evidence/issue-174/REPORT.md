@@ -40,3 +40,16 @@ Real Safari, iOS/Android, native soft keyboard, and OS IME were not exercised. C
 - `deno task check:ui`: ownership 200 files / visual 141 files, 0 violations and 0 allowances.
 
 The initial full-run failures were a grid measured-column mismatch (4 vs 7), a text-selection mismatch (2 vs 6), and a keyboard fixture retaining search-result presentation while seeking a root launcher button. They were not suppressed or re-pinned. A single successful isolated execution does not establish the root cause of scheduling sensitivity.
+
+## Merge and independent CI
+
+PR [#183](https://github.com/aawai/searcher/pull/183) merged into main as `910e25b`; issue #174 is closed. All six PR workflow runs for head `64a1cbbc0d8c` passed before merge:
+
+- [Full Workspace acceptance](https://github.com/aawai/searcher/actions/runs/38866421370)
+- [Bundle audit and route loading/CSS isolation](https://github.com/aawai/searcher/actions/runs/38866421398)
+- [Notes contracts](https://github.com/aawai/searcher/actions/runs/38866421775)
+- [Wallpaper contracts](https://github.com/aawai/searcher/actions/runs/38866421406)
+- [UI Guard](https://github.com/aawai/searcher/actions/runs/38866421542)
+- [Container build](https://github.com/aawai/searcher/actions/runs/38866421389)
+
+These CI passes are independent of the local partitioned comparison; they do not rewrite the first full local run as successful.
