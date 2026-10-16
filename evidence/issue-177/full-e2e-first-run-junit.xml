@@ -1,0 +1,848 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="349" failures="3" errors="0" time="1071.979">
+    <testsuite name="./web/e2e/workspace.test.ts" tests="9" disabled="0" errors="0" failures="0">
+        <testcase name="production workspace contracts" classname="./web/e2e/workspace.test.ts" time="20.182" line="25" col="6">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Widgets closed Dock -&gt; Apps/Notes, non-modal desktop no backdrop/no focus trap/layout shift" classname="./web/e2e/workspace.test.ts" time="0.121" line="126" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; root in-place switch preserving queries" classname="./web/e2e/workspace.test.ts" time="0.401" line="222" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; nested AppForm dirty Back/Close protection and save" classname="./web/e2e/workspace.test.ts" time="1.610" line="318" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server" classname="./web/e2e/workspace.test.ts" time="5.570" line="464" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation" classname="./web/e2e/workspace.test.ts" time="8.114" line="884" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Home Quick Apps pinned order, icon size and label preferences" classname="./web/e2e/workspace.test.ts" time="1.804" line="1206" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Zen apps notes note edit FloatingNotes preserved desktop layout" classname="./web/e2e/workspace.test.ts" time="0.632" line="1331" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Mobile focustrap/swipe/escape and focus return" classname="./web/e2e/workspace.test.ts" time="0.441" line="1441" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/workspace-shell.test.ts" tests="10" disabled="0" errors="0" failures="0">
+        <testcase name="production Workspace state, keyboard and responsive contracts" classname="./web/e2e/workspace-shell.test.ts" time="24.679" line="11" col="6">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; loading remains bounded; retry recovers an empty Apps launcher" classname="./web/e2e/workspace-shell.test.ts" time="0.317" line="222" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; offline stale Apps cache remains browsable and explicit retry refreshes it" classname="./web/e2e/workspace-shell.test.ts" time="0.469" line="298" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; failed add/edit preserves draft and error; retry saves; delete/undo restores" classname="./web/e2e/workspace-shell.test.ts" time="0.807" line="382" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus" classname="./web/e2e/workspace-shell.test.ts" time="6.390" line="504" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority" classname="./web/e2e/workspace-shell.test.ts" time="0.846" line="719" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration" classname="./web/e2e/workspace-shell.test.ts" time="0.673" line="851" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability" classname="./web/e2e/workspace-shell.test.ts" time="6.225" line="956" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; presentation changes preserve Core queries and nested Back; logout clears transient state" classname="./web/e2e/workspace-shell.test.ts" time="2.143" line="1351" col="13">
+        </testcase>
+        <testcase name="production Workspace state, keyboard and responsive contracts &gt; Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence" classname="./web/e2e/workspace-shell.test.ts" time="5.440" line="1417" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/desktop-drag.test.ts" tests="2" disabled="0" errors="0" failures="0">
+        <testcase name="desktop drag preserves immediate reverse movement at all normal bounds" classname="./web/e2e/desktop-drag.test.ts" time="11.410" line="663" col="6">
+        </testcase>
+        <testcase name="desktop drag clips diagonal and single-frame gestures without dragging controls" classname="./web/e2e/desktop-drag.test.ts" time="2.281" line="1872" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/desktop-presentation.test.ts" tests="4" disabled="0" errors="0" failures="0">
+        <testcase name="desktop presentation restores the free-desktop frame after an uncommitted shrink-grow" classname="./web/e2e/desktop-presentation.test.ts" time="2.336" line="330" col="6">
+        </testcase>
+        <testcase name="MOVE and RESIZE at 1024 become the new free-desktop intent" classname="./web/e2e/desktop-presentation.test.ts" time="2.049" line="487" col="6">
+        </testcase>
+        <testcase name="constrained workspace presets and measured chrome preserve free-desktop geometry" classname="./web/e2e/desktop-presentation.test.ts" time="2.491" line="580" col="6">
+        </testcase>
+        <testcase name="Snap, maximize, restore, and drag-out resolve current presentation geometry" classname="./web/e2e/desktop-presentation.test.ts" time="1.948" line="1029" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/launcher.test.ts" tests="15" disabled="0" errors="0" failures="0">
+        <testcase name="production launcher contracts - Issue #47" classname="./web/e2e/launcher.test.ts" time="14.149" line="12" col="6">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 0. Empty Launcher Root: blank surface menu available when zero apps or folders" classname="./web/e2e/launcher.test.ts" time="0.105" line="206" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 1. Unified Launcher Root: defaults directly to complete launcher without legacy IA" classname="./web/e2e/launcher.test.ts" time="0.178" line="282" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 2. Folder Inline Browse &amp; Back scroll-focus restoration" classname="./web/e2e/launcher.test.ts" time="0.167" line="381" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 3. Blank space context menu &amp; Keyboard / Touch folder creation" classname="./web/e2e/launcher.test.ts" time="0.611" line="471" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 4. Folder context actions: resize, rename, delete with confirmation and apps preserved" classname="./web/e2e/launcher.test.ts" time="0.979" line="556" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 5. Search deduplication, Folder result click &amp; arrange mode search unbinding" classname="./web/e2e/launcher.test.ts" time="0.402" line="671" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 6. App Context Menu ownership fallback (move in &amp; out of folder)" classname="./web/e2e/launcher.test.ts" time="0.477" line="791" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 7. App -&gt; Folder pointer DnD: drop-target feedback and move failure rollback" classname="./web/e2e/launcher.test.ts" time="0.441" line="891" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 8. App -&gt; Folder pointer DnD: successful move and server reload consistency" classname="./web/e2e/launcher.test.ts" time="0.432" line="1007" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 9. Folder-internal App reorder, scope-local order, and pinnedOrder untouched" classname="./web/e2e/launcher.test.ts" time="0.412" line="1095" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 10. Mixed Root Reorder via KeyboardSensor and atomic PUT persistence" classname="./web/e2e/launcher.test.ts" time="0.513" line="1209" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 11. 375px mobile viewport &amp; real theme system (dataset.theme reactive)" classname="./web/e2e/launcher.test.ts" time="0.140" line="1296" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 12. Folder across App and App across App preserve mixed order on reload" classname="./web/e2e/launcher.test.ts" time="1.218" line="1339" col="13">
+        </testcase>
+        <testcase name="production launcher contracts - Issue #47 &gt; 13. Real touch drag moves App into Folder without changing Home pin order" classname="./web/e2e/launcher.test.ts" time="6.469" line="1466" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/apps-density.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="apps workspace touch density geometry and hit targets #149" classname="./web/e2e/apps-density.test.ts" time="39.741" line="1018" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/home-launcher-density.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Home touch grid density and drag alignment" classname="./web/e2e/home-launcher-density.test.ts" time="4.035" line="7" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/apps-session.test.ts" tests="10" disabled="0" errors="0" failures="0">
+        <testcase name="apps edit keeps fields and confirmation across hosts and window modes" classname="./web/e2e/apps-session.test.ts" time="2.298" line="75" col="6">
+        </testcase>
+        <testcase name="Zen Apps dirty new-app draft survives a Settings route leave" classname="./web/e2e/apps-session.test.ts" time="1.852" line="211" col="6">
+        </testcase>
+        <testcase name="clean Zen Apps form leaves for Settings without confirmation" classname="./web/e2e/apps-session.test.ts" time="0.946" line="289" col="6">
+        </testcase>
+        <testcase name="dirty Apps blocks SearchHome&apos;s programmatic Ask navigation" classname="./web/e2e/apps-session.test.ts" time="1.914" line="300" col="6">
+        </testcase>
+        <testcase name="dirty Apps drafts block browser Back and Forward until confirmed" classname="./web/e2e/apps-session.test.ts" time="3.618" line="360" col="6">
+        </testcase>
+        <testcase name="Zen Apps draft survives presenter and edge workspace switches; close can cancel" classname="./web/e2e/apps-session.test.ts" time="2.615" line="439" col="6">
+        </testcase>
+        <testcase name="workspace close keeps first intent against a competing route leave" classname="./web/e2e/apps-session.test.ts" time="2.480" line="513" col="6">
+        </testcase>
+        <testcase name="route leave waits for an Apps form confirmation dialog to close" classname="./web/e2e/apps-session.test.ts" time="2.686" line="563" col="6">
+        </testcase>
+        <testcase name="Apps beforeunload warns only for a dirty active document" classname="./web/e2e/apps-session.test.ts" time="6.297" line="644" col="6">
+        </testcase>
+        <testcase name="Apps route leave is refused while the new-app save is pending" classname="./web/e2e/apps-session.test.ts" time="1.678" line="702" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/apps-interactions.test.ts" tests="7" disabled="0" errors="0" failures="0">
+        <testcase name="apps session, modal undo and visible management contracts #141" classname="./web/e2e/apps-interactions.test.ts" time="5.674" line="29" col="6">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; visible folder creation, arranging exit and layered Escape" classname="./web/e2e/apps-interactions.test.ts" time="1.164" line="59" col="22">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; all draft fields, icon input and real upload survive host replacement" classname="./web/e2e/apps-interactions.test.ts" time="1.690" line="172" col="22">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; cross-folder search context and icon shortcut versus normal edit" classname="./web/e2e/apps-interactions.test.ts" time="0.917" line="349" col="22">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; mobile modal undo is a visible, hittable normal layout row" classname="./web/e2e/apps-interactions.test.ts" time="0.355" line="433" col="17">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; moving undo between modal and global hosts preserves its deadline" classname="./web/e2e/apps-interactions.test.ts" time="0.288" line="471" col="17">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; restore failure remains inside the active modal and never restores falsely" classname="./web/e2e/apps-interactions.test.ts" time="0.512" line="521" col="17">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/apps-races.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="apps ignores obsolete fetches and retains failed saves" classname="./web/e2e/apps-races.test.ts" time="3.637" line="5" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/apps-ordering.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="apps concurrent optimistic sorting converges to confirmed server order #141" classname="./web/e2e/apps-ordering.test.ts" time="2.092" line="5" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/apps-ai-session.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="apps AI snapshot, candidates and selection stay in one session #141" classname="./web/e2e/apps-ai-session.test.ts" time="2.849" line="7" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-workspace.test.ts" tests="14" disabled="0" errors="0" failures="0">
+        <testcase name="production notes workspace contracts (#44 &amp; #43)" classname="./web/e2e/notes-workspace.test.ts" time="19.605" line="20" col="6">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Empty state (no notes) and search no result empty state" classname="./web/e2e/notes-workspace.test.ts" time="0.286" line="202" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Fixed section deduplication and search deduplication" classname="./web/e2e/notes-workspace.test.ts" time="0.311" line="297" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Controls isolation (drag, expand, pin, home-fixed, color, delete do not enter editor)" classname="./web/e2e/notes-workspace.test.ts" time="1.348" line="485" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44/#109: Inline expand/collapse, card column-width geometry (&lt;=2px), and API write purity" classname="./web/e2e/notes-workspace.test.ts" time="0.589" line="610" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #78: toolbar, shortcuts, composite blur, Markdown persistence and newline parity" classname="./web/e2e/notes-workspace.test.ts" time="5.542" line="737" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes Source/Live: coarse-pointer toolbar touch targets and editable tasks" classname="./web/e2e/notes-workspace.test.ts" time="2.491" line="904" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: NoteEditor saving / unsynced / error and retry lifecycle" classname="./web/e2e/notes-workspace.test.ts" time="0.804" line="1045" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: NoteEditor 409 conflict detection, dialog UI, and resolution" classname="./web/e2e/notes-workspace.test.ts" time="0.791" line="1190" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Version history error handling and display" classname="./web/e2e/notes-workspace.test.ts" time="0.652" line="1360" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Stale cached notes browse and retry on API failure" classname="./web/e2e/notes-workspace.test.ts" time="0.278" line="1459" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Long title and many notes overflow contracts across desktop (1440) and mobile (390)" classname="./web/e2e/notes-workspace.test.ts" time="3.273" line="1531" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: Zen FloatingNotes opening/closing workspace geometry isolation" classname="./web/e2e/notes-workspace.test.ts" time="1.129" line="1688" col="13">
+        </testcase>
+        <testcase name="production notes workspace contracts (#44 &amp; #43) &gt; Notes #44: ControlledNotes deterministic spatial layout and narrow fallback" classname="./web/e2e/notes-workspace.test.ts" time="0.661" line="1791" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-masonry.test.ts" tests="24" disabled="0" errors="0" failures="0">
+        <testcase name="production notes masonry contracts (#109)" classname="./web/e2e/notes-masonry.test.ts" time="62.325" line="681" col="6">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; Content widths 505/506/766/767, max three columns and every desktop window operation are write-free" classname="./web/e2e/notes-masonry.test.ts" time="9.112" line="693" col="13">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 768–1023 constrained presets reflow without resetting query, expansion or API order" classname="./web/e2e/notes-masonry.test.ts" time="4.385" line="841" col="13">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; Unequal expanded Markdown heights use shortest columns; expand/collapse restores geometry without writes" classname="./web/e2e/notes-masonry.test.ts" time="2.730" line="914" col="13">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; Search uses independent nonsortable masonry, prunes filtered geometry and clear restores grouping and expansion" classname="./web/e2e/notes-masonry.test.ts" time="2.356" line="973" col="13">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; Pin/home-fixed membership changes preserve expansion; deletion reflows both independent containers" classname="./web/e2e/notes-masonry.test.ts" time="4.169" line="1081" col="13">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 2-column pointer drop across columns at upper target center persists canonical order" classname="./web/e2e/notes-masonry.test.ts" time="3.404" line="1242" col="21">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 2-column pointer drop across columns at lower target center persists canonical order" classname="./web/e2e/notes-masonry.test.ts" time="2.640" line="1242" col="21">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 2-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion" classname="./web/e2e/notes-masonry.test.ts" time="4.508" line="1323" col="17">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 3-column pointer drop across columns at upper target center persists canonical order" classname="./web/e2e/notes-masonry.test.ts" time="3.369" line="1242" col="21">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 3-column pointer drop across columns at lower target center persists canonical order" classname="./web/e2e/notes-masonry.test.ts" time="2.829" line="1242" col="21">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; 3-column keyboard cross-column reorder, keyboard/pointer cancel and fixed exclusion" classname="./web/e2e/notes-masonry.test.ts" time="4.601" line="1323" col="17">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; widgets 390px light: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.630" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; widgets 390px dark: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.649" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; widgets 768px light: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="2.074" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; widgets 768px dark: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.380" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; widgets 1440px light: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.332" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; widgets 1440px dark: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="2.217" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; zen 390px light: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.574" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; zen 390px dark: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="0.925" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; zen 768px light: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="0.876" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; zen 768px dark: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.697" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; zen 1440px light: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="0.952" line="1487" col="25">
+        </testcase>
+        <testcase name="production notes masonry contracts (#109) &gt; zen 1440px dark: root/search presentation and home isolation with screenshot evidence" classname="./web/e2e/notes-masonry.test.ts" time="1.732" line="1487" col="25">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-live-preview.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Notes Live Preview: opening and switching preserve canonical Markdown without saves" classname="./web/e2e/notes-live-preview.test.ts" time="4.456" line="5" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-live-editing.test.ts" tests="7" disabled="0" errors="0" failures="0">
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore" classname="./web/e2e/notes-live-editing.test.ts" time="10.495" line="5" col="6">
+        </testcase>
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore &gt; IME does not save or format partial composition; final text autosaves" classname="./web/e2e/notes-live-editing.test.ts" time="3.357" line="58" col="13">
+        </testcase>
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore &gt; selection, undo/redo, local link precedence and manual save" classname="./web/e2e/notes-live-editing.test.ts" time="0.088" line="80" col="13">
+        </testcase>
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore &gt; toolbar focus stays inside composite and tasks persist checked state" classname="./web/e2e/notes-live-editing.test.ts" time="0.150" line="113" col="13">
+        </testcase>
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore &gt; use cloud replaces both modes without callback/autosave loop" classname="./web/e2e/notes-live-editing.test.ts" time="1.961" line="134" col="13">
+        </testcase>
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore &gt; long Markdown saves without truncation; over-limit draft survives rejection" classname="./web/e2e/notes-live-editing.test.ts" time="0.121" line="181" col="13">
+        </testcase>
+        <testcase name="Notes Live Preview: user changes, IME, shortcuts, cloud replacement and restore &gt; restore updates Live and Source without a second PATCH" classname="./web/e2e/notes-live-editing.test.ts" time="2.279" line="202" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-focus.test.ts" tests="15" disabled="0" errors="0" failures="0">
+        <testcase name="Notes focus boundary preserves network, versions and history" classname="./web/e2e/notes-focus.test.ts" time="31.194" line="5" col="6">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; clean title to body has no PATCH or version/history change" classname="./web/e2e/notes-focus.test.ts" time="1.932" line="88" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; 源码: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown" classname="./web/e2e/notes-focus.test.ts" time="1.967" line="104" col="17">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; 源码: dirty title and body autosave together, never a title-only manual snapshot" classname="./web/e2e/notes-focus.test.ts" time="1.991" line="139" col="17">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; 所见即所得: Enter, Tab/Shift+Tab and mode switches preserve clean Markdown" classname="./web/e2e/notes-focus.test.ts" time="1.940" line="104" col="17">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; 所见即所得: dirty title and body autosave together, never a title-only manual snapshot" classname="./web/e2e/notes-focus.test.ts" time="1.951" line="139" col="17">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; internal focus does not restart the original title debounce" classname="./web/e2e/notes-focus.test.ts" time="1.518" line="180" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; title-only dirty leave to history flushes exactly once with a manual snapshot" classname="./web/e2e/notes-focus.test.ts" time="1.911" line="196" col="17">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; title-only dirty leave to color flushes exactly once with a manual snapshot" classname="./web/e2e/notes-focus.test.ts" time="1.839" line="196" col="17">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; clean explicit Ctrl+S retains manual save and version semantics" classname="./web/e2e/notes-focus.test.ts" time="0.059" line="226" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; title composition blocks Enter, commands and blur; committed title autosaves" classname="./web/e2e/notes-focus.test.ts" time="3.398" line="243" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer" classname="./web/e2e/notes-focus.test.ts" time="5.620" line="270" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; failed title flush stays dirty and can retry through real leave" classname="./web/e2e/notes-focus.test.ts" time="0.124" line="299" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; older title response cannot delete newer body draft after immediate close" classname="./web/e2e/notes-focus.test.ts" time="0.350" line="329" col="13">
+        </testcase>
+        <testcase name="Notes focus boundary preserves network, versions and history &gt; two note instances flush only the dirty instance actually left" classname="./web/e2e/notes-focus.test.ts" time="4.040" line="384" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-ux.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Notes long document actions and history stay reachable without replacing editor" classname="./web/e2e/notes-ux.test.ts" time="2.888" line="5" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-history.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Notes history flush, cancel, restore and failure preserve real server contracts" classname="./web/e2e/notes-history.test.ts" time="4.134" line="6" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-menu.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Notes format menus retain Source selection, keyboard focus and debounce; IME blocks commands" classname="./web/e2e/notes-menu.test.ts" time="7.169" line="5" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/notes-color.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Note card color dots have accessible names without visible labels and persist keyboard selection" classname="./web/e2e/notes-color.test.ts" time="1.901" line="5" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/home-notes-order.test.ts" tests="9" disabled="0" errors="0" failures="0">
+        <testcase name="production home notes manual order E2E (#62)" classname="./web/e2e/home-notes-order.test.ts" time="18.432" line="15" col="6">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Handle rendering and handle click does not open editor" classname="./web/e2e/home-notes-order.test.ts" time="0.566" line="188" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Pointer drag C-&gt;A immediate DOM, reload and relogin persistence, normal notes preserved" classname="./web/e2e/home-notes-order.test.ts" time="1.177" line="264" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Keyboard equivalent reordering and reload persistence" classname="./web/e2e/home-notes-order.test.ts" time="0.877" line="451" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Max 5 slots displayed, hidden sixth+ note preserved in background" classname="./web/e2e/home-notes-order.test.ts" time="0.886" line="508" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Fix and unfix notes toggles board presence and sorting capability" classname="./web/e2e/home-notes-order.test.ts" time="1.452" line="627" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Workspace other notes sorting and search unsortable contract" classname="./web/e2e/home-notes-order.test.ts" time="0.801" line="750" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Visual overflow at 375/390/768/1024/1440 light/dark and #40 layout contract" classname="./web/e2e/home-notes-order.test.ts" time="4.137" line="910" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Home #155: code scrolling stays inside Zen and Widgets notes" classname="./web/e2e/home-notes-order.test.ts" time="7.118" line="1076" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/bento.test.ts" tests="21" disabled="0" errors="0" failures="3">
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44)" classname="./web/e2e/bento.test.ts" time="5.240" line="12" col="6">
+            <failure message="2 test steps failed">2 test steps failed.</failure>
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Both have content -&gt; 5:3 double-column &amp; intrinsic height" classname="./web/e2e/bento.test.ts" time="0.388" line="197" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Apps-only -&gt; Apps card full width, Notes empty moves down compact" classname="./web/e2e/bento.test.ts" time="0.126" line="262" col="13">
+            <failure message="Uncaught AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   false
++   true
+">AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   false
++   true
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///home/aawei/searcher/.worktrees/issue-177/web/e2e/bento.test.ts:315:17
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async Object.outerWrapped [as fn] (ext:cli/40_test.js:239:22)
+    at async TestContext.step (ext:cli/40_test.js:855:22)
+    at async file:///home/aawei/searcher/.worktrees/issue-177/web/e2e/bento.test.ts:262:5
+
+    info: This program assigned to Object.prototype.__proto__, which Deno disables by default.
+    hint: If this caused the error, run again with --unsafe-proto to restore it.</failure>
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Notes-only -&gt; Notes card full width, Apps empty moves down compact" classname="./web/e2e/bento.test.ts" time="0.162" line="332" col="13">
+            <failure message="Uncaught AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   false
++   true
+">AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   false
++   true
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///home/aawei/searcher/.worktrees/issue-177/web/e2e/bento.test.ts:386:17
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async Object.outerWrapped [as fn] (ext:cli/40_test.js:239:22)
+    at async TestContext.step (ext:cli/40_test.js:855:22)
+    at async file:///home/aawei/searcher/.worktrees/issue-177/web/e2e/bento.test.ts:332:5
+
+    info: This program assigned to Object.prototype.__proto__, which Deno disables by default.
+    hint: If this caused the error, run again with --unsafe-proto to restore it.</failure>
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Both empty -&gt; Both entries discoverable, 5:3 side-by-side, no large fixed min-height" classname="./web/e2e/bento.test.ts" time="0.262" line="409" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Tile Centering: 1 to 4 tiles centered (data-few-apps), 5+ start-aligned" classname="./web/e2e/bento.test.ts" time="0.452" line="468" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Geometry: Long app title &amp; long note title do not cause overflow" classname="./web/e2e/bento.test.ts" time="0.129" line="548" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 375 mobile (375x667) - light" classname="./web/e2e/bento.test.ts" time="0.197" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 390 mobile standard (390x844) - light" classname="./web/e2e/bento.test.ts" time="0.103" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 768 tablet (768x1024) - light" classname="./web/e2e/bento.test.ts" time="0.134" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1024 desktop small (1024x768) - light" classname="./web/e2e/bento.test.ts" time="0.146" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1440 desktop standard (1440x900) - light" classname="./web/e2e/bento.test.ts" time="0.115" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1920 desktop large (1920x1080) - light" classname="./web/e2e/bento.test.ts" time="0.128" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 375 mobile (375x667) - dark" classname="./web/e2e/bento.test.ts" time="0.151" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 390 mobile standard (390x844) - dark" classname="./web/e2e/bento.test.ts" time="0.098" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 768 tablet (768x1024) - dark" classname="./web/e2e/bento.test.ts" time="0.133" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1024 desktop small (1024x768) - dark" classname="./web/e2e/bento.test.ts" time="0.150" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1440 desktop standard (1440x900) - dark" classname="./web/e2e/bento.test.ts" time="0.311" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1920 desktop large (1920x1080) - dark" classname="./web/e2e/bento.test.ts" time="0.112" line="632" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Notes: compact &amp; expanded state toggles within controlled board" classname="./web/e2e/bento.test.ts" time="0.475" line="720" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Zen Isolation: FloatingNotes &amp; edge trigger work without Bento injection" classname="./web/e2e/bento.test.ts" time="0.145" line="785" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/workspace-contract.test.ts" tests="8" disabled="0" errors="0" failures="0">
+        <testcase name="production workspace #80 behavioral contracts" classname="./web/e2e/workspace-contract.test.ts" time="11.359" line="13" col="6">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Heading hierarchy contract: h2 panel -&gt; h3 subsection with accessible regions (no skipping levels)" classname="./web/e2e/workspace-contract.test.ts" time="5.195" line="107" col="13">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Typography &amp; spacing contract: Apps and Notes section titles computed styles parity" classname="./web/e2e/workspace-contract.test.ts" time="0.080" line="203" col="13">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Apps root and empty folder canonical EmptyState contract (h3, compact, footer primary sole action, no competing body button)" classname="./web/e2e/workspace-contract.test.ts" time="0.460" line="286" col="13">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Count badge and search results contract: visible count and &apos;搜索结果&apos; region in Apps and Notes" classname="./web/e2e/workspace-contract.test.ts" time="0.413" line="380" col="13">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Empty search action contract: EmptyState with &apos;清空搜索&apos; action clears query and restores items" classname="./web/e2e/workspace-contract.test.ts" time="0.155" line="545" col="13">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Loading and error live roles + retry contract" classname="./web/e2e/workspace-contract.test.ts" time="2.919" line="597" col="13">
+        </testcase>
+        <testcase name="production workspace #80 behavioral contracts &gt; Warning offline cache contract: offline status banner with compact density and retry button" classname="./web/e2e/workspace-contract.test.ts" time="0.723" line="684" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/workspace-matrix.test.ts" tests="8" disabled="0" errors="0" failures="0">
+        <testcase name="production workspace layered matrix E2E (Issue #92)" classname="./web/e2e/workspace-matrix.test.ts" time="20.869" line="25" col="6">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix A: 16-combination responsive &amp; visual matrix (4 viewports x 2 themes x 2 styles)" classname="./web/e2e/workspace-matrix.test.ts" time="5.136" line="292" col="13">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix B: Wallpaper material, surface boundaries, and active window separation" classname="./web/e2e/workspace-matrix.test.ts" time="0.558" line="454" col="13">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix C: Apps/Notes states (root/nested/empty/loading/error) and Core Domain Independence (390 &amp; 1440)" classname="./web/e2e/workspace-matrix.test.ts" time="1.734" line="559" col="13">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix C: Apps/Notes loading, error and retry at 390 and 1440" classname="./web/e2e/workspace-matrix.test.ts" time="3.010" line="753" col="13">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix D: Desktop Window behavior (1024 &amp; 1440 Widgets)" classname="./web/e2e/workspace-matrix.test.ts" time="2.768" line="853" col="13">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix E: Persistence, identity isolation, and layout restore (1440 Widgets)" classname="./web/e2e/workspace-matrix.test.ts" time="5.413" line="1207" col="13">
+        </testcase>
+        <testcase name="production workspace layered matrix E2E (Issue #92) &gt; Matrix F: Tablet constrained contract (768 Widgets)" classname="./web/e2e/workspace-matrix.test.ts" time="0.991" line="1598" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/navigation.test.ts" tests="11" disabled="0" errors="0" failures="0">
+        <testcase name="production navigation contracts" classname="./web/e2e/navigation.test.ts" time="11.591" line="17" col="6">
+        </testcase>
+        <testcase name="production navigation contracts &gt; auth surfaces retain responsive geometry in both themes" classname="./web/e2e/navigation.test.ts" time="1.608" line="59" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; settings direct-entry, refresh, canonicalization and one-step Back" classname="./web/e2e/navigation.test.ts" time="1.780" line="166" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; anonymous device appearance survives reload without an account" classname="./web/e2e/navigation.test.ts" time="0.277" line="242" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; unknown pages and workspace children render the same recoverable 404" classname="./web/e2e/navigation.test.ts" time="0.784" line="291" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; register after a guest CTA retains destination through auth mode switching" classname="./web/e2e/navigation.test.ts" time="0.433" line="315" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; account appearance survives reload and syncs without leaking on logout or expiry" classname="./web/e2e/navigation.test.ts" time="2.267" line="338" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; login restores ask, trash and account queries; direct and external next return home" classname="./web/e2e/navigation.test.ts" time="2.931" line="508" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; admin exact children, tab Back and AI Provider workspace entry" classname="./web/e2e/navigation.test.ts" time="0.799" line="539" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; admin dialog keyboard close restores focus to its opener" classname="./web/e2e/navigation.test.ts" time="0.170" line="606" col="13">
+        </testcase>
+        <testcase name="production navigation contracts &gt; mobile breadcrumbs remain visible within viewport" classname="./web/e2e/navigation.test.ts" time="0.393" line="637" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/documents.test.ts" tests="20" disabled="0" errors="0" failures="0">
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7)" classname="./web/e2e/documents.test.ts" time="26.476" line="9" col="6">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; Documents Library stays body-free and does not load editor runtime" classname="./web/e2e/documents.test.ts" time="0.092" line="81" col="17">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 390x844 zen light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.306" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 390x844 zen dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.266" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 390x844 widgets light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.317" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 390x844 widgets dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.268" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 768x1024 zen light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.398" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 768x1024 zen dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.223" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 768x1024 widgets light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.357" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 768x1024 widgets dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.303" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1024x768 zen light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.316" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1024x768 zen dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.301" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1024x768 widgets light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.233" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1024x768 widgets dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.315" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1440x900 zen light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.386" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1440x900 zen dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.359" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1440x900 widgets light: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.275" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 1440x900 widgets dark: modes, overflow and Host boundary" classname="./web/e2e/documents.test.ts" time="1.332" line="156" col="29">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; short viewport keeps the focused source text visible and saves typed content" classname="./web/e2e/documents.test.ts" time="1.232" line="250" col="17">
+        </testcase>
+        <testcase name="Documents production responsive modes and large-document integrity (#102 M7) &gt; 100k Markdown / 200 headings / 50 images / 20 tables / 30 breaks survive input, page and source" classname="./web/e2e/documents.test.ts" time="2.886" line="300" col="17">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/document-immersion.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="#147: document immersion preserves the editor and normal window semantics" classname="./web/e2e/document-immersion.test.ts" time="34.181" line="22" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/document-vertical-layout.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="#147: production page layout, editing, paper settings and print flow" classname="./web/e2e/document-vertical-layout.test.ts" time="50.322" line="120" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/document-zen-pagination-stability.test.ts" tests="41" disabled="0" errors="0" failures="0">
+        <testcase name="#158 Zen page layout reaches an idle fixed point" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="410.814" line="128" col="6">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-1440x900-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.562" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-1440x900-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.330" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-1024x768-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.465" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-1024x768-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.353" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-768x1024-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.477" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-768x1024-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.298" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-390x844-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.569" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-390x844-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.279" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-1024x1552-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.701" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; short-1024x1552-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.469" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-1440x900-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.709" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-1440x900-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.579" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-1024x768-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.529" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-1024x768-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.284" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-768x1024-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.532" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-768x1024-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.412" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-390x844-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.554" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-390x844-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.319" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-1024x1552-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.733" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; manual-1024x1552-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.541" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-1440x900-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.493" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-1440x900-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.271" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-1024x768-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.516" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-1024x768-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.341" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-768x1024-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.591" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-768x1024-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.311" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-390x844-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.556" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-390x844-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.278" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-1024x1552-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.792" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; consecutive-1024x1552-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.535" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-1440x900-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.504" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-1440x900-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.328" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-1024x768-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.535" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-1024x768-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.381" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-768x1024-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.652" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-768x1024-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.322" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-390x844-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.544" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-390x844-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="8.274" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-1024x1552-light" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.912" line="253" col="36">
+        </testcase>
+        <testcase name="#158 Zen page layout reaches an idle fixed point &gt; mixed-1024x1552-dark" classname="./web/e2e/document-zen-pagination-stability.test.ts" time="15.633" line="253" col="36">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/document-host-boundaries.test.ts" tests="7" disabled="0" errors="0" failures="0">
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists" classname="./web/e2e/document-host-boundaries.test.ts" time="15.120" line="50" col="6">
+        </testcase>
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists &gt; 1440x900" classname="./web/e2e/document-host-boundaries.test.ts" time="1.965" line="114" col="21">
+        </testcase>
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists &gt; 1024x768" classname="./web/e2e/document-host-boundaries.test.ts" time="2.315" line="114" col="21">
+        </testcase>
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists &gt; 768x1024" classname="./web/e2e/document-host-boundaries.test.ts" time="2.016" line="114" col="21">
+        </testcase>
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists &gt; 390x844" classname="./web/e2e/document-host-boundaries.test.ts" time="2.268" line="114" col="21">
+        </testcase>
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists &gt; 1440x240" classname="./web/e2e/document-host-boundaries.test.ts" time="2.283" line="114" col="21">
+        </testcase>
+        <testcase name="#158 Zen body owner, short-host access and unrelated lists &gt; 390x240" classname="./web/e2e/document-host-boundaries.test.ts" time="2.283" line="114" col="21">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/document-presentation-contracts.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Zen document presentations preserve editor, layout and save contracts" classname="./web/e2e/document-presentation-contracts.test.ts" time="16.867" line="341" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/wallpaper.test.ts" tests="24" disabled="0" errors="0" failures="0">
+        <testcase name="production wallpaper composition, lifecycle and sync E2E" classname="./web/e2e/wallpaper.test.ts" time="72.726" line="23" col="6">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; off-center subjects survive desktop/mobile preview, apply and refresh" classname="./web/e2e/wallpaper.test.ts" time="2.647" line="311" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; motion presets cover focal extremes without exposing canvas edges" classname="./web/e2e/wallpaper.test.ts" time="18.148" line="451" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; fresh device login restores cloud selection and asset-specific composition" classname="./web/e2e/wallpaper.test.ts" time="0.377" line="633" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; history primary action previews, menu selects, clear does not delete" classname="./web/e2e/wallpaper.test.ts" time="0.432" line="657" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; delete failure preserves selection; non-current and current deletion have distinct consequences" classname="./web/e2e/wallpaper.test.ts" time="0.828" line="685" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; URL draft does not PATCH; failed sync recovers and rapid changes retain the latest value" classname="./web/e2e/wallpaper.test.ts" time="0.713" line="750" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; reduced-motion disables background animations and displays settings notice" classname="./web/e2e/wallpaper.test.ts" time="0.407" line="813" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; anonymous gradient and local upload survive reload without touching cloud preferences" classname="./web/e2e/wallpaper.test.ts" time="1.197" line="846" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; preset sliders respond to keyboard Arrow, Home and End with semantic aria values and style updates" classname="./web/e2e/wallpaper.test.ts" time="0.708" line="886" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; real pointer move preview updates thumbnail filter and mask with zero PATCH, and pointer release commits exactly one sync" classname="./web/e2e/wallpaper.test.ts" time="0.350" line="1088" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; per-wallpaper presentation restore across uploaded, remote, and gradient sources and reload" classname="./web/e2e/wallpaper.test.ts" time="1.693" line="1231" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; turning motion off preserves motion level, and clearing wallpaper restricts motion to off and ambient" classname="./web/e2e/wallpaper.test.ts" time="0.682" line="1475" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; focal composition dialog forces runtime motion off while preserving persisted drift or zoom" classname="./web/e2e/wallpaper.test.ts" time="0.900" line="1636" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; real-page mono transparent-gradient regression verifies neutral sRGB channels and neutral ambient color" classname="./web/e2e/wallpaper.test.ts" time="0.823" line="1745" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; Settings live preview plays motion, immediately updates CSS variables without reload, and prevents PATCH flooding during drag" classname="./web/e2e/wallpaper.test.ts" time="0.576" line="1913" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; substrate contract validates canvas, gradient, and image ambient calibration and layering" classname="./web/e2e/wallpaper.test.ts" time="0.877" line="2041" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; embedded and fullscreen ambient motion use their own container geometry" classname="./web/e2e/wallpaper.test.ts" time="0.576" line="2300" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; drift and zoom satisfy deterministic onset deadlines with at least 10% geometric progress" classname="./web/e2e/wallpaper.test.ts" time="1.178" line="2352" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; fixed gray texture: frozen ROI lower bounds and adjacent stage separation" classname="./web/e2e/wallpaper.test.ts" time="11.551" line="2517" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; ambient peaks are separated and actual full-frame luminance does not breathe" classname="./web/e2e/wallpaper.test.ts" time="1.936" line="2628" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; wall-clock ambient recurrence: top-6 worst overlap windows aggregate luminance swing &lt;= budget" classname="./web/e2e/wallpaper.test.ts" time="1.626" line="2670" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; actual raster composite: all stages, clear/balanced, fixed cycle phases" classname="./web/e2e/wallpaper.test.ts" time="21.756" line="2731" col="13">
+        </testcase>
+        <testcase name="production wallpaper composition, lifecycle and sync E2E &gt; capture visual evidence for Main verification" classname="./web/e2e/wallpaper.test.ts" time="0.335" line="2823" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/bundle-loading.test.ts" tests="6" disabled="0" errors="0" failures="0">
+        <testcase name="production bundle loading and route isolation contracts" classname="./web/e2e/bundle-loading.test.ts" time="2.552" line="23" col="6">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 1: Home page initial load only requests initial static graph" classname="./web/e2e/bundle-loading.test.ts" time="0.154" line="100" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 2: Suspense observable fallback &amp; SPA navigation to Ask without full reload" classname="./web/e2e/bundle-loading.test.ts" time="0.165" line="192" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 3: Direct visit to async routes resolves Suspense" classname="./web/e2e/bundle-loading.test.ts" time="1.570" line="267" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 4: Lazy route chunk failure caught by RouteErrorBoundary with recovery" classname="./web/e2e/bundle-loading.test.ts" time="0.307" line="298" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 5: Motion Inspector diagnostic dynamic boundary" classname="./web/e2e/bundle-loading.test.ts" time="0.255" line="359" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/route-style-stability.test.ts" tests="4" disabled="0" errors="0" failures="0">
+        <testcase name="Production Route Style Stability E2E Suite" classname="./web/e2e/route-style-stability.test.ts" time="7.043" line="27" col="6">
+        </testcase>
+        <testcase name="Production Route Style Stability E2E Suite &gt; 1440x900: Settings Appearance, Motion level, and Ask geometry hard gates" classname="./web/e2e/route-style-stability.test.ts" time="2.321" line="47" col="13">
+        </testcase>
+        <testcase name="Production Route Style Stability E2E Suite &gt; 2048x1152: Ask Wide-screen Responsive Geometry Hard Gates" classname="./web/e2e/route-style-stability.test.ts" time="2.091" line="401" col="13">
+        </testcase>
+        <testcase name="Production Route Style Stability E2E Suite &gt; 390x844: Mobile Layout, Touch Targets, and Drawer Contracts" classname="./web/e2e/route-style-stability.test.ts" time="2.388" line="546" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/home-notes-persistence.test.ts" tests="8" disabled="0" errors="0" failures="0">
+        <testcase name="production home notes expand/collapse persistence E2E (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="4.942" line="14" col="6">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario A: compact note -&gt; toggle expand -&gt; reload persists full (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.528" line="164" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario B: full note -&gt; toggle collapse -&gt; reload persists compact (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.410" line="267" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario C: cross-session logout and re-login retains expanded state from backend (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.560" line="344" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario D: legacy note without layout defaults to expanded, collapses and persists (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.471" line="405" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Failure rollback: PUT 500 error rolls back optimistic UI to compact and shows error (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.496" line="465" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Zen / FloatingNotes: toggle mode produces exactly 1 PUT and persists across reload (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.474" line="555" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Zen code block native scrollbar remains draggable (#138)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.743" line="621" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/ui-ownership.test.ts" tests="6" disabled="0" errors="0" failures="0">
+        <testcase name="UI Ownership and style scoping contracts" classname="./web/e2e/ui-ownership.test.ts" time="6.611" line="25" col="6">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Admin login fixture establishes authenticated session" classname="./web/e2e/ui-ownership.test.ts" time="0.136" line="163" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Home style zen vs widgets switching isolates Settings/Admin/Account/Trash/Ask" classname="./web/e2e/ui-ownership.test.ts" time="1.964" line="181" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Global theme, accent, and search shape preferences remain effective globally" classname="./web/e2e/ui-ownership.test.ts" time="1.009" line="286" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Utility/Management/Workbench/Search geometry has no overflow across 390/768/1440 x light/dark" classname="./web/e2e/ui-ownership.test.ts" time="2.594" line="415" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Canonical rendering and semantic feedback without checking source classes" classname="./web/e2e/ui-ownership.test.ts" time="0.666" line="476" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/settings-shortcuts.test.ts" tests="5" disabled="0" errors="0" failures="0">
+        <testcase name="production settings shortcuts contracts" classname="./web/e2e/settings-shortcuts.test.ts" time="3.535" line="11" col="6">
+        </testcase>
+        <testcase name="production settings shortcuts contracts &gt; guest direct access, active tab state, and refresh persistence" classname="./web/e2e/settings-shortcuts.test.ts" time="0.984" line="50" col="13">
+        </testcase>
+        <testcase name="production settings shortcuts contracts &gt; settings 404 for unknown shortcut routes and recovery" classname="./web/e2e/settings-shortcuts.test.ts" time="0.159" line="95" col="13">
+        </testcase>
+        <testcase name="production settings shortcuts contracts &gt; macOS and other platform keycaps and screen reader accessibility" classname="./web/e2e/settings-shortcuts.test.ts" time="1.817" line="115" col="13">
+        </testcase>
+        <testcase name="production settings shortcuts contracts &gt; responsive geometry across 390 / 768 / 1440 widths and light/dark themes without horizontal overflow" classname="./web/e2e/settings-shortcuts.test.ts" time="0.454" line="194" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/shortcuts-notes-ask.test.ts" tests="5" disabled="0" errors="0" failures="0">
+        <testcase name="production shortcuts for Notes and Ask (#103)" classname="./web/e2e/shortcuts-notes-ask.test.ts" time="2.147" line="16" col="6">
+        </testcase>
+        <testcase name="production shortcuts for Notes and Ask (#103) &gt; Notes toolbar displays unified shortcut format in tooltips" classname="./web/e2e/shortcuts-notes-ask.test.ts" time="0.347" line="94" col="13">
+        </testcase>
+        <testcase name="production shortcuts for Notes and Ask (#103) &gt; Note K inserts link and does not steal focus to global search" classname="./web/e2e/shortcuts-notes-ask.test.ts" time="0.053" line="161" col="13">
+        </testcase>
+        <testcase name="production shortcuts for Notes and Ask (#103) &gt; Note B, I, strike (Shift+X), and S shortcuts execute correctly in editor" classname="./web/e2e/shortcuts-notes-ask.test.ts" time="0.154" line="211" col="13">
+        </testcase>
+        <testcase name="production shortcuts for Notes and Ask (#103) &gt; Ask F opens conversation search dialog from composer and non-Ask does not register" classname="./web/e2e/shortcuts-notes-ask.test.ts" time="0.223" line="276" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/shortcuts-search.test.ts" tests="6" disabled="0" errors="0" failures="0">
+        <testcase name="production search shortcuts respect editable focus and submit command targets" classname="./web/e2e/shortcuts-search.test.ts" time="1.969" line="11" col="6">
+        </testcase>
+        <testcase name="production search shortcuts respect editable focus and submit command targets &gt; global focus yields to input textarea select contenteditable and textbox descendants" classname="./web/e2e/shortcuts-search.test.ts" time="0.043" line="43" col="13">
+        </testcase>
+        <testcase name="production search shortcuts respect editable focus and submit command targets &gt; plain global bindings focus search but extra modifiers do not" classname="./web/e2e/shortcuts-search.test.ts" time="0.052" line="92" col="13">
+        </testcase>
+        <testcase name="production search shortcuts respect editable focus and submit command targets &gt; late suggestions do not reopen the listbox after search loses focus" classname="./web/e2e/shortcuts-search.test.ts" time="0.396" line="115" col="13">
+        </testcase>
+        <testcase name="production search shortcuts respect editable focus and submit command targets &gt; all quick commands select their target without query pollution" classname="./web/e2e/shortcuts-search.test.ts" time="1.151" line="169" col="13">
+        </testcase>
+        <testcase name="production search shortcuts respect editable focus and submit command targets &gt; mod Enter opens the stripped engine query in a new tab" classname="./web/e2e/shortcuts-search.test.ts" time="0.096" line="212" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/ui-feedback.test.ts" tests="18" disabled="0" errors="0" failures="0">
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts" classname="./web/e2e/ui-feedback.test.ts" time="8.958" line="15" col="6">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership" classname="./web/e2e/ui-feedback.test.ts" time="2.646" line="1125" col="6">
+        </testcase>
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts &gt; Account: 当前设备退出 / 其他设备退出 dialog contracts (Cancel/Escape no mutation, Confirm 1 mutation, pending disabled, focus recovery)" classname="./web/e2e/ui-feedback.test.ts" time="0.759" line="94" col="13">
+        </testcase>
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts &gt; Trash: 永久删除 dialog contracts on Desktop &amp; Mobile (Escape/Cancel no mutation, Confirm 1 mutation, pending disabled, EmptyState after delete)" classname="./web/e2e/ui-feedback.test.ts" time="1.477" line="231" col="13">
+        </testcase>
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts &gt; Provider: 删除 Provider dialog contracts (Cancel/Escape no mutation, focus restoration, Confirm 1 mutation, pending disabled)" classname="./web/e2e/ui-feedback.test.ts" time="0.480" line="419" col="13">
+        </testcase>
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts &gt; AppForm: 重复应用添加确认与图标覆盖确认 (Escape/Cancel no mutation, focus recovery, Confirm 1 mutation, pending disabled)" classname="./web/e2e/ui-feedback.test.ts" time="1.219" line="522" col="13">
+        </testcase>
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts &gt; UndoToast: Home app/note 删除撤销恢复与 Ask conversation 删除撤销恢复无需真实模型" classname="./web/e2e/ui-feedback.test.ts" time="2.026" line="749" col="13">
+        </testcase>
+        <testcase name="UI feedback, confirmation dialogs, and undo contracts &gt; Workspace: Apps/Notes initial loading, error, empty (首次空结果不闪空态) 及可读 warning" classname="./web/e2e/ui-feedback.test.ts" time="1.763" line="947" col="13">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; Notes 503 without a previously cached note does not claim ready-empty" classname="./web/e2e/ui-feedback.test.ts" time="0.204" line="1433" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; Notes pending and 503 never claim ready-empty; cached note remains and retry fetches ready data" classname="./web/e2e/ui-feedback.test.ts" time="0.185" line="1531" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; Apps loading and HTTP 503 are accessible errors, not offline, and retry performs a successful read" classname="./web/e2e/ui-feedback.test.ts" time="0.194" line="1586" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; A real Apps network abort retains cached content, announces offline, and retries online" classname="./web/e2e/ui-feedback.test.ts" time="0.191" line="1649" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; Successful empty Apps still show the ready-empty content" classname="./web/e2e/ui-feedback.test.ts" time="0.106" line="1686" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; Successful empty Notes still show the ready-empty content" classname="./web/e2e/ui-feedback.test.ts" time="0.101" line="1709" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; Apps workspace is the sole live error owner while visible and homepage ownership returns when minimized" classname="./web/e2e/ui-feedback.test.ts" time="0.229" line="1730" col="17">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; constrained same-domain workspace is sole live owner; closing/minimizing restores homepage ownership" classname="./web/e2e/ui-feedback.test.ts" time="0.218" line="1823" col="21">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; mobile same-domain workspace is sole live owner; closing/minimizing restores homepage ownership" classname="./web/e2e/ui-feedback.test.ts" time="0.412" line="1823" col="21">
+        </testcase>
+        <testcase name="Widgets home feedback reports pending/error/offline states and restores live announcement ownership &gt; desktop same-domain workspace is sole live owner; closing/minimizing restores homepage ownership" classname="./web/e2e/ui-feedback.test.ts" time="0.235" line="1823" col="21">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/editable-pagination-spike.test.ts" tests="6" disabled="0" errors="0" failures="0">
+        <testcase name="M0B production editable pagination preserves state, boundaries and IME" classname="./web/e2e/editable-pagination-spike.test.ts" time="2.092" line="11" col="6">
+        </testcase>
+        <testcase name="M0B production editable pagination preserves state, boundaries and IME &gt; runtime loads only on open; continuous/page keep DOM, selection and history" classname="./web/e2e/editable-pagination-spike.test.ts" time="1.308" line="62" col="17">
+        </testcase>
+        <testcase name="M0B production editable pagination preserves state, boundaries and IME &gt; manual start/consecutive/end breaks retain blank pages; gaps cannot receive a caret" classname="./web/e2e/editable-pagination-spike.test.ts" time="0.138" line="150" col="17">
+        </testcase>
+        <testcase name="M0B production editable pagination preserves state, boundaries and IME &gt; copy/paste preserves semantic PageBreak without copying page decoration" classname="./web/e2e/editable-pagination-spike.test.ts" time="0.036" line="260" col="17">
+        </testcase>
+        <testcase name="M0B production editable pagination preserves state, boundaries and IME &gt; physical paper and margins reflow only after Chinese composition commits" classname="./web/e2e/editable-pagination-spike.test.ts" time="0.088" line="287" col="17">
+        </testcase>
+        <testcase name="M0B production editable pagination preserves state, boundaries and IME &gt; oversized text/code/table fragment and PNG fits printable box proportionally" classname="./web/e2e/editable-pagination-spike.test.ts" time="0.393" line="377" col="17">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/markdown-editor-loading.test.ts" tests="5" disabled="0" errors="0" failures="0">
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts" classname="./web/e2e/markdown-editor-loading.test.ts" time="3.799" line="25" col="6">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 1: Anonymous Home visit never requests editor-vendor or runtime" classname="./web/e2e/markdown-editor-loading.test.ts" time="0.154" line="163" col="13">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 2: Home/Apps stay vendor-cold; Notes root stays runtime-cold; Live loads on demand and Source does not reload" classname="./web/e2e/markdown-editor-loading.test.ts" time="2.335" line="198" col="13">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 3: /design-lab/markdown-editor route shell loads without editor runtime" classname="./web/e2e/markdown-editor-loading.test.ts" time="0.922" line="303" col="13">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 4: Clicking &apos;打开编辑器&apos; on demand requests runtime and editor-vendor" classname="./web/e2e/markdown-editor-loading.test.ts" time="0.288" line="350" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/markdown-editor-spike.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="M0A production React editor lifecycle, source, IME and isolation" classname="./web/e2e/markdown-editor-spike.test.ts" time="2.002" line="11" col="6">
+        </testcase>
+    </testsuite>
+</testsuites>

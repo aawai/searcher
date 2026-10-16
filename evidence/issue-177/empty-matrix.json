@@ -1,0 +1,458 @@
+[
+  {
+    "mode": "apps-only",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 279.96875,
+          "overflow": 0
+        },
+        {
+          "kind": "notes",
+          "compact": "true",
+          "height": 139.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-apps-only-light-390.png"
+  },
+  {
+    "mode": "apps-only",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 263.96875,
+          "overflow": 0
+        },
+        {
+          "kind": "notes",
+          "compact": "true",
+          "height": 117.96875,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-apps-only-light-768.png"
+  },
+  {
+    "mode": "apps-only",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 167.96875,
+          "overflow": 0
+        },
+        {
+          "kind": "notes",
+          "compact": "true",
+          "height": 117.96875,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-apps-only-light-1440.png"
+  },
+  {
+    "mode": "apps-only",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 279.96875,
+          "overflow": 0
+        },
+        {
+          "kind": "notes",
+          "compact": "true",
+          "height": 139.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-apps-only-dark-390.png"
+  },
+  {
+    "mode": "apps-only",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 263.96875,
+          "overflow": 0
+        },
+        {
+          "kind": "notes",
+          "compact": "true",
+          "height": 117.96875,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-apps-only-dark-768.png"
+  },
+  {
+    "mode": "apps-only",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 167.96875,
+          "overflow": 0
+        },
+        {
+          "kind": "notes",
+          "compact": "true",
+          "height": 117.96875,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-apps-only-dark-1440.png"
+  },
+  {
+    "mode": "notes-only",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": "true",
+          "height": 117.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 715,
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-notes-only-light-390.png"
+  },
+  {
+    "mode": "notes-only",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": "true",
+          "height": 95.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 391,
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-notes-only-light-768.png"
+  },
+  {
+    "mode": "notes-only",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": "true",
+          "height": 95.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 391,
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-notes-only-light-1440.png"
+  },
+  {
+    "mode": "notes-only",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": "true",
+          "height": 117.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 715,
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-notes-only-dark-390.png"
+  },
+  {
+    "mode": "notes-only",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": "true",
+          "height": 95.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 391,
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-notes-only-dark-768.png"
+  },
+  {
+    "mode": "notes-only",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": "true",
+          "height": 95.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 391,
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-notes-only-dark-1440.png"
+  },
+  {
+    "mode": "empty",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 145.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 167.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-empty-light-390.png"
+  },
+  {
+    "mode": "empty",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 157.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 201.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-empty-light-768.png"
+  },
+  {
+    "mode": "empty",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 135.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 179.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-empty-light-1440.png"
+  },
+  {
+    "mode": "empty",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 145.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 167.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-empty-dark-390.png"
+  },
+  {
+    "mode": "empty",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 157.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 201.90625,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-empty-dark-768.png"
+  },
+  {
+    "mode": "empty",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "cards": [
+        {
+          "kind": "apps",
+          "compact": null,
+          "height": 135.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的应用。可以在应用工作区中将常用应用固定到此处。"
+        },
+        {
+          "kind": "notes",
+          "compact": null,
+          "height": 179.9375,
+          "overflow": 0,
+          "empty": "暂无固定在首页的便签。点击上方新建便签，或在便签工作区中固定。"
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/empty-empty-dark-1440.png"
+  }
+]

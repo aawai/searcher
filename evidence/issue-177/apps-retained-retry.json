@@ -1,0 +1,1 @@
+{"scenario":"Successful app cache -> real network abort -> retry held pending -> HTTP503 -> successful retry","cachedLaunchers":9,"pendingLaunchers":9,"failedLaunchers":9,"finalFeedbackCleared":true,"verification":"actual browser request interception and clickable UI retry, no artificial cache writes"}

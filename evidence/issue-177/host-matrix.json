@@ -1,0 +1,302 @@
+[
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 17,
+            "y": 203.28125,
+            "width": 356,
+            "height": 584.4375,
+            "top": 203.28125,
+            "right": 373,
+            "bottom": 787.71875,
+            "left": 17
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-widgets-light-390.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 113.95999908447266,
+            "y": 260,
+            "width": 540.078125,
+            "height": 450,
+            "top": 260,
+            "right": 654.0381240844727,
+            "bottom": 710,
+            "left": 113.95999908447266
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-widgets-light-768.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 310,
+            "y": 229,
+            "width": 821,
+            "height": 331,
+            "top": 229,
+            "right": 1131,
+            "bottom": 560,
+            "left": 310
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-widgets-light-1440.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 23.461301803588867,
+            "y": 203.28125,
+            "width": 356,
+            "height": 584.4375,
+            "top": 203.28125,
+            "right": 379.46130180358887,
+            "bottom": 787.71875,
+            "left": 23.461301803588867
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-widgets-dark-390.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 113.95999908447266,
+            "y": 260,
+            "width": 540.078125,
+            "height": 450,
+            "top": 260,
+            "right": 654.0381240844727,
+            "bottom": 710,
+            "left": 113.95999908447266
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-widgets-dark-768.png"
+  },
+  {
+    "style": "widgets",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 310,
+            "y": 229,
+            "width": 821,
+            "height": 331,
+            "top": 229,
+            "right": 1131,
+            "bottom": 560,
+            "left": 310
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-widgets-dark-1440.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 25.157306671142578,
+            "y": 203.28125,
+            "width": 356,
+            "height": 584.4375,
+            "top": 203.28125,
+            "right": 381.1573066711426,
+            "bottom": 787.71875,
+            "left": 25.157306671142578
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-zen-light-390.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 377.15655517578125,
+            "y": 158,
+            "width": 366,
+            "height": 560.4375,
+            "top": 158,
+            "right": 743.1565551757812,
+            "bottom": 718.4375,
+            "left": 377.15655517578125
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-zen-light-768.png"
+  },
+  {
+    "style": "zen",
+    "theme": "light",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 1047.458251953125,
+            "y": 158,
+            "width": 366,
+            "height": 560.4375,
+            "top": 158,
+            "right": 1413.458251953125,
+            "bottom": 718.4375,
+            "left": 1047.458251953125
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-zen-light-1440.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 23.470563888549805,
+            "y": 203.28125,
+            "width": 356,
+            "height": 584.4375,
+            "top": 203.28125,
+            "right": 379.4705638885498,
+            "bottom": 787.71875,
+            "left": 23.470563888549805
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-zen-dark-390.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 768,
+    "height": 1024,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 377.16357421875,
+            "y": 158,
+            "width": 366,
+            "height": 560.4375,
+            "top": 158,
+            "right": 743.16357421875,
+            "bottom": 718.4375,
+            "left": 377.16357421875
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-zen-dark-768.png"
+  },
+  {
+    "style": "zen",
+    "theme": "dark",
+    "width": 1440,
+    "height": 900,
+    "metrics": {
+      "overflow": 0,
+      "notesWorkspace": [
+        {
+          "rect": {
+            "x": 1049.1572265625,
+            "y": 158,
+            "width": 366,
+            "height": 560.4375,
+            "top": 158,
+            "right": 1415.1572265625,
+            "bottom": 718.4375,
+            "left": 1049.1572265625
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    "path": "/tmp/searcher-issue177-evidence/host-zen-dark-1440.png"
+  }
+]

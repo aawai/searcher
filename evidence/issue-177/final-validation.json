@@ -1,0 +1,18 @@
+{
+  "implementationCommit": "417e6ef",
+  "pr": "https://github.com/aawai/searcher/pull/184",
+  "baselineCommit": "910e25b",
+  "unit": {"command":"deno task test","passed":672,"steps":51,"failed":0},
+  "uiGuardTests": {"command":"deno test -A scripts/ui-guard/","passed":100,"failed":0},
+  "fullProductionFirstRun": {"command":"deno task test:e2e:full","passed":57,"passedSteps":289,"failed":1,"failedSteps":2,"failure":"Bento Apps-only and Notes-only empty cards exceeded existing <120px compact-height assertion"},
+  "finalFocusedRecheck": {"command":"NODE_ENV=test deno test -A web/e2e/bento.test.ts web/e2e/ui-feedback.test.ts","passed":3,"steps":36,"failed":0,"change":"EmptyState description-only composition removes redundant heading; existing compact-height assertions retained"},
+  "finalTypecheck": "deno check src/main.ts web/src/App.tsx web/e2e/ui-feedback.test.ts web/e2e/bento.test.ts: passed",
+  "finalBuild":"deno task build: passed",
+  "finalUiGuard":{"ownershipFiles":200,"visualFiles":141,"violations":0,"allowances":0},
+  "finalBundleBudget":"passed; initial JS 920101 bytes raw / 284140 bytes gzip",
+  "finalLint":"6 changed TS/TSX files passed",
+  "finalFormat":"10 changed files passed; checklist subsequently formatted after evidence summary insertion",
+  "browserEvidence":{"homeVisual":44,"workspaceHosts":12,"errorOffline":6,"finalEmptyModes":18,"shortRetry":3,"documentHorizontalOverflow":0},
+  "reuseScope":"Full-run successful cases retained: final follow-on production change only omits an absent EmptyState heading and deletes unused old empty-text CSS. Existing title-bearing consumers unchanged. All affected Bento and ui-feedback cases rerun.",
+  "limitations":["No claim that complete production command passed in one run","No real Safari/iOS/Android, soft keyboard, OS IME or screen-reader speech verification"]
+}
