@@ -501,6 +501,13 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
   初始基线只在真实进入会话时快照，Host、窗口 mode、props 更新不重新初始化。
   字段、dirty、确认、AI 模型选择/候选及 pending 均属会话；登出/换账号/
   明确离开清空并取消失效请求、释放计时器，不跨刷新保存。
+- 真实 SPA 路由离开由 data router 的单一 `useBlocker` 接入现有 `SearchHome` 确认
+  owner；Link、程序化 navigate 和 Back/Forward 共用同一 pending intent。取消
+  reset 保留草稿和当前位置，明确放弃 proceed 一次。 Workspace
+  确认与路由确认互斥；已有表单确认先完成，提交中拒绝离开。 Zen edge、Dock 与
+  Presenter 切换不是路由离开，不触发路由确认。
+- 仅活跃 dirty 会话注册 `beforeunload`，document 刷新、关闭或硬导航使用浏览器
+  原生提示；自定义 AlertDialog 不拦截 document 卸载，不新增跨刷新草稿持久化。
 - 旧会话及旧 URL 响应不得覆盖当前草稿；自动名称不覆盖手填名称，迟到的网站图标
   不覆盖上传/网络/AI 来源选择。自动获取失败不清提交错误，不自动重试； 合法 URL
   保留名称回退规则。网址校验、网站获取、图标操作与提交分别展示反馈。
