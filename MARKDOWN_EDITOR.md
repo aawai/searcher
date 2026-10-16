@@ -9,11 +9,12 @@ theme。类型入口 `types.ts` 不加载 runtime。Documents
 的资产、outline、paper、pagination 与 print 保留在 Documents consumer，不进入
 Notes 编辑依赖图。
 
-`NoteEditor.tsx` 拥有 canonical Markdown、1500ms autosave、手动保存、IndexedDB
-草稿、mutation queue、409 冲突与历史恢复。`NoteLivePreviewEditor.tsx` 是 lazy
-consumer，仅负责挂载/销毁、受控正文替换、selection/command 与 composition
-bridge。Home、NoteCard、FloatingNotes 和 Notes 根列表继续使用只读
-`NoteMarkdown`，不创建编辑实例。
+`NoteEditor.tsx` 拥有 canonical Markdown、1500ms autosave、手动保存、mutation
+queue、409 冲突与历史恢复。设备草稿的 key、读写、迁移、清除及退出发现统一由
+`features/notes/local-drafts.ts` 拥有，复用 local 层 FIFO 与事务提交语义。
+`NoteLivePreviewEditor.tsx` 是 lazy consumer，仅负责挂载/销毁、受控正文替换、
+selection/command 与 composition bridge。Home、NoteCard、FloatingNotes 和 Notes
+根列表继续使用只读 `NoteMarkdown`，不创建编辑实例。
 
 ## 正文与事件
 
@@ -51,6 +52,39 @@ bridge。Home、NoteCard、FloatingNotes 和 Notes 根列表继续使用只读
 
 Notes API、schema、版本持久化和 10,000 characters 限制未改变。Live task checkbox
 是用户编辑；卡片、冲突与历史版本 checkbox 只读。
+
+## 设备草稿与降级
+
+- `searcher-client` IndexedDB 的 `state` store 仅写
+  `note:draft:<userId>:<noteId>`（两段 ID 经 `encodeURIComponent` 编码）。
+  恢复、保存、清除共用同 note 的本地 FIFO 锁；不引入跨标签页锁或云端 flush。
+- 旧 `note:draft:<noteId>` 只枚举 key 名。编辑器恢复先用当前鉴权的单 note API
+  验证归属；退出发现通过当前账号完整 notes 列表过滤 ID 后才读旧内容， 不信任离线
+  notes 缓存作为归属证明。已软删除 note 不在该列表中，其 legacy
+  数据原样保留，不触发当前退出提醒。
+- 新旧并存时，仅选择字段有效且 `version >= 当前服务端版本` 的草稿， `updatedAt`
+  较新优先，同时间取较高版本。迁移先等待 canonical 写事务完成， 再清
+  legacy；任一步失败不删除唯一可恢复副本。新格式只写，不双写。
+- 归属网络检查或 IndexedDB 失败不当作“无草稿”。退出保留登录态并提示重试，
+  恢复失败保留原数据、暂停编辑并提供恢复重试。AppState 的会话对象身份是 auth
+  epoch，同账号重新登录也换 epoch；旧异步结果不能提示或注销新会话。
+- 取消退出不清草稿；确认退出保留同账号恢复能力。正常同步只清对应账号/note
+  的副本，清理等待期间出现新输入则保留新草稿；1500ms debounce 和卸载不补发
+  保存的语义不变。当前账号 canonical 退出检查校验存储结构，不额外请求云端版本。
+
+降级到只识别旧 key 的版本前，必须逐账号执行以下步骤，不能先删新格式草稿：
+
+1. 暂停所有标签页的编辑；导出 `state` 中全部草稿的**原 key 与完整值**，
+   保存独立备份，覆盖前同时备份已有 legacy 值。
+2. 保持新版本运行，登录对应账号，用鉴权 notes API 确认 note 的归属与当前版本。
+   网络或归属验证失败的条目不转换、不删除；在全部必要账号验证完成前停止降级。
+3. 将该账号的 canonical 值复制到 `note:draft:<noteId>`。目标已存在时，按上述
+   有效版本/时间顺序选取；不同内容的未选中副本必须留在独立备份中，不盲目覆盖。
+4. 逐条等待旧 key 的写事务 `complete`，重新读取并核对完整值；任何失败立即停止，
+   保留 canonical 与备份。转换过程中关闭新版本编辑器，避免自动迁移回 canonical。
+5. 确认所有需恢复的草稿已被旧 reader 可读后才切换旧版本；仍保留 canonical 原 key
+   与独立备份，不以清空新 key 作为回滚步骤。旧版本恢复不具备本次账号隔离
+   与退出检查修复；需要重新升级时，以备份和同一版本/时间规则核对数据。
 
 ## Presentation
 

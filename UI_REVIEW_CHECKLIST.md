@@ -4,6 +4,56 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #178 账号便签草稿与退出提醒
+
+- [x] 仅修复 C5 的 key/owner 不一致；编辑器、退出发现和清理统一消费
+      `features/notes/local-drafts.ts`。不重建 Workspace/Window，不改 CSS、
+      Token、v4 布局、API 或数据库 schema；保留原退出确认组件与交互文案。
+- [x] 基线 `cc1cf90` focused regression 在等待“有未同步的便签草稿”时超时；
+      此前已确认本地提交、PATCH 0、服务端标题/正文/版本未变。修复后同条
+      regression 通过，真实浏览器再次观察到对应 canonical 草稿与退出提醒。
+- [x] 领域与原存储 focused 5 tests 通过；完整 `deno task test` 为 673 tests / 51
+      steps，UI Guard regression 为 100 tests，均 0 failed。其后仅将 IDB mock
+      控制状态收进 fixture 实例，受影响 notes/local/desktop persistence/ desktop
+      hook 的 40 tests 通过；不新增跨调用测试 global。
+- [x] 新增 E2E 首轮 3 passed / 1 failed；失败源于 epoch 脚本使用完整文档导航，
+      登录 cookie 仍有效导致认证页重定向，且重建 AppState 无法检验同 realm
+      的旧结果保护。改为真实 SPA 登录 Link 后，单独 epoch 场景通过；
+      不将分批结果描述为首次完整命令通过。真实 IDB transaction abort 场景已确认
+      legacy 完整保留、canonical 未提交、编辑暂停，重试成功恢复。
+- [x] 无草稿直接退出、他人 canonical 不警告、他人 legacy 不读取/迁移、 当前
+      owner legacy 提醒与恢复、网络检查失败后重试、取消保留、确认后重登、
+      正常同步清 key 均由新生产 E2E 覆盖。epoch 场景在同一 document 中挂起
+      检查，换账号后释放响应，不出现旧提示、不发注销新会话请求。
+- [x] 最终
+      `E2E_REPORT_DIR=artifacts/issue-178/full DENO_JOBS=2 deno task test:e2e:full --parallel`
+      完整执行一次为 62 passed / 291 steps / 0 failed（45 文件，11m0s）；
+      包含最终四条草稿 E2E、notes-focus/navigation、搜索锚点、移动 Apps、
+      Workspace 未保存保护、桌面几何/v4/Dock、编辑器版本/撤销/滚动、 Documents
+      分页、壁纸/reduced-motion、路由懒加载与账号隔离。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 的 12
+      组退出确认与 12 组实际编辑器 Host 截图；Sheet、Zen Panel、Widgets
+      constrained/free Desktop 均只挂载一个编辑器，恢复同账号标题，无横向溢出。
+- [x] 另验收 320×640、430×932、767×900、1023×768、1024×768、390×240、
+      1440×240、900×200 × 两主题/布局，合计 44 组退出确认；popup 均在 viewport
+      内，无横向溢出，取消按钮可真实滚动点击。短屏使用 viewport 截图，避免
+      full-page 捕获扩大画布误表视口。字体就绪、两帧布局后采样； 1440px hero
+      y=64 / height=288.1875 与基线一致。
+- [x] `deno check web/src/main.tsx src/main.ts`、生产 build、bundle budget
+      通过；`check:ui` 实扫 ownership 201 / visual 141 文件，
+      violations/allowances 为 0。新增验收文件已注册权威清单，`check:e2e` 覆盖
+      45 个文件。
+- [x] README 与 Markdown Editor 同步迁移、账号/epoch、失败重试和降级契约；
+      CHANGELOG 仅记录最终行为。实页实际备份原 key/完整值、鉴权验证归属后 复制
+      canonical 到旧 key、等待 commit 并重读，确认完整值一致且 canonical
+      保留。未部署旧版服务，不将 key 转换验证扩大为完整旧版运行验收。
+- [x] 最终变更源码 lint、文档/源码 fmt check 通过；原始 red 结果、56 张浏览器
+      截图、逐场景几何 JSON、降级备份与完整 E2E JUnit/timing/stdout 存于
+      [独立证据分支](https://github.com/aawai/searcher/tree/evidence/issue-178/evidence/issue-178)，
+      媒体不合并到 main。
+- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
+      Chromium 的视口与事务验证不冒充真机。
+
 ## Issue #177 Widgets 首页状态反馈
 
 - [x] 本次仅跟踪首页状态反馈；撤回旧 issue 中未经证实的 feature `:root` 污染、
