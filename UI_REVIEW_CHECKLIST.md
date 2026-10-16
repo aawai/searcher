@@ -4,6 +4,56 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #177 Widgets 首页状态反馈
+
+- [x] 本次仅跟踪首页状态反馈；撤回旧 issue 中未经证实的 feature `:root` 污染、
+      fallback 色差与任意 CSS 引入序需清理的归因，不搭载 CSS / Token 全局重构。
+- [x] 复用 Search archetype、Bento 与 compact semantic 状态组件。 `SearchHome`
+      继续拥有领域 load state、账号缓存与 reload；无新重试引擎。
+      同账号重试保留可用内容，账号切换清空并按 owner 隔离渲染。
+- [x] baseline `910e25b` 的隔离首页 focused 回归在 Notes pending 缺少
+      `role=status` 时失败；修复后 1 test / 10 steps 通过。覆盖无缓存 Notes
+      503、 pending/503 不误报空、缓存保留、Apps 503 与 network abort
+      区分、真实重试、 两域 ready-empty，以及 Desktop / constrained / Sheet
+      的单一 live owner。
+- [x] `deno task test`：672 tests / 51 steps；UI guard tests：100 passed。
+      完整生产 `test:e2e:full` 首轮为 57 passed / 289 steps、1 failed / 2 failed
+      steps（Bento compact 高度）。修复重复空态标题后，Bento + 完整 ui-feedback
+      为 3 passed / 36 steps；未放宽 `<120px`
+      断言，不将分批结果描述为完整命令一次通过。
+      其余首轮兼容场景已通过，最终改动只影响首页空态组合，既有带标题 consumer
+      不变。
+- [x] 最终生产 build、前后端及受影响 E2E typecheck、6 个 TS/TSX 文件 lint、 10
+      个变更文件 fmt check、bundle budget 均通过；`check:ui` 实扫 200 / 141
+      文件，violations/allowances 均为 0。
+- [x] 最终另验收 Apps-only、Notes-only、both-empty × 390/768/1440 × light/dark
+      共 18 组实页，无横向溢出；1440px 两主题 compact Notes / Apps 高度分别为
+      117.96875 / 95.9375px。空态只省略重复标题，原引导说明仍可阅读。
+- [x] 独立真实浏览器复核 Notes pending→503→重试：无假空态，503 保留 3 条便签、
+      显示 alert，重试成功清除错误。Apps 真实网络 abort 保留 9 个入口并显示离线
+      warning，重试真实请求后恢复。没有把 HTTP 503 改成离线缓存策略。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 的 12
+      组实页；另含 320×640、430×932、767×900、1023×768、1024×768、
+      390×240、1440×240、900×200，共 44 组稳定截图/几何记录， document 与 Bento
+      卡片横向溢出均为 0。另验收 6 组 Widgets 错误/离线组合。
+      字体就绪和两帧布局后采样；不以首次可见作为布局稳定条件。
+- [x] 另以相同固定尺寸/主题/布局打开 Notes Workspace，12 组实际 Host 截图覆盖
+      Sheet、Zen Panel、Widgets constrained 与 free Desktop； 页面横向溢出均为
+      0。Apps 离线缓存→pending 重试→HTTP 503 的独立实页 在两种中间状态均保留 9
+      个可打开入口，之后成功重试清除错误。
+- [x] 390×240、1440×240 与 900×200 的首页错误重试经真实滚动、中心 hit-test 和
+      click 验证可达，均发起新请求。此结论不扩大为极矮 Workspace
+      的全部操作通过。 1440×900 的 hero y=64 / height=288.1875 与 baseline
+      完全一致。
+- [x] 不新增 CSS/Token；仅删除已被 semantic EmptyState 替代的私有空态文字规则。
+      API、cache key、数据库与 v4 布局协议不变；可独立回滚首页 render、
+      状态传入与 semantic 组合，无数据迁移或兼容 shim。
+- [x] 原始红测输出、baseline/final 截图与逐场景 JSON 保存于
+      [evidence/issue-177](https://github.com/aawai/searcher/tree/evidence/issue-177/evidence/issue-177)，
+      媒体不合并至 main。
+- [ ] 真实 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
+      Chromium 的 DOM/live-role 验证不冒充真机或实际语音验收。
+
 ## Issue #174 Apps 真实 SPA 离开保护
 
 - [x] 撤回“Zen edge 切换丢草稿”的归因。main `0c8d36d` 实页的 edge Notes→Apps

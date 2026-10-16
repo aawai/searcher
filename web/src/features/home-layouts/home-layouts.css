@@ -76,7 +76,6 @@
     --space-bento-action-padding: 9px;
     --space-bento-empty-py: 22px;
     --font-bento-count: 11px;
-    --font-bento-empty: 12.5px;
     --space-layout-mode-margin-top: 14px;
     --space-layout-card-padding: 14px;
     --radius-preview: 8px;
@@ -379,11 +378,6 @@
     min-height: auto;
 }
 
-.widgets-bento-card[data-compact="true"] .widgets-bento-empty-text,
-.widgets-bento-card--compact .widgets-bento-empty-text {
-    max-width: none;
-    font-size: var(--font-caption-size);
-}
 /* Empty state inside bento card */
 .widgets-bento-empty {
     display: flex;
@@ -396,14 +390,6 @@
     background: color-mix(in srgb, var(--surface-solid) 35%, transparent);
     border: 1px dashed var(--border-subtle);
     border-radius: var(--radius-bento-inner);
-}
-
-.widgets-bento-empty-text {
-    font-size: var(--font-bento-empty);
-    line-height: 1.5;
-    color: var(--muted);
-    max-width: 290px;
-    margin: 0;
 }
 
 /* --------------------------------------------------------------------------

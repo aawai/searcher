@@ -105,7 +105,7 @@ export function EmptyState(
         density = "default",
         className,
     }: {
-        title: string;
+        title?: string;
         description?: string;
         action?: ReactNode;
         headingLevel?: 2 | 3;
@@ -116,7 +116,7 @@ export function EmptyState(
     const Heading = headingLevel === 3 ? "h3" : "h2";
     return (
         <div className={cn("empty-state", className)} data-density={density}>
-            <Heading>{title}</Heading>
+            {title && <Heading>{title}</Heading>}
             {description && <p>{description}</p>}
             {action && <ActionGroup>{action}</ActionGroup>}
         </div>
@@ -149,18 +149,24 @@ export function StatusBanner(
     );
 }
 export function LoadingState(
-    { children = "正在加载…", density = "default", className }: {
+    {
+        children = "正在加载…",
+        density = "default",
+        className,
+        announce = true,
+    }: {
         children?: ReactNode;
         density?: "default" | "compact";
         className?: string;
+        announce?: boolean;
     },
 ) {
     return (
         <div
             className={cn("loading-state", className)}
             data-density={density}
-            role="status"
-            aria-live="polite"
+            role={announce ? "status" : "presentation"}
+            aria-live={announce ? "polite" : "off"}
         >
             {children}
         </div>
