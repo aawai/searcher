@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import {
-    BrowserRouter,
+    createBrowserRouter,
     Link,
     Route,
+    RouterProvider,
     Routes,
     useLocation,
     useNavigate,
@@ -422,11 +423,17 @@ function Layout() {
     );
 }
 export function App() {
-    return (
-        <BrowserRouter>
-            <AppState>
-                <Layout />
-            </AppState>
-        </BrowserRouter>
+    const [router] = useState(() =>
+        createBrowserRouter([
+            {
+                path: "*",
+                element: (
+                    <AppState>
+                        <Layout />
+                    </AppState>
+                ),
+            },
+        ])
     );
+    return <RouterProvider router={router} />;
 }
