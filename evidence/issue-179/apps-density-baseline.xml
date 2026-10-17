@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="1" failures="0" errors="0" time="39.339">
+    <testsuite name="./web/e2e/apps-density.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="apps workspace touch density geometry and hit targets #149" classname="./web/e2e/apps-density.test.ts" time="39.329" line="1018" col="6">
+        </testcase>
+    </testsuite>
+</testsuites>

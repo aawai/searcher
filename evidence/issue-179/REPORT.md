@@ -36,3 +36,12 @@
 ## 边界
 
 未验证真实 Safari / iOS / Android、软键盘、OS IME 或读屏器语音。Chromium 模拟不等于真机。无迁移；回滚 prop 与 CSS 消费即可，不覆盖已有布局或用户数据。媒体与本报告仅保存在独立证据分支，不合并 main。
+
+## PR 持续集成
+
+PR https://github.com/aawai/searcher/pull/186，产品提交 `e52bb3f90f700e6821d2c7f141f13ecf964daafc`。
+
+- 六个 Workflow 最终全部成功：UI Guard、Bundle、Docker、Wallpaper、Notes 与 Workspace。
+- Workspace run https://github.com/aawai/searcher/actions/runs/38989246211 首轮为 42 passed / 135 steps、1 failed；失败在既有 Apps density 的390px resize场景，采到540.078125px容器宽度。`apps-density.test.ts:1199-1216` 等待列数与当前容器宽度的公式一致，但未单独确认容器已收敛到目标viewport；本次不搭载该脚本的修复，也不放宽断言。日志 `ci-workspace-attempt-1.log`。
+- 对照独立未修复基线，原 Apps density 模块为1 passed；见 `apps-density-baseline.xml`。本地完整生产执行中该模块也已通过。
+- 收集证据后仅手动复查失败的 Workspace job；无产品或断言变动。第二次完整 Workspace 结果为43 passed / 135 steps / 0 failed（3m31s），日志 `ci-workspace-attempt-2.log`。不将此表述为首轮CI通过。
