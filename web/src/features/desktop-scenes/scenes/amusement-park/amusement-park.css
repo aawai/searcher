@@ -6,6 +6,7 @@
  */
 .scene-park {
     --sp-ink: #27324a;
+    --sp-line: var(--sp-ink);
     --sp-teal: #1f8a80;
     --sp-red: #e4675a;
     --sp-gold: #f2b94b;
@@ -19,6 +20,11 @@
     --sp-front: color-mix(in srgb, var(--accent) 4%, #b3d79b);
     --sp-tex: rgb(255 255 255 / 0.4);
     --sp-cloud: rgb(255 255 255 / 0.9);
+    --sp-path: #efe3c3;
+    --sp-path-edge: #d9c9a0;
+    --sp-far-a: color-mix(in srgb, var(--sp-teal) 30%, var(--sp-ridge));
+    --sp-far-b: color-mix(in srgb, var(--sp-red) 30%, var(--sp-ridge));
+    --sp-panel: color-mix(in srgb, var(--sp-gold) 35%, var(--sp-paper));
     --sp-skin: #f1c9a5;
     --sp-hair-dark: #3b3030;
     --sp-hair-warm: #8a5a35;
@@ -29,6 +35,7 @@
 
 .scene-host[data-scene-theme="dark"] .scene-park {
     --sp-ink: #0b1020;
+    --sp-line: #56638a;
     --sp-teal: #2fa399;
     --sp-red: #c9564c;
     --sp-gold: #e8b24a;
@@ -42,6 +49,8 @@
     --sp-front: color-mix(in srgb, var(--accent) 6%, #1b3a33);
     --sp-tex: rgb(140 210 180 / 0.07);
     --sp-cloud: rgb(150 170 210 / 0.16);
+    --sp-path: #3a4b44;
+    --sp-path-edge: #2c3a35;
     --sp-skin: #d6a47f;
     --sp-hair-dark: #1a1620;
     --sp-hair-warm: #6d4527;
@@ -76,6 +85,33 @@
 }
 .scene-park .sp-paper {
     fill: var(--sp-paper);
+}
+.scene-park .sp-path,
+.scene-park .sp-path-edge {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.scene-park .sp-path {
+    stroke: var(--sp-path);
+}
+.scene-park .sp-path-fill {
+    fill: var(--sp-path);
+    stroke: var(--sp-path-edge);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+}
+.scene-park .sp-path-edge {
+    stroke: var(--sp-path-edge);
+}
+.scene-park .sp-far-a {
+    fill: var(--sp-far-a);
+}
+.scene-park .sp-far-b {
+    fill: var(--sp-far-b);
+}
+.scene-park .sp-panel {
+    fill: var(--sp-panel);
 }
 .scene-park .sp-skin {
     fill: var(--sp-skin);
@@ -112,15 +148,11 @@
     opacity: var(--sp-shadow-opacity);
 }
 
-.scene-park .sp-line,
-.scene-park .sp-rail {
+.scene-park .sp-line {
     fill: none;
-    stroke: var(--sp-ink);
+    stroke: var(--sp-line);
     stroke-linecap: round;
     stroke-linejoin: round;
-}
-.scene-park .sp-rail {
-    opacity: 0.5;
 }
 .scene-park .sp-rope {
     fill: none;
@@ -132,6 +164,12 @@
     stroke: var(--sp-gold);
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+.scene-park .sp-brace {
+    opacity: 0.45;
+}
+.scene-park .sp-pillar-brace {
+    fill: var(--sp-paper);
 }
 .scene-park .sp-pillar {
     opacity: 0.9;
@@ -344,5 +382,29 @@
     }
     to {
         transform: rotate(4deg);
+    }
+}
+
+/* 第二只热气球：周期与相位不同，避免与第一只同步。 */
+.scene-park .sp-balloon--b {
+    animation-duration: 11s;
+    animation-delay: -4s;
+}
+
+/* 小火车烟囱冒烟：向后上方飘散并淡出（车体镜像，故 +x 为向后）。 */
+.scene-park .sp-puff {
+    animation: sp-puff 2.4s ease-out infinite;
+}
+.scene-park .sp-puff--b {
+    animation-delay: -1.2s;
+}
+@keyframes sp-puff {
+    from {
+        opacity: 0.9;
+        transform: translate(0, 0);
+    }
+    to {
+        opacity: 0;
+        transform: translate(6px, -11px);
     }
 }

@@ -1,6 +1,14 @@
 /** 游乐场中除过山车以外的设施。所有形状围绕局部原点绘制，由外层 translate 定位。 */
 
 const WHEEL_RADIUS = 44;
+const RIM_LIGHTS = Array.from({ length: 24 }, (_, index) => {
+    const angle = index * Math.PI / 12 + Math.PI / 24;
+    return {
+        index,
+        x: Number((WHEEL_RADIUS * Math.cos(angle)).toFixed(2)),
+        y: Number((WHEEL_RADIUS * Math.sin(angle)).toFixed(2)),
+    };
+});
 const GONDOLA_STYLES = ["sp-fr", "sp-ft", "sp-fg"] as const;
 
 /** 木马：金色立杆随木马一起起伏，朝右的侧面剪影。 */
@@ -31,6 +39,10 @@ function Horse({ tone, coat }: { tone: string; coat: string }) {
     );
 }
 
+const RIM_BULBS = [-30, -22, -14, -6, 6, 14, 22, 30] as const;
+/** 转台前沿椭圆（rx 36, ry 6）上的 y 坐标，灯泡贴着前沿。 */
+const rimY = (x: number) => 6 * Math.sqrt(1 - (x / 36) ** 2);
+
 export function Carousel() {
     return (
         <g transform="translate(337 148)">
@@ -45,6 +57,14 @@ export function Carousel() {
                 strokeWidth="1.5"
                 d="M-21 0V-27M-5 2V-27M5 2V-27M21 0V-27"
             />
+            <rect
+                className="sp-panel"
+                x="-5"
+                y="-26"
+                width="10"
+                height="23"
+                rx="1"
+            />
             <g transform="translate(0 -2)">
                 <Horse tone="sp-horse--b" coat="sp-fr" />
             </g>
@@ -54,7 +74,26 @@ export function Carousel() {
             <g transform="translate(2 0)">
                 <Horse tone="sp-horse--c" coat="sp-ft" />
             </g>
+            {RIM_BULBS.map((x) => (
+                <g key={x}>
+                    <circle
+                        className="sp-lamp sp-glow"
+                        cx={x}
+                        cy={rimY(x)}
+                        r="2.8"
+                    />
+                    <circle className="sp-lamp" cx={x} cy={rimY(x)} r="1" />
+                </g>
+            ))}
             <path className="sp-ft" d="M-41 -27 L0 -49 L41 -27Z" />
+            {Array.from({ length: 8 }, (_, index) => (
+                <path
+                    key={index}
+                    className={index % 2 === 0 ? "sp-fr" : "sp-paper"}
+                    d={`M${-41 + index * 10.25} -27a5.125 4 0 0 0 10.25 0z`}
+                />
+            ))}
+            <circle className="sp-fg" cx="0" cy="-49" r="2.4" />
             <path
                 className="sp-paper"
                 d="M0 -49 L-15 -27 L-5 -27Z M0 -49 L5 -27 L15 -27Z"
@@ -68,16 +107,41 @@ export function Carousel() {
 }
 
 export function TicketBooth() {
+    const awning = [-15, -9, -3, 3, 9] as const;
     return (
         <g transform="translate(472 150)">
             <ellipse className="sp-shadow" cx="0" cy="2" rx="20" ry="3" />
             <rect className="sp-paper" x="-12" y="-16" width="24" height="16" />
             <rect className="sp-fn" x="-6" y="-10" width="12" height="6" />
-            <rect className="sp-fr" x="-15" y="-22" width="6" height="7" />
-            <rect className="sp-paper" x="-9" y="-22" width="6" height="7" />
-            <rect className="sp-fr" x="-3" y="-22" width="6" height="7" />
-            <rect className="sp-paper" x="3" y="-22" width="6" height="7" />
-            <rect className="sp-fr" x="9" y="-22" width="6" height="7" />
+            <rect className="sp-fg" x="-6" y="-4" width="12" height="1.6" />
+            {awning.map((x, index) => (
+                <g key={x}>
+                    <rect
+                        className={index % 2 === 0 ? "sp-fr" : "sp-paper"}
+                        x={x}
+                        y="-22"
+                        width="6"
+                        height="7"
+                    />
+                    <path
+                        className={index % 2 === 0 ? "sp-fr" : "sp-paper"}
+                        d={`M${x} -15a3 3 0 0 0 6 0z`}
+                    />
+                </g>
+            ))}
+            <rect
+                className="sp-wood-dark"
+                x="-9"
+                y="-31"
+                width="18"
+                height="7"
+                rx="1.5"
+            />
+            <circle className="sp-fg" cx="-4" cy="-27.5" r="1.6" />
+            <circle className="sp-fg" cx="0" cy="-27.5" r="1.6" />
+            <circle className="sp-fg" cx="4" cy="-27.5" r="1.6" />
+            <path className="sp-line" strokeWidth="1" d="M0 -31V-38" />
+            <path className="sp-fr sp-flag" d="M0 -38L7 -36L0 -34Z" />
         </g>
     );
 }
@@ -103,7 +167,12 @@ export function SwingShip() {
                     d="M-15 28Q0 42 15 28L12.5 24H-12.5Z"
                 />
                 <path className="sp-rope" strokeWidth="1" d="M-11 27H11" />
+                <circle className="sp-paper" cx="-6" cy="30" r="1" />
+                <circle className="sp-paper" cx="0" cy="31.4" r="1" />
+                <circle className="sp-paper" cx="6" cy="30" r="1" />
             </g>
+            <path className="sp-line" strokeWidth="1.2" d="M0 0V-10" />
+            <path className="sp-fr sp-flag" d="M0 -10L8 -7.5L0 -5Z" />
             <circle className="sp-fg" cx="0" cy="0" r="3" />
         </g>
     );
@@ -146,6 +215,17 @@ export function FerrisWheel() {
                     strokeWidth="1.2"
                     d="M0 -44V44M-44 0H44M-31 -31L31 31M31 -31L-31 31"
                 />
+                {RIM_LIGHTS.map(({ index, x, y }) => (
+                    <g key={index}>
+                        <circle
+                            className="sp-lamp sp-glow"
+                            cx={x}
+                            cy={y}
+                            r="3"
+                        />
+                        <circle className="sp-lamp" cx={x} cy={y} r="1" />
+                    </g>
+                ))}
                 {gondolas.map(({ index, x, y }) => (
                     <g key={index} transform={`translate(${x} ${y})`}>
                         <g className="sp-gondola">
@@ -161,7 +241,16 @@ export function FerrisWheel() {
                     </g>
                 ))}
             </g>
-            <circle className="sp-fg" cx="0" cy="0" r="4" />
+            <rect
+                className="sp-wood-dark"
+                x="-17"
+                y="45"
+                width="34"
+                height="3"
+                rx="1"
+            />
+            <circle className="sp-fg" cx="0" cy="0" r="4.5" />
+            <circle className="sp-fn" cx="0" cy="0" r="1.6" />
         </g>
     );
 }
@@ -169,8 +258,20 @@ export function FerrisWheel() {
 export function MiniTrain() {
     return (
         <g className="sp-train">
-            <g transform="translate(0 178)">
-                <circle className="sp-cloud-fill" cx="12" cy="-8" r="4" />
+            {/* 镜像后机车在右端领跑，车厢在后 */}
+            <g transform="translate(48 178) scale(-1 1)">
+                <circle
+                    className="sp-cloud-fill sp-puff"
+                    cx="12"
+                    cy="-8"
+                    r="3.4"
+                />
+                <circle
+                    className="sp-cloud-fill sp-puff sp-puff--b"
+                    cx="12"
+                    cy="-8"
+                    r="2.8"
+                />
                 <rect
                     className="sp-ft"
                     x="0"
@@ -180,6 +281,15 @@ export function MiniTrain() {
                     rx="2"
                 />
                 <rect className="sp-fr" x="10" y="-5" width="4" height="5" />
+                <rect
+                    className="sp-fn"
+                    x="1"
+                    y="-3"
+                    width="9"
+                    height="3"
+                    rx="1"
+                />
+                <circle className="sp-fg" cx="-0.6" cy="4.5" r="1.3" />
                 <rect
                     className="sp-fg"
                     x="19"
@@ -206,11 +316,30 @@ export function MiniTrain() {
 
 export function Balloon() {
     return (
-        <g transform="translate(420 46)">
-            <g className="sp-balloon">
-                <ellipse className="sp-fr" cx="0" cy="0" rx="11" ry="14" />
+        <g>
+            <g transform="translate(420 46)">
+                <BalloonBody tone="sp-balloon" a="sp-fr" b="sp-ft" />
+            </g>
+            <g transform="translate(1316 62) scale(0.78)">
+                <BalloonBody
+                    tone="sp-balloon sp-balloon--b"
+                    a="sp-fg"
+                    b="sp-fr"
+                />
+            </g>
+        </g>
+    );
+}
+
+function BalloonBody(
+    { tone, a, b }: { tone: string; a: string; b: string },
+) {
+    return (
+        <g>
+            <g className={tone}>
+                <ellipse className={a} cx="0" cy="0" rx="11" ry="14" />
                 <path
-                    className="sp-ft"
+                    className={b}
                     d="M0 -14 C-6 -7 -6 7 0 14 C6 7 6 -7 0 -14Z"
                 />
                 <rect

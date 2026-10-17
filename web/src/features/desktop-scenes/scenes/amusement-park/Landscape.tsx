@@ -1,3 +1,5 @@
+import { FarSilhouettes, Paths } from "./Details.tsx";
+
 /** 地景：远处山脊、中景草地、前景草地、松树、路灯、游客与花。 */
 
 const VIEW_WIDTH = 1440;
@@ -81,6 +83,7 @@ export function BackGround({ patternId }: PatternProps) {
         <g>
             <path className="sp-ridge" d={RIDGE} />
             <path fill={`url(#${patternId})`} d={RIDGE} />
+            <FarSilhouettes />
             <path className="sp-meadow" d={MEADOW} />
             <path fill={`url(#${patternId})`} d={MEADOW} />
         </g>
@@ -94,6 +97,7 @@ export function FrontGround(
         <g>
             <path className="sp-front" d={FRONT} />
             <path fill={`url(#${patternId})`} d={FRONT} />
+            <Paths />
             {PINES.map(([x, y, scale]) => (
                 <use
                     key={x}
@@ -101,7 +105,6 @@ export function FrontGround(
                     transform={`translate(${x} ${y}) scale(${scale})`}
                 />
             ))}
-            <path className="sp-rail" strokeWidth="1.2" d="M0 188H1440" />
             {LAMPS.map(([x, top, bottom]) => (
                 <g key={x}>
                     <path
