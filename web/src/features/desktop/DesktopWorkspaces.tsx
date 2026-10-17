@@ -232,6 +232,10 @@ export function DesktopWorkspaces({
                 );
             } else if (open && (!before.open || before.view !== view)) {
                 frames.push(requestAnimationFrame(() => {
+                    // Hydration must not steal focus before a fallback hands off.
+                    if (document.activeElement?.closest(".workspace-panel")) {
+                        return;
+                    }
                     const control = view === `${kind}/root`
                         ? chromeRefs[kind].close
                         : chromeRefs[kind].back;

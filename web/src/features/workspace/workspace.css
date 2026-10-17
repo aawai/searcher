@@ -27,6 +27,17 @@
 .workspace-panel[data-viewport-constrained="true"] {
     inset-inline: 0;
     width: auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+.workspace-panel[data-viewport-constrained="true"] > .workspace-body:not([data-layout="editor"]) {
+    /* Lists and forms scroll with chrome; editors retain bounded domain scrolling. */
+    flex: 0 0 auto;
+    overflow: visible;
+}
+.workspace-panel[data-viewport-constrained="true"] > .workspace-body[data-layout="editor"] {
+    min-height: var(--editor-min-content-height);
+    overflow: hidden;
 }
 .workspace-header {
     position: relative;

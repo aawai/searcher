@@ -4,6 +4,45 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #181 Widgets 短屏初次打开工作区
+
+- [x] 基线 `6a34b75`：844×390 Widgets 点击 Apps 后 windows=0、panels=0； focused
+      regression 在成功登录后等待真实 `.apps-workspace-root` 超时。 修复后
+      `#181` focused 7 tests 通过，844×390 / 900×200 的 Apps、Notes、 Documents
+      初开均操作真实搜索框并关闭，767/768、1023/1024 独立空桌面通过。
+- [x] 900×200 正式生产构建实页：滚动 Apps 表单填写 URL/名称、提交后 API
+      返回持久化条目；Notes 标题保存后返回关闭；Documents 创建、编辑标题与正文、
+      返回关闭，API 返回实际保存内容。未把等待保存前的导航当作保存完成。
+- [x] 844×500 / 900×700 恢复仅一个 Apps window，保留 create route、草稿与
+      输入焦点；首轮暴露恢复后焦点丢失，修复交接顺序后通过。
+- [x] 沿用 `useDesktopGeometry`、Workspace Host intent、已有窗口 presentation；
+      仅缺少窗口时启用共享 Surface，受限 Surface 整体滚动，无新 viewport owner，
+      无 storage schema/key 迁移。focused 验证不可用几何不创建 canonical v4
+      frame； 既有 free-window shrink/grow/pagehide 基线通过。
+- [x] 短屏刷新恢复专项先 Red 后 Green：实际拖动的非默认窗口在900×200刷新后打开，
+      恢复1440×900保持原frame与完整v4 payload。恢复前等待IndexedDB读取完成，
+      不以新建默认窗口抢占旧canonical。已有Apps窗口hydrate时，Notes查询、焦点、
+      选区(1,3)和单实例保留；实页与独立回归均通过。语义aria-label优先于 Base
+      UI自动生成id；hydrate chrome不抢占fallback焦点。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 共 12 组
+      Home/Apps 实页截图，均一个 Apps 实例、document 横向 overflow=0； 本地截图
+      `/tmp/issue181-evidence/`。首轮脚本误点残留表单路由，清除后改用明确 Host
+      selector 重新取得完整矩阵，不把脚本失败记为产品通过。
+- [x] 最终 `deno task test`：673 passed / 51 steps / 0 failed；
+      typecheck、lint（6 files）、fmt（10 files）、`deno task check:ui`
+      通过，两类 UI Guard 均 0 violations。
+- [x] 完整生产 E2E 首轮为 69 passed / 291 steps、1 failed：Documents
+      初始受限长文的领域 scroll area 被自然高度撑开。改为 Shell 显式
+      `bodyLayout="editor"`、有界最小 Body 后，最终定向运行
+      `deno test -A web/e2e/document-immersion.test.ts web/e2e/desktop-presentation.test.ts`
+      为 12 passed / 0 failed；未宣称完整命令一次通过。 复查包含桌面
+      free/constrained、short reload、Notes 实际标题提交、Documents
+      长文滚轮和恢复。实页 scroll area 为 240 / 2414px，滚轮后 scrollTop=500，
+      收起入口可达；普通 Panel/Sheet 的样式不消费新增 editor
+      标记，矩阵证据仍有效。 中途取消的旧产物运行不计为通过。
+- [ ] 真实 Safari / iOS / Android、软键盘与 OS IME 未验证；Chromium viewport
+      模拟不作为真机或软键盘证据。
+
 ## Issue #179 Zen Panel 顶部连接提示避让
 
 - [x] 仅修复 C4；复用 `useDesktopGeometry` 的 chrome measurement， `SearchHome`

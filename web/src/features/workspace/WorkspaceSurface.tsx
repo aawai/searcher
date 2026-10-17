@@ -29,7 +29,7 @@ export function WorkspaceSurface(
         footer,
         feedback,
         onFeedbackHost,
-        formLayout = false,
+        bodyLayout,
         onEscape = onClose,
         escapeManaged = false,
         expanded = false,
@@ -48,7 +48,7 @@ export function WorkspaceSurface(
         footer: ReactNode;
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
-        formLayout?: boolean;
+        bodyLayout?: "app-form" | "editor";
         onEscape?: () => void;
         escapeManaged?: boolean;
         expanded?: boolean;
@@ -173,7 +173,7 @@ export function WorkspaceSurface(
             </header>
             <div
                 className="workspace-body"
-                data-layout={formLayout ? "app-form" : undefined}
+                data-layout={bodyLayout}
             >
                 {children}
             </div>

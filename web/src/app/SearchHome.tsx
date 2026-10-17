@@ -150,9 +150,10 @@ export function SearchHome() {
         workspaceHostReducer,
         initialWorkspaceHost,
     );
+    const pendingRestrictedWorkspace = useRef<WorkspaceKind | null>(null);
     const [dockElement, setDockElement] = useState<HTMLElement | null>(null);
     const geometry = useDesktopGeometry(dockElement);
-    const [desktop, dispatchDesktop] = useDesktopLayout({
+    const [desktop, dispatchDesktop, desktopRestored] = useDesktopLayout({
         userId: user?.id,
         layoutStyle,
         rect: geometry,
@@ -452,6 +453,7 @@ export function SearchHome() {
         }
     }
     useEffect(() => {
+        if (pendingRestrictedWorkspace.current) return;
         if (appearance.style === "widgets" && !mobile) {
             dispatchHost({
                 type: "activate",
@@ -462,6 +464,7 @@ export function SearchHome() {
         }
     }, [desktop.activeId, appearance.style, mobile]);
     useEffect(() => {
+        if (pendingRestrictedWorkspace.current) return;
         if (initialSyncDoneRef.current) return;
         if (desktop.windows.length === 0) return;
         initialSyncDoneRef.current = true;
@@ -1054,13 +1057,16 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
-    const constrainedDesktop = layoutStyle === "widgets" &&
-        globalThis.innerWidth >= 1024 && !geometry.usable;
+    const constrainedDesktop = layoutStyle === "widgets" && !mobile &&
+        (!geometry.usable ||
+            pendingRestrictedWorkspace.current === host.activeKind);
     const missingActiveWindow = Boolean(
         host.activeKind &&
             !desktop.windows.some((window) => window.id === host.activeKind),
     );
-    const restrictedWorkspace = constrainedDesktop && missingActiveWindow;
+    const restrictedWorkspace = constrainedDesktop &&
+        (missingActiveWindow ||
+            pendingRestrictedWorkspace.current === host.activeKind);
     const workspaceWindows = useMemo(
         () => desktop.windows.filter((window) => isWorkspaceKind(window.kind)),
         [desktop.windows],
@@ -1142,9 +1148,8 @@ export function SearchHome() {
     };
     const currentWorkspace = host.activeKind ?? "apps";
     const currentRoute = host.models[currentWorkspace].route;
-    const pendingRestrictedWorkspace = useRef<WorkspaceKind | null>(null);
     useEffect(() => {
-        if (restrictedWorkspace) {
+        if (restrictedWorkspace && !geometry.usable) {
             pendingRestrictedWorkspace.current = host.activeKind;
             return;
         }
@@ -1153,13 +1158,49 @@ export function SearchHome() {
             pendingRestrictedWorkspace.current = null;
             return;
         }
-        if (!kind || !geometry.usable) return;
+        if (!kind || !geometry.usable || !desktopRestored) return;
         pendingRestrictedWorkspace.current = null;
+        const focused = document.activeElement;
+        let focusSelector = "";
+        if (
+            focused instanceof HTMLElement &&
+            focused.closest(".workspace-panel")
+        ) {
+            const label = focused.getAttribute("aria-label");
+            if (label) {
+                focusSelector = `[aria-label="${CSS.escape(label)}"]`;
+            } else if (focused.id) {
+                focusSelector = `#${CSS.escape(focused.id)}`;
+            }
+        }
+        const selection = focused instanceof HTMLInputElement ||
+                focused instanceof HTMLTextAreaElement
+            ? [focused.selectionStart, focused.selectionEnd] as const
+            : null;
         dispatchDesktop({ type: "OPEN", id: kind, kind, rect: geometry });
+        if (focusSelector) {
+            // Let the destination chrome initialize before restoring domain focus.
+            requestAnimationFrame(() =>
+                requestAnimationFrame(() => {
+                    const target = document.getElementById(
+                        `desktop-window-${kind}`,
+                    )
+                        ?.querySelector<HTMLElement>(focusSelector);
+                    target?.focus({ preventScroll: true });
+                    if (
+                        selection && selection[0] !== null &&
+                        selection[1] !== null &&
+                        (target instanceof HTMLInputElement ||
+                            target instanceof HTMLTextAreaElement)
+                    ) target.setSelectionRange(selection[0], selection[1]);
+                })
+            );
+        }
     }, [
         restrictedWorkspace,
         host.activeKind,
         layoutStyle,
+        desktopRestored,
         geometry,
         dispatchDesktop,
     ]);
@@ -1354,7 +1395,13 @@ export function SearchHome() {
                                 dispatch={dispatchDesktop}
                                 models={host.models}
                                 renderContent={(kind) =>
-                                    renderWorkspaceContent(kind, "masonry")}
+                                    restrictedWorkspace &&
+                                        host.activeKind === kind
+                                        ? null
+                                        : renderWorkspaceContent(
+                                            kind,
+                                            "masonry",
+                                        )}
                                 onOpen={openWorkspace}
                                 onClose={closeWorkspace}
                                 onBack={backWorkspace}
