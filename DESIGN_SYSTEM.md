@@ -105,6 +105,19 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   恢复块代码的透明背景、零 padding/radius 与继承字号/行高， 以 intrinsic-width
   block 保留两端滚动 padding。长行保持不换行， 首尾字符均可完整滚入视区；行内
   code 与工作区不变。
+- Zen 默认固定便签由 `SearchHome` 复用 `useDesktopGeometry` 的 safe rect；
+  `ZenLayout` 仅测量 Search 实际 viewport
+  bounds，并在字体就绪、布局或滚动后更新。 exclusion 保留当前 bounds
+  与未滚动时实测占位的并集，避免回流内容随滚动被移回画布、
+  页面缩短并重置滚动。`FloatingNotes` 将无 desktop x/y 的便签尺寸交给纯
+  placement， 避开 Search，
+  仅放入当前可用区；空间不足的默认便签复用流式网格，<=960px 全部保持 flow。
+  测量阶段的隐藏卡片不参与交互，Markdown 与字体就绪后才发布默认位置。 已保存的
+  desktop 坐标不自动重排；展开、折叠和置顶不将默认位置写入账号布局，
+  只有用户拖动建立坐标。无数据库、storage key 或桌面 v4 迁移；不改搜索 anchor
+  或全局 elevation，可独立回滚 bounds props 与默认 placement。 Zen
+  仅在存在固定便签时按需加载该模块，Search 与个人应用不等待便签代码； 复用 React
+  lazy / Suspense，不将默认 placement 扩大为首页入口依赖。
 - Toolbar 使用 Button ghost/icon、lucide 与 canonical touch geometry；不引入
   Documents paper、分页、图片上传或 outline。
 - 编辑几何由 tokens.css 的 `--workspace-editor-expanded-width`（900px）、
