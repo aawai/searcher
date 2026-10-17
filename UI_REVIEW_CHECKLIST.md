@@ -4,6 +4,55 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #179 Zen Panel 顶部连接提示避让
+
+- [x] 仅修复 C4；复用 `useDesktopGeometry` 的 chrome measurement， `SearchHome`
+      经 Shell 将 `chromeBottom` 传到 Surface，Panel 顶部取 原语义 inset
+      与实测下缘最大值。不新增 measurement / visualViewport owner，不提高 banner
+      z-index，不改 Sheet 或受限窗口 inset 语义。
+- [x] 基线 `8e50419`：初始 `/api/auth/me` abort，恢复网络后真实登录， 768×1024
+      打开 Apps，Retry 中心命中 `h2.workspace-title`，focused regression
+      实际失败。修复后相同路径普通 click 发出成功的 auth/me 请求、 清除
+      banner，Panel 回到 64px；键盘打开、关闭焦点恢复与内容内部滚动通过。
+- [x] 首次 green 的 36 个 Apps 恰好填满 body，滚动夹具断言失败 （clientHeight =
+      scrollHeight = 756）；改用 60 个 Apps 建立真实溢出后 focused 为 1 passed /
+      0 failed。未放宽 Retry、几何或滚动契约。
+- [x] 独立真实浏览器按字体就绪、两帧与 reduced-motion 稳定采样； 修复前后
+      1440×900 Zen / Widgets 的 hero y=64、height=288.1875， Search
+      x=360、y=296.1875、width=720、height=56 完全一致； 768×1024 无 banner 的
+      Panel x=352、y=64、width=400、height=944 不变。
+- [x] 完整领域测试 673 tests / 51 steps、UI Guard regression 100 tests
+      均通过；前后端 typecheck、生产 build 与 bundle budget 通过。 UI Guard
+      首轮指出新增 runtime CSS variable 未声明；补充局部默认值与 Surface
+      精确几何例外后，ownership 201 / visual 141 文件均为 0 violations。
+- [x] 完整生产 E2E 首轮为 62 passed / 290 steps、1 failed / 1 step （46
+      文件）；失败为移动 Sheet Undo 错误提示 30s 超时。原断言未修改，
+      最终分支与独立 `8e50419` baseline 的模块对照各为 1 test / 6 steps
+      通过；不将分批结果描述为完整命令一次通过。其余搜索、导航/未保存保护、
+      canonical/v4/Dock、编辑器/版本/分页、壁纸、懒加载和身份隔离在首轮通过。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 的 12 组 Home /
+      Apps 实页截图；另验收 900、767/768、1023/1024， 320/360/375/390/414/430
+      两布局 Apps 网格与 768×560 内部滚轮， 共 33
+      个场景分批取得通过证据。首轮三处脚本失败为错误等待成功网格及 错将 banner
+      正常流平移视作锚点回归；修正后复查 Apps Retry、Zen 与 Widgets 真实 auth/me
+      恢复路径。Widgets 复查再次修正误等 Panel
+      header，最后独立场景通过。保留全部失败报告，不更改产品契约。
+- [x] 真实 banner 高 53px 时，Zen Panel top=117→64；Search 随提示平移
+      53px，水平锚点不变；Widgets v4 canonical frame 前后完全一致。 主代理另验收
+      900×900 与 900×360：61px banner 下 Panel top=125， Retry
+      中心可命中；短屏底部创建、顶部返回/关闭普通 click 可达， Retry 清除后
+      top=64。表单仅 `.app-dialog-body` 滚动，返回/关闭后 等待实际 opener
+      focus，document scrollY=0。
+- [x] 最终变更源码 lint、10 个文件 fmt check 与 E2E 权威清单检查通过； 清单覆盖
+      46 文件。原始红绿报告、分批矩阵 JSON、截图和完整门禁 JUnit/timing 保存在
+      [独立证据分支](https://github.com/aawai/searcher/tree/evidence/issue-179/evidence/issue-179)，
+      不将媒体合并到 main。
+- [x] Design System 同步共享 inset、唯一 measurement owner 与独立 Sheet /
+      constrained 契约；CHANGELOG 仅记录最终用户行为。 无 storage key、数据库或
+      v4 payload 变化，可独立回滚 prop / CSS 消费， 不迁移或覆盖用户数据。
+- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
+      Chromium 视口、命中与焦点验证不冒充真机。
+
 ## Issue #178 账号便签草稿与退出提醒
 
 - [x] 仅修复 C5 的 key/owner 不一致；编辑器、退出发现和清理统一消费

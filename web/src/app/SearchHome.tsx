@@ -1385,6 +1385,7 @@ export function SearchHome() {
                         )}
                         <WorkspaceShell
                             open={Boolean(host.activeKind)}
+                            chromeBottom={geometry.chromeBottom}
                             viewportInsets={restrictedWorkspace
                                 ? {
                                     top: geometry.chromeBottom,
