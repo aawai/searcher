@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
+import { DesktopSceneHost } from "./features/desktop-scenes/DesktopSceneHost.tsx";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
@@ -164,6 +165,9 @@ function Layout() {
                     presentation={presentation}
                     testId="home-wallpaper-surface"
                 />
+            )}
+            {isHomePage && appearance.desktopScene !== "none" && (
+                <DesktopSceneHost scene={appearance.desktopScene} />
             )}
             <header className="topbar">
                 <Link

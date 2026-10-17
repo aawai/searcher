@@ -184,3 +184,25 @@ Deno.test("Appearance: malformed presentation records normalize to canonical def
     assertEquals(pres.motion, "off");
     assertEquals(pres.motionLevel, "soft");
 });
+
+Deno.test("Appearance: desktopScene survives valid values and degrades unknown or corrupted caches to none without touching other fields", () => {
+    assertEquals(normalizeAppearance({}).desktopScene, "none");
+    assertEquals(
+        normalizeAppearance({ desktopScene: "amusement-park" }).desktopScene,
+        "amusement-park",
+    );
+    for (
+        const raw of [null, "", "undersea", "AMUSEMENT-PARK", 1, {}, [
+            "amusement-park",
+        ]]
+    ) {
+        const result = normalizeAppearance({
+            accent: "violet",
+            canvasMotion: "ambient",
+            desktopScene: raw,
+        });
+        assertEquals(result.desktopScene, "none");
+        assertEquals(result.accent, "violet");
+        assertEquals(result.canvasMotion, "ambient");
+    }
+});

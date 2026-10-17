@@ -876,3 +876,56 @@
     opacity: 0.5;
     pointer-events: none;
 }
+
+/* 动态桌面场景选项：缩略图 + 名称/说明；缩略图只使用主题 token 着色。 */
+.settings-scene-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--space-card-gap);
+    width: 100%;
+}
+.settings-scene-option {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    text-align: left;
+    font-weight: inherit;
+    gap: var(--space-control-gap);
+}
+.settings-scene-option .radio-circle {
+    display: none;
+}
+.settings-scene-preview {
+    display: block;
+    aspect-ratio: 16 / 5;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--control-radius);
+    background: var(--surface);
+}
+.settings-scene-preview svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.settings-scene-option__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+.settings-scene-preview__ground {
+    fill: color-mix(in srgb, var(--accent) 22%, var(--surface-soft));
+}
+.settings-scene-preview__hill {
+    fill: color-mix(in srgb, var(--accent) 12%, var(--surface-soft));
+}
+.settings-scene-preview__ride {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.settings-scene-preview__dot {
+    fill: var(--accent);
+}

@@ -11,6 +11,7 @@ import {
     ACCENT_IDS,
     CANONICAL_REASONING_EFFORTS,
 } from "../../shared/contracts.ts";
+import { DESKTOP_SCENE_IDS } from "../../shared/desktop-scenes.ts";
 import {
     normalizeWallpaperPresentation,
     type WallpaperPresentation,
@@ -84,6 +85,7 @@ const CanvasMotionValidator = v.optional(v.picklist(["off", "ambient"]));
 const CanvasMotionLevelValidator = v.optional(
     v.picklist(["subtle", "soft", "standard", "pronounced"]),
 );
+const DesktopScene = v.optional(v.picklist(DESKTOP_SCENE_IDS));
 const WallpaperPresentations = v.optional(
     v.nullable(
         v.record(
@@ -217,6 +219,7 @@ export function registerPreferencesRoutes(
             wallpaperPresentations: json(WallpaperPresentations),
             canvasMotion: json(CanvasMotionValidator),
             canvasMotionLevel: json(CanvasMotionLevelValidator),
+            desktopScene: json(DesktopScene),
             aiGenerationDefaults: json(AiGenerationDefaults),
             wallpaperCompositions: json(WallpaperCompositions),
         }),

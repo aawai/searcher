@@ -15,6 +15,11 @@ import {
     type StylePreset,
     type UserDto,
 } from "@shared/contracts.ts";
+import {
+    DEFAULT_DESKTOP_SCENE,
+    type DesktopSceneId,
+    normalizeDesktopScene,
+} from "@shared/desktop-scenes.ts";
 import type { EngineId } from "@shared/engines.ts";
 import {
     parseWallpaperSource,
@@ -50,6 +55,7 @@ export type Appearance = {
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     canvasMotion: CanvasMotion;
     canvasMotionLevel: WallpaperMotionLevel;
+    desktopScene: DesktopSceneId;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
@@ -68,6 +74,7 @@ const initial: Appearance = {
     wallpaperPresentations: {},
     canvasMotion: DEFAULT_CANVAS_MOTION,
     canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
+    desktopScene: DEFAULT_DESKTOP_SCENE,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
     showAppLabels: true,
@@ -149,6 +156,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
         const migrated = migrateLegacyWallpaperPresentation(saved);
         result.canvasMotionLevel = migrated.motionLevel;
     }
+    result.desktopScene = normalizeDesktopScene(saved.desktopScene);
     if (typeof saved.showTitle === "boolean") {
         result.showTitle = saved.showTitle;
     }
@@ -295,6 +303,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     canvasMotion: prefs.canvasMotion,
                     canvasMotionLevel: prefs.canvasMotionLevel,
+                    desktopScene: prefs.desktopScene,
                     webAppHomeLimit: prefs.webAppHomeLimit,
                     webAppIconSize: prefs.webAppIconSize,
                     showAppLabels: prefs.showAppLabels,
@@ -388,6 +397,9 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (next.canvasMotionLevel !== undefined) {
                 updates.canvasMotionLevel = next.canvasMotionLevel;
+            }
+            if (next.desktopScene !== undefined) {
+                updates.desktopScene = next.desktopScene;
             }
             if (next.webAppHomeLimit !== undefined) {
                 updates.webAppHomeLimit = next.webAppHomeLimit;
