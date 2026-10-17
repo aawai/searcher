@@ -1,13 +1,4 @@
 import {
-    createContext,
-    type ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
-import {
     type AccentId,
     normalizeAccent,
     normalizeStylePreset,
@@ -22,10 +13,6 @@ import {
 } from "@shared/desktop-scenes.ts";
 import type { EngineId } from "@shared/engines.ts";
 import {
-    parseWallpaperSource,
-    type WallpaperComposition,
-} from "@shared/wallpaper.ts";
-import {
     type CanvasMotion,
     DEFAULT_CANVAS_MOTION,
     DEFAULT_CANVAS_MOTION_LEVEL,
@@ -34,13 +21,27 @@ import {
     type WallpaperMotionLevel,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
-import { api, ApiError, json } from "../lib/api.ts";
 import {
-    deleteLocal,
-    getLocal,
-    listLocalKeys,
-    setLocal,
-} from "../lib/local.ts";
+    parseWallpaperSource,
+    type WallpaperComposition,
+} from "@shared/wallpaper.ts";
+import {
+    createContext,
+    type ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+import { hasUnsyncedNoteDrafts } from "../features/notes/local-drafts.ts";
+import { api, ApiError, json } from "../lib/api.ts";
+import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
+import {
+    appearanceStorageKey,
+    type AppearanceSyncQueue,
+    queueAppearanceSync,
+} from "./appearance-sync.ts";
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
@@ -180,8 +181,11 @@ export function normalizeAppearance(raw: unknown): Appearance {
     }
     return result;
 }
+type AuthSession = { userId: string | null; isCurrent: () => boolean };
+
 type State = {
     user: UserDto | null;
+    authSession: AuthSession;
     ready: boolean;
     syncFailed: boolean;
     connectionError: boolean;
@@ -210,16 +214,35 @@ export function AppState({ children }: { children: ReactNode }) {
     const [appearance, setValue] = useState<Appearance>(initial);
     const [appearanceOwner, setAppearanceOwner] = useState<string | null>(null);
     const [syncFailed, setSyncFailed] = useState(false);
-    const [connectionError, setConnectionError] = useState(false);
+    const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
-    const sync = useRef({
-        owner: null as string | null,
+    const sessionRef = useRef<AuthSession>({
+        userId: null,
+        isCurrent: () => false,
+    });
+    // Object identity is the auth epoch, renewed even when the same account logs in again.
+    const updateUser = useCallback((next: UserDto | null, renew = false) => {
+        if (userRef.current?.id !== next?.id) {
+            setAppearanceOwner(null);
+            setValue(initial);
+        }
+        if (renew || userRef.current?.id !== next?.id) {
+            const session: AuthSession = {
+                userId: next?.id ?? null,
+                isCurrent: () => sessionRef.current === session,
+            };
+            sessionRef.current = session;
+        }
+        userRef.current = next;
+        setUser(next);
+    }, []);
+    const sync = useRef<AppearanceSyncQueue>({
+        owner: null,
         tail: Promise.resolve(),
-        pending: {} as Record<string, unknown>,
-        reconciled: {} as Record<string, unknown>,
+        pending: {},
+        reconciled: {},
     });
     const appearanceRevision = useRef(0);
-    userRef.current = user;
     useEffect(() => {
         // 旧缓存未关联用户，不能作为匿名或账号偏好继续使用。
         try {
@@ -229,29 +252,74 @@ export function AppState({ children }: { children: ReactNode }) {
         }
         void deleteLocal("visitor_appearance").catch(() => {});
     }, []);
+    const retryAppearanceLoad = useRef<() => Promise<void>>(() =>
+        Promise.resolve()
+    );
+    const sendPendingAppearance = useCallback((
+        queue: AppearanceSyncQueue,
+        owner: string,
+    ) => queueAppearanceSync(
+        queue,
+        owner,
+        () => sync.current === queue && userRef.current?.id === owner,
+        (patch) => api("/api/preferences", json("PATCH", patch)),
+        () => {
+            setSyncFailed(false);
+        },
+        (error) => {
+            if (!(error instanceof ApiError && error.code === 401)) {
+                setSyncFailed(true);
+            }
+        },
+    ), []);
 
     const checkAuth = useCallback(async () => {
+        const session = sessionRef.current;
         try {
             const { user } = await api<{ user: UserDto }>("/api/auth/me", {
                 signal: AbortSignal.timeout(5000),
             });
+            if (sessionRef.current !== session) return;
             const next = handleAuthCheckResult(
                 { user: userRef.current, connectionError: false },
                 { type: "success", user },
             );
-            setUser(next.user);
-            setConnectionError(next.connectionError);
+            updateUser(next.user);
+            setAuthConnectionError(next.connectionError);
         } catch (error) {
+            if (sessionRef.current !== session) return;
             const next = handleAuthCheckResult(
                 { user: userRef.current, connectionError: true },
                 { type: "error", error },
             );
-            setUser(next.user);
-            setConnectionError(next.connectionError);
+            updateUser(next.user);
+            setAuthConnectionError(next.connectionError);
         } finally {
             setReady(true);
         }
-    }, []);
+    }, [updateUser]);
+
+    const retryFailedAppearanceSync = useCallback(async () => {
+        const queue = sync.current;
+        const owner = queue.owner;
+        if (!owner || userRef.current?.id !== owner) return;
+        await sendPendingAppearance(queue, owner).catch(() => {});
+        if (sync.current !== queue || userRef.current?.id !== owner) return;
+        try {
+            await retryAppearanceLoad.current();
+        } catch (error) {
+            if (
+                sync.current === queue && userRef.current?.id === owner &&
+                !(error instanceof ApiError && error.code === 401)
+            ) {
+                setSyncFailed(true);
+            }
+        }
+    }, [sendPendingAppearance]);
+    const retryConnection = useCallback(async () => {
+        await checkAuth();
+        await retryFailedAppearanceSync();
+    }, [checkAuth, retryFailedAppearanceSync]);
 
     useEffect(() => {
         void checkAuth();
@@ -261,7 +329,7 @@ export function AppState({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!ready) return;
         const userId = user?.id ?? null;
-        const key = userId ? "appearance:" + userId : "appearance:anonymous";
+        const key = appearanceStorageKey(userId);
         let alive = true;
         setAppearanceOwner(null);
         setValue(initial);
@@ -274,19 +342,14 @@ export function AppState({ children }: { children: ReactNode }) {
             reconciled: {},
         };
         setSyncFailed(false);
-        async function loadAppearance() {
-            const saved = await getLocal<unknown>(key)
-                .catch(() => undefined);
-            if (!active()) return;
-            if (appearanceRevision.current === revision) {
-                setValue(normalizeAppearance(saved));
-            }
-            setAppearanceOwner(key);
+        async function loadCloudAppearance() {
             if (!userId) return;
             const prefs = await api<PreferencesDto>("/api/preferences");
             if (!active()) return;
+            if (Object.keys(sync.current.pending).length === 0) {
+                setSyncFailed(false);
+            }
             if (appearanceRevision.current !== revision) return;
-            setSyncFailed(false);
             setValue((prev) =>
                 normalizeAppearance({
                     ...prev,
@@ -310,6 +373,17 @@ export function AppState({ children }: { children: ReactNode }) {
                 })
             );
         }
+        retryAppearanceLoad.current = loadCloudAppearance;
+        async function loadAppearance() {
+            const saved = await getLocal<unknown>(key)
+                .catch(() => undefined);
+            if (!active()) return;
+            if (appearanceRevision.current === revision) {
+                setValue(normalizeAppearance(saved));
+            }
+            setAppearanceOwner(key);
+            await loadCloudAppearance();
+        }
         void loadAppearance().catch((err) => {
             if (active() && !(err instanceof ApiError && err.code === 401)) {
                 setSyncFailed(true);
@@ -317,11 +391,14 @@ export function AppState({ children }: { children: ReactNode }) {
         });
         return () => {
             alive = false;
+            if (retryAppearanceLoad.current === loadCloudAppearance) {
+                retryAppearanceLoad.current = () => Promise.resolve();
+            }
         };
     }, [ready, user?.id]);
 
     useEffect(() => {
-        const key = user ? "appearance:" + user.id : "appearance:anonymous";
+        const key = appearanceStorageKey(user?.id ?? null);
         if (!ready || appearanceOwner !== key) return;
         void setLocal(key, appearance).catch(() => {});
     }, [ready, user?.id, appearanceOwner, appearance]);
@@ -330,14 +407,14 @@ export function AppState({ children }: { children: ReactNode }) {
         const expired = () => {
             if (userRef.current) setValue(initial);
             setAppearanceOwner(null);
-            setUser(null);
+            updateUser(null);
             setSyncFailed(false);
-            setConnectionError(false);
+            setAuthConnectionError(false);
         };
         globalThis.addEventListener("searcher:auth-expired", expired);
         return () =>
             globalThis.removeEventListener("searcher:auth-expired", expired);
-    }, []);
+    }, [updateUser]);
 
     useEffect(() => {
         const media = matchMedia("(prefers-color-scheme: dark)");
@@ -428,53 +505,33 @@ export function AppState({ children }: { children: ReactNode }) {
                 delete queue.reconciled[key];
             }
             Object.assign(queue.pending, updates);
-            const result = queue.tail.then(async () => {
-                if (sync.current !== queue || userRef.current?.id !== owner) {
-                    return;
-                }
-                const patch = queue.pending;
-                queue.pending = {};
-                if (Object.keys(patch).length === 0) return;
-                try {
-                    await api("/api/preferences", json("PATCH", patch));
-                    if (
-                        sync.current === queue && userRef.current?.id === owner
-                    ) {
-                        setSyncFailed(false);
-                    }
-                } catch (error) {
-                    if (
-                        sync.current === queue && userRef.current?.id === owner
-                    ) {
-                        queue.pending = { ...patch, ...queue.pending };
-                        for (const key of Object.keys(queue.reconciled)) {
-                            delete queue.pending[key];
-                        }
-                        if (
-                            !(error instanceof ApiError && error.code === 401)
-                        ) setSyncFailed(true);
-                    }
-                    throw error;
-                }
-            });
-            // Existing controls intentionally fire-and-forget; callers may still await the original promise.
-            queue.tail = result.catch(() => {});
-            return result;
+            return sendPendingAppearance(queue, owner);
         }
         return Promise.resolve();
     };
 
     const logout = async (options?: { force?: boolean }) => {
-        if (!options?.force && user) {
+        const session = sessionRef.current;
+        if (!session.userId) return true;
+        if (!options?.force) {
             try {
-                const keys = await listLocalKeys("draft:" + user.id + ":");
-                if (keys.length > 0) return false;
+                const hasDrafts = await hasUnsyncedNoteDrafts(
+                    session.userId,
+                    session.isCurrent,
+                );
+                if (!session.isCurrent()) return true;
+                if (hasDrafts) return false;
             } catch {
-                // IndexedDB 不可用时降级放行
+                if (!session.isCurrent()) return true;
+                throw new Error(
+                    "未能检查本地便签草稿，尚未退出登录；请重试退出。",
+                );
             }
         }
+        if (!session.isCurrent()) return true;
         await api("/api/auth/logout", { method: "POST" });
-        setUser(null);
+        if (!session.isCurrent()) return true;
+        updateUser(null);
         setAppearanceOwner(null);
         setValue(initial);
         return true;
@@ -484,14 +541,15 @@ export function AppState({ children }: { children: ReactNode }) {
         <Context.Provider
             value={{
                 user,
+                authSession: sessionRef.current,
                 ready,
                 syncFailed,
-                connectionError,
-                retryConnection: checkAuth,
+                connectionError: authConnectionError || syncFailed,
+                retryConnection,
                 appearance,
                 setAppearance,
                 settleAppearanceSync: () => sync.current.tail,
-                login: setUser,
+                login: (user) => updateUser(user, true),
                 logout,
             }}
         >

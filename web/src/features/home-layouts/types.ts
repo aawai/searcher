@@ -27,6 +27,10 @@ export interface HomeLayoutProps {
     appsStatus: "loading" | "ready" | "offline" | "error";
     appsError: string;
     onReloadApps: () => void;
+    notesLoading: boolean;
+    notesError: string;
+    announceAppsFeedback: boolean;
+    announceNotesFeedback: boolean;
     notes: NoteItem[];
     fixedNotes: NoteItem[];
     reorderNotes: (notes: NoteItem[]) => Promise<void>;

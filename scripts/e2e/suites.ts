@@ -5,8 +5,10 @@ export const suites = {
     workspace: [
         "workspace",
         "workspace-shell",
+        "workspace-chrome-inset",
         "desktop-drag",
         "desktop-presentation",
+        "desktop-scenes",
         "launcher",
         "apps-density",
         "home-launcher-density",
@@ -22,6 +24,7 @@ export const suites = {
         "notes-focus",
         "notes-ux",
         "notes-history",
+        "notes-drafts",
         "notes-menu",
         "notes-color",
         "home-notes-order",
@@ -39,6 +42,7 @@ export const suites = {
         "document-presentation-contracts",
     ],
     wallpaper: ["wallpaper"],
+    "desktop-scenes": ["desktop-scenes"],
     bundle: ["bundle-loading", "route-style-stability"],
     "home-notes": ["home-notes-order", "home-notes-persistence"],
     supplemental: [

@@ -17,19 +17,21 @@ function placeCars(
     model: CoasterModel,
     leadDistance: number,
     cars: ReadonlyArray<SVGGElement | null>,
+    transforms: string[],
 ) {
-    cars.forEach((car, index) => {
-        if (!car) return;
+    // SVG geometry reads must finish before any car transform invalidates layout.
+    for (let index = 0; index < cars.length; index++) {
+        if (!cars[index]) continue;
         const pose = model.poseAt(
             wrapDistance(leadDistance - CAR_DISTANCES[index], model.length),
         );
-        car.setAttribute(
-            "transform",
-            `translate(${pose.x.toFixed(2)} ${pose.y.toFixed(2)}) rotate(${
-                pose.angle.toFixed(2)
-            })`,
-        );
-    });
+        transforms[index] = `translate(${pose.x.toFixed(2)} ${
+            pose.y.toFixed(2)
+        }) rotate(${pose.angle.toFixed(2)})`;
+    }
+    for (let index = 0; index < cars.length; index++) {
+        cars[index]?.setAttribute("transform", transforms[index]);
+    }
 }
 
 /**
@@ -42,6 +44,7 @@ export function useCoasterMotion(
 ) {
     const modelRef = useRef<CoasterModel | null>(null);
     const distanceRef = useRef(0);
+    const transformsRef = useRef<string[]>([]);
 
     useEffect(() => {
         const path = track.current;
@@ -49,7 +52,12 @@ export function useCoasterMotion(
         const model = createCoasterModel(svgPathSampler(path));
         modelRef.current = model;
         distanceRef.current = model.nearestDistance(STATIC_CAR_ANCHOR);
-        placeCars(model, distanceRef.current, cars.current);
+        placeCars(
+            model,
+            distanceRef.current,
+            cars.current,
+            transformsRef.current,
+        );
         return () => {
             modelRef.current = null;
         };
@@ -67,7 +75,12 @@ export function useCoasterMotion(
                 distanceRef.current,
                 elapsedSeconds,
             );
-            placeCars(model, distanceRef.current, cars.current);
+            placeCars(
+                model,
+                distanceRef.current,
+                cars.current,
+                transformsRef.current,
+            );
             frame = requestAnimationFrame(step);
         };
         frame = requestAnimationFrame(step);

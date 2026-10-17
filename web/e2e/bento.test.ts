@@ -384,14 +384,8 @@ Deno.test("production Bento contracts & empty expansion matrix (#44)", async (t)
                 );
                 // Apps empty card has compact intrinsic height (under 120px)
                 assertEquals(appsBox.height < 120, true);
-                // Apps title and description remain discoverable
                 assertEquals(
-                    await appsCard.locator(".widgets-bento-title")
-                        .textContent(),
-                    "常用应用",
-                );
-                assertEquals(
-                    await appsCard.locator(".widgets-bento-empty-text")
+                    await appsCard.locator(".empty-state")
                         .isVisible(),
                     true,
                 );

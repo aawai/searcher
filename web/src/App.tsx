@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import {
-    BrowserRouter,
+    createBrowserRouter,
     Link,
     Route,
+    RouterProvider,
     Routes,
     useLocation,
     useNavigate,
@@ -123,6 +124,7 @@ function Layout() {
         location.pathname.startsWith(`${routes.settings()}/`);
     const {
         user,
+        authSession,
         ready,
         appearance,
         setAppearance,
@@ -132,8 +134,31 @@ function Layout() {
         retryConnection,
     } = useAppState();
     const [error, setError] = useState("");
-    // V-003：检测到未同步草稿时弹确认 Dialog，确认后 force 登出
-    const [confirmLogout, setConfirmLogout] = useState(false);
+    const [logoutSession, setLogoutSession] = useState<
+        typeof authSession | null
+    >(null);
+    const [logoutBusy, setLogoutBusy] = useState(false);
+    useEffect(() => {
+        setLogoutSession(null);
+        setLogoutBusy(false);
+        setError("");
+    }, [authSession]);
+
+    async function requestLogout(force = false) {
+        const session = authSession;
+        if (logoutBusy || !session.isCurrent()) return;
+        if (force && logoutSession !== session) return;
+        setError("");
+        setLogoutBusy(true);
+        try {
+            const done = await logout({ force });
+            if (session.isCurrent()) setLogoutSession(done ? null : session);
+        } catch (error) {
+            if (session.isCurrent()) setError(String(error));
+        } finally {
+            if (session.isCurrent()) setLogoutBusy(false);
+        }
+    }
     const imageSource = appearance.wallpaper.startsWith("data:image/") ||
         ["uploaded", "remote"].includes(
             parseWallpaperSource(appearance.wallpaper)?.type ?? "",
@@ -291,14 +316,8 @@ function Layout() {
                                     <DropdownMenuItem
                                         className="note-dropdown-item--delete"
                                         aria-label="退出登录"
-                                        onClick={() =>
-                                            void logout().then((done) => {
-                                                if (!done) {
-                                                    setConfirmLogout(true);
-                                                }
-                                            }).catch((e) =>
-                                                setError(String(e))
-                                            )}
+                                        disabled={logoutBusy}
+                                        onClick={() => void requestLogout()}
                                     >
                                         <LogIn
                                             size={15}
@@ -340,7 +359,12 @@ function Layout() {
                 </aside>
             )}
             {error && <p role="alert" className="error">{error}</p>}
-            <Dialog open={confirmLogout} onOpenChange={setConfirmLogout}>
+            <Dialog
+                open={logoutSession?.isCurrent() ?? false}
+                onOpenChange={(open) => {
+                    if (!open && !logoutBusy) setLogoutSession(null);
+                }}
+            >
                 <DialogContent aria-label="退出登录确认">
                     <DialogTitle>有未同步的便签草稿</DialogTitle>
                     <DialogDescription>
@@ -349,17 +373,16 @@ function Layout() {
                     <DialogFooter>
                         <Button
                             type="button"
-                            onClick={() => setConfirmLogout(false)}
+                            disabled={logoutBusy}
+                            onClick={() => setLogoutSession(null)}
                         >
                             先去同步
                         </Button>
                         <Button
                             type="button"
                             variant="destructive"
-                            onClick={() =>
-                                void logout({ force: true }).then(() =>
-                                    setConfirmLogout(false)
-                                ).catch((e) => setError(String(e)))}
+                            disabled={logoutBusy}
+                            onClick={() => void requestLogout(true)}
                         >
                             仍要退出
                         </Button>
@@ -426,11 +449,17 @@ function Layout() {
     );
 }
 export function App() {
-    return (
-        <BrowserRouter>
-            <AppState>
-                <Layout />
-            </AppState>
-        </BrowserRouter>
+    const [router] = useState(() =>
+        createBrowserRouter([
+            {
+                path: "*",
+                element: (
+                    <AppState>
+                        <Layout />
+                    </AppState>
+                ),
+            },
+        ])
     );
+    return <RouterProvider router={router} />;
 }

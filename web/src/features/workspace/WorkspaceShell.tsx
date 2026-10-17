@@ -37,6 +37,7 @@ export function WorkspaceShell(
         appsArranging = false,
         children,
         viewportInsets,
+        chromeBottom,
     }: {
         open?: boolean;
         state: WorkspaceRoute;
@@ -53,6 +54,7 @@ export function WorkspaceShell(
         appsArranging?: boolean;
         children: ReactNode;
         viewportInsets?: WorkspaceViewportInsets;
+        chromeBottom?: number;
     },
 ) {
     const [notesExpanded, setNotesExpanded] = useState(false);
@@ -111,10 +113,17 @@ export function WorkspaceShell(
     const editing = state.view === "apps/create" ||
         state.view === "apps/edit" || state.view === "notes/edit" ||
         state.view === "documents/edit" || state.view === "documents/create";
+    let bodyLayout: "app-form" | "editor" | undefined;
+    if (state.view === "apps/create" || state.view === "apps/edit") {
+        bodyLayout = "app-form";
+    } else if (state.view === "notes/edit" || state.view === "documents/edit") {
+        bodyLayout = "editor";
+    }
     return (
         <WorkspaceSurface
             presentation={presentation}
             viewportInsets={viewportInsets}
+            chromeBottom={chromeBottom}
             title={title}
             expanded={state.view === "documents/edit" ||
                 (state.view === "notes/edit" && notesExpanded)}
@@ -137,8 +146,7 @@ export function WorkspaceShell(
             onClose={onClose}
             onEscape={onEscape}
             escapeManaged={workspace === "apps"}
-            formLayout={state.view === "apps/create" ||
-                state.view === "apps/edit"}
+            bodyLayout={bodyLayout}
             feedback={mobile ? feedback : undefined}
             onFeedbackHost={mobile ? onFeedbackHost : undefined}
             footer={!editing &&

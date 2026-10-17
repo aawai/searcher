@@ -59,6 +59,7 @@ export function Coaster({ running }: CoasterProps) {
             {CAR_DISTANCES.map((distance, index) => (
                 <g
                     key={distance}
+                    data-scene-car={index}
                     ref={(element) => {
                         cars.current[index] = element;
                     }}

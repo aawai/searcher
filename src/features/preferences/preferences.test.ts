@@ -49,6 +49,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 searchOpacity: 0.85,
                 canvasMotion: "ambient",
                 canvasMotionLevel: "standard",
+                desktopScene: "amusement-park",
                 defaultEngine: "google",
                 webAppHomeLimit: 16,
                 webAppIconSize: "large",
@@ -63,6 +64,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.searchOpacity, 0.85);
         assertEquals(saved.data?.webAppHomeLimit, 16);
         assertEquals(saved.data?.webAppIconSize, "large");
+        assertEquals(saved.data?.desktopScene, "amusement-park");
         assertEquals(saved.data?.showAppLabels, false);
         const partial = await app.request("/api/preferences", {
             method: "PATCH",
@@ -71,7 +73,11 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 cookie: first,
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ canvasMotion: "off", accent: "rose" }),
+            body: JSON.stringify({
+                canvasMotion: "off",
+                desktopScene: "none",
+                accent: "rose",
+            }),
         });
         assertEquals(partial.status, 200);
         const changed = await partial.json() as Envelope<PreferencesDto>;
@@ -82,6 +88,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.webAppIconSize, "large");
+        assertEquals(changed.data?.desktopScene, "none");
         assertEquals(changed.data?.showAppLabels, false);
         const updateEmerald = await app.request("/api/preferences", {
             method: "PATCH",
@@ -119,6 +126,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.webAppIconSize, "default");
         assertEquals(isolated.data?.showAppLabels, true);
+        assertEquals(isolated.data?.desktopScene, "none");
         assertEquals(isolated.data?.canvasMotion, "off");
         assertEquals(isolated.data?.canvasMotionLevel, "soft");
     } finally {
@@ -163,6 +171,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { backgroundImage: "https://user:pass@example.com/a.png" },
                 { webAppHomeLimit: 15 },
                 { webAppIconSize: "huge" },
+                { desktopScene: "unknown" },
+                { desktopScene: null },
                 { searchOpacity: 0.05 },
                 { searchOpacity: 1.5 },
                 { showAppLabels: "not-a-bool" },
@@ -194,6 +204,7 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults inc
         const guestBody = await guestRes.json() as Envelope<PreferencesDto>;
         assertEquals(guestBody.data?.canvasMotion, "off");
         assertEquals(guestBody.data?.canvasMotionLevel, "soft");
+        assertEquals(guestBody.data?.desktopScene, "none");
         assertEquals(guestBody.data?.wallpaperPresentations, {});
 
         // 2. New registered user GET returns same canonical defaults
@@ -215,6 +226,7 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults inc
         const userBody = await userRes.json() as Envelope<PreferencesDto>;
         assertEquals(userBody.data?.canvasMotion, "off");
         assertEquals(userBody.data?.canvasMotionLevel, "soft");
+        assertEquals(userBody.data?.desktopScene, "none");
         assertEquals(userBody.data?.wallpaperPresentations, {});
         assertEquals(userBody.data?.accent, "blue");
         assertEquals(userBody.data?.style, "zen");

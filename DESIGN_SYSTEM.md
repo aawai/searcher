@@ -32,6 +32,26 @@ primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlis
 均无法表达；至少两个 consumer 需要同一语义，或属于明确的系统级语义；并定义
 owner、state、token、a11y 和 responsive contract。否则保持 feature composition。
 
+### Desktop scene decorative layer
+
+- `features/desktop-scenes/DesktopSceneHost.tsx` 与 `desktop-scenes.css`
+  拥有首页视口底部装饰层；场景注册表只提供元数据与 lazy 入口，设置预览不导入
+  动画资源。关闭或离开首页时不挂载场景。
+- `.app-shell` 的 `isolation: isolate` 内，WallpaperSurface 与场景均为 fixed、
+  z-index -1；场景排在壁纸 DOM 之后，绘制于壁纸之上。正常流 Search/Bento、 Zen
+  Panel、DesktopCanvas/Window 和 Dock 在其上方；Portal 的 Dialog/Sheet/Toast
+  沿用共享 elevation，不为场景提高全局 z-index。
+- `pointer-events: none`、`aria-hidden` 与 SVG `focusable=false` 保持装饰不进入
+  命中或键盘导航；不挪动 Dock，也不建立 Dock 固定高度假设。
+- `scenes/amusement-park/` 独占原创 SVG 几何与 `--sp-*` 领域色板，resolved
+  light/dark 驱动明暗，不读取真实时间。色板和 SVG 坐标不是普通控件的 Token
+  替代；场景不能重新定义 Button、Radio、Dialog 等共享组件。
+- 场景动效限于装饰层，独立于壁纸环境微动预算；只有选中、首页、文档可见且 非
+  reduced-motion 时运行。CSS 的暂停/静态规则由 Host 独占，其优先级必须
+  高于按需加载的场景动画；RAF 只供路径小车，暂停取消，恢复保留位置并重置计时。
+- 设置卡片复用 RadioGroup/RadioGroupItem；布局适配使用对应 `data-slot` 的
+  compound selector，避免共享 primitive 与页面 CSS 的加载次序改变结果。
+
 ### Workspace semantic layer
 
 - Apps / Notes subsection 使用 `features/workspace/WorkspaceSection.tsx`：语义
@@ -105,6 +125,19 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   恢复块代码的透明背景、零 padding/radius 与继承字号/行高， 以 intrinsic-width
   block 保留两端滚动 padding。长行保持不换行， 首尾字符均可完整滚入视区；行内
   code 与工作区不变。
+- Zen 默认固定便签由 `SearchHome` 复用 `useDesktopGeometry` 的 safe rect；
+  `ZenLayout` 仅测量 Search 实际 viewport
+  bounds，并在字体就绪、布局或滚动后更新。 exclusion 保留当前 bounds
+  与未滚动时实测占位的并集，避免回流内容随滚动被移回画布、
+  页面缩短并重置滚动。`FloatingNotes` 将无 desktop x/y 的便签尺寸交给纯
+  placement， 避开 Search，
+  仅放入当前可用区；空间不足的默认便签复用流式网格，<=960px 全部保持 flow。
+  测量阶段的隐藏卡片不参与交互，Markdown 与字体就绪后才发布默认位置。 已保存的
+  desktop 坐标不自动重排；展开、折叠和置顶不将默认位置写入账号布局，
+  只有用户拖动建立坐标。无数据库、storage key 或桌面 v4 迁移；不改搜索 anchor
+  或全局 elevation，可独立回滚 bounds props 与默认 placement。 Zen
+  仅在存在固定便签时按需加载该模块，Search 与个人应用不等待便签代码； 复用 React
+  lazy / Suspense，不将默认 placement 扩大为首页入口依赖。
 - Toolbar 使用 Button ghost/icon、lucide 与 canonical touch geometry；不引入
   Documents paper、分页、图片上传或 outline。
 - 编辑几何由 tokens.css 的 `--workspace-editor-expanded-width`（900px）、
@@ -278,8 +311,15 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - **Zen 桌面端（>=768px）**：呈现为右侧固定非模态侧边栏（`<aside>`，宽度
   `--workspace-width: 400px`，边距
   `--workspace-inset: var(--space-4)`，顶栏安全避让
-  `--workspace-top-inset: calc(var(--control-height) + var(--space-6))`）。采用
-  `--surface-workspace: var(--surface-solid)`（非模态 L3
+  `--workspace-top-inset: calc(var(--control-height) + var(--space-6))`）。实际顶部取
+  该语义 inset 与 Host 传入的 `chromeBottom` 最大值；后者由现有
+  `useDesktopGeometry` 统一测量 `.topbar` / `.connection-banner`， 经
+  `SearchHome` → `WorkspaceShell` → `WorkspaceSurface` 注入局部
+  `--workspace-chrome-bottom`。连接提示出现、换行或移除时同步调整 Panel
+  可用高度，Retry 不被 Panel 覆盖；无提示时仍为原 64px 基线。不新增 viewport
+  listener 或提高 banner elevation，受限窗口的 `viewportInsets` 与移动 Sheet
+  的几何契约保持独立。采用 `--surface-workspace: var(--surface-solid)`（非模态
+  L3
   覆盖层）、`--shadow-workspace: var(--shadow-l2)`、`--elevation-workspace: 45`。面板不设
   backdrop 背景遮罩，不执行全局
   focus-trap；主页底层的搜索框与画布内容保持可直接交互，仅阻断面板容器内的滚动与按键；支持
@@ -334,6 +374,21 @@ AlertDialog）具有严格不同的交互与视觉语义：
   safe-height)；fullscreen = safe rect。 constrained preset
   与工作区导航只拥有当前 presentation，不得回写自由桌面的 canonical frame 或
   basis。
+- Widgets >=768px 若 `useDesktopGeometry` 报告 `geometry.usable=false` 且没有
+  active workspace window，Apps / Notes / Documents 首次打开使用现有
+  `WorkspaceShell` `viewportInsets` 共享 Surface fallback；已有窗口在可用空间
+  缩小时继续由其现有 `DesktopWorkspaces` fallback 处理，不重复创建实例。 受限
+  Surface 整体滚动 Header、列表/普通表单和 Footer；Shell 根据 route 显式传入
+  `bodyLayout`（普通列表 / `app-form` / `editor`），不依赖领域 DOM class 猜测。
+  编辑器 Body 沿用 `--editor-min-content-height`
+  保留最小有界区域，正文继续由领域 scroll area
+  滚动，避免极短空间下塌陷或长文撑开原滚动区。 不改变普通 Panel、Sheet 或已有
+  DesktopWindow 的滚动 owner。空间恢复时保留 fallback
+  至桌面窗口交接，`pendingRestrictedWorkspace` 等待 `useDesktopLayout` 的
+  `restored` 完成后才 OPEN：先读取已有 canonical，再恢复或创建一次窗口，
+  不让默认 frame 抢先覆盖短屏刷新前的布局。交接期间该领域内容仅在 fallback
+  挂载， 目的 chrome 初始化后恢复对应字段焦点与选区。 不新增 viewport
+  owner，不修改 canonical/v4 schema 或几何持久化契约。
 - Task Dock 负责窗口导航与空间管理：Apps/Notes root closed → Open、visible →
   Focus、minimized → Restore + Focus；>=1024 增加 Overview 与 running note
   item，普通窗口下始终可见，文档沉浸时由底边入口临时呼出；无 CRUD、无 footer
@@ -501,6 +556,13 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
   初始基线只在真实进入会话时快照，Host、窗口 mode、props 更新不重新初始化。
   字段、dirty、确认、AI 模型选择/候选及 pending 均属会话；登出/换账号/
   明确离开清空并取消失效请求、释放计时器，不跨刷新保存。
+- 真实 SPA 路由离开由 data router 的单一 `useBlocker` 接入现有 `SearchHome` 确认
+  owner；Link、程序化 navigate 和 Back/Forward 共用同一 pending intent。取消
+  reset 保留草稿和当前位置，明确放弃 proceed 一次。 Workspace
+  确认与路由确认互斥；已有表单确认先完成，提交中拒绝离开。 Zen edge、Dock 与
+  Presenter 切换不是路由离开，不触发路由确认。
+- 仅活跃 dirty 会话注册 `beforeunload`，document 刷新、关闭或硬导航使用浏览器
+  原生提示；自定义 AlertDialog 不拦截 document 卸载，不新增跨刷新草稿持久化。
 - 旧会话及旧 URL 响应不得覆盖当前草稿；自动名称不覆盖手填名称，迟到的网站图标
   不覆盖上传/网络/AI 来源选择。自动获取失败不清提交错误，不自动重试； 合法 URL
   保留名称回退规则。网址校验、网站获取、图标操作与提交分别展示反馈。
@@ -839,6 +901,18 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
     下通过正式 Token `--layout-bento-columns: 5fr 3fr`
     呈现不对称列比（应用/便签）；卡片高度由内部内容决定，不强制等高。空态与少量应用展开通过同一
     Token 约束列比与溢出边界；底部居中 Dock（`.workspace-dock`）作为工作区入口。
+  - 首页状态直接消费 `SearchHome` 的 Apps load state 和 Notes loading/error，
+    使用 compact `LoadingState` / `StatusBanner` /
+    `EmptyState`。仅加载完成且无错误、 无固定内容时显示
+    ready-empty；已有内容在同账号重试和错误期间保持可用。 Apps
+    的真实网络失败且有账号缓存时显示 warning 离线提示；HTTP 错误仍为 error，
+    不更改现有缓存回退政策。两域复用已有 reload 回调，不创建第二套重试或状态
+    owner。
+  - 首页与同域可见 Workspace 只有一个 live-region owner：可见 Workspace 优先，
+    关闭、最小化或 constrained Host 隐藏后恢复首页播报。首页提示仍可阅读，
+    仅取消其 live role；`LoadingState announce={false}` 对应普通呈现与
+    `aria-live=off`。 每域独立裁决，不能只用 desktop activeKind
+    代替多窗口实际可见性。
 - **首页职责收敛与 QuickLaunch 移除**：
   - 首页专注于“使用内容”，完全移除 QuickLaunch
     管理模式切换、管理条（`.home-managing-bar`）及卡片内竞争的启动管理按钮。所有应用新建、编辑、分组管理及便签编辑统一下沉至
@@ -937,7 +1011,9 @@ WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 Conte
   aria-live=polite。Consumer 显式维护 loading 与
   initialized，不用“无数据”推断首次加载完成。
 - `EmptyState`：通过 headingLevel 与 density 表达页面或 Workspace 空态；compact
-  不建立第二套 card surface。
+  不建立第二套 card surface。 已有区域标题的上下文空态可以省略 title，仅传
+  description，避免重复标题把 compact 容器撑高；不新增首页专用 typography 或空态
+  primitive。
 - `UndoToast`：message、onUndo、可选 onClose；timeout 与恢复业务由 consumer
   持有，浮层位置、surface 与按钮几何只有 semantic owner。Home 应用 / 便签和 Ask
   对话共用。

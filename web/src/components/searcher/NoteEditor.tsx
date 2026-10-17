@@ -17,8 +17,14 @@ import {
     type TextEditResult,
 } from "./note-markdown-edit.ts";
 import { api, ApiError, json } from "../../lib/api.ts";
-import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
+import { useAppState } from "../../app/state.tsx";
+import {
+    clearNoteDraft,
+    loadNoteDraft,
+    saveNoteDraft,
+} from "../../features/notes/local-drafts.ts";
 import { Button } from "../ui/button.tsx";
+import { StatusBanner } from "./semantic.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import {
@@ -45,12 +51,6 @@ import type { MarkdownEditorHandle } from "../../features/markdown-editor/types.
 const NoteLivePreviewEditor = lazy(() => import("./NoteLivePreviewEditor.tsx"));
 
 type Draft = { body: string; title: string };
-type StoredDraft = {
-    body: string;
-    title: string;
-    version: number;
-    updatedAt: number;
-};
 type Status = "saved" | "saving" | "unsynced" | "error";
 type Version = {
     id: string;
@@ -71,6 +71,8 @@ export function NoteEditor(
         platform?: ShortcutPlatform;
     },
 ) {
+    const { authSession } = useAppState();
+    const userId = authSession.userId;
     const editorId = useId();
     const sourceBodyId = `note-body-source-${editorId}`;
     const [draft, setDraft] = useState<Draft>({
@@ -81,6 +83,8 @@ export function NoteEditor(
     const [status, setStatus] = useState<Status>("saved");
     const [view, setView] = useState<"live" | "source">("live");
     const [draftReady, setDraftReady] = useState(false);
+    const [recoveryError, setRecoveryError] = useState(false);
+    const [recoveryAttempt, setRecoveryAttempt] = useState(0);
     const [liveReady, setLiveReady] = useState(false);
     const [editorError, setEditorError] = useState("");
     const [versions, setVersions] = useState<Version[] | null>(null);
@@ -133,7 +137,7 @@ export function NoteEditor(
     // Composite blur and explicit save can submit the same draft in one event.
     const submittedDraftRef = useRef<Draft | undefined>(undefined);
 
-    const key = "note:draft:" + note.id;
+    const isCurrent = authSession.isCurrent;
 
     useLayoutEffect(() => {
         const result = pendingSelection.current;
@@ -148,11 +152,13 @@ export function NoteEditor(
     useEffect(() => {
         let cancelled = false;
         setDraftReady(false);
+        setRecoveryError(false);
         const initialDraft = draftRef.current;
-        void getLocal<StoredDraft>(key).catch(() => undefined).then(
+        if (!userId || !isCurrent()) return;
+        void loadNoteDraft(userId, note, isCurrent).then(
             (stored) => {
                 // Device recovery must not overwrite input entered while IndexedDB loads.
-                if (cancelled) return;
+                if (cancelled || !isCurrent()) return;
                 if (draftRef.current !== initialDraft) {
                     setDraftReady(true);
                     return;
@@ -166,11 +172,13 @@ export function NoteEditor(
                 }
                 setDraftReady(true);
             },
-        );
+        ).catch(() => {
+            if (!cancelled && isCurrent()) setRecoveryError(true);
+        });
         return () => {
             cancelled = true;
         };
-    }, [note.id]);
+    }, [note.id, authSession, recoveryAttempt]);
     useEffect(() => {
         setColor(note.color || "paper");
     }, [note.color]);
@@ -212,11 +220,12 @@ export function NoteEditor(
         draftRef.current = next;
         setDraft(next);
         setStatus("unsynced");
-        void setLocal(key, {
+        if (!userId || !isCurrent()) return;
+        void saveNoteDraft(userId, note.id, {
             ...next,
             version: latestNoteRef.current.version,
             updatedAt: Date.now(),
-        }).catch(() => {
+        }, isCurrent).catch(() => {
             // IndexedDB failure leaves the draft in memory; cloud autosave remains available.
         });
         if (!composingRef.current) scheduleAutosave(next);
@@ -394,6 +403,9 @@ export function NoteEditor(
         origin: "autosave" | "manual" | "conflict_resolution" = "autosave",
     ) {
         if (composingRef.current) return mutationQueue.current;
+        if (!userId || !isCurrent() || !draftReady) {
+            return mutationQueue.current;
+        }
         clearTimeout(timer.current);
         timer.current = undefined;
         const data = next ?? draftRef.current;
@@ -401,6 +413,7 @@ export function NoteEditor(
         setStatus("saving");
         saveFailed.current = false;
         mutationQueue.current = mutationQueue.current.then(async () => {
+            if (!isCurrent()) return;
             try {
                 const updated = await api<NoteItem>(
                     "/api/notes/" +
@@ -412,19 +425,25 @@ export function NoteEditor(
                         origin,
                     }),
                 );
+                if (!isCurrent()) return;
                 latestNoteRef.current = updated;
                 if (
                     draftRef.current.body === data.body &&
                     draftRef.current.title === data.title
                 ) {
-                    await deleteLocal(key).catch(() => {});
+                    await clearNoteDraft(
+                        userId,
+                        note.id,
+                        () => isCurrent() && draftRef.current === data,
+                    ).catch(() => {});
                 } else {
-                    await setLocal(key, {
+                    await saveNoteDraft(userId, note.id, {
                         ...draftRef.current,
                         version: updated.version,
                         updatedAt: Date.now(),
-                    }).catch(() => {});
+                    }, isCurrent).catch(() => {});
                 }
+                if (!isCurrent()) return;
                 onSaved(updated);
                 if (
                     draftRef.current.body === data.body &&
@@ -434,6 +453,7 @@ export function NoteEditor(
                 }
                 setConflict(null);
             } catch (error) {
+                if (!isCurrent()) return;
                 saveFailed.current = true;
                 if (submittedDraftRef.current === data) {
                     submittedDraftRef.current = undefined;
@@ -512,6 +532,7 @@ export function NoteEditor(
         timer.current = undefined;
         // A blur-triggered save may still return 409 after the click. Accept after it settles.
         await mutationQueue.current;
+        if (!userId || !isCurrent()) return;
         latestNoteRef.current = conflict;
         const accepted = { body: conflict.body, title: conflict.title ?? "" };
         draftRef.current = accepted;
@@ -522,7 +543,11 @@ export function NoteEditor(
             setColor(conflict.color);
         }
         onSaved(conflict);
-        void deleteLocal(key).catch(() => {});
+        void clearNoteDraft(
+            userId,
+            note.id,
+            () => isCurrent() && draftRef.current === accepted,
+        ).catch(() => {});
         setConflict(null);
         setStatus("saved");
     }
@@ -632,12 +657,14 @@ export function NoteEditor(
         setVersionError("");
         clearTimeout(timer.current);
         mutationQueue.current = mutationQueue.current.then(async () => {
+            if (!userId || !isCurrent()) return;
             try {
                 const restored = await api<NoteItem>(
                     "/api/notes/" + encodeURIComponent(note.id) + "/versions/" +
                         old.version + "/restore",
                     { method: "POST" },
                 );
+                if (!isCurrent()) return;
                 latestNoteRef.current = restored;
                 const accepted = {
                     body: restored.body,
@@ -647,7 +674,12 @@ export function NoteEditor(
                 submittedDraftRef.current = undefined;
                 setDraft(accepted);
                 setColor(restored.color || "paper");
-                await deleteLocal(key).catch(() => {});
+                await clearNoteDraft(
+                    userId,
+                    note.id,
+                    () => isCurrent() && draftRef.current === accepted,
+                ).catch(() => {});
+                if (!isCurrent()) return;
                 onSaved(restored);
                 setConflict(null);
                 saveFailed.current = false;
@@ -700,6 +732,7 @@ export function NoteEditor(
                         className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
                         placeholder="便签标题…"
                         aria-label="便签标题"
+                        disabled={!draftReady}
                         value={draft.title}
                         onChange={(event) =>
                             change({
@@ -795,6 +828,21 @@ export function NoteEditor(
 
                     {editorError && (
                         <p role="alert" className="error">{editorError}</p>
+                    )}
+                    {recoveryError && (
+                        <StatusBanner tone="error" density="compact">
+                            <span>本地草稿恢复检查失败，原数据已保留。</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    setRecoveryAttempt((n) =>
+                                        n + 1
+                                    )}
+                            >
+                                重试恢复草稿
+                            </Button>
+                        </StatusBanner>
                     )}
                     <NoteMarkdownToolbar
                         editorId={editorId}

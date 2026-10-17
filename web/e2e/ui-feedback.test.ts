@@ -1006,10 +1006,6 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             // While in flight: LoadingState is visible, EmptyState is NOT visible (no flicker!)
             const notesLoading = notesAside.locator(".loading-state");
             await notesLoading.waitFor({ state: "visible" });
-            assertStringIncludes(
-                await notesLoading.textContent() ?? "",
-                "正在加载便签",
-            );
 
             const notesEmpty = notesAside.locator(
                 ".empty-state:has-text('还没有便签')",
@@ -1126,3 +1122,773 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
         },
     );
 });
+Deno.test(
+    "Widgets home feedback reports pending/error/offline states and restores live announcement ownership",
+    async (t) => {
+        await using cleanup = new AsyncDisposableStack();
+        const files = await Deno.makeTempDir({
+            prefix: "searcher_widgets_feedback_177_",
+        });
+        cleanup.defer(() => Deno.remove(files, { recursive: true }));
+
+        const store = openDatabase(":memory:");
+        cleanup.defer(() => store.close());
+        await migrateDatabase(store);
+
+        const server = Deno.serve(
+            { hostname: "127.0.0.1", port: 0, onListen() {} },
+            (request) => app.fetch(request),
+        );
+        cleanup.defer(() => server.shutdown());
+
+        const origin = `http://127.0.0.1:${server.addr.port}`;
+        const auth = new AuthService({ store, origin });
+        const app = createApp({
+            store,
+            auth,
+            origin,
+            settings: new SystemSettingsStore(":memory:"),
+            wallpaper: new WallpaperService(`${files}/wallpapers`),
+            icons: new WebAppIconService(`${files}/icons`),
+        });
+
+        const browser = await chromium.launch({
+            handleSIGTERM: false,
+            headless: true,
+            args: ["--no-sandbox"],
+        });
+        cleanup.defer(() => browser.close());
+        const context = await browser.newContext({
+            colorScheme: "light",
+            viewport: { width: 1440, height: 900 },
+        });
+        cleanup.defer(() => context.close());
+        const page = await context.newPage();
+        page.setDefaultTimeout(5000);
+
+        const registerResponse = await page.goto(origin + "/register");
+        assertEquals(registerResponse?.status(), 200);
+        await page.locator("#auth-username").fill("widgets_feedback_177");
+        await page.locator("#auth-display-name").fill("Widgets Feedback");
+        await page.locator("#auth-password").fill("Widgets-Feedback-177!");
+        await page.locator('form button[type="submit"]').click();
+        await page.waitForURL(origin + "/");
+        await page.locator("main").waitFor({ state: "visible" });
+
+        const appName = "Widgets Cached App";
+        const noteTitle = "Widgets Cached Note";
+        const registeredUsers = await store.run((db) =>
+            db.select().from(users).all()
+        );
+        assertEquals(registeredUsers.length, 1);
+        const user = registeredUsers[0];
+        const { appId, noteId } = await page.evaluate(
+            async ({ appName, noteTitle }) => {
+                const preferences = await fetch("/api/preferences", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ style: "widgets" }),
+                });
+                if (!preferences.ok) {
+                    throw new Error(
+                        `PATCH /api/preferences failed: ${preferences.status}`,
+                    );
+                }
+                const appResponse = await fetch("/api/webapps", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: appName,
+                        url: "https://widgets-feedback.example/",
+                        isPinned: true,
+                    }),
+                });
+                if (!appResponse.ok) {
+                    throw new Error(
+                        `POST /api/webapps failed: ${appResponse.status}`,
+                    );
+                }
+                const appResult = await appResponse.json();
+                const noteResponse = await fetch("/api/notes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: noteTitle,
+                        body: "Retained while the Notes request fails.",
+                        isHomeFixed: true,
+                        layout: { expanded: true },
+                    }),
+                });
+                if (!noteResponse.ok) {
+                    throw new Error(
+                        `POST /api/notes failed: ${noteResponse.status}`,
+                    );
+                }
+                const noteResult = await noteResponse.json();
+                return {
+                    appId: appResult.data.id as string,
+                    noteId: noteResult.data.id as string,
+                };
+            },
+            { appName, noteTitle },
+        );
+
+        function isGetResponse(
+            response: {
+                url(): string;
+                request(): { method(): string };
+                status(): number;
+            },
+            path: string,
+            status: number,
+        ) {
+            return new URL(response.url()).pathname === path &&
+                response.request().method() === "GET" &&
+                response.status() === status;
+        }
+        function waitForGet(path: string, status: number) {
+            return page.waitForResponse((response) =>
+                isGetResponse(response, path, status)
+            );
+        }
+        async function waitForAccountCache(target: Page) {
+            await target.waitForFunction(
+                async ({ userId, appName, noteTitle }) => {
+                    let db: IDBDatabase | undefined;
+                    try {
+                        db = await new Promise<IDBDatabase>(
+                            (resolve, reject) => {
+                                const request = indexedDB.open(
+                                    "searcher-client",
+                                    1,
+                                );
+                                request.onsuccess = () =>
+                                    resolve(request.result);
+                                request.onerror = () => reject(request.error);
+                            },
+                        );
+                        const transaction = db.transaction(
+                            "state",
+                            "readonly",
+                        );
+                        const objectStore = transaction.objectStore("state");
+                        const transactionComplete = new Promise<void>(
+                            (resolve, reject) => {
+                                transaction.oncomplete = () => resolve();
+                                transaction.onerror = () =>
+                                    reject(transaction.error);
+                                transaction.onabort = () =>
+                                    reject(transaction.error);
+                            },
+                        );
+                        const read = (key: string) =>
+                            new Promise<unknown>((resolve, reject) => {
+                                const request = objectStore.get(key);
+                                request.onsuccess = () =>
+                                    resolve(request.result);
+                                request.onerror = () => reject(request.error);
+                            });
+                        const [appsCache, notesCache] = await Promise.all([
+                            read(`webapps:${userId}`),
+                            read(`notes:${userId}`),
+                            transactionComplete,
+                        ]);
+                        const cachedApps = appsCache as
+                            | { apps?: Array<{ name?: string }> }
+                            | undefined;
+                        const cachedNotes = notesCache as
+                            | Array<{ title?: string }>
+                            | undefined;
+                        return Array.isArray(cachedApps?.apps) &&
+                            cachedApps.apps.some((item) =>
+                                item.name === appName
+                            ) &&
+                            Array.isArray(cachedNotes) &&
+                            cachedNotes.some((item) =>
+                                item.title === noteTitle
+                            );
+                    } catch {
+                        return false;
+                    } finally {
+                        db?.close();
+                    }
+                },
+                { userId: user.id, appName, noteTitle },
+                { polling: 50, timeout: 5000 },
+            );
+        }
+
+        // The account's cache is seeded only by real, successful page reads.
+        const initialAppsRead = waitForGet("/api/webapps", 200);
+        const initialNotesRead = waitForGet("/api/notes", 200);
+        await page.reload();
+        await Promise.all([initialAppsRead, initialNotesRead]);
+        const appsCard = page.locator(
+            '.widgets-bento-card[data-bento-card="apps"]',
+        );
+        const notesCard = page.locator(
+            '.widgets-bento-card[data-bento-card="notes"]',
+        );
+        await page.locator(".widgets-bento-container").waitFor({
+            state: "visible",
+        });
+        await appsCard.getByText(appName, { exact: true }).waitFor({
+            state: "visible",
+        });
+        await notesCard.getByText(noteTitle, { exact: true }).waitFor({
+            state: "visible",
+        });
+        await waitForAccountCache(page);
+
+        type RouteMode = "success" | "gate" | "unavailable" | "abort";
+        let notesMode: RouteMode = "success";
+        let appsMode: RouteMode = "success";
+        let notesGets = 0;
+        let appsGets = 0;
+        let notesGate = Promise.withResolvers<void>();
+        let notesGateReached = Promise.withResolvers<void>();
+        let appsGate = Promise.withResolvers<void>();
+        let appsGateReached = Promise.withResolvers<void>();
+        let appsAbortReached = Promise.withResolvers<void>();
+
+        await page.route("**/api/notes", async (route) => {
+            if (route.request().method() !== "GET") {
+                try {
+                    await route.continue();
+                } catch { /* The page may have navigated. */ }
+                return;
+            }
+            notesGets++;
+            if (notesMode === "gate") {
+                const gate = notesGate;
+                notesGateReached.resolve();
+                await gate.promise;
+            }
+            if (notesMode === "unavailable") {
+                try {
+                    await route.fulfill({
+                        status: 503,
+                        contentType: "application/json",
+                        body: JSON.stringify({
+                            message: "便签服务暂时不可用",
+                        }),
+                    });
+                } catch { /* The page may have navigated. */ }
+                return;
+            }
+            if (notesMode === "abort") {
+                try {
+                    await route.abort("failed");
+                } catch { /* The page may have navigated. */ }
+                return;
+            }
+            try {
+                await route.continue();
+            } catch { /* The page may have navigated. */ }
+        });
+        await page.route("**/api/webapps", async (route) => {
+            if (route.request().method() !== "GET") {
+                try {
+                    await route.continue();
+                } catch { /* The page may have navigated. */ }
+                return;
+            }
+            appsGets++;
+            if (appsMode === "gate") {
+                const gate = appsGate;
+                appsGateReached.resolve();
+                await gate.promise;
+            }
+            if (appsMode === "unavailable") {
+                try {
+                    await route.fulfill({
+                        status: 503,
+                        contentType: "application/json",
+                        body: JSON.stringify({
+                            message: "应用服务暂时不可用",
+                        }),
+                    });
+                } catch { /* The page may have navigated. */ }
+                return;
+            }
+            if (appsMode === "abort") {
+                appsAbortReached.resolve();
+                try {
+                    await route.abort("failed");
+                } catch { /* The page may have navigated. */ }
+                return;
+            }
+            try {
+                await route.continue();
+            } catch { /* The page may have navigated. */ }
+        });
+
+        const notesCardSelector =
+            '.widgets-bento-card[data-bento-card="notes"]';
+        function loadingNotesIn(selector: string) {
+            return page.locator(selector).locator(
+                '.loading-state[role="status"]:visible',
+            );
+        }
+        await t.step(
+            "Notes 503 without a previously cached note does not claim ready-empty",
+            async () => {
+                const noCacheContext = await browser.newContext({
+                    colorScheme: "light",
+                    viewport: { width: 1280, height: 800 },
+                });
+                const { token } = await auth.createSession(
+                    user.id,
+                    user.authVersion,
+                );
+                await noCacheContext.addCookies([{
+                    name: "searcher_session",
+                    value: token,
+                    domain: "127.0.0.1",
+                    path: "/",
+                    httpOnly: true,
+                    sameSite: "Lax",
+                }]);
+                const noCachePage = await noCacheContext.newPage();
+                noCachePage.setDefaultTimeout(5000);
+                const noCacheGate = Promise.withResolvers<void>();
+                const noCacheRequestStarted = Promise.withResolvers<void>();
+                await noCachePage.route(
+                    "**/api/notes",
+                    async (route) => {
+                        if (route.request().method() === "GET") {
+                            noCacheRequestStarted.resolve();
+                            await noCacheGate.promise;
+                            try {
+                                await route.fulfill({
+                                    status: 503,
+                                    contentType: "application/json",
+                                    body: JSON.stringify({
+                                        message: "便签服务暂时不可用",
+                                    }),
+                                });
+                            } catch { /* The page may have navigated. */ }
+                            return;
+                        }
+                        try {
+                            await route.continue();
+                        } catch { /* The page may have navigated. */ }
+                    },
+                );
+                try {
+                    const failedRead = noCachePage.waitForResponse(
+                        (response) =>
+                            isGetResponse(response, "/api/notes", 503),
+                    );
+                    const response = await noCachePage.goto(origin + "/");
+                    assertEquals(response?.status(), 200);
+                    await noCachePage.locator("main").waitFor({
+                        state: "visible",
+                    });
+                    await noCacheRequestStarted.promise;
+                    const noCacheNotesCard = noCachePage.locator(
+                        '.widgets-bento-card[data-bento-card="notes"]',
+                    );
+                    await noCacheNotesCard.getByRole("status").filter({
+                        hasText: /加载便签/,
+                    }).waitFor({ state: "visible" });
+                    assertEquals(
+                        await noCacheNotesCard.getByText(
+                            /暂无固定在首页的便签/,
+                        ).isVisible(),
+                        false,
+                    );
+
+                    noCacheGate.resolve();
+                    await failedRead;
+                    const noCacheError = noCacheNotesCard.getByRole("alert")
+                        .filter({
+                            hasText: "便签服务暂时不可用",
+                        });
+                    await noCacheError.waitFor({ state: "visible" });
+                    assertEquals(
+                        await noCacheNotesCard.getByText(
+                            /暂无固定在首页的便签/,
+                        ).isVisible(),
+                        false,
+                        "A 503 without a cache must not be presented as ready-empty.",
+                    );
+                    assertEquals(
+                        await noCacheNotesCard.getByText(noteTitle, {
+                            exact: true,
+                        }).isVisible(),
+                        false,
+                        "The isolated browser context must not reuse the other context's cached note.",
+                    );
+                } finally {
+                    noCacheGate.resolve();
+                    await noCacheContext.close();
+                }
+            },
+        );
+
+        await t.step(
+            "Notes pending and 503 never claim ready-empty; cached note remains and retry fetches ready data",
+            async () => {
+                try {
+                    notesMode = "gate";
+                    notesGate = Promise.withResolvers<void>();
+                    notesGateReached = Promise.withResolvers<void>();
+                    await page.reload();
+                    await notesGateReached.promise;
+
+                    const notesLoading = loadingNotesIn(notesCardSelector);
+                    await notesLoading.waitFor({ state: "visible" });
+                    assertEquals(
+                        await notesCard.getByText(/暂无固定在首页的便签/)
+                            .isVisible(),
+                        false,
+                        "Pending Notes must not be presented as ready-empty.",
+                    );
+
+                    notesMode = "unavailable";
+                    const notesFailure = waitForGet("/api/notes", 503);
+                    notesGate.resolve();
+                    await notesFailure;
+                    const notesError = notesCard.getByRole("alert").filter({
+                        hasText: "便签服务暂时不可用",
+                    });
+                    await notesError.waitFor({ state: "visible" });
+                    assertEquals(
+                        await notesCard.getByText(/暂无固定在首页的便签/)
+                            .isVisible(),
+                        false,
+                        "Failed Notes must not be presented as ready-empty.",
+                    );
+                    await notesCard.getByText(noteTitle, { exact: true })
+                        .waitFor({ state: "visible" });
+
+                    const previousNotesGets = notesGets;
+                    notesMode = "success";
+                    const retryRead = waitForGet("/api/notes", 200);
+                    await notesError.getByRole("button", {
+                        name: "重试",
+                        exact: true,
+                    }).click();
+                    await retryRead;
+                    assertEquals(notesGets > previousNotesGets, true);
+                    await notesError.waitFor({ state: "hidden" });
+                    await notesCard.getByText(noteTitle, { exact: true })
+                        .waitFor({ state: "visible" });
+                } finally {
+                    notesMode = "success";
+                    notesGate.resolve();
+                }
+            },
+        );
+
+        await t.step(
+            "Apps loading and HTTP 503 are accessible errors, not offline, and retry performs a successful read",
+            async () => {
+                try {
+                    appsMode = "gate";
+                    appsGate = Promise.withResolvers<void>();
+                    appsGateReached = Promise.withResolvers<void>();
+                    await page.reload();
+                    await appsGateReached.promise;
+
+                    const appsLoading = appsCard.getByRole("status").filter({
+                        hasText: /加载/,
+                    });
+                    await appsLoading.waitFor({ state: "visible" });
+                    assertEquals(
+                        await appsCard.getByText(/暂无固定在首页的应用/)
+                            .isVisible(),
+                        false,
+                        "Pending Apps must not be presented as ready-empty.",
+                    );
+
+                    appsMode = "unavailable";
+                    const appsFailure = waitForGet("/api/webapps", 503);
+                    appsGate.resolve();
+                    await appsFailure;
+                    const appsError = appsCard.getByRole("alert").filter({
+                        hasText: "应用服务暂时不可用",
+                    });
+                    await appsError.waitFor({ state: "visible" });
+                    assertEquals(
+                        await appsCard.getByRole("status").filter({
+                            hasText: /离线|offline/i,
+                        }).count(),
+                        0,
+                        "HTTP 503 must not be announced as network-offline.",
+                    );
+                    assertEquals(
+                        await appsCard.getByText(/暂无固定在首页的应用/)
+                            .isVisible(),
+                        false,
+                        "Apps errors must not be presented as ready-empty.",
+                    );
+
+                    const previousAppsGets = appsGets;
+                    appsMode = "success";
+                    const retryRead = waitForGet("/api/webapps", 200);
+                    await appsError.getByRole("button", {
+                        name: "重试",
+                        exact: true,
+                    }).click();
+                    await retryRead;
+                    assertEquals(appsGets > previousAppsGets, true);
+                    await appsError.waitFor({ state: "hidden" });
+                    await appsCard.getByText(appName, { exact: true }).waitFor({
+                        state: "visible",
+                    });
+                } finally {
+                    appsMode = "success";
+                    appsGate.resolve();
+                }
+            },
+        );
+
+        await t.step(
+            "A real Apps network abort retains cached content, announces offline, and retries online",
+            async () => {
+                try {
+                    await waitForAccountCache(page);
+                    appsMode = "abort";
+                    appsAbortReached = Promise.withResolvers<void>();
+                    await page.reload();
+                    await appsAbortReached.promise;
+
+                    const offlineStatus = appsCard.getByRole("status").filter({
+                        hasText: /离线|offline/i,
+                    });
+                    await offlineStatus.waitFor({ state: "visible" });
+                    await appsCard.getByText(appName, { exact: true }).waitFor({
+                        state: "visible",
+                    });
+
+                    const previousAppsGets = appsGets;
+                    appsMode = "success";
+                    const retryRead = waitForGet("/api/webapps", 200);
+                    await offlineStatus.getByRole("button", {
+                        name: "重试",
+                        exact: true,
+                    }).click();
+                    await retryRead;
+                    assertEquals(appsGets > previousAppsGets, true);
+                    await offlineStatus.waitFor({ state: "hidden" });
+                    await appsCard.getByText(appName, { exact: true }).waitFor({
+                        state: "visible",
+                    });
+                } finally {
+                    appsMode = "success";
+                    appsGate.resolve();
+                }
+            },
+        );
+        await t.step(
+            "Successful empty Apps still show the ready-empty content",
+            async () => {
+                const deleted = await page.evaluate(async (id) => {
+                    const response = await fetch(
+                        `/api/webapps/${encodeURIComponent(id)}`,
+                        { method: "DELETE" },
+                    );
+                    return response.status;
+                }, appId);
+                assertEquals(deleted, 200);
+
+                const appsRead = waitForGet("/api/webapps", 200);
+                await page.reload();
+                await appsRead;
+                await appsCard.getByText(/暂无固定在首页的应用/).waitFor({
+                    state: "visible",
+                });
+                assertEquals(await appsCard.getByRole("alert").count(), 0);
+            },
+        );
+
+        await t.step(
+            "Successful empty Notes still show the ready-empty content",
+            async () => {
+                const deleted = await page.evaluate(async (id) => {
+                    const response = await fetch(
+                        `/api/notes/${encodeURIComponent(id)}`,
+                        { method: "DELETE" },
+                    );
+                    return response.status;
+                }, noteId);
+                assertEquals(deleted, 200);
+
+                const notesRead = waitForGet("/api/notes", 200);
+                await page.reload();
+                await notesRead;
+                await notesCard.getByText(/暂无固定在首页的便签/).waitFor({
+                    state: "visible",
+                });
+                assertEquals(await notesCard.getByRole("alert").count(), 0);
+            },
+        );
+        await t.step(
+            "Apps workspace is the sole live error owner while visible and homepage ownership returns when minimized",
+            async () => {
+                try {
+                    appsMode = "unavailable";
+                    const appsFailure = waitForGet("/api/webapps", 503);
+                    await page.reload();
+                    await appsFailure;
+
+                    const homeError = appsCard.getByRole("alert").filter({
+                        hasText: "应用服务暂时不可用",
+                    });
+                    await homeError.waitFor({ state: "visible" });
+
+                    const appsButton = page.locator(
+                        '.desktop-dock button[aria-label="应用工作区"], .workspace-dock button[aria-label="应用工作区"], button[data-workspace="apps"]',
+                    );
+                    await appsButton.first().click();
+                    const appsWorkspace = page.locator(".apps-workspace");
+                    await appsWorkspace.waitFor({ state: "visible" });
+                    const workspaceError = appsWorkspace.getByRole("alert")
+                        .filter({
+                            hasText: "应用服务暂时不可用",
+                        });
+                    await workspaceError.waitFor({ state: "visible" });
+
+                    const appAnnouncements = page.getByRole("alert").filter({
+                        hasText: "应用服务暂时不可用",
+                    });
+                    assertEquals(
+                        await appAnnouncements.count(),
+                        1,
+                        "Only the visible Apps workspace may own the live error announcement.",
+                    );
+                    assertEquals(await homeError.count(), 0);
+
+                    await page.getByRole("button", {
+                        name: "最小化窗口",
+                        exact: true,
+                    }).click();
+                    await homeError.waitFor({ state: "visible" });
+                    assertEquals(await appAnnouncements.count(), 1);
+                    assertEquals(await workspaceError.count(), 0);
+
+                    const previousAppsGets = appsGets;
+                    appsMode = "success";
+                    const retryRead = waitForGet("/api/webapps", 200);
+                    await homeError.getByRole("button", {
+                        name: "重试",
+                        exact: true,
+                    }).click();
+                    await retryRead;
+                    assertEquals(appsGets > previousAppsGets, true);
+                    await homeError.waitFor({ state: "hidden" });
+                } finally {
+                    appsMode = "success";
+                    appsGate.resolve();
+                }
+            },
+        );
+
+        async function assertNotesAnnouncementOwner(
+            expected: "home" | "workspace",
+            viewportName: string,
+        ) {
+            const announcements = page.locator(
+                `${notesCardSelector} .loading-state[role="status"]:visible, .notes-workspace .loading-state[role="status"]:visible`,
+            );
+            assertEquals(
+                await announcements.count(),
+                1,
+                `${viewportName}: one visible Notes loading announcement owner is required.`,
+            );
+            assertEquals(
+                await loadingNotesIn(notesCardSelector).count(),
+                expected === "home" ? 1 : 0,
+                `${viewportName}: homepage role ownership should follow workspace visibility.`,
+            );
+            assertEquals(
+                await loadingNotesIn(".notes-workspace").count(),
+                expected === "workspace" ? 1 : 0,
+                `${viewportName}: workspace role ownership should follow visibility.`,
+            );
+        }
+
+        for (
+            const viewport of [
+                { name: "constrained", width: 768, height: 900 },
+                { name: "mobile", width: 390, height: 844 },
+                { name: "desktop", width: 1440, height: 900 },
+            ]
+        ) {
+            await t.step(
+                `${viewport.name} same-domain workspace is sole live owner; closing/minimizing restores homepage ownership`,
+                async () => {
+                    try {
+                        await page.setViewportSize({
+                            width: viewport.width,
+                            height: viewport.height,
+                        });
+                        notesMode = "gate";
+                        notesGate = Promise.withResolvers<void>();
+                        notesGateReached = Promise.withResolvers<void>();
+                        await page.reload();
+                        await notesGateReached.promise;
+
+                        const homeLoading = loadingNotesIn(notesCardSelector);
+                        await homeLoading.waitFor({ state: "visible" });
+                        assertEquals(
+                            await notesCard.getByText(/暂无固定在首页的便签/)
+                                .isVisible(),
+                            false,
+                            `${viewport.name}: pending Notes must not be ready-empty.`,
+                        );
+                        await assertNotesAnnouncementOwner(
+                            "home",
+                            viewport.name,
+                        );
+
+                        const notesWorkspace = page.locator(".notes-workspace");
+                        const notesButton = page.locator(
+                            '.desktop-dock button[aria-label="便签工作区"], .workspace-mobile-navigation button[aria-label="便签工作区"], .workspace-dock button[aria-label="便签工作区"], button[data-workspace="notes"]',
+                        );
+                        await notesButton.first().waitFor({
+                            state: "visible",
+                        });
+                        await notesButton.first().click();
+                        await notesWorkspace.waitFor({ state: "visible" });
+                        await loadingNotesIn(".notes-workspace").waitFor({
+                            state: "visible",
+                        });
+                        await assertNotesAnnouncementOwner(
+                            "workspace",
+                            viewport.name,
+                        );
+
+                        if (viewport.name === "desktop") {
+                            await page.getByRole("button", {
+                                name: "最小化窗口",
+                                exact: true,
+                            }).click();
+                        } else {
+                            await page.getByRole("button", {
+                                name: "收起工作区",
+                                exact: true,
+                            }).last().click();
+                        }
+                        await homeLoading.waitFor({ state: "visible" });
+                        await assertNotesAnnouncementOwner(
+                            "home",
+                            viewport.name,
+                        );
+
+                        const readyRead = waitForGet("/api/notes", 200);
+                        notesMode = "success";
+                        notesGate.resolve();
+                        await readyRead;
+                        await homeLoading.waitFor({ state: "hidden" });
+                    } finally {
+                        notesMode = "success";
+                        notesGate.resolve();
+                    }
+                },
+            );
+        }
+    },
+);

@@ -29,13 +29,14 @@ export function WorkspaceSurface(
         footer,
         feedback,
         onFeedbackHost,
-        formLayout = false,
+        bodyLayout,
         onEscape = onClose,
         escapeManaged = false,
         expanded = false,
         headerActions,
         backLabel = "返回上一级",
         viewportInsets,
+        chromeBottom = 0,
     }: {
         presentation: Exclude<WorkspacePresentation, "window">;
         title: string;
@@ -47,13 +48,14 @@ export function WorkspaceSurface(
         footer: ReactNode;
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
-        formLayout?: boolean;
+        bodyLayout?: "app-form" | "editor";
         onEscape?: () => void;
         escapeManaged?: boolean;
         expanded?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
         viewportInsets?: WorkspaceViewportInsets;
+        chromeBottom?: number;
     },
 ) {
     const mobile = presentation === "sheet";
@@ -171,7 +173,7 @@ export function WorkspaceSurface(
             </header>
             <div
                 className="workspace-body"
-                data-layout={formLayout ? "app-form" : undefined}
+                data-layout={bodyLayout}
             >
                 {children}
             </div>
@@ -241,9 +243,13 @@ export function WorkspaceSurface(
                 data-presentation={presentation}
                 data-workspace-expanded={expanded || undefined}
                 data-viewport-constrained={Boolean(viewportInsets) || undefined}
-                style={viewportInsets
-                    ? { top: viewportInsets.top, bottom: viewportInsets.bottom }
-                    : undefined}
+                style={{
+                    "--workspace-chrome-bottom": `${chromeBottom}px`,
+                    ...(viewportInsets && {
+                        top: viewportInsets.top,
+                        bottom: viewportInsets.bottom,
+                    }),
+                } as CSSProperties}
                 aria-label={title + "工作区"}
             >
                 {content}

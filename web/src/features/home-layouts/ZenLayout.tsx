@@ -5,13 +5,25 @@ import {
     NotebookPen,
     StickyNote,
 } from "lucide-react";
+import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
+import type { SafeRect } from "../desktop/desktop-geometry.ts";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
-import { FloatingNotes } from "../../components/searcher/FloatingNotes.tsx";
 import { Button } from "../../components/ui/button.tsx";
 
-export function ZenLayout(props: HomeLayoutProps) {
+const FloatingNotes = lazy(() =>
+    import("../../components/searcher/FloatingNotes.tsx").then((module) => ({
+        default: module.FloatingNotes,
+    }))
+);
+
+export function ZenLayout(
+    props: HomeLayoutProps & {
+        availableRect: SafeRect;
+        viewportWidth: number;
+    },
+) {
     const {
         user,
         appearance,
@@ -46,10 +58,45 @@ export function ZenLayout(props: HomeLayoutProps) {
         updateNoteLayout,
         openWorkspace,
     } = props;
+    const heroRef = useRef<HTMLElement>(null);
+    const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
+
+    useLayoutEffect(() => {
+        const hero = heroRef.current;
+        const search = hero?.querySelector(".search-form-wrap");
+        if (!hero || !search) return;
+        let active = true;
+        const measure = () => {
+            if (!active) return;
+            const { x, y, width, height } = search.getBoundingClientRect();
+            // Keep the normal-flow anchor reserved while scrolling. Releasing
+            // it would remove overflow notes, shrink the page, and reset scroll.
+            const top = Math.min(y, y + scrollY);
+            const reservedHeight = height + Math.abs(scrollY);
+            setExclusionRect((previous) =>
+                previous?.x === x && previous.y === top &&
+                    previous.width === width &&
+                    previous.height === reservedHeight
+                    ? previous
+                    : { x, y: top, width, height: reservedHeight }
+            );
+        };
+        const observer = new ResizeObserver(measure);
+        observer.observe(hero);
+        observer.observe(search);
+        measure();
+        void document.fonts.ready.then(measure);
+        addEventListener("scroll", measure, true);
+        return () => {
+            active = false;
+            observer.disconnect();
+            removeEventListener("scroll", measure, true);
+        };
+    }, [props.availableRect, mode]);
 
     return (
         <>
-            <section className="hero" aria-label="搜索">
+            <section className="hero" aria-label="搜索" ref={heroRef}>
                 <SearcherSearchInput
                     engine={engine}
                     onEngineChange={setEngine}
@@ -180,21 +227,30 @@ export function ZenLayout(props: HomeLayoutProps) {
                             />
                         </>
                     )}
-                    <FloatingNotes
-                        notes={fixedNotes}
-                        onOpen={editNote}
-                        onUpdateLayout={(n, layout) =>
-                            void updateNoteLayout(n, layout)}
-                        onTogglePin={(n) =>
-                            void updateNote(n, { isPinned: !n.isPinned })}
-                        onToggleHomeFixed={(n) =>
-                            void updateNote(n, {
-                                isHomeFixed: !n.isHomeFixed,
-                            })}
-                        onChangeColor={(n, color) =>
-                            void updateNote(n, { color })}
-                        onDelete={(n) => void deleteNote(n)}
-                    />
+                    {fixedNotes.length > 0 && (
+                        <Suspense fallback={null}>
+                            <FloatingNotes
+                                notes={fixedNotes}
+                                exclusionRect={exclusionRect}
+                                availableRect={props.availableRect}
+                                viewportWidth={props.viewportWidth}
+                                onOpen={editNote}
+                                onUpdateLayout={(n, layout) =>
+                                    void updateNoteLayout(n, layout)}
+                                onTogglePin={(n) =>
+                                    void updateNote(n, {
+                                        isPinned: !n.isPinned,
+                                    })}
+                                onToggleHomeFixed={(n) =>
+                                    void updateNote(n, {
+                                        isHomeFixed: !n.isHomeFixed,
+                                    })}
+                                onChangeColor={(n, color) =>
+                                    void updateNote(n, { color })}
+                                onDelete={(n) => void deleteNote(n)}
+                            />
+                        </Suspense>
+                    )}
                 </section>
             )}
 

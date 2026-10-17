@@ -44,6 +44,16 @@ function enqueue<T>(key: string, fn: () => Promise<T>): Promise<T> {
     return next;
 }
 
+/** Serialize compound operations without sharing the underlying
+ * storage-key queue.
+ */
+export function withLocalLock<T>(
+    key: string,
+    operation: () => Promise<T>,
+): Promise<T> {
+    return enqueue(`lock:${key}`, operation);
+}
+
 export async function getLocal<T>(key: string): Promise<T | undefined> {
     return await enqueue(key, async () => {
         const db = await open();
@@ -66,6 +76,14 @@ export async function setLocal(key: string, value: unknown): Promise<void> {
         tx.objectStore(store).put(value, key);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        tx.onabort = () =>
+            reject(
+                tx.error ??
+                    new DOMException(
+                        "IndexedDB transaction aborted",
+                        "AbortError",
+                    ),
+            );
         await promise;
     });
 }
@@ -78,6 +96,14 @@ export async function deleteLocal(key: string): Promise<void> {
         tx.objectStore(store).delete(key);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        tx.onabort = () =>
+            reject(
+                tx.error ??
+                    new DOMException(
+                        "IndexedDB transaction aborted",
+                        "AbortError",
+                    ),
+            );
         await promise;
     });
 }

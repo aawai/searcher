@@ -878,13 +878,13 @@
 }
 
 /* 动态桌面场景选项：缩略图 + 名称/说明；缩略图只使用主题 token 着色。 */
-.settings-scene-options {
+[data-slot="radio-group"].settings-scene-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: var(--space-card-gap);
     width: 100%;
 }
-.settings-scene-option {
+[data-slot="radio-group-item"].settings-scene-option {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
@@ -892,7 +892,7 @@
     font-weight: inherit;
     gap: var(--space-control-gap);
 }
-.settings-scene-option .radio-circle {
+[data-slot="radio-group-item"].settings-scene-option .radio-circle {
     display: none;
 }
 .settings-scene-preview {

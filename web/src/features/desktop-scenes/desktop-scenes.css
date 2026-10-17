@@ -30,11 +30,11 @@
 }
 
 /* 标签隐藏：暂停并保留相位，恢复后从原位继续。 */
-.scene-host[data-paused="true"] * {
+.scene-host[data-scene][data-paused="true"] * {
     animation-play-state: paused;
 }
 
 /* 减少动态效果：保留完整静态场景，仅停掉全部运动。 */
-.scene-host[data-motion="reduced"] * {
+.scene-host[data-scene][data-motion="reduced"] * {
     animation: none;
 }
