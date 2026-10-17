@@ -1,0 +1,339 @@
+{
+  "phase": "focus",
+  "origin": "http://127.0.0.1:39457",
+  "startedAt": "2026-10-16T14:54:42.666Z",
+  "scenarios": [
+    {
+      "id": "768x1024-apps-retry-hit-test",
+      "checks": [
+        {
+          "name": "apps-request-was-really-aborted",
+          "pass": true,
+          "expected": ">0 GET /api/webapps aborts",
+          "actual": 2
+        },
+        {
+          "name": "retry-center-hit-test",
+          "pass": true,
+          "expected": true,
+          "actual": {
+            "x": 693.875,
+            "y": 188.96875,
+            "button": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--subtle button--sm\">重试</button>",
+            "hit": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [",
+            "receivesHit": true
+          }
+        },
+        {
+          "name": "actual-retry-click-fetches-success",
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/focus-screenshots/768x1024-apps-retry-hit-test-error.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/focus-screenshots/768x1024-apps-retry-hit-test-recovered.png"
+      ],
+      "metrics": {
+        "abortedGets": 2,
+        "hitTest": {
+          "x": 693.875,
+          "y": 188.96875,
+          "button": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--subtle button--sm\">重试</button>",
+          "hit": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [",
+          "receivesHit": true
+        },
+        "retryResponse": 200,
+        "workspace": {
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "document": {
+            "scrollWidth": 768,
+            "scrollHeight": 1024,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 352,
+              "y": 64,
+              "width": 400,
+              "height": 944
+            },
+            "presentation": "panel",
+            "zIndex": "45",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "64px",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 756,
+            "clientHeight": 756,
+            "scrollers": []
+          },
+          "grid": {
+            "box": {
+              "x": 369,
+              "y": 266,
+              "width": 366,
+              "height": 572
+            },
+            "scrollWidth": 366,
+            "clientWidth": 366,
+            "scrollHeight": 572,
+            "clientHeight": 572,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        }
+      }
+    },
+    {
+      "id": "real-auth-me-abort-retry-zen",
+      "checks": [
+        {
+          "name": "auth-me-network-abort-produced-real-banner",
+          "pass": true,
+          "expected": "visible connection banner after intercepted GET /api/auth/me",
+          "actual": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          }
+        },
+        {
+          "name": "recovered-network-and-authenticated-login",
+          "pass": true,
+          "expected": "one failed auth/me then real login after route restoration",
+          "actual": 1
+        },
+        {
+          "name": "presenter-top-respects-live-chrome-bottom",
+          "pass": true,
+          "expected": ">=117",
+          "actual": 117,
+          "detail": "chromeBottom=117"
+        },
+        {
+          "name": "retry-uses-real-auth-me-success",
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        },
+        {
+          "name": "banner-removal-restores-baseline-panel-top",
+          "pass": true,
+          "expected": 64,
+          "actual": 64
+        },
+        {
+          "name": "search-flow-anchor-tracks-banner-and-restores",
+          "pass": true,
+          "expected": {
+            "yShift": 53,
+            "x": 435,
+            "width": 504.203125
+          },
+          "actual": {
+            "yShift": 53,
+            "x": 435,
+            "width": 504.203125
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/focus-screenshots/real-auth-me-abort-retry-zen-banner.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/focus-screenshots/real-auth-me-abort-retry-zen-cleared.png"
+      ],
+      "metrics": {
+        "withBanner": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 953,
+            "scrollTop": 0
+          },
+          "chromeBottom": 117,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          },
+          "search": {
+            "x": 435,
+            "y": 356.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 1024,
+              "y": 117,
+              "width": 400,
+              "height": 767
+            },
+            "presentation": "panel",
+            "zIndex": "45",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "117px",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 648,
+            "clientHeight": 579,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 579,
+                "scrollHeight": 648,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 1041,
+              "y": 319,
+              "width": 366,
+              "height": 500
+            },
+            "scrollWidth": 366,
+            "clientWidth": 366,
+            "scrollHeight": 500,
+            "clientHeight": 500,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "afterRetry": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 1024,
+              "y": 64,
+              "width": 400,
+              "height": 820
+            },
+            "presentation": "panel",
+            "zIndex": "45",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "64px",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 648,
+            "clientHeight": 632,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 632,
+                "scrollHeight": 648,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 1041,
+              "y": 266,
+              "width": 366,
+              "height": 500
+            },
+            "scrollWidth": 366,
+            "clientWidth": 366,
+            "scrollHeight": 500,
+            "clientHeight": 500,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "login": "real auth/login form",
+        "abortedRequests": 1,
+        "canonicalBefore": null,
+        "canonicalAfter": null,
+        "canonicalBeforeFrame": null,
+        "canonicalAfterFrame": null
+      }
+    },
+    {
+      "id": "real-auth-me-abort-retry-widgets",
+      "checks": [
+        {
+          "name": "auth-me-network-abort-produced-real-banner",
+          "pass": true,
+          "expected": "visible connection banner after intercepted GET /api/auth/me",
+          "actual": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          }
+        },
+        {
+          "name": "recovered-network-and-authenticated-login",
+          "pass": true,
+          "expected": "one failed auth/me then real login after route restoration",
+          "actual": 1
+        }
+      ],
+      "screenshots": [],
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.workspace-header').first() to be visible\n\n    at openApps (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:134:53)\n    at async runAuthBannerScenario (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:377:9)\n    at async main (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:610:13)\n    at async file:///home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:635:1"
+    }
+  ],
+  "finishedAt": "2026-10-16T14:55:16.736Z",
+  "failures": [
+    "real-auth-me-abort-retry-widgets: scenario error: locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.workspace-header').first() to be visible\n\n    at openApps (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:134:53)\n    at async runAuthBannerScenario (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:377:9)\n    at async main (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:610:13)\n    at async file:///home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:635:1"
+  ],
+  "status": "fail"
+}

@@ -1,0 +1,46 @@
+{
+  "1440x900": {
+    "pageShellWidth": 1280,
+    "sidebarWidth": 260,
+    "readingLaneWidth": 900,
+    "assistantMsgWidth": 900,
+    "userMsgWidth": 760,
+    "composerWidth": 760,
+    "swatchColumns": 2,
+    "swatchHeightDiff": 0,
+    "motionLevelSegments": 4,
+    "motionLevelWidthDiff": 0
+  },
+  "askNavigatedControls": {
+    "pill": {
+      "display": "flex",
+      "height": "40px",
+      "borderRadius": "9999px"
+    },
+    "send": {
+      "display": "flex",
+      "borderRadius": "50%"
+    },
+    "trigger": {
+      "display": "flex",
+      "height": "36px"
+    }
+  },
+  "2048x1152": {
+    "pageShellWidth": 1679.359375,
+    "sidebarWidth": 260,
+    "readingLaneWidth": 1040,
+    "assistantMsgWidth": 1040,
+    "userMsgWidth": 920,
+    "composerWidth": 920,
+    "preWidth": 1040
+  },
+  "390x844": {
+    "settingsHorizontalOverflow": false,
+    "askHorizontalOverflow": false,
+    "mobileSendBtnSize": {
+      "width": 44,
+      "height": 44
+    }
+  }
+}

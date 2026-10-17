@@ -1,0 +1,101 @@
+{
+  "id": "768x1024-apps-retry-hit-test",
+  "checks": [
+    {
+      "name": "apps-request-was-really-aborted",
+      "pass": true,
+      "expected": ">0 GET /api/webapps aborts",
+      "actual": 2
+    },
+    {
+      "name": "retry-center-hit-test",
+      "pass": true,
+      "expected": true,
+      "actual": {
+        "x": 693.875,
+        "y": 188.96875,
+        "button": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--subtle button--sm\">重试</button>",
+        "hit": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [",
+        "receivesHit": true
+      }
+    },
+    {
+      "name": "actual-retry-click-fetches-success",
+      "pass": true,
+      "expected": 200,
+      "actual": 200
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/focus-screenshots/768x1024-apps-retry-hit-test-error.png",
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/focus-screenshots/768x1024-apps-retry-hit-test-recovered.png"
+  ],
+  "metrics": {
+    "abortedGets": 2,
+    "hitTest": {
+      "x": 693.875,
+      "y": 188.96875,
+      "button": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--subtle button--sm\">重试</button>",
+      "hit": "<button type=\"button\" tabindex=\"0\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [",
+      "receivesHit": true
+    },
+    "retryResponse": 200,
+    "workspace": {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "document": {
+        "scrollWidth": 768,
+        "scrollHeight": 1024,
+        "scrollTop": 0
+      },
+      "chromeBottom": 64,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 64
+      },
+      "banner": null,
+      "search": {
+        "x": 99,
+        "y": 305.796875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": {
+        "box": {
+          "x": 352,
+          "y": 64,
+          "width": 400,
+          "height": 944
+        },
+        "presentation": "panel",
+        "zIndex": "45",
+        "topInset": "calc(40px + 24px)",
+        "chromeBottomToken": "64px",
+        "dataConstrained": null,
+        "scrollTop": 0,
+        "scrollHeight": 756,
+        "clientHeight": 756,
+        "scrollers": []
+      },
+      "grid": {
+        "box": {
+          "x": 369,
+          "y": 266,
+          "width": 366,
+          "height": 572
+        },
+        "scrollWidth": 366,
+        "clientWidth": 366,
+        "scrollHeight": 572,
+        "clientHeight": 572,
+        "tiles": 96
+      },
+      "theme": "light",
+      "homeClass": "page-shell home home-zen"
+    }
+  }
+}

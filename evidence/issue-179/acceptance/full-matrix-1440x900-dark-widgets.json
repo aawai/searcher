@@ -1,0 +1,132 @@
+{
+  "id": "matrix-1440x900-dark-widgets",
+  "checks": [
+    {
+      "name": "search-flow-anchor-in-viewport",
+      "pass": true,
+      "expected": "search input within viewport",
+      "actual": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      }
+    },
+    {
+      "name": "document-horizontal-overflow",
+      "pass": true,
+      "expected": "<=1440",
+      "actual": 1440
+    },
+    {
+      "name": "expected-presenter",
+      "pass": true,
+      "expected": "window",
+      "actual": "window"
+    },
+    {
+      "name": "workspace-present",
+      "pass": true,
+      "expected": "visible workspace rectangle",
+      "actual": {
+        "x": 0,
+        "y": 174,
+        "width": 1440,
+        "height": 621
+      }
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-dark-widgets-home.png",
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-dark-widgets-apps.png"
+  ],
+  "metrics": {
+    "home": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 900,
+        "scrollTop": 0
+      },
+      "chromeBottom": 64,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 64
+      },
+      "banner": null,
+      "search": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": {
+        "box": {
+          "x": 0,
+          "y": 174,
+          "width": 1440,
+          "height": 621
+        },
+        "presentation": "window",
+        "zIndex": "1",
+        "topInset": "calc(40px + 24px)",
+        "chromeBottomToken": "",
+        "dataConstrained": null,
+        "scrollTop": 0,
+        "scrollHeight": 498,
+        "clientHeight": 498,
+        "scrollers": []
+      },
+      "grid": {
+        "box": {
+          "x": 17,
+          "y": 351,
+          "width": 1406,
+          "height": 140
+        },
+        "scrollWidth": 1406,
+        "clientWidth": 1406,
+        "scrollHeight": 140,
+        "clientHeight": 140,
+        "tiles": 96
+      },
+      "theme": "dark",
+      "homeClass": "page-shell home home-widgets"
+    },
+    "workspace": {
+      "box": {
+        "x": 0,
+        "y": 174,
+        "width": 1440,
+        "height": 621
+      },
+      "presentation": "window",
+      "zIndex": "1",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 498,
+      "clientHeight": 498,
+      "scrollers": []
+    },
+    "grid": {
+      "box": {
+        "x": 17,
+        "y": 351,
+        "width": 1406,
+        "height": 140
+      },
+      "scrollWidth": 1406,
+      "clientWidth": 1406,
+      "scrollHeight": 140,
+      "clientHeight": 140,
+      "tiles": 96
+    }
+  }
+}

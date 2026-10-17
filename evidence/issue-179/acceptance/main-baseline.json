@@ -1,0 +1,58 @@
+[
+  {
+    "label": "1440-zen",
+    "hero": {
+      "x": 0,
+      "y": 64,
+      "width": 1440,
+      "height": 288.1875
+    },
+    "search": {
+      "x": 360,
+      "y": 296.1875,
+      "width": 720,
+      "height": 56
+    },
+    "panel": null,
+    "overflow": 0
+  },
+  {
+    "label": "768-zen",
+    "hero": {
+      "x": 0,
+      "y": 64,
+      "width": 768,
+      "height": 290.796875
+    },
+    "search": {
+      "x": 24,
+      "y": 298.796875,
+      "width": 720,
+      "height": 56
+    },
+    "panel": {
+      "x": 352,
+      "y": 64,
+      "width": 400,
+      "height": 944
+    },
+    "overflow": 0
+  },
+  {
+    "label": "1440-widgets",
+    "hero": {
+      "x": 0,
+      "y": 64,
+      "width": 1440,
+      "height": 288.1875
+    },
+    "search": {
+      "x": 360,
+      "y": 296.1875,
+      "width": 720,
+      "height": 56
+    },
+    "panel": null,
+    "overflow": 0
+  }
+]

@@ -1,0 +1,105 @@
+{
+  "id": "short-screen-zen-panel-scroll-owner",
+  "checks": [
+    {
+      "name": "short-panel-content-overflows",
+      "pass": true,
+      "expected": ">clientHeight",
+      "actual": {
+        "clientHeight": 292,
+        "scrollHeight": 648,
+        "scrollTop": 0,
+        "box": {
+          "x": 353,
+          "y": 134,
+          "width": 398,
+          "height": 292
+        }
+      }
+    },
+    {
+      "name": "short-panel-wheel-scrolls-down",
+      "pass": true,
+      "expected": ">0",
+      "actual": 356
+    },
+    {
+      "name": "short-panel-wheel-scrolls-up",
+      "pass": true,
+      "expected": 0,
+      "actual": 0
+    },
+    {
+      "name": "unique-internal-vertical-scroll-owner",
+      "pass": true,
+      "expected": 1,
+      "actual": [
+        {
+          "className": "workspace-body",
+          "tagName": "DIV",
+          "clientHeight": 292,
+          "scrollHeight": 648,
+          "scrollTop": 0
+        }
+      ]
+    },
+    {
+      "name": "short-panel-does-not-scroll-document",
+      "pass": true,
+      "expected": 0,
+      "actual": 0
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/short-screen-zen-panel-scroll-owner.png"
+  ],
+  "metrics": {
+    "body": {
+      "clientHeight": 292,
+      "scrollHeight": 648,
+      "scrollTop": 0,
+      "box": {
+        "x": 353,
+        "y": 134,
+        "width": 398,
+        "height": 292
+      }
+    },
+    "scrollPoint": {
+      "x": 552,
+      "y": 280
+    },
+    "down": 356,
+    "up": 0,
+    "workspace": {
+      "box": {
+        "x": 352,
+        "y": 64,
+        "width": 400,
+        "height": 480
+      },
+      "presentation": "panel",
+      "zIndex": "45",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "64px",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 648,
+      "clientHeight": 292,
+      "scrollers": [
+        {
+          "className": "workspace-body",
+          "tagName": "DIV",
+          "clientHeight": 292,
+          "scrollHeight": 648,
+          "scrollTop": 0
+        }
+      ]
+    },
+    "document": {
+      "scrollWidth": 768,
+      "scrollHeight": 560,
+      "scrollTop": 0
+    }
+  }
+}

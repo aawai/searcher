@@ -1,0 +1,94 @@
+{
+  "id": "apps-grid-390-zen",
+  "checks": [
+    {
+      "name": "apps-grid-no-horizontal-overflow",
+      "pass": true,
+      "expected": "grid scrollWidth <= clientWidth + 1",
+      "actual": {
+        "scrollWidth": 356,
+        "clientWidth": 356
+      }
+    },
+    {
+      "name": "apps-grid-all-seeded-tiles-present",
+      "pass": true,
+      "expected": ">=20 visible or rendered app tiles",
+      "actual": 96
+    },
+    {
+      "name": "document-no-horizontal-overflow",
+      "pass": true,
+      "expected": "<=390",
+      "actual": 390
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-390-zen.png"
+  ],
+  "metrics": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "document": {
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "scrollTop": 0
+    },
+    "chromeBottom": 64,
+    "topbar": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 64
+    },
+    "banner": null,
+    "search": {
+      "x": 89,
+      "y": 253.796875,
+      "width": 230,
+      "height": 42
+    },
+    "workspace": {
+      "box": {
+        "x": 0,
+        "y": 101.28125,
+        "width": 390,
+        "height": 742.71875
+      },
+      "presentation": "sheet",
+      "zIndex": "50",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "0px",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 648,
+      "clientHeight": 544,
+      "scrollers": [
+        {
+          "className": "workspace-body",
+          "tagName": "DIV",
+          "clientHeight": 544,
+          "scrollHeight": 648,
+          "scrollTop": 0
+        }
+      ]
+    },
+    "grid": {
+      "box": {
+        "x": 17,
+        "y": 311.28125,
+        "width": 356,
+        "height": 500
+      },
+      "scrollWidth": 356,
+      "clientWidth": 356,
+      "scrollHeight": 500,
+      "clientHeight": 500,
+      "tiles": 96
+    },
+    "theme": "light",
+    "homeClass": "page-shell home home-zen"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "id": "boundary-768-widgets",
+  "checks": [
+    {
+      "name": "boundary-presenter",
+      "pass": true,
+      "expected": "window",
+      "actual": "window"
+    },
+    {
+      "name": "boundary-no-horizontal-overflow",
+      "pass": true,
+      "expected": "<=768",
+      "actual": 768
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-768-widgets.png"
+  ],
+  "metrics": {
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "document": {
+      "scrollWidth": 768,
+      "scrollHeight": 1024,
+      "scrollTop": 0
+    },
+    "chromeBottom": 64,
+    "topbar": {
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 64
+    },
+    "banner": null,
+    "search": {
+      "x": 99,
+      "y": 305.796875,
+      "width": 504.203125,
+      "height": 42
+    },
+    "workspace": {
+      "box": {
+        "x": 96.95999908447266,
+        "y": 199.55999755859375,
+        "width": 574.078125,
+        "height": 614.875
+      },
+      "presentation": "window",
+      "zIndex": "1",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 504,
+      "clientHeight": 492,
+      "scrollers": [
+        {
+          "className": "workspace-body",
+          "tagName": "DIV",
+          "clientHeight": 492,
+          "scrollHeight": 504,
+          "scrollTop": 0
+        }
+      ]
+    },
+    "grid": {
+      "box": {
+        "x": 113.95999908447266,
+        "y": 376.55999755859375,
+        "width": 540.078125,
+        "height": 356
+      },
+      "scrollWidth": 540,
+      "clientWidth": 540,
+      "scrollHeight": 356,
+      "clientHeight": 356,
+      "tiles": 96
+    },
+    "theme": "light",
+    "homeClass": "page-shell home home-widgets"
+  }
+}

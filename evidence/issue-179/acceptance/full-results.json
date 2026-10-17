@@ -1,0 +1,3634 @@
+{
+  "phase": "full",
+  "origin": "http://127.0.0.1:39457",
+  "startedAt": "2026-10-16T14:49:30.492Z",
+  "scenarios": [
+    {
+      "id": "matrix-390x844-light-zen",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=390",
+          "actual": 390
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "sheet",
+          "actual": "sheet"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-light-zen-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-light-zen-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "document": {
+            "scrollWidth": 390,
+            "scrollHeight": 844,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 356,
+            "height": 500
+          },
+          "scrollWidth": 356,
+          "clientWidth": 356,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-768x1024-light-zen",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=768",
+          "actual": 768
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "panel",
+          "actual": "panel"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 352,
+            "y": 64,
+            "width": 400,
+            "height": 944
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-light-zen-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-light-zen-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "document": {
+            "scrollWidth": 768,
+            "scrollHeight": 1024,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "workspace": {
+          "box": {
+            "x": 352,
+            "y": 64,
+            "width": 400,
+            "height": 944
+          },
+          "presentation": "panel",
+          "zIndex": "45",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "64px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 756,
+          "clientHeight": 756,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 369,
+            "y": 266,
+            "width": 366,
+            "height": 500
+          },
+          "scrollWidth": 366,
+          "clientWidth": 366,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-1440x900-light-zen",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=1440",
+          "actual": 1440
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "panel",
+          "actual": "panel"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 1024,
+            "y": 64,
+            "width": 400,
+            "height": 820
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-light-zen-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-light-zen-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "workspace": {
+          "box": {
+            "x": 1024,
+            "y": 64,
+            "width": 400,
+            "height": 820
+          },
+          "presentation": "panel",
+          "zIndex": "45",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "64px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 632,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 632,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 1041,
+            "y": 266,
+            "width": 366,
+            "height": 500
+          },
+          "scrollWidth": 366,
+          "clientWidth": 366,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-390x844-dark-zen",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=390",
+          "actual": 390
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "sheet",
+          "actual": "sheet"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-dark-zen-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-dark-zen-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "document": {
+            "scrollWidth": 390,
+            "scrollHeight": 844,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "dark",
+          "homeClass": "page-shell home home-zen"
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 356,
+            "height": 500
+          },
+          "scrollWidth": 356,
+          "clientWidth": 356,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-768x1024-dark-zen",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=768",
+          "actual": 768
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "panel",
+          "actual": "panel"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 352,
+            "y": 64,
+            "width": 400,
+            "height": 944
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-dark-zen-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-dark-zen-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "document": {
+            "scrollWidth": 768,
+            "scrollHeight": 1024,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "dark",
+          "homeClass": "page-shell home home-zen"
+        },
+        "workspace": {
+          "box": {
+            "x": 352,
+            "y": 64,
+            "width": 400,
+            "height": 944
+          },
+          "presentation": "panel",
+          "zIndex": "45",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "64px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 756,
+          "clientHeight": 756,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 369,
+            "y": 266,
+            "width": 366,
+            "height": 500
+          },
+          "scrollWidth": 366,
+          "clientWidth": 366,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-1440x900-dark-zen",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=1440",
+          "actual": 1440
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "panel",
+          "actual": "panel"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 1024,
+            "y": 64,
+            "width": 400,
+            "height": 820
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-dark-zen-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-dark-zen-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "dark",
+          "homeClass": "page-shell home home-zen"
+        },
+        "workspace": {
+          "box": {
+            "x": 1024,
+            "y": 64,
+            "width": 400,
+            "height": 820
+          },
+          "presentation": "panel",
+          "zIndex": "45",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "64px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 632,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 632,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 1041,
+            "y": 266,
+            "width": 366,
+            "height": 500
+          },
+          "scrollWidth": 366,
+          "clientWidth": 366,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-390x844-light-widgets",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=390",
+          "actual": 390
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "sheet",
+          "actual": "sheet"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-light-widgets-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-light-widgets-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "document": {
+            "scrollWidth": 390,
+            "scrollHeight": 844,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          },
+          "workspace": null,
+          "grid": null,
+          "theme": "light",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 356,
+            "height": 500
+          },
+          "scrollWidth": 356,
+          "clientWidth": 356,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-768x1024-light-widgets",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=768",
+          "actual": 768
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 96.95999908447266,
+            "y": 199.55999755859375,
+            "width": 574.078125,
+            "height": 614.875
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-light-widgets-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-light-widgets-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "document": {
+            "scrollWidth": 768,
+            "scrollHeight": 1024,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 96.95999908447266,
+              "y": 199.55999755859375,
+              "width": 574.078125,
+              "height": 614.875
+            },
+            "presentation": "window",
+            "zIndex": "1",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 504,
+            "clientHeight": 492,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 492,
+                "scrollHeight": 504,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 113.95999908447266,
+              "y": 376.55999755859375,
+              "width": 540.078125,
+              "height": 356
+            },
+            "scrollWidth": 540,
+            "clientWidth": 540,
+            "scrollHeight": 356,
+            "clientHeight": 356,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "workspace": {
+          "box": {
+            "x": 96.95999908447266,
+            "y": 199.55999755859375,
+            "width": 574.078125,
+            "height": 614.875
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 504,
+          "clientHeight": 492,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 492,
+              "scrollHeight": 504,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 113.95999908447266,
+            "y": 376.55999755859375,
+            "width": 540.078125,
+            "height": 356
+          },
+          "scrollWidth": 540,
+          "clientWidth": 540,
+          "scrollHeight": 356,
+          "clientHeight": 356,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-1440x900-light-widgets",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=1440",
+          "actual": 1440
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 60,
+            "y": 174,
+            "width": 1322,
+            "height": 621
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-light-widgets-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-light-widgets-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 60,
+              "y": 174,
+              "width": 1322,
+              "height": 621
+            },
+            "presentation": "window",
+            "zIndex": "1",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 498,
+            "clientHeight": 498,
+            "scrollers": []
+          },
+          "grid": {
+            "box": {
+              "x": 77,
+              "y": 351,
+              "width": 1288,
+              "height": 140
+            },
+            "scrollWidth": 1288,
+            "clientWidth": 1288,
+            "scrollHeight": 140,
+            "clientHeight": 140,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "workspace": {
+          "box": {
+            "x": 60,
+            "y": 174,
+            "width": 1322,
+            "height": 621
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 498,
+          "clientHeight": 498,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 77,
+            "y": 351,
+            "width": 1288,
+            "height": 140
+          },
+          "scrollWidth": 1288,
+          "clientWidth": 1288,
+          "scrollHeight": 140,
+          "clientHeight": 140,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-390x844-dark-widgets",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=390",
+          "actual": 390
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "sheet",
+          "actual": "sheet"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-dark-widgets-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-390x844-dark-widgets-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "document": {
+            "scrollWidth": 390,
+            "scrollHeight": 844,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 89,
+            "y": 253.796875,
+            "width": 230,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 0,
+              "y": 101.28125,
+              "width": 390,
+              "height": 742.71875
+            },
+            "presentation": "sheet",
+            "zIndex": "50",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "0px",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 648,
+            "clientHeight": 544,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 544,
+                "scrollHeight": 648,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 17,
+              "y": 311.28125,
+              "width": 356,
+              "height": 500
+            },
+            "scrollWidth": 356,
+            "clientWidth": 356,
+            "scrollHeight": 500,
+            "clientHeight": 500,
+            "tiles": 96
+          },
+          "theme": "dark",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 356,
+            "height": 500
+          },
+          "scrollWidth": 356,
+          "clientWidth": 356,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-768x1024-dark-widgets",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=768",
+          "actual": 768
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 96.95999908447266,
+            "y": 199.55999755859375,
+            "width": 574.078125,
+            "height": 614.875
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-dark-widgets-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-dark-widgets-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 768,
+            "height": 1024
+          },
+          "document": {
+            "scrollWidth": 768,
+            "scrollHeight": 1024,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 99,
+            "y": 305.796875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 96.95999908447266,
+              "y": 199.55999755859375,
+              "width": 574.078125,
+              "height": 614.875
+            },
+            "presentation": "window",
+            "zIndex": "1",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 504,
+            "clientHeight": 492,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 492,
+                "scrollHeight": 504,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 113.95999908447266,
+              "y": 376.55999755859375,
+              "width": 540.078125,
+              "height": 356
+            },
+            "scrollWidth": 540,
+            "clientWidth": 540,
+            "scrollHeight": 356,
+            "clientHeight": 356,
+            "tiles": 96
+          },
+          "theme": "dark",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "workspace": {
+          "box": {
+            "x": 96.95999908447266,
+            "y": 199.55999755859375,
+            "width": 574.078125,
+            "height": 614.875
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 504,
+          "clientHeight": 492,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 492,
+              "scrollHeight": 504,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 113.95999908447266,
+            "y": 376.55999755859375,
+            "width": 540.078125,
+            "height": 356
+          },
+          "scrollWidth": 540,
+          "clientWidth": 540,
+          "scrollHeight": 356,
+          "clientHeight": 356,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "matrix-1440x900-dark-widgets",
+      "checks": [
+        {
+          "name": "search-flow-anchor-in-viewport",
+          "pass": true,
+          "expected": "search input within viewport",
+          "actual": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "document-horizontal-overflow",
+          "pass": true,
+          "expected": "<=1440",
+          "actual": 1440
+        },
+        {
+          "name": "expected-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "workspace-present",
+          "pass": true,
+          "expected": "visible workspace rectangle",
+          "actual": {
+            "x": 0,
+            "y": 174,
+            "width": 1440,
+            "height": 621
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-dark-widgets-home.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-dark-widgets-apps.png"
+      ],
+      "metrics": {
+        "home": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 0,
+              "y": 174,
+              "width": 1440,
+              "height": 621
+            },
+            "presentation": "window",
+            "zIndex": "1",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 498,
+            "clientHeight": 498,
+            "scrollers": []
+          },
+          "grid": {
+            "box": {
+              "x": 17,
+              "y": 351,
+              "width": 1406,
+              "height": 140
+            },
+            "scrollWidth": 1406,
+            "clientWidth": 1406,
+            "scrollHeight": 140,
+            "clientHeight": 140,
+            "tiles": 96
+          },
+          "theme": "dark",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 174,
+            "width": 1440,
+            "height": 621
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 498,
+          "clientHeight": 498,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 351,
+            "width": 1406,
+            "height": 140
+          },
+          "scrollWidth": 1406,
+          "clientWidth": 1406,
+          "scrollHeight": 140,
+          "clientHeight": 140,
+          "tiles": 96
+        }
+      }
+    },
+    {
+      "id": "boundary-900-widgets",
+      "checks": [
+        {
+          "name": "boundary-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "boundary-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=900",
+          "actual": 900
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-900-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 900,
+          "height": 900
+        },
+        "document": {
+          "scrollWidth": 900,
+          "scrollHeight": 900,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 900,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 165,
+          "y": 288.671875,
+          "width": 504.203125,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 111.4800033569336,
+            "y": 182.1999969482422,
+            "width": 677.03125,
+            "height": 525.59375
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 432,
+          "clientHeight": 403,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 403,
+              "scrollHeight": 432,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 128.48001098632812,
+            "y": 359.20001220703125,
+            "width": 643.03125,
+            "height": 284
+          },
+          "scrollWidth": 643,
+          "clientWidth": 643,
+          "scrollHeight": 284,
+          "clientHeight": 284,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "boundary-767-zen",
+      "checks": [
+        {
+          "name": "boundary-presenter",
+          "pass": true,
+          "expected": "sheet",
+          "actual": "sheet"
+        },
+        {
+          "name": "boundary-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=767",
+          "actual": 767
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-767-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 767,
+          "height": 1024
+        },
+        "document": {
+          "scrollWidth": 767,
+          "scrollHeight": 1024,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 767,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 98.5,
+          "y": 305.796875,
+          "width": 504.203125,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 204,
+            "width": 767,
+            "height": 820
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 621,
+          "clientHeight": 621,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 414,
+            "width": 733,
+            "height": 284
+          },
+          "scrollWidth": 733,
+          "clientWidth": 733,
+          "scrollHeight": 284,
+          "clientHeight": 284,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "boundary-768-widgets",
+      "checks": [
+        {
+          "name": "boundary-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "boundary-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=768",
+          "actual": 768
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-768-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "document": {
+          "scrollWidth": 768,
+          "scrollHeight": 1024,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 99,
+          "y": 305.796875,
+          "width": 504.203125,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 96.95999908447266,
+            "y": 199.55999755859375,
+            "width": 574.078125,
+            "height": 614.875
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 504,
+          "clientHeight": 492,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 492,
+              "scrollHeight": 504,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 113.95999908447266,
+            "y": 376.55999755859375,
+            "width": 540.078125,
+            "height": 356
+          },
+          "scrollWidth": 540,
+          "clientWidth": 540,
+          "scrollHeight": 356,
+          "clientHeight": 356,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "boundary-1023-widgets",
+      "checks": [
+        {
+          "name": "boundary-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "boundary-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=1023",
+          "actual": 1023
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-1023-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 1023,
+          "height": 1024
+        },
+        "document": {
+          "scrollWidth": 1023,
+          "scrollHeight": 1024,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 1023,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 226.5,
+          "y": 311,
+          "width": 504.203125,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 171.5,
+            "y": 199.55999755859375,
+            "width": 680,
+            "height": 614.875
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 492,
+          "clientHeight": 492,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 188.5,
+            "y": 376.55999755859375,
+            "width": 646,
+            "height": 284
+          },
+          "scrollWidth": 646,
+          "clientWidth": 646,
+          "scrollHeight": 284,
+          "clientHeight": 284,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "boundary-1024-widgets",
+      "checks": [
+        {
+          "name": "boundary-presenter",
+          "pass": true,
+          "expected": "window",
+          "actual": "window"
+        },
+        {
+          "name": "boundary-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=1024",
+          "actual": 1024
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-1024-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 1024
+        },
+        "document": {
+          "scrollWidth": 1024,
+          "scrollHeight": 1024,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 227,
+          "y": 311.03125,
+          "width": 504.203125,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 157,
+            "y": 183,
+            "width": 711,
+            "height": 647
+          },
+          "presentation": "window",
+          "zIndex": "1",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 524,
+          "clientHeight": 524,
+          "scrollers": []
+        },
+        "grid": {
+          "box": {
+            "x": 174,
+            "y": 360,
+            "width": 677,
+            "height": 284
+          },
+          "scrollWidth": 677,
+          "clientWidth": 677,
+          "scrollHeight": 284,
+          "clientHeight": 284,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "apps-grid-320-zen",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 286,
+            "clientWidth": 286
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=320",
+          "actual": 320
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-320-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 320,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 320,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 160,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 320,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 720,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 720,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 286,
+            "height": 572
+          },
+          "scrollWidth": 286,
+          "clientWidth": 286,
+          "scrollHeight": 572,
+          "clientHeight": 572,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "apps-grid-360-zen",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 326,
+            "clientWidth": 326
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=360",
+          "actual": 360
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-360-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 360,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 360,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 200,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 360,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 720,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 720,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 326,
+            "height": 572
+          },
+          "scrollWidth": 326,
+          "clientWidth": 326,
+          "scrollHeight": 572,
+          "clientHeight": 572,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "apps-grid-375-zen",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 341,
+            "clientWidth": 341
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=375",
+          "actual": 375
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-375-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 375,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 375,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 215,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 375,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 720,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 720,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 341,
+            "height": 572
+          },
+          "scrollWidth": 341,
+          "clientWidth": 341,
+          "scrollHeight": 572,
+          "clientHeight": 572,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "apps-grid-390-zen",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 356,
+            "clientWidth": 356
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=390",
+          "actual": 390
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-390-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 390,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 230,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 356,
+            "height": 500
+          },
+          "scrollWidth": 356,
+          "clientWidth": 356,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "apps-grid-414-zen",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 380,
+            "clientWidth": 380
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=414",
+          "actual": 414
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-414-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 414,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 414,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 414,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 254,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 414,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 380,
+            "height": 500
+          },
+          "scrollWidth": 380,
+          "clientWidth": 380,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "apps-grid-430-zen",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 396,
+            "clientWidth": 396
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=430",
+          "actual": 430
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-430-zen.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 430,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 430,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 270,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 430,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 396,
+            "height": 500
+          },
+          "scrollWidth": 396,
+          "clientWidth": 396,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-zen"
+      }
+    },
+    {
+      "id": "apps-grid-320-widgets",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 286,
+            "clientWidth": 286
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=320",
+          "actual": 320
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-320-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 320,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 320,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 160,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 320,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 720,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 720,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 286,
+            "height": 572
+          },
+          "scrollWidth": 286,
+          "clientWidth": 286,
+          "scrollHeight": 572,
+          "clientHeight": 572,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "apps-grid-360-widgets",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 326,
+            "clientWidth": 326
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=360",
+          "actual": 360
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-360-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 360,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 360,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 200,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 360,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 720,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 720,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 326,
+            "height": 572
+          },
+          "scrollWidth": 326,
+          "clientWidth": 326,
+          "scrollHeight": 572,
+          "clientHeight": 572,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "apps-grid-375-widgets",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 341,
+            "clientWidth": 341
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=375",
+          "actual": 375
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-375-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 375,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 375,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 215,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 375,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 720,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 720,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 341,
+            "height": 572
+          },
+          "scrollWidth": 341,
+          "clientWidth": 341,
+          "scrollHeight": 572,
+          "clientHeight": 572,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "apps-grid-390-widgets",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 356,
+            "clientWidth": 356
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=390",
+          "actual": 390
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-390-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 390,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 230,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 390,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 356,
+            "height": 500
+          },
+          "scrollWidth": 356,
+          "clientWidth": 356,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "apps-grid-414-widgets",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 380,
+            "clientWidth": 380
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=414",
+          "actual": 414
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-414-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 414,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 414,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 414,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 254,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 414,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 380,
+            "height": 500
+          },
+          "scrollWidth": 380,
+          "clientWidth": 380,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "apps-grid-430-widgets",
+      "checks": [
+        {
+          "name": "apps-grid-no-horizontal-overflow",
+          "pass": true,
+          "expected": "grid scrollWidth <= clientWidth + 1",
+          "actual": {
+            "scrollWidth": 396,
+            "clientWidth": 396
+          }
+        },
+        {
+          "name": "apps-grid-all-seeded-tiles-present",
+          "pass": true,
+          "expected": ">=20 visible or rendered app tiles",
+          "actual": 96
+        },
+        {
+          "name": "document-no-horizontal-overflow",
+          "pass": true,
+          "expected": "<=430",
+          "actual": 430
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/apps-grid-430-widgets.png"
+      ],
+      "metrics": {
+        "viewport": {
+          "width": 430,
+          "height": 844
+        },
+        "document": {
+          "scrollWidth": 430,
+          "scrollHeight": 844,
+          "scrollTop": 0
+        },
+        "chromeBottom": 64,
+        "topbar": {
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 64
+        },
+        "banner": null,
+        "search": {
+          "x": 89,
+          "y": 253.796875,
+          "width": 270,
+          "height": 42
+        },
+        "workspace": {
+          "box": {
+            "x": 0,
+            "y": 101.28125,
+            "width": 430,
+            "height": 742.71875
+          },
+          "presentation": "sheet",
+          "zIndex": "50",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "0px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 544,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 544,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "grid": {
+          "box": {
+            "x": 17,
+            "y": 311.28125,
+            "width": 396,
+            "height": 500
+          },
+          "scrollWidth": 396,
+          "clientWidth": 396,
+          "scrollHeight": 500,
+          "clientHeight": 500,
+          "tiles": 96
+        },
+        "theme": "light",
+        "homeClass": "page-shell home home-widgets"
+      }
+    },
+    {
+      "id": "short-screen-zen-panel-scroll-owner",
+      "checks": [
+        {
+          "name": "short-panel-content-overflows",
+          "pass": true,
+          "expected": ">clientHeight",
+          "actual": {
+            "clientHeight": 292,
+            "scrollHeight": 648,
+            "scrollTop": 0,
+            "box": {
+              "x": 353,
+              "y": 134,
+              "width": 398,
+              "height": 292
+            }
+          }
+        },
+        {
+          "name": "short-panel-wheel-scrolls-down",
+          "pass": true,
+          "expected": ">0",
+          "actual": 356
+        },
+        {
+          "name": "short-panel-wheel-scrolls-up",
+          "pass": true,
+          "expected": 0,
+          "actual": 0
+        },
+        {
+          "name": "unique-internal-vertical-scroll-owner",
+          "pass": true,
+          "expected": 1,
+          "actual": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 292,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        {
+          "name": "short-panel-does-not-scroll-document",
+          "pass": true,
+          "expected": 0,
+          "actual": 0
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/short-screen-zen-panel-scroll-owner.png"
+      ],
+      "metrics": {
+        "body": {
+          "clientHeight": 292,
+          "scrollHeight": 648,
+          "scrollTop": 0,
+          "box": {
+            "x": 353,
+            "y": 134,
+            "width": 398,
+            "height": 292
+          }
+        },
+        "scrollPoint": {
+          "x": 552,
+          "y": 280
+        },
+        "down": 356,
+        "up": 0,
+        "workspace": {
+          "box": {
+            "x": 352,
+            "y": 64,
+            "width": 400,
+            "height": 480
+          },
+          "presentation": "panel",
+          "zIndex": "45",
+          "topInset": "calc(40px + 24px)",
+          "chromeBottomToken": "64px",
+          "dataConstrained": null,
+          "scrollTop": 0,
+          "scrollHeight": 648,
+          "clientHeight": 292,
+          "scrollers": [
+            {
+              "className": "workspace-body",
+              "tagName": "DIV",
+              "clientHeight": 292,
+              "scrollHeight": 648,
+              "scrollTop": 0
+            }
+          ]
+        },
+        "document": {
+          "scrollWidth": 768,
+          "scrollHeight": 560,
+          "scrollTop": 0
+        }
+      }
+    },
+    {
+      "id": "768x1024-apps-retry-hit-test",
+      "checks": [],
+      "screenshots": [],
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.launcher-grid--workspace, .launcher-grid').first() to be visible\n\n    at openApps (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:133:77)\n    at async runAppsRetry (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:553:9)\n    at async main (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:603:13)\n    at async file:///home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:621:1"
+    },
+    {
+      "id": "real-auth-me-abort-retry-zen",
+      "checks": [
+        {
+          "name": "auth-me-network-abort-produced-real-banner",
+          "pass": true,
+          "expected": "visible connection banner after intercepted GET /api/auth/me",
+          "actual": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          }
+        },
+        {
+          "name": "recovered-network-and-authenticated-login",
+          "pass": true,
+          "expected": "one failed auth/me then real login after route restoration",
+          "actual": 1
+        },
+        {
+          "name": "presenter-top-respects-live-chrome-bottom",
+          "pass": true,
+          "expected": ">=117",
+          "actual": 117,
+          "detail": "chromeBottom=117"
+        },
+        {
+          "name": "retry-uses-real-auth-me-success",
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        },
+        {
+          "name": "banner-removal-restores-baseline-panel-top",
+          "pass": true,
+          "expected": 64,
+          "actual": 64
+        },
+        {
+          "name": "search-flow-anchor-remains-stable-after-banner-retry",
+          "pass": false,
+          "expected": {
+            "x": 435,
+            "y": 356.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "actual": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/real-auth-me-abort-retry-zen-banner.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/real-auth-me-abort-retry-zen-cleared.png"
+      ],
+      "metrics": {
+        "withBanner": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 953,
+            "scrollTop": 0
+          },
+          "chromeBottom": 117,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          },
+          "search": {
+            "x": 435,
+            "y": 356.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 1024,
+              "y": 117,
+              "width": 400,
+              "height": 767
+            },
+            "presentation": "panel",
+            "zIndex": "45",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "117px",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 648,
+            "clientHeight": 579,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 579,
+                "scrollHeight": 648,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 1041,
+              "y": 319,
+              "width": 366,
+              "height": 500
+            },
+            "scrollWidth": 366,
+            "clientWidth": 366,
+            "scrollHeight": 500,
+            "clientHeight": 500,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "afterRetry": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 1024,
+              "y": 64,
+              "width": 400,
+              "height": 820
+            },
+            "presentation": "panel",
+            "zIndex": "45",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "64px",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 648,
+            "clientHeight": 632,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 632,
+                "scrollHeight": 648,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 1041,
+              "y": 266,
+              "width": 366,
+              "height": 500
+            },
+            "scrollWidth": 366,
+            "clientWidth": 366,
+            "scrollHeight": 500,
+            "clientHeight": 500,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-zen"
+        },
+        "login": "real auth/login form",
+        "abortedRequests": 1,
+        "canonicalBefore": null,
+        "canonicalAfter": null,
+        "canonicalBeforeFrame": null,
+        "canonicalAfterFrame": null
+      }
+    },
+    {
+      "id": "real-auth-me-abort-retry-widgets",
+      "checks": [
+        {
+          "name": "auth-me-network-abort-produced-real-banner",
+          "pass": true,
+          "expected": "visible connection banner after intercepted GET /api/auth/me",
+          "actual": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          }
+        },
+        {
+          "name": "recovered-network-and-authenticated-login",
+          "pass": true,
+          "expected": "one failed auth/me then real login after route restoration",
+          "actual": 1
+        },
+        {
+          "name": "widgets-canonical-layout-present",
+          "pass": true,
+          "expected": "persisted canonical desktop layout",
+          "actual": {
+            "version": 4,
+            "windows": [
+              {
+                "id": "apps",
+                "kind": "apps",
+                "entityId": null,
+                "frame": {
+                  "x": 0.2361111111111111,
+                  "y": 0.2311111111111111,
+                  "width": 0.5277777777777778,
+                  "height": 0.5866666666666667
+                },
+                "restoreFrame": null,
+                "mode": "normal",
+                "zOrder": 1,
+                "snap": null
+              }
+            ],
+            "activeId": "apps"
+          }
+        },
+        {
+          "name": "widgets-app-frame-present",
+          "pass": true,
+          "expected": "canonical Apps frame in persisted Widgets layout",
+          "actual": {
+            "x": 0.2361111111111111,
+            "y": 0.2311111111111111,
+            "width": 0.5277777777777778,
+            "height": 0.5866666666666667
+          }
+        },
+        {
+          "name": "retry-uses-real-auth-me-success",
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        },
+        {
+          "name": "search-flow-anchor-remains-stable-after-banner-retry",
+          "pass": false,
+          "expected": {
+            "x": 435,
+            "y": 356.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "actual": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          }
+        },
+        {
+          "name": "widgets-canonical-frame-not-written-by-banner",
+          "pass": true,
+          "expected": {
+            "x": 0.2361111111111111,
+            "y": 0.2311111111111111,
+            "width": 0.5277777777777778,
+            "height": 0.5866666666666667
+          },
+          "actual": {
+            "x": 0.2361111111111111,
+            "y": 0.2311111111111111,
+            "width": 0.5277777777777778,
+            "height": 0.5866666666666667
+          }
+        }
+      ],
+      "screenshots": [
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/real-auth-me-abort-retry-widgets-banner.png",
+        "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/real-auth-me-abort-retry-widgets-cleared.png"
+      ],
+      "metrics": {
+        "withBanner": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 953,
+            "scrollTop": 0
+          },
+          "chromeBottom": 117,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": {
+            "x": 0,
+            "y": 64,
+            "width": 1440,
+            "height": 53
+          },
+          "search": {
+            "x": 435,
+            "y": 356.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 340,
+              "y": 208,
+              "width": 760,
+              "height": 528
+            },
+            "presentation": "window",
+            "zIndex": "1",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 432,
+            "clientHeight": 405,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 405,
+                "scrollHeight": 432,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 357,
+              "y": 385,
+              "width": 726,
+              "height": 284
+            },
+            "scrollWidth": 726,
+            "clientWidth": 726,
+            "scrollHeight": 284,
+            "clientHeight": 284,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "afterRetry": {
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "document": {
+            "scrollWidth": 1440,
+            "scrollHeight": 900,
+            "scrollTop": 0
+          },
+          "chromeBottom": 64,
+          "topbar": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 64
+          },
+          "banner": null,
+          "search": {
+            "x": 435,
+            "y": 303.1875,
+            "width": 504.203125,
+            "height": 42
+          },
+          "workspace": {
+            "box": {
+              "x": 340,
+              "y": 208,
+              "width": 760,
+              "height": 528
+            },
+            "presentation": "window",
+            "zIndex": "1",
+            "topInset": "calc(40px + 24px)",
+            "chromeBottomToken": "",
+            "dataConstrained": null,
+            "scrollTop": 0,
+            "scrollHeight": 432,
+            "clientHeight": 405,
+            "scrollers": [
+              {
+                "className": "workspace-body",
+                "tagName": "DIV",
+                "clientHeight": 405,
+                "scrollHeight": 432,
+                "scrollTop": 0
+              }
+            ]
+          },
+          "grid": {
+            "box": {
+              "x": 357,
+              "y": 385,
+              "width": 726,
+              "height": 284
+            },
+            "scrollWidth": 726,
+            "clientWidth": 726,
+            "scrollHeight": 284,
+            "clientHeight": 284,
+            "tiles": 96
+          },
+          "theme": "light",
+          "homeClass": "page-shell home home-widgets"
+        },
+        "login": "real auth/login form",
+        "abortedRequests": 1,
+        "canonicalBefore": {
+          "userId": "f2f92632-b66a-4a21-8eec-c790201b219f",
+          "layout": {
+            "version": 4,
+            "windows": [
+              {
+                "id": "apps",
+                "kind": "apps",
+                "entityId": null,
+                "frame": {
+                  "x": 0.2361111111111111,
+                  "y": 0.2311111111111111,
+                  "width": 0.5277777777777778,
+                  "height": 0.5866666666666667
+                },
+                "restoreFrame": null,
+                "mode": "normal",
+                "zOrder": 1,
+                "snap": null
+              }
+            ],
+            "activeId": "apps"
+          }
+        },
+        "canonicalAfter": {
+          "userId": "f2f92632-b66a-4a21-8eec-c790201b219f",
+          "layout": {
+            "version": 4,
+            "windows": [
+              {
+                "id": "apps",
+                "kind": "apps",
+                "entityId": null,
+                "frame": {
+                  "x": 0.2361111111111111,
+                  "y": 0.2311111111111111,
+                  "width": 0.5277777777777778,
+                  "height": 0.5866666666666667
+                },
+                "restoreFrame": null,
+                "mode": "normal",
+                "zOrder": 1,
+                "snap": null
+              }
+            ],
+            "activeId": "apps"
+          }
+        },
+        "canonicalBeforeFrame": {
+          "x": 0.2361111111111111,
+          "y": 0.2311111111111111,
+          "width": 0.5277777777777778,
+          "height": 0.5866666666666667
+        },
+        "canonicalAfterFrame": {
+          "x": 0.2361111111111111,
+          "y": 0.2311111111111111,
+          "width": 0.5277777777777778,
+          "height": 0.5866666666666667
+        }
+      }
+    }
+  ],
+  "finishedAt": "2026-10-16T14:50:24.498Z",
+  "failures": [
+    "768x1024-apps-retry-hit-test: scenario error: locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.launcher-grid--workspace, .launcher-grid').first() to be visible\n\n    at openApps (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:133:77)\n    at async runAppsRetry (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:553:9)\n    at async main (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:603:13)\n    at async file:///home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:621:1",
+    "real-auth-me-abort-retry-zen: search-flow-anchor-remains-stable-after-banner-retry",
+    "real-auth-me-abort-retry-widgets: search-flow-anchor-remains-stable-after-banner-retry"
+  ],
+  "status": "fail"
+}

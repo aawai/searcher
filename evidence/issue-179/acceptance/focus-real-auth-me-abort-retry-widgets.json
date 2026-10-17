@@ -1,0 +1,24 @@
+{
+  "id": "real-auth-me-abort-retry-widgets",
+  "checks": [
+    {
+      "name": "auth-me-network-abort-produced-real-banner",
+      "pass": true,
+      "expected": "visible connection banner after intercepted GET /api/auth/me",
+      "actual": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 53
+      }
+    },
+    {
+      "name": "recovered-network-and-authenticated-login",
+      "pass": true,
+      "expected": "one failed auth/me then real login after route restoration",
+      "actual": 1
+    }
+  ],
+  "screenshots": [],
+  "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.workspace-header').first() to be visible\n\n    at openApps (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:134:53)\n    at async runAuthBannerScenario (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:377:9)\n    at async main (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:610:13)\n    at async file:///home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:635:1"
+}

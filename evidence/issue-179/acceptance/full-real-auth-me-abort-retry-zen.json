@@ -1,0 +1,204 @@
+{
+  "id": "real-auth-me-abort-retry-zen",
+  "checks": [
+    {
+      "name": "auth-me-network-abort-produced-real-banner",
+      "pass": true,
+      "expected": "visible connection banner after intercepted GET /api/auth/me",
+      "actual": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 53
+      }
+    },
+    {
+      "name": "recovered-network-and-authenticated-login",
+      "pass": true,
+      "expected": "one failed auth/me then real login after route restoration",
+      "actual": 1
+    },
+    {
+      "name": "presenter-top-respects-live-chrome-bottom",
+      "pass": true,
+      "expected": ">=117",
+      "actual": 117,
+      "detail": "chromeBottom=117"
+    },
+    {
+      "name": "retry-uses-real-auth-me-success",
+      "pass": true,
+      "expected": 200,
+      "actual": 200
+    },
+    {
+      "name": "banner-removal-restores-baseline-panel-top",
+      "pass": true,
+      "expected": 64,
+      "actual": 64
+    },
+    {
+      "name": "search-flow-anchor-remains-stable-after-banner-retry",
+      "pass": false,
+      "expected": {
+        "x": 435,
+        "y": 356.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "actual": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      }
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/real-auth-me-abort-retry-zen-banner.png",
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/real-auth-me-abort-retry-zen-cleared.png"
+  ],
+  "metrics": {
+    "withBanner": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 953,
+        "scrollTop": 0
+      },
+      "chromeBottom": 117,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 64
+      },
+      "banner": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 53
+      },
+      "search": {
+        "x": 435,
+        "y": 356.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": {
+        "box": {
+          "x": 1024,
+          "y": 117,
+          "width": 400,
+          "height": 767
+        },
+        "presentation": "panel",
+        "zIndex": "45",
+        "topInset": "calc(40px + 24px)",
+        "chromeBottomToken": "117px",
+        "dataConstrained": null,
+        "scrollTop": 0,
+        "scrollHeight": 648,
+        "clientHeight": 579,
+        "scrollers": [
+          {
+            "className": "workspace-body",
+            "tagName": "DIV",
+            "clientHeight": 579,
+            "scrollHeight": 648,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "grid": {
+        "box": {
+          "x": 1041,
+          "y": 319,
+          "width": 366,
+          "height": 500
+        },
+        "scrollWidth": 366,
+        "clientWidth": 366,
+        "scrollHeight": 500,
+        "clientHeight": 500,
+        "tiles": 96
+      },
+      "theme": "light",
+      "homeClass": "page-shell home home-zen"
+    },
+    "afterRetry": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 900,
+        "scrollTop": 0
+      },
+      "chromeBottom": 64,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 64
+      },
+      "banner": null,
+      "search": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": {
+        "box": {
+          "x": 1024,
+          "y": 64,
+          "width": 400,
+          "height": 820
+        },
+        "presentation": "panel",
+        "zIndex": "45",
+        "topInset": "calc(40px + 24px)",
+        "chromeBottomToken": "64px",
+        "dataConstrained": null,
+        "scrollTop": 0,
+        "scrollHeight": 648,
+        "clientHeight": 632,
+        "scrollers": [
+          {
+            "className": "workspace-body",
+            "tagName": "DIV",
+            "clientHeight": 632,
+            "scrollHeight": 648,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "grid": {
+        "box": {
+          "x": 1041,
+          "y": 266,
+          "width": 366,
+          "height": 500
+        },
+        "scrollWidth": 366,
+        "clientWidth": 366,
+        "scrollHeight": 500,
+        "clientHeight": 500,
+        "tiles": 96
+      },
+      "theme": "light",
+      "homeClass": "page-shell home home-zen"
+    },
+    "login": "real auth/login form",
+    "abortedRequests": 1,
+    "canonicalBefore": null,
+    "canonicalAfter": null,
+    "canonicalBeforeFrame": null,
+    "canonicalAfterFrame": null
+  }
+}

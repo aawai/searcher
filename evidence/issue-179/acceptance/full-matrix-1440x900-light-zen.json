@@ -1,0 +1,112 @@
+{
+  "id": "matrix-1440x900-light-zen",
+  "checks": [
+    {
+      "name": "search-flow-anchor-in-viewport",
+      "pass": true,
+      "expected": "search input within viewport",
+      "actual": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      }
+    },
+    {
+      "name": "document-horizontal-overflow",
+      "pass": true,
+      "expected": "<=1440",
+      "actual": 1440
+    },
+    {
+      "name": "expected-presenter",
+      "pass": true,
+      "expected": "panel",
+      "actual": "panel"
+    },
+    {
+      "name": "workspace-present",
+      "pass": true,
+      "expected": "visible workspace rectangle",
+      "actual": {
+        "x": 1024,
+        "y": 64,
+        "width": 400,
+        "height": 820
+      }
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-light-zen-home.png",
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-1440x900-light-zen-apps.png"
+  ],
+  "metrics": {
+    "home": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 900,
+        "scrollTop": 0
+      },
+      "chromeBottom": 64,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 64
+      },
+      "banner": null,
+      "search": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": null,
+      "grid": null,
+      "theme": "light",
+      "homeClass": "page-shell home home-zen"
+    },
+    "workspace": {
+      "box": {
+        "x": 1024,
+        "y": 64,
+        "width": 400,
+        "height": 820
+      },
+      "presentation": "panel",
+      "zIndex": "45",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "64px",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 648,
+      "clientHeight": 632,
+      "scrollers": [
+        {
+          "className": "workspace-body",
+          "tagName": "DIV",
+          "clientHeight": 632,
+          "scrollHeight": 648,
+          "scrollTop": 0
+        }
+      ]
+    },
+    "grid": {
+      "box": {
+        "x": 1041,
+        "y": 266,
+        "width": 366,
+        "height": 500
+      },
+      "scrollWidth": 366,
+      "clientWidth": 366,
+      "scrollHeight": 500,
+      "clientHeight": 500,
+      "tiles": 96
+    }
+  }
+}

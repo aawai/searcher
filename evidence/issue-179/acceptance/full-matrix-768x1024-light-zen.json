@@ -1,0 +1,104 @@
+{
+  "id": "matrix-768x1024-light-zen",
+  "checks": [
+    {
+      "name": "search-flow-anchor-in-viewport",
+      "pass": true,
+      "expected": "search input within viewport",
+      "actual": {
+        "x": 99,
+        "y": 305.796875,
+        "width": 504.203125,
+        "height": 42
+      }
+    },
+    {
+      "name": "document-horizontal-overflow",
+      "pass": true,
+      "expected": "<=768",
+      "actual": 768
+    },
+    {
+      "name": "expected-presenter",
+      "pass": true,
+      "expected": "panel",
+      "actual": "panel"
+    },
+    {
+      "name": "workspace-present",
+      "pass": true,
+      "expected": "visible workspace rectangle",
+      "actual": {
+        "x": 352,
+        "y": 64,
+        "width": 400,
+        "height": 944
+      }
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-light-zen-home.png",
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/matrix-768x1024-light-zen-apps.png"
+  ],
+  "metrics": {
+    "home": {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "document": {
+        "scrollWidth": 768,
+        "scrollHeight": 1024,
+        "scrollTop": 0
+      },
+      "chromeBottom": 64,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 64
+      },
+      "banner": null,
+      "search": {
+        "x": 99,
+        "y": 305.796875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": null,
+      "grid": null,
+      "theme": "light",
+      "homeClass": "page-shell home home-zen"
+    },
+    "workspace": {
+      "box": {
+        "x": 352,
+        "y": 64,
+        "width": 400,
+        "height": 944
+      },
+      "presentation": "panel",
+      "zIndex": "45",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "64px",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 756,
+      "clientHeight": 756,
+      "scrollers": []
+    },
+    "grid": {
+      "box": {
+        "x": 369,
+        "y": 266,
+        "width": 366,
+        "height": 500
+      },
+      "scrollWidth": 366,
+      "clientWidth": 366,
+      "scrollHeight": 500,
+      "clientHeight": 500,
+      "tiles": 96
+    }
+  }
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="7" failures="0" errors="0" time="7.064">
+    <testsuite name="./web/e2e/apps-interactions.test.ts" tests="7" disabled="0" errors="0" failures="0">
+        <testcase name="apps session, modal undo and visible management contracts #141" classname="./web/e2e/apps-interactions.test.ts" time="7.058" line="29" col="6">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; visible folder creation, arranging exit and layered Escape" classname="./web/e2e/apps-interactions.test.ts" time="1.286" line="59" col="22">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; all draft fields, icon input and real upload survive host replacement" classname="./web/e2e/apps-interactions.test.ts" time="1.814" line="172" col="22">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; cross-folder search context and icon shortcut versus normal edit" classname="./web/e2e/apps-interactions.test.ts" time="0.956" line="349" col="22">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; mobile modal undo is a visible, hittable normal layout row" classname="./web/e2e/apps-interactions.test.ts" time="0.573" line="433" col="17">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; moving undo between modal and global hosts preserves its deadline" classname="./web/e2e/apps-interactions.test.ts" time="0.283" line="471" col="17">
+        </testcase>
+        <testcase name="apps session, modal undo and visible management contracts #141 &gt; restore failure remains inside the active modal and never restores falsely" classname="./web/e2e/apps-interactions.test.ts" time="0.608" line="521" col="17">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="1" failures="0" errors="0" time="2.395">
+    <testsuite name="./web/e2e/workspace-chrome-inset.test.ts" tests="1" disabled="0" errors="0" failures="0">
+        <testcase name="Zen panel follows shared chrome and preserves focused scroll bounds" classname="./web/e2e/workspace-chrome-inset.test.ts" time="2.390" line="12" col="6">
+        </testcase>
+    </testsuite>
+</testsuites>

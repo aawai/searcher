@@ -1,0 +1,77 @@
+{
+  "id": "boundary-767-zen",
+  "checks": [
+    {
+      "name": "boundary-presenter",
+      "pass": true,
+      "expected": "sheet",
+      "actual": "sheet"
+    },
+    {
+      "name": "boundary-no-horizontal-overflow",
+      "pass": true,
+      "expected": "<=767",
+      "actual": 767
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/full-screenshots/boundary-767-zen.png"
+  ],
+  "metrics": {
+    "viewport": {
+      "width": 767,
+      "height": 1024
+    },
+    "document": {
+      "scrollWidth": 767,
+      "scrollHeight": 1024,
+      "scrollTop": 0
+    },
+    "chromeBottom": 64,
+    "topbar": {
+      "x": 0,
+      "y": 0,
+      "width": 767,
+      "height": 64
+    },
+    "banner": null,
+    "search": {
+      "x": 98.5,
+      "y": 305.796875,
+      "width": 504.203125,
+      "height": 42
+    },
+    "workspace": {
+      "box": {
+        "x": 0,
+        "y": 204,
+        "width": 767,
+        "height": 820
+      },
+      "presentation": "sheet",
+      "zIndex": "50",
+      "topInset": "calc(40px + 24px)",
+      "chromeBottomToken": "0px",
+      "dataConstrained": null,
+      "scrollTop": 0,
+      "scrollHeight": 621,
+      "clientHeight": 621,
+      "scrollers": []
+    },
+    "grid": {
+      "box": {
+        "x": 17,
+        "y": 414,
+        "width": 733,
+        "height": 284
+      },
+      "scrollWidth": 733,
+      "clientWidth": 733,
+      "scrollHeight": 284,
+      "clientHeight": 284,
+      "tiles": 96
+    },
+    "theme": "light",
+    "homeClass": "page-shell home home-zen"
+  }
+}

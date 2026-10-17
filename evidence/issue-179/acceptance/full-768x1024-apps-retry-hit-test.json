@@ -1,0 +1,6 @@
+{
+  "id": "768x1024-apps-retry-hit-test",
+  "checks": [],
+  "screenshots": [],
+  "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('.launcher-grid--workspace, .launcher-grid').first() to be visible\n\n    at openApps (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:133:77)\n    at async runAppsRetry (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:553:9)\n    at async main (/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:603:13)\n    at async file:///home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/acceptance.ts:621:1"
+}

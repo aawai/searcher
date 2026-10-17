@@ -1,0 +1,298 @@
+{
+  "id": "real-auth-me-abort-retry-widgets",
+  "checks": [
+    {
+      "name": "auth-me-network-abort-produced-real-banner",
+      "pass": true,
+      "expected": "visible connection banner after intercepted GET /api/auth/me",
+      "actual": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 53
+      }
+    },
+    {
+      "name": "recovered-network-and-authenticated-login",
+      "pass": true,
+      "expected": "one failed auth/me then real login after route restoration",
+      "actual": 1
+    },
+    {
+      "name": "widgets-canonical-layout-present",
+      "pass": true,
+      "expected": "persisted canonical desktop layout",
+      "actual": {
+        "version": 4,
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "entityId": null,
+            "frame": {
+              "x": 0.2361111111111111,
+              "y": 0.2311111111111111,
+              "width": 0.5277777777777778,
+              "height": 0.5866666666666667
+            },
+            "restoreFrame": null,
+            "mode": "normal",
+            "zOrder": 1,
+            "snap": null
+          }
+        ],
+        "activeId": "apps"
+      }
+    },
+    {
+      "name": "widgets-app-frame-present",
+      "pass": true,
+      "expected": "canonical Apps frame in persisted Widgets layout",
+      "actual": {
+        "x": 0.2361111111111111,
+        "y": 0.2311111111111111,
+        "width": 0.5277777777777778,
+        "height": 0.5866666666666667
+      }
+    },
+    {
+      "name": "retry-uses-real-auth-me-success",
+      "pass": true,
+      "expected": 200,
+      "actual": 200
+    },
+    {
+      "name": "search-flow-anchor-tracks-banner-and-restores",
+      "pass": true,
+      "expected": {
+        "yShift": 53,
+        "x": 435,
+        "width": 504.203125
+      },
+      "actual": {
+        "yShift": 53,
+        "x": 435,
+        "width": 504.203125
+      }
+    },
+    {
+      "name": "widgets-canonical-frame-not-written-by-banner",
+      "pass": true,
+      "expected": {
+        "x": 0.2361111111111111,
+        "y": 0.2311111111111111,
+        "width": 0.5277777777777778,
+        "height": 0.5866666666666667
+      },
+      "actual": {
+        "x": 0.2361111111111111,
+        "y": 0.2311111111111111,
+        "width": 0.5277777777777778,
+        "height": 0.5866666666666667
+      }
+    }
+  ],
+  "screenshots": [
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/widgets-only-screenshots/real-auth-me-abort-retry-widgets-banner.png",
+    "/home/aawei/searcher/.worktrees/issue-179/artifacts/issue-179/widgets-only-screenshots/real-auth-me-abort-retry-widgets-cleared.png"
+  ],
+  "metrics": {
+    "withBanner": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 953,
+        "scrollTop": 0
+      },
+      "chromeBottom": 117,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 64
+      },
+      "banner": {
+        "x": 0,
+        "y": 64,
+        "width": 1440,
+        "height": 53
+      },
+      "search": {
+        "x": 435,
+        "y": 356.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": {
+        "box": {
+          "x": 340,
+          "y": 208,
+          "width": 760,
+          "height": 528
+        },
+        "presentation": "window",
+        "zIndex": "1",
+        "topInset": "calc(40px + 24px)",
+        "chromeBottomToken": "",
+        "dataConstrained": null,
+        "scrollTop": 0,
+        "scrollHeight": 432,
+        "clientHeight": 405,
+        "scrollers": [
+          {
+            "className": "workspace-body",
+            "tagName": "DIV",
+            "clientHeight": 405,
+            "scrollHeight": 432,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "grid": {
+        "box": {
+          "x": 357,
+          "y": 385,
+          "width": 726,
+          "height": 284
+        },
+        "scrollWidth": 726,
+        "clientWidth": 726,
+        "scrollHeight": 284,
+        "clientHeight": 284,
+        "tiles": 96
+      },
+      "theme": "light",
+      "homeClass": "page-shell home home-widgets"
+    },
+    "afterRetry": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "document": {
+        "scrollWidth": 1440,
+        "scrollHeight": 900,
+        "scrollTop": 0
+      },
+      "chromeBottom": 64,
+      "topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 64
+      },
+      "banner": null,
+      "search": {
+        "x": 435,
+        "y": 303.1875,
+        "width": 504.203125,
+        "height": 42
+      },
+      "workspace": {
+        "box": {
+          "x": 340,
+          "y": 208,
+          "width": 760,
+          "height": 528
+        },
+        "presentation": "window",
+        "zIndex": "1",
+        "topInset": "calc(40px + 24px)",
+        "chromeBottomToken": "",
+        "dataConstrained": null,
+        "scrollTop": 0,
+        "scrollHeight": 432,
+        "clientHeight": 405,
+        "scrollers": [
+          {
+            "className": "workspace-body",
+            "tagName": "DIV",
+            "clientHeight": 405,
+            "scrollHeight": 432,
+            "scrollTop": 0
+          }
+        ]
+      },
+      "grid": {
+        "box": {
+          "x": 357,
+          "y": 385,
+          "width": 726,
+          "height": 284
+        },
+        "scrollWidth": 726,
+        "clientWidth": 726,
+        "scrollHeight": 284,
+        "clientHeight": 284,
+        "tiles": 96
+      },
+      "theme": "light",
+      "homeClass": "page-shell home home-widgets"
+    },
+    "login": "real auth/login form",
+    "abortedRequests": 1,
+    "canonicalBefore": {
+      "userId": "e38b95e5-3a11-4890-9bcf-95f2e6aedba8",
+      "layout": {
+        "version": 4,
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "entityId": null,
+            "frame": {
+              "x": 0.2361111111111111,
+              "y": 0.2311111111111111,
+              "width": 0.5277777777777778,
+              "height": 0.5866666666666667
+            },
+            "restoreFrame": null,
+            "mode": "normal",
+            "zOrder": 1,
+            "snap": null
+          }
+        ],
+        "activeId": "apps"
+      }
+    },
+    "canonicalAfter": {
+      "userId": "e38b95e5-3a11-4890-9bcf-95f2e6aedba8",
+      "layout": {
+        "version": 4,
+        "windows": [
+          {
+            "id": "apps",
+            "kind": "apps",
+            "entityId": null,
+            "frame": {
+              "x": 0.2361111111111111,
+              "y": 0.2311111111111111,
+              "width": 0.5277777777777778,
+              "height": 0.5866666666666667
+            },
+            "restoreFrame": null,
+            "mode": "normal",
+            "zOrder": 1,
+            "snap": null
+          }
+        ],
+        "activeId": "apps"
+      }
+    },
+    "canonicalBeforeFrame": {
+      "x": 0.2361111111111111,
+      "y": 0.2311111111111111,
+      "width": 0.5277777777777778,
+      "height": 0.5866666666666667
+    },
+    "canonicalAfterFrame": {
+      "x": 0.2361111111111111,
+      "y": 0.2311111111111111,
+      "width": 0.5277777777777778,
+      "height": 0.5866666666666667
+    }
+  }
+}

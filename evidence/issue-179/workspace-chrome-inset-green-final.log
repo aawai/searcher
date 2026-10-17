@@ -1,0 +1,103 @@
+Check web/e2e/workspace-chrome-inset.test.ts
+running 1 test from ./web/e2e/workspace-chrome-inset.test.ts
+Zen panel follows shared chrome and preserves focused scroll bounds ...
+------- output -------
+E2E evidence: /tmp/issue-179/workspace-chrome-inset-cc23608997082c62
+[2026-10-16 14:47:53.226] INFO: GET /register 200 1ms undefined
+[2026-10-16 14:47:53.235] INFO: GET /assets/index-CEAHVY58.js 200 2ms undefined
+[2026-10-16 14:47:53.235] INFO: GET /assets/index-PyvYAFyd.css 200 1ms undefined
+[2026-10-16 14:47:53.235] INFO: GET /assets/react-vendor-D8mvmE0C.js 200 1ms undefined
+[2026-10-16 14:47:53.236] INFO: GET /assets/ui-vendor-3VZK0TOr.js 200 2ms undefined
+[2026-10-16 14:47:53.289] INFO: GET /api/auth/me 401 1ms undefined
+[2026-10-16 14:47:53.294] INFO: GET /assets/AuthPage-BPqIdgmK.js 200 0ms undefined
+[2026-10-16 14:47:53.295] INFO: GET /assets/AuthPage-DHZUjKsq.css 200 1ms undefined
+[2026-10-16 14:47:54.226] INFO: POST /api/auth/register 200 79ms undefined
+[2026-10-16 14:47:54.253] INFO: GET /api/preferences 200 3ms undefined
+[2026-10-16 14:47:54.262] INFO: GET /api/webapps 200 2ms undefined
+[2026-10-16 14:47:54.265] INFO: GET /api/webapp-groups 200 2ms undefined
+[2026-10-16 14:47:54.265] INFO: GET /api/notes 200 2ms undefined
+[2026-10-16 14:47:54.271] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-10-16 14:47:54.278] INFO: POST /api/webapps 200 2ms undefined
+[2026-10-16 14:47:54.283] INFO: POST /api/webapps 200 2ms undefined
+[2026-10-16 14:47:54.288] INFO: POST /api/webapps 200 2ms undefined
+[2026-10-16 14:47:54.291] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.295] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.299] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.304] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.308] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.312] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.316] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.319] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.322] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.326] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.330] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.333] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.337] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.340] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.344] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.348] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.351] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.371] INFO: POST /api/webapps 200 2ms undefined
+[2026-10-16 14:47:54.375] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.379] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.382] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.386] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.392] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.396] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.400] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.404] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.407] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.411] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.414] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.418] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.422] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.425] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.429] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.432] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.437] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.441] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.445] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.448] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.452] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.455] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.459] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.462] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.466] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.470] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.474] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.477] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.481] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.485] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.488] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.492] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.495] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.499] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.502] INFO: POST /api/webapps 200 0ms undefined
+[2026-10-16 14:47:54.506] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.510] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.514] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.518] INFO: POST /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.523] INFO: GET / 200 1ms undefined
+[2026-10-16 14:47:54.551] INFO: GET /api/auth/me 200 1ms undefined
+[2026-10-16 14:47:54.568] INFO: GET /api/webapps 200 1ms undefined
+[2026-10-16 14:47:54.570] INFO: GET /api/webapp-groups 200 1ms undefined
+[2026-10-16 14:47:54.570] INFO: GET /api/notes 200 1ms undefined
+[2026-10-16 14:47:54.573] INFO: GET /api/preferences 200 2ms undefined
+[2026-10-16 14:47:54.694] INFO: POST /api/auth/logout 200 1ms undefined
+[2026-10-16 14:47:54.715] INFO: GET / 200 0ms undefined
+[2026-10-16 14:47:54.721] INFO: GET /assets/index-CEAHVY58.js 200 0ms undefined
+[2026-10-16 14:47:54.723] INFO: GET /assets/react-vendor-D8mvmE0C.js 200 1ms undefined
+[2026-10-16 14:47:54.723] INFO: GET /assets/ui-vendor-3VZK0TOr.js 200 1ms undefined
+[2026-10-16 14:47:54.723] INFO: GET /assets/index-PyvYAFyd.css 200 1ms undefined
+[2026-10-16 14:47:54.834] INFO: GET /api/auth/register 200 0ms undefined
+[2026-10-16 14:47:54.950] INFO: POST /api/auth/login 200 74ms undefined
+[2026-10-16 14:47:54.967] INFO: GET /api/webapps 200 2ms undefined
+[2026-10-16 14:47:54.971] INFO: GET /api/webapp-groups 200 4ms undefined
+[2026-10-16 14:47:54.971] INFO: GET /api/notes 200 4ms undefined
+[2026-10-16 14:47:54.971] INFO: GET /api/preferences 200 3ms undefined
+[2026-10-16 14:47:55.229] INFO: GET /api/auth/me 200 1ms undefined
+----- output end -----
+Zen panel follows shared chrome and preserves focused scroll bounds ... ok (2s)
+
+ok | 1 passed | 0 failed (2s)
+
