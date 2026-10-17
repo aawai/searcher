@@ -1,13 +1,4 @@
 import {
-    createContext,
-    type ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
-import {
     type AccentId,
     normalizeAccent,
     normalizeStylePreset,
@@ -15,11 +6,12 @@ import {
     type StylePreset,
     type UserDto,
 } from "@shared/contracts.ts";
-import type { EngineId } from "@shared/engines.ts";
 import {
-    parseWallpaperSource,
-    type WallpaperComposition,
-} from "@shared/wallpaper.ts";
+    DEFAULT_DESKTOP_SCENE,
+    type DesktopSceneId,
+    normalizeDesktopScene,
+} from "@shared/desktop-scenes.ts";
+import type { EngineId } from "@shared/engines.ts";
 import {
     type CanvasMotion,
     DEFAULT_CANVAS_MOTION,
@@ -29,9 +21,27 @@ import {
     type WallpaperMotionLevel,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
+import {
+    parseWallpaperSource,
+    type WallpaperComposition,
+} from "@shared/wallpaper.ts";
+import {
+    createContext,
+    type ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+import { hasUnsyncedNoteDrafts } from "../features/notes/local-drafts.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
-import { hasUnsyncedNoteDrafts } from "../features/notes/local-drafts.ts";
+import {
+    appearanceStorageKey,
+    type AppearanceSyncQueue,
+    queueAppearanceSync,
+} from "./appearance-sync.ts";
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
@@ -46,6 +56,7 @@ export type Appearance = {
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     canvasMotion: CanvasMotion;
     canvasMotionLevel: WallpaperMotionLevel;
+    desktopScene: DesktopSceneId;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
@@ -64,6 +75,7 @@ const initial: Appearance = {
     wallpaperPresentations: {},
     canvasMotion: DEFAULT_CANVAS_MOTION,
     canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
+    desktopScene: DEFAULT_DESKTOP_SCENE,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
     showAppLabels: true,
@@ -145,6 +157,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
         const migrated = migrateLegacyWallpaperPresentation(saved);
         result.canvasMotionLevel = migrated.motionLevel;
     }
+    result.desktopScene = normalizeDesktopScene(saved.desktopScene);
     if (typeof saved.showTitle === "boolean") {
         result.showTitle = saved.showTitle;
     }
@@ -201,7 +214,7 @@ export function AppState({ children }: { children: ReactNode }) {
     const [appearance, setValue] = useState<Appearance>(initial);
     const [appearanceOwner, setAppearanceOwner] = useState<string | null>(null);
     const [syncFailed, setSyncFailed] = useState(false);
-    const [connectionError, setConnectionError] = useState(false);
+    const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
     const sessionRef = useRef<AuthSession>({
         userId: null,
@@ -209,6 +222,10 @@ export function AppState({ children }: { children: ReactNode }) {
     });
     // Object identity is the auth epoch, renewed even when the same account logs in again.
     const updateUser = useCallback((next: UserDto | null, renew = false) => {
+        if (userRef.current?.id !== next?.id) {
+            setAppearanceOwner(null);
+            setValue(initial);
+        }
         if (renew || userRef.current?.id !== next?.id) {
             const session: AuthSession = {
                 userId: next?.id ?? null,
@@ -219,11 +236,11 @@ export function AppState({ children }: { children: ReactNode }) {
         userRef.current = next;
         setUser(next);
     }, []);
-    const sync = useRef({
-        owner: null as string | null,
+    const sync = useRef<AppearanceSyncQueue>({
+        owner: null,
         tail: Promise.resolve(),
-        pending: {} as Record<string, unknown>,
-        reconciled: {} as Record<string, unknown>,
+        pending: {},
+        reconciled: {},
     });
     const appearanceRevision = useRef(0);
     useEffect(() => {
@@ -235,6 +252,26 @@ export function AppState({ children }: { children: ReactNode }) {
         }
         void deleteLocal("visitor_appearance").catch(() => {});
     }, []);
+    const retryAppearanceLoad = useRef<() => Promise<void>>(() =>
+        Promise.resolve()
+    );
+    const sendPendingAppearance = useCallback((
+        queue: AppearanceSyncQueue,
+        owner: string,
+    ) => queueAppearanceSync(
+        queue,
+        owner,
+        () => sync.current === queue && userRef.current?.id === owner,
+        (patch) => api("/api/preferences", json("PATCH", patch)),
+        () => {
+            setSyncFailed(false);
+        },
+        (error) => {
+            if (!(error instanceof ApiError && error.code === 401)) {
+                setSyncFailed(true);
+            }
+        },
+    ), []);
 
     const checkAuth = useCallback(async () => {
         const session = sessionRef.current;
@@ -248,7 +285,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 { type: "success", user },
             );
             updateUser(next.user);
-            setConnectionError(next.connectionError);
+            setAuthConnectionError(next.connectionError);
         } catch (error) {
             if (sessionRef.current !== session) return;
             const next = handleAuthCheckResult(
@@ -256,11 +293,33 @@ export function AppState({ children }: { children: ReactNode }) {
                 { type: "error", error },
             );
             updateUser(next.user);
-            setConnectionError(next.connectionError);
+            setAuthConnectionError(next.connectionError);
         } finally {
             setReady(true);
         }
     }, [updateUser]);
+
+    const retryFailedAppearanceSync = useCallback(async () => {
+        const queue = sync.current;
+        const owner = queue.owner;
+        if (!owner || userRef.current?.id !== owner) return;
+        await sendPendingAppearance(queue, owner).catch(() => {});
+        if (sync.current !== queue || userRef.current?.id !== owner) return;
+        try {
+            await retryAppearanceLoad.current();
+        } catch (error) {
+            if (
+                sync.current === queue && userRef.current?.id === owner &&
+                !(error instanceof ApiError && error.code === 401)
+            ) {
+                setSyncFailed(true);
+            }
+        }
+    }, [sendPendingAppearance]);
+    const retryConnection = useCallback(async () => {
+        await checkAuth();
+        await retryFailedAppearanceSync();
+    }, [checkAuth, retryFailedAppearanceSync]);
 
     useEffect(() => {
         void checkAuth();
@@ -270,7 +329,7 @@ export function AppState({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!ready) return;
         const userId = user?.id ?? null;
-        const key = userId ? "appearance:" + userId : "appearance:anonymous";
+        const key = appearanceStorageKey(userId);
         let alive = true;
         setAppearanceOwner(null);
         setValue(initial);
@@ -283,19 +342,14 @@ export function AppState({ children }: { children: ReactNode }) {
             reconciled: {},
         };
         setSyncFailed(false);
-        async function loadAppearance() {
-            const saved = await getLocal<unknown>(key)
-                .catch(() => undefined);
-            if (!active()) return;
-            if (appearanceRevision.current === revision) {
-                setValue(normalizeAppearance(saved));
-            }
-            setAppearanceOwner(key);
+        async function loadCloudAppearance() {
             if (!userId) return;
             const prefs = await api<PreferencesDto>("/api/preferences");
             if (!active()) return;
+            if (Object.keys(sync.current.pending).length === 0) {
+                setSyncFailed(false);
+            }
             if (appearanceRevision.current !== revision) return;
-            setSyncFailed(false);
             setValue((prev) =>
                 normalizeAppearance({
                     ...prev,
@@ -312,11 +366,23 @@ export function AppState({ children }: { children: ReactNode }) {
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     canvasMotion: prefs.canvasMotion,
                     canvasMotionLevel: prefs.canvasMotionLevel,
+                    desktopScene: prefs.desktopScene,
                     webAppHomeLimit: prefs.webAppHomeLimit,
                     webAppIconSize: prefs.webAppIconSize,
                     showAppLabels: prefs.showAppLabels,
                 })
             );
+        }
+        retryAppearanceLoad.current = loadCloudAppearance;
+        async function loadAppearance() {
+            const saved = await getLocal<unknown>(key)
+                .catch(() => undefined);
+            if (!active()) return;
+            if (appearanceRevision.current === revision) {
+                setValue(normalizeAppearance(saved));
+            }
+            setAppearanceOwner(key);
+            await loadCloudAppearance();
         }
         void loadAppearance().catch((err) => {
             if (active() && !(err instanceof ApiError && err.code === 401)) {
@@ -325,11 +391,14 @@ export function AppState({ children }: { children: ReactNode }) {
         });
         return () => {
             alive = false;
+            if (retryAppearanceLoad.current === loadCloudAppearance) {
+                retryAppearanceLoad.current = () => Promise.resolve();
+            }
         };
     }, [ready, user?.id]);
 
     useEffect(() => {
-        const key = user ? "appearance:" + user.id : "appearance:anonymous";
+        const key = appearanceStorageKey(user?.id ?? null);
         if (!ready || appearanceOwner !== key) return;
         void setLocal(key, appearance).catch(() => {});
     }, [ready, user?.id, appearanceOwner, appearance]);
@@ -340,7 +409,7 @@ export function AppState({ children }: { children: ReactNode }) {
             setAppearanceOwner(null);
             updateUser(null);
             setSyncFailed(false);
-            setConnectionError(false);
+            setAuthConnectionError(false);
         };
         globalThis.addEventListener("searcher:auth-expired", expired);
         return () =>
@@ -406,6 +475,9 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.canvasMotionLevel !== undefined) {
                 updates.canvasMotionLevel = next.canvasMotionLevel;
             }
+            if (next.desktopScene !== undefined) {
+                updates.desktopScene = next.desktopScene;
+            }
             if (next.webAppHomeLimit !== undefined) {
                 updates.webAppHomeLimit = next.webAppHomeLimit;
             }
@@ -433,38 +505,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 delete queue.reconciled[key];
             }
             Object.assign(queue.pending, updates);
-            const result = queue.tail.then(async () => {
-                if (sync.current !== queue || userRef.current?.id !== owner) {
-                    return;
-                }
-                const patch = queue.pending;
-                queue.pending = {};
-                if (Object.keys(patch).length === 0) return;
-                try {
-                    await api("/api/preferences", json("PATCH", patch));
-                    if (
-                        sync.current === queue && userRef.current?.id === owner
-                    ) {
-                        setSyncFailed(false);
-                    }
-                } catch (error) {
-                    if (
-                        sync.current === queue && userRef.current?.id === owner
-                    ) {
-                        queue.pending = { ...patch, ...queue.pending };
-                        for (const key of Object.keys(queue.reconciled)) {
-                            delete queue.pending[key];
-                        }
-                        if (
-                            !(error instanceof ApiError && error.code === 401)
-                        ) setSyncFailed(true);
-                    }
-                    throw error;
-                }
-            });
-            // Existing controls intentionally fire-and-forget; callers may still await the original promise.
-            queue.tail = result.catch(() => {});
-            return result;
+            return sendPendingAppearance(queue, owner);
         }
         return Promise.resolve();
     };
@@ -503,8 +544,8 @@ export function AppState({ children }: { children: ReactNode }) {
                 authSession: sessionRef.current,
                 ready,
                 syncFailed,
-                connectionError,
-                retryConnection: checkAuth,
+                connectionError: authConnectionError || syncFailed,
+                retryConnection,
                 appearance,
                 setAppearance,
                 settleAppearanceSync: () => sync.current.tail,

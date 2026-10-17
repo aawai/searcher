@@ -32,6 +32,26 @@ primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlis
 均无法表达；至少两个 consumer 需要同一语义，或属于明确的系统级语义；并定义
 owner、state、token、a11y 和 responsive contract。否则保持 feature composition。
 
+### Desktop scene decorative layer
+
+- `features/desktop-scenes/DesktopSceneHost.tsx` 与 `desktop-scenes.css`
+  拥有首页视口底部装饰层；场景注册表只提供元数据与 lazy 入口，设置预览不导入
+  动画资源。关闭或离开首页时不挂载场景。
+- `.app-shell` 的 `isolation: isolate` 内，WallpaperSurface 与场景均为 fixed、
+  z-index -1；场景排在壁纸 DOM 之后，绘制于壁纸之上。正常流 Search/Bento、 Zen
+  Panel、DesktopCanvas/Window 和 Dock 在其上方；Portal 的 Dialog/Sheet/Toast
+  沿用共享 elevation，不为场景提高全局 z-index。
+- `pointer-events: none`、`aria-hidden` 与 SVG `focusable=false` 保持装饰不进入
+  命中或键盘导航；不挪动 Dock，也不建立 Dock 固定高度假设。
+- `scenes/amusement-park/` 独占原创 SVG 几何与 `--sp-*` 领域色板，resolved
+  light/dark 驱动明暗，不读取真实时间。色板和 SVG 坐标不是普通控件的 Token
+  替代；场景不能重新定义 Button、Radio、Dialog 等共享组件。
+- 场景动效限于装饰层，独立于壁纸环境微动预算；只有选中、首页、文档可见且 非
+  reduced-motion 时运行。CSS 的暂停/静态规则由 Host 独占，其优先级必须
+  高于按需加载的场景动画；RAF 只供路径小车，暂停取消，恢复保留位置并重置计时。
+- 设置卡片复用 RadioGroup/RadioGroupItem；布局适配使用对应 `data-slot` 的
+  compound selector，避免共享 primitive 与页面 CSS 的加载次序改变结果。
+
 ### Workspace semantic layer
 
 - Apps / Notes subsection 使用 `features/workspace/WorkspaceSection.tsx`：语义

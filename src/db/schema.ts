@@ -112,6 +112,8 @@ export const preferences = sqliteTable("preferences", {
     canvasMotionLevel: text("canvas_motion_level", {
         enum: ["subtle", "soft", "standard", "pronounced"],
     }).notNull().default("soft"),
+    // 不加 CHECK：未来场景 ID 写入后，旧版本读取时在 toDto 中降级为 none。
+    desktopScene: text("desktop_scene").notNull().default("none"),
 }, (t) => [
     check(
         "preferences_engine_check",
