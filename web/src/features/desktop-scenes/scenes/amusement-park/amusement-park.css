@@ -19,6 +19,9 @@
     --sp-front: color-mix(in srgb, var(--accent) 4%, #b3d79b);
     --sp-tex: rgb(255 255 255 / 0.4);
     --sp-cloud: rgb(255 255 255 / 0.9);
+    --sp-skin: #f1c9a5;
+    --sp-hair-dark: #3b3030;
+    --sp-hair-warm: #8a5a35;
     --sp-lamp: #f7c96a;
     --sp-glow: 0;
     --sp-shadow-opacity: 0.12;
@@ -39,6 +42,9 @@
     --sp-front: color-mix(in srgb, var(--accent) 6%, #1b3a33);
     --sp-tex: rgb(140 210 180 / 0.07);
     --sp-cloud: rgb(150 170 210 / 0.16);
+    --sp-skin: #d6a47f;
+    --sp-hair-dark: #1a1620;
+    --sp-hair-warm: #6d4527;
     --sp-lamp: #ffd98a;
     --sp-glow: 0.45;
     --sp-shadow-opacity: 0.2;
@@ -70,6 +76,15 @@
 }
 .scene-park .sp-paper {
     fill: var(--sp-paper);
+}
+.scene-park .sp-skin {
+    fill: var(--sp-skin);
+}
+.scene-park .sp-hair-dark {
+    fill: var(--sp-hair-dark);
+}
+.scene-park .sp-hair-warm {
+    fill: var(--sp-hair-warm);
 }
 .scene-park .sp-wood {
     fill: var(--sp-wood);
@@ -106,6 +121,17 @@
 }
 .scene-park .sp-rail {
     opacity: 0.5;
+}
+.scene-park .sp-rope {
+    fill: none;
+    stroke: var(--sp-paper);
+    stroke-linecap: round;
+}
+.scene-park .sp-pole {
+    fill: none;
+    stroke: var(--sp-gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 .scene-park .sp-pillar {
     opacity: 0.9;
@@ -145,21 +171,23 @@
 }
 @keyframes sp-swing {
     from {
-        transform: rotate(-26deg);
+        transform: rotate(-24deg);
     }
     to {
-        transform: rotate(26deg);
+        transform: rotate(24deg);
     }
 }
 
-/* 旋转木马：木马在转台内往复并上下起伏，三者相位错开 1/3 周期。 */
+/* 旋转木马：木马在转台内往复并上下起伏，三者周期各异，避免长时间叠在一起。 */
 .scene-park .sp-horse {
     animation: sp-orbit 4.2s ease-in-out infinite alternate;
 }
 .scene-park .sp-horse--b {
+    animation-duration: 5.4s;
     animation-delay: -1.4s;
 }
 .scene-park .sp-horse--c {
+    animation-duration: 3.7s;
     animation-delay: -2.8s;
 }
 .scene-park .sp-horse__bob {
@@ -240,5 +268,81 @@
     }
     to {
         transform: translateX(1700px);
+    }
+}
+
+/*
+ * 游客：站立者轻微起伏（周期与相位各异，避免整齐划一）；漫步者在步道上
+ * 慢速往复，并带有步伐起伏。静态姿态由基础位置给出。
+ */
+.scene-park .sp-idle-a {
+    animation: sp-idle 2.6s ease-in-out infinite alternate;
+}
+.scene-park .sp-idle-b {
+    animation: sp-idle 3.1s ease-in-out -1.2s infinite alternate;
+}
+.scene-park .sp-idle-c {
+    animation: sp-idle 2.9s ease-in-out -2s infinite alternate;
+}
+@keyframes sp-idle {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-0.9px);
+    }
+}
+.scene-park .sp-stroll-a,
+.scene-park .sp-stroll-b,
+.scene-park .sp-stroll-c,
+.scene-park .sp-stroll-d {
+    animation: sp-stroll 24s ease-in-out infinite alternate;
+}
+.scene-park .sp-stroll-a {
+    --sp-range: 46px;
+}
+.scene-park .sp-stroll-b {
+    --sp-range: 60px;
+    animation-duration: 30s;
+    animation-delay: -9s;
+}
+.scene-park .sp-stroll-c {
+    --sp-range: 70px;
+    animation-duration: 34s;
+    animation-delay: -20s;
+}
+.scene-park .sp-stroll-d {
+    --sp-range: 50px;
+    animation-duration: 27s;
+    animation-delay: -4s;
+}
+@keyframes sp-stroll {
+    from {
+        transform: translateX(calc(var(--sp-range) * -1));
+    }
+    to {
+        transform: translateX(var(--sp-range));
+    }
+}
+.scene-park .sp-step {
+    animation: sp-step 0.55s ease-in-out infinite alternate;
+}
+@keyframes sp-step {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-1px);
+    }
+}
+.scene-park .sp-hold {
+    animation: sp-hold 2.2s ease-in-out infinite alternate;
+}
+@keyframes sp-hold {
+    from {
+        transform: rotate(-4deg);
+    }
+    to {
+        transform: rotate(4deg);
     }
 }

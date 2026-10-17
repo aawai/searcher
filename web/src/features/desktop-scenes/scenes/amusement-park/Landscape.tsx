@@ -35,19 +35,6 @@ const LAMPS: ReadonlyArray<readonly [number, number, number]> = [
     [1260, 154, 178],
 ];
 
-/** [x, y, 头部, 身体] */
-const VISITORS: ReadonlyArray<
-    readonly [number, number, string, string]
-> = [
-    [390, 172, "sp-fr", "sp-fn"],
-    [690, 176, "sp-ft", "sp-fg"],
-    [780, 172, "sp-fg", "sp-fr"],
-    [900, 178, "sp-fr", "sp-ft"],
-    [1140, 174, "sp-ft", "sp-fg"],
-    [1340, 180, "sp-fg", "sp-fr"],
-];
-
-/** [x, y, 样式] */
 const FLOWERS: ReadonlyArray<readonly [number, number, string]> = [
     [130, 194, "sp-fr"],
     [470, 196, "sp-fg"],
@@ -124,18 +111,6 @@ export function FrontGround(
                     />
                     <circle className="sp-lamp sp-glow" cx={x} cy={top} r="9" />
                     <circle className="sp-lamp" cx={x} cy={top} r="2.6" />
-                </g>
-            ))}
-            {VISITORS.map(([x, y, head, body]) => (
-                <g key={x}>
-                    <circle className={head} cx={x} cy={y} r="1.8" />
-                    <rect
-                        className={body}
-                        x={x - 1.4}
-                        y={y + 2}
-                        width="2.8"
-                        height="5"
-                    />
                 </g>
             ))}
             {FLOWERS.map(([x, y, style]) => (

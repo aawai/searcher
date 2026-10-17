@@ -12,13 +12,13 @@ export const TRACK_PATH =
 
 /** 立柱：x 坐标与对应位置的轨道高度（顶端 y），落地线 y=150。 */
 export const TRACK_PILLARS: ReadonlyArray<readonly [x: number, top: number]> = [
-    [606, 134],
+    [606, 125],
     [656, 96],
     [688, 73],
     [720, 51],
     [750, 44],
     [772, 68],
-    [794, 112],
+    [794, 109],
     [830, 128],
 ];
 export const TRACK_GROUND_Y = 150;

@@ -3,6 +3,7 @@ import type { SceneProps } from "../../scene-types.ts";
 import { useMediaQuery } from "../../use-scene-environment.ts";
 import { Coaster } from "./Coaster.tsx";
 import { BackGround, FrontGround, LandscapeDefs } from "./Landscape.tsx";
+import { Visitors } from "./People.tsx";
 import {
     Balloon,
     Carousel,
@@ -50,6 +51,7 @@ export default function AmusementParkScene({ running }: SceneProps) {
             <SwingShip />
             <FerrisWheel />
             <FrontGround patternId={patternId} pineId={pineId} />
+            <Visitors />
             <MiniTrain />
         </svg>
     );

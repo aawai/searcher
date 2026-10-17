@@ -3,6 +3,34 @@
 const WHEEL_RADIUS = 44;
 const GONDOLA_STYLES = ["sp-fr", "sp-ft", "sp-fg"] as const;
 
+/** 木马：金色立杆随木马一起起伏，朝右的侧面剪影。 */
+function Horse({ tone, coat }: { tone: string; coat: string }) {
+    return (
+        <g className={`sp-horse ${tone}`}>
+            <g className="sp-horse__bob">
+                <path
+                    className="sp-pole"
+                    strokeWidth="1"
+                    d="M0 -26V-3"
+                />
+                <path className={coat} d="M-6 -9a6 3 0 0 1 12 0v2h-12z" />
+                <path className={coat} d="M4 -10L8 -15L11 -14L10 -11L6 -8z" />
+                <circle className="sp-paper" cx="9.6" cy="-13.2" r="0.6" />
+                <path
+                    className="sp-pole"
+                    strokeWidth="1.4"
+                    d="M-5 -7L-7 -2M-2 -6V-1M2 -6V-1M5 -7L6 -2"
+                />
+                <path
+                    className="sp-pole"
+                    strokeWidth="1.2"
+                    d="M-6 -9Q-9 -8 -9 -4"
+                />
+            </g>
+        </g>
+    );
+}
+
 export function Carousel() {
     return (
         <g transform="translate(337 148)">
@@ -17,20 +45,14 @@ export function Carousel() {
                 strokeWidth="1.5"
                 d="M-21 0V-27M-5 2V-27M5 2V-27M21 0V-27"
             />
-            <g className="sp-horse sp-horse--a">
-                <g className="sp-horse__bob">
-                    <circle className="sp-fg" cx="-13" cy="-7" r="4" />
-                </g>
+            <g transform="translate(0 -2)">
+                <Horse tone="sp-horse--b" coat="sp-fr" />
             </g>
-            <g className="sp-horse sp-horse--b">
-                <g className="sp-horse__bob">
-                    <circle className="sp-fr" cx="0" cy="-5" r="4" />
-                </g>
+            <g transform="translate(-2 0)">
+                <Horse tone="sp-horse--a" coat="sp-fg" />
             </g>
-            <g className="sp-horse sp-horse--c">
-                <g className="sp-horse__bob">
-                    <circle className="sp-ft" cx="13" cy="-7" r="4" />
-                </g>
+            <g transform="translate(2 0)">
+                <Horse tone="sp-horse--c" coat="sp-ft" />
             </g>
             <path className="sp-ft" d="M-41 -27 L0 -49 L41 -27Z" />
             <path
@@ -62,18 +84,27 @@ export function TicketBooth() {
 
 export function SwingShip() {
     return (
-        <g transform="translate(926 112)">
-            <ellipse className="sp-shadow" cx="0" cy="40" rx="20" ry="3" />
+        <g transform="translate(926 108)">
+            <ellipse className="sp-shadow" cx="0" cy="44" rx="24" ry="3" />
             <path
                 className="sp-line"
                 strokeWidth="2.5"
-                d="M-14 38L0 0L14 38"
+                d="M-18 44L0 0L18 44"
             />
+            <path className="sp-line" strokeWidth="2" d="M-10 28H10" />
             <g className="sp-swing">
-                <path className="sp-line" strokeWidth="1.5" d="M0 0V26" />
-                <path className="sp-fr" d="M-13 26 Q0 38 13 26 L11 22 H-11Z" />
+                <path
+                    className="sp-rope"
+                    strokeWidth="1.1"
+                    d="M0 0L-10 28M0 0L10 28"
+                />
+                <path
+                    className="sp-fr"
+                    d="M-15 28Q0 42 15 28L12.5 24H-12.5Z"
+                />
+                <path className="sp-rope" strokeWidth="1" d="M-11 27H11" />
             </g>
-            <circle className="sp-fg" cx="0" cy="0" r="2.8" />
+            <circle className="sp-fg" cx="0" cy="0" r="3" />
         </g>
     );
 }
