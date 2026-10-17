@@ -75,6 +75,18 @@ canonical/v4/Dock、编辑器撤销/版本/滚动、Documents
 限制。未提高门禁；仅存在固定便签时按现有 React lazy/Suspense 模式加载
 FloatingNotes，最终守住预算。匿名 Home 与 Apps 的编辑器 runtime 冷加载契约通过。
 
+## 合并与 CI
+
+PR #188 已合并至 main，merge commit `f862435`；issue #180 自动关闭。 最终
+`ae3867d` 上六个 workflow 全部成功：
+
+- [完整 Workspace E2E 与格式](https://github.com/aawai/searcher/actions/runs/39028627108)
+- [Notes regression](https://github.com/aawai/searcher/actions/runs/39028627226)
+- [Wallpaper contracts](https://github.com/aawai/searcher/actions/runs/39028627202)
+- [Bundle 与 Route Loading](https://github.com/aawai/searcher/actions/runs/39028627102)
+- [UI Guard](https://github.com/aawai/searcher/actions/runs/39028627191)
+- [Docker build](https://github.com/aawai/searcher/actions/runs/39028627111)
+
 ## 未验证
 
 真实 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证。Chromium
