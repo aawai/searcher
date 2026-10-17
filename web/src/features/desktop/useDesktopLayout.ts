@@ -34,7 +34,11 @@ export interface UseDesktopLayoutOptions {
     notesLoaded?: boolean;
 }
 
-export type UseDesktopLayoutReturn = [DesktopState, Dispatch<DesktopAction>];
+export type UseDesktopLayoutReturn = [
+    state: DesktopState,
+    dispatch: Dispatch<DesktopAction>,
+    restored: boolean,
+];
 
 function hasStableGeometry(geometry: DesktopGeometry): boolean {
     return geometry.usable &&
@@ -198,7 +202,14 @@ export function useDesktopLayout(
                 }
             })
             .catch(() => {
-                // Read failure: proceeds with empty memory state
+                if (
+                    restoreSeqRef.current !== seq ||
+                    userIdRef.current !== targetUserId ||
+                    layoutStyleRef.current !== "widgets"
+                ) return;
+                // Read failure proceeds with the current empty-memory layout.
+                restoredKeyRef.current = targetUserId;
+                dispatch({ type: "HYDRATE", state: stateRef.current });
             });
 
         return () => {
@@ -275,5 +286,9 @@ export function useDesktopLayout(
     const isOwnerMatch = activeRestoredKeyRef.current === currentActiveKey;
     const displayedState = isOwnerMatch ? state : initialDesktopState;
 
-    return [displayedState, dispatchAction];
+    return [
+        displayedState,
+        dispatchAction,
+        isOwnerMatch && restoredKeyRef.current === currentActiveKey,
+    ];
 }

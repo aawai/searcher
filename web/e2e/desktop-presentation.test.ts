@@ -1247,3 +1247,529 @@ Deno.test(
         );
     },
 );
+Deno.test(
+    "Widgets 844x390 and 900x200 open empty Apps, Notes, Documents from Dock #181",
+    async () => {
+        const domains = [
+            {
+                id: "apps",
+                root: ".apps-workspace-root",
+                searchLabel: "搜索应用",
+            },
+            {
+                id: "notes",
+                root: ".notes-workspace",
+                searchLabel: "搜索便签",
+            },
+            {
+                id: "documents",
+                root: ".documents-workspace",
+                searchLabel: "搜索笔记",
+            },
+        ] as const;
+
+        for (
+            const viewport of [
+                { width: 844, height: 390 },
+                { width: 900, height: 200 },
+            ]
+        ) {
+            const fixture = await createDesktopFixture(
+                `issue181_${viewport.width}`,
+            );
+            await using _cleanup = fixture.cleanup;
+            const { page } = fixture;
+            await page.setViewportSize(viewport);
+            await waitForViewport(page, viewport.width, viewport.height);
+
+            for (const domain of domains) {
+                const before = await readPersistedLayout(page);
+                assert(
+                    !before ||
+                        (before.activeId === null &&
+                            before.windows.length === 0),
+                    `A fresh empty desktop is required before opening ${domain.id}`,
+                );
+
+                const dock = page.locator(
+                    `.desktop-dock button[data-workspace="${domain.id}"]`,
+                );
+                await dock.waitFor({ state: "visible" });
+                await dock.click();
+
+                const panel = page.locator(
+                    '.workspace-panel[data-presentation="panel"][data-viewport-constrained="true"]',
+                );
+                await panel.waitFor({ state: "visible" });
+                assertEquals(
+                    await page.locator(".desktop-window").count(),
+                    0,
+                    "An unusable empty desktop must use the existing panel, not create a desktop window",
+                );
+
+                const root = page.locator(domain.root);
+                await root.waitFor({ state: "visible" });
+                const search = root.getByRole("searchbox", {
+                    name: domain.searchLabel,
+                    exact: true,
+                });
+                await search.waitFor({ state: "visible" });
+                await search.click();
+                await search.fill("issue181");
+                assertEquals(
+                    await search.inputValue(),
+                    "issue181",
+                    `${domain.id} content must be interactive`,
+                );
+                await search.fill("");
+                if (domain.id === "notes") {
+                    await panel.getByRole("button", {
+                        name: "新建便签",
+                        exact: true,
+                    }).click();
+                    const title = panel.locator(
+                        'input[aria-label="便签标题"]:not(:disabled)',
+                    );
+                    await title.click();
+                    const saved = page.waitForResponse((response) =>
+                        new URL(response.url()).pathname.startsWith(
+                            "/api/notes/",
+                        ) &&
+                        response.request().method() === "PATCH"
+                    );
+                    await title.fill("Short screen note");
+                    assertEquals(
+                        (await (await saved).json()).data.title,
+                        "Short screen note",
+                    );
+                    await panel.getByRole("button", {
+                        name: "返回便签列表",
+                        exact: true,
+                    }).click();
+                    await root.waitFor({ state: "visible" });
+                }
+
+                await panel.getByRole("button", {
+                    name: "收起工作区",
+                    exact: true,
+                }).click();
+                await panel.waitFor({ state: "hidden" });
+                await root.waitFor({ state: "hidden" });
+                await page.waitForFunction(
+                    (id) =>
+                        document.activeElement?.getAttribute(
+                            "data-workspace",
+                        ) ===
+                            id,
+                    domain.id,
+                );
+                const after = await readPersistedLayout(page);
+                assert(
+                    !after ||
+                        (after.activeId === null &&
+                            after.windows.length === 0),
+                    `Closing the fallback must leave ${domain.id} as no desktop window`,
+                );
+            }
+        }
+    },
+);
+Deno.test(
+    "Widgets 844x390 Apps fallback can discard, submit, and close #181",
+    async () => {
+        const fixture = await createDesktopFixture("issue181_submit");
+        await using _cleanup = fixture.cleanup;
+        const { page } = fixture;
+        await page.setViewportSize({ width: 844, height: 390 });
+        await waitForViewport(page, 844, 390);
+
+        const dock = page.locator(
+            '.desktop-dock button[data-workspace="apps"]',
+        );
+        await dock.waitFor({ state: "visible" });
+        await dock.click();
+        const panel = page.locator(
+            '.workspace-panel[data-presentation="panel"][data-viewport-constrained="true"]',
+        );
+        await panel.waitFor({ state: "visible" });
+        const root = page.locator(".apps-workspace-root");
+        await root.waitFor({ state: "visible" });
+
+        await panel.getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        }).click();
+        const url = "https://intranet/";
+        const draftName = "待返回的短屏草稿";
+        await page.locator("#app-url-input").fill(url);
+        await page.locator("#app-name-input").fill(draftName);
+        await page.getByRole("button", { name: "取消", exact: true }).click();
+        const discardDialog = page.getByRole("alertdialog");
+        await discardDialog.getByRole("heading", {
+            name: "放弃未保存的应用修改？",
+            exact: true,
+        }).waitFor({ state: "visible" });
+        await discardDialog.getByRole("button", {
+            name: "继续编辑",
+            exact: true,
+        }).click();
+        assertEquals(await page.locator("#app-url-input").inputValue(), url);
+        assertEquals(
+            await page.locator("#app-name-input").inputValue(),
+            draftName,
+        );
+        await page.getByRole("button", { name: "取消", exact: true }).click();
+        await page.getByRole("alertdialog").getByRole("button", {
+            name: "放弃修改",
+            exact: true,
+        }).click();
+        await root.waitFor({ state: "visible" });
+
+        await panel.getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        }).click();
+        const submittedName = "短屏提交应用";
+        await page.locator("#app-url-input").fill(url);
+        await page.locator("#app-name-input").fill(submittedName);
+        const saveResponse = page.waitForResponse((response) =>
+            new URL(response.url()).pathname === "/api/webapps" &&
+            response.request().method() === "POST"
+        );
+        await page.getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        }).click();
+        assert((await saveResponse).ok(), "Apps form must submit successfully");
+        await root.waitFor({ state: "visible" });
+        const appSearch = root.getByRole("searchbox", {
+            name: "搜索应用",
+            exact: true,
+        });
+        await appSearch.fill(submittedName);
+        const savedApp = root.locator(".apps-search-row");
+        await savedApp.waitFor({ state: "visible" });
+        assert(
+            (await savedApp.innerText()).includes(submittedName),
+            "The submitted app must render in the real Apps root",
+        );
+        const savedApps = await page.evaluate(async () => {
+            const response = await fetch("/api/webapps");
+            if (!response.ok) throw new Error(await response.text());
+            return (await response.json()).data as Array<{
+                name: string;
+                url: string;
+            }>;
+        });
+        assert(
+            savedApps.some((app) =>
+                app.name === submittedName && app.url === url
+            ),
+            "The submitted app must be persisted",
+        );
+
+        await panel.getByRole("button", {
+            name: "收起工作区",
+            exact: true,
+        }).click();
+        await panel.waitFor({ state: "hidden" });
+        await root.waitFor({ state: "hidden" });
+        await page.waitForFunction(() =>
+            document.activeElement?.getAttribute("data-workspace") === "apps"
+        );
+    },
+);
+
+Deno.test(
+    "Widgets restricted Apps draft recovers into one window with route and focus #181",
+    async () => {
+        async function recover(
+            width: number,
+            shortHeight: number,
+            restoredHeight: number,
+        ) {
+            const fixture = await createDesktopFixture(
+                `issue181_recover_${width}`,
+            );
+            await using _cleanup = fixture.cleanup;
+            const { page } = fixture;
+            await page.setViewportSize({ width, height: shortHeight });
+            await waitForViewport(page, width, shortHeight);
+
+            const dock = page.locator(
+                '.desktop-dock button[data-workspace="apps"]',
+            );
+            await dock.waitFor({ state: "visible" });
+            await dock.click();
+            const panel = page.locator(
+                '.workspace-panel[data-presentation="panel"][data-viewport-constrained="true"]',
+            );
+            await panel.waitFor({ state: "visible" });
+            await panel.getByRole("button", {
+                name: "添加应用",
+                exact: true,
+            }).click();
+            const url = `https://issue181-${width}/`;
+            const name = `恢复草稿 ${width}`;
+            await page.locator("#app-url-input").fill(url);
+            const nameInput = page.locator("#app-name-input");
+            await nameInput.fill(name);
+            await nameInput.focus();
+            await page.waitForFunction(() =>
+                document.activeElement?.id === "app-name-input"
+            );
+
+            await page.setViewportSize({ width, height: restoredHeight });
+            await waitForViewport(page, width, restoredHeight);
+            const window = page.locator(
+                '.desktop-window[data-window-id="apps"]',
+            );
+            await window.waitFor({ state: "visible" });
+            await page.waitForFunction(() =>
+                document.querySelectorAll(
+                        '.desktop-window[data-window-id="apps"]',
+                    ).length === 1 &&
+                !document.querySelector(
+                    '.workspace-panel[data-viewport-constrained="true"]',
+                )
+            );
+            assertEquals(await window.count(), 1);
+            assertEquals(
+                await window.getAttribute("data-window-active"),
+                "true",
+                "The recovered Apps window must own focus",
+            );
+            assertEquals(await page.locator("#app-name-input").count(), 1);
+            assertEquals(
+                await window.locator("#app-url-input").inputValue(),
+                url,
+                "The Apps create route and URL draft must survive recovery",
+            );
+            assertEquals(
+                await window.locator("#app-name-input").inputValue(),
+                name,
+                "The Apps name draft must survive recovery",
+            );
+            await page.waitForFunction(() =>
+                document.activeElement?.id === "app-name-input"
+            );
+            assertEquals(
+                await window.locator(".app-dialog-form").count(),
+                1,
+                "Recovery must render one copy of the Apps create route",
+            );
+
+            const saveResponse = page.waitForResponse((response) =>
+                new URL(response.url()).pathname === "/api/webapps" &&
+                response.request().method() === "POST"
+            );
+            await window.getByRole("button", {
+                name: "添加应用",
+                exact: true,
+            }).click();
+            assert((await saveResponse).ok());
+            await window.locator(".apps-workspace-root").waitFor({
+                state: "visible",
+            });
+            assertEquals(await window.count(), 1);
+            const apps = await page.evaluate(async () => {
+                const response = await fetch("/api/webapps");
+                if (!response.ok) throw new Error(await response.text());
+                return (await response.json()).data as Array<{
+                    name: string;
+                    url: string;
+                }>;
+            });
+            assert(
+                apps.some((app) => app.name === name && app.url === url),
+                "The recovered draft must submit once to the app library",
+            );
+        }
+
+        await recover(844, 390, 500);
+        await recover(900, 200, 700);
+    },
+);
+
+Deno.test(
+    "Widgets short-screen workspace presentation respects 767/768/1023/1024 boundaries #181",
+    async () => {
+        for (const width of [767, 768, 1023, 1024]) {
+            const fixture = await createDesktopFixture(
+                `issue181_edge_${width}`,
+            );
+            await using _cleanup = fixture.cleanup;
+            const { page } = fixture;
+            await page.setViewportSize({ width, height: 390 });
+            await waitForViewport(page, width, 390);
+            await stableLayout(page);
+            const mobile = width < 768;
+            const trigger = mobile
+                ? page.locator(
+                    '.workspace-mobile-navigation button[data-workspace="apps"]',
+                )
+                : page.locator(
+                    '.desktop-dock button[data-workspace="apps"]',
+                );
+            await trigger.waitFor({ state: "visible" });
+            await trigger.click();
+
+            const surface = mobile
+                ? page.locator(
+                    '.workspace-panel--mobile[data-presentation="sheet"]',
+                )
+                : page.locator(
+                    '.workspace-panel[data-presentation="panel"][data-viewport-constrained="true"]',
+                );
+            await surface.waitFor({ state: "visible" });
+            const root = page.locator(".apps-workspace-root");
+            await root.waitFor({ state: "visible" });
+            assertEquals(
+                await page.locator(".desktop-window").count(),
+                0,
+                `${width}px with unusable geometry must not create a desktop window`,
+            );
+            const search = root.getByRole("searchbox", {
+                name: "搜索应用",
+                exact: true,
+            });
+            await search.click();
+            await search.fill(`boundary${width}`);
+            assertEquals(await search.inputValue(), `boundary${width}`);
+
+            await surface.getByRole("button", {
+                name: "收起工作区",
+                exact: true,
+            }).click();
+            await surface.waitFor({ state: "hidden" });
+            await root.waitFor({ state: "hidden" });
+        }
+    },
+);
+
+Deno.test(
+    "Widgets unusable geometry does not persist a canonical v4 workspace frame #181",
+    async () => {
+        const fixture = await createDesktopFixture("issue181_v4");
+        await using _cleanup = fixture.cleanup;
+        const { page } = fixture;
+        await page.setViewportSize({ width: 900, height: 200 });
+        await waitForViewport(page, 900, 200);
+        const before = await readPersistedLayout(page);
+        assert(
+            !before || before.windows.length === 0,
+            "The fresh desktop must have no canonical windows",
+        );
+
+        await page.locator(
+            '.desktop-dock button[data-workspace="apps"]',
+        ).click();
+        const panel = page.locator(
+            '.workspace-panel[data-presentation="panel"][data-viewport-constrained="true"]',
+        );
+        await panel.waitFor({ state: "visible" });
+        const root = page.locator(".apps-workspace-root");
+        await root.waitFor({ state: "visible" });
+        await panel.getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        }).click();
+        await page.locator("#app-url-input").fill("https://intranet/");
+        await page.locator("#app-name-input").fill("仅在 fallback 中的草稿");
+
+        assertEquals(await page.locator(".desktop-window").count(), 0);
+        const after = await readPersistedLayout(page);
+        assertEquals(
+            after?.windows ?? [],
+            before?.windows ?? [],
+            "An unusable geometry presentation must not write its panel frame to the canonical v4 windows",
+        );
+        assertEquals(
+            after?.windows.some((window) =>
+                ["apps", "notes", "documents"].includes(window.id)
+            ) ?? false,
+            false,
+        );
+    },
+);
+
+Deno.test(
+    "Widgets short-screen reload restores the saved canonical frame before opening #181",
+    async () => {
+        const fixture = await createDesktopFixture("issue181_reload");
+        await using _cleanup = fixture.cleanup;
+        const { page } = fixture;
+        const window = await openApps(page);
+        await dragWindowTo(page, "apps", { x: 540, y: 160 });
+        const placed = await window.boundingBox();
+        assert(placed);
+        await waitForPersistedNormalFrame(page, "apps", placed, {
+            width: 1440,
+            height: 900,
+        });
+        const before = await readPersistedLayout(page);
+
+        await page.setViewportSize({ width: 900, height: 200 });
+        await stableLayout(page);
+        await page.reload();
+        await page.locator(".desktop-dock").waitFor({ state: "visible" });
+        await page.locator(
+            '.desktop-dock button[data-workspace="apps"]',
+        ).click();
+        await page.locator(
+            '.workspace-panel[data-viewport-constrained="true"]',
+        ).waitFor({ state: "visible" });
+        assertEquals(await readPersistedLayout(page), before);
+
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await waitForFrame(page, "apps", placed);
+        assertEquals(await readPersistedLayout(page), before);
+        assertEquals(await window.count(), 1);
+    },
+);
+
+Deno.test(
+    "Widgets fallback keeps query focus when other saved windows hydrate #181",
+    async () => {
+        const fixture = await createDesktopFixture("issue181_query_focus");
+        await using _cleanup = fixture.cleanup;
+        const { page } = fixture;
+        const apps = await openApps(page);
+        const frame = await apps.boundingBox();
+        assert(frame);
+        await waitForPersistedNormalFrame(page, "apps", frame, {
+            width: 1440,
+            height: 900,
+        });
+        await page.setViewportSize({ width: 900, height: 200 });
+        await stableLayout(page);
+        await page.reload();
+        await page.locator(".desktop-dock").waitFor({ state: "visible" });
+        await page.locator(
+            '.desktop-dock button[data-workspace="notes"]',
+        ).click();
+        const search = page.getByRole("searchbox", {
+            name: "搜索便签",
+            exact: true,
+        });
+        await search.fill("保留查询");
+        await search.evaluate((input: HTMLInputElement) =>
+            input.setSelectionRange(1, 3)
+        );
+        await page.setViewportSize({ width: 900, height: 700 });
+        await page.waitForFunction(() => {
+            const input = document.activeElement;
+            return input instanceof HTMLInputElement &&
+                input.closest('[data-window-id="notes"]') !== null &&
+                input.value === "保留查询" &&
+                input.selectionStart === 1 && input.selectionEnd === 3;
+        });
+        assertEquals(await page.locator(".notes-workspace").count(), 1);
+        assertEquals(
+            await page.locator(
+                '.desktop-window[data-window-id="notes"]',
+            ).getAttribute("data-window-active"),
+            "true",
+        );
+    },
+);

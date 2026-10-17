@@ -341,6 +341,21 @@ AlertDialog）具有严格不同的交互与视觉语义：
   safe-height)；fullscreen = safe rect。 constrained preset
   与工作区导航只拥有当前 presentation，不得回写自由桌面的 canonical frame 或
   basis。
+- Widgets >=768px 若 `useDesktopGeometry` 报告 `geometry.usable=false` 且没有
+  active workspace window，Apps / Notes / Documents 首次打开使用现有
+  `WorkspaceShell` `viewportInsets` 共享 Surface fallback；已有窗口在可用空间
+  缩小时继续由其现有 `DesktopWorkspaces` fallback 处理，不重复创建实例。 受限
+  Surface 整体滚动 Header、列表/普通表单和 Footer；Shell 根据 route 显式传入
+  `bodyLayout`（普通列表 / `app-form` / `editor`），不依赖领域 DOM class 猜测。
+  编辑器 Body 沿用 `--editor-min-content-height`
+  保留最小有界区域，正文继续由领域 scroll area
+  滚动，避免极短空间下塌陷或长文撑开原滚动区。 不改变普通 Panel、Sheet 或已有
+  DesktopWindow 的滚动 owner。空间恢复时保留 fallback
+  至桌面窗口交接，`pendingRestrictedWorkspace` 等待 `useDesktopLayout` 的
+  `restored` 完成后才 OPEN：先读取已有 canonical，再恢复或创建一次窗口，
+  不让默认 frame 抢先覆盖短屏刷新前的布局。交接期间该领域内容仅在 fallback
+  挂载， 目的 chrome 初始化后恢复对应字段焦点与选区。 不新增 viewport
+  owner，不修改 canonical/v4 schema 或几何持久化契约。
 - Task Dock 负责窗口导航与空间管理：Apps/Notes root closed → Open、visible →
   Focus、minimized → Restore + Focus；>=1024 增加 Overview 与 running note
   item，普通窗口下始终可见，文档沉浸时由底边入口临时呼出；无 CRUD、无 footer

@@ -113,6 +113,12 @@ export function WorkspaceShell(
     const editing = state.view === "apps/create" ||
         state.view === "apps/edit" || state.view === "notes/edit" ||
         state.view === "documents/edit" || state.view === "documents/create";
+    let bodyLayout: "app-form" | "editor" | undefined;
+    if (state.view === "apps/create" || state.view === "apps/edit") {
+        bodyLayout = "app-form";
+    } else if (state.view === "notes/edit" || state.view === "documents/edit") {
+        bodyLayout = "editor";
+    }
     return (
         <WorkspaceSurface
             presentation={presentation}
@@ -140,8 +146,7 @@ export function WorkspaceShell(
             onClose={onClose}
             onEscape={onEscape}
             escapeManaged={workspace === "apps"}
-            formLayout={state.view === "apps/create" ||
-                state.view === "apps/edit"}
+            bodyLayout={bodyLayout}
             feedback={mobile ? feedback : undefined}
             onFeedbackHost={mobile ? onFeedbackHost : undefined}
             footer={!editing &&
