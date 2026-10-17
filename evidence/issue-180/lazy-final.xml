@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="34" failures="0" errors="0" time="60.692">
+    <testsuite name="./web/e2e/home-notes-order.test.ts" tests="11" disabled="0" errors="0" failures="0">
+        <testcase name="production home notes manual order E2E (#62)" classname="./web/e2e/home-notes-order.test.ts" time="22.233" line="22" col="6">
+        </testcase>
+        <testcase name="Zen default floating notes do not block Search submit (#180)" classname="./web/e2e/home-notes-order.test.ts" time="3.414" line="1324" col="6">
+        </testcase>
+        <testcase name="Home floating-note placement and responsive matrix" classname="./web/e2e/home-notes-order.test.ts" time="11.836" line="1695" col="6">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Handle rendering and handle click does not open editor" classname="./web/e2e/home-notes-order.test.ts" time="0.536" line="195" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Pointer drag C-&gt;A immediate DOM, reload and relogin persistence, normal notes preserved" classname="./web/e2e/home-notes-order.test.ts" time="1.021" line="271" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Keyboard equivalent reordering and reload persistence" classname="./web/e2e/home-notes-order.test.ts" time="0.846" line="458" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Max 5 slots displayed, hidden sixth+ note preserved in background" classname="./web/e2e/home-notes-order.test.ts" time="0.803" line="515" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Fix and unfix notes toggles board presence and sorting capability" classname="./web/e2e/home-notes-order.test.ts" time="1.460" line="634" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Workspace other notes sorting and search unsortable contract" classname="./web/e2e/home-notes-order.test.ts" time="0.780" line="757" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Visual overflow at 375/390/768/1024/1440 light/dark and #40 layout contract" classname="./web/e2e/home-notes-order.test.ts" time="3.990" line="917" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Home #155: code scrolling stays inside Zen and Widgets notes" classname="./web/e2e/home-notes-order.test.ts" time="10.688" line="1083" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/home-notes-persistence.test.ts" tests="8" disabled="0" errors="0" failures="0">
+        <testcase name="production home notes expand/collapse persistence E2E (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="5.121" line="14" col="6">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario A: compact note -&gt; toggle expand -&gt; reload persists full (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.504" line="164" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario B: full note -&gt; toggle collapse -&gt; reload persists compact (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.395" line="267" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario C: cross-session logout and re-login retains expanded state from backend (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.545" line="344" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario D: legacy note without layout defaults to expanded, collapses and persists (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.489" line="405" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Failure rollback: PUT 500 error rolls back optimistic UI to compact and shows error (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.530" line="465" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Zen / FloatingNotes: toggle mode produces exactly 1 PUT and persists across reload (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.758" line="555" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Zen code block native scrollbar remains draggable (#138)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.629" line="621" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/bundle-loading.test.ts" tests="6" disabled="0" errors="0" failures="0">
+        <testcase name="production bundle loading and route isolation contracts" classname="./web/e2e/bundle-loading.test.ts" time="4.577" line="23" col="6">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 1: Home page initial load only requests initial static graph" classname="./web/e2e/bundle-loading.test.ts" time="0.158" line="100" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 2: Suspense observable fallback &amp; SPA navigation to Ask without full reload" classname="./web/e2e/bundle-loading.test.ts" time="0.179" line="192" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 3: Direct visit to async routes resolves Suspense" classname="./web/e2e/bundle-loading.test.ts" time="3.604" line="267" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 4: Lazy route chunk failure caught by RouteErrorBoundary with recovery" classname="./web/e2e/bundle-loading.test.ts" time="0.304" line="298" col="13">
+        </testcase>
+        <testcase name="production bundle loading and route isolation contracts &gt; Scenario 5: Motion Inspector diagnostic dynamic boundary" classname="./web/e2e/bundle-loading.test.ts" time="0.244" line="359" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/markdown-editor-loading.test.ts" tests="5" disabled="0" errors="0" failures="0">
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts" classname="./web/e2e/markdown-editor-loading.test.ts" time="3.673" line="25" col="6">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 1: Anonymous Home visit never requests editor-vendor or runtime" classname="./web/e2e/markdown-editor-loading.test.ts" time="0.175" line="163" col="13">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 2: Home/Apps stay vendor-cold; Notes root stays runtime-cold; Live loads on demand and Source does not reload" classname="./web/e2e/markdown-editor-loading.test.ts" time="1.511" line="198" col="13">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 3: /design-lab/markdown-editor route shell loads without editor runtime" classname="./web/e2e/markdown-editor-loading.test.ts" time="0.900" line="303" col="13">
+        </testcase>
+        <testcase name="production browser network isolation: editor runtime lazy boundary contracts &gt; Scenario 4: Clicking &apos;打开编辑器&apos; on demand requests runtime and editor-vendor" classname="./web/e2e/markdown-editor-loading.test.ts" time="0.987" line="350" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/route-style-stability.test.ts" tests="4" disabled="0" errors="0" failures="0">
+        <testcase name="Production Route Style Stability E2E Suite" classname="./web/e2e/route-style-stability.test.ts" time="8.081" line="27" col="6">
+        </testcase>
+        <testcase name="Production Route Style Stability E2E Suite &gt; 1440x900: Settings Appearance, Motion level, and Ask geometry hard gates" classname="./web/e2e/route-style-stability.test.ts" time="3.421" line="47" col="13">
+        </testcase>
+        <testcase name="Production Route Style Stability E2E Suite &gt; 2048x1152: Ask Wide-screen Responsive Geometry Hard Gates" classname="./web/e2e/route-style-stability.test.ts" time="2.052" line="401" col="13">
+        </testcase>
+        <testcase name="Production Route Style Stability E2E Suite &gt; 390x844: Mobile Layout, Touch Targets, and Drawer Contracts" classname="./web/e2e/route-style-stability.test.ts" time="2.348" line="546" col="13">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="2" failures="1" errors="0" time="4.200">
+    <testsuite name="./web/e2e/home-notes-order.test.ts" tests="2" disabled="1" errors="0" failures="1">
+        <testcase name="production home notes manual order E2E (#62)" classname="./web/e2e/home-notes-order.test.ts" line="15" col="6">
+            <skipped/>
+        </testcase>
+        <testcase name="Zen default floating notes do not block Search submit (#180)" classname="./web/e2e/home-notes-order.test.ts" time="4.193" line="1317" col="6">
+            <failure message="Uncaught TimeoutError: locator.click: Timeout 2500ms exceeded.
+Call log:
+  - waiting for locator(&apos;.search-form .search-submit&apos;)
+    - locator resolved to &lt;button tabindex=&quot;0&quot; type=&quot;submit&quot; aria-label=&quot;搜索&quot; data-slot=&quot;button&quot; class=&quot;button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--primary search-submit&quot;&gt;…&lt;/button&gt;
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    5 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+">TimeoutError: locator.click: Timeout 2500ms exceeded.
+Call log:
+  - waiting for locator(&apos;.search-form .search-submit&apos;)
+    - locator resolved to &lt;button tabindex=&quot;0&quot; type=&quot;submit&quot; aria-label=&quot;搜索&quot; data-slot=&quot;button&quot; class=&quot;button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--primary search-submit&quot;&gt;…&lt;/button&gt;
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    5 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+
+Call log:
+  - waiting for locator(&apos;.search-form .search-submit&apos;)
+    - locator resolved to &lt;button tabindex=&quot;0&quot; type=&quot;submit&quot; aria-label=&quot;搜索&quot; data-slot=&quot;button&quot; class=&quot;button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--primary search-submit&quot;&gt;…&lt;/button&gt;
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    5 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - &lt;p&gt;…&lt;/p&gt; from &lt;section class=&quot;pinned-area&quot; aria-label=&quot;固定的个人内容&quot;&gt;…&lt;/section&gt; subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+
+    at /home/aawei/searcher/.worktrees/issue-180/web/e2e/home-notes-order.test.ts:1572:22
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+
+    info: This program assigned to Object.prototype.__proto__, which Deno disables by default.
+    hint: If this caused the error, run again with --unsafe-proto to restore it.</failure>
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -1,0 +1,66 @@
+{
+  "issue": 180,
+  "query": "issue 180 real submit click",
+  "apiLayout": [
+    {
+      "title": "Issue #180 fixed note two",
+      "x": null,
+      "y": null,
+      "expanded": true
+    },
+    {
+      "title": "Issue #180 fixed note one",
+      "x": null,
+      "y": null,
+      "expanded": true
+    }
+  ],
+  "geometry": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "search": {
+      "x": 360,
+      "y": 296.1875,
+      "width": 720,
+      "height": 56
+    },
+    "submit": {
+      "x": 1031,
+      "y": 304.1875,
+      "width": 40,
+      "height": 40
+    },
+    "submitCenterHit": {
+      "tagName": "P",
+      "className": "",
+      "isFloatingNote": true,
+      "html": "<p>Issue #180 expanded fixed note line 1. This long text keeps the default floating note tall.<br>\nIssue #180 expanded fixed note line 2. This long text keeps the default floating note tall.<br>\nIssue #180 expanded fixed note line 3. This long text keeps the default floating note tall.<br>\nIssue #180 expanded fixed note line 4. This long text keeps the default floating note tall.<br>\nIssue #180 expanded fixed note line 5. This long text keeps the default floating note tall.<br>\nIssue #180 expand"
+    },
+    "notes": [
+      {
+        "id": null,
+        "rect": {
+          "x": 1130,
+          "y": 200,
+          "width": 250,
+          "height": 307
+        },
+        "html": "<div class=\"note-position\" style=\"left: 1130px; top: 200px; z-index: 1; --note-tilt: -0.3deg;\"><article class=\"note-card note-paper\"><header class=\"note-head\"><div class=\"note-head-left\"><span class=\"note-drag\"><span class=\"note-drag-handle\" role=\"button\" tabindex=\"0\" aria-disabled=\"false\" aria-roledescription=\"draggable\" aria-describedby=\"DndDescribedBy-0\" aria-label=\"拖动 Issue #180 fixed note two\">⋮⋮</span></span><button type=\"button\" tabindex=\"0\" data-slot=\"button\" title=\"Issue #180 fixed note"
+      },
+      {
+        "id": null,
+        "rect": {
+          "x": 850,
+          "y": 200,
+          "width": 250,
+          "height": 307
+        },
+        "html": "<div class=\"note-position\" style=\"left: 850px; top: 200px; z-index: 2; --note-tilt: -0.6deg;\"><article class=\"note-card note-paper\"><header class=\"note-head\"><div class=\"note-head-left\"><span class=\"note-drag\"><span class=\"note-drag-handle\" role=\"button\" tabindex=\"0\" aria-disabled=\"false\" aria-roledescription=\"draggable\" aria-describedby=\"DndDescribedBy-0\" aria-label=\"拖动 Issue #180 fixed note one\">⋮⋮</span></span><button type=\"button\" tabindex=\"0\" data-slot=\"button\" title=\"Issue #180 fixed note "
+      }
+    ]
+  },
+  "screenshotPath": "artifacts/issue-180/red-click/home-notes-order-180-bc40ec15bec4a083/issue-180-zen-search-before-submit.png",
+  "clickError": "TimeoutError: locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('.search-form .search-submit')\n    - locator resolved to <button tabindex=\"0\" type=\"submit\" aria-label=\"搜索\" data-slot=\"button\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--primary search-submit\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <p>…</p> from <section class=\"pinned-area\" aria-label=\"固定的个人内容\">…</section> subtree intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <p>…</p> from <section class=\"pinned-area\" aria-label=\"固定的个人内容\">…</section> subtree intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    5 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <p>…</p> from <section class=\"pinned-area\" aria-label=\"固定的个人内容\">…</section> subtree intercepts pointer events\n    - retrying click action\n      - waiting 500ms\n"
+}

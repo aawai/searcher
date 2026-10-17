@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="55" failures="0" errors="0" time="68.348">
+    <testsuite name="./web/e2e/home-notes-order.test.ts" tests="11" disabled="0" errors="0" failures="0">
+        <testcase name="production home notes manual order E2E (#62)" classname="./web/e2e/home-notes-order.test.ts" time="18.185" line="22" col="6">
+        </testcase>
+        <testcase name="Zen default floating notes do not block Search submit (#180)" classname="./web/e2e/home-notes-order.test.ts" time="1.480" line="1324" col="6">
+        </testcase>
+        <testcase name="Home floating-note placement and responsive matrix" classname="./web/e2e/home-notes-order.test.ts" time="9.978" line="1695" col="6">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Handle rendering and handle click does not open editor" classname="./web/e2e/home-notes-order.test.ts" time="0.571" line="195" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Pointer drag C-&gt;A immediate DOM, reload and relogin persistence, normal notes preserved" classname="./web/e2e/home-notes-order.test.ts" time="1.093" line="271" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Keyboard equivalent reordering and reload persistence" classname="./web/e2e/home-notes-order.test.ts" time="0.864" line="458" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Max 5 slots displayed, hidden sixth+ note preserved in background" classname="./web/e2e/home-notes-order.test.ts" time="0.844" line="515" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Fix and unfix notes toggles board presence and sorting capability" classname="./web/e2e/home-notes-order.test.ts" time="1.593" line="634" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Workspace other notes sorting and search unsortable contract" classname="./web/e2e/home-notes-order.test.ts" time="0.797" line="757" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Notes #62: Visual overflow at 375/390/768/1024/1440 light/dark and #40 layout contract" classname="./web/e2e/home-notes-order.test.ts" time="3.973" line="917" col="13">
+        </testcase>
+        <testcase name="production home notes manual order E2E (#62) &gt; Home #155: code scrolling stays inside Zen and Widgets notes" classname="./web/e2e/home-notes-order.test.ts" time="6.981" line="1083" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/home-notes-persistence.test.ts" tests="8" disabled="0" errors="0" failures="0">
+        <testcase name="production home notes expand/collapse persistence E2E (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="5.163" line="14" col="6">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario A: compact note -&gt; toggle expand -&gt; reload persists full (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.521" line="164" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario B: full note -&gt; toggle collapse -&gt; reload persists compact (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.413" line="267" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario C: cross-session logout and re-login retains expanded state from backend (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.538" line="344" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Scenario D: legacy note without layout defaults to expanded, collapses and persists (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.591" line="405" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Failure rollback: PUT 500 error rolls back optimistic UI to compact and shows error (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.567" line="465" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Zen / FloatingNotes: toggle mode produces exactly 1 PUT and persists across reload (#122)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.501" line="555" col="13">
+        </testcase>
+        <testcase name="production home notes expand/collapse persistence E2E (#122) &gt; Zen code block native scrollbar remains draggable (#138)" classname="./web/e2e/home-notes-persistence.test.ts" time="0.742" line="621" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/bento.test.ts" tests="21" disabled="0" errors="0" failures="0">
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44)" classname="./web/e2e/bento.test.ts" time="5.710" line="12" col="6">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Both have content -&gt; 5:3 double-column &amp; intrinsic height" classname="./web/e2e/bento.test.ts" time="0.355" line="197" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Apps-only -&gt; Apps card full width, Notes empty moves down compact" classname="./web/e2e/bento.test.ts" time="0.285" line="262" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Notes-only -&gt; Notes card full width, Apps empty moves down compact" classname="./web/e2e/bento.test.ts" time="0.344" line="332" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Contract: Both empty -&gt; Both entries discoverable, 5:3 side-by-side, no large fixed min-height" classname="./web/e2e/bento.test.ts" time="0.260" line="403" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Tile Centering: 1 to 4 tiles centered (data-few-apps), 5+ start-aligned" classname="./web/e2e/bento.test.ts" time="0.525" line="462" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Geometry: Long app title &amp; long note title do not cause overflow" classname="./web/e2e/bento.test.ts" time="0.127" line="542" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 375 mobile (375x667) - light" classname="./web/e2e/bento.test.ts" time="0.184" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 390 mobile standard (390x844) - light" classname="./web/e2e/bento.test.ts" time="0.093" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 768 tablet (768x1024) - light" classname="./web/e2e/bento.test.ts" time="0.148" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1024 desktop small (1024x768) - light" classname="./web/e2e/bento.test.ts" time="0.127" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1440 desktop standard (1440x900) - light" classname="./web/e2e/bento.test.ts" time="0.142" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1920 desktop large (1920x1080) - light" classname="./web/e2e/bento.test.ts" time="0.118" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 375 mobile (375x667) - dark" classname="./web/e2e/bento.test.ts" time="0.173" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 390 mobile standard (390x844) - dark" classname="./web/e2e/bento.test.ts" time="0.095" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 768 tablet (768x1024) - dark" classname="./web/e2e/bento.test.ts" time="0.137" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1024 desktop small (1024x768) - dark" classname="./web/e2e/bento.test.ts" time="0.136" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1440 desktop standard (1440x900) - dark" classname="./web/e2e/bento.test.ts" time="0.336" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Matrix: 1920 desktop large (1920x1080) - dark" classname="./web/e2e/bento.test.ts" time="0.121" line="626" col="21">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Bento Notes: compact &amp; expanded state toggles within controlled board" classname="./web/e2e/bento.test.ts" time="0.492" line="714" col="13">
+        </testcase>
+        <testcase name="production Bento contracts &amp; empty expansion matrix (#44) &gt; Zen Isolation: FloatingNotes &amp; edge trigger work without Bento injection" classname="./web/e2e/bento.test.ts" time="0.117" line="779" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/workspace.test.ts" tests="9" disabled="0" errors="0" failures="0">
+        <testcase name="production workspace contracts" classname="./web/e2e/workspace.test.ts" time="19.797" line="25" col="6">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Widgets closed Dock -&gt; Apps/Notes, non-modal desktop no backdrop/no focus trap/layout shift" classname="./web/e2e/workspace.test.ts" time="0.140" line="126" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; root in-place switch preserving queries" classname="./web/e2e/workspace.test.ts" time="0.358" line="222" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; nested AppForm dirty Back/Close protection and save" classname="./web/e2e/workspace.test.ts" time="1.082" line="318" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server" classname="./web/e2e/workspace.test.ts" time="5.815" line="464" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation" classname="./web/e2e/workspace.test.ts" time="7.937" line="884" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Home Quick Apps pinned order, icon size and label preferences" classname="./web/e2e/workspace.test.ts" time="1.898" line="1206" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Zen apps notes note edit FloatingNotes preserved desktop layout" classname="./web/e2e/workspace.test.ts" time="0.666" line="1331" col="13">
+        </testcase>
+        <testcase name="production workspace contracts &gt; Mobile focustrap/swipe/escape and focus return" classname="./web/e2e/workspace.test.ts" time="0.442" line="1441" col="13">
+        </testcase>
+    </testsuite>
+    <testsuite name="./web/e2e/ui-ownership.test.ts" tests="6" disabled="0" errors="0" failures="0">
+        <testcase name="UI Ownership and style scoping contracts" classname="./web/e2e/ui-ownership.test.ts" time="6.268" line="25" col="6">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Admin login fixture establishes authenticated session" classname="./web/e2e/ui-ownership.test.ts" time="0.158" line="163" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Home style zen vs widgets switching isolates Settings/Admin/Account/Trash/Ask" classname="./web/e2e/ui-ownership.test.ts" time="1.504" line="181" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Global theme, accent, and search shape preferences remain effective globally" classname="./web/e2e/ui-ownership.test.ts" time="0.967" line="286" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Utility/Management/Workbench/Search geometry has no overflow across 390/768/1440 x light/dark" classname="./web/e2e/ui-ownership.test.ts" time="2.743" line="415" col="13">
+        </testcase>
+        <testcase name="UI Ownership and style scoping contracts &gt; Canonical rendering and semantic feedback without checking source classes" classname="./web/e2e/ui-ownership.test.ts" time="0.654" line="476" col="13">
+        </testcase>
+    </testsuite>
+</testsuites>

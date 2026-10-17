@@ -1,0 +1,72 @@
+{
+  "issue": 180,
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "query": "issue 180 real submit click 1440x900",
+  "apiLayout": [
+    {
+      "title": "Issue #180 fixed note two",
+      "x": null,
+      "y": null,
+      "expanded": true
+    },
+    {
+      "title": "Issue #180 fixed note one",
+      "x": null,
+      "y": null,
+      "expanded": true
+    }
+  ],
+  "geometry": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "search": {
+      "x": 360,
+      "y": 296.1875,
+      "width": 720,
+      "height": 56
+    },
+    "submit": {
+      "x": 1031,
+      "y": 304.1875,
+      "width": 40,
+      "height": 40
+    },
+    "submitCenterHit": {
+      "tagName": "BUTTON",
+      "className": "button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--primary search-submit",
+      "isHomeNote": false,
+      "html": "<button type=\"submit\" tabindex=\"0\" data-slot=\"button\" aria-label=\"搜索\" class=\"button group/button inline-flex shrink-0 items-center justify-center transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 cursor-pointer button--primary search-submit\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"roun"
+    },
+    "notes": [
+      {
+        "id": null,
+        "title": "Issue #180 fixed note two",
+        "rect": {
+          "x": 1174,
+          "y": 80,
+          "width": 250,
+          "height": 307
+        },
+        "html": "<div class=\"note-position\" style=\"left: 1174px; top: 80px; z-index: 1; --note-tilt: -0.3deg;\"><article class=\"note-card note-paper\"><header class=\"note-head\"><div class=\"note-head-left\"><span class=\"note-drag\"><span class=\"note-drag-handle\" role=\"button\" tabindex=\"0\" aria-disabled=\"false\" aria-roledescription=\"draggable\" aria-describedby=\"DndDescribedBy-0\" aria-label=\"拖动 Issue #180 fixed note two\">⋮⋮</span></span><button type=\"button\" tabindex=\"0\" data-slot=\"button\" title=\"Issue #180 fixed note "
+      },
+      {
+        "id": null,
+        "title": "Issue #180 fixed note one",
+        "rect": {
+          "x": 94,
+          "y": 80,
+          "width": 250,
+          "height": 307
+        },
+        "html": "<div class=\"note-position\" style=\"left: 94px; top: 80px; z-index: 2; --note-tilt: -0.3deg;\"><article class=\"note-card note-paper\"><header class=\"note-head\"><div class=\"note-head-left\"><span class=\"note-drag\"><span class=\"note-drag-handle\" role=\"button\" tabindex=\"0\" aria-disabled=\"false\" aria-roledescription=\"draggable\" aria-describedby=\"DndDescribedBy-0\" aria-label=\"拖动 Issue #180 fixed note one\">⋮⋮</span></span><button type=\"button\" tabindex=\"0\" data-slot=\"button\" title=\"Issue #180 fixed note on"
+      }
+    ]
+  },
+  "screenshotPath": "artifacts/issue-180/lazy-final/home-notes-order-180-f30463cee67081fd/issue-180-zen-search-before-submit-1440x900.png",
+  "controlledTargetUrl": "http://127.0.0.1:33309/search-target?q=issue+180+real+submit+click+1440x900"
+}
