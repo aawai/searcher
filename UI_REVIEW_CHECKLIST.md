@@ -4,6 +4,52 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #180 Zen 默认固定便签避让 Search
+
+- [x] 在隔离 worktree、`origin/main@b055c8d` 基线，两个展开固定便签的 API x/y
+      均为 null；focused 真点击 submit 被便签正文拦截而超时。 首轮夹具误依赖 GET
+      顺序，修正后才取得真实遮挡 Red，不将夹具失败算产品证据。
+- [x] `SearchHome` 复用现有 `useDesktopGeometry.safeRect`，`ZenLayout` 测量
+      Search bounds；纯 placement 只处理未保存 desktop 坐标的便签。
+      Markdown、字体与尺寸就绪后发布位置，空间不足复用 flow；不新增 viewport
+      owner， 不改搜索纵向 anchor 或全局 z-index。Design Lab 明确使用 flow
+      预览同一组件。
+- [x] 最终 focused 在 1440×900、1024×768 输入搜索词、普通 click submit，
+      都到达受控本地搜索目标；首屏、字体就绪、实时 resize、light/dark 均覆盖。
+      已保存 x=700/y=420 不自动重排，默认置顶/折叠/展开保持 null 坐标，
+      实际拖动建立坐标并经 reload 保留，折叠与第二账号不覆盖该坐标。
+- [x] 320/390/768/960 flow 与 961×390 短屏回流通过；额外发现滚动释放 Search
+      占位会令 flow 移回 canvas 并重置页面滚动。新增回归先 Red，修复后普通滚轮
+      保持滚动；主代理另在 1440×450 实页观察 scrollY=252 连续六帧不变。
+      exclusion 保留实测 Search 当前与未滚动占位的并集，无硬编码 Search Y。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      共十二组实际截图与搜索 hit-testing、零横向 overflow；主代理逐张审阅。
+      1440×900 Zen Search 修复前后均为 x=360/y=296.1875/width=720/height=56。
+- [x] 领域测试 675 tests / 51 steps、纯 placement 2 tests、UI Guard regression
+      100 tests 通过；前后端 typecheck、7 files lint、格式化与 `check:ui` 通过，
+      ownership 202 files / visual 141 files 均为 0 violations。
+- [x] 完整生产 E2E 首轮 71 passed / 291 steps、1 failed：新增快速折叠/展开夹具
+      未等待重排和 hover 操作区就绪。改用真实 placement-ready 与 hover
+      完成条件， 不 force、不重发点击；最终
+      home-notes-order、home-notes-persistence、bento、 workspace、ui-ownership
+      共 7 tests / 48 steps 全通过，包含滚动修复。
+      不将分批结果描述为完整命令一次通过。其他完整套件成功项覆盖导航/草稿保护、
+      canonical/v4/Dock、编辑器/版本/分页、壁纸/reduced-motion、懒加载与身份隔离。
+- [x] 入口预算首轮因同步引入 placement 超出 350000 B：entry=351942 B。
+      仅存在固定便签时用现有 React lazy / Suspense 挂载该模块，最终 entry=344786
+      B， initial graph=285111 B gzip，bundle 全部门禁通过；不提高阈值。
+      最终按需构建上的
+      home-notes-order、home-notes-persistence、bundle-loading、
+      markdown-editor-loading、route-style-stability 共 7 tests / 27 steps
+      通过； 新版十二组矩阵与真实搜索目标一并复查，匿名/Apps 不加载编辑器
+      runtime。
+- [x] CHANGELOG、Design System 同步；无 schema/storage key/v4 迁移，
+      不持久化覆盖默认或已有用户坐标，可独立回滚 bounds props 与 placement。
+      原始 Red、最终矩阵、分批 JUnit 和完整运行 timing 见
+      [证据分支](https://github.com/aawai/searcher/tree/evidence/issue-180/evidence/issue-180)。
+- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
+      Chromium viewport 与焦点/命中验证不作为真机证据。
+
 ## Issue #181 Widgets 短屏初次打开工作区
 
 - [x] 基线 `6a34b75`：844×390 Widgets 点击 Apps 后 windows=0、panels=0； focused
