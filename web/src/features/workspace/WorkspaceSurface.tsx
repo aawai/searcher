@@ -36,6 +36,7 @@ export function WorkspaceSurface(
         headerActions,
         backLabel = "返回上一级",
         viewportInsets,
+        chromeBottom = 0,
     }: {
         presentation: Exclude<WorkspacePresentation, "window">;
         title: string;
@@ -54,6 +55,7 @@ export function WorkspaceSurface(
         headerActions?: ReactNode;
         backLabel?: string;
         viewportInsets?: WorkspaceViewportInsets;
+        chromeBottom?: number;
     },
 ) {
     const mobile = presentation === "sheet";
@@ -241,9 +243,13 @@ export function WorkspaceSurface(
                 data-presentation={presentation}
                 data-workspace-expanded={expanded || undefined}
                 data-viewport-constrained={Boolean(viewportInsets) || undefined}
-                style={viewportInsets
-                    ? { top: viewportInsets.top, bottom: viewportInsets.bottom }
-                    : undefined}
+                style={{
+                    "--workspace-chrome-bottom": `${chromeBottom}px`,
+                    ...(viewportInsets && {
+                        top: viewportInsets.top,
+                        bottom: viewportInsets.bottom,
+                    }),
+                } as CSSProperties}
                 aria-label={title + "工作区"}
             >
                 {content}

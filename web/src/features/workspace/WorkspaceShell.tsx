@@ -37,6 +37,7 @@ export function WorkspaceShell(
         appsArranging = false,
         children,
         viewportInsets,
+        chromeBottom,
     }: {
         open?: boolean;
         state: WorkspaceRoute;
@@ -53,6 +54,7 @@ export function WorkspaceShell(
         appsArranging?: boolean;
         children: ReactNode;
         viewportInsets?: WorkspaceViewportInsets;
+        chromeBottom?: number;
     },
 ) {
     const [notesExpanded, setNotesExpanded] = useState(false);
@@ -115,6 +117,7 @@ export function WorkspaceShell(
         <WorkspaceSurface
             presentation={presentation}
             viewportInsets={viewportInsets}
+            chromeBottom={chromeBottom}
             title={title}
             expanded={state.view === "documents/edit" ||
                 (state.view === "notes/edit" && notesExpanded)}

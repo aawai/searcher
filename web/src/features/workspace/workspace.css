@@ -1,7 +1,11 @@
 .workspace-panel {
+    --workspace-chrome-bottom: 0px;
     position: fixed;
     inset-block: var(--workspace-inset);
-    inset-block-start: var(--workspace-top-inset);
+    inset-block-start: max(
+        var(--workspace-top-inset),
+        var(--workspace-chrome-bottom)
+    );
     right: var(--workspace-inset);
     width: min(var(--workspace-width), calc(100vw - 2 *
         var(--workspace-inset)));

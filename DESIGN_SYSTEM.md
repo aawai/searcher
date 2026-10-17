@@ -278,8 +278,15 @@ AlertDialog）具有严格不同的交互与视觉语义：
 - **Zen 桌面端（>=768px）**：呈现为右侧固定非模态侧边栏（`<aside>`，宽度
   `--workspace-width: 400px`，边距
   `--workspace-inset: var(--space-4)`，顶栏安全避让
-  `--workspace-top-inset: calc(var(--control-height) + var(--space-6))`）。采用
-  `--surface-workspace: var(--surface-solid)`（非模态 L3
+  `--workspace-top-inset: calc(var(--control-height) + var(--space-6))`）。实际顶部取
+  该语义 inset 与 Host 传入的 `chromeBottom` 最大值；后者由现有
+  `useDesktopGeometry` 统一测量 `.topbar` / `.connection-banner`， 经
+  `SearchHome` → `WorkspaceShell` → `WorkspaceSurface` 注入局部
+  `--workspace-chrome-bottom`。连接提示出现、换行或移除时同步调整 Panel
+  可用高度，Retry 不被 Panel 覆盖；无提示时仍为原 64px 基线。不新增 viewport
+  listener 或提高 banner elevation，受限窗口的 `viewportInsets` 与移动 Sheet
+  的几何契约保持独立。采用 `--surface-workspace: var(--surface-solid)`（非模态
+  L3
   覆盖层）、`--shadow-workspace: var(--shadow-l2)`、`--elevation-workspace: 45`。面板不设
   backdrop 背景遮罩，不执行全局
   focus-trap；主页底层的搜索框与画布内容保持可直接交互，仅阻断面板容器内的滚动与按键；支持
