@@ -8,15 +8,22 @@
 
 - [x] 合并前审查发现
       [Workspace CI](https://github.com/aawai/searcher/actions/runs/39042396911)
-      为 53 passed / 1 failed：实时缩屏至 390px 时采样到旧受限窗口的
-      540.078125px 容器、7 列。原等待只核对网格与当前容器自洽，没有等待目标
-      Host；探针确认稳定窗口为约 540px / 7 列，稳定 390px Sheet 为 356px / 5
+      为 53 passed / 1 failed：实时缩屏至 390px 时测得 540.078125px 容器、7
+      列，与旧受限窗口宽度吻合。原等待只核对网格与当前 容器自洽，没有等待目标
+      Host；探针确认稳定窗口为约 540px / 7 列， 稳定 390px Sheet 为 356px / 5
       列。 `apps-density.test.ts` 改为先等待对应 Sheet/Window
       与视口边界匹配，再复用 `settlePresentation`
       等待动画、字体和布局收敛。未修改产品样式、五列期望、
       命中区或排序断言；完整 focused Chromium density 验收为 1 passed / 0
       failed， lint 通过。本次只修复验收采样边界，不在 CHANGELOG
       记录内部测试调整。
+- [x] 后续
+      [Workspace CI](https://github.com/aawai/searcher/actions/runs/39082067504)
+      中 density 已通过，但 Shell 的平板 Escape 场景失败：只等 innerWidth=800
+      就发按键，没有等待受限 Host 发布。改为等待便签窗口的“窗口尺寸”控件可见，
+      再从便签搜索框发送一次 Escape；保留桌面不关闭、平板关闭与 Dock 焦点
+      恢复断言，不重发按键。完整 Shell Chromium 验收为 1 passed / 9 steps、 0
+      failed，lint/format 通过；未修改产品代码或样式。
 
 - [x] 三阶段范围统一保留在 PR #189 的独立 worktree，合入当前 main， 未触碰 main
       或旧 issue-182 工作区的未提交修改。
