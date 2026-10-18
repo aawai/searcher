@@ -1194,15 +1194,27 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
             ) => tile.id);
         for (const width of [390, 375, 430, 767, 768]) {
             await touchPage.setViewportSize({ width, height: 844 });
-            // 767 is mobile Sheet; 768 is the constrained desktop Owner.
-            // Accept either layout's current mount at each width.
-            await touchPage.waitForFunction(() => {
+            // Require the destination Host, not a self-consistent outgoing grid.
+            // A constrained window can still report seven columns after shrinking.
+            await touchPage.waitForFunction((width) => {
                 const grids = Array.from(
                     document.querySelectorAll<HTMLElement>(
                         ".apps-workspace-root .launcher-grid--workspace",
                     ),
                 ).filter((grid) => grid.isConnected);
                 if (grids.length !== 1) return false;
+                const host = grids[0].closest<HTMLElement>(
+                    '[data-presentation="sheet"], [data-presentation="window"]',
+                );
+                if (
+                    innerWidth !== width ||
+                    host?.dataset.presentation !==
+                        (width < 768 ? "sheet" : "window")
+                ) return false;
+                const bounds = host.getBoundingClientRect();
+                if (bounds.left < -0.75 || bounds.right > width + 0.75) {
+                    return false;
+                }
                 const parent = grids[0].parentElement;
                 if (!parent) return false;
                 const parentStyle = getComputedStyle(parent);
@@ -1214,7 +1226,8 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                 );
                 return Number(grids[0].dataset.columns) ===
                     Math.floor((available + gap) / (68 + gap));
-            });
+            }, width);
+            await settlePresentation(touchPage);
             const metrics = await collectDensityMetrics(touchPage, fixtures);
             assertDensityMetrics(metrics, { width, height: 844 });
             assertEquals(

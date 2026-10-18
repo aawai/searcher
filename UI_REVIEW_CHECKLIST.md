@@ -6,6 +6,18 @@
 
 ## Issue #182 / PR #189 动态桌面场景续实现
 
+- [x] 合并前审查发现
+      [Workspace CI](https://github.com/aawai/searcher/actions/runs/39042396911)
+      为 53 passed / 1 failed：实时缩屏至 390px 时采样到旧受限窗口的
+      540.078125px 容器、7 列。原等待只核对网格与当前容器自洽，没有等待目标
+      Host；探针确认稳定窗口为约 540px / 7 列，稳定 390px Sheet 为 356px / 5
+      列。 `apps-density.test.ts` 改为先等待对应 Sheet/Window
+      与视口边界匹配，再复用 `settlePresentation`
+      等待动画、字体和布局收敛。未修改产品样式、五列期望、
+      命中区或排序断言；完整 focused Chromium density 验收为 1 passed / 0
+      failed， lint 通过。本次只修复验收采样边界，不在 CHANGELOG
+      记录内部测试调整。
+
 - [x] 三阶段范围统一保留在 PR #189 的独立 worktree，合入当前 main， 未触碰 main
       或旧 issue-182 工作区的未提交修改。
 - [x] `desktop_scene` 增量迁移保留旧用户的 engine/theme/accent，旧行默认 none；
