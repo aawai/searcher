@@ -56,6 +56,8 @@
         "remark-gfm": "npm:remark-gfm@4.0.1",
         "remark-breaks": "npm:remark-breaks@4.0.0",
         "remark": "npm:remark@15.0.1",
+        "remark-parse": "npm:remark-parse@11.0.0",
+        "unified": "npm:unified@11.0.5",
         "rehype-sanitize": "npm:rehype-sanitize@6.0.0",
         "@milkdown/core": "npm:@milkdown/core@7.22.2",
         "@milkdown/ctx": "npm:@milkdown/ctx@7.22.2",

@@ -1,4 +1,5 @@
-import { remark } from "remark";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 
 interface ReadableNode {
@@ -20,7 +21,11 @@ export interface NoteSummaryAnalysis {
     preview: (body: string, readable: string, query: string) => NotePreview;
     highlight: (text: string, query: string) => NoteTextPart[];
 }
-const parser = remark().use(remarkGfm);
+const parser = unified().use(remarkParse).use(remarkGfm);
+/** Parse note Markdown with the same CommonMark/GFM processor as summaries. */
+export function parseNoteMarkdown(body: string) {
+    return parser.parse(body);
+}
 
 export function analyzeNoteBody(body: string): string {
     function readable(node: ReadableNode): string {
@@ -35,7 +40,7 @@ export function analyzeNoteBody(body: string): string {
             node.type === "link" || node.type === "linkReference";
         return (node.children ?? []).map(readable).join(inline ? "" : " ");
     }
-    return readable(parser.parse(body)).replace(/\s+/gu, " ").trim();
+    return readable(parseNoteMarkdown(body)).replace(/\s+/gu, " ").trim();
 }
 
 // Map lower-case offsets back to the original text, including case expansions.

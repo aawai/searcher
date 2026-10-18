@@ -11,10 +11,16 @@ import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import { useZenNoteSelection } from "./useZenNoteSelection.ts";
 
 const FloatingNotes = lazy(() =>
     import("../../components/searcher/FloatingNotes.tsx").then((module) => ({
         default: module.FloatingNotes,
+    }))
+);
+const ZenInlineNotes = lazy(() =>
+    import("./ZenInlineNotes.tsx").then((module) => ({
+        default: module.ZenInlineNotes,
     }))
 );
 
@@ -60,8 +66,10 @@ export function ZenLayout(
     } = props;
     const heroRef = useRef<HTMLElement>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
+    const mobile = props.viewportWidth < 768;
 
     useLayoutEffect(() => {
+        if (mobile) return;
         const hero = heroRef.current;
         const search = hero?.querySelector(".search-form-wrap");
         if (!hero || !search) return;
@@ -92,7 +100,7 @@ export function ZenLayout(
             observer.disconnect();
             removeEventListener("scroll", measure, true);
         };
-    }, [props.availableRect, mode]);
+    }, [props.availableRect, mode, mobile]);
 
     return (
         <>
@@ -128,7 +136,7 @@ export function ZenLayout(
                 appsStatus === "error" ||
                 (appsStatus === "offline" && pinned.length > 0) ||
                 pinned.length > 0 ||
-                fixedNotes.length > 0
+                (!mobile && fixedNotes.length > 0)
             ) && (
                 <section className="pinned-area" aria-label="固定的个人内容">
                     {appsStatus === "loading" && (
@@ -227,7 +235,7 @@ export function ZenLayout(
                             />
                         </>
                     )}
-                    {fixedNotes.length > 0 && (
+                    {!mobile && fixedNotes.length > 0 && (
                         <Suspense fallback={null}>
                             <FloatingNotes
                                 notes={fixedNotes}
@@ -252,6 +260,16 @@ export function ZenLayout(
                         </Suspense>
                     )}
                 </section>
+            )}
+
+            {user && !props.notesLoading && (
+                <ZenHomeNotes
+                    key={user.id}
+                    userId={user.id}
+                    notes={fixedNotes}
+                    mobile={mobile}
+                    onOpen={editNote}
+                />
             )}
 
             {user && (
@@ -289,5 +307,21 @@ export function ZenLayout(
                 </aside>
             )}
         </>
+    );
+}
+
+/** Keep device selection alive even when no preview or mobile surface exists. */
+function ZenHomeNotes({ userId, notes, mobile, onOpen }: {
+    userId: string;
+    notes: HomeLayoutProps["fixedNotes"];
+    mobile: boolean;
+    onOpen: HomeLayoutProps["editNote"];
+}) {
+    const selection = useZenNoteSelection(userId, notes);
+    if (!mobile || !selection.current) return null;
+    return (
+        <Suspense fallback={null}>
+            <ZenInlineNotes selection={selection} onOpen={onOpen} />
+        </Suspense>
     );
 }

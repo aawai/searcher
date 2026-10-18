@@ -91,6 +91,12 @@
     --space-preview-card-p: 3px;
     --space-pinned-area-mb: 48px;
     --space-pinned-area-mb-mobile: 40px;
+    /* Zen inline preview geometry: not a new card/material. */
+    --zen-note-preview-lines: 4;
+    --zen-note-title-lines: 2;
+    --zen-note-swipe-distance: 32;
+    --zen-note-position-size: 4px;
+    --zen-note-navigation-clearance: calc(var(--control-touch-target) + var(--space-7));
 }
 
 /* ==========================================================================
@@ -726,4 +732,96 @@
     color: var(--accent);
     display: inline-flex;
     align-items: center;
+}
+
+/* Mobile Zen secondary content shares the search/launcher axis, not its surface. */
+.zen-inline-notes {
+    width: calc(100% - 2 * var(--space-4));
+    max-width: var(--layout-home-content-max);
+    margin: var(--space-section) auto;
+    color: var(--foreground);
+}
+.zen-inline-note {
+    width: calc(100% - 2 * var(--space-4));
+    margin-inline: auto;
+    block-size: calc(
+        var(--zen-note-title-lines) * var(--font-component-title-line-height) +
+        var(--space-inline-gap) +
+        var(--zen-note-preview-lines) * var(--font-body-size) *
+        var(--font-body-line-height)
+    );
+    text-align: start;
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+}
+.zen-inline-note[data-alignment="center"] {
+    text-align: center;
+}
+.zen-inline-note-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    block-size: 100%;
+    gap: var(--space-inline-gap);
+}
+.zen-inline-note-title,
+.zen-inline-note-body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+.zen-inline-note-title {
+    -webkit-line-clamp: var(--zen-note-title-lines);
+    max-block-size: calc(var(--zen-note-title-lines) *
+        var(--font-component-title-line-height));
+    font-size: var(--font-component-title-size);
+    line-height: var(--font-component-title-line-height);
+    font-weight: var(--font-title-weight);
+}
+.zen-inline-note-body {
+    -webkit-line-clamp: var(--zen-note-preview-lines);
+    max-block-size: calc(var(--zen-note-preview-lines) * var(--font-body-size) *
+        var(--font-body-line-height));
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-body-weight);
+    white-space: pre-wrap;
+}
+.zen-inline-notes-position {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-inline-gap);
+    margin-block-start: var(--space-row-gap);
+}
+.zen-inline-notes-position > span {
+    inline-size: var(--zen-note-position-size);
+    block-size: var(--zen-note-position-size);
+    border-radius: var(--control-radius);
+    background: var(--border);
+}
+.zen-inline-notes-position > [data-active="true"] {
+    inline-size: var(--space-3);
+    background: var(--muted);
+}
+@media (max-width: 767px) {
+    .home-zen {
+        padding-block-end: calc(var(--zen-note-navigation-clearance) +
+            env(safe-area-inset-bottom, 0px));
+    }
+    .home-zen .pinned-area:has(+ .zen-inline-notes) {
+        margin-block-end: 0;
+    }
+    .home-zen .zen-edge-trigger {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100% - 2 * var(--space-4));
+    }
+    .home-zen .zen-edge-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
 }
