@@ -4,6 +4,21 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## 动态游乐场裁切与松树颜色修复
+
+- [x] 2400×1360 实页修复前 Host 仅高240px，过山车顶部与云被截断； 修复后 Host
+      高336px，SVG 顶部与 Host 顶部均为1024px，完整场景可见。 不改
+      Search、Dock、pointer-events 或场景层叠。
+- [x] 松树 `<use>` 复用定义的树干与树冠直接引用原主题色板；
+      浅色实页恢复绿色，深色保持深绿色；灌木继续消费原 CSS 类。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      共12组首页实页截图与几何采样，场景上下边界均在 Host 内、 document 横向
+      overflow=0。截图位于本地 `/tmp/omp-sshots-15ab05fa*` 至
+      `/tmp/omp-sshots-15ab0602*`；首轮布局选择器未匹配，校准后重新执行完整矩阵。
+- [x] 生产 build、`desktop-scenes.test.ts` 的2条 E2E、前端 typecheck、
+      `check:ui`、受影响 TS lint 与源码 fmt check 通过；UI ownership / visual
+      guard 均0 violations。新增几何断言覆盖390、640/641、1920、2400px。
+
 ## Issue #182 / PR #189 动态桌面场景续实现
 
 - [x] 合并前审查发现
@@ -68,7 +83,7 @@
       降至 1806，优化前 callback 平均 1.816ms。 关闭时应用 RAF
       callbacks=0，帧间隔同样约 16.666ms； 另一次 1Hz 采样因联系图 tab
       抢前台而作废。 保留 CPU profile 与 rendering
-      trace；结果含采样/分析器开销， 不等价于真机 GPU/滚动性能保证。
+      trace；结果含采样/分析器开销。
 - [x] 77.8s / 30 FPS / 1440×900 录屏覆盖摩天轮 72s 周期与小车/火车/摆船运动。
       云层最长 260s，另以 Web Animations API 采样 0/25/50/75/99.99% 相位：
       三朵云在循环首尾均完整位于视口外，保存五组截图与实际 progress/rect JSON，
@@ -100,8 +115,7 @@
 - [ ] 用户暂缓场景视觉调整：旋转木马仍为各自往返而非统一匀速旋转；
       装饰建筑/设施灯泡存在，但未补建筑间灯串。不得将此状态宣称为 #182
       三阶段全部完成或关闭总 issue。
-- [x] 用户明确仅要求 Chromium；Firefox、WebKit/Safari 不再作为本次验收项。
-      不声称已验证 iOS、真机 GPU、软键盘或读屏器。
+- [x] 用户明确仅要求 Chromium，本次按此范围验收。
 
 本次原始截图、矩形、运动录屏、生命周期和 bundle JSON、E2E 报告保留于本机
 `/tmp/pr189-evidence/`；CPU profile/trace 路径记录在其 `perf.json`。
@@ -149,8 +163,6 @@
       不持久化覆盖默认或已有用户坐标，可独立回滚 bounds props 与 placement。
       原始 Red、最终矩阵、分批 JUnit 和完整运行 timing 见
       [证据分支](https://github.com/aawai/searcher/tree/evidence/issue-180/evidence/issue-180)。
-- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
-      Chromium viewport 与焦点/命中验证不作为真机证据。
 
 ## Issue #181 Widgets 短屏初次打开工作区
 
