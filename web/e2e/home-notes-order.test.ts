@@ -1109,6 +1109,8 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
                 for (const theme of ["light", "dark"]) {
                     const presentations = [];
                     for (const style of ["zen", "widgets"]) {
+                        // #191 mobile Zen consumes text summaries, not a code scroller.
+                        if (width < 768 && style === "zen") continue;
                         await page.evaluate(async (preferences) => {
                             const response = await fetch("/api/preferences", {
                                 method: "PATCH",
@@ -1306,6 +1308,7 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
                         });
                     }
                     if (
+                        presentations.length === 2 &&
                         presentations.every((presentation) =>
                             presentation.scoped
                         )
@@ -1806,6 +1809,12 @@ Deno.test("Home floating-note placement and responsive matrix", async () => {
             )
         );
         const viewport = page.viewportSize();
+        if (style === "zen" && viewport && viewport.width < 768) {
+            await page.locator(".zen-inline-note").waitFor({
+                state: "visible",
+            });
+            return;
+        }
         if (style === "zen" && viewport && viewport.width > 960) {
             await page.waitForFunction(() => {
                 const canvas = document.querySelector(
@@ -2102,13 +2111,11 @@ Deno.test("Home floating-note placement and responsive matrix", async () => {
         assertEquals(layoutSnapshot(await readNotes()), initialSnapshot);
     }
 
-    // Zen preserves the existing in-flow presentation through 960px. The
-    // short 961px case also forces a flow fallback when the viewport is too low.
+    // Mobile previews are covered by #191; tablet retains flowing cards.
+    // The short 961px case forces fallback when the viewport is too low.
     await setHome("zen", "dark");
     for (
         const viewport of [
-            { width: 320, height: 640 },
-            { width: 390, height: 844 },
             { width: 768, height: 1024 },
             { width: 960, height: 640 },
         ]

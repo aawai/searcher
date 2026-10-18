@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-17T01:18:17.529Z",
+  "last_updated": "2026-10-18T14:03:55.895Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1652,6 +1652,25 @@
       "source_context": "完成issue179、创建PR并合并main关闭issue",
       "created": "2026-10-17",
       "updated": "2026-10-17"
+    },
+    "sources/obs-2026-10-18-zen-remark": {
+      "type": "source",
+      "title": "Observation: Zen 便签预览避免 remark 根入口拉入编辑器包",
+      "tags": [
+        "zen",
+        "notes",
+        "bundle",
+        "markdown",
+        "lazy-loading",
+        "issue191"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-18-zen-remark",
+      "relevance": "high",
+      "observed_at": "2026-10-18T13:11:31.063Z",
+      "source_context": "移动极简空间无容器便签实施，仍在执行完整交互与矩阵验收",
+      "created": "2026-10-18",
+      "updated": "2026-10-18"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

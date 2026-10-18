@@ -4,6 +4,49 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #191 移动 Zen 无容器便签
+
+- [x] 仅 `<768px` Zen 使用单张透明内容预览；实际 computed background 为透明、
+      border 为 0、box-shadow 为 none。删除数值分页、外框与首页管理栏，
+      短句居中，结构化/长文左对齐，复用现有 Typography/Spacing/Button content
+      语义，无新增 guard allowance。
+- [x] `zen-inline-notes.test.ts` 生产 E2E 为 1 passed / 0 failed：
+      0/1/多张、仅首页固定、稳定排序与删除回退、真实 CDP 双向滑动和纵向手势、
+      键盘/辅助技术操作、原 Sheet
+      编辑保存与正常关闭焦点恢复、账号隔离与立即刷新通过。
+      单行标题实测高度为单行行高（24px），与正文共享 8px
+      间距，不为单行预留空白第二行； 首轮确实暴露异步 IndexedDB
+      写入被刷新中断；采用与 DocumentEditor 一致的同步 localStorage 当前 ID
+      后，同一路径通过。无服务端字段或 note_layouts 迁移。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 的 12 组实页截图
+      与 overflow 检查通过，并审阅构图；移动 Zen 的 Search、Launcher
+      网格、便签、 Navigation 中轴偏差 <=1 CSS
+      px。应用网格保持标准左对齐流式排列，不修改图标对齐；
+      切换当前便签不改变外部控件几何。
+      证据：`artifacts/e2e/evidence/zen-inline-notes-191-68a03903e410a024/`。
+- [x] 同一生产 E2E 覆盖默认背景、代表性纯色/CSS gradient/真实上传图片， 150%
+      正文字体、390×520 短屏、reduced-motion 与 767→768→767 编辑会话；
+      草稿可保存，最后一行能滚到导航上方。跨断点卸载 opener 后遵循既有 Host
+      契约恢复工作区入口，不重新创建全局焦点规则。极端自定义壁纸仍保留既有可读性例外。
+- [x] 补充真实浏览器 smoke：localStorage 被 SecurityError 拒绝仍可切换； 失效 ID
+      回到首项；无标题空内容显示“空白便签”；中文/英文长段落与混合 Markdown
+      无交互子节点或横向溢出，标题两行/正文四行；多指与 touchCancel 不切项。
+      开启游乐场后便签与导航 hit-test 均可命中，场景 pointer-events 为 none。
+      最终单行短句实页（间距修正后）：`/tmp/omp-sshots-15ab1bf1cef3d0c5.webp`；
+      长文实页：`/tmp/omp-sshots-15ab1a612933d0c2.webp`。
+- [x] 摘要与选择等模块 22 项通过；曾由测试发现的列表勾选丢失已修复。 既有
+      Launcher density/drag、默认便签避让/响应式矩阵通过； 旧 manual-order
+      用例移除已废弃的移动卡片代码滚动假设后，定向复查为 1 passed / 8
+      steps。上述证据分批取得，不表示完整旧命令一次通过。
+- [x] 前端 `deno check web/src/main.tsx`、受影响源码/测试 lint、19 文件 fmt
+      check、 生产 build、E2E manifest 与 `check:ui` 通过，ownership/visual 均 0
+      violations。 Bundle gate 通过；首页预览只加载 parser，不提前请求
+      editor-vendor、 NoteLivePreviewEditor 或 editor runtime。复用已锁定的
+      unified/remark-parse， 没有修改 chunk 规则或放宽预算。
+- [x] 浏览器脚本按实际就绪条件校准：不把 sr-only 后代自身的尺寸当成可见控件，
+      等待目标主题与正文/图片 decode；不因卡片可见就假设 Host 或数据已完成切换。
+      脚本问题与实际刷新竞态分别处理，未自动重发操作或改变产品来满足旧卡片断言。
+
 ## 动态游乐场裁切与松树颜色修复
 
 - [x] 2400×1360 实页修复前 Host 仅高240px，过山车顶部与云被截断； 修复后 Host

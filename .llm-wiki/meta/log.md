@@ -407,3 +407,6 @@
 ## [2026-10-17T01:18:17.480Z] observe
 - slug: "obs-2026-10-17-issue-179-zen-chrome-inset-pr-186", title: "Issue 179 Zen chrome inset 经 PR 186 合并关闭", relevance: "high"
 
+## [2026-10-18T13:11:31.066Z] observe
+- slug: "obs-2026-10-18-zen-remark", title: "Zen 便签预览避免 remark 根入口拉入编辑器包", relevance: "high"
+
