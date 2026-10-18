@@ -117,8 +117,9 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   或外观偏好。
 - 标题使用 component title，正文使用 body；标题与正文作为同一内容组使用
   `--space-inline-gap`（当前 8px），不得为单行标题预留空白第二行。
-  短纯文本仅在实际字体和宽度下逐行不溢出时居中，结构化/长摘要左对齐。
-  只展示安全文本摘要，不挂载完整 Markdown 或编辑器，不产生嵌套滚动。
+  便签标题与正文在中轴默认居中排版，与首页
+  Search、桌面场景和底部导航保持一致视觉语言。 只展示安全文本摘要，不挂载完整
+  Markdown 或编辑器，不产生嵌套滚动。
 - `home-layouts.css` 拥有正文最多 4 行、标题最多 2 行、
   `--zen-note-swipe-distance`（32 CSS px）与 `--zen-note-position-size`（4px）；
   由上述最大文字预算与 inline gap 派生外层固定阅读窗口，实际标题/正文自然占高，

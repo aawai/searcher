@@ -750,12 +750,9 @@
         var(--zen-note-preview-lines) * var(--font-body-size) *
         var(--font-body-line-height)
     );
-    text-align: start;
+    text-align: center;
     touch-action: pan-y pinch-zoom;
     user-select: none;
-}
-.zen-inline-note[data-alignment="center"] {
-    text-align: center;
 }
 .zen-inline-note-content {
     display: flex;
