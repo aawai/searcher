@@ -2,6 +2,10 @@ import { assertEquals } from "@std/assert";
 import type { UserDto } from "@shared/contracts.ts";
 import { ApiError } from "../lib/api.ts";
 import { handleAuthCheckResult, normalizeAppearance } from "./state.tsx";
+import {
+    type AppearanceSyncQueue,
+    queueAppearanceSync,
+} from "./appearance-sync.ts";
 
 Deno.test("AppState: 401 error results in anonymous user and NO connectionError", () => {
     const initial = { user: null, connectionError: false };
@@ -183,4 +187,71 @@ Deno.test("Appearance: malformed presentation records normalize to canonical def
     assertEquals(pres.tone, "natural");
     assertEquals(pres.motion, "off");
     assertEquals(pres.motionLevel, "soft");
+});
+
+Deno.test("Appearance: desktopScene survives valid values and degrades unknown or corrupted caches to none without touching other fields", () => {
+    assertEquals(normalizeAppearance({}).desktopScene, "none");
+    assertEquals(
+        normalizeAppearance({ desktopScene: "amusement-park" }).desktopScene,
+        "amusement-park",
+    );
+    for (
+        const raw of [null, "", "undersea", "AMUSEMENT-PARK", 1, {}, [
+            "amusement-park",
+        ]]
+    ) {
+        const result = normalizeAppearance({
+            accent: "violet",
+            canvasMotion: "ambient",
+            desktopScene: raw,
+        });
+        assertEquals(result.desktopScene, "none");
+        assertEquals(result.accent, "violet");
+        assertEquals(result.canvasMotion, "ambient");
+    }
+});
+
+Deno.test("Appearance sync: a failed patch remains queued for an explicit retry", async () => {
+    const queue: AppearanceSyncQueue = {
+        owner: "user-a",
+        tail: Promise.resolve(),
+        pending: { desktopScene: "amusement-park" },
+        reconciled: {},
+    };
+    const calls: Record<string, unknown>[] = [];
+    const failure = new Error("temporarily unavailable");
+    let shouldFail = true;
+    let succeeded = false;
+    const failures: unknown[] = [];
+    const send = (patch: Record<string, unknown>) => {
+        calls.push({ ...patch });
+        if (shouldFail) return Promise.reject(failure);
+        return Promise.resolve();
+    };
+    const retry = () =>
+        queueAppearanceSync(
+            queue,
+            "user-a",
+            () => queue.owner === "user-a",
+            send,
+            () => succeeded = true,
+            (error) => failures.push(error),
+        );
+
+    try {
+        await retry();
+    } catch {
+        // The failed request remains available for the next explicit retry.
+    }
+    assertEquals(queue.pending, { desktopScene: "amusement-park" });
+    assertEquals(failures, [failure]);
+
+    shouldFail = false;
+    await retry();
+    assertEquals(calls, [
+        { desktopScene: "amusement-park" },
+        { desktopScene: "amusement-park" },
+    ]);
+    assertEquals(queue.pending, {});
+    assertEquals(succeeded, true);
 });

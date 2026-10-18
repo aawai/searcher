@@ -87,6 +87,13 @@ import {
 } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
 import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
+import { SCENE_REGISTRY } from "../features/desktop-scenes/scene-registry.ts";
+import { SCENE_PREVIEWS } from "../features/desktop-scenes/scene-previews.tsx";
+import {
+    DESKTOP_SCENE_IDS,
+    type DesktopSceneId,
+    normalizeDesktopScene,
+} from "@shared/desktop-scenes.ts";
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
@@ -97,6 +104,21 @@ import { SettingsActionCard, SettingsSection } from "./SettingsPrimitives.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
 
 type Tab = SettingsTab;
+
+const NO_SCENE_OPTION = {
+    id: "none",
+    label: "关闭",
+    description: "不显示桌面场景，保持纯壁纸背景。",
+} as const;
+
+/** 选项顺序遵循共享 ID 列表；新场景注册后自动出现，未注册的不可选。 */
+const DESKTOP_SCENE_OPTIONS: ReadonlyArray<{
+    id: DesktopSceneId;
+    label: string;
+    description: string;
+}> = DESKTOP_SCENE_IDS.map((id) =>
+    id === "none" ? NO_SCENE_OPTION : SCENE_REGISTRY[id]
+);
 
 const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     search: { label: "搜索", icon: Search },
@@ -1639,6 +1661,61 @@ export function SettingsPage() {
                                                 </div>
                                             </div>
                                         )}
+                                    </SettingsCard>
+                                </SettingsSection>
+
+                                <SettingsSection
+                                    title="动态桌面场景"
+                                    description="叠加在壁纸之上的底部装饰，仅在首页显示，不影响搜索、应用与窗口布局。"
+                                >
+                                    <SettingsCard>
+                                        <RadioGroup
+                                            value={appearance.desktopScene}
+                                            onValueChange={(next) => {
+                                                void setAppearance({
+                                                    desktopScene:
+                                                        normalizeDesktopScene(
+                                                            next,
+                                                        ),
+                                                });
+                                            }}
+                                            aria-label="动态桌面场景"
+                                            className="settings-scene-options"
+                                            data-testid="desktop-scene-group"
+                                        >
+                                            {DESKTOP_SCENE_OPTIONS.map(
+                                                (option) => {
+                                                    const Preview =
+                                                        SCENE_PREVIEWS[
+                                                            option.id
+                                                        ];
+                                                    return (
+                                                        <RadioGroupItem
+                                                            key={option.id}
+                                                            value={option.id}
+                                                            aria-label={option
+                                                                .label}
+                                                            className="settings-scene-option"
+                                                            data-testid={`desktop-scene-${option.id}`}
+                                                        >
+                                                            <span className="settings-scene-preview">
+                                                                <Preview />
+                                                            </span>
+                                                            <span className="settings-scene-option__text">
+                                                                <span className="settings-row-title">
+                                                                    {option
+                                                                        .label}
+                                                                </span>
+                                                                <span className="settings-row-desc">
+                                                                    {option
+                                                                        .description}
+                                                                </span>
+                                                            </span>
+                                                        </RadioGroupItem>
+                                                    );
+                                                },
+                                            )}
+                                        </RadioGroup>
                                     </SettingsCard>
                                 </SettingsSection>
                             </div>

@@ -49,6 +49,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 searchOpacity: 0.85,
                 canvasMotion: "ambient",
                 canvasMotionLevel: "standard",
+                desktopScene: "amusement-park",
                 defaultEngine: "google",
                 webAppHomeLimit: 16,
                 webAppIconSize: "large",
@@ -63,6 +64,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.searchOpacity, 0.85);
         assertEquals(saved.data?.webAppHomeLimit, 16);
         assertEquals(saved.data?.webAppIconSize, "large");
+        assertEquals(saved.data?.desktopScene, "amusement-park");
         assertEquals(saved.data?.showAppLabels, false);
         const partial = await app.request("/api/preferences", {
             method: "PATCH",
@@ -71,7 +73,11 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 cookie: first,
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ canvasMotion: "off", accent: "rose" }),
+            body: JSON.stringify({
+                canvasMotion: "off",
+                desktopScene: "none",
+                accent: "rose",
+            }),
         });
         assertEquals(partial.status, 200);
         const changed = await partial.json() as Envelope<PreferencesDto>;
@@ -82,6 +88,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.webAppIconSize, "large");
+        assertEquals(changed.data?.desktopScene, "none");
         assertEquals(changed.data?.showAppLabels, false);
         const updateEmerald = await app.request("/api/preferences", {
             method: "PATCH",
@@ -119,6 +126,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.webAppIconSize, "default");
         assertEquals(isolated.data?.showAppLabels, true);
+        assertEquals(isolated.data?.desktopScene, "none");
         assertEquals(isolated.data?.canvasMotion, "off");
         assertEquals(isolated.data?.canvasMotionLevel, "soft");
     } finally {
@@ -163,6 +171,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { backgroundImage: "https://user:pass@example.com/a.png" },
                 { webAppHomeLimit: 15 },
                 { webAppIconSize: "huge" },
+                { desktopScene: "unknown" },
+                { desktopScene: null },
                 { searchOpacity: 0.05 },
                 { searchOpacity: 1.5 },
                 { showAppLabels: "not-a-bool" },
@@ -194,6 +204,7 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults inc
         const guestBody = await guestRes.json() as Envelope<PreferencesDto>;
         assertEquals(guestBody.data?.canvasMotion, "off");
         assertEquals(guestBody.data?.canvasMotionLevel, "soft");
+        assertEquals(guestBody.data?.desktopScene, "none");
         assertEquals(guestBody.data?.wallpaperPresentations, {});
 
         // 2. New registered user GET returns same canonical defaults
@@ -215,6 +226,7 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults inc
         const userBody = await userRes.json() as Envelope<PreferencesDto>;
         assertEquals(userBody.data?.canvasMotion, "off");
         assertEquals(userBody.data?.canvasMotionLevel, "soft");
+        assertEquals(userBody.data?.desktopScene, "none");
         assertEquals(userBody.data?.wallpaperPresentations, {});
         assertEquals(userBody.data?.accent, "blue");
         assertEquals(userBody.data?.style, "zen");
@@ -866,6 +878,129 @@ Deno.test("preferences: remote/gradient LRU enforces max 24 limit while uploaded
                 ?.readability,
             "balanced",
         );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("preferences: desktopScene defaults to none, validates, preserves other fields and isolates users", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+        const register = async (username: string) => {
+            const response = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: { origin, "content-type": "application/json" },
+                body: JSON.stringify({
+                    username,
+                    displayName: username,
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(response.status, 200);
+            return response.headers.get("set-cookie")?.split(";")[0] ?? "";
+        };
+        const patch = (cookie: string, payload: unknown) =>
+            app.request("/api/preferences", {
+                method: "PATCH",
+                headers: { origin, cookie, "content-type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+        const read = async (cookie?: string) => {
+            const response = await app.request("/api/preferences", {
+                headers: cookie ? { cookie } : {},
+            });
+            assertEquals(response.status, 200);
+            return (await response.json() as Envelope<PreferencesDto>).data;
+        };
+
+        // 访客与新用户默认关闭场景
+        assertEquals((await read())?.desktopScene, "none");
+        const first = await register("scene_a");
+        const second = await register("scene_b");
+        assertEquals((await read(first))?.desktopScene, "none");
+
+        // 先写入其他外观字段，再只改场景，其余字段必须保持
+        assertEquals(
+            (await patch(first, {
+                accent: "violet",
+                canvasMotion: "ambient",
+                canvasMotionLevel: "pronounced",
+            })).status,
+            200,
+        );
+        const enabled = await patch(first, { desktopScene: "amusement-park" });
+        assertEquals(enabled.status, 200);
+        const enabledBody = await enabled.json() as Envelope<PreferencesDto>;
+        assertEquals(enabledBody.data?.desktopScene, "amusement-park");
+        assertEquals(enabledBody.data?.accent, "violet");
+        assertEquals(enabledBody.data?.canvasMotion, "ambient");
+        assertEquals(enabledBody.data?.canvasMotionLevel, "pronounced");
+
+        // 反向：修改其他字段不会重置场景
+        assertEquals((await patch(first, { theme: "dark" })).status, 200);
+        assertEquals((await read(first))?.desktopScene, "amusement-park");
+
+        // 用户之间互不影响
+        assertEquals((await read(second))?.desktopScene, "none");
+
+        // 非法值被拒绝，且不改变已保存的值
+        for (
+            const invalid of [
+                { desktopScene: "undersea" },
+                { desktopScene: "AMUSEMENT-PARK" },
+                { desktopScene: "" },
+                { desktopScene: null },
+                { desktopScene: 1 },
+            ]
+        ) {
+            const response = await patch(first, invalid);
+            assertEquals(response.status, 400, JSON.stringify(invalid));
+            await response.body?.cancel();
+        }
+        assertEquals((await read(first))?.desktopScene, "amusement-park");
+
+        // 关闭
+        const disabled = await patch(first, { desktopScene: "none" });
+        assertEquals(disabled.status, 200);
+        assertEquals((await read(first))?.desktopScene, "none");
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("preferences: unknown stored desktopScene degrades to none without affecting other fields", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+        await store.run(async (db) => {
+            await db.insert(users).values({
+                id: "newer",
+                username: "newer",
+                displayName: "Newer",
+                passwordHash: "hash",
+                createdAt: 1,
+                updatedAt: 1,
+            }).run();
+            // 模拟回滚/升级后遇到本版本不认识的场景 ID
+            await db.insert(preferences).values({
+                userId: "newer",
+                accent: "cyan",
+                desktopScene: "undersea",
+            }).run();
+        });
+        const session = await auth.createSession("newer", 1);
+        const response = await app.request("/api/preferences", {
+            headers: { cookie: SESSION_COOKIE_NAME + "=" + session.token },
+        });
+        assertEquals(response.status, 200);
+        const body = await response.json() as Envelope<PreferencesDto>;
+        assertEquals(body.data?.desktopScene, "none");
+        assertEquals(body.data?.accent, "cyan");
     } finally {
         await store.close();
     }

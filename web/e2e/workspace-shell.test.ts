@@ -828,6 +828,18 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             // Tablet viewport preserves legacy Escape close behavior
             await page.setViewportSize({ width: 800, height: 900 });
             await page.waitForFunction(() => globalThis.innerWidth === 800);
+            const constrainedNotes = page.locator(
+                '.desktop-window[data-window-id="notes"]',
+            );
+            // Viewport metrics update before the constrained Host is committed.
+            await constrainedNotes.getByRole("button", {
+                name: "窗口尺寸",
+                exact: true,
+            }).waitFor({ state: "visible" });
+            await constrainedNotes.getByRole("searchbox", {
+                name: "搜索便签",
+                exact: true,
+            }).focus();
             await page.keyboard.press("Escape");
             await page.locator('.desktop-window[data-window-id="notes"]')
                 .waitFor({ state: "hidden" });
