@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef } from "react";
 import type { PointerEvent } from "react";
 import type { NoteItem } from "../../components/searcher/NoteCard.tsx";
 import { Button } from "../../components/ui/button.tsx";
@@ -16,8 +16,6 @@ export function ZenInlineNotes({ selection, onOpen }: {
         () => analyzeZenNotePreview(current?.body ?? ""),
         [current?.body],
     );
-    const bodyRef = useRef<HTMLSpanElement>(null);
-    const [fits, setFits] = useState(false);
     const statusId = useId();
     const pointers = useRef(new Set<number>());
     const gesture = useRef<
@@ -29,41 +27,6 @@ export function ZenInlineNotes({ selection, onOpen }: {
         } | null
     >(null);
     const suppressClick = useRef(false);
-
-    useLayoutEffect(() => {
-        const body = bodyRef.current;
-        if (!body) return;
-        let active = true;
-        const measure = () => {
-            if (!active) return;
-            const style = getComputedStyle(body);
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            if (!context) return;
-            context.font =
-                `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-            const lines = preview.text.split("\n");
-            const budget = Number(
-                style.getPropertyValue("--zen-note-preview-lines"),
-            );
-            setFits(
-                !preview.structured && lines.length <= budget &&
-                    lines.every((line) =>
-                        context.measureText(line).width <= body.clientWidth
-                    ),
-            );
-        };
-        const observer = new ResizeObserver(measure);
-        observer.observe(body);
-        measure();
-        void document.fonts.ready.then(measure);
-        document.fonts.addEventListener("loadingdone", measure);
-        return () => {
-            active = false;
-            observer.disconnect();
-            document.fonts.removeEventListener("loadingdone", measure);
-        };
-    }, [preview, current?.id]);
 
     function pointerDown(event: PointerEvent<HTMLButtonElement>) {
         if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -129,7 +92,6 @@ export function ZenInlineNotes({ selection, onOpen }: {
                 variant="content"
                 className="zen-inline-note"
                 data-note-id={current.id}
-                data-alignment={fits ? "center" : "start"}
                 aria-label={`打开便签：${label}`}
                 aria-describedby={statusId}
                 onKeyDown={(event) => {
@@ -155,7 +117,7 @@ export function ZenInlineNotes({ selection, onOpen }: {
                     {title && (
                         <span className="zen-inline-note-title">{title}</span>
                     )}
-                    <span ref={bodyRef} className="zen-inline-note-body">
+                    <span className="zen-inline-note-body">
                         {preview.text || "空白便签"}
                     </span>
                 </span>

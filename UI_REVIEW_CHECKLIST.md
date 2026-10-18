@@ -8,7 +8,7 @@
 
 - [x] 仅 `<768px` Zen 使用单张透明内容预览；实际 computed background 为透明、
       border 为 0、box-shadow 为 none。删除数值分页、外框与首页管理栏，
-      短句居中，结构化/长文左对齐，复用现有 Typography/Spacing/Button content
+      标题与正文在中轴默认居中排版，复用现有 Typography/Spacing/Button content
       语义，无新增 guard allowance。
 - [x] `zen-inline-notes.test.ts` 生产 E2E 为 1 passed / 0 failed：
       0/1/多张、仅首页固定、稳定排序与删除回退、真实 CDP 双向滑动和纵向手势、
