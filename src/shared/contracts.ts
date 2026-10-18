@@ -1,4 +1,6 @@
 export * from "./wallpaper.ts";
+export type { DesktopSceneId } from "./desktop-scenes.ts";
+import type { DesktopSceneId } from "./desktop-scenes.ts";
 import type {
     CanvasMotion,
     WallpaperMotionLevel,
@@ -194,6 +196,8 @@ export interface PreferencesDto {
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     canvasMotion: CanvasMotion;
     canvasMotionLevel: WallpaperMotionLevel;
+    /** 叠加在壁纸之上的动态桌面场景；`none` 为关闭 */
+    desktopScene: DesktopSceneId;
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";

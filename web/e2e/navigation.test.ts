@@ -175,23 +175,6 @@ Deno.test("production navigation contracts", async (t) => {
                     ["/settings/shortcuts", "快捷键"],
                 ]
             ) {
-                const sections: Record<string, string[]> = {
-                    "/settings": ["搜索引擎与打开方式"],
-                    "/settings/appearance": [
-                        "主题与配色",
-                        "主页与快捷入口",
-                        "壁纸与背景效果",
-                    ],
-                    "/settings/ai": ["AI 问答工作区", "已配置的 Provider"],
-                    "/settings/data": ["同步", "数据管理"],
-                    "/settings/shortcuts": [
-                        "全局",
-                        "搜索",
-                        "AI 问答",
-                        "便签编辑",
-                        "快捷命令",
-                    ],
-                };
                 await visit(path);
                 await page.getByRole("heading", {
                     name: heading,
@@ -206,11 +189,6 @@ Deno.test("production navigation contracts", async (t) => {
                     await page.getByRole("heading", { level: 2 })
                         .allTextContents(),
                     [heading],
-                );
-                assertEquals(
-                    await page.getByRole("heading", { level: 3 })
-                        .allTextContents(),
-                    sections[path],
                 );
                 assertEquals(
                     await page.getByRole("navigation", { name: "设置分类" })

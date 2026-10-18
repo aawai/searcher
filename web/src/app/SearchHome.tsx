@@ -1385,7 +1385,13 @@ export function SearchHome() {
                 )}
                 {layoutStyle === "widgets"
                     ? <WidgetsLayout {...layoutProps} />
-                    : <ZenLayout {...layoutProps} />}
+                    : (
+                        <ZenLayout
+                            {...layoutProps}
+                            availableRect={geometry.safeRect}
+                            viewportWidth={geometry.viewportRect.width}
+                        />
+                    )}
                 {user && (
                     <>
                         {layoutStyle === "widgets" && !mobile && (

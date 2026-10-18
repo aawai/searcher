@@ -24,6 +24,10 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
+import {
+    DEFAULT_DESKTOP_SCENE,
+    normalizeDesktopScene,
+} from "@shared/desktop-scenes.ts";
 
 export type UpdateAiGenerationDefaultsInput = {
     default?:
@@ -59,6 +63,7 @@ const defaults: PreferencesDto = {
     backgroundImage: null,
     canvasMotion: DEFAULT_CANVAS_MOTION,
     canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
+    desktopScene: DEFAULT_DESKTOP_SCENE,
     searchTarget: "same",
     searchHistoryEnabled: false,
     webAppHomeLimit: 12,
@@ -206,6 +211,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
             DEFAULT_CANVAS_MOTION,
         canvasMotionLevel: (row.canvasMotionLevel as WallpaperMotionLevel) ??
             DEFAULT_CANVAS_MOTION_LEVEL,
+        desktopScene: normalizeDesktopScene(row.desktopScene),
         searchTarget: row.searchTarget,
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
         webAppHomeLimit: row.webAppHomeLimit === "all"
@@ -525,6 +531,7 @@ export class PreferencesService {
                 canvasMotion: canonicalDefaults.canvasMotion ?? "off",
                 canvasMotionLevel: canonicalDefaults.canvasMotionLevel ??
                     "soft",
+                desktopScene: canonicalDefaults.desktopScene,
                 wallpaperPresentations: JSON.stringify(
                     canonicalDefaults.wallpaperPresentations ?? {},
                 ),

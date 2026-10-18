@@ -1125,6 +1125,7 @@ export function DesignLab() {
                                 {/* Floating Notes Canvas */}
                                 <div className="lab-notes-row">
                                     <FloatingNotes
+                                        flow
                                         notes={notesFixture.slice(0, noteCount)}
                                         onOpen={(note) => setFeedbackMessage(
                                             `查看便签：${note.title}`,

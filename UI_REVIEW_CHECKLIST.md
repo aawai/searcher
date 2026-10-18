@@ -4,6 +4,154 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #182 / PR #189 动态桌面场景续实现
+
+- [x] 合并前审查发现
+      [Workspace CI](https://github.com/aawai/searcher/actions/runs/39042396911)
+      为 53 passed / 1 failed：实时缩屏至 390px 时测得 540.078125px 容器、7
+      列，与旧受限窗口宽度吻合。原等待只核对网格与当前 容器自洽，没有等待目标
+      Host；探针确认稳定窗口为约 540px / 7 列， 稳定 390px Sheet 为 356px / 5
+      列。 `apps-density.test.ts` 改为先等待对应 Sheet/Window
+      与视口边界匹配，再复用 `settlePresentation`
+      等待动画、字体和布局收敛。未修改产品样式、五列期望、
+      命中区或排序断言；完整 focused Chromium density 验收为 1 passed / 0
+      failed， lint 通过。本次只修复验收采样边界，不在 CHANGELOG
+      记录内部测试调整。
+- [x] 后续
+      [Workspace CI](https://github.com/aawai/searcher/actions/runs/39082067504)
+      中 density 已通过，但 Shell 的平板 Escape 场景失败：只等 innerWidth=800
+      就发按键，没有等待受限 Host 发布。改为等待便签窗口的“窗口尺寸”控件可见，
+      再从便签搜索框发送一次 Escape；保留桌面不关闭、平板关闭与 Dock 焦点
+      恢复断言，不重发按键。完整 Shell Chromium 验收为 1 passed / 9 steps、 0
+      failed，lint/format 通过；未修改产品代码或样式。
+
+- [x] 三阶段范围统一保留在 PR #189 的独立 worktree，合入当前 main， 未触碰 main
+      或旧 issue-182 工作区的未提交修改。
+- [x] `desktop_scene` 增量迁移保留旧用户的 engine/theme/accent，旧行默认 none；
+      `db:generate` 输出无 schema 差异。偏好、迁移、归一化与过山车 focused 首轮
+      35 tests 通过；随后删除只断言 storage key 文本的测试， 完整领域回归为 690
+      tests / 51 steps、0 failed。
+- [x] 匿名键盘选择与刷新、登录云端默认覆盖匿名缓存、失败 PATCH 后顶部重试、
+      新浏览器上下文读取同账号、登出恢复匿名选择与另一账号默认关闭，由真实生产
+      Chromium E2E 通过。独立实页复现旧产物保存失败只有 `!` 无重试入口；
+      新产物重试后 API 返回 amusement-park。
+- [x] 生命周期函数回归先暴露 fixture 的多元素 strict selector 错误，修正后确认
+      CSS 暂停失败：Host 已 paused，但 flag computed play-state 仍为 running。
+      经用户确认，只提高 Host 暂停/reduced-motion 选择器优先级，
+      不修改正常场景构图、色板或动画参数。
+- [x] 最终生产产物的独立 Chromium 141 smoke：四十次首页/设置往返，稳态首页只有 1
+      个待执行 RAF、3 个 document visibility listeners，离页均回到 0/0；
+      reduced-motion 下 RAF=0、场景 CSS animations=0，恢复后 RAF=1。 强制 GC
+      后最后十次挂载堆占用在 8.09–8.40 MB 波动，末次 8.31 MB；
+      此短时样本不等价于长期无泄漏证明。首次采样错误假设 WallpaperSurface
+      不随首页卸载；扩展内存采样时又碰到瞬时 layout RAF，修正为等待可观察的 RAF
+      稳态后采样，不放宽离页零 RAF 契约。
+- [x] 经用户确认修正设置场景选项的三条 Rule M：只增加 RadioGroup/Item slot
+      compound selector；`check:ui` ownership 220 / visual 152 files、 0
+      violations，不调整 baseline/allowlist。
+- [x] 1440/1024/768/390/360 × light/dark × Zen/Widgets，20 组首页截图， 均零
+      document 横向 overflow；桌面现有设施及移动过山车/摩天轮可辨认。
+      该矩阵为暂停规则修正前正常运行态；修正不改变正常构图， 修正后的
+      reduced-motion 静态实页另行确认。
+- [x] 场景开启/关闭，1440×900 的 Search、Bento、Dock、Apps window 的
+      x/y/width/height 完全一致；Search 为 360/296.1875/720/56。 开启场景时八向
+      resize 每方向按预期增长 12px，最大化/还原、左 Snap、 Dock、未保存 Dialog
+      的继续编辑/放弃操作可用。768 Zen Panel 输入值在 390 Sheet
+      切换后保留，Sheet 可继续输入；图片上传 Toast 与设置卡片实页可用。
+- [x] 默认背景矩阵、真实上传图片的 dark 场景、CSS gradient 的 light 场景均实页
+      审阅；未修改 WallpaperMotionController、全局 modal z-index 或 Dock 几何。
+- [x] Chromium 150 headless / Linux x64 / 8 logical CPUs / 1440×900、DPR=1， 15s
+      前台采样 899 帧：最终场景 RAF callback 平均 1.487ms，
+      p95=2.6ms、p99=3.4ms、max=4.7ms；帧间隔平均 16.666ms、p99=16.8ms。
+      初次有效采样发现 SVG 读写交错；保持轨道/速度/位姿计算不变，复用字符串
+      buffer，先读完三车位姿再统一写 transform；15s trace 的 Layout 事件由 3616
+      降至 1806，优化前 callback 平均 1.816ms。 关闭时应用 RAF
+      callbacks=0，帧间隔同样约 16.666ms； 另一次 1Hz 采样因联系图 tab
+      抢前台而作废。 保留 CPU profile 与 rendering
+      trace；结果含采样/分析器开销， 不等价于真机 GPU/滚动性能保证。
+- [x] 77.8s / 30 FPS / 1440×900 录屏覆盖摩天轮 72s 周期与小车/火车/摆船运动。
+      云层最长 260s，另以 Web Animations API 采样 0/25/50/75/99.99% 相位：
+      三朵云在循环首尾均完整位于视口外，保存五组截图与实际 progress/rect JSON，
+      不把 seek 分段证据描述为 260s 实时录屏。
+- [x] 主线与最终 PR 的独立生产构建对照（gzip level 9）：initial JS 285111→286033
+      B；entry raw 344786→347331 B； 场景独立 JS 19715 B raw / 5616 B gzip，CSS
+      6535 / 1542 B， SVG 内嵌在该 JS，无额外图片或字体资产。最终 `check:bundle`
+      通过， 未提高任何 budget。
+- [x] 完整 Chromium E2E 首轮 72 passed / 290 steps、2 failed / 1 step：
+      导航测试硬编码三级标题清单，新增场景分组后失效；删除该静态文案断言，
+      不重写期望清单，保留路由、刷新和返回行为。 另一失败是偏好 GET
+      成功误清认证连接错误；改为独立 auth 错误与 syncFailed
+      派生全局提示，偏好读写不能清除认证错误。 同时保留既有匿名 legacy cache
+      清理，不改缓存迁移约定。 最终导航、Zen banner/Panel、场景、Apps
+      session、壁纸、bundle、 route style、UI feedback 八文件定向复查：19 passed
+      / 57 steps、 0
+      failed。其余完整套件通过项未重复运行；不声称完整命令一次全通过。
+      随后仅调整小车同帧读写顺序；最终场景与 bundle-loading 再验收为 3 passed /
+      5 steps、0 failed，原轨道/速度纯模型未变。
+- [x] 前后端与新增/修改 E2E typecheck、源码 lint 分批通过； 异步场景 JS 被真实
+      abort 时局部边界回退，搜索仍可输入， uncaught page errors=0。
+- [x] Chromium 141、1440×900、新浏览器上下文、无 IndexedDB/cache、 保留登录
+      Cookie，每档三次交替采样：从导航到 Widgets 实际发布且搜索完成
+      fill/readback，关闭场景 161–234ms、开启 169–173ms。
+      与完整集成套件并行运行，不是标准化 TTI，也不足以声称场景使首屏更快。
+      初次未等待 layout 发布时输入丢失；确定性阻塞 preferences GET 的对照确认
+      main 与本 PR 均存在云端 style hydrate 重挂载 Search 的旧行为， 本 PR
+      未扩大范围改动它，不将初始 shell 可见当作最终交互就绪。
+- [ ] 用户暂缓场景视觉调整：旋转木马仍为各自往返而非统一匀速旋转；
+      装饰建筑/设施灯泡存在，但未补建筑间灯串。不得将此状态宣称为 #182
+      三阶段全部完成或关闭总 issue。
+- [x] 用户明确仅要求 Chromium；Firefox、WebKit/Safari 不再作为本次验收项。
+      不声称已验证 iOS、真机 GPU、软键盘或读屏器。
+
+本次原始截图、矩形、运动录屏、生命周期和 bundle JSON、E2E 报告保留于本机
+`/tmp/pr189-evidence/`；CPU profile/trace 路径记录在其 `perf.json`。
+
+## Issue #180 Zen 默认固定便签避让 Search
+
+- [x] 在隔离 worktree、`origin/main@b055c8d` 基线，两个展开固定便签的 API x/y
+      均为 null；focused 真点击 submit 被便签正文拦截而超时。 首轮夹具误依赖 GET
+      顺序，修正后才取得真实遮挡 Red，不将夹具失败算产品证据。
+- [x] `SearchHome` 复用现有 `useDesktopGeometry.safeRect`，`ZenLayout` 测量
+      Search bounds；纯 placement 只处理未保存 desktop 坐标的便签。
+      Markdown、字体与尺寸就绪后发布位置，空间不足复用 flow；不新增 viewport
+      owner， 不改搜索纵向 anchor 或全局 z-index。Design Lab 明确使用 flow
+      预览同一组件。
+- [x] 最终 focused 在 1440×900、1024×768 输入搜索词、普通 click submit，
+      都到达受控本地搜索目标；首屏、字体就绪、实时 resize、light/dark 均覆盖。
+      已保存 x=700/y=420 不自动重排，默认置顶/折叠/展开保持 null 坐标，
+      实际拖动建立坐标并经 reload 保留，折叠与第二账号不覆盖该坐标。
+- [x] 320/390/768/960 flow 与 961×390 短屏回流通过；额外发现滚动释放 Search
+      占位会令 flow 移回 canvas 并重置页面滚动。新增回归先 Red，修复后普通滚轮
+      保持滚动；主代理另在 1440×450 实页观察 scrollY=252 连续六帧不变。
+      exclusion 保留实测 Search 当前与未滚动占位的并集，无硬编码 Search Y。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      共十二组实际截图与搜索 hit-testing、零横向 overflow；主代理逐张审阅。
+      1440×900 Zen Search 修复前后均为 x=360/y=296.1875/width=720/height=56。
+- [x] 领域测试 675 tests / 51 steps、纯 placement 2 tests、UI Guard regression
+      100 tests 通过；前后端 typecheck、7 files lint、格式化与 `check:ui` 通过，
+      ownership 202 files / visual 141 files 均为 0 violations。
+- [x] 完整生产 E2E 首轮 71 passed / 291 steps、1 failed：新增快速折叠/展开夹具
+      未等待重排和 hover 操作区就绪。改用真实 placement-ready 与 hover
+      完成条件， 不 force、不重发点击；最终
+      home-notes-order、home-notes-persistence、bento、 workspace、ui-ownership
+      共 7 tests / 48 steps 全通过，包含滚动修复。
+      不将分批结果描述为完整命令一次通过。其他完整套件成功项覆盖导航/草稿保护、
+      canonical/v4/Dock、编辑器/版本/分页、壁纸/reduced-motion、懒加载与身份隔离。
+- [x] 入口预算首轮因同步引入 placement 超出 350000 B：entry=351942 B。
+      仅存在固定便签时用现有 React lazy / Suspense 挂载该模块，最终 entry=344786
+      B， initial graph=285111 B gzip，bundle 全部门禁通过；不提高阈值。
+      最终按需构建上的
+      home-notes-order、home-notes-persistence、bundle-loading、
+      markdown-editor-loading、route-style-stability 共 7 tests / 27 steps
+      通过； 新版十二组矩阵与真实搜索目标一并复查，匿名/Apps 不加载编辑器
+      runtime。
+- [x] CHANGELOG、Design System 同步；无 schema/storage key/v4 迁移，
+      不持久化覆盖默认或已有用户坐标，可独立回滚 bounds props 与 placement。
+      原始 Red、最终矩阵、分批 JUnit 和完整运行 timing 见
+      [证据分支](https://github.com/aawai/searcher/tree/evidence/issue-180/evidence/issue-180)。
+- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
+      Chromium viewport 与焦点/命中验证不作为真机证据。
+
 ## Issue #181 Widgets 短屏初次打开工作区
 
 - [x] 基线 `6a34b75`：844×390 Widgets 点击 Apps 后 windows=0、panels=0； focused

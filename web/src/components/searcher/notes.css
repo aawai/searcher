@@ -575,6 +575,17 @@
     touch-action: none;
 }
 
+.floating-notes--canvas[data-placement-ready="false"] .note-measurement {
+    position: absolute;
+    inset: 0 auto auto 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.floating-notes.notes-flow-grid {
+    margin: var(--space-section-gap) auto;
+}
+
 .floating-notes--canvas .note-card {
     transform: rotate(var(--note-tilt, 0deg));
 }
@@ -623,6 +634,9 @@
 }
 
 @media (max-width: 700px) {
+    .floating-notes.notes-flow-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
     .floating-notes {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

@@ -1,0 +1,410 @@
+/*
+ * 动态游乐场场景：调色板、形状样式与动画。
+ * 光线来自左上；描边统一为圆角端点；背景透明，壁纸负责整体氛围。
+ * 色板只随 Searcher 当前 light/dark 变化（宿主 data-scene-theme），不读取
+ * 真实时间或天气；暖色灯光仅在 dark 下点亮。
+ */
+.scene-park {
+    --sp-ink: #27324a;
+    --sp-line: var(--sp-ink);
+    --sp-teal: #1f8a80;
+    --sp-red: #e4675a;
+    --sp-gold: #f2b94b;
+    --sp-paper: #fffaf0;
+    --sp-wood: #b08c5c;
+    --sp-wood-dark: #8f7048;
+    --sp-pine: #3a8a4f;
+    --sp-pine-low: #2c7343;
+    --sp-ridge: color-mix(in srgb, var(--accent) 4%, #d3e8c1);
+    --sp-meadow: color-mix(in srgb, var(--accent) 4%, #c3e1ab);
+    --sp-front: color-mix(in srgb, var(--accent) 4%, #b3d79b);
+    --sp-tex: rgb(255 255 255 / 0.4);
+    --sp-cloud: rgb(255 255 255 / 0.9);
+    --sp-path: #efe3c3;
+    --sp-path-edge: #d9c9a0;
+    --sp-far-a: color-mix(in srgb, var(--sp-teal) 30%, var(--sp-ridge));
+    --sp-far-b: color-mix(in srgb, var(--sp-red) 30%, var(--sp-ridge));
+    --sp-panel: color-mix(in srgb, var(--sp-gold) 35%, var(--sp-paper));
+    --sp-skin: #f1c9a5;
+    --sp-hair-dark: #3b3030;
+    --sp-hair-warm: #8a5a35;
+    --sp-lamp: #f7c96a;
+    --sp-glow: 0;
+    --sp-shadow-opacity: 0.12;
+}
+
+.scene-host[data-scene-theme="dark"] .scene-park {
+    --sp-ink: #0b1020;
+    --sp-line: #56638a;
+    --sp-teal: #2fa399;
+    --sp-red: #c9564c;
+    --sp-gold: #e8b24a;
+    --sp-paper: #d8d1c0;
+    --sp-wood: #6b5638;
+    --sp-wood-dark: #54432b;
+    --sp-pine: #1f5a3a;
+    --sp-pine-low: #184a30;
+    --sp-ridge: color-mix(in srgb, var(--accent) 6%, #1f3a42);
+    --sp-meadow: color-mix(in srgb, var(--accent) 6%, #21443c);
+    --sp-front: color-mix(in srgb, var(--accent) 6%, #1b3a33);
+    --sp-tex: rgb(140 210 180 / 0.07);
+    --sp-cloud: rgb(150 170 210 / 0.16);
+    --sp-path: #3a4b44;
+    --sp-path-edge: #2c3a35;
+    --sp-skin: #d6a47f;
+    --sp-hair-dark: #1a1620;
+    --sp-hair-warm: #6d4527;
+    --sp-lamp: #ffd98a;
+    --sp-glow: 0.45;
+    --sp-shadow-opacity: 0.2;
+}
+
+.scene-park .sp-ridge {
+    fill: var(--sp-ridge);
+}
+.scene-park .sp-meadow {
+    fill: var(--sp-meadow);
+}
+.scene-park .sp-front {
+    fill: var(--sp-front);
+}
+.scene-park .sp-tex {
+    fill: var(--sp-tex);
+}
+.scene-park .sp-fr {
+    fill: var(--sp-red);
+}
+.scene-park .sp-ft {
+    fill: var(--sp-teal);
+}
+.scene-park .sp-fg {
+    fill: var(--sp-gold);
+}
+.scene-park .sp-fn {
+    fill: var(--sp-ink);
+}
+.scene-park .sp-paper {
+    fill: var(--sp-paper);
+}
+.scene-park .sp-path,
+.scene-park .sp-path-edge {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.scene-park .sp-path {
+    stroke: var(--sp-path);
+}
+.scene-park .sp-path-fill {
+    fill: var(--sp-path);
+    stroke: var(--sp-path-edge);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+}
+.scene-park .sp-path-edge {
+    stroke: var(--sp-path-edge);
+}
+.scene-park .sp-far-a {
+    fill: var(--sp-far-a);
+}
+.scene-park .sp-far-b {
+    fill: var(--sp-far-b);
+}
+.scene-park .sp-panel {
+    fill: var(--sp-panel);
+}
+.scene-park .sp-skin {
+    fill: var(--sp-skin);
+}
+.scene-park .sp-hair-dark {
+    fill: var(--sp-hair-dark);
+}
+.scene-park .sp-hair-warm {
+    fill: var(--sp-hair-warm);
+}
+.scene-park .sp-wood {
+    fill: var(--sp-wood);
+}
+.scene-park .sp-wood-dark {
+    fill: var(--sp-wood-dark);
+}
+.scene-park .sp-pine {
+    fill: var(--sp-pine);
+}
+.scene-park .sp-pine-low {
+    fill: var(--sp-pine-low);
+}
+.scene-park .sp-cloud-fill {
+    fill: var(--sp-cloud);
+}
+.scene-park .sp-lamp {
+    fill: var(--sp-lamp);
+}
+.scene-park .sp-glow {
+    opacity: var(--sp-glow);
+}
+.scene-park .sp-shadow {
+    fill: var(--sp-ink);
+    opacity: var(--sp-shadow-opacity);
+}
+
+.scene-park .sp-line {
+    fill: none;
+    stroke: var(--sp-line);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.scene-park .sp-rope {
+    fill: none;
+    stroke: var(--sp-paper);
+    stroke-linecap: round;
+}
+.scene-park .sp-pole {
+    fill: none;
+    stroke: var(--sp-gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.scene-park .sp-brace {
+    opacity: 0.45;
+}
+.scene-park .sp-pillar-brace {
+    fill: var(--sp-paper);
+}
+.scene-park .sp-pillar {
+    opacity: 0.9;
+}
+.scene-park .sp-track {
+    fill: none;
+    stroke: var(--sp-teal);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.scene-park .sp-ties {
+    fill: none;
+    stroke: var(--sp-paper);
+    stroke-dasharray: 2 3.5;
+    opacity: 0.85;
+}
+
+/* ---------- 动画：各设施周期互不相同，错峰启动 ---------- */
+
+/* 摩天轮：车轮匀速慢转，吊舱以同周期反向自转，始终保持竖直。 */
+.scene-park .sp-wheel {
+    animation: sp-spin 72s linear infinite;
+}
+.scene-park .sp-gondola {
+    animation: sp-spin 72s linear infinite reverse;
+}
+@keyframes sp-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 海盗船：两端缓入缓出，中点最快；静态姿态为轻微倾斜。 */
+.scene-park .sp-swing {
+    transform: rotate(-14deg);
+    animation: sp-swing 3.4s ease-in-out infinite alternate;
+}
+@keyframes sp-swing {
+    from {
+        transform: rotate(-24deg);
+    }
+    to {
+        transform: rotate(24deg);
+    }
+}
+
+/* 旋转木马：木马在转台内往复并上下起伏，三者周期各异，避免长时间叠在一起。 */
+.scene-park .sp-horse {
+    animation: sp-orbit 4.2s ease-in-out infinite alternate;
+}
+.scene-park .sp-horse--b {
+    animation-duration: 5.4s;
+    animation-delay: -1.4s;
+}
+.scene-park .sp-horse--c {
+    animation-duration: 3.7s;
+    animation-delay: -2.8s;
+}
+.scene-park .sp-horse__bob {
+    animation: sp-bob 1.4s ease-in-out infinite alternate;
+}
+@keyframes sp-orbit {
+    from {
+        transform: translateX(-16px);
+    }
+    to {
+        transform: translateX(16px);
+    }
+}
+@keyframes sp-bob {
+    from {
+        transform: translateY(-2px);
+    }
+    to {
+        transform: translateY(2px);
+    }
+}
+
+/* 旗帜轻微飘动。 */
+.scene-park .sp-flag {
+    animation: sp-flutter 1.8s ease-in-out infinite alternate;
+}
+@keyframes sp-flutter {
+    from {
+        transform: skewY(-8deg);
+    }
+    to {
+        transform: skewY(8deg);
+    }
+}
+
+/* 热气球缓慢漂移摇摆。 */
+.scene-park .sp-balloon {
+    animation: sp-drift 9s ease-in-out infinite alternate;
+}
+@keyframes sp-drift {
+    from {
+        transform: translate(-8px, 2px) rotate(-2deg);
+    }
+    to {
+        transform: translate(8px, -5px) rotate(2deg);
+    }
+}
+
+/*
+ * 云层与小火车：从画面外驶入、驶出（-300 与 1700 均在可视区之外，含
+ * 超宽屏），因此循环重置时不会可见地瞬移。静态姿态由基础 transform 给出。
+ */
+.scene-park .sp-cloud {
+    animation: sp-cross 210s linear infinite;
+}
+.scene-park .sp-cloud--a {
+    transform: translateX(220px);
+    animation-delay: -30s;
+}
+.scene-park .sp-cloud--b {
+    transform: translateX(700px);
+    animation-duration: 260s;
+    animation-delay: -120s;
+}
+.scene-park .sp-cloud--c {
+    transform: translateX(1180px);
+    animation-duration: 180s;
+    animation-delay: -90s;
+}
+.scene-park .sp-train {
+    transform: translateX(200px);
+    animation: sp-cross 46s linear infinite;
+    animation-delay: -12s;
+}
+@keyframes sp-cross {
+    from {
+        transform: translateX(-300px);
+    }
+    to {
+        transform: translateX(1700px);
+    }
+}
+
+/*
+ * 游客：站立者轻微起伏（周期与相位各异，避免整齐划一）；漫步者在步道上
+ * 慢速往复，并带有步伐起伏。静态姿态由基础位置给出。
+ */
+.scene-park .sp-idle-a {
+    animation: sp-idle 2.6s ease-in-out infinite alternate;
+}
+.scene-park .sp-idle-b {
+    animation: sp-idle 3.1s ease-in-out -1.2s infinite alternate;
+}
+.scene-park .sp-idle-c {
+    animation: sp-idle 2.9s ease-in-out -2s infinite alternate;
+}
+@keyframes sp-idle {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-0.9px);
+    }
+}
+.scene-park .sp-stroll-a,
+.scene-park .sp-stroll-b,
+.scene-park .sp-stroll-c,
+.scene-park .sp-stroll-d {
+    animation: sp-stroll 24s ease-in-out infinite alternate;
+}
+.scene-park .sp-stroll-a {
+    --sp-range: 46px;
+}
+.scene-park .sp-stroll-b {
+    --sp-range: 60px;
+    animation-duration: 30s;
+    animation-delay: -9s;
+}
+.scene-park .sp-stroll-c {
+    --sp-range: 70px;
+    animation-duration: 34s;
+    animation-delay: -20s;
+}
+.scene-park .sp-stroll-d {
+    --sp-range: 50px;
+    animation-duration: 27s;
+    animation-delay: -4s;
+}
+@keyframes sp-stroll {
+    from {
+        transform: translateX(calc(var(--sp-range) * -1));
+    }
+    to {
+        transform: translateX(var(--sp-range));
+    }
+}
+.scene-park .sp-step {
+    animation: sp-step 0.55s ease-in-out infinite alternate;
+}
+@keyframes sp-step {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-1px);
+    }
+}
+.scene-park .sp-hold {
+    animation: sp-hold 2.2s ease-in-out infinite alternate;
+}
+@keyframes sp-hold {
+    from {
+        transform: rotate(-4deg);
+    }
+    to {
+        transform: rotate(4deg);
+    }
+}
+
+/* 第二只热气球：周期与相位不同，避免与第一只同步。 */
+.scene-park .sp-balloon--b {
+    animation-duration: 11s;
+    animation-delay: -4s;
+}
+
+/* 小火车烟囱冒烟：向后上方飘散并淡出（车体镜像，故 +x 为向后）。 */
+.scene-park .sp-puff {
+    animation: sp-puff 2.4s ease-out infinite;
+}
+.scene-park .sp-puff--b {
+    animation-delay: -1.2s;
+}
+@keyframes sp-puff {
+    from {
+        opacity: 0.9;
+        transform: translate(0, 0);
+    }
+    to {
+        opacity: 0;
+        transform: translate(6px, -11px);
+    }
+}
