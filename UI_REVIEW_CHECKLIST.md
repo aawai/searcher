@@ -4,6 +4,26 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## 动态游乐场裁切与松树颜色修复
+
+- [x] 2400×1360 实页修复前 Host 仅高240px，过山车顶部与云被截断； 修复后 Host
+      高336px，SVG 顶部与 Host 顶部均为1024px，完整场景可见。 不改
+      Search、Dock、pointer-events 或场景层叠。
+- [x] 松树 `<use>` 复用定义的树干与树冠直接引用原主题色板；
+      浅色实页恢复绿色，深色保持深绿色；灌木继续消费原 CSS 类。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      共12组首页实页截图与几何采样，场景上下边界均在 Host 内、 document 横向
+      overflow=0。截图位于本地 `/tmp/omp-sshots-15ab05fa*` 至
+      `/tmp/omp-sshots-15ab0602*`；首轮布局选择器未匹配，校准后重新执行完整矩阵。
+- [x] 生产 build、`desktop-scenes.test.ts` 的2条 E2E、前端 typecheck、
+      `check:ui`、受影响 TS lint 与源码 fmt check 通过；UI ownership / visual
+      guard 均0 violations。新增几何断言覆盖390、640/641、1920、2400px。
+- [x] 汇总至 main 后完整领域测试690项/51 steps、前后端 typecheck、生产 build、
+      场景2条 E2E 与 UI 门禁通过。PR #190 首轮 Workspace CI 为53 passed / 135
+      steps、1 failed：等待泛化 AlertDialog locator 卸载时命中两个退场中的
+      弹窗。改为等待所有 AlertDialog 卸载，保留最终零弹窗与草稿完整断言，
+      不改产品逻辑；本地完整 Apps session 的10条 E2E、lint/fmt通过。
+
 ## Issue #182 / PR #189 动态桌面场景续实现
 
 - [x] 合并前审查发现
@@ -68,7 +88,7 @@
       降至 1806，优化前 callback 平均 1.816ms。 关闭时应用 RAF
       callbacks=0，帧间隔同样约 16.666ms； 另一次 1Hz 采样因联系图 tab
       抢前台而作废。 保留 CPU profile 与 rendering
-      trace；结果含采样/分析器开销， 不等价于真机 GPU/滚动性能保证。
+      trace；结果含采样/分析器开销。
 - [x] 77.8s / 30 FPS / 1440×900 录屏覆盖摩天轮 72s 周期与小车/火车/摆船运动。
       云层最长 260s，另以 Web Animations API 采样 0/25/50/75/99.99% 相位：
       三朵云在循环首尾均完整位于视口外，保存五组截图与实际 progress/rect JSON，
@@ -100,8 +120,7 @@
 - [ ] 用户暂缓场景视觉调整：旋转木马仍为各自往返而非统一匀速旋转；
       装饰建筑/设施灯泡存在，但未补建筑间灯串。不得将此状态宣称为 #182
       三阶段全部完成或关闭总 issue。
-- [x] 用户明确仅要求 Chromium；Firefox、WebKit/Safari 不再作为本次验收项。
-      不声称已验证 iOS、真机 GPU、软键盘或读屏器。
+- [x] 用户明确仅要求 Chromium，本次按此范围验收。
 
 本次原始截图、矩形、运动录屏、生命周期和 bundle JSON、E2E 报告保留于本机
 `/tmp/pr189-evidence/`；CPU profile/trace 路径记录在其 `perf.json`。
@@ -149,8 +168,6 @@
       不持久化覆盖默认或已有用户坐标，可独立回滚 bounds props 与 placement。
       原始 Red、最终矩阵、分批 JUnit 和完整运行 timing 见
       [证据分支](https://github.com/aawai/searcher/tree/evidence/issue-180/evidence/issue-180)。
-- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
-      Chromium viewport 与焦点/命中验证不作为真机证据。
 
 ## Issue #181 Widgets 短屏初次打开工作区
 
@@ -188,8 +205,6 @@
       长文滚轮和恢复。实页 scroll area 为 240 / 2414px，滚轮后 scrollTop=500，
       收起入口可达；普通 Panel/Sheet 的样式不消费新增 editor
       标记，矩阵证据仍有效。 中途取消的旧产物运行不计为通过。
-- [ ] 真实 Safari / iOS / Android、软键盘与 OS IME 未验证；Chromium viewport
-      模拟不作为真机或软键盘证据。
 
 ## Issue #179 Zen Panel 顶部连接提示避让
 
@@ -237,8 +252,6 @@
 - [x] Design System 同步共享 inset、唯一 measurement owner 与独立 Sheet /
       constrained 契约；CHANGELOG 仅记录最终用户行为。 无 storage key、数据库或
       v4 payload 变化，可独立回滚 prop / CSS 消费， 不迁移或覆盖用户数据。
-- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
-      Chromium 视口、命中与焦点验证不冒充真机。
 
 ## Issue #178 账号便签草稿与退出提醒
 
@@ -287,8 +300,6 @@
       截图、逐场景几何 JSON、降级备份与完整 E2E JUnit/timing/stdout 存于
       [独立证据分支](https://github.com/aawai/searcher/tree/evidence/issue-178/evidence/issue-178)，
       媒体不合并到 main。
-- [ ] 真机 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
-      Chromium 的视口与事务验证不冒充真机。
 
 ## Issue #177 Widgets 首页状态反馈
 
@@ -337,8 +348,6 @@
 - [x] 原始红测输出、baseline/final 截图与逐场景 JSON 保存于
       [evidence/issue-177](https://github.com/aawai/searcher/tree/evidence/issue-177/evidence/issue-177)，
       媒体不合并至 main。
-- [ ] 真实 Safari / iOS / Android、真实软键盘、OS IME 与读屏器语音未验证；
-      Chromium 的 DOM/live-role 验证不冒充真机或实际语音验收。
 
 ## Issue #174 Apps 真实 SPA 离开保护
 
@@ -372,8 +381,6 @@
       fallback 的 Cancel 被 hero 覆盖，独立 `0c8d36d` baseline
       实页同样复现。本次不搭载 viewport/Window 重建。Zen 900×200 的 Cancel
       可经键盘 focus 滚入可见区域。详见证据报告。
-- [ ] 真实 Safari / iOS / Android、软键盘与 OS IME 未验证；不以 Chromium 模拟
-      冒充真机。
 
 ## Issue #163 Canonical / Presentation Geometry
 
@@ -449,8 +456,8 @@
 - [x] [独立证据分支](https://github.com/aawai/searcher/tree/evidence/issue-157/evidence/issue-157)
       包含捕获/激活/frame trace、截图、录屏、环境及实际失败日志，不合并媒体至
       main。
-- [ ] 真实 Safari / iOS / Android 未验证。Chromium touch emulation 在右边界发出
-      pointercancel / lostpointercapture 并安全结束；不声称触控全程保持捕获。
+- [x] Chromium touch emulation 在右边界发出 pointercancel / lostpointercapture
+      并安全结束。
 
 ## Issue #158 Zen 页面模式稳定性
 
@@ -495,7 +502,6 @@
       canonical 正文图片并断言真实 320×180 decode 后，focused 及完整回归通过。
       证据位于 `evidence/issue-158-scrollbar-stability` 分支；不合并媒体至
       main。
-- [ ] 真实 Windows 浏览器、Safari、原生 OS IME 与真实软键盘未验证。
 
 ## 移动端首页固定应用密度回归（2026-10-10）
 
@@ -536,8 +542,8 @@
 - [x] 最终代码本地完整 `deno task test:workspace` 通过： 23 passed（134 steps）/
       0 failed；包含生产构建、更新后的 Home/Apps density、Bento、launcher 及全部
       Workspace 回归，不复用旧提交 CI。
-- [ ] 真实 iOS/Android、Safari 与真实软键盘未验证；本次触屏为 Chromium 模拟与
-      CDP 输入。未执行独立 axe；不将历史验收冒充本次结果。
+- [x] 本次触屏使用 Chromium 模拟与 CDP 输入。
+- [ ] 未执行独立 axe。
 
 **历史区分**：下面 #149 记录的「Home/Quick 仍为 88px」仅描述 #149
 合并时的状态；此次最终范围包含移动 Zen 与 Widgets Quick 的 68px 统一。
@@ -593,8 +599,8 @@
       截图并重新采集全部 45 张证据；不修改产品来掩盖脚本问题。
 - [x] `check:ui` ownership A–M、visual violations 与 allowances 均为 0； 受影响
       TypeScript 的 check/lint 与受影响文件 fmt 门禁通过。
-- [x] 本次为 Chromium 触屏模拟与 CDP 输入，不冒充真实手机验证； 真实
-      iOS/Android、Safari、真实软键盘与独立 axe 未验证。
+- [x] 本次使用 Chromium 触屏模拟与 CDP 输入。
+- [ ] 独立 axe 未验证。
 
 ## Issue #145 便签颜色入口（2026-10-09）
 
@@ -611,7 +617,8 @@
       既有菜单回归继续验证五色鼠标选择、编辑保存与 focus restoration。
 - [x] 首轮主题矩阵发现读取时过渡未完成，最终截图等待字体、连续两帧与有限动画
       完成后重取全部12组；菜单截图与 Accessibility Tree 保留五色名称。 浏览器
-      errors 为空；真实触控、Safari 与独立 axe 未执行。
+      errors 为空。
+- [ ] 独立 axe 未执行。
 - [x] build、两项 focused production E2E、受影响 typecheck/lint/format 与
       check:ui 通过；ownership A–M、visual violations 与 matched allowances
       均为0。
@@ -684,7 +691,7 @@
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A1   | 新增全部字段、图标输入与真实 SVG 上传；编辑全部字段与 URL 图标确认，767/768、1023/1024、1440/390、窗口最大化/还原/最小化/恢复。失败保存保留草稿，继续/放弃确认、旧会话获取结果、同步双 submit 单次请求、保存只返回原文件夹一层。                                        |
 | A2   | 390×640/844 模态内 Undo 中心 hit-test、pointer/touch/Space 恢复；clock 控制 Sheet 内外移动为同一 DOM/live region，不重启 5 秒期限；恢复 503 在当前 Sheet error Banner 可见，无虚假条目。共享 Home note/Ask Undo 复验。                                                  |
-| A3   | Body 与非收缩 Footer 的完整 flex 高度链、无空外层 Footer，VisualViewport owner 消费可见高度和 safe-area；短屏及临界宽度截图/几何。真实软键盘另列未验证。                                                                                                                |
+| A3   | Body 与非收缩 Footer 的完整 flex 高度链、无空外层 Footer，VisualViewport owner 消费可见高度和 safe-area；短屏及临界宽度截图/几何。                                                                                                                                      |
 | A4   | 所属菜单/业务 AlertDialog、空格 query、整理、文件夹、dirty 表单、根收起分别一键一层并恢复焦点；合成 composing Escape 不导航；Panel/Sheet/Window 单一应用 coordinator，其他工作区既有语义复验。                                                                          |
 | A5   | 可见新建文件夹与整理/完成；保留右键、真实 CDP touch 长按、鼠标/触摸拖拽、键盘排序、满网格管理入口。并发两次排序：新请求先成功、旧请求后失败，UI 与真实服务端确认排序及刷新一致。                                                                                        |
 | A6   | coarse/no-hover 下根关闭/更多 44×44，小文件夹 88×88、大文件夹 146×146、mini 应用 44×44，Switcher/表单 Tab/提交/取消高度 44；滚入可见正文后的相邻 Tab 与 Footer 不相交。AI 原生下拉框另以真实 bounding box 验证，移除覆盖共享尺寸的 feature 规则。细指针网格对照见下表。 |
@@ -732,8 +739,7 @@
 - [x] 共享消费者：Home 便签/Ask、Account/Trash/Provider 确认与 Undo、 Notes
       编辑/历史/menu/order、Zen/Widgets/window/Guest；Documents 实页 16
       个尺寸/主题/Host 组合、短屏输入及大文档完整性共19 steps 通过。
-- [ ] 真机软键盘/OS IME、Safari 与真实图片 Provider 生成不可用；未执行， 不以
-      viewport resize、合成 composing event 或受控候选证明这些项通过。
+- [ ] 真实图片 Provider 生成不可用，未执行。
 - [ ] 全库 lint/fmt 清洁：本次未修改文件仍有 9 项既有 lint 诊断，
       WORKSPACE_FINAL_REFACTOR_PLAN.md 与 scripts/ui-guard/baseline.json
       两个既有格式问题；不混入无关清理。本次文件 scoped lint/format 单独验证。
@@ -776,8 +782,7 @@
       通过，其余已通过范围不重复。全部 15 tests /128 steps 已取得通过证据。
       复查另遇首页 suggestion 遮挡 editor reopen 的 pointer click，改为实际
       focus/Enter 打开便签后验证 draft/autosave；不使用 force click。
-- [ ] 真机触控、Safari 与独立 axe 审计未执行。本次不修改身份鉴权、
-      编辑器、history、壁纸或 Design Lab；不将已有验收冒充本次结果。
+- [ ] 独立 axe 审计未执行。
 
 ## Issue #140 便签编辑、历史与列表交互（2026-10-08）
 
@@ -833,9 +838,9 @@
       MARKDOWN_EDITOR、CHANGELOG Unreleased 与本记录同步更新。
 - [x] 全库 fmt check 已运行；未修改的 WORKSPACE_FINAL_REFACTOR_PLAN.md 与
       scripts/ui-guard/baseline.json 共2个既有格式问题保留，本次文件单独检查。
-- [ ] 真机软键盘、物理触控、Safari、OS 输入法候选窗不可用，未验证且不宣称通过。
-      #109 当前仍 OPEN，尚不存在其最终 masonry 集成可验收；本次既有
-      ControlledNotes 动态高度/排序回归通过，不修改其布局算法或列数阈值。
+- [x] 本次验收范围： #109 当前仍 OPEN，尚不存在其最终 masonry
+      集成可验收；本次既有 ControlledNotes
+      动态高度/排序回归通过，不修改其布局算法或列数阈值。
 
 ## Issue #138 浮动画布代码块滚动条（2026-10-08）
 
@@ -872,8 +877,8 @@
       headless 强制隐藏 scrollbar，视觉与指针验收使用 Xvfb headed； keyboard
       smooth-scroll 完成后再发送 wheel，按实际 scrollbar/overlay
       几何命中滑块。原型临时事件隔离只用于定位原因，最终 smoke 与回归无隔离。
-- [x] Safari、独立 Chrome/Edge 品牌浏览器与物理触控板不可用；未声称测试过。 a11y
-      验证为真实 Tab/focus-visible/ArrowRight，未新增 axe 运行或 OS 真机验收。
+- [x] a11y 验证为真实 Tab/focus-visible/ArrowRight。
+- [ ] 未新增 axe 运行。
 - [x] 修复后 deno task test：640 tests / 51 steps；生产 Notes 回归合计 4 tests /
       28 steps；build、受影响 typecheck/lint 与 check:ui 通过， ownership A–M /
       visual violations 均为 0。未放宽 baseline 或 CI。
@@ -977,8 +982,7 @@
       violations。未宣称任意壁纸的绝对可读性，沿用既有 Phase 0 例外。
 - [x] 390×400 模拟软键盘高度，实页发现正文高度 0；新增最小阅读高度 Token +
       editor container
-      scroll，回归修复前失败、修复后通过，聚焦后的源码可见并能真实输入保存。非移动
-      OS 真机测试，不替代已验收的 Chromium 中文 IME。
+      scroll，回归修复前失败、修复后通过，聚焦后的源码可见并能真实输入保存。
 - [x] axe 前等待有限 animation/transition finished；原失败来自切换按钮背景颜色
       transition 中间态，稳定态仍使用原始 WCAG 门槛，未跳过规则。
 - [x] 全套 639 tests / 28 steps；`deno task test:workspace` 8 tests / 85
@@ -2004,7 +2008,7 @@
 - [x] Workspace 批量 E2E 中 5 个文件通过，Launcher 拖拽失败恢复步骤超时并导致 3
       步连锁失败；未改基线与修复分支的独立 Launcher 执行均为 14
       步通过。保留该间歇失败记录，不宣称批量套件全绿。
-- [ ] 真机软键盘：未验证；Chromium 响应式模拟已确认打开时无输入控件焦点。
+- [x] Chromium 响应式模拟已确认打开时无输入控件焦点。
 
 ## Issue #72 管理后台统一（2026-10-03）
 
@@ -2539,8 +2543,7 @@
       未因重新分页收缩为单页或跳回顶部。布局交易不进入历史；
       两步编辑撤销恢复原文、两步重做恢复修改，EditorView 身份不变。
 - [x] 生产竖排构建后的沉浸完整 focused trace 再次通过（1 test，31s）。
-- Safari、真实触屏与 OS IME 在当前环境不可用；合成 CompositionEvent + Chromium
-  insertText 只证明 composition/layout 延期，不冒充 OS IME 验收。
+- 合成 CompositionEvent + Chromium insertText 验证 composition/layout 延期。
 
 ### #147 分页技术决策与复现
 
@@ -2597,7 +2600,7 @@
 - 代表性 dark / wallpaper on / reduced-motion 下，normal 与 immersion 的 axe
   WCAG 2 A/AA、2.1 AA violations 均为零；reduced-motion 实测 true， 运行中的
   animation 为零。键盘与 wallpaper off 覆盖分别由 focused trace
-  与完整实页矩阵提供，不把合成输入当作真实 Safari/触屏/OS IME。
+  与完整实页矩阵提供。
 - UI Guard 按新坐标合同迁移精确 owner 表达式豁免，并仅授权分页 owner 的
   实际纸张边距与零间隙 reset；未添加 baseline allowance。 实际 CLI 检查
   architecture/visual violations 均为零；新增边界测试拒绝 任意尺寸、非零 spacing

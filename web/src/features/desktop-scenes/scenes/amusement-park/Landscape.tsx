@@ -65,14 +65,14 @@ export function LandscapeDefs({ patternId, pineId }: {
             </pattern>
             <g id={pineId}>
                 <rect
-                    className="sp-wood-dark"
+                    fill="var(--sp-wood-dark)"
                     x="-1.5"
                     y="0"
                     width="3"
                     height="7"
                 />
-                <path className="sp-pine-low" d="M0 -14L11 3H-11Z" />
-                <path className="sp-pine" d="M0 -26L9 -8H-9Z" />
+                <path fill="var(--sp-pine-low)" d="M0 -14L11 3H-11Z" />
+                <path fill="var(--sp-pine)" d="M0 -26L9 -8H-9Z" />
             </g>
         </defs>
     );

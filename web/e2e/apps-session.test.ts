@@ -625,7 +625,9 @@ Deno.test("route leave waits for an Apps form confirmation dialog to close", asy
             name: "继续编辑",
             exact: true,
         }).click();
-        await routeDialog.waitFor({ state: "detached" });
+        await page.waitForFunction(() =>
+            document.querySelectorAll('[role="alertdialog"]').length === 0
+        );
         assertEquals(new URL(page.url()).pathname, "/");
         assertEquals(
             await page.locator("#app-url-input").inputValue(),

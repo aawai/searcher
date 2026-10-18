@@ -10,7 +10,7 @@
     position: fixed;
     inset: auto 0 0;
     z-index: -1;
-    height: clamp(160px, 14vw, 240px);
+    height: max(160px, 14vw);
     overflow: hidden;
     pointer-events: none;
     user-select: none;
@@ -19,7 +19,7 @@
 
 @media (max-width: 640px) {
     .scene-host {
-        height: clamp(90px, 30vw, 150px);
+        height: max(90px, 30vw);
     }
 }
 

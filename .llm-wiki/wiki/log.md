@@ -1,5 +1,19 @@
 # Wiki Update Log
 
+## 2026-10-17
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-17-issue-179-zen-chrome-inset-pr-186","title":"Issue 179 Zen chrome inset 经 PR 186 合并关闭"}
+
+## 2026-10-16
+
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-16-issue-177-widgets-pr-184","title":"Issue 177 Widgets 首页反馈经 PR 184 合并关闭"}
+- **retro**: {"category":"bugfix","slug":"issue-174-data-router-session-leave-guard","title":"Issue 174 data-router Apps leave guard merged via PR 183"}
+
+## 2026-10-15
+
+- **retro**: {"category":"testing","slug":"e2e-parallel-default-enabled-171","title":"E2E并行默认启用及回退策略"}
+- **retro**: {"category":"testing","slug":"e2e-native-parallel-speedup-vs-stability-167","title":"E2E原生并行提速存在但默认保留串行"}
+
 ## 2026-10-11
 
 - **observe**: {"relevance":"high","slug":"obs-2026-10-11-issue-158-completed-through-pr-159","title":"Issue 158 completed through PR 159"}

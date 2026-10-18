@@ -39,6 +39,7 @@ function getInitialPoint(note: NoteItem, index: number): Point {
     }
     return { x: 0, y: 0, z: index + 1 };
 }
+
 function getNoteTilt(id: string): string {
     let hash = 0;
     for (let i = 0; i < id.length; i++) {

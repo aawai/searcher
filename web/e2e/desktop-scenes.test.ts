@@ -228,6 +228,35 @@ Deno.test("desktop scenes load on selection and respect host lifecycle", async (
     await page.locator(".desktop-dock").waitFor({ state: "visible" });
     await stableLayout(page);
 
+    // The complete vertical composition must survive wide CSS viewports
+    // (including zoomed-out browsers) and both sides of the compact boundary.
+    for (const width of [390, 640, 641, 1920, 2400]) {
+        await page.setViewportSize({ width, height: 900 });
+        await stableLayout(page);
+        const bounds = await page.locator("svg.scene-park").evaluate((svg) => {
+            const element = svg as SVGSVGElement;
+            const matrix = element.getScreenCTM()!;
+            const box = element.viewBox.baseVal;
+            const host = element.parentElement!.getBoundingClientRect();
+            return {
+                top: box.y * matrix.d + matrix.f,
+                bottom: (box.y + box.height) * matrix.d + matrix.f,
+                hostTop: host.top,
+                hostBottom: host.bottom,
+            };
+        });
+        assert(
+            bounds.top >= bounds.hostTop - 0.75,
+            `Scene top clipped at ${width}px: ${JSON.stringify(bounds)}`,
+        );
+        assert(
+            bounds.bottom <= bounds.hostBottom + 0.75,
+            `Scene bottom clipped at ${width}px: ${JSON.stringify(bounds)}`,
+        );
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await stableLayout(page);
+
     const sceneChunk = [...requestedJs].find((file) =>
         /\/AmusementParkScene-[^/]+\.js$/.test(file)
     );

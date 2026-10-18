@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-11T14:52:06.498Z",
+  "last_updated": "2026-10-17T01:18:17.529Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -697,6 +697,33 @@
       "source_id": "SRC-2026-10-05-004",
       "format": "web",
       "captured": "2026-10-05"
+    },
+    "sources/e2e-native-parallel-speedup-vs-stability-167": {
+      "type": "source",
+      "title": "E2E原生并行提速存在但默认保留串行",
+      "category": "testing",
+      "status": "insight",
+      "slug": "e2e-native-parallel-speedup-vs-stability-167",
+      "created": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "sources/e2e-parallel-default-enabled-171": {
+      "type": "source",
+      "title": "E2E并行默认启用及回退策略",
+      "category": "testing",
+      "status": "insight",
+      "slug": "e2e-parallel-default-enabled-171",
+      "created": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "sources/issue-174-data-router-session-leave-guard": {
+      "type": "source",
+      "title": "Issue 174 data-router Apps leave guard merged via PR 183",
+      "category": "bugfix",
+      "status": "insight",
+      "slug": "issue-174-data-router-session-leave-guard",
+      "created": "2026-10-16",
+      "updated": "2026-10-16"
     },
     "sources/obs-2026-09-25-ui-app": {
       "type": "source",
@@ -1512,6 +1539,119 @@
       "source_context": "Fixing issue #158 in isolated worktree",
       "created": "2026-10-11",
       "updated": "2026-10-11"
+    },
+    "sources/obs-2026-10-12-issue-157": {
+      "type": "source",
+      "title": "Observation: Issue 157 拖拽边界积分与碰撞接触状态",
+      "tags": [
+        "desktop",
+        "drag",
+        "pointer-capture",
+        "collision",
+        "issue-157"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-12-issue-157",
+      "relevance": "high",
+      "observed_at": "2026-10-12T23:42:00.542Z",
+      "source_context": "实施 issue 157，已创建 PR 162，待合并",
+      "created": "2026-10-12",
+      "updated": "2026-10-12"
+    },
+    "sources/obs-2026-10-12-issue-157-pr-162-main": {
+      "type": "source",
+      "title": "Observation: Issue 157 经 PR 162 合并 main 并关闭",
+      "tags": [
+        "desktop",
+        "issue-157",
+        "pr-162",
+        "merged",
+        "acceptance"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-12-issue-157-pr-162-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-12T23:50:31.068Z",
+      "source_context": "完成 issue 157 的 worktree 实施、PR 创建与合并交付",
+      "created": "2026-10-12",
+      "updated": "2026-10-12"
+    },
+    "sources/obs-2026-10-15-ci-p3-p4-research-branch-cleanup-and-cache-evaluation": {
+      "type": "source",
+      "title": "Observation: CI P3/P4 research: branch cleanup and cache evaluation",
+      "tags": [
+        "ci",
+        "github-actions",
+        "deno",
+        "playwright",
+        "issue-161"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-15-ci-p3-p4-research-branch-cleanup-and-cache-evaluation",
+      "relevance": "high",
+      "observed_at": "2026-10-15T06:25:44.920Z",
+      "source_context": "Issue #161 P3/P4 research",
+      "created": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "sources/obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug": {
+      "type": "source",
+      "title": "Observation: SearcherSearchInput unguided async suggestions reopening bug",
+      "tags": [
+        "searcher",
+        "workspace",
+        "e2e",
+        "playwright",
+        "suggestion-item",
+        "combobox"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug",
+      "relevance": "high",
+      "observed_at": "2026-10-15T09:23:02.467Z",
+      "source_context": "Issue #167 root cause investigation on workspace.test.ts failure",
+      "created": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "sources/obs-2026-10-16-issue-177-widgets-pr-184": {
+      "type": "source",
+      "title": "Observation: Issue 177 Widgets 首页反馈经 PR 184 合并关闭",
+      "tags": [
+        "issue177",
+        "widgets",
+        "feedback",
+        "offline",
+        "e2e",
+        "merged"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-16-issue-177-widgets-pr-184",
+      "relevance": "critical",
+      "observed_at": "2026-10-16T12:03:55.855Z",
+      "source_context": "实施 issue #177 并创建 PR、合并 main、关闭 issue",
+      "created": "2026-10-16",
+      "updated": "2026-10-16"
+    },
+    "sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186": {
+      "type": "source",
+      "title": "Observation: Issue 179 Zen chrome inset 经 PR 186 合并关闭",
+      "tags": [
+        "searcher",
+        "zen",
+        "workspace",
+        "issue-179",
+        "pr-186",
+        "chrome",
+        "geometry",
+        "acceptance"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-17-issue-179-zen-chrome-inset-pr-186",
+      "relevance": "high",
+      "observed_at": "2026-10-17T01:18:17.477Z",
+      "source_context": "完成issue179、创建PR并合并main关闭issue",
+      "created": "2026-10-17",
+      "updated": "2026-10-17"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",
