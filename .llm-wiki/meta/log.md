@@ -392,3 +392,18 @@
 ## [2026-10-11T14:52:06.474Z] observe
 - slug: "obs-2026-10-11-issue-158-completed-through-pr-159", title: "Issue 158 completed through PR 159", relevance: "high"
 
+## [2026-10-15T10:19:18.523Z] retro
+- slug: "e2e-native-parallel-speedup-vs-stability-167", title: "E2E原生并行提速存在但默认保留串行", category: "testing"
+
+## [2026-10-15T10:58:58.744Z] retro
+- slug: "e2e-parallel-default-enabled-171", title: "E2E并行默认启用及回退策略", category: "testing"
+
+## [2026-10-16T07:25:16.231Z] retro
+- slug: "issue-174-data-router-session-leave-guard", title: "Issue 174 data-router Apps leave guard merged via PR 183", category: "bugfix"
+
+## [2026-10-16T12:03:55.858Z] observe
+- slug: "obs-2026-10-16-issue-177-widgets-pr-184", title: "Issue 177 Widgets 首页反馈经 PR 184 合并关闭", relevance: "critical"
+
+## [2026-10-17T01:18:17.480Z] observe
+- slug: "obs-2026-10-17-issue-179-zen-chrome-inset-pr-186", title: "Issue 179 Zen chrome inset 经 PR 186 合并关闭", relevance: "high"
+

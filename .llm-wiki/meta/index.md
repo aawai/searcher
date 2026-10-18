@@ -38,6 +38,9 @@
 
 ## Sources
 
+- [[sources/e2e-native-parallel-speedup-vs-stability-167]] — E2E原生并行提速存在但默认保留串行 *(created: 2026-10-15)*
+- [[sources/e2e-parallel-default-enabled-171]] — E2E并行默认启用及回退策略 *(created: 2026-10-15)*
+- [[sources/issue-174-data-router-session-leave-guard]] — Issue 174 data-router Apps leave guard merged via PR 183 *(created: 2026-10-16)*
 - [[sources/obs-2026-09-25-ui-app]] — Observation: UI 精致化与交互优化：APP 命名对齐、壁纸复合输入、便签全屏与悬浮卡片空间优化 *(created: 2026-09-25)*
 - [[sources/obs-2026-09-25-ui-ux]] — Observation: UI/UX 精致化与设计系统收敛落地 *(created: 2026-09-25)*
 - [[sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture]] — Observation: Web App Launcher Grid Alignment & Square Folder Architecture *(created: 2026-09-25)*
@@ -86,6 +89,12 @@
 - [[sources/obs-2026-10-11-147]] — Observation: #147 非文本分页与自滚动坐标修复 *(created: 2026-10-11)*
 - [[sources/obs-2026-10-11-issue-158-completed-through-pr-159]] — Observation: Issue 158 completed through PR 159 *(created: 2026-10-11)*
 - [[sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop]] — Observation: Issue 158 Zen page scrollbar feedback loop *(created: 2026-10-11)*
+- [[sources/obs-2026-10-12-issue-157]] — Observation: Issue 157 拖拽边界积分与碰撞接触状态 *(created: 2026-10-12)*
+- [[sources/obs-2026-10-12-issue-157-pr-162-main]] — Observation: Issue 157 经 PR 162 合并 main 并关闭 *(created: 2026-10-12)*
+- [[sources/obs-2026-10-15-ci-p3-p4-research-branch-cleanup-and-cache-evaluation]] — Observation: CI P3/P4 research: branch cleanup and cache evaluation *(created: 2026-10-15)*
+- [[sources/obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug]] — Observation: SearcherSearchInput unguided async suggestions reopening bug *(created: 2026-10-15)*
+- [[sources/obs-2026-10-16-issue-177-widgets-pr-184]] — Observation: Issue 177 Widgets 首页反馈经 PR 184 合并关闭 *(created: 2026-10-16)*
+- [[sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186]] — Observation: Issue 179 Zen chrome inset 经 PR 186 合并关闭 *(created: 2026-10-17)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -142,4 +151,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-11T14:52:06.498Z* | *Total pages: 127*
+*Last updated: 2026-10-17T01:18:17.529Z* | *Total pages: 136*

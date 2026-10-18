@@ -519,6 +519,9 @@
   "sources/SRC-2026-10-05-004": [
     "concepts/web-animations-api-runtime-architecture"
   ],
+  "sources/e2e-native-parallel-speedup-vs-stability-167": [],
+  "sources/e2e-parallel-default-enabled-171": [],
+  "sources/issue-174-data-router-session-leave-guard": [],
   "sources/obs-2026-09-25-ui-app": [],
   "sources/obs-2026-09-25-ui-ux": [],
   "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [
@@ -562,13 +565,23 @@
   "sources/obs-2026-10-05-issue-114-wallpaper-motion-perceptibility-calibrated-and-pr-": [],
   "sources/obs-2026-10-05-issue-116-phase-0c-v2-wallpaper-temporal-motion-system-merge": [],
   "sources/obs-2026-10-05-issue-117-route-dynamic-splitting-and-bundle-guard-merged": [],
-  "sources/obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137": [],
+  "sources/obs-2026-10-08-issue-136-notes-focus-boundary-merged-via-pr-137": [
+    "sources/issue-174-data-router-session-leave-guard"
+  ],
   "sources/obs-2026-10-08-issue-140-notes-history-and-portal-regression-findings": [],
   "sources/obs-2026-10-09-ubuntu-chromium": [],
   "sources/obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un": [],
   "sources/obs-2026-10-11-147": [],
   "sources/obs-2026-10-11-issue-158-completed-through-pr-159": [],
   "sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop": [],
+  "sources/obs-2026-10-12-issue-157": [],
+  "sources/obs-2026-10-12-issue-157-pr-162-main": [
+    "sources/issue-174-data-router-session-leave-guard"
+  ],
+  "sources/obs-2026-10-15-ci-p3-p4-research-branch-cleanup-and-cache-evaluation": [],
+  "sources/obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug": [],
+  "sources/obs-2026-10-16-issue-177-widgets-pr-184": [],
+  "sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",
