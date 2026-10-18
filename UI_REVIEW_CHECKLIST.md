@@ -18,6 +18,11 @@
 - [x] 生产 build、`desktop-scenes.test.ts` 的2条 E2E、前端 typecheck、
       `check:ui`、受影响 TS lint 与源码 fmt check 通过；UI ownership / visual
       guard 均0 violations。新增几何断言覆盖390、640/641、1920、2400px。
+- [x] 汇总至 main 后完整领域测试690项/51 steps、前后端 typecheck、生产 build、
+      场景2条 E2E 与 UI 门禁通过。PR #190 首轮 Workspace CI 为53 passed / 135
+      steps、1 failed：等待泛化 AlertDialog locator 卸载时命中两个退场中的
+      弹窗。改为等待所有 AlertDialog 卸载，保留最终零弹窗与草稿完整断言，
+      不改产品逻辑；本地完整 Apps session 的10条 E2E、lint/fmt通过。
 
 ## Issue #182 / PR #189 动态桌面场景续实现
 
