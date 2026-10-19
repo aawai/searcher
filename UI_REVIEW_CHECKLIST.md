@@ -33,6 +33,11 @@
       中断设备偏好事务；等待已保存的目标布局后，完整游客AI与UI feedback复查 3
       passed/17 steps，UI gate仍为0 violations。认证和navigation的已通过结果
       未受影响；不把这些分批证据描述为一次完整routing通过。
+- [x] PR #219 首轮CI：Workspace为55 passed/1 failed（139 steps）， Zen
+      reduced-motion采样到12个running动画；Bundle两处游客入口仍匹配旧
+      aria-label。迁移为AI链接的语义前缀，Zen按动画结束条件等待后仍断言零running，
+      无固定sleep或重发操作。完整bundle-loading、route-style-stability、
+      zen-inline-notes本地复查3 passed/8 steps，lint/format通过。
 
 ## Issues #207 / #212 / #213 无障碍修复
 

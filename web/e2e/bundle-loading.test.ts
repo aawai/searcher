@@ -221,7 +221,7 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                 });
 
                 // Click topbar Ask link
-                await page.locator('a[aria-label="AI 问答"]').click();
+                await page.getByRole("link", { name: /^AI 问答/ }).click();
 
                 // During delay: topbar and App Shell must remain visible
                 const topbarVisible = await page.locator(".topbar").isVisible();
@@ -309,7 +309,7 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                 });
 
                 // Navigate to /ask
-                await page.locator('a[aria-label="AI 问答"]').click();
+                await page.getByRole("link", { name: /^AI 问答/ }).click();
 
                 // Error boundary UI must appear
                 await page.locator('[data-testid="route-error-boundary"]')
