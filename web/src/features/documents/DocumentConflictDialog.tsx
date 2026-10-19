@@ -22,7 +22,16 @@ export interface DocumentConflictDialogProps {
     localTitle: string;
     localBody: string;
     onResolve: (choice: "server" | "local" | "new") => Promise<void>;
+    /** 暂不处理：关闭弹窗并保留编辑状态，冲突仍待解决。 */
+    onDismiss: () => void;
 }
+
+type ConflictChoice = "server" | "local" | "new";
+
+const DESTRUCTIVE_CONFIRM: Record<"server" | "local", string> = {
+    server: "将丢弃你的本地修改，改用云端版本。此操作无法撤销。",
+    local: "将用你的本地修改覆盖云端版本，对方的更新会被替换。",
+};
 
 export function DocumentConflictDialog({
     open,
@@ -30,22 +39,41 @@ export function DocumentConflictDialog({
     localTitle,
     localBody,
     onResolve,
+    onDismiss,
 }: DocumentConflictDialogProps) {
-    const [submittingChoice, setSubmittingChoice] = useState<string | null>(
+    const [submittingChoice, setSubmittingChoice] = useState<
+        ConflictChoice | null
+    >(null);
+    const [confirming, setConfirming] = useState<"server" | "local" | null>(
         null,
     );
+    const [error, setError] = useState("");
 
-    const handleChoice = async (choice: "server" | "local" | "new") => {
+    const handleChoice = async (choice: ConflictChoice) => {
+        setError("");
+        setConfirming(null);
         try {
             setSubmittingChoice(choice);
             await onResolve(choice);
+        } catch {
+            setError("处理冲突失败，请检查网络后重试。你的本地修改仍保留在编辑器中。");
         } finally {
             setSubmittingChoice(null);
         }
     };
 
+    const busy = submittingChoice !== null;
+
     return (
-        <Dialog open={open}>
+        <Dialog
+            open={open}
+            onOpenChange={(next) => {
+                if (next || busy) return;
+                setConfirming(null);
+                setError("");
+                onDismiss();
+            }}
+        >
             <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>发现版本冲突</DialogTitle>
@@ -115,37 +143,87 @@ export function DocumentConflictDialog({
                     </Tabs>
                 </div>
 
+                {error && (
+                    <p
+                        role="alert"
+                        className="text-sm text-[var(--danger)]"
+                    >
+                        {error}
+                    </p>
+                )}
+                {confirming && (
+                    <p
+                        role="alert"
+                        className="text-sm text-[var(--foreground)]"
+                    >
+                        {DESTRUCTIVE_CONFIRM[confirming]}
+                    </p>
+                )}
+
                 <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={submittingChoice !== null}
-                        onClick={() => void handleChoice("server")}
-                    >
-                        {submittingChoice === "server"
-                            ? "处理中…"
-                            : "保留云端版本"}
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        disabled={submittingChoice !== null}
-                        onClick={() => void handleChoice("new")}
-                    >
-                        {submittingChoice === "new"
-                            ? "创建中…"
-                            : "另存为新文档"}
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={submittingChoice !== null}
-                        onClick={() => void handleChoice("local")}
-                    >
-                        {submittingChoice === "local"
-                            ? "覆盖中…"
-                            : "覆盖为本地版本"}
-                    </Button>
+                    {confirming
+                        ? (
+                            <>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={busy}
+                                    onClick={() => setConfirming(null)}
+                                >
+                                    返回
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={busy}
+                                    onClick={() => void handleChoice(confirming)}
+                                >
+                                    {confirming === "server"
+                                        ? "确认保留云端版本"
+                                        : "确认覆盖云端"}
+                                </Button>
+                            </>
+                        )
+                        : (
+                            <>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    disabled={busy}
+                                    onClick={() => {
+                                        setError("");
+                                        onDismiss();
+                                    }}
+                                >
+                                    暂不处理
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={busy}
+                                    onClick={() => setConfirming("server")}
+                                >
+                                    保留云端版本
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={busy}
+                                    onClick={() => setConfirming("local")}
+                                >
+                                    覆盖为本地版本
+                                </Button>
+                                <Button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() => void handleChoice("new")}
+                                >
+                                    {submittingChoice === "new"
+                                        ? "创建中…"
+                                        : "另存为新笔记"}
+                                </Button>
+                            </>
+                        )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

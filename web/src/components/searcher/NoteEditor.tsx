@@ -183,6 +183,14 @@ export function NoteEditor(
         setColor(note.color || "paper");
     }, [note.color]);
 
+    // SSE 订阅只随 note.id 重建；经 ref 调用以始终拿到最新的 props 与 state。
+    const remoteUpdateRef = useRef<(serverNote: NoteItem) => void>(() => {});
+    remoteUpdateRef.current = (serverNote) => {
+        if (serverNote.version <= latestNoteRef.current.version) return;
+        if (isDraftDirty()) openConflict(serverNote, draftRef.current.body);
+        else acceptCloud(serverNote);
+    };
+
     // Y-003: 监听 SSE 实时协同事件，当其他端修改当前便签时提示冲突
     useEffect(() => {
         const es = new EventSource("/api/notes/events");
@@ -191,12 +199,11 @@ export function NoteEditor(
                 const data = JSON.parse(event.data);
                 if (data.type === "note.updated" && data.note?.id === note.id) {
                     const serverNote = data.note as NoteItem;
-                    if (serverNote.version > latestNoteRef.current.version) {
-                        setConflict(serverNote);
-                        setMerge(
-                            `<<<<<<< 本地草稿\n${draftRef.current.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                        );
-                    }
+                    // 本机保存也会广播 note.updated，且可能先于保存响应到达；
+                    // 等排队中的保存落定后再比较版本，避免把自己的保存当成冲突。
+                    void mutationQueue.current.then(() =>
+                        remoteUpdateRef.current(serverNote)
+                    );
                 }
             } catch {
                 // ignore SSE parse errors
@@ -207,9 +214,17 @@ export function NoteEditor(
         };
     }, [note.id]);
 
+    // 窗口关闭、切换便签或 Esc 会直接卸载编辑器；卸载时若仍有未提交修改（例如
+    // 位于 1500ms 自动保存的防抖窗口内），先提交一次，避免丢失最后几次输入。
+    const flushOnUnmountRef = useRef<() => void>(() => {});
+    flushOnUnmountRef.current = () => {
+        if (composingRef.current || conflict || !isDraftDirty()) return;
+        void save(undefined, "autosave");
+    };
     useEffect(() => () => {
-        clearTimeout(timer.current);
         clearTimeout(blurTimer.current);
+        flushOnUnmountRef.current();
+        clearTimeout(timer.current);
     }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function change(next: Draft) {
@@ -460,12 +475,7 @@ export function NoteEditor(
                 }
                 if (error instanceof ApiError && error.code === 409) {
                     const serverNote = error.data as NoteItem | undefined;
-                    if (serverNote) {
-                        setConflict(serverNote);
-                        setMerge(
-                            `<<<<<<< 本地草稿\n${data.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                        );
-                    }
+                    if (serverNote) openConflict(serverNote, data.body);
                 }
                 setStatus("error");
             }
@@ -505,10 +515,7 @@ export function NoteEditor(
                 if (error instanceof ApiError && error.code === 409) {
                     const serverNote = error.data as NoteItem | undefined;
                     if (serverNote) {
-                        setConflict(serverNote);
-                        setMerge(
-                            `<<<<<<< 本地草稿\n${draftRef.current.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                        );
+                        openConflict(serverNote, draftRef.current.body);
                     }
                 }
                 setStatus("error");
@@ -526,23 +533,29 @@ export function NoteEditor(
         setTimeout(() => setCopiedDraft(false), 2000);
     }
 
-    async function useCloud() {
-        if (!conflict) return;
+    // 合并框以本地草稿为起点；云端版本已在上方并排展示，不向正文写入任何冲突标记。
+    function openConflict(serverNote: NoteItem, localBody: string) {
+        setConflict(serverNote);
+        setMerge(localBody);
+    }
+
+    function acceptCloud(serverNote: NoteItem) {
+        if (!userId || !isCurrent()) return;
         clearTimeout(timer.current);
         timer.current = undefined;
-        // A blur-triggered save may still return 409 after the click. Accept after it settles.
-        await mutationQueue.current;
-        if (!userId || !isCurrent()) return;
-        latestNoteRef.current = conflict;
-        const accepted = { body: conflict.body, title: conflict.title ?? "" };
+        latestNoteRef.current = serverNote;
+        const accepted = {
+            body: serverNote.body,
+            title: serverNote.title ?? "",
+        };
         draftRef.current = accepted;
         setDraft(accepted);
         submittedDraftRef.current = undefined;
         saveFailed.current = false;
-        if (conflict.color) {
-            setColor(conflict.color);
+        if (serverNote.color) {
+            setColor(serverNote.color);
         }
-        onSaved(conflict);
+        onSaved(serverNote);
         void clearNoteDraft(
             userId,
             note.id,
@@ -550,6 +563,15 @@ export function NoteEditor(
         ).catch(() => {});
         setConflict(null);
         setStatus("saved");
+    }
+
+    async function useCloud() {
+        if (!conflict) return;
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        // A blur-triggered save may still return 409 after the click. Accept after it settles.
+        await mutationQueue.current;
+        acceptCloud(conflict);
     }
 
     function resolve(body: string) {

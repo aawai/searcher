@@ -156,6 +156,7 @@ export function DocumentEditor({
     const [initError, setInitError] = useState<string | null>(null);
     const [initKey, setInitKey] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [conflictDismissed, setConflictDismissed] = useState(false);
     const saveStatusLabel = {
         saved: "已保存",
         dirty: "未保存",
@@ -163,6 +164,12 @@ export function DocumentEditor({
         error: "保存失败",
         conflict: "版本冲突",
     }[snapshot.saveStatus];
+    const hasConflict = snapshot.saveStatus === "conflict" ||
+        snapshot.conflict !== null;
+    useEffect(() => {
+        // 冲突解除后重置；下一次冲突应重新弹出。
+        if (!hasConflict) setConflictDismissed(false);
+    }, [hasConflict]);
     useEffect(() => {
         onSaveStatusChange?.(isUploading ? "正在上传图片…" : saveStatusLabel);
     }, [isUploading, saveStatusLabel, onSaveStatusChange]);
@@ -546,7 +553,9 @@ export function DocumentEditor({
         choice: "server" | "local" | "new",
     ) => {
         const newDocId = await session.resolveConflict(choice);
-        if (choice === "new" && newDocId) {
+        // session 以 null 表示解决失败（错误已写入 snapshot），交给弹窗显示失败反馈。
+        if (newDocId === null) throw new Error("conflict resolution failed");
+        if (choice === "new") {
             onOpenDocument?.(newDocId);
         }
         onChanged?.();
@@ -811,6 +820,16 @@ export function DocumentEditor({
                             )}
                             {saveStatusLabel}
                         </span>
+                        {hasConflict && conflictDismissed && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setConflictDismissed(false)}
+                            >
+                                处理冲突
+                            </Button>
+                        )}
                     </div>
 
                     <div className="document-editor-header-actions">
@@ -1041,12 +1060,12 @@ export function DocumentEditor({
 
             {/* Conflict Dialog */}
             <DocumentConflictDialog
-                open={snapshot.saveStatus === "conflict" ||
-                    snapshot.conflict !== null}
+                open={hasConflict && !conflictDismissed}
                 serverDocument={snapshot.conflict}
                 localTitle={snapshot.title}
                 localBody={snapshot.body}
                 onResolve={handleResolveConflict}
+                onDismiss={() => setConflictDismissed(true)}
             />
         </div>
     );

@@ -413,7 +413,13 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         "true",
         "conflict dialog takes priority over immersive Escape",
     );
+    // Escape 仅关闭冲突弹窗（暂不处理），冲突仍待处理，可从编辑器头部重新打开。
+    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: "处理冲突", exact: true }).click();
     await page.getByRole("button", { name: "覆盖为本地版本", exact: true })
+        .click();
+    // 覆盖云端属破坏性操作，需二次确认。
+    await page.getByRole("button", { name: "确认覆盖云端", exact: true })
         .click();
     await page.getByRole("dialog").waitFor({ state: "hidden" });
     await waitForDocument(
