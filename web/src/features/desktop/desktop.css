@@ -1,7 +1,7 @@
 /* Desktop Window Manager Styles
  * Semantic Tokens:
  * --window-surface, --window-border, --shadow-window, --radius-window,
- * --space-window-gap, --window-elevation, --window-resize-hit, --window-chrome-height
+ * --space-window-gap, --elevation-window, --window-resize-hit, --window-chrome-height
  */
 
 .desktop-overview[data-slot="dialog-content"] {
@@ -80,12 +80,12 @@
 :root:not([data-document-immersive]) .app-shell:has(.desktop-canvas) > .topbar,
 :root:not([data-document-immersive]) .app-shell:has(.desktop-canvas) > .connection-banner {
     position: relative;
-    z-index: var(--elevation-desktop-dock);
+    z-index: var(--elevation-dock);
 }
 .desktop-canvas {
     position: fixed;
     pointer-events: none;
-    z-index: var(--elevation-window-base);
+    z-index: var(--elevation-window);
     box-sizing: border-box;
 }
 
@@ -94,7 +94,7 @@
     display: flex;
     flex-direction: column;
     pointer-events: auto;
-    z-index: var(--window-elevation);
+    z-index: var(--elevation-window);
     background: var(--window-surface);
     border: 1px solid var(--window-border);
     border-radius: var(--radius-window);
@@ -109,7 +109,7 @@
 .desktop-window-collision {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: var(--elevation-local-1);
     pointer-events: none;
     box-sizing: border-box;
     border: calc(var(--space-1) / 2) solid transparent;
@@ -265,7 +265,7 @@
 /* 8-Way Window Resize Handles */
 .desktop-window-resize-handle {
     position: absolute;
-    z-index: 10;
+    z-index: var(--elevation-local-10);
     touch-action: none;
     user-select: none;
 }
@@ -358,7 +358,7 @@
     border: 1px solid var(--surface-navigation-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-navigation);
-    z-index: var(--elevation-desktop-dock);
+    z-index: var(--elevation-dock);
 }
 
 .desktop-dock-item {
@@ -401,7 +401,7 @@
     position: absolute;
     pointer-events: none;
     box-sizing: border-box;
-    z-index: var(--elevation-desktop-dock);
+    z-index: var(--elevation-drag);
     background: color-mix(in srgb, var(--accent) 16%, transparent);
     border: 1px solid var(--accent);
     border-radius: var(--radius-window);

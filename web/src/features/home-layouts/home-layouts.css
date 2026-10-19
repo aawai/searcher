@@ -111,7 +111,7 @@
     border: 1px solid var(--border-subtle);
     border-radius: 999px;
     box-shadow: var(--shadow-navigation);
-    z-index: var(--elevation-floating);
+    z-index: var(--elevation-dock);
 }
 
 .zen-edge-trigger {
@@ -417,36 +417,36 @@
     --note-slot: 0;
     --space-note-inset: var(--space-1);
     --note-tilt: calc(-1 * var(--notes-board-tilt));
-    z-index: 1;
+    z-index: var(--elevation-local-1);
 }
 .controlled-note-slot[data-slot-index="1"] {
     --note-slot: 1;
     --space-note-inset: var(--space-4);
     --note-tilt: var(--notes-board-tilt);
-    z-index: 2;
+    z-index: var(--elevation-local-2);
 }
 .controlled-note-slot[data-slot-index="2"] {
     --note-slot: 2;
     --space-note-inset: var(--space-2);
     --note-tilt: calc(-1 * var(--notes-board-tilt));
-    z-index: 3;
+    z-index: var(--elevation-local-3);
 }
 .controlled-note-slot[data-slot-index="3"] {
     --note-slot: 3;
     --space-note-inset: var(--space-5);
     --note-tilt: var(--notes-board-tilt);
-    z-index: 4;
+    z-index: var(--elevation-local-4);
 }
 .controlled-note-slot[data-slot-index="4"] {
     --note-slot: 4;
     --space-note-inset: var(--space-3);
     --note-tilt: calc(-1 * var(--notes-board-tilt));
-    z-index: 5;
+    z-index: var(--elevation-local-5);
 }
 .controlled-note-slot:hover,
 .controlled-note-slot:focus-within,
 .controlled-note-slot[data-dragging] {
-    z-index: 6;
+    z-index: var(--elevation-local-6);
     transform: none;
 }
 .controlled-note-slot .note-card {
@@ -550,7 +550,7 @@
 .layout-mode-card[data-active="true"] {
     background: var(--accent-soft);
     border-color: var(--accent);
-    box-shadow: var(--accent-glow);
+    box-shadow: none;
 }
 
 .layout-mode-preview {

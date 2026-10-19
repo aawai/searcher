@@ -31,6 +31,7 @@
     --destructive: var(--danger);
     --note-tilt: 0deg;
     position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     width: 250px;
@@ -52,7 +53,7 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    z-index: 1;
+    z-index: var(--elevation-local-1);
     background-image:
         linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(0, 0, 0,
         0.015) 100%),
@@ -68,7 +69,7 @@
     width: 10px;
     height: 10px;
     pointer-events: none;
-    z-index: 3;
+    z-index: var(--elevation-local-3);
     clip-path: polygon(0 100%, 100% 0, 100% 100%);
     background: linear-gradient(135deg,
         color-mix(in srgb, var(--border) 75%, var(--surface-solid)) 50%,
@@ -226,7 +227,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s ease;
-    z-index: 5;
+    z-index: var(--elevation-local-5);
 }
 
 .note-card:hover .note-head,

@@ -1,5 +1,6 @@
 export type RuleId =
     | "raw-box-shadow"
+    | "raw-z-index"
     | "raw-font-size"
     | "raw-border-radius"
     | "raw-spacing-literal"

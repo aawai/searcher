@@ -4,6 +4,58 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issues #205 / #206 / #209 / #208 系统层级、强调色与中文排版
+
+- [x] 按用户指定顺序先实施 #205/#206，再实施 #209/#208；所有改动在隔离
+      worktree。层级与材质分离，便签持久化 rank 不改变 canvas 的全局层级。 Sheet
+      内版本恢复确认与编辑菜单实页 hit-test 通过；Dialog/AlertDialog light/dark
+      均为 45% 黑色 scrim、无 blur、12px radius、L3 shadow、 16px title。Ask
+      Popover 使用受控模型元数据、不发送生成请求， 实测 positioner=70、12px
+      radius、L2 shadow，指针命中自身。
+- [x] Switch 无选中 glow，Radio 仅保留选择轮廓，Slider 使用 L1； Primary 的
+      default/hover/active 使用纯色。新增 raw-z-index guard， CSS/TSX/Tailwind
+      静态数值拒绝，运行时排序允许；guard 模块102项通过。 首轮类型检查发现漏登记
+      RuleId，补齐后通过；UI gate 最初指出 Radio 裸选择阴影，迁移至既有选择轮廓
+      Token 后 ownership/visual 均0。
+- [x] 新对比度 E2E 在旧产物中明确失败：light emerald/soft=4.460、
+      amber/soft=4.455。调整为 `#157e3d` / `#b25209` 后， 实际 sRGB
+      对比度为4.543 / 4.511；所有18组合最小文字/surface与
+      foreground/按钮状态均5.117，最小焦点对比度4.563。 检查登记于 Workspace
+      suite，进入现有 CI，不放宽门槛。
+- [x] 每种强调色只保留一个明暗 palette block，派生色只由主题比例定义； mono
+      既有较弱比例保留。18组截图与独立探针比较：其余16组合所有
+      accent/hover/active/foreground/soft/subtle/border/ring 通道差异均0；
+      上述两种浅色 accent/ring 最大2/255，soft/border 最大1/255，
+      hover/active/foreground/subtle 不变。证据
+      `/tmp/ui-final-accent-evidence.json`，截图审阅画廊
+      `/tmp/omp-sshots-15ac755b409858ec.webp`。
+- [x] 默认壁纸使用 background/surface-soft，保留原 accent 混合预算； 自定义
+      image/gradient、mask、filter、ambient neutral light 未改。 完整 Wallpaper
+      E2E（23 steps）在最终全量运行中通过。 中文 metadata=13px、wordmark
+      letter-spacing=normal；Linux CDP 实际标题字体为 Noto Sans CJK
+      SC、非自定义字体。macOS/Windows 未实测；用户明确选择按 Linux
+      验收后合并，并在 PR 保留该限制。
+- [x] 最终设置6组及首页 Zen/Widgets 12组：390×844、768×1024、 1440×900 ×
+      light/dark，实际页面截图与 overflow 检查均通过； 无选中
+      glow、无横向溢出，默认背景无异色底板。截图使用已校准的 reduced-motion
+      稳态，不将最初颜色过渡中的截图计为通过。 首页画廊
+      `/tmp/omp-sshots-15ac75e85e5858ed.webp`， 设置与首页详情
+      `/tmp/ui-final-page-evidence.json`。
+- [x] 高持久化 rank=2000 的便签新增拖拽回归，在第一阶段产物中失败； 独立 canvas
+      内拖拽上限 Token 修复后通过。定向对比度与完整 home-notes-order 为4 tests /
+      8 steps通过。
+- [x] 第一阶段完整 Workspace 为56 tests / 139 steps通过。 最终完整 E2E 首轮80
+      tests / 295 steps通过、2 tests失败： masonry 在 Widgets 未发布最终 mode
+      前采样；ownership 将 violet CSS token 源文本写死。前者等待已发布
+      notes-only 与字体就绪，不放宽
+      几何断言；后者删除实现文本断言，不改钉新字符串。两个完整文件定向 复查为2
+      tests / 28 steps通过。证据分批取得，不声称完整命令一次全绿。
+      首轮完整报告：
+      `artifacts/e2e/full-1792407904588-c210eea0-ee80-4ad9-98fe-bf4973c96064/`。
+- [x] 隔离工作区基线领域测试702 tests / 51 steps通过； 最终前端
+      typecheck、相关源码/测试 lint、format、E2E manifest、 UI ownership/visual
+      与 bundle budget 门禁通过。
+
 ## Issues #196 / #199 游客登录引导与注册可用性
 
 - [x] Zen/Widgets 游客 AI 菜单与顶栏入口标明登录要求，保持可聚焦和可读屏；

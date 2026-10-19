@@ -55,7 +55,7 @@
 
 .lab-field-value {
     color: var(--foreground);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-metadata-size);
 }
 
@@ -164,7 +164,7 @@
 .lab-swatch-token {
     font-size: var(--font-metadata-size);
     color: var(--muted);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
 }
 
 .lab-typography-table {
@@ -212,7 +212,7 @@
 .lab-typography-role {
     font-size: var(--font-caption-size);
     color: var(--muted);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
 }
 
 .lab-typography-metric {

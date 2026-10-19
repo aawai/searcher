@@ -50,8 +50,7 @@
     background: var(--surface-soft);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    font: var(--font-code-size)/var(--font-code-line-height)
-        var(--font-code-family);
+    font: var(--font-code-size)/var(--font-code-line-height) var(--font-mono);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     max-height: var(--page-content-height);

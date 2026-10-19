@@ -279,3 +279,31 @@ Deno.test("tsx-scanner - NotesWorkspace masonry expressions stay at their exact 
         );
     }
 });
+
+Deno.test("tsx-scanner - rejects static numeric z-index but allows tokens and runtime order", () => {
+    const code = `
+        export function LayerExamples({ layout, active }: Record<string, unknown>) {
+            return <>
+                <div style={{ zIndex: 12 }} />
+                <div style={{ zIndex: -1 }} />
+                <div style={{ zIndex: "50" }} />
+                <div style={{ zIndex: "var(--elevation-modal)" }} />
+                <div style={{ zIndex: layout.zIndex }} />
+                <div style={{ zIndex: active ? layout.front : layout.back }} />
+                <div className="z-10 -z-20 hover:z-30 z-auto z-[var(--elevation-modal)]" />
+            </>;
+        }
+    `;
+    const violations = scanTsxCode("web/src/features/LayerExamples.tsx", code);
+    assertEquals(
+        violations.map((violation) => [violation.rule, violation.value]),
+        [
+            ["raw-z-index", "zIndex: 12"],
+            ["raw-z-index", "zIndex: -1"],
+            ["raw-z-index", 'zIndex: "50"'],
+            ["raw-z-index", "z-10"],
+            ["raw-z-index", "-z-20"],
+            ["raw-z-index", "hover:z-30"],
+        ],
+    );
+});

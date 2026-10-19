@@ -32,6 +32,7 @@ export const suites = {
         "bento",
         "workspace-contract",
         "workspace-matrix",
+        "accent-contrast",
     ],
     routing: ["navigation", "auth", "guest-ai-auth"],
     documents: [

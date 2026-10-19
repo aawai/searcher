@@ -93,6 +93,7 @@ Deno.test("css-scanner - respects documented rules for tokens.css and global res
             --font-body-size: 14px;
             --shadow-l1: 0 4px 16px -8px rgba(0, 0, 0, 0.10);
             --space-4: 16px;
+            --elevation-modal: 71;
         }
     `;
     const tokenViolations = scanCssCode(
@@ -113,4 +114,24 @@ Deno.test("css-scanner - respects documented rules for tokens.css and global res
         globalResetCss,
     );
     assertEquals(resetViolations.length, 0);
+});
+
+Deno.test("css-scanner - rejects numeric z-index and allows tokens and runtime values", () => {
+    const css = `
+        .positive { z-index: 3; }
+        .negative { z-index: -1; }
+        .zero { z-index: 0; }
+        .token { z-index: var(--elevation-modal); }
+        .automatic { z-index: auto; }
+        .runtime { z-index: calc(var(--elevation-base) + 1); }
+    `;
+    const violations = scanCssCode("web/src/features/layers.css", css);
+    assertEquals(
+        violations.map((violation) => [violation.rule, violation.value]),
+        [
+            ["raw-z-index", "z-index: 3"],
+            ["raw-z-index", "z-index: -1"],
+            ["raw-z-index", "z-index: 0"],
+        ],
+    );
 });

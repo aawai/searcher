@@ -162,6 +162,7 @@
 }
 .wallpaper-stage {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     border-radius: var(--radius);
     border: 1px solid var(--border);
@@ -184,7 +185,7 @@
     justify-content: center;
     pointer-events: none;
     user-select: none;
-    z-index: 2;
+    z-index: var(--elevation-local-2);
 }
 .wallpaper-stage-context-preview__card {
     display: flex;
@@ -232,7 +233,7 @@
     justify-content: center;
     padding: 0 var(--space-1);
     font-size: var(--font-caption-size);
-    font-family: monospace;
+    font-family: var(--font-mono);
     color: var(--muted);
     background: var(--surface-soft);
     border: 1px solid var(--border);
@@ -303,6 +304,7 @@
 }
 .wallpaper-card {
     position: relative;
+    isolation: isolate;
     aspect-ratio: 1;
     min-width: 0;
     overflow: hidden;
@@ -359,7 +361,7 @@
     position: absolute;
     top: var(--space-1);
     right: var(--space-1);
-    z-index: 10;
+    z-index: var(--elevation-local-10);
 }
 .wallpaper-card__menu-trigger {
     width: var(--control-touch-target);
@@ -448,6 +450,7 @@
 }
 .wallpaper-preview-container {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     border-radius: var(--radius);
     border: 1px solid var(--border);
@@ -472,7 +475,7 @@
     position: absolute;
     transform: translate(-50%, -50%);
     pointer-events: none;
-    z-index: 20;
+    z-index: var(--elevation-local-20);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -726,7 +729,7 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-1) var(--space-2);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-code-size);
     line-height: var(--font-code-line-height);
     font-weight: var(--font-label-weight);
@@ -766,7 +769,7 @@
 }
 
 .settings-shortcut-command-example {
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-code-size);
     padding: 0 var(--space-1);
     background: var(--surface-soft);

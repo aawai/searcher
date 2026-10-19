@@ -214,7 +214,7 @@
     border-radius: var(--control-radius);
     background: var(--surface-l3);
     box-shadow: var(--shadow-l3);
-    z-index: var(--elevation-popover);
+    z-index: var(--elevation-toast);
 }
 @media (max-width: 767px) {
     .status-banner[data-presentation="floating"],

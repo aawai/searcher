@@ -104,13 +104,13 @@
     background: var(--surface-soft);
     padding: var(--space-row-gap);
     border-radius: var(--radius);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-code-size);
     line-height: var(--font-code-line-height);
 }
 
 .markdown code {
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-inline-code-size);
     background: var(--surface-soft);
     padding: calc(var(--space-1) / 2) var(--space-1);

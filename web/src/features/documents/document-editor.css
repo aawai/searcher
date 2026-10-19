@@ -13,6 +13,7 @@
     container-type: inline-size;
     color: var(--foreground);
     position: relative;
+    isolation: isolate;
     box-sizing: border-box;
 }
 
@@ -25,7 +26,7 @@
     border-bottom: 1px solid var(--border-subtle);
     background-color: var(--surface);
     flex-shrink: 0;
-    z-index: 10;
+    z-index: var(--elevation-local-10);
 }
 
 .document-editor-header-main {
@@ -134,7 +135,7 @@
     background-color: var(--surface);
     border-bottom: 1px solid var(--border-subtle);
     flex-shrink: 0;
-    z-index: 5;
+    z-index: var(--elevation-local-5);
 }
 
 .document-editor-toolbar-group {
@@ -290,8 +291,7 @@
 .document-continuous-editor .ProseMirror code {
     background-color: var(--surface-soft);
     color: var(--foreground);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        monospace;
+    font-family: var(--font-mono);
     font-size: var(--font-inline-code-size);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-inline-code);
@@ -376,8 +376,7 @@
     width: 100%;
     flex: 1;
     min-height: 400px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", monospace;
+    font-family: var(--font-mono);
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     padding: var(--space-3);

@@ -10,9 +10,7 @@ body {
     min-height: 100vh;
     background: var(--background);
     color: var(--foreground);
-    font: var(--font-body-size)/var(--font-body-line-height) system-ui,
-        -apple-system, 'Segoe UI', Roboto, Helvetica,
-        Arial, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font: var(--font-body-size)/var(--font-body-line-height) var(--font-sans);
     -webkit-font-smoothing: antialiased;
 }
 button,
@@ -56,16 +54,20 @@ a {
     container-type: size;
     position: fixed;
     inset: 0;
-    z-index: -1;
+    z-index: var(--elevation-wallpaper);
     isolation: isolate;
     overflow: hidden;
     pointer-events: none;
-    background: linear-gradient(155deg, color-mix(in srgb, var(--accent) 3%,
-        #f4f4f5), #fafafa 52%, color-mix(in srgb, var(--accent) 4%, #e4e4e7));
+    background: linear-gradient(155deg,
+        color-mix(in srgb, var(--accent) 3%, var(--surface-soft)),
+        var(--background) 52%,
+        color-mix(in srgb, var(--accent) 4%, var(--surface-soft)));
 }
 [data-theme="dark"] .wallpaper-surface {
-    background: linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%,
-        #18181b), #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b));
+    background: linear-gradient(155deg,
+        color-mix(in srgb, var(--accent) 6%, var(--surface-soft)),
+        var(--background) 52%,
+        color-mix(in srgb, var(--accent) 4%, var(--surface-soft)));
 }
 .wallpaper-surface[data-tone="mono"] {
     background: var(--wallpaper-neutral-light);
@@ -73,17 +75,20 @@ a {
 [data-theme="dark"] .wallpaper-surface[data-tone="mono"] {
     background: var(--wallpaper-neutral-dark);
 }
+[data-theme] .wallpaper-surface[data-tone="mono"][data-substrate="canvas"] {
+    background: var(--wallpaper-base-neutral);
+}
 .wallpaper-surface[data-tone="mono"] .wallpaper-surface__mask {
     background: inherit;
 }
 .wallpaper-surface--embedded {
     position: absolute;
-    z-index: 0;
+    z-index: var(--elevation-local-0);
 }
 .wallpaper-surface__overscan {
     position: absolute;
     inset: var(--wallpaper-overscan-y) var(--wallpaper-overscan-x);
-    z-index: 0;
+    z-index: var(--elevation-local-0);
 }
 .wallpaper-surface__image {
     position: absolute;
@@ -98,7 +103,7 @@ a {
 .wallpaper__ambient {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: var(--elevation-local-1);
 }
 .wallpaper__ambient-field-a,
 .wallpaper__ambient-field-b {
@@ -129,7 +134,7 @@ a {
 .wallpaper-surface__mask {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: var(--elevation-local-2);
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask);
 }
@@ -190,7 +195,7 @@ a {
     background: var(--accent-soft);
     border-bottom: 1px solid var(--accent-border);
     position: relative;
-    z-index: 10;
+    z-index: var(--elevation-dock);
 }
 .wordmark-small {
     min-width: 44px;
@@ -199,12 +204,15 @@ a {
     align-items: center;
     justify-content: center;
     border-radius: var(--radius);
-    font-weight: 780;
+    font-weight: 700;
     font-size: var(--font-brand-size);
     letter-spacing: -.07em;
     color: var(--foreground);
     text-decoration: none;
     transition: background 0.15s ease;
+}
+.wordmark-small:lang(zh) {
+    letter-spacing: normal;
 }
 .wordmark-small:hover {
     background: var(--surface);
