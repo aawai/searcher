@@ -32,6 +32,21 @@ primitive 的正式 prop 表达，而不是复制样式或扩大 prefix allowlis
 均无法表达；至少两个 consumer 需要同一语义，或属于明确的系统级语义；并定义
 owner、state、token、a11y 和 responsive contract。否则保持 feature composition。
 
+### Global accessibility and navigation
+
+- 搜索占位符直接使用 `--muted`，不再叠加 opacity；默认 Search surface 的
+  light/dark 文字对比度必须达到4.5:1。
+- 全局 reduced-motion 规则同时缩短 duration 与限制 iteration-count 为1；
+  壁纸和场景保留专用静止降级。加载不可仅由旋转表达，刷新、重试和保存
+  保留可见状态文字；系统偏好只改变运行时表现，不修改已保存偏好。
+- Topbar 主题按钮的 accessible name 和 title 使用中文当前/下一主题。
+  同步失败使用常驻 polite status 容器中的图标与文字链接，不覆盖 link role；
+  连接错误与偏好同步错误独立建模、分别提示，首屏复用 `LoadingState`。
+- Zen edge 是 `nav[aria-label="工作区"]`，保持 Navigation 材质和原有定位；
+  入口使用 caption（13px）与 foreground，桌面最小命中高度为
+  `--control-compact-height`，coarse/no-hover/any-pointer:coarse 时为
+  `--control-touch-target`。焦点沿用全局 focus-visible。
+
 ### Desktop scene decorative layer
 
 - `features/desktop-scenes/DesktopSceneHost.tsx` 与 `desktop-scenes.css`

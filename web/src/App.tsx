@@ -9,6 +9,7 @@ import {
     useNavigate,
 } from "react-router-dom";
 import {
+    AlertTriangle,
     LogIn,
     Monitor,
     Moon,
@@ -33,6 +34,7 @@ import {
     RouteLoadingFallback,
 } from "./app/RouteErrorBoundary.tsx";
 import { Button } from "./components/ui/button.tsx";
+import { LoadingState } from "./components/searcher/semantic.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -173,6 +175,19 @@ function Layout() {
             motion: appearance.canvasMotion,
             motionLevel: appearance.canvasMotionLevel,
         };
+    const themeNames = {
+        system: "跟随系统",
+        light: "浅色",
+        dark: "深色",
+    };
+    const nextTheme = appearance.theme === "system"
+        ? "light"
+        : appearance.theme === "light"
+        ? "dark"
+        : "system";
+    const themeLabel = `切换主题，当前：${
+        themeNames[appearance.theme]
+    }，下一个：${themeNames[nextTheme]}`;
 
     return (
         <div
@@ -220,17 +235,9 @@ function Layout() {
                     </Link>
                     <button
                         type="button"
-                        onClick={() => {
-                            // B-005: System → Light → Dark → System
-                            const next = appearance.theme === "system"
-                                ? "light"
-                                : appearance.theme === "light"
-                                ? "dark"
-                                : "system";
-                            setAppearance({ theme: next });
-                        }}
-                        aria-label={`当前主题：${appearance.theme}，点击切换模式`}
-                        title={`当前主题：${appearance.theme} (System → Light → Dark)`}
+                        onClick={() => void setAppearance({ theme: nextTheme })}
+                        aria-label={themeLabel}
+                        title={themeLabel}
                     >
                         {appearance.theme === "dark"
                             ? <Sun size={20} />
@@ -248,18 +255,19 @@ function Layout() {
                     >
                         <Settings size={20} />
                     </Link>
-                    {/* Y-002: 仅在同步异常时展示全局警示 Badge */}
-                    {syncFailed && (
-                        <Link
-                            to={routes.settings("data")}
-                            className="sync-failed-badge text-[var(--danger)]"
-                            role="alert"
-                            aria-label="偏好设置同步失败，点击查看"
-                            title="部分设置未能同步到云端，点击前往设置检查"
-                        >
-                            !
-                        </Link>
-                    )}
+                    <span className="sync-status" role="status">
+                        {syncFailed && (
+                            <Link
+                                to={routes.settings("data")}
+                                className="sync-failed-badge"
+                                aria-label="偏好设置同步失败，点击查看"
+                                title="部分设置未能同步到云端，点击前往设置检查"
+                            >
+                                <AlertTriangle size={16} aria-hidden="true" />
+                                <span>同步失败</span>
+                            </Link>
+                        )}
+                    </span>
                     {user
                         ? (
                             <DropdownMenu>
@@ -341,13 +349,17 @@ function Layout() {
                         )}
                 </nav>
             </header>
-            {connectionError && (
+            {(connectionError || syncFailed) && (
                 <aside
                     className="connection-banner"
                     role="status"
                     aria-live="polite"
                 >
-                    <span>服务暂不可用，部分功能可能受限</span>
+                    <span>
+                        {connectionError
+                            ? "网络或服务暂不可用，请检查连接后重试"
+                            : "偏好设置同步失败，部分设置尚未同步到云端"}
+                    </span>
                     <Button
                         type="button"
                         variant="outline"
@@ -390,7 +402,7 @@ function Layout() {
                 </DialogContent>
             </Dialog>
             {!ready
-                ? <p className="page muted">正在加载…</p>
+                ? <LoadingState className="page">正在加载…</LoadingState>
                 : (
                     <RouteErrorBoundary locationKey={location.pathname}>
                         <Suspense fallback={<RouteLoadingFallback />}>

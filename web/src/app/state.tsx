@@ -544,7 +544,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 authSession: sessionRef.current,
                 ready,
                 syncFailed,
-                connectionError: authConnectionError || syncFailed,
+                connectionError: authConnectionError,
                 retryConnection,
                 appearance,
                 setAppearance,

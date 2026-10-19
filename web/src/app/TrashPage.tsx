@@ -236,7 +236,7 @@ export function TrashPage() {
                             size={14}
                             className={loading ? "animate-spin" : ""}
                         />
-                        <span>刷新</span>
+                        <span>{loading ? "刷新中…" : "刷新"}</span>
                     </Button>
                 }
             />

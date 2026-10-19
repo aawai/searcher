@@ -92,6 +92,155 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     }
 
     await t.step(
+        "Global status: loading announcement, distinct connection/sync errors and accessible theme cycle",
+        async () => {
+            const { page, context } = await createTestPage({
+                width: 390,
+                height: 844,
+            });
+            await authenticateContext(context);
+            const authGate = Promise.withResolvers<void>();
+            await page.route("**/api/auth/me", async (route) => {
+                await authGate.promise;
+                await route.fulfill({
+                    status: 503,
+                    contentType: "application/json",
+                    body: JSON.stringify({
+                        success: false,
+                        error: "private server diagnostic",
+                    }),
+                });
+            });
+            await page.goto(origin + "/");
+            await page.getByRole("status").filter({
+                hasText: "正在加载…",
+            }).waitFor({ state: "visible" });
+            authGate.resolve();
+            const banner = page.locator(".connection-banner");
+            await banner.waitFor({ state: "visible" });
+            const networkMessage = await banner.innerText();
+            assertStringIncludes(networkMessage, "网络或服务暂不可用");
+            assertEquals(
+                networkMessage.includes("private server diagnostic"),
+                false,
+            );
+            assertEquals(await page.locator(".sync-failed-badge").count(), 0);
+            await page.unroute("**/api/auth/me");
+            await banner.getByRole("button", { name: "重试" }).click();
+            await banner.waitFor({ state: "hidden" });
+            await page.getByRole("button", {
+                name: "用户菜单：Feedback Tester",
+            }).waitFor({ state: "visible" });
+            await page.waitForFunction(() =>
+                document.querySelector('button[aria-label^="切换主题，"]')
+                    ?.getAttribute("aria-label")?.includes("当前：跟随系统")
+            );
+            await page.route("**/api/preferences", async (route) => {
+                if (route.request().method() !== "PATCH") {
+                    await route.continue();
+                    return;
+                }
+                await route.fulfill({
+                    status: 503,
+                    contentType: "application/json",
+                    body: JSON.stringify({
+                        success: false,
+                        error: "private sync diagnostic",
+                    }),
+                });
+            });
+            await page.getByRole("button", {
+                name: "切换主题，当前：跟随系统，下一个：浅色",
+                exact: true,
+            }).click();
+            const badge = page.getByRole("link", {
+                name: "偏好设置同步失败，点击查看",
+            });
+            await badge.waitFor({ state: "visible" });
+            assertStringIncludes(await badge.innerText(), "同步失败");
+            assertEquals(await badge.getAttribute("role"), null);
+            assertEquals(
+                await badge.locator("..").getAttribute("role"),
+                "status",
+            );
+            assertStringIncludes(await banner.innerText(), "偏好设置同步失败");
+            assertEquals(
+                (await banner.innerText()).includes("private sync diagnostic"),
+                false,
+            );
+            await page.getByRole("button", {
+                name: "切换主题，当前：浅色，下一个：深色",
+                exact: true,
+            }).click();
+            await page.getByRole("button", {
+                name: "切换主题，当前：深色，下一个：跟随系统",
+                exact: true,
+            }).waitFor({ state: "visible" });
+            assertEquals(
+                await page.locator(".topbar").evaluate((header) =>
+                    Array.from(header.querySelectorAll("a, button")).every(
+                        (control) => {
+                            const box = control.getBoundingClientRect();
+                            return box.left >= 0 && box.right <= innerWidth;
+                        },
+                    )
+                ),
+                true,
+            );
+            await page.unroute("**/api/preferences");
+            await banner.getByRole("button", { name: "重试" }).click();
+            await badge.waitFor({ state: "hidden" });
+            await banner.waitFor({ state: "hidden" });
+            await page.goto(origin + "/account");
+            await page.locator(".account-device-list").waitFor({
+                state: "visible",
+            });
+            const beforeMotion = await page.request.get(
+                origin + "/api/preferences",
+            );
+            const savedPreferences: unknown = await beforeMotion.json();
+            await page.emulateMedia({ reducedMotion: "reduce" });
+            const devicesGate = Promise.withResolvers<void>();
+            await page.route("**/api/auth/devices", async (route) => {
+                await devicesGate.promise;
+                await route.continue();
+            });
+            try {
+                const refresh = page.getByRole("button", {
+                    name: "刷新设备列表",
+                });
+                await refresh.click();
+                await refresh.getByText("刷新中…").waitFor({
+                    state: "visible",
+                });
+                const animation = await refresh.locator(".animate-spin")
+                    .evaluate(
+                        (spinner) => {
+                            const style = getComputedStyle(spinner);
+                            return {
+                                iterations: style.animationIterationCount,
+                                duration: parseFloat(style.animationDuration),
+                            };
+                        },
+                    );
+                assertEquals(animation.iterations, "1");
+                assertEquals(animation.duration <= 0.00001, true);
+                const afterMotion = await page.request.get(
+                    origin + "/api/preferences",
+                );
+                assertEquals(await afterMotion.json(), savedPreferences);
+            } finally {
+                devicesGate.resolve();
+            }
+            await page.getByRole("button", { name: "刷新设备列表" })
+                .getByText("刷新", { exact: true }).waitFor({
+                    state: "visible",
+                });
+            await page.close();
+        },
+    );
+
+    await t.step(
         "Account: 当前设备退出 / 其他设备退出 dialog contracts (Cancel/Escape no mutation, Confirm 1 mutation, pending disabled, focus recovery)",
         async () => {
             // Seed a secondary session device
@@ -842,7 +991,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // 2. Home / Notes workspace: Note delete and UndoToast restoration
             const notesNavBtn = page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], aside button[aria-label="便签工作区"], .workspace-mobile-navigation button[aria-label="便签工作区"]',
+                '.desktop-dock button[aria-label="便签工作区"], .workspace-panel button[aria-label="便签工作区"], .workspace-mobile-navigation button[aria-label="便签工作区"]',
             );
             await notesNavBtn.first().click();
 

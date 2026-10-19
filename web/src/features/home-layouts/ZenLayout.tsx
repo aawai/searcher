@@ -273,13 +273,12 @@ export function ZenLayout(
             )}
 
             {user && (
-                <aside className="zen-edge-trigger" aria-label="侧边工作区">
+                <nav className="zen-edge-trigger" aria-label="工作区">
                     <button
                         type="button"
                         className="zen-edge-btn"
                         data-workspace="apps"
-                        onClick={() =>
-                            openWorkspace("apps")}
+                        onClick={() => openWorkspace("apps")}
                     >
                         <Folder size={13} />
                         <span>应用 · {apps.length}</span>
@@ -288,8 +287,7 @@ export function ZenLayout(
                         type="button"
                         className="zen-edge-btn"
                         data-workspace="notes"
-                        onClick={() =>
-                            openWorkspace("notes")}
+                        onClick={() => openWorkspace("notes")}
                     >
                         <StickyNote size={13} />
                         <span>便签 · {notes.length}</span>
@@ -304,7 +302,7 @@ export function ZenLayout(
                         <NotebookPen size={13} />
                         <span>笔记</span>
                     </Button>
-                </aside>
+                </nav>
             )}
         </>
     );

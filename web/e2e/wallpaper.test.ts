@@ -790,7 +790,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await input.fill("linear-gradient(90deg, #102030, #405060)");
             await page.getByTestId("wallpaper-apply-btn").click();
             await page.locator(".sync-failed-badge").waitFor();
-            const theme = page.locator('button[aria-label^="当前主题："]');
+            const theme = page.getByRole("button", { name: /^切换主题，/ });
             await theme.click();
             await held.promise;
             await theme.click();
@@ -801,10 +801,12 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             });
             await page.waitForFunction(async () => {
                 const result = await (await fetch("/api/preferences")).json();
-                const label = document.querySelector(
-                    'button[aria-label^="当前主题："]',
-                )?.getAttribute("aria-label");
-                return label?.startsWith(`当前主题：${result.data.theme}，`);
+                const resolvedTheme = result.data.theme === "system"
+                    ? matchMedia("(prefers-color-scheme: dark)").matches
+                        ? "dark"
+                        : "light"
+                    : result.data.theme;
+                return document.documentElement.dataset.theme === resolvedTheme;
             });
             assert(!patchResponses.includes(400));
             await page.unroute("**/api/preferences");

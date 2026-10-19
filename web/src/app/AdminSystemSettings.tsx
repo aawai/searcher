@@ -103,7 +103,7 @@ export function AdminSystemSettings() {
                                 size={14}
                                 className={loading ? "animate-spin" : ""}
                             />
-                            <span>重试</span>
+                            <span>{loading ? "正在重试…" : "重试"}</span>
                         </Button>
                     </div>
                 </StatusBanner>

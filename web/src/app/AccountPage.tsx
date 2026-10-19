@@ -575,7 +575,9 @@ export function AccountPage() {
                                             ? "animate-spin"
                                             : ""}
                                     />
-                                    <span>刷新</span>
+                                    <span>
+                                        {devicesLoading ? "刷新中…" : "刷新"}
+                                    </span>
                                 </Button>
                                 {hasOtherDevices && (
                                     <Button

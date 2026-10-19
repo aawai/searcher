@@ -70,7 +70,6 @@
 }
 .search-frame input::placeholder {
     color: var(--muted);
-    opacity: .85;
 }
 .search-submit {
     width: 40px;
