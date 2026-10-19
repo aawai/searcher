@@ -89,7 +89,7 @@ export function AdminOverview({
                             size={15}
                             className={loading ? "animate-spin" : ""}
                         />
-                        <span>刷新概览</span>
+                        <span>{loading ? "刷新中…" : "刷新概览"}</span>
                     </Button>
                 }
             />
@@ -112,7 +112,7 @@ export function AdminOverview({
                                 size={14}
                                 className={loading ? "animate-spin" : ""}
                             />
-                            <span>重试</span>
+                            <span>{loading ? "正在重试…" : "重试"}</span>
                         </Button>
                     </div>
                 </StatusBanner>

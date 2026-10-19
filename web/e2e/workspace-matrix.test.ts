@@ -157,7 +157,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             `.desktop-dock button[data-workspace="${type}"], .desktop-dock button[aria-label="${label}"], .workspace-mobile-navigation button[data-workspace="${type}"], .workspace-mobile-navigation button[aria-label="${label}"], .zen-edge-btn[data-workspace="${type}"], button[aria-label="${label}"]`,
         ).first();
         await trigger.waitFor({ state: "visible" });
-        await trigger.click({ force: true });
+        await trigger.click();
         const win = target.locator(
             `.desktop-window[data-window-id="${type}"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel, [data-slot="sheet-content"]`,
         ).first();
@@ -869,7 +869,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 });
                 await resetPersistedLayout(page);
                 await page.reload();
-                await page.locator("main").waitFor({ state: "visible" });
+                await page.locator(".home-widgets .desktop-dock").waitFor({
+                    state: "visible",
+                });
 
                 // 1. Multi-window simultaneous presence
                 await openWorkspace("apps");

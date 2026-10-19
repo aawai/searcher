@@ -4,6 +4,53 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issues #207 / #212 / #213 无障碍修复
+
+- [x] 默认 Search surface 的实际 computed placeholder 为浅色
+      rgb(96,105,117)/白底、深色 rgb(166,175,188)/rgb(29,33,40)， WCAG
+      对比度分别5.56:1、7.29:1，opacity=1；旧浅色0.85合成为4.02:1。 Zen
+      入口13px、foreground，Navigation 94%不透明材质即使分别叠在纯黑/
+      纯白底上，对比度下界仍为13.63:1、11.66:1，不提升材质或阴影等级。
+- [x] 无限动画盘点：global wallpaper ambient A/B、wallpaper controller 的
+      drift/zoom WAAPI；游乐场 wheel/gondola、swing、orbit/bob、flag、balloon、
+      cloud、idle/stroll/step/hold、puff，继续使用各自静止降级。 animate-spin
+      消费者为 Account、AdminOverview、AdminPage、
+      AdminSystemSettings、Trash、AppForm、EngineSelector、LogoCandidatePicker、
+      DocumentEditor；全局 iteration-count=1，刷新/重试补充进行中文字，
+      其余抓取、检查、处理、保存保留已有状态文字。
+- [x] 首屏 gate 下 LoadingState 为 polite
+      status；主题三态中文说明当前/下一状态；
+      503连接错误与偏好PATCH失败使用不同文案、不泄漏原始诊断， 同步失败链接保留
+      link role 并处于常驻status中。390px失败顶栏全部控件在视口内。
+      全局反馈与错误恢复 E2E 最终为2 tests / 17 steps、0 failed， 包含
+      reduced-motion 刷新文字与迭代次数、API偏好不变。
+- [x] 独立Playwright生产smoke实测fine/hover入口36px、touch/coarse入口44px，
+      对照旧入口样式时Search frame的Y均为296.1875px、无变化。
+      reduced-motion稳态中running infinite与场景动画均0，
+      Account真实刷新保留“刷新中…”、duration=0.00001s、iterations=1，
+      减少动态效果前后完整API偏好相同。探针首轮缺Origin被403拦截；
+      修正同源请求后又在降级刚提交时采到退场动画，
+      等待两帧稳态后fine/touch两组通过，未修改产品以满足探针。 截图
+      `/tmp/a11y-account-reduced-{fine,touch}.png`。
+- [x] Zen 入口在辅助技术树中为“工作区”navigation，键盘Tab可达；
+      实页焦点为2px实线rgb(29,78,216)，沿用全局focus-visible。 焦点截图
+      `/tmp/omp-sshots-15ac2c8abe6502f7.webp`， 同步失败截图
+      `/tmp/a11y-sync-failed-390.png`。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets
+      十二组生产首页截图与几何检查通过，document横向overflow均0；
+      逐张审阅，搜索保持一级焦点。截图
+      `/tmp/a11y-{zen,widgets}-{390,768,1440}-{light,dark}.png`。
+- [x] layout首轮21 tests / 50 steps通过、1 step失败：Matrix D只等待main，
+      强制点击可能命中异步Host切换前的入口。改等Widgets Dock并移除force，
+      完整workspace-matrix定向复查1 test / 7 steps通过；
+      其余layout结果仍有效，不将分批证据描述为整条命令一次通过。
+      UndoToast首轮选择器误选被面板遮挡的Zen入口，改为活动workspace-panel导航，
+      完整ui-feedback复查通过，不重发操作或放宽原行为断言。
+- [x] 生产build、前端/受影响E2E typecheck、lint/format、check:ui、 E2E
+      manifest、bundle gate通过，ownership/visual均0 violations。 wallpaper
+      E2E完整通过（1 test / 23 steps），覆盖保存、故障恢复、
+      reduced-motion与所有壁纸动效；加载文字后续变更不涉及壁纸路径。
+
 ## Issue #195 / PR #194 输入与冲突保护续实现
 
 - [x] 获取 PR 分支并合入当前 main；保留两侧 CHANGELOG 新增内容。

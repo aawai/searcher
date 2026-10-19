@@ -586,7 +586,7 @@ export function AdminPage() {
                                         ? "animate-spin"
                                         : ""}
                                 />
-                                <span>刷新</span>
+                                <span>{usersLoading ? "刷新中…" : "刷新"}</span>
                             </Button>
                             <Button
                                 ref={createTriggerRef}
@@ -1086,7 +1086,7 @@ export function AdminPage() {
                                         ? "animate-spin"
                                         : ""}
                                 />
-                                <span>刷新</span>
+                                <span>{auditLoading ? "刷新中…" : "刷新"}</span>
                             </Button>
                         </ActionGroup>
                     </WorkspaceToolbar>

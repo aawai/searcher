@@ -114,11 +114,6 @@
     z-index: var(--elevation-floating);
 }
 
-.zen-edge-btn:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-}
-
 .zen-edge-trigger {
     position: fixed;
     bottom: max(20px, env(safe-area-inset-bottom, 20px));
@@ -134,9 +129,11 @@
     align-items: center;
     gap: var(--space-zen-btn-gap);
     padding: var(--space-zen-btn-padding);
-    font-size: var(--font-metadata-size);
-    font-weight: 500;
-    color: var(--muted);
+    min-height: var(--control-compact-height);
+    line-height: var(--font-caption-line-height);
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
     background: transparent;
     border: none;
     border-radius: 999px;
@@ -144,11 +141,10 @@
 }
 
 .zen-edge-btn:hover {
-    color: var(--foreground);
     background: var(--surface);
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (pointer: coarse), (hover: none), (any-pointer: coarse) {
     .zen-edge-btn {
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);

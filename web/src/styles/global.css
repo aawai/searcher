@@ -218,6 +218,28 @@ a {
     align-items: center;
     gap: var(--space-control-gap);
 }
+.sync-status:empty {
+    display: none;
+}
+.topbar:has(.sync-failed-badge) {
+    height: auto;
+    min-height: 64px;
+}
+.top-actions:has(.sync-failed-badge) {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+}
+.top-actions .sync-status {
+    order: 1;
+}
+.top-actions .sync-failed-badge {
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    font-size: var(--font-caption-size);
+    color: var(--danger);
+    white-space: nowrap;
+}
 .top-actions a,
 .top-actions button {
     min-width: 44px;
@@ -297,6 +319,7 @@ a {
     *::before,
     *::after {
         animation-duration: .01ms!important;
+        animation-iteration-count: 1!important;
         transition-duration: .01ms!important;
         scroll-behavior: auto!important;
     }
