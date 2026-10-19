@@ -142,7 +142,9 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   debounce。模式 Tab 保留不保存例外，历史、颜色和外部控件仍是真正离开。
 - 仅 dirty 草稿真正离开时执行一次 manual flush；clean 离开不提交，显式
   Ctrl/Cmd+S 语义不变。初始化与云端替换不保存；标题/正文 IME composition
-  期间不执行格式命令、Enter 跳转或提交半成品。卸载不补发延迟保存。
+  期间不执行格式命令、Enter
+  跳转或提交半成品。关闭、Esc、切换便签时提交非组合态、 无冲突的 dirty
+  草稿，同一草稿不重复排队；组合态关闭保留设备草稿供恢复。
 - NoteEditor 持有 canonical Markdown、1500ms autosave、IndexedDB 草稿及 mutation
   queue；NoteLivePreviewEditor 仅持有共享 runtime 的实例生命周期、选区与
   composition bridge，不拥有云端业务。详见
@@ -1057,6 +1059,10 @@ WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 Conte
   prop，不以 feature selector 重写 SettingsCard。
 - 不可逆操作统一使用 AlertDialog；取消和 Escape 不执行保存或删除，pending
   禁用确认/取消，关闭恢复到触发控件。图标重取失败不保存网址或覆盖原图标。
+- AlertDialog 的 overlay/popup 使用现有 `--elevation-modal`，按 Portal DOM
+  次序叠在原 Dialog 之后；不使用低于原 Dialog 的固定 `z-50`， 也不为 feature
+  添加临时 z-index。嵌套确认必须通过真实 pointer hit-test， 不能只凭 DOM
+  可见或键盘可达判定完成。
 
 PageShell 的 Utility / Management / Workbench / Search archetype 唯一拥有页面
 width、max-width、margin 与 page spacing；不得叠加 legacy .page，或以 feature
@@ -1068,6 +1074,10 @@ root 的居中 margin + layout max-width 再建一套页面 geometry。
   可辨识；selected 不仅改变颜色，使用 check/current/ARIA；loading 保留位置。
 - hover/selected 不改尺寸，不用 hover transform 模拟 elevation；focus-visible 用
   --ring；disabled 可读；error 有文字和 role=alert。
+- `--ring` 使用不透明 `--accent`；共享 Input、Textarea、NativeSelect、Checkbox、
+  Switch、Radio 与 Slider 的必要边界使用 `--border-control`，装饰分隔继续使用
+  `--border`。控件 default/hover 边界与焦点环在支持的明暗表面上满足至少 3:1，
+  禁用态及任意自定义壁纸沿用既有可读性边界。
 - 遵循 prefers-reduced-motion，不用 motion 表示唯一状态。
 - 小屏 actions wrap、控件不溢出；设置行由 settings-panel container query
   重排；touch target 不缩小。

@@ -92,7 +92,7 @@ async function waitForDraftCommit(
 }
 
 Deno.test(
-    "notes draft survives editor unmount and logout, then restores",
+    "offline draft survives editor unmount and logout, then restores",
     async () => {
         await using cleanup = new AsyncDisposableStack();
         const app = await startProductionApp();
@@ -160,12 +160,24 @@ Deno.test(
                 request.url().endsWith(`/api/notes/${note.id}`)
             ) patches.push(request.method());
         });
+        await page.route(
+            `**/api/notes/${note.id}`,
+            (route) =>
+                route.request().method() === "PATCH"
+                    ? route.abort("internetdisconnected")
+                    : route.continue(),
+        );
         const editedTitle = "退出前尚未同步的标题";
         await title.fill(editedTitle);
+        const failedFlush = page.waitForRequest((request) =>
+            request.method() === "PATCH" &&
+            request.url().endsWith(`/api/notes/${note.id}`)
+        );
         await page.getByRole("button", {
             name: "返回便签列表",
             exact: true,
         }).click();
+        await failedFlush;
         await editor.waitFor({ state: "detached" });
 
         await waitForDraftCommit(page, keys.canonical, {
@@ -177,7 +189,7 @@ Deno.test(
         assertEquals(initialDraft?.title, editedTitle);
         assertEquals(initialDraft?.version, note.version);
         assertEquals((await readDraftKeys(page, keys)).legacy, undefined);
-        assertEquals(patches, []);
+        assertEquals(patches, ["PATCH"]);
         const unchanged = await page.evaluate(async (id) => {
             const response = await fetch(`/api/notes/${id}`);
             return (await response.json()).data as {
@@ -209,7 +221,7 @@ Deno.test(
         const afterCancel = await readDraftKeys(page, keys);
         assertEquals(afterCancel.canonical?.title, editedTitle);
         assertEquals(afterCancel.legacy, undefined);
-        assertEquals(patches, []);
+        assertEquals(patches, ["PATCH"]);
         assertEquals(
             await page.evaluate(async (id) => {
                 const response = await fetch(`/api/notes/${id}`);
@@ -225,7 +237,7 @@ Deno.test(
         await page.getByRole("link", { name: "登录", exact: true }).waitFor({
             state: "visible",
         });
-        assertEquals(patches, []);
+        assertEquals(patches, ["PATCH"]);
 
         await loginAndVisit(page, app.origin, "/", credentials);
         await page.locator(
@@ -246,12 +258,38 @@ Deno.test(
             );
             return input instanceof HTMLInputElement && input.value === value;
         }, editedTitle);
+        const invalidationTitle = "账号失效时本地草稿";
+        await restoredTitle.fill(invalidationTitle);
+        await waitForDraftCommit(page, keys.canonical, {
+            body: note.body,
+            title: invalidationTitle,
+        });
+        await requestLogout();
+        await warning.waitFor({ state: "visible" });
+        await page.getByRole("button", { name: "仍要退出", exact: true })
+            .click();
+        await page.getByRole("link", { name: "登录", exact: true }).waitFor({
+            state: "visible",
+        });
+
+        await loginAndVisit(page, app.origin, "/", credentials);
+        await page.locator(
+            '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+        ).first().click();
+        await page.locator(".notes-workspace-list .note-title").filter({
+            hasText: note.title,
+        }).click();
+        await page.waitForFunction((value) => {
+            const input = document.querySelector(
+                '.note-editor input[aria-label="便签标题"]',
+            );
+            return input instanceof HTMLInputElement && input.value === value;
+        }, invalidationTitle);
         const finalDraft = await readDraftKeys(page, keys);
         assertEquals(finalDraft.canonical?.body, note.body);
-        assertEquals(finalDraft.canonical?.title, editedTitle);
+        assertEquals(finalDraft.canonical?.title, invalidationTitle);
         assertEquals(finalDraft.canonical?.version, note.version);
         assertEquals(finalDraft.legacy, undefined);
-        assertEquals(patches, []);
         const finalServerNote = await page.evaluate(async (id) => {
             const response = await fetch(`/api/notes/${id}`);
             return (await response.json()).data as { version: number };
@@ -890,3 +928,103 @@ Deno.test(
         assertEquals(afterRetry.legacy, undefined);
     },
 );
+
+Deno.test("closing a recovered note conflict preserves its original draft baseline", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const credentials = await app.seedAskFixtureUser({
+        username: "note_conflict_recovery",
+        password: "Note-conflict-recovery-195!",
+    });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage();
+    await loginAndVisit(page, app.origin, "/", credentials);
+    const localBody = "关闭后仍可恢复的本地编辑";
+    const fixture = await page.evaluate(async (body) => {
+        await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ style: "zen" }),
+        });
+        const created = await fetch("/api/notes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: "关闭冲突草稿", body: "原始正文" }),
+        });
+        const note = (await created.json()).data as {
+            id: string;
+            title: string;
+            version: number;
+        };
+        const updated = await fetch(`/api/notes/${note.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ version: note.version, body: "远端新正文" }),
+        });
+        if (!updated.ok) throw new Error(await updated.text());
+        const user = (await (await fetch("/api/auth/me")).json()).data.user;
+        const key = `note:draft:${user.id}:${note.id}`;
+        await new Promise<void>((resolve, reject) => {
+            const open = indexedDB.open("searcher-client", 1);
+            open.onupgradeneeded = () => {
+                if (!open.result.objectStoreNames.contains("state")) {
+                    open.result.createObjectStore("state");
+                }
+            };
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+                const db = open.result;
+                const transaction = db.transaction("state", "readwrite");
+                transaction.objectStore("state").put({
+                    title: note.title,
+                    body,
+                    version: note.version,
+                    updatedAt: Date.now(),
+                }, key);
+                transaction.oncomplete = () => {
+                    db.close();
+                    resolve();
+                };
+                transaction.onerror = () => reject(transaction.error);
+            };
+        });
+        return { note, key };
+    }, localBody);
+    await page.reload();
+    await page.locator('.zen-edge-btn[data-workspace="notes"]').click();
+    const noteTitle = page.locator(".notes-workspace-list .note-title").filter({
+        hasText: fixture.note.title,
+    });
+    await noteTitle.click();
+    const conflict = page.locator('.note-editor [role="alertdialog"]');
+    await conflict.waitFor();
+    assertEquals(await conflict.locator("textarea").inputValue(), localBody);
+    await page.getByRole("button", { name: "返回便签列表", exact: true })
+        .click();
+    await page.locator(".note-editor").waitFor({ state: "detached" });
+    await waitForDraftCommit(page, fixture.key, {
+        body: localBody,
+        title: fixture.note.title,
+    });
+    assertEquals(
+        (await readDraftKeys(page, {
+            canonical: fixture.key,
+            legacy: `note:draft:${fixture.note.id}`,
+        })).canonical?.version,
+        fixture.note.version,
+        "closing must not rebase unresolved local edits onto the cloud version",
+    );
+    await noteTitle.click();
+    await conflict.waitFor();
+    assertEquals(await conflict.locator("textarea").inputValue(), localBody);
+    const serverBody = await page.evaluate(async (id) => {
+        return (await (await fetch(`/api/notes/${id}`)).json()).data.body;
+    }, fixture.note.id);
+    assertEquals(serverBody, "远端新正文");
+});

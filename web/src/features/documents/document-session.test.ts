@@ -1057,6 +1057,149 @@ Deno.test("Conflict resolution: 'local' choice with origin conflict_resolution",
     // Draft cleared
     assertEquals(drafts.hasKey("text:document:draft:user-1:doc-1"), false);
 });
+Deno.test("Failed local conflict resolution preserves draft and can be retried", async () => {
+    const drafts = new MemoryDraftStorage();
+    const serverConflictDoc = createMockDoc({
+        version: 5,
+        title: "Server title",
+        body: "Server body",
+    });
+    let failResolution = true;
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts,
+        request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+            if (init?.method === "PATCH") {
+                const payload: PatchPayload = JSON.parse(
+                    init.body as string,
+                );
+                if (payload.origin === "conflict_resolution") {
+                    if (failResolution) {
+                        failResolution = false;
+                        return Promise.reject(
+                            new Error("Resolution offline"),
+                        );
+                    }
+                    return Promise.resolve(createMockDoc({
+                        ...serverConflictDoc,
+                        title: payload.title ?? serverConflictDoc.title,
+                        body: payload.body ?? serverConflictDoc.body,
+                        version: 6,
+                    }) as unknown as T);
+                }
+                return Promise.reject(
+                    new ApiError(409, "Conflict", {
+                        currentDocument: serverConflictDoc,
+                    }),
+                );
+            }
+            return Promise.resolve(
+                createMockDoc() as unknown as T,
+            );
+        },
+    });
+
+    await session.load();
+    session.edit({ title: "Local draft", body: "Unsaved local body" });
+    assertEquals(await session.save(), false);
+
+    assertEquals(await session.resolveConflict("local"), null);
+    const failed = session.getSnapshot();
+    assertEquals(failed.saveStatus, "conflict");
+    assertEquals(failed.error, "Resolution offline");
+    assertEquals(failed.conflict?.version, 5);
+    assertEquals(failed.title, "Local draft");
+    assertEquals(failed.body, "Unsaved local body");
+    const failedDraft = drafts.getDraft(
+        "text:document:draft:user-1:doc-1",
+    );
+    assert(failedDraft !== undefined);
+    assertEquals(failedDraft.title, "Local draft");
+    assertEquals(failedDraft.body, "Unsaved local body");
+    assertEquals(failedDraft.version, 1);
+
+    assertEquals(await session.resolveConflict("local"), "doc-1");
+    const retried = session.getSnapshot();
+    assertEquals(retried.saveStatus, "saved");
+    assertEquals(retried.error, null);
+    assertEquals(retried.conflict, null);
+    assertEquals(retried.body, "Unsaved local body");
+    assertEquals(
+        drafts.hasKey("text:document:draft:user-1:doc-1"),
+        false,
+    );
+});
+
+Deno.test("Failed save-as-new conflict resolution preserves draft for retry", async () => {
+    const drafts = new MemoryDraftStorage();
+    const serverConflictDoc = createMockDoc({
+        version: 5,
+        title: "Server title",
+        body: "Server body",
+    });
+    let failCreate = true;
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts,
+        request: <T>(path: string, init?: RequestInit): Promise<T> => {
+            if (path === "/api/documents" && init?.method === "POST") {
+                if (failCreate) {
+                    failCreate = false;
+                    return Promise.reject(new Error("Create offline"));
+                }
+                const payload: PostPayload = JSON.parse(
+                    init.body as string,
+                );
+                return Promise.resolve(createMockDoc({
+                    id: "new-doc-42",
+                    title: payload.title ?? "",
+                    body: payload.body ?? "",
+                }) as unknown as T);
+            }
+            if (init?.method === "PATCH") {
+                return Promise.reject(
+                    new ApiError(409, "Conflict", {
+                        currentDocument: serverConflictDoc,
+                    }),
+                );
+            }
+            return Promise.resolve(
+                createMockDoc() as unknown as T,
+            );
+        },
+    });
+
+    await session.load();
+    session.edit({ title: "Forked draft", body: "Forked body" });
+    assertEquals(await session.save(), false);
+
+    assertEquals(await session.resolveConflict("new"), null);
+    const failed = session.getSnapshot();
+    assertEquals(failed.saveStatus, "conflict");
+    assertEquals(failed.error, "Create offline");
+    assertEquals(failed.title, "Forked draft");
+    assertEquals(failed.body, "Forked body");
+    const failedDraft = drafts.getDraft(
+        "text:document:draft:user-1:doc-1",
+    );
+    assert(failedDraft !== undefined);
+    assertEquals(failedDraft.title, "Forked draft");
+    assertEquals(failedDraft.body, "Forked body");
+    assertEquals(failedDraft.version, 1);
+
+    assertEquals(await session.resolveConflict("new"), "new-doc-42");
+    const retried = session.getSnapshot();
+    assertEquals(retried.saveStatus, "saved");
+    assertEquals(retried.error, null);
+    assertEquals(retried.conflict, null);
+    assertEquals(retried.body, "Server body");
+    assertEquals(
+        drafts.hasKey("text:document:draft:user-1:doc-1"),
+        false,
+    );
+});
 
 Deno.test("In-flight edits during resolveConflict local are preserved as dirty without data loss", async () => {
     const time = new TestTime();
@@ -1430,4 +1573,44 @@ Deno.test("destroy() clears listeners immediately, flushes or safely persists to
     assertEquals(savedDraft.body, "Must not lose this on destroy");
     // Failure is visible
     assert(sessionFail.getSnapshot().error !== null);
+    const conflictDrafts = new MemoryDraftStorage();
+    const conflictBaseDoc = createMockDoc({
+        id: "doc-conflict",
+        version: 3,
+    });
+    const conflictServerDoc = createMockDoc({
+        id: "doc-conflict",
+        version: 5,
+    });
+    const conflictSession = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-conflict",
+        drafts: conflictDrafts,
+        request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+            if (init?.method === "PATCH") {
+                return Promise.reject(
+                    new ApiError(409, "Conflict", {
+                        currentDocument: conflictServerDoc,
+                    }),
+                );
+            }
+            return Promise.resolve(conflictBaseDoc as unknown as T);
+        },
+    });
+    await conflictSession.load();
+    conflictDrafts.failWrites = true;
+    conflictSession.edit({ body: "Conflict draft pending teardown" });
+    assertEquals(await conflictSession.save(), false);
+    assertEquals(conflictSession.getSnapshot().saveStatus, "conflict");
+    conflictDrafts.failWrites = false;
+    await conflictSession.destroy();
+    const preservedConflictDraft = conflictDrafts.getDraft(
+        "text:document:draft:user-1:doc-conflict",
+    );
+    assert(preservedConflictDraft !== undefined);
+    assertEquals(
+        preservedConflictDraft.body,
+        "Conflict draft pending teardown",
+    );
+    assertEquals(preservedConflictDraft.version, 3);
 });

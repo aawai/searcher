@@ -116,6 +116,8 @@ export function SearcherSearchInput(
     const field = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<AbortController | null>(null);
+    // IME 组合态：组合期间的方向键、Enter 属于输入法候选操作，不能驱动联想或提交。
+    const composingRef = useRef(false);
 
     // Global keyboard shortcut focus (/ and Cmd/Ctrl+K)
     useEffect(() => {
@@ -385,6 +387,7 @@ export function SearcherSearchInput(
 
     function submit(event: FormEvent, newTab = false) {
         event.preventDefault();
+        if (composingRef.current) return;
         if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
             const chosen = suggestions[selectedIndex];
             selectSuggestion(chosen, newTab);
@@ -394,6 +397,16 @@ export function SearcherSearchInput(
     }
 
     function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
+        // Safari 的 compositionend 先于最后一次 keydown，此时 isComposing 已为
+        // false，但 keyCode 仍是 229；两者都要识别为输入法按键。
+        if (
+            composingRef.current || event.nativeEvent.isComposing ||
+            event.nativeEvent.keyCode === 229
+        ) {
+            if (event.key === "Enter") event.preventDefault();
+            return;
+        }
+
         if (matchesShortcut(event, SHORTCUTS.searchNewTab.binding)) {
             event.preventDefault();
             submit(event, true);
@@ -458,6 +471,12 @@ export function SearcherSearchInput(
                         autoComplete="off"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
+                        onCompositionStart={() => {
+                            composingRef.current = true;
+                        }}
+                        onCompositionEnd={() => {
+                            composingRef.current = false;
+                        }}
                         onFocus={() => {
                             if (suggestions.length > 0) setIsOpen(true);
                         }}

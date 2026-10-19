@@ -87,6 +87,7 @@ export function NoteEditor(
     const [recoveryAttempt, setRecoveryAttempt] = useState(0);
     const [liveReady, setLiveReady] = useState(false);
     const [editorError, setEditorError] = useState("");
+    const [remoteError, setRemoteError] = useState(false);
     const [versions, setVersions] = useState<Version[] | null>(null);
     const [versionError, setVersionError] = useState("");
     const [conflict, setConflict] = useState<NoteItem | null>(null);
@@ -121,17 +122,18 @@ export function NoteEditor(
     }, [historyOpen, historyBusy]);
     const latestNoteRef = useRef(note);
     const draftRef = useRef(draft);
+    const draftVersionRef = useRef(note.version);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const liveEditorRef = useRef<MarkdownEditorHandle | null>(null);
     const composingRef = useRef(false);
+    const compositionBaseRef = useRef<Draft | null>(null);
+    const disposedRef = useRef(false);
+    const conflictRef = useRef<NoteItem | null>(conflict);
+    const pendingRemoteNoteRef = useRef<NoteItem | null>(null);
     const blurTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
     );
     const pendingSelection = useRef<TextEditResult | null>(null);
-    // Accepted conflict/save versions must not regress to a stale parent prop.
-    if (note.version > latestNoteRef.current.version) {
-        latestNoteRef.current = note;
-    }
     draftRef.current = draft;
     const mutationQueue = useRef<Promise<void>>(Promise.resolve());
     // Composite blur and explicit save can submit the same draft in one event.
@@ -163,9 +165,15 @@ export function NoteEditor(
                     setDraftReady(true);
                     return;
                 }
-                if (stored && stored.version >= note.version) {
+                if (stored) {
+                    draftVersionRef.current = stored.version;
                     setDraft({ body: stored.body, title: stored.title });
                     setStatus("unsynced");
+                    if (
+                        stored.version < note.version &&
+                        (stored.body !== note.body ||
+                            stored.title !== (note.title ?? ""))
+                    ) openConflict(note, stored.body);
                 } else {
                     setDraft({ body: note.body, title: note.title ?? "" });
                     setStatus("saved");
@@ -183,52 +191,155 @@ export function NoteEditor(
         setColor(note.color || "paper");
     }, [note.color]);
 
-    // Y-003: 监听 SSE 实时协同事件，当其他端修改当前便签时提示冲突
-    useEffect(() => {
-        const es = new EventSource("/api/notes/events");
-        es.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === "note.updated" && data.note?.id === note.id) {
-                    const serverNote = data.note as NoteItem;
-                    if (serverNote.version > latestNoteRef.current.version) {
-                        setConflict(serverNote);
-                        setMerge(
-                            `<<<<<<< 本地草稿\n${draftRef.current.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                        );
-                    }
-                }
-            } catch {
-                // ignore SSE parse errors
+    // SSE 订阅只随 note.id 重建；经 ref 调用以始终拿到最新的 props 与 state。
+    const remoteUpdateRef = useRef<(serverNote: NoteItem) => void>(() => {});
+    remoteUpdateRef.current = (serverNote) => {
+        if (
+            !isCurrent() || serverNote.id !== latestNoteRef.current.id ||
+            serverNote.version <= latestNoteRef.current.version
+        ) return;
+        const currentConflict = conflictRef.current;
+        if (
+            currentConflict && currentConflict.version >= serverNote.version
+        ) return;
+        if (!draftReady) {
+            const pending = pendingRemoteNoteRef.current;
+            if (!pending || serverNote.version > pending.version) {
+                pendingRemoteNoteRef.current = serverNote;
             }
-        };
+            return;
+        }
+        const compositionDraft = capturePendingLiveBody();
+        if (compositionDraft) {
+            setDraft(compositionDraft);
+            setStatus("unsynced");
+            persistLocalDraft(compositionDraft);
+        }
+        if (isDraftDirty()) openConflict(serverNote, draftRef.current.body);
+        else acceptCloud(serverNote);
+    };
+    useLayoutEffect(() => {
+        if (
+            note.id === latestNoteRef.current.id &&
+            note.version > latestNoteRef.current.version
+        ) {
+            const parentNote = note;
+            void mutationQueue.current.then(() =>
+                remoteUpdateRef.current(parentNote)
+            );
+        }
+    }, [note]);
+    useEffect(() => {
+        if (!draftReady) return;
+        const pending = pendingRemoteNoteRef.current;
+        if (!pending) return;
+        pendingRemoteNoteRef.current = null;
+        remoteUpdateRef.current(pending);
+    }, [draftReady]);
+
+    useEffect(() => {
+        let active = true;
+        const es = new EventSource("/api/notes/events");
+        es.addEventListener("note.updated", (event) => {
+            let data: unknown;
+            try {
+                data = JSON.parse(event.data);
+            } catch {
+                return;
+            }
+            if (
+                !data || typeof data !== "object" ||
+                !("noteId" in data) || data.noteId !== note.id ||
+                !("version" in data) || typeof data.version !== "number" ||
+                !Number.isSafeInteger(data.version)
+            ) return;
+            const version = data.version;
+            // The stream contains invalidation metadata, not a full note. Wait for
+            // local writes before checking versions, including our own broadcasts.
+            void (async () => {
+                await mutationQueue.current;
+                if (
+                    !active || !isCurrent() ||
+                    version <= latestNoteRef.current.version
+                ) return;
+                const serverNote = await api<NoteItem>(
+                    `/api/notes/${encodeURIComponent(note.id)}`,
+                );
+                await mutationQueue.current;
+                if (active && isCurrent()) {
+                    setRemoteError(false);
+                    remoteUpdateRef.current(serverNote);
+                }
+            })().catch(() => {
+                if (active && isCurrent()) setRemoteError(true);
+            });
+        });
         return () => {
+            active = false;
             es.close();
         };
     }, [note.id]);
 
-    useEffect(() => () => {
-        clearTimeout(timer.current);
-        clearTimeout(blurTimer.current);
+    // Close, Escape, and note switches must persist the debounce-window draft.
+    const flushOnUnmountRef = useRef<() => void>(() => {});
+    flushOnUnmountRef.current = () => {
+        capturePendingLiveBody();
+        if (isDraftDirty() || composingRef.current) {
+            persistLocalDraft(draftRef.current);
+        }
+        if (
+            composingRef.current || conflictRef.current || !isCurrent() ||
+            !isDraftDirty() ||
+            submittedDraftRef.current === draftRef.current
+        ) return;
+        void save(undefined, "autosave");
+    };
+    useLayoutEffect(() => {
+        disposedRef.current = false;
+        return () => {
+            disposedRef.current = true;
+            clearTimeout(blurTimer.current);
+            clearTimeout(timer.current);
+            flushOnUnmountRef.current();
+        };
     }, []);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    function persistLocalDraft(data: Draft) {
+        if (!userId || !isCurrent()) return;
+        void saveNoteDraft(userId, note.id, {
+            ...data,
+            version: draftVersionRef.current,
+            updatedAt: Date.now(),
+        }, isCurrent).catch(() => {
+            // Keep an in-memory copy if IndexedDB is unavailable.
+        });
+    }
+    function capturePendingLiveBody(): Draft | undefined {
+        if (
+            view !== "live" ||
+            compositionBaseRef.current !== draftRef.current
+        ) return;
+        const body = liveEditorRef.current?.getMarkdown();
+        if (body === undefined || body === draftRef.current.body) return;
+        const next = { ...draftRef.current, body };
+        draftRef.current = next;
+        compositionBaseRef.current = null;
+        return next;
+    }
     function change(next: Draft) {
         if (
             next.body === draftRef.current.body &&
             next.title === draftRef.current.title
         ) return;
+        compositionBaseRef.current = null;
         draftRef.current = next;
         setDraft(next);
         setStatus("unsynced");
-        if (!userId || !isCurrent()) return;
-        void saveNoteDraft(userId, note.id, {
-            ...next,
-            version: latestNoteRef.current.version,
-            updatedAt: Date.now(),
-        }, isCurrent).catch(() => {
-            // IndexedDB failure leaves the draft in memory; cloud autosave remains available.
-        });
-        if (!composingRef.current) scheduleAutosave(next);
+        persistLocalDraft(next);
+        if (
+            !disposedRef.current && !composingRef.current &&
+            !conflictRef.current
+        ) scheduleAutosave(next);
     }
 
     function scheduleAutosave(next: Draft) {
@@ -241,8 +352,13 @@ export function NoteEditor(
 
     function composition(composing: boolean) {
         composingRef.current = composing;
-        if (composing) clearTimeout(timer.current);
-        else if (isDraftDirty()) scheduleAutosave(draftRef.current);
+        if (disposedRef.current) return;
+        if (composing) {
+            compositionBaseRef.current = draftRef.current;
+            clearTimeout(timer.current);
+        } else if (!conflictRef.current && isDraftDirty()) {
+            scheduleAutosave(draftRef.current);
+        }
     }
 
     function isDraftDirty() {
@@ -403,6 +519,9 @@ export function NoteEditor(
         origin: "autosave" | "manual" | "conflict_resolution" = "autosave",
     ) {
         if (composingRef.current) return mutationQueue.current;
+        if (conflictRef.current && origin !== "conflict_resolution") {
+            return mutationQueue.current;
+        }
         if (!userId || !isCurrent() || !draftReady) {
             return mutationQueue.current;
         }
@@ -426,7 +545,9 @@ export function NoteEditor(
                     }),
                 );
                 if (!isCurrent()) return;
+                saveFailed.current = false;
                 latestNoteRef.current = updated;
+                draftVersionRef.current = updated.version;
                 if (
                     draftRef.current.body === data.body &&
                     draftRef.current.title === data.title
@@ -451,6 +572,7 @@ export function NoteEditor(
                 ) {
                     setStatus("saved");
                 }
+                conflictRef.current = null;
                 setConflict(null);
             } catch (error) {
                 if (!isCurrent()) return;
@@ -461,10 +583,7 @@ export function NoteEditor(
                 if (error instanceof ApiError && error.code === 409) {
                     const serverNote = error.data as NoteItem | undefined;
                     if (serverNote) {
-                        setConflict(serverNote);
-                        setMerge(
-                            `<<<<<<< 本地草稿\n${data.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                        );
+                        openConflict(serverNote, draftRef.current.body);
                     }
                 }
                 setStatus("error");
@@ -474,13 +593,16 @@ export function NoteEditor(
     }
 
     function selectColor(nextColor: string) {
-        if (nextColor === color) return Promise.resolve();
+        if (conflictRef.current || nextColor === color) {
+            return Promise.resolve();
+        }
         clearTimeout(timer.current);
         timer.current = undefined;
         setColor(nextColor);
         setStatus("saving");
         saveFailed.current = false;
         mutationQueue.current = mutationQueue.current.then(async () => {
+            if (!isCurrent()) return;
             try {
                 const updated = await api<NoteItem>(
                     "/api/notes/" +
@@ -490,25 +612,23 @@ export function NoteEditor(
                         version: latestNoteRef.current.version,
                     }),
                 );
+                if (!isCurrent()) return;
+                saveFailed.current = false;
                 latestNoteRef.current = updated;
+                draftVersionRef.current = updated.version;
                 onSaved(updated);
-                const isDraftDirty = draftRef.current.body !== updated.body ||
+                const dirty = draftRef.current.body !== updated.body ||
                     (draftRef.current.title || "") !== (updated.title || "");
-                if (isDraftDirty) {
-                    setStatus("unsynced");
-                } else {
-                    setStatus("saved");
-                }
+                setStatus(dirty ? "unsynced" : "saved");
+                conflictRef.current = null;
                 setConflict(null);
             } catch (error) {
+                if (!isCurrent()) return;
                 saveFailed.current = true;
                 if (error instanceof ApiError && error.code === 409) {
                     const serverNote = error.data as NoteItem | undefined;
                     if (serverNote) {
-                        setConflict(serverNote);
-                        setMerge(
-                            `<<<<<<< 本地草稿\n${draftRef.current.body}\n=======\n${serverNote.body}\n>>>>>>> 云端版本`,
-                        );
+                        openConflict(serverNote, draftRef.current.body);
                     }
                 }
                 setStatus("error");
@@ -526,39 +646,66 @@ export function NoteEditor(
         setTimeout(() => setCopiedDraft(false), 2000);
     }
 
-    async function useCloud() {
-        if (!conflict) return;
+    // 合并框以本地草稿为起点；云端版本已在上方并排展示，不向正文写入任何冲突标记。
+    function openConflict(serverNote: NoteItem, localBody: string) {
+        const currentConflict = conflictRef.current;
+        if (
+            currentConflict && currentConflict.version >= serverNote.version
+        ) return;
         clearTimeout(timer.current);
         timer.current = undefined;
-        // A blur-triggered save may still return 409 after the click. Accept after it settles.
-        await mutationQueue.current;
+        conflictRef.current = serverNote;
+        setConflict(serverNote);
+        if (!currentConflict) setMerge(localBody);
+    }
+
+    function acceptCloud(serverNote: NoteItem) {
         if (!userId || !isCurrent()) return;
-        latestNoteRef.current = conflict;
-        const accepted = { body: conflict.body, title: conflict.title ?? "" };
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        latestNoteRef.current = serverNote;
+        draftVersionRef.current = serverNote.version;
+        const accepted = {
+            body: serverNote.body,
+            title: serverNote.title ?? "",
+        };
         draftRef.current = accepted;
         setDraft(accepted);
         submittedDraftRef.current = undefined;
         saveFailed.current = false;
-        if (conflict.color) {
-            setColor(conflict.color);
+        if (serverNote.color) {
+            setColor(serverNote.color);
         }
-        onSaved(conflict);
+        onSaved(serverNote);
         void clearNoteDraft(
             userId,
             note.id,
             () => isCurrent() && draftRef.current === accepted,
         ).catch(() => {});
+        conflictRef.current = null;
         setConflict(null);
         setStatus("saved");
     }
 
+    async function useCloud() {
+        if (!conflictRef.current) return;
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        // A blur-triggered save may still return 409 after the click.
+        await mutationQueue.current;
+        const newestConflict = conflictRef.current;
+        if (newestConflict) acceptCloud(newestConflict);
+    }
+
     function resolve(body: string) {
-        if (!conflict) return;
-        latestNoteRef.current = conflict;
-        if (conflict.color) {
-            setColor(conflict.color);
+        const currentConflict = conflictRef.current;
+        if (!currentConflict) return;
+        latestNoteRef.current = currentConflict;
+        if (currentConflict.color) {
+            setColor(currentConflict.color);
         }
-        const next = { ...draft, body };
+        const next = { ...draftRef.current, body };
+        draftRef.current = next;
         setDraft(next);
         void save(next, "conflict_resolution");
     }
@@ -627,7 +774,6 @@ export function NoteEditor(
             setHistoryBusy(false);
         }
     }
-
     async function showVersions() {
         if (composingRef.current || historyTransition.current) return;
         rememberEditing();
@@ -641,7 +787,7 @@ export function NoteEditor(
             await mutationQueue.current;
         }
         historyTransition.current = false;
-        if (saveFailed.current) {
+        if (saveFailed.current || conflictRef.current) {
             setHistoryBusy(false);
             return;
         }
@@ -666,6 +812,7 @@ export function NoteEditor(
                 );
                 if (!isCurrent()) return;
                 latestNoteRef.current = restored;
+                draftVersionRef.current = restored.version;
                 const accepted = {
                     body: restored.body,
                     title: restored.title ?? "",
@@ -681,6 +828,7 @@ export function NoteEditor(
                 ).catch(() => {});
                 if (!isCurrent()) return;
                 onSaved(restored);
+                conflictRef.current = null;
                 setConflict(null);
                 saveFailed.current = false;
                 setStatus("saved");
@@ -828,6 +976,11 @@ export function NoteEditor(
 
                     {editorError && (
                         <p role="alert" className="error">{editorError}</p>
+                    )}
+                    {remoteError && (
+                        <p role="alert" className="error">
+                            无法读取其他设备的更新；本地草稿已保留，请重新打开便签重试。
+                        </p>
                     )}
                     {recoveryError && (
                         <StatusBanner tone="error" density="compact">

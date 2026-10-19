@@ -268,32 +268,120 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
         },
     );
     await t.step(
-        "unmounted editor cannot flush; restored dirty draft flushes on real leave without a timer",
+        "closing during the debounce window flushes exactly once",
         async () => {
             const count = writes.length;
-            await title.fill("关闭后恢复");
+            await title.fill("关闭后保存");
+            const response = saved("autosave");
             await page.locator(
                 'button[aria-label="关闭便签"], button[aria-label="返回便签列表"]',
             ).first().click();
             await editor.waitFor({ state: "detached" });
-            await page.waitForTimeout(1800);
-            assertEquals(writes.length, count);
-            await page.locator(".notes-workspace-list .note-title").filter({
-                hasText: "中文组合标题",
-            }).click();
-            await live.waitFor();
-            assertEquals(await title.inputValue(), "关闭后恢复");
-            await page.waitForTimeout(1800);
-            assertEquals(writes.length, count);
-            await title.focus();
-            const response = saved("manual");
-            await editor.getByRole("button", { name: "版本历史", exact: true })
-                .click();
             assertEquals((await response).status(), 200);
-            await settled();
             await page.waitForTimeout(1800);
             assertEquals(writes.length, count + 1);
-            assertEquals((await readState()).note.title, "关闭后恢复");
+            assertEquals((await readState()).note.title, "关闭后保存");
+            await page.locator(".notes-workspace-list .note-title").filter({
+                hasText: "关闭后保存",
+            }).click();
+            await live.waitFor();
+            assertEquals(await title.inputValue(), "关闭后保存");
+        },
+    );
+    await t.step(
+        "Escape and switching notes flush edits before unmount",
+        async () => {
+            const escapeCount = writes.length;
+            await title.fill("Esc退出前保存");
+            const escapeSave = saved("autosave");
+            await title.press("Escape");
+            await editor.waitFor({ state: "detached" });
+            assertEquals((await escapeSave).status(), 200);
+            assertEquals(writes.length, escapeCount + 1);
+            await page.waitForTimeout(1800);
+            assertEquals(writes.length, escapeCount + 1);
+            assertEquals((await readState()).note.title, "Esc退出前保存");
+
+            const secondId = await page.evaluate(async () => {
+                const response = await fetch("/api/notes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: "切换目标便签",
+                        body: "目标正文",
+                    }),
+                });
+                if (!response.ok) throw new Error("Cannot create second note");
+                return (await response.json()).data.id as string;
+            });
+            await page.reload();
+            await page.locator(
+                '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+            ).first().click();
+            await page.locator(".notes-workspace-list .note-title").filter({
+                hasText: "Esc退出前保存",
+            }).click();
+            await live.waitFor();
+            const switchCount = writes.length;
+            await title.fill("切换便签前保存");
+            const switchSave = saved("autosave");
+            await page.getByRole("button", {
+                name: "返回便签列表",
+                exact: true,
+            }).click();
+            await editor.waitFor({ state: "detached" });
+            assertEquals((await switchSave).status(), 200);
+            assertEquals(writes.length, switchCount + 1);
+            await page.waitForTimeout(1800);
+            assertEquals(writes.length, switchCount + 1);
+            await page.locator(".notes-workspace-list .note-title").filter({
+                hasText: "切换目标便签",
+            }).click();
+            await page.locator(".note-editor").waitFor();
+            assertEquals((await readState()).note.title, "切换便签前保存");
+            assertEquals(
+                await page.evaluate(async (noteId) => {
+                    const response = await fetch(`/api/notes/${noteId}`);
+                    return (await response.json()).data.title as string;
+                }, secondId),
+                "切换目标便签",
+            );
+            await page.getByRole("button", {
+                name: "返回便签列表",
+                exact: true,
+            }).click();
+            await editor.waitFor({ state: "detached" });
+            await page.locator(".notes-workspace-list .note-title").filter({
+                hasText: "切换便签前保存",
+            }).click();
+            await live.waitFor();
+        },
+    );
+    await t.step(
+        "active IME composition is retained locally across editor unmount",
+        async () => {
+            const before = await readState();
+            const count = writes.length;
+            await title.dispatchEvent("compositionstart", { data: "IME" });
+            await title.fill("IME 组合中的标题");
+            await page.getByRole("button", {
+                name: "返回便签列表",
+                exact: true,
+            }).click();
+            await editor.waitFor({ state: "detached" });
+            await page.waitForTimeout(1800);
+            assertEquals(writes.length, count);
+            assertEquals((await readState()).note.title, before.note.title);
+            await page.locator(".notes-workspace-list .note-title").filter({
+                hasText: before.note.title,
+            }).click();
+            await page.waitForFunction(() => {
+                const input = document.querySelector(
+                    '.note-editor input[aria-label="便签标题"]',
+                );
+                return input instanceof HTMLInputElement &&
+                    input.value === "IME 组合中的标题";
+            });
         },
     );
     await t.step(
@@ -327,7 +415,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
         },
     );
     await t.step(
-        "older title response cannot delete newer body draft after immediate close",
+        "closing during a save queues the newest draft before unmount",
         async () => {
             const held = Promise.withResolvers<void>();
             const release = Promise.withResolvers<void>();
@@ -341,6 +429,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                 await route.fulfill({ response });
             });
             try {
+                const count = writes.length;
                 await title.fill("在途标题");
                 const response = saved("manual");
                 await editor.locator(".note-color-trigger").focus();
@@ -348,14 +437,17 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                 await editor.getByRole("tab", { name: "源码", exact: true })
                     .click();
                 await editor.locator("textarea.note-body-textarea").fill(
-                    "在途请求后的最新正文",
+                    "关闭前最新正文",
                 );
+                const followup = saved("autosave");
                 await page.locator(
                     'button[aria-label="关闭便签"], button[aria-label="返回便签列表"]',
                 ).first().click();
                 await editor.waitFor({ state: "detached" });
                 release.resolve();
                 assertEquals((await response).status(), 200);
+                assertEquals((await followup).status(), 200);
+                assertEquals(writes.length, count + 2);
                 const card = page.locator(".notes-workspace-list .note-title")
                     .filter({ hasText: "在途标题" });
                 await card.waitFor();
@@ -366,19 +458,13 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                 assertEquals(
                     await editor.locator("textarea.note-body-textarea")
                         .inputValue(),
-                    "在途请求后的最新正文",
+                    "关闭前最新正文",
                 );
+                assertEquals((await readState()).note.body, "关闭前最新正文");
             } finally {
                 release.resolve();
                 await page.unroute(`**/api/notes/${id}`);
             }
-            const response = saved("manual");
-            await editor.locator("textarea.note-body-textarea").focus();
-            await editor.getByRole("button", { name: "版本历史", exact: true })
-                .click();
-            assertEquals((await response).status(), 200);
-            await settled();
-            assertEquals((await readState()).note.body, "在途请求后的最新正文");
         },
     );
     await t.step(

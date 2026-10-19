@@ -4,6 +4,57 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #195 / PR #194 输入与冲突保护续实现
+
+- [x] 获取 PR 分支并合入当前 main；保留两侧 CHANGELOG 新增内容。
+      搜索组合态方向键、Enter、form submit 与 Safari 风格 `keyCode=229`
+      事件顺序有生产页面回归；旧产物在 ArrowUp 被抢占处失败，新产物通过。
+- [x] 推送后首轮完整 Workspace CI 为55 passed / 1 failed（2 steps）：
+      `workspace.test.ts` 仍使用“先更新 clean
+      云端，再输入本地内容”的旧冲突时序，
+      远端已被正确静默接受，因此不再产生预期冲突；后续用例被未关闭窗口遮挡。
+      改为先建立 dirty 本地草稿再更新云端，保留正文、版本递增与后续保存断言。
+      本地完整 `workspace.test.ts` 复查为1 passed / 8 steps、0 failed，
+      lint/format 通过；不改产品行为、不重发操作、不放宽验收。
+- [x] 便签订阅真实的具名 `note.updated` 失效事件，等待 mutation queue 后按版本
+      GET 最新 DTO。clean 远端更新静默同步，dirty 才冲突；自己保存不误报，
+      合并初值保持本地正文。无 SSE 时仍经 409 保护旧版本写入。
+- [x] 关闭、Esc、切换便签、进行中保存后的新输入、IME 卸载与账号隔离有回归；
+      落后版本的 canonical 草稿进入显式冲突，关闭重开保留原基线。
+      实页立即关闭标题编辑后，GET 已返回最后输入及递增版本。
+- [x] 文档冲突可 Esc/遮罩/暂不处理关闭并重开；两种破坏性选择使用独立
+      AlertDialog，失败反馈保留本地内容并可重试。实页发现原 `z-50` 确认被 Dialog
+      遮挡；改用既有 modal Token 后，确认框中心 hit-test 命中自身，
+      取消/确认可点击。390px Sheet 内恢复冲突后，全部操作在视口内。
+- [x] 相关 Chromium E2E 共18条分批取得通过：扩大范围首次为16 passed / 2
+      failed，历史守卫、409 fallback 时序与接受云端状态修正后，失败文件定向
+      复查通过；不是整条扩大范围命令一次全绿。覆盖 notes 全组、搜索、 document
+      immersion 与共享 UI feedback。领域测试首轮702条通过，
+      草稿恢复增补后26条模块测试定向通过；前端/受影响 E2E typecheck、 lint、生产
+      build、UI ownership/visual 与 E2E manifest 门禁通过。
+- [x] 入口预算复查后将两个 NoteEditor 消费者改为既有 lazy/Suspense 模式， 入口
+      chunk 为327098 B，全部 bundle 门禁通过，未提高预算。 切分后的 Notes
+      focus/drafts/live-editing/workspace 与 bundle-loading 最后一次定向运行9
+      passed / 42 steps、0 failed；实页首屏未请求 NoteEditor
+      chunk，首次打开才加载，编辑后立即关闭仍已保存。
+- [x] 390×844 / 768×1024 / 1440×900 × light/dark × Zen/Widgets 首页12组，
+      及外观设置6组实页、焦点和边界审阅通过，document 横向 overflow 均为0。
+      首轮焦点过渡采样及恢复中的工作区影响首页画面，已等待焦点动画收敛并使用
+      无窗口状态的独立上下文复查受影响 Widgets 组合，不把遮挡截图算通过。 有效
+      Zen 截图为 `/tmp/omp-sshots-15abd8186ae07e01.webp`、
+      `15abd818dce07e02`、`15abd81a6d207e05`、`15abd81b02207e06`、
+      `15abd81cf7a07e09`、`15abd81da6a07e0a`（后五项同目录与扩展名）； Widgets
+      为 `/tmp/issue195-widgets-{390,768,1440}-{light,dark}.png`； 设置为
+      `/tmp/omp-sshots-15abd4a7*` 至 `15abd4aae*`。
+- [x] 实际 computed color 按 WCAG 计算，9种强调色、明暗主题与
+      background/surface-solid/surface-soft 三种表面的最小焦点对比度分别为
+      4.47:1 / 5.16:1，控件边界分别为3.25:1 / 3.80:1。 访客登录表单与代表性
+      gradient 壁纸另有实页检查；任意自定义图片沿用既有例外。
+      确认框截图：`/tmp/omp-sshots-15abd7b3eba07dfd.webp`；
+      移动冲突/确认：`15abd7dac6607dfe`、`15abd7db30607dff`（同目录扩展名）。
+- [x] 用户明确要求跳过 Safari 验证；本次不以原生 Safari IME 作为交付门禁，
+      也不将 Chromium 的 composition/229 合成事件结果描述为 Safari 实测。
+
 ## Issue #191 移动 Zen 无容器便签
 
 - [x] 仅 `<768px` Zen 使用单张透明内容预览；实际 computed background 为透明、

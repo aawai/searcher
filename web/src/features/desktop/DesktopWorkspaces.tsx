@@ -1,7 +1,9 @@
 import {
     type Dispatch,
+    lazy,
     type ReactNode,
     type RefObject,
+    Suspense,
     useEffect,
     useLayoutEffect,
     useRef,
@@ -33,7 +35,7 @@ import type {
     WorkspaceKind,
     WorkspaceRoute,
 } from "../workspace/workspace-state.ts";
-import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
+import { LoadingState } from "../../components/searcher/semantic.tsx";
 import {
     getNoteDisplayTitle,
     type NoteItem,
@@ -42,6 +44,12 @@ import "./desktop.css";
 import type { DocumentDto } from "@shared/documents.ts";
 import { DocumentEntityWindow } from "./DocumentEntityWindow.tsx";
 import { useDocumentImmersion } from "./useDocumentImmersion.ts";
+
+const NoteEditor = lazy(() =>
+    import("../../components/searcher/NoteEditor.tsx").then((module) => ({
+        default: module.NoteEditor,
+    }))
+);
 
 export interface DesktopWorkspacesProps {
     state: DesktopState;
@@ -418,11 +426,19 @@ export function DesktopWorkspaces({
                                     className="notes-workspace-editor"
                                     data-workspace-editor
                                 >
-                                    <NoteEditor
-                                        key={`${userId}:${note.id}`}
-                                        note={note}
-                                        onSaved={onSaveNote}
-                                    />
+                                    <Suspense
+                                        fallback={
+                                            <LoadingState density="compact">
+                                                正在加载编辑器…
+                                            </LoadingState>
+                                        }
+                                    >
+                                        <NoteEditor
+                                            key={`${userId}:${note.id}`}
+                                            note={note}
+                                            onSaved={onSaveNote}
+                                        />
+                                    </Suspense>
                                 </div>
                             </DesktopWindow>
                         );

@@ -117,13 +117,14 @@ export async function loadNoteDraft(
         );
         if (keys === STALE || !isCurrent()) return undefined;
         if (!keys.includes(legacyKey)) {
-            return validDraft(canonicalRead, note.version);
+            // Keep older account-scoped drafts so the editor can resolve them explicitly.
+            return validDraft(canonicalRead, 1);
         }
 
         const ownedNote = await fetchOwnedNote(note.id, isCurrent);
         if (ownedNote === STALE || !isCurrent()) return undefined;
         if (!ownedNote || ownedNote.id !== note.id) {
-            return validDraft(canonicalRead, note.version);
+            return validDraft(canonicalRead, 1);
         }
 
         const currentVersion = ownedNote.version;
@@ -133,7 +134,7 @@ export async function loadNoteDraft(
         );
         if (legacyRead === STALE || !isCurrent()) return undefined;
 
-        const canonical = validDraft(canonicalRead, currentVersion);
+        const canonical = validDraft(canonicalRead, 1);
         const legacy = validDraft(legacyRead, currentVersion);
         if (!legacy) return canonical;
 

@@ -156,6 +156,7 @@ export function DocumentEditor({
     const [initError, setInitError] = useState<string | null>(null);
     const [initKey, setInitKey] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+    const [conflictDismissed, setConflictDismissed] = useState(false);
     const saveStatusLabel = {
         saved: "已保存",
         dirty: "未保存",
@@ -163,6 +164,12 @@ export function DocumentEditor({
         error: "保存失败",
         conflict: "版本冲突",
     }[snapshot.saveStatus];
+    const hasConflict = snapshot.saveStatus === "conflict" ||
+        snapshot.conflict !== null;
+    useEffect(() => {
+        // 冲突解除后重置；下一次冲突应重新弹出。
+        if (!hasConflict) setConflictDismissed(false);
+    }, [hasConflict]);
     useEffect(() => {
         onSaveStatusChange?.(isUploading ? "正在上传图片…" : saveStatusLabel);
     }, [isUploading, saveStatusLabel, onSaveStatusChange]);
@@ -222,23 +229,29 @@ export function DocumentEditor({
     // onDirtyChange: true ONLY when unsaved content AND localDraftError means cannot safely persist
     useEffect(() => {
         const isUnsaved = snapshot.saveStatus === "dirty" ||
-            snapshot.saveStatus === "error";
+            snapshot.saveStatus === "error" || hasConflict;
         const hasUnsafePersist = isUnsaved &&
             Boolean(snapshot.localDraftError);
         onDirtyChange?.(hasUnsafePersist);
         return () => {
             onDirtyChange?.(false);
         };
-    }, [snapshot.saveStatus, snapshot.localDraftError, onDirtyChange]);
+    }, [
+        snapshot.saveStatus,
+        snapshot.localDraftError,
+        hasConflict,
+        onDirtyChange,
+    ]);
 
     // Flush/persist on beforeunload
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             if (
                 snapshot.saveStatus === "dirty" ||
-                snapshot.saveStatus === "error"
+                snapshot.saveStatus === "error" ||
+                hasConflict
             ) {
-                void session.save("autosave");
+                if (!hasConflict) void session.save("autosave");
                 if (snapshot.localDraftError) {
                     event.preventDefault();
                     event.returnValue = "";
@@ -249,7 +262,7 @@ export function DocumentEditor({
         return () => {
             globalThis.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [session, snapshot.saveStatus, snapshot.localDraftError]);
+    }, [session, snapshot.saveStatus, snapshot.localDraftError, hasConflict]);
 
     // 6. Asset upload handler (POST /api/documents/:id/assets multipart)
     const handleUpload = useCallback(async (file: File): Promise<string> => {
@@ -546,7 +559,12 @@ export function DocumentEditor({
         choice: "server" | "local" | "new",
     ) => {
         const newDocId = await session.resolveConflict(choice);
-        if (choice === "new" && newDocId) {
+        if (newDocId === null) {
+            throw new Error(
+                session.getSnapshot().error ?? "处理冲突失败",
+            );
+        }
+        if (choice === "new") {
             onOpenDocument?.(newDocId);
         }
         onChanged?.();
@@ -691,7 +709,8 @@ export function DocumentEditor({
             )}
 
             {/* Error banner if upload or save error */}
-            {(uploadError || snapshot.error) && (
+            {(uploadError ||
+                (snapshot.error && (!hasConflict || conflictDismissed))) && (
                 <div
                     className="p-2 text-xs text-[var(--danger)] bg-[var(--surface-soft)] border-b border-[var(--border-subtle)] flex items-center justify-between"
                     role="alert"
@@ -704,12 +723,18 @@ export function DocumentEditor({
                         className="h-6 text-xs"
                         onClick={() => {
                             setUploadError(null);
-                            if (snapshot.error) {
+                            if (hasConflict) {
+                                setConflictDismissed(false);
+                            } else if (snapshot.error) {
                                 void session.save("manual");
                             }
                         }}
                     >
-                        {snapshot.error ? "重试保存" : "关闭"}
+                        {hasConflict
+                            ? "查看冲突"
+                            : snapshot.error
+                            ? "重试保存"
+                            : "关闭"}
                     </Button>
                 </div>
             )}
@@ -811,6 +836,16 @@ export function DocumentEditor({
                             )}
                             {saveStatusLabel}
                         </span>
+                        {hasConflict && conflictDismissed && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setConflictDismissed(false)}
+                            >
+                                处理冲突
+                            </Button>
+                        )}
                     </div>
 
                     <div className="document-editor-header-actions">
@@ -1041,12 +1076,12 @@ export function DocumentEditor({
 
             {/* Conflict Dialog */}
             <DocumentConflictDialog
-                open={snapshot.saveStatus === "conflict" ||
-                    snapshot.conflict !== null}
+                open={hasConflict && !conflictDismissed}
                 serverDocument={snapshot.conflict}
                 localTitle={snapshot.title}
                 localBody={snapshot.body}
                 onResolve={handleResolveConflict}
+                onDismiss={() => setConflictDismissed(true)}
             />
         </div>
     );

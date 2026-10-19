@@ -100,9 +100,14 @@ Deno.test("notes/local-drafts: account-scoped recovery, migration, and exit disc
             ),
             undefined,
         );
+        const staleCanonicalDraft = draft(
+            "unsaved edits before remote update",
+            2,
+            500,
+        );
         await store(
             noteDraftKey(USER, "stale-canonical"),
-            draft("stale", 2, 500),
+            staleCanonicalDraft,
         );
         assertEquals(
             await loadNoteDraft(
@@ -110,7 +115,7 @@ Deno.test("notes/local-drafts: account-scoped recovery, migration, and exit disc
                 { id: "stale-canonical", version: 3 },
                 () => true,
             ),
-            undefined,
+            staleCanonicalDraft,
         );
 
         const unownedId = "unowned-legacy";

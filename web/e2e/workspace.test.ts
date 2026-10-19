@@ -645,6 +645,8 @@ Deno.test("production workspace contracts", async (t) => {
             }, createdNoteId);
             const baseVersion = heldSavedNote.version;
 
+            await bodyInput.fill("Client conflicting edit");
+
             // Simulate concurrent edit on real server to trigger conflict
             const concurrentStatus = await page.evaluate(
                 async ({ id, version }) => {
@@ -666,10 +668,7 @@ Deno.test("production workspace contracts", async (t) => {
             );
             assertEquals(concurrentStatus, 200);
 
-            // Client attempts to save with outdated version
-            await bodyInput.fill(
-                "Client conflicting edit",
-            );
+            // Explicit save must not bypass concurrent-update protection.
             // Trigger manual save
             await bodyInput.blur();
             await page.keyboard.press("Control+s");

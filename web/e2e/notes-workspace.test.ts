@@ -1188,9 +1188,10 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     );
 
     await t.step(
-        "Notes #44: NoteEditor 409 conflict detection, dialog UI, and resolution",
+        "Notes #44: 409 fallback without SSE, conflict UI, and resolution",
         async () => {
             await ensureNotesRoot(page);
+            await page.route("**/api/notes/events", (route) => route.abort());
             const panel = getNotesWorkspace(page);
             const firstCard = panel.locator(".notes-workspace-list .note-card")
                 .first();
@@ -1354,6 +1355,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
             });
+            await page.unroute("**/api/notes/events");
         },
     );
 

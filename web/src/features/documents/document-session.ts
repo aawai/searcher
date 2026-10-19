@@ -318,7 +318,9 @@ export function createDocumentSession(
         }
 
         // Never report success on conflict
-        if (snapshot.saveStatus === "conflict") {
+        if (
+            snapshot.saveStatus === "conflict" || snapshot.conflict !== null
+        ) {
             return false;
         }
 
@@ -583,6 +585,7 @@ export function createDocumentSession(
                 snapshot = {
                     ...snapshot,
                     saveStatus: "saving",
+                    error: null,
                 };
                 notify();
 
@@ -611,6 +614,7 @@ export function createDocumentSession(
                             document: updated,
                             conflict: null,
                             saveStatus: "dirty",
+                            error: null,
                         };
                         notify();
                         void persistDraftToStorage(
@@ -645,12 +649,19 @@ export function createDocumentSession(
                     } else {
                         snapshot = {
                             ...snapshot,
-                            saveStatus: "error",
+                            saveStatus: snapshot.conflict !== null
+                                ? "conflict"
+                                : "error",
                             error: err instanceof Error
                                 ? err.message
                                 : "解决冲突失败",
                         };
                     }
+                    await persistDraftToStorage(
+                        snapshot.title,
+                        snapshot.body,
+                        snapshot.document?.version ?? conflictDoc.version,
+                    );
                     notify();
                     return null;
                 }
@@ -663,6 +674,7 @@ export function createDocumentSession(
                 snapshot = {
                     ...snapshot,
                     saveStatus: "saving",
+                    error: null,
                 };
                 notify();
 
@@ -689,6 +701,7 @@ export function createDocumentSession(
                         snapshot = {
                             ...snapshot,
                             saveStatus: "dirty",
+                            error: null,
                         };
                     } else {
                         await clearDraftFromStorage();
@@ -710,11 +723,19 @@ export function createDocumentSession(
                 } catch (err) {
                     snapshot = {
                         ...snapshot,
-                        saveStatus: "error",
+                        saveStatus: snapshot.conflict !== null
+                            ? "conflict"
+                            : "error",
                         error: err instanceof Error
                             ? err.message
                             : "创建新文档失败",
                     };
+                    await persistDraftToStorage(
+                        snapshot.title,
+                        snapshot.body,
+                        snapshot.document?.version ??
+                            snapshot.conflict?.version ?? 1,
+                    );
                     notify();
                     return null;
                 }
@@ -824,7 +845,15 @@ export function createDocumentSession(
                 }
             }
 
-            if (snapshot.saveStatus === "dirty") {
+            if (
+                snapshot.conflict !== null || snapshot.saveStatus === "conflict"
+            ) {
+                await persistDraftToStorage(
+                    snapshot.title,
+                    snapshot.body,
+                    snapshot.document?.version ?? 1,
+                );
+            } else if (snapshot.saveStatus === "dirty") {
                 try {
                     const saved = await executeSave("autosave");
                     if (!saved) {

@@ -1,6 +1,8 @@
 import {
     type CSSProperties,
+    lazy,
     type ReactNode,
+    Suspense,
     useCallback,
     useEffect,
     useMemo,
@@ -37,7 +39,6 @@ import {
     NoteCard,
     type NoteItem,
 } from "../../components/searcher/NoteCard.tsx";
-import { NoteEditor } from "../../components/searcher/NoteEditor.tsx";
 import { useMasonryLayout } from "../../components/searcher/masonry.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
@@ -49,6 +50,12 @@ import {
 } from "../../components/searcher/semantic.tsx";
 import type { NotesRoute } from "./workspace-state.ts";
 import "./notes-workspace.css";
+
+const NoteEditor = lazy(() =>
+    import("../../components/searcher/NoteEditor.tsx").then((module) => ({
+        default: module.NoteEditor,
+    }))
+);
 
 type NoteActions = Pick<
     HomeLayoutProps,
@@ -497,11 +504,19 @@ export function NotesWorkspace(
         return editing
             ? (
                 <div className="notes-workspace-editor" data-workspace-editor>
-                    <NoteEditor
-                        key={userId + ":" + editing.id}
-                        note={editing}
-                        onSaved={onSaved}
-                    />
+                    <Suspense
+                        fallback={
+                            <LoadingState density="compact">
+                                正在加载编辑器…
+                            </LoadingState>
+                        }
+                    >
+                        <NoteEditor
+                            key={userId + ":" + editing.id}
+                            note={editing}
+                            onSaved={onSaved}
+                        />
+                    </Suspense>
                 </div>
             )
             : (
