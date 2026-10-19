@@ -276,6 +276,12 @@
     gap: var(--space-control-gap);
     flex: 1;
 }
+.engine-guest-label {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    white-space: nowrap;
+}
 .engine-check-label {
     display: inline-flex;
     align-items: center;

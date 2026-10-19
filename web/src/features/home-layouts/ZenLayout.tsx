@@ -12,6 +12,7 @@ import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInp
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { useZenNoteSelection } from "./useZenNoteSelection.ts";
+import { GUEST_AI_UNAVAILABLE_MESSAGE } from "../../components/searcher/GuestAiUnavailable.tsx";
 
 const FloatingNotes = lazy(() =>
     import("../../components/searcher/FloatingNotes.tsx").then((module) => ({
@@ -111,7 +112,7 @@ export function ZenLayout(
                     mode={mode}
                     onModeChange={(next) => {
                         if (next === "ai" && !user) {
-                            props.setError("登录后使用 AI 问答");
+                            props.setError(GUEST_AI_UNAVAILABLE_MESSAGE);
                             return;
                         }
                         setMode(next);
@@ -123,10 +124,16 @@ export function ZenLayout(
                     isChecking={isCheckingConnections}
                     webApps={apps}
                     onOpenApp={openApp}
+                    isGuest={!user}
                 />
                 {mode === "ai" && (
                     <p className="hero-caption">
                         问你所想，回答将在独立对话中展开
+                    </p>
+                )}
+                {!user && (
+                    <p className="hero-caption">
+                        登录后同步常用网站与便签
                     </p>
                 )}
             </section>

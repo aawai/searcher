@@ -131,6 +131,7 @@ export function EngineSelector(
         reachability,
         onCheck,
         isChecking = false,
+        isGuest = false,
     }: {
         engine: EngineId;
         mode: "search" | "ai";
@@ -139,6 +140,7 @@ export function EngineSelector(
         reachability: Reachability;
         onCheck?: () => void;
         isChecking?: boolean;
+        isGuest?: boolean;
     },
 ) {
     const current = SEARCH_ENGINES.find((item) => item.id === engine);
@@ -199,6 +201,11 @@ export function EngineSelector(
                         <Sparkles size={16} className="text-accent" />
                         <span>AI 问答</span>
                     </span>
+                    {isGuest && (
+                        <span className="engine-guest-label">
+                            登录后可用
+                        </span>
+                    )}
                 </DropdownMenuItem>
                 {onCheck && (
                     <DropdownMenuItem

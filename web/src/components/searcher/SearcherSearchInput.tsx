@@ -80,6 +80,7 @@ export function SearcherSearchInput(
         reachability = EMPTY_REACHABILITY,
         onCheck,
         isChecking = false,
+        isGuest = false,
         modelLabel = "未配置模型",
         models = EMPTY_MODELS,
         selectedModel = null,
@@ -100,6 +101,7 @@ export function SearcherSearchInput(
         reachability?: Reachability;
         onCheck?: () => void;
         isChecking?: boolean;
+        isGuest?: boolean;
         modelLabel?: string;
         models?: ModelOption[];
         selectedModel?: string | null;
@@ -452,6 +454,7 @@ export function SearcherSearchInput(
                         reachability={reachability}
                         onCheck={onCheck}
                         isChecking={isChecking}
+                        isGuest={isGuest}
                     />
                     {mode === "ai" && (onModelChange
                         ? (

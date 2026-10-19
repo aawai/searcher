@@ -260,6 +260,16 @@ a {
     background: var(--surface-soft);
     color: var(--accent);
 }
+.top-actions .topbar-link--guest-ai {
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    white-space: nowrap;
+}
+.topbar-guest-ai-label {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    font-weight: 500;
+}
 .top-actions .user-link {
     gap: var(--space-control-gap);
     padding: 0 var(--space-control-gap);

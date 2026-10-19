@@ -33,7 +33,7 @@ export const suites = {
         "workspace-contract",
         "workspace-matrix",
     ],
-    routing: ["navigation"],
+    routing: ["navigation", "auth", "guest-ai-auth"],
     documents: [
         "documents",
         "document-immersion",
