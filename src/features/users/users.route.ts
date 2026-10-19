@@ -3,11 +3,22 @@ import { json, param, query, validator } from "@internal/validator/hono.ts";
 import type { Routes } from "@internal/hono/routes.ts";
 import { failResponse } from "@internal/hono/middleware/response.ts";
 import { and, count, desc, eq, isNull, like, or } from "drizzle-orm";
-import type { AdminUserDto } from "@shared/contracts.ts";
+import {
+    type AdminUserDto,
+    AUTH_CREDENTIAL_RULES,
+    AUTH_USERNAME_PATTERN,
+} from "@shared/contracts.ts";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { preferences, sessions, users } from "../../db/schema.ts";
 import { AuditService } from "../audit/service.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
+const usernameRules = AUTH_CREDENTIAL_RULES.username;
+const passwordRules = AUTH_CREDENTIAL_RULES.password;
+const usernamePattern = new RegExp(AUTH_USERNAME_PATTERN);
+const usernameLengthMessage =
+    `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 位的字母、数字或下划线`;
+const passwordLengthMessage =
+    `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
 const pageSchema = v.pipe(
     v.optional(v.string(), "1"),
     v.regex(/^[1-9]\d*$/, "页码必须为正整数"),
@@ -27,7 +38,7 @@ const usernameSchema = v.pipe(
     v.string("用户名必须是字符串"),
     v.trim(),
     v.toLowerCase(),
-    v.regex(/^[a-z0-9_]{3,32}$/, "用户名需为 3–32 位的字母、数字或下划线"),
+    v.regex(usernamePattern, usernameLengthMessage),
 );
 
 const emailSchema = v.optional(
@@ -48,8 +59,8 @@ const displayNameSchema = v.pipe(
 
 const passwordSchema = v.pipe(
     v.string("密码必须是字符串"),
-    v.minLength(12, "密码长度须为 12–128 个字符"),
-    v.maxLength(128, "密码长度须为 12–128 个字符"),
+    v.minLength(passwordRules.minLength, passwordLengthMessage),
+    v.maxLength(passwordRules.maxLength, passwordLengthMessage),
 );
 
 const disabledSchema = v.boolean("disabled 必须是布尔值");

@@ -1,4 +1,8 @@
 import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
+import {
+    GUEST_AI_UNAVAILABLE_MESSAGE,
+    GuestAiUnavailable,
+} from "../components/searcher/GuestAiUnavailable.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useNavigate } from "react-router-dom";
 import {
@@ -703,7 +707,7 @@ export function SearchHome() {
         if (effMode === "ai") {
             if (!user) {
                 // 访客拦截：留首页显示提示，不跳转、不发起 Provider 请求
-                setError("登录后使用 AI 问答");
+                setError(GUEST_AI_UNAVAILABLE_MESSAGE);
                 return;
             }
             navigate(routes.ask + "?" + new URLSearchParams({ q: trimmed }));
@@ -1371,7 +1375,9 @@ export function SearchHome() {
             >
                 {error && !mobileFeedback && (
                     <StatusBanner tone="error" presentation="floating">
-                        <span>{error}</span>
+                        {error === GUEST_AI_UNAVAILABLE_MESSAGE
+                            ? <GuestAiUnavailable />
+                            : <span>{error}</span>}
                         <Button
                             variant="ghost"
                             size="icon"

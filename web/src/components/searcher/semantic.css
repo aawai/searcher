@@ -196,6 +196,9 @@
 .loading-state[data-density="compact"] {
     padding: var(--space-row-gap);
 }
+.status-banner[data-presentation="floating"] {
+    width: max-content;
+}
 .status-banner[data-presentation="floating"],
 .undo-toast {
     position: fixed;

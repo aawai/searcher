@@ -12,7 +12,7 @@
 | `test:workspace:apps`     | Workspace 中 `apps-*`、`desktop-*`、`launcher`、`home-launcher-*`                                |
 | `test:workspace:notes`    | Workspace 中 `notes-*`、`home-notes-*`                                                           |
 | `test:workspace:layout`   | Workspace 中 `workspace*`、`desktop-*`、`home-launcher-*`、`bento`                               |
-| `test:routing`            | `navigation`                                                                                     |
+| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`：导航、认证规则/注册可用性、游客 AI 登录回跳               |
 | `test:documents`          | `documents` 和五个 `document-*` 文件；完整列表见清单                                             |
 | `test:wallpaper`          | `wallpaper`                                                                                      |
 | `test:bundle`             | `bundle-loading`、`route-style-stability`                                                        |

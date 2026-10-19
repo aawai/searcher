@@ -4,6 +4,46 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issues #196 / #199 游客登录引导与注册可用性
+
+- [x] Zen/Widgets 游客 AI 菜单与顶栏入口标明登录要求，保持可聚焦和可读屏；
+      切换及 `/ai` 提交的错误共用登录链接，带原页面 query 的 next
+      真实登录回跳通过。
+- [x] 首页提示只在搜索后作为 secondary content，无 primary 或 autofocus；
+      390×844、768×1024、1440×900 × light/dark × Zen/Widgets 十二组
+      实页截图逐张审阅、横向 overflow 均0。Search frame 的 Y 与修复前一致：
+      248.796875、298.796875、296.1875 CSS px。 截图
+      `/tmp/guest-auth-{zen,widgets}-{390,768,1440}-{light,dark}.png`。
+- [x] 注册用户名/密码规则来自共享契约，aria-describedby 进入辅助技术描述；
+      blur/invalid 后有错误态。注册页六组尺寸/主题实页与 overflow 检查通过，
+      截图 `/tmp/guest-auth-register-{390,768,1440}-{light,dark}.png`。
+- [x] 503 注册状态为未知、不可提交、不露出误导性注册入口；重查可恢复，
+      关闭状态不发注册请求；登录错误凭据反馈不变。首次红测1 passed/3 failed，
+      实现后认证、游客AI及既有导航定向回归6 passed/10 steps、0 failed。
+- [x] 领域测试702 passed/51 steps；前后端及CLI typecheck、lint、UI ownership
+      与visual gate通过。格式检查最初发现4文件未格式化，已按Deno修正；
+      E2E清单最初发现漏登认证测试，已纳入routing，与游客AI一同常规执行。
+- [x] 完整 Workspace 生产回归56 passed/139 steps，E2E manifest与bundle
+      gate通过。 后续移动实页暴露浮动错误条被固定定位的 shrink-to-fit 挤窄；共享
+      StatusBanner 使用 max-content 且保留视口
+      max-width。新移动回归旧产物失败，修复后通过， 390px
+      实测横幅宽274.609375px、提示单行，截图
+      `/tmp/omp-sshots-15ac35ed38de2b47.webp`。
+- [x] 最终routing首轮5 passed/1 failed：游客AI测试切换外观后立即硬导航，
+      中断设备偏好事务；等待已保存的目标布局后，完整游客AI与UI feedback复查 3
+      passed/17 steps，UI gate仍为0 violations。认证和navigation的已通过结果
+      未受影响；不把这些分批证据描述为一次完整routing通过。
+- [x] PR #219 首轮CI：Workspace为55 passed/1 failed（139 steps）， Zen
+      reduced-motion采样到12个running动画；Bundle两处游客入口仍匹配旧
+      aria-label。迁移为AI链接的语义前缀，Zen按动画结束条件等待后仍断言零running，
+      无固定sleep或重发操作。完整bundle-loading、route-style-stability、
+      zen-inline-notes本地复查3 passed/8 steps，lint/format通过。
+- [x] 第二轮CI Bundle及其余六项检查通过；Workspace为55 passed/1 failed （138
+      steps），失败在代码滚动测试直接hover被相邻叠放便签遮挡的中心。
+      改为先hover露出的标题按已有board规则置顶，再操作代码区，保留原滚动、
+      scrollbar及无溢出断言；未使用force或修改产品叠层。完整home-notes-order
+      本地复查3 passed/8 steps，lint/format通过。
+
 ## Issues #207 / #212 / #213 无障碍修复
 
 - [x] 默认 Search surface 的实际 computed placeholder 为浅色

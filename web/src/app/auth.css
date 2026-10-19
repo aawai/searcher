@@ -15,6 +15,26 @@
 .auth-surface .field {
     margin: 0 0 var(--space-row-gap);
 }
+
+.auth-surface .auth-field-hint {
+    margin: var(--space-control-gap) 0 0;
+    font-size: var(--font-caption-size);
+}
+.auth-surface .auth-field-hint--error {
+    color: var(--danger);
+}
+.auth-registration-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-control-gap);
+    margin-block-end: var(--space-row-gap);
+}
+.auth-registration-status p {
+    margin: 0;
+    font-size: var(--font-caption-size);
+}
 .auth-surface button[type="submit"] {
     width: 100%;
     margin-top: var(--space-control-gap);

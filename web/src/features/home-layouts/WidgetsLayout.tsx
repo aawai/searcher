@@ -9,6 +9,7 @@ import {
     StatusBanner,
 } from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import { GUEST_AI_UNAVAILABLE_MESSAGE } from "../../components/searcher/GuestAiUnavailable.tsx";
 
 export function WidgetsLayout(props: HomeLayoutProps) {
     const {
@@ -80,7 +81,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                     mode={mode}
                     onModeChange={(next) => {
                         if (next === "ai" && !user) {
-                            props.setError("登录后使用 AI 问答");
+                            props.setError(GUEST_AI_UNAVAILABLE_MESSAGE);
                             return;
                         }
                         setMode(next);
@@ -92,10 +93,16 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                     isChecking={isCheckingConnections}
                     webApps={apps}
                     onOpenApp={openApp}
+                    isGuest={!user}
                 />
                 {mode === "ai" && (
                     <p className="hero-caption">
                         问你所想，回答将在独立对话中展开
+                    </p>
+                )}
+                {!user && (
+                    <p className="hero-caption">
+                        登录后同步常用网站与便签
                     </p>
                 )}
             </section>

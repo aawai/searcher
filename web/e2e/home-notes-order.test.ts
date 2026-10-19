@@ -1247,6 +1247,12 @@ Deno.test("production home notes manual order E2E (#62)", async (t) => {
                                 ?.scrollLeft > 0
                         );
                         if (width === 1440 && theme === "light") {
+                            // Stacked cards expose their titles; hovering the
+                            // covered code center first can raise its neighbor.
+                            await page.getByRole("button", {
+                                name: "Long SSH command",
+                                exact: true,
+                            }).hover();
                             await long.hover();
                             const scrollbar = await long.evaluate(
                                 async (pre) => {

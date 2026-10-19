@@ -926,6 +926,16 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     await notesRegion.locator(".zen-inline-note").focus();
     await page.keyboard.press("ArrowLeft");
     await settlePaint();
+    await page.waitForFunction(
+        () =>
+            [...document.querySelectorAll(".zen-inline-notes")].every((
+                element,
+            ) => element.getAnimations({ subtree: true }).every((animation) =>
+                animation.playState !== "running"
+            )),
+        null,
+        { timeout: 2000 },
+    );
     const reducedMotionState = await notesRegion.evaluate((element) => ({
         reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
         runningAnimations: element.getAnimations({ subtree: true }).filter(

@@ -3,9 +3,19 @@ import { eq } from "drizzle-orm";
 import { openDatabase } from "../db/database.ts";
 import { preferences, sessions, users } from "../db/schema.ts";
 import { AuthService } from "../features/auth/service.ts";
+import {
+    AUTH_CREDENTIAL_RULES,
+    AUTH_USERNAME_PATTERN,
+} from "../shared/contracts.ts";
 
 let pipedRemainder = "";
 const decoder = new TextDecoder("utf-8");
+
+const usernameRules = AUTH_CREDENTIAL_RULES.username;
+const passwordRules = AUTH_CREDENTIAL_RULES.password;
+const usernamePattern = new RegExp(AUTH_USERNAME_PATTERN);
+const passwordLengthMessage =
+    `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
 
 function readHiddenInput(prompt: string): string {
     const encoder = new TextEncoder();
@@ -98,15 +108,20 @@ function readHiddenInput(prompt: string): string {
 }
 function normalizeUsername(raw: string): string {
     const trimmed = raw.trim().toLowerCase();
-    if (!/^[a-z0-9_]{3,32}$/.test(trimmed)) {
-        throw new Error("用户名格式不正确：需为 3–32 位的字母、数字或下划线");
+    if (!usernamePattern.test(trimmed)) {
+        throw new Error(
+            `用户名格式不正确：需为 ${usernameRules.minLength}–${usernameRules.maxLength} 位的字母、数字或下划线`,
+        );
     }
     return trimmed;
 }
 
 function validatePassword(password: string): void {
-    if (password.length < 12 || password.length > 128) {
-        throw new Error("密码长度须为 12–128 个字符");
+    if (
+        password.length < passwordRules.minLength ||
+        password.length > passwordRules.maxLength
+    ) {
+        throw new Error(passwordLengthMessage);
     }
 }
 
@@ -136,7 +151,9 @@ async function handleCreateAdmin(
             Deno.exit(1);
         }
 
-        const pass1 = readHiddenInput("请输入管理员密码 (12-128 字符): ");
+        const pass1 = readHiddenInput(
+            `请输入管理员密码 (${passwordRules.minLength}-${passwordRules.maxLength} 字符): `,
+        );
         validatePassword(pass1);
 
         const pass2 = readHiddenInput("请再次输入管理员密码确认: ");
@@ -206,7 +223,9 @@ async function handleResetAdmin(
             Deno.exit(1);
         }
 
-        const pass1 = readHiddenInput("请输入新密码 (12-128 字符): ");
+        const pass1 = readHiddenInput(
+            `请输入新密码 (${passwordRules.minLength}-${passwordRules.maxLength} 字符): `,
+        );
         validatePassword(pass1);
 
         const pass2 = readHiddenInput("请再次输入新密码确认: ");

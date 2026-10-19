@@ -7,11 +7,23 @@ import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { preferences, sessions, users } from "../../db/schema.ts";
 import { getClientIp, InMemoryRateLimiter } from "./security.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
+import {
+    AUTH_CREDENTIAL_RULES,
+    AUTH_USERNAME_PATTERN,
+} from "@shared/contracts.ts";
+
+const usernameRules = AUTH_CREDENTIAL_RULES.username;
+const passwordRules = AUTH_CREDENTIAL_RULES.password;
+const usernamePattern = new RegExp(AUTH_USERNAME_PATTERN);
+const usernameLengthMessage =
+    `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 位的字母、数字或下划线`;
+const passwordLengthMessage =
+    `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
 const usernameSchema = v.pipe(
     v.string("用户名必须是字符串"),
     v.trim(),
     v.toLowerCase(),
-    v.regex(/^[a-z0-9_]{3,32}$/, "用户名需为 3–32 位的字母、数字或下划线"),
+    v.regex(usernamePattern, usernameLengthMessage),
 );
 
 const emailSchema = v.optional(
@@ -32,8 +44,8 @@ const displayNameSchema = v.pipe(
 
 const passwordSchema = v.pipe(
     v.string("密码必须是字符串"),
-    v.minLength(12, "密码长度须为 12–128 个字符"),
-    v.maxLength(128, "密码长度须为 12–128 个字符"),
+    v.minLength(passwordRules.minLength, passwordLengthMessage),
+    v.maxLength(passwordRules.maxLength, passwordLengthMessage),
 );
 
 const loginIdentifierSchema = v.pipe(

@@ -225,13 +225,18 @@ function Layout() {
                 <nav className="top-actions" aria-label="账户与设置">
                     <Link
                         to={routes.ask}
-                        className={isAskPage
-                            ? "topbar-link topbar-link--active"
-                            : "topbar-link"}
-                        aria-label="AI 问答"
-                        title="AI 问答"
+                        className={`topbar-link${
+                            isAskPage ? " topbar-link--active" : ""
+                        }${user ? "" : " topbar-link--guest-ai"}`}
+                        aria-label={user ? "AI 问答" : "AI 问答，登录后可用"}
+                        title={user ? "AI 问答" : "AI 问答，登录后可用"}
                     >
                         <Sparkles size={19} />
+                        {!user && (
+                            <span className="topbar-guest-ai-label">
+                                登录后可用
+                            </span>
+                        )}
                     </Link>
                     <button
                         type="button"

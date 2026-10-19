@@ -10,6 +10,15 @@ export type { CanvasMotion, WallpaperMotionLevel, WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
 
 export type ThemeId = "system" | "light" | "dark";
+
+/** Shared registration and credential-change validation limits. */
+export const AUTH_CREDENTIAL_RULES = {
+    username: { minLength: 3, maxLength: 32 },
+    password: { minLength: 12, maxLength: 128 },
+} as const;
+export const AUTH_USERNAME_PATTERN =
+    `^\\s*[a-zA-Z0-9_]{${AUTH_CREDENTIAL_RULES.username.minLength},${AUTH_CREDENTIAL_RULES.username.maxLength}}\\s*$`;
+
 export type StylePreset = "zen" | "widgets";
 export type LegacyStylePreset =
     | "command"
