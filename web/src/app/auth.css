@@ -6,7 +6,7 @@
     background: var(--surface-solid);
     border: 1px solid var(--card-border);
     border-radius: var(--radius);
-    box-shadow: var(--card-highlight), var(--card-shadow);
+    box-shadow: var(--shadow-l1);
 }
 .auth-surface form {
     display: flex;

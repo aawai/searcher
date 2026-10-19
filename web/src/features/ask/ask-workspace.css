@@ -23,6 +23,7 @@
     width: 100%;
     height: auto;
     overflow: hidden;
+    isolation: isolate;
     background: var(--surface-solid);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius);
@@ -109,7 +110,7 @@
     flex-shrink: 0;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: var(--elevation-local-10);
     background: var(--surface-solid);
     padding-bottom: var(--space-2);
     border-bottom: 1px solid var(--border);
@@ -257,7 +258,7 @@
     padding: 0 var(--space-4);
     border-bottom: 1px solid var(--border);
     background: var(--surface-solid);
-    z-index: 20;
+    z-index: var(--elevation-local-20);
 }
 
 .ask-header__left {
@@ -405,7 +406,7 @@
 .ask-thread__dock {
     position: relative;
     flex-shrink: 0;
-    z-index: 20;
+    z-index: var(--elevation-local-20);
     pointer-events: none;
 }
 
@@ -415,8 +416,8 @@
     bottom: calc(100% + var(--space-2));
     left: 50%;
     transform: translateX(-50%);
-    z-index: 25;
-    box-shadow: var(--card-shadow);
+    z-index: var(--elevation-local-25);
+    box-shadow: var(--shadow-l1);
     pointer-events: auto;
 }
 
@@ -497,7 +498,7 @@
     background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--shadow-l1);
     padding: var(--space-2) var(--space-3);
     display: flex;
     flex-direction: column;
@@ -881,14 +882,14 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
 }
 
 .ask-codeblock__pre {
     padding: var(--space-3);
     margin: 0;
     overflow-x: auto;
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-code-size);
     line-height: var(--font-code-line-height);
 }
@@ -897,7 +898,7 @@
     background: var(--surface-soft);
     padding: var(--space-1) var(--space-1);
     border-radius: var(--control-radius);
-    font-family: var(--font-code-family);
+    font-family: var(--font-mono);
     font-size: var(--font-code-size);
     border: 1px solid var(--border);
 }
@@ -1009,7 +1010,7 @@
     background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--shadow-l2);
     padding: var(--space-3);
     z-index: var(--elevation-popover);
 }

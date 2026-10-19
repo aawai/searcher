@@ -39,7 +39,7 @@ function AlertDialogOverlay({
         <AlertDialogPrimitive.Backdrop
             data-slot="alert-dialog-overlay"
             className={cn(
-                "fixed inset-0 z-[var(--elevation-modal)] bg-black/80 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
+                "fixed inset-0 z-[var(--elevation-modal-backdrop)] bg-[var(--surface-scrim)] transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                 className,
             )}
             {...props}
@@ -58,7 +58,7 @@ function AlertDialogContent({
             <AlertDialogPrimitive.Popup
                 data-slot="alert-dialog-content"
                 className={cn(
-                    "fixed left-[50%] top-[50%] z-[var(--elevation-modal)] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-[var(--border)] bg-[var(--surface-solid)] p-6 shadow-lg duration-200 rounded-[var(--radius)] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
+                    "fixed left-[50%] top-[50%] z-[var(--elevation-modal)] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-[var(--border)] bg-[var(--surface-l3)] p-6 shadow-[var(--shadow-l3)] duration-200 rounded-[var(--radius)] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
                     className,
                 )}
                 {...props}
@@ -107,7 +107,7 @@ function AlertDialogTitle({
         <AlertDialogPrimitive.Title
             data-slot="alert-dialog-title"
             className={cn(
-                "text-lg font-semibold text-[var(--foreground)]",
+                "text-[length:var(--font-component-title-size)] font-bold text-[var(--foreground)]",
                 className,
             )}
             {...props}

@@ -105,7 +105,7 @@
     background: var(--surface-solid);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-l2);
     z-index: var(--elevation-suggestions);
     padding: var(--space-1);
     max-height: 360px;
@@ -176,7 +176,7 @@
 .suggestion-item.active .suggestion-badge {
     background: var(--surface-solid);
     color: var(--accent);
-    box-shadow: var(--shadow-suggestion-badge-selected);
+    border: 1px solid var(--accent-border);
 }
 .engine-menu {
     min-width: 248px;
@@ -184,9 +184,9 @@
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--shadow-engine-menu);
+    box-shadow: var(--shadow-l2);
     color: var(--foreground);
-    z-index: var(--elevation-popover);
+    z-index: var(--elevation-menu);
 }
 .engine-option {
     min-height: 44px;

@@ -38,11 +38,7 @@ function isAllowedCssShadow(value: string): boolean {
     if (v === "none" || v === "inherit" || v === "initial" || v === "unset") {
         return true;
     }
-    return (
-        v.includes("var(--shadow") ||
-        v.includes("var(--card-shadow)") ||
-        v.includes("var(--accent-glow)")
-    );
+    return v.includes("var(--shadow");
 }
 
 function isAllowedCssFontSize(value: string): boolean {
@@ -225,6 +221,26 @@ export function scanCssCode(file: string, cssText: string): UiViolation[] {
 
         // Documented rules: check design-system permissions
         if (isDesignSystemAllowed(file, prop, value)) {
+            return;
+        }
+        // Numeric z-index values must use an elevation token. Runtime token expressions
+        // and `auto` remain valid because they do not encode a local static layer.
+        if (prop === "z-index") {
+            if (
+                /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?(?:\s*!important)?$/i
+                    .test(value)
+            ) {
+                const snippet = normalizeSnippet(`${prop}: ${value}`);
+                violations.push({
+                    file,
+                    rule: "raw-z-index",
+                    property: prop,
+                    value: snippet,
+                    line,
+                    column: col,
+                    fingerprint: `raw-z-index:${prop}:${snippet}`,
+                });
+            }
             return;
         }
 

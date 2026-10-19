@@ -90,6 +90,7 @@ export async function mountVerticalWritingModeRepro(
             box-sizing: border-box;
             position: relative;
             width: 100%;
+            isolation: isolate;
             min-width: 0;
             height: ${metrics.height}px;
             overflow: visible;
@@ -97,7 +98,7 @@ export async function mountVerticalWritingModeRepro(
         .issue147-vertical-repro-sheets {
             box-sizing: border-box;
             position: absolute;
-            z-index: 0;
+            z-index: var(--elevation-local-0);
             inset: 0 auto auto 50%;
             width: ${metrics.width}px;
             pointer-events: none;
@@ -118,7 +119,7 @@ export async function mountVerticalWritingModeRepro(
         .issue147-vertical-repro-editor {
             box-sizing: border-box;
             position: relative;
-            z-index: 1;
+            z-index: var(--elevation-local-1);
             width: ${metrics.width}px;
             height: ${metrics.height}px;
             margin: 0 auto;

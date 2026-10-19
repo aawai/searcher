@@ -323,6 +323,7 @@ role，不把 muted 文字色当作 surface。
 | row / control / inline                   | --space-row-gap / --space-control-gap / --space-inline-gap                                    |
 | page / section / component title         | --font-page-title-* / --font-section-title-* / --font-component-title-*                       |
 | body / caption / metadata / code         | --font-body-* / --font-caption-* / --font-metadata-* / --font-code-*                          |
+| font family                              | --font-sans / --font-mono                                                                     |
 | weight                                   | --font-title-weight / --font-label-weight / --font-body-weight                                |
 | card / control / input / search radius   | --radius / --control-radius / --input-radius / --search-radius                                |
 | control / compact / input / touch height | --control-height / --control-compact-height / --control-input-height / --control-touch-target |
@@ -335,6 +336,16 @@ role，不把 muted 文字色当作 surface。
 每页最多一个 h1；section 使用 h2；component title 不抬高到 page
 层级。caption/muted 不承载唯一关键提示。code 使用 code role/monospace。
 
+强调色每种仅在一个 palette block 中通过 `light-dark()` 声明明暗两套
+accent、foreground、hover、active；`color-scheme` 由 resolved theme 决定。
+soft/subtle/border 统一引用 `var(--accent)` 与主题混合比例，mono 保留较弱的既有
+中性比例；`--ring` 始终等于不透明 accent，不再派生装饰性 glow。
+
+中文页面使用系统优先的 sans 字体栈，PingFang / Hiragino / Microsoft YaHei 先于
+Noto Sans SC；code 使用含 CJK 回退的 mono 栈。中文 metadata 为 13px， 其他语言为
+12px；中文 wordmark 不使用负字距。标题与标签复用共享字重角色， 不再写
+690/750/780 等非标准字重。
+
 上表是常规页面与控件的 canonical 命名，不提供第二套同义 role。Home 保留
 `--space-section`、`--space-card`、`--space-card-gap` 的既有响应式几何语义，
 不是常规 Card Token 的可互换 alias：`--space-card` 在 640px 以下为 16px，
@@ -344,17 +355,36 @@ breakpoint，不能按初始值相同全局替换。
 
 ## Surface / elevation
 
-| level                  | 背景                     | 边框                        | 阴影                | blur                                          | 状态                                                         |
-| ---------------------- | ------------------------ | --------------------------- | ------------------- | --------------------------------------------- | ------------------------------------------------------------ |
-| L0 Canvas              | --surface-l0 / wallpaper | 无                          | 无                  | 壁纸 runtime filter                           | 无交互                                                       |
-| L1 Content             | --surface-l1             | --border-subtle             | --shadow-l1         | 壁纸 material 才用 --material-blur-content    | hover 不改变 geometry；selected 有语义标记                   |
-| L2 Primary interaction | --surface-l2             | --surface-l2-border         | --shadow-l2         | 壁纸 material 可用 --material-blur-search     | focus/loading/error 不改变 geometry                          |
-| L3 Overlay             | --surface-l3             | --surface-l3-border         | --shadow-l3         | 不叠加大 blur                                 | 破坏性 Dialog/AlertDialog 管理 focus/open/close              |
-| Workspace              | --surface-workspace      | --border-subtle             | --shadow-workspace  | 不叠加大 blur                                 | 桌面非模态 aside (elevation 45)；移动端 Sheet (elevation 50) |
-| Navigation             | --surface-navigation     | --surface-navigation-border | --shadow-navigation | 壁纸 material 可用 --material-blur-navigation | hover/current/focus 不升为 L2                                |
+| level                  | 背景                     | 边框                        | 阴影                | blur                                          | 状态                                                       |
+| ---------------------- | ------------------------ | --------------------------- | ------------------- | --------------------------------------------- | ---------------------------------------------------------- |
+| L0 Canvas              | --surface-l0 / wallpaper | 无                          | 无                  | 壁纸 runtime filter                           | 无交互                                                     |
+| L1 Content             | --surface-l1             | --border-subtle             | --shadow-l1         | 壁纸 material 才用 --material-blur-content    | hover 不改变 geometry；selected 有语义标记                 |
+| L2 Primary interaction | --surface-l2             | --surface-l2-border         | --shadow-l2         | 壁纸 material 可用 --material-blur-search     | focus/loading/error 不改变 geometry                        |
+| L3 Overlay             | --surface-l3             | --surface-l3-border         | --shadow-l3         | 不叠加大 blur                                 | 破坏性 Dialog/AlertDialog 管理 focus/open/close            |
+| Workspace              | --surface-workspace      | --border-subtle             | --shadow-workspace  | 不叠加大 blur                                 | 桌面非模态 aside（workspace 层）；移动端 Sheet（sheet 层） |
+| Navigation             | --surface-navigation     | --surface-navigation-border | --shadow-navigation | 壁纸 material 可用 --material-blur-navigation | hover/current/focus 不升为 L2                              |
 
 material 与 z-index 分离：--elevation-* 只表达叠放顺序，不授权更强阴影。普通
 content 不叠加强 border/glow/highlight。
+
+### Shared overlays and quiet controls
+
+- 全局叠放顺序唯一由 `tokens.css` 的 elevation 表拥有： canvas < window < dock <
+  workspace < sheet < modal < popover < menu < suggestions <
+  toast。局部装饰、卡片内部与运行时窗口/便签排序不改变所在 stacking context
+  的全局层级；拖拽不得绕过 Sheet 或 modal 的交互边界。 便签拖拽使用 canvas
+  内部的 CSS integer ceiling token，避免长期持久化排序 超过普通 overlay band
+  后反而压住正在拖拽的便签；它不提高 canvas 的全局层级。
+- Dialog 与 AlertDialog 共用 scrim、surface、radius、L3 shadow 和
+  component-title typography；嵌套确认按 Portal 次序出现在原 Dialog 之上，
+  必须以实际 pointer hit-test 验证。Popover、Menu 消费共享圆角与 L2 shadow，
+  不在组件或 feature 写死全局 z-index。 Scrim 使用 `--surface-scrim`（45%
+  黑），不叠加 backdrop blur。
+- Switch、Radio、Slider 的选中态使用填充、边框与语义标记，不叠加强调色光晕。
+  Primary Button 使用纯色 accent / hover / active，无渐变或装饰阴影；
+  focus-visible 继续使用不透明 `--ring`，不以阴影代替焦点轮廓。
+- 普通表面的 elevation shadow 只来自 L1–L3；Navigation 保留较弱的专用
+  shadow，便签纸张保留已有领域阴影。选择轮廓与焦点环不是 elevation。
 
 ### Workspace semantic surface
 
@@ -373,7 +403,7 @@ AlertDialog）具有严格不同的交互与视觉语义：
   listener 或提高 banner elevation，受限窗口的 `viewportInsets` 与移动 Sheet
   的几何契约保持独立。采用 `--surface-workspace: var(--surface-solid)`（非模态
   L3
-  覆盖层）、`--shadow-workspace: var(--shadow-l2)`、`--elevation-workspace: 45`。面板不设
+  覆盖层）、`--shadow-workspace: var(--shadow-l2)`、`--elevation-workspace`。面板不设
   backdrop 背景遮罩，不执行全局
   focus-trap；主页底层的搜索框与画布内容保持可直接交互，仅阻断面板容器内的滚动与按键；支持
   `Escape` 键或头部收起按钮关闭，关闭后焦点平滑归还至唤起按钮。
@@ -381,7 +411,7 @@ AlertDialog）具有严格不同的交互与视觉语义：
   `--elevation-sheet: 50` 与 `--elevation-sheet-backdrop: 49`，最大高度受
   `--workspace-mobile-height: 820px`（`min(88dvh, var(--workspace-mobile-height))`）约束，顶部带有居中抓手条（`.workspace-grip`），支持手势向下滑动收起并严格避让底部
   `safe-area-inset-bottom`。
-- **真正的模态语义保留**：破坏性操作（如删除文件夹、放弃未保存表单修改）必须使用模态确认弹窗（`AlertDialog`，`--surface-l3`、`--elevation-modal: 71`、完整
+- **真正的模态语义保留**：破坏性操作（如删除文件夹、放弃未保存表单修改）必须使用模态确认弹窗（`AlertDialog`，`--surface-l3`、`--elevation-modal`、完整
   backdrop 与
   focus-trap），严禁将普通工作区浏览和常规表单伪装成模态弹窗，也严禁将破坏性操作静默退化为非模态。
 
@@ -505,7 +535,7 @@ AlertDialog）具有严格不同的交互与视觉语义：
   上下沿由正常 Chrome/Dock 实测值限定，正文独立滚动；打开/关闭仅操作 domain
   route，不写非法 frame。恢复可用视口后才创建普通窗口。
 - window 使用 `--window-surface/border`、`--shadow-window`、`--radius-window`、
-  `--window-elevation`、`--window-chrome-height` 与
+  `--elevation-window`、`--window-chrome-height` 与
   `--window-resize-hit`；不叠加 blur。
 - 默认 Apps/Notes/Note 尺寸分别为 min(760,72%)/min(720,78%)、
   min(640,62%)/min(680,74%)、min(560,54%)/min(600,68%)，以 safe rect
@@ -685,10 +715,11 @@ context。壁纸运行时由组件
 CSS 变量架构：
 
 - **容器 `.wallpaper-surface`**：`fixed`（`--embedded` 时为
-  `absolute`），`inset: 0`，`z-index: -1`（`--embedded` 时为
-  `0`）。默认拥有基底渐变（暗色主题为
-  `linear-gradient(155deg, color-mix(in srgb, var(--accent) 6%, #18181b), #09090b 52%, color-mix(in srgb, var(--accent) 4%, #18181b))`）；在
-  `data-tone="mono"` 时切换为纯中性纯色底色以杜绝彩色渐变泄漏。
+  `absolute`），`inset: 0`，消费 wallpaper / local-base 层级 Token。 默认渐变以
+  `--surface-soft` 为两端、`--background` 为中点； 强调色保留浅色首端
+  3%、深色首端 6%、末端 4% 的混合预算。 mono 默认画布消费
+  `--wallpaper-base-neutral`；用户指定的 gradient/image、 中性 ambient
+  光、mask、filter 和焦点构图保持原行为。
 - **图像与溢出层 `.wallpaper-surface__overscan`（内部 z-index: 0）**：通过
   `--wallpaper-overscan-x` 与 `--wallpaper-overscan-y`
   负向内嵌裁切容器（`inset: var(--wallpaper-overscan-y) var(--wallpaper-overscan-x)`）；内含真实图像层
@@ -976,7 +1007,8 @@ breadcrumb/上级；local tab replace，跨 workspace 入口保持 history。
   - 采用纯 CSS
     阶梯与微倾斜槽位定位（`--notes-board-step: 54px`，`--notes-board-tilt: 1.2deg`），槽位
     0~4 交错应用 `--space-1`、`--space-4`、`--space-2`、`--space-5`、`--space-3`
-    的内联偏移与正负倾角；悬浮或聚焦（`:hover, :focus-within`）时平整（`transform: none`）并提升层级（`z-index: 6`）。
+    的内联偏移与正负倾角；悬浮或聚焦（`:hover, :focus-within`）时平整（`transform: none`）并提升至局部
+    raised 层。
   - 网格采用内在高度布局（`grid-area: 1 / 1; align-self: start` 与
     `margin-block-start`），不向服务器写入或持久化绝对 x/y
     坐标；在桌面视口（>=768px）且卡片容器宽于 280px
@@ -1074,10 +1106,10 @@ WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 Conte
   prop，不以 feature selector 重写 SettingsCard。
 - 不可逆操作统一使用 AlertDialog；取消和 Escape 不执行保存或删除，pending
   禁用确认/取消，关闭恢复到触发控件。图标重取失败不保存网址或覆盖原图标。
-- AlertDialog 的 overlay/popup 使用现有 `--elevation-modal`，按 Portal DOM
-  次序叠在原 Dialog 之后；不使用低于原 Dialog 的固定 `z-50`， 也不为 feature
-  添加临时 z-index。嵌套确认必须通过真实 pointer hit-test， 不能只凭 DOM
-  可见或键盘可达判定完成。
+- AlertDialog 遮罩使用 `--elevation-modal-backdrop`，popup 使用
+  `--elevation-modal`，按 Portal DOM 次序叠在原 Dialog 之后；不使用低于原 Dialog
+  的固定 `z-50`，也不为 feature 添加临时 z-index。 嵌套确认必须通过真实 pointer
+  hit-test，不能只凭 DOM 可见或键盘可达判定完成。
 
 PageShell 的 Utility / Management / Workbench / Search archetype 唯一拥有页面
 width、max-width、margin 与 page spacing；不得叠加 legacy .page，或以 feature
@@ -1110,8 +1142,10 @@ root 的居中 margin + layout max-width 再建一套页面 geometry。
 ## Static guard
 
 deno task check:ui 检查业务 CSS/TSX 新增 raw
-shadow/font-size/radius/spacing、inline visual style 与 arbitrary
-Tailwind。baseline 精确到内容和次数，不按文件放行。runtime exception 见
+shadow/font-size/radius/spacing/z-index、inline visual style 与 arbitrary
+Tailwind。静态数字 z-index、zIndex 与 z-N utility 必须迁移到 Token；
+运行时窗口/便签的排序表达式保持允许。baseline
+精确到内容和次数，不按文件放行。runtime exception 见
 scripts/ui-guard/exceptions.ts。删除旧违规同时缩减
 baseline，不将迁移后的新增违规加入 baseline。
 

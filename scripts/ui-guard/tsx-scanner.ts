@@ -49,8 +49,7 @@ function isAllowedShadow(value: string): boolean {
     ) {
         return true;
     }
-    return v.includes("var(--shadow") || v.includes("var(--card-shadow)") ||
-        v.includes("var(--accent-glow)");
+    return v.includes("var(--shadow");
 }
 
 function isAllowedFontSize(value: string): boolean {
@@ -153,6 +152,18 @@ function checkTailwindClass(
             line,
             column: col,
             fingerprint: `raw-spacing-literal:className:${cls}`,
+        };
+    }
+    // Static Tailwind stacking levels, including variants and negative utilities.
+    if (/^(?:[^:]+:)*-?z-\d+$/.test(cls)) {
+        return {
+            file,
+            rule: "raw-z-index",
+            property: "className",
+            value: cls,
+            line,
+            column: col,
+            fingerprint: `raw-z-index:className:${cls}`,
         };
     }
 
@@ -260,6 +271,32 @@ export function scanTsxCode(file: string, code: string): UiViolation[] {
                                 const posLine = line + 1;
                                 const posCol = character + 1;
 
+                                // Runtime z-index expressions and elevation tokens are
+                                // allowed; only literal numeric levels are forbidden.
+                                if (
+                                    propName === "zIndex" ||
+                                    propName === "z-index"
+                                ) {
+                                    if (
+                                        /^(?:[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|["'`][+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?["'`])$/
+                                            .test(propValue.trim())
+                                    ) {
+                                        const snippet = normalizeSnippet(
+                                            `${propName}: ${propValue}`,
+                                        );
+                                        violations.push({
+                                            file,
+                                            rule: "raw-z-index",
+                                            property: propName,
+                                            value: snippet,
+                                            line: posLine,
+                                            column: posCol,
+                                            fingerprint:
+                                                `raw-z-index:${propName}:${snippet}`,
+                                        });
+                                    }
+                                    continue;
+                                }
                                 // Check runtime exceptions
                                 if (
                                     isWallpaperFilterException(

@@ -121,7 +121,7 @@ function Floating(
             style={{
                 left: point.x,
                 top: point.y,
-                zIndex: isDragging ? 2000 : point.z,
+                zIndex: isDragging ? "var(--elevation-note-drag)" : point.z,
                 transform: CSS.Translate.toString(transform),
                 "--note-tilt": getNoteTilt(note.id),
             } as CSSProperties}

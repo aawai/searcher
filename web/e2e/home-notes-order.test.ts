@@ -2043,7 +2043,7 @@ Deno.test("Home floating-note placement and responsive matrix", async () => {
                 x: 700,
                 y: 420,
                 width: null,
-                zIndex: 3,
+                zIndex: 2000,
                 expanded: true,
             },
         ];
@@ -2298,8 +2298,35 @@ Deno.test("Home floating-note placement and responsive matrix", async () => {
         handleBox.y + handleBox.height / 2 + 50,
         { steps: 10 },
     );
+    const dragLayer = await notePosition.evaluate((element) => {
+        const canvas = element.closest(".floating-notes--canvas")!;
+        const peers = Array.from(canvas.querySelectorAll(".note-position"))
+            .filter((peer) => peer !== element);
+        return {
+            active: Number(getComputedStyle(element).zIndex),
+            highestPeer: Math.max(
+                ...peers.map((peer) => Number(getComputedStyle(peer).zIndex)),
+            ),
+            canvas: Number(getComputedStyle(canvas).zIndex),
+            workspace: Number(
+                getComputedStyle(document.documentElement).getPropertyValue(
+                    "--elevation-workspace",
+                ),
+            ),
+        };
+    });
     await page.mouse.up();
     await dragSave;
+    assertEquals(
+        dragLayer.active > dragLayer.highestPeer,
+        true,
+        "Dragging a note must remain above notes with long-lived saved ranks",
+    );
+    assertEquals(
+        dragLayer.canvas < dragLayer.workspace,
+        true,
+        "Canvas drag must not escape above a workspace",
+    );
     await page.waitForFunction(
         async ({ id, title }) => {
             const response = await fetch("/api/notes");

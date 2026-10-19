@@ -13,11 +13,13 @@ function PopoverPortal(props: PopoverPrimitive.Portal.Props) {
     return <PopoverPrimitive.Portal data-slot="popover-portal" {...props} />;
 }
 
-function PopoverPositioner(props: PopoverPrimitive.Positioner.Props) {
+function PopoverPositioner(
+    { className, ...props }: PopoverPrimitive.Positioner.Props,
+) {
     return (
         <PopoverPrimitive.Positioner
             data-slot="popover-positioner"
-            style={{ zIndex: 1000, ...props.style }}
+            className={cn("z-[var(--elevation-popover)]", className)}
             {...props}
         />
     );
@@ -31,7 +33,7 @@ function PopoverPopup({
         <PopoverPrimitive.Popup
             data-slot="popover-content"
             className={cn(
-                "z-50 w-72 rounded-md border border-border bg-surface-solid p-3 text-foreground shadow-md outline-none",
+                "w-72 rounded-[var(--radius)] border border-border bg-surface-solid p-3 text-foreground shadow-[var(--shadow-l2)] outline-none",
                 className,
             )}
             {...props}

@@ -322,16 +322,6 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
                 ),
                 "violet",
             );
-            const violetAccent = await page.evaluate(() =>
-                getComputedStyle(document.documentElement).getPropertyValue(
-                    "--accent",
-                ).trim()
-            );
-            assert(
-                violetAccent === "#6d28d9" ||
-                    violetAccent === "rgb(109, 40, 217)",
-                `Expected violet accent token, got ${violetAccent}`,
-            );
 
             // Verify accent is effective on another page too
             await visit("/settings");

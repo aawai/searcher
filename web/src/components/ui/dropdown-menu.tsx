@@ -22,7 +22,6 @@ function DropdownMenuPositioner(props: MenuPrimitive.Positioner.Props) {
     return (
         <MenuPrimitive.Positioner
             data-slot="dropdown-menu-positioner"
-            style={{ zIndex: 1000, ...props.style }}
             {...props}
         />
     );

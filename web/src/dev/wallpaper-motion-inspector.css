@@ -8,7 +8,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-l2);
-    z-index: 9999;
+    z-index: var(--elevation-dev-inspector);
     font-size: var(--font-caption-size);
     color: var(--foreground);
     display: flex;
@@ -46,7 +46,7 @@
 }
 
 .wallpaper-motion-inspector__value {
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-weight: 500;
 }
 

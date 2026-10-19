@@ -56,7 +56,7 @@
     box-shadow: var(--shadow-launcher-glyph);
     border-radius: var(--radius-launcher-tile);
     color: var(--accent);
-    font-weight: 750;
+    font-weight: 700;
     font-size: var(--font-launcher-glyph);
     overflow: hidden;
 }
@@ -158,6 +158,11 @@
     justify-content: start;
     gap: var(--space-launcher-gap-y) var(--space-launcher-gap-x);
 }
+.launcher-grid,
+.launcher-folder-contents {
+    isolation: isolate;
+}
+
 .launcher-grid-boundary {
     grid-row: 1;
     width: 0;
@@ -212,7 +217,7 @@
     position: relative;
 }
 .launcher-tile.is-dragging {
-    z-index: 4;
+    z-index: var(--elevation-local-4);
     opacity: .35;
 }
 .launcher-tile.is-over {
@@ -237,7 +242,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 5;
+    z-index: var(--elevation-local-5);
     display: flex;
     align-items: center;
     gap: var(--space-1);
