@@ -99,6 +99,9 @@ export function ConversationWorkspace({
             conversation?.activeLeafMessageId,
         );
     }, [allMessages, conversation?.activeLeafMessageId]);
+    const latestAssistantMessage = branchMessages.findLast((message) =>
+        message.role === "assistant"
+    );
 
     const activeModel = models.find((m) => m.id === selectedModelId);
 
@@ -160,6 +163,14 @@ export function ConversationWorkspace({
                 />
 
                 <SearcherThread
+                    isStreaming={isStreaming}
+                    streamingTextLength={isStreaming &&
+                            latestAssistantMessage?.status === "streaming"
+                        ? latestAssistantMessage.content.length
+                        : 0}
+                    terminalMessageStatus={latestAssistantMessage?.status ??
+                        null}
+                    onSamplePrompt={onDraftChange}
                     models={models}
                     modelOptions={modelOptions}
                     selectedModelId={selectedModelId}

@@ -1,4 +1,4 @@
-import { Folder, NotebookPen, StickyNote } from "lucide-react";
+import { AppWindow, NotebookPen, StickyNote } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import type { WorkspaceKind } from "./workspace-state.ts";
 
@@ -30,7 +30,7 @@ export function WorkspaceNavigation(
                     onClick={() => onSelect(workspace)}
                 >
                     {workspace === "apps"
-                        ? <Folder size={18} />
+                        ? <AppWindow size={16} />
                         : workspace === "notes"
                         ? <StickyNote size={18} />
                         : <NotebookPen size={18} />}

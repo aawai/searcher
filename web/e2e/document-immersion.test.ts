@@ -137,9 +137,9 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         true,
     );
     assertEquals(contentPatches, []);
-    for (const mode of ["连续", "页面", "源码"]) {
+    for (const mode of ["编辑", "分页", "Markdown 源码"]) {
         await win.getByRole("button", { name: mode, exact: true }).click();
-        const body = mode === "源码"
+        const body = mode === "Markdown 源码"
             ? win.getByRole("textbox", {
                 name: "Markdown 源码正文",
                 exact: true,
@@ -148,7 +148,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         await body.waitFor();
         const retained = await body.elementHandle();
         assert(retained);
-        const canonical = mode === "源码"
+        const canonical = mode === "Markdown 源码"
             ? await body.inputValue()
             : await body.textContent();
         for (let cycle = 0; cycle < 20; cycle++) {
@@ -162,7 +162,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
                 `${mode} cycle ${cycle} must retain its live editor`,
             );
             assertEquals(
-                mode === "源码"
+                mode === "Markdown 源码"
                     ? await body.inputValue()
                     : await body.textContent(),
                 canonical,
@@ -183,18 +183,19 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         }
     }
     for (let cycle = 0; cycle < 20; cycle++) {
-        await win.getByRole("button", { name: "连续", exact: true }).click();
+        await win.getByRole("button", { name: "编辑", exact: true }).click();
         await win.locator(".ProseMirror").waitFor();
         const rich = await win.locator(".ProseMirror").elementHandle();
         assert(rich);
-        await win.getByRole("button", { name: "页面", exact: true }).click();
+        await win.getByRole("button", { name: "分页", exact: true }).click();
         assert(
             await rich.evaluate((node) =>
                 node === document.querySelector(".ProseMirror")
             ),
             "continuous/page transitions must retain the rich editor",
         );
-        await win.getByRole("button", { name: "源码", exact: true }).click();
+        await win.getByRole("button", { name: "Markdown 源码", exact: true })
+            .click();
         assertEquals(
             await win.getByRole("textbox", {
                 name: "Markdown 源码正文",
@@ -215,7 +216,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         doc.id,
     );
     assertEquals(saved.version, doc.version);
-    await win.getByRole("button", { name: "连续", exact: true }).click();
+    await win.getByRole("button", { name: "编辑", exact: true }).click();
     await win.locator(".ProseMirror").click();
     await page.keyboard.press("Control+End");
     await page.keyboard.insertText(" retained-undo-147");
@@ -238,7 +239,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         };
     });
     const historyCyclePatchCount = contentPatches.length;
-    for (const mode of ["连续", "页面"]) {
+    for (const mode of ["编辑", "分页"]) {
         await win.getByRole("button", { name: mode, exact: true }).click();
         await stableLayout(page);
         for (let cycle = 0; cycle < 20; cycle++) {
@@ -278,7 +279,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         historyCyclePatchCount,
         "saved history/selection cycles must not write content",
     );
-    await win.getByRole("button", { name: "连续", exact: true }).click();
+    await win.getByRole("button", { name: "编辑", exact: true }).click();
     await win.getByRole("button", { name: "撤销", exact: true }).click();
     await waitForDocument(
         page,

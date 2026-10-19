@@ -453,8 +453,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 name: "打开 State Beta",
                 exact: true,
             }).click({ button: "right" });
-            await page.getByRole("menuitem", { name: "删除", exact: true })
-                .click();
+            await page.getByRole("menuitem", {
+                name: "移至回收站",
+                exact: true,
+            }).click();
             const confirm = page.getByRole("alertdialog");
             if (await confirm.isVisible()) {
                 await confirm.getByRole("button", { name: "删除", exact: true })

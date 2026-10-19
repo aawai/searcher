@@ -1,9 +1,12 @@
-import { ThreadPrimitive } from "@assistant-ui/react";
-import { useEffect, useRef } from "react";
+import { ThreadPrimitive, useAui } from "@assistant-ui/react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button.tsx";
-import type { AiModelDto } from "../../../../src/features/ai/types.ts";
+import type {
+    AiMessageDto,
+    AiModelDto,
+} from "../../../../src/features/ai/types.ts";
 import type {
     AiCapabilitiesDto,
     GenerationConfig,
@@ -14,8 +17,17 @@ import { SearcherAssistantMessage } from "./SearcherAssistantMessage.tsx";
 import { SearcherComposer } from "./SearcherComposer.tsx";
 import type { ModelOption } from "../../components/searcher/ModelSelector.tsx";
 import { routes } from "../../app/routes.ts";
+const SAMPLE_PROMPTS = [
+    "用一个生活化例子解释机器学习",
+    "帮我设计一周的健康饮食计划",
+    "比较远程办公与办公室办公的优缺点",
+];
 
 interface SearcherThreadProps {
+    isStreaming: boolean;
+    streamingTextLength: number;
+    terminalMessageStatus: AiMessageDto["status"] | null;
+    onSamplePrompt: (prompt: string) => void;
     models: AiModelDto[];
     modelOptions: ModelOption[];
     selectedModelId: string | null;
@@ -33,6 +45,10 @@ interface SearcherThreadProps {
 }
 
 export function SearcherThread({
+    isStreaming,
+    streamingTextLength,
+    terminalMessageStatus,
+    onSamplePrompt,
     models,
     modelOptions,
     selectedModelId,
@@ -47,6 +63,12 @@ export function SearcherThread({
     isDefaultGenerationConfig,
 }: SearcherThreadProps) {
     const threadRef = useRef<HTMLDivElement>(null);
+    const aui = useAui();
+    const [liveAnnouncement, setLiveAnnouncement] = useState("");
+    const streamingTextLengthRef = useRef(streamingTextLength);
+    streamingTextLengthRef.current = streamingTextLength;
+    const wasStreamingRef = useRef(false);
+    const lastAnnouncedLengthRef = useRef(0);
     useEffect(() => {
         const viewport = globalThis.visualViewport;
         const thread = threadRef.current;
@@ -71,8 +93,43 @@ export function SearcherThread({
             globalThis.removeEventListener("resize", update);
         };
     }, []);
+    useEffect(() => {
+        if (!isStreaming) return;
+        wasStreamingRef.current = true;
+        lastAnnouncedLengthRef.current = streamingTextLengthRef.current;
+        setLiveAnnouncement("正在生成回答。");
+        const interval = globalThis.setInterval(() => {
+            const length = streamingTextLengthRef.current;
+            if (length <= lastAnnouncedLengthRef.current) return;
+            lastAnnouncedLengthRef.current = length;
+            setLiveAnnouncement(`回答仍在生成，已生成约 ${length} 个字。`);
+        }, 10_000);
+        return () => globalThis.clearInterval(interval);
+    }, [isStreaming]);
+
+    useEffect(() => {
+        if (isStreaming || !wasStreamingRef.current) return;
+        wasStreamingRef.current = false;
+        setLiveAnnouncement(
+            terminalMessageStatus === "failed"
+                ? "回答生成失败，错误详情见当前消息。"
+                : terminalMessageStatus === "interrupted"
+                ? "回答已中断，详情见当前消息。"
+                : terminalMessageStatus === "complete"
+                ? "回答生成完成。"
+                : "生成请求已结束。",
+        );
+    }, [isStreaming, terminalMessageStatus]);
     return (
         <ThreadPrimitive.Root ref={threadRef} className="ask-thread">
+            <div
+                className="sr-only ask-thread__live-status"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
+                {liveAnnouncement}
+            </div>
             {/* Empty state: welcome & composer centered together */}
             <ThreadPrimitive.Empty>
                 <div className="ask-empty-layout">
@@ -99,6 +156,37 @@ export function SearcherThread({
                                 </Link>
                             )}
                         </div>
+                        {selectedModelId && (
+                            <div
+                                className="ask-empty-prompts"
+                                role="group"
+                                aria-label="示例问题"
+                            >
+                                {SAMPLE_PROMPTS.map((prompt) => (
+                                    <Button
+                                        key={prompt}
+                                        type="button"
+                                        variant="outline"
+                                        className="ask-empty-prompt"
+                                        onClick={() => {
+                                            // Update the runtime immediately and keep the parent draft in sync.
+                                            aui.composer.setText(prompt);
+                                            onSamplePrompt(prompt);
+                                            globalThis.requestAnimationFrame(
+                                                () =>
+                                                    document.querySelector<
+                                                        HTMLTextAreaElement
+                                                    >(
+                                                        ".ask-empty-composer-wrap .ask-composer__textarea",
+                                                    )?.focus(),
+                                            );
+                                        }}
+                                    >
+                                        {prompt}
+                                    </Button>
+                                ))}
+                            </div>
+                        )}
 
                         {selectedModelId && (
                             <div className="ask-empty-composer-wrap">

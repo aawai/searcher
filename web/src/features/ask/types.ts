@@ -64,7 +64,11 @@ export interface StreamMeta {
     modelId?: string;
 }
 
+export type AskMessageDto = AiMessageDto & {
+    failureReason?: string;
+};
+
 export interface ConversationFullData {
     conversation: AiConversationDto;
-    messages: AiMessageDto[];
+    messages: AskMessageDto[];
 }

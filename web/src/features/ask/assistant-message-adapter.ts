@@ -1,8 +1,25 @@
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import type { AiMessageDto } from "./types.ts";
+import type { AskMessageDto } from "./types.ts";
+
+const MAX_FAILURE_REASON_LENGTH = 180;
+
+export function sanitizeFailureReason(reason: unknown): string {
+    const normalized = (typeof reason === "string" ? reason : "")
+        .replace(
+            /[\p{Cc}\p{Cf}]/gu,
+            " ",
+        )
+        .replace(/\s+/g, " ")
+        .trim();
+    if (!normalized) return "模型生成失败，请重试。";
+    const characters = Array.from(normalized);
+    return characters.length > MAX_FAILURE_REASON_LENGTH
+        ? `${characters.slice(0, MAX_FAILURE_REASON_LENGTH - 1).join("")}…`
+        : normalized;
+}
 
 export function convertAiMessageToThreadMessageLike(
-    msg: AiMessageDto,
+    msg: AskMessageDto,
 ): ThreadMessageLike {
     let status: ThreadMessageLike["status"] = undefined;
 
@@ -15,7 +32,7 @@ export function convertAiMessageToThreadMessageLike(
             status = {
                 type: "incomplete",
                 reason: "error",
-                error: "生成失败",
+                error: sanitizeFailureReason(msg.failureReason),
             };
         } else {
             status = { type: "complete", reason: "stop" };

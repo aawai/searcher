@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useState } from "react";
-import { Folder, LayoutGrid, NotebookPen, StickyNote } from "lucide-react";
+import { AppWindow, LayoutGrid, NotebookPen, StickyNote } from "lucide-react";
+import { DESKTOP_SHORTCUTS } from "./desktop-shortcuts.ts";
 import type { WindowPreview } from "./DesktopOverview.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { DesktopState } from "./desktop-state.ts";
@@ -128,7 +129,7 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                             onClick={() => onOpen(item.kind)}
                         >
                             {item.kind === "apps"
-                                ? <Folder size={18} />
+                                ? <AppWindow size={20} />
                                 : item.kind === "notes"
                                 ? <StickyNote size={18} />
                                 : <NotebookPen size={18} />}
@@ -147,10 +148,12 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                         variant="ghost"
                         className="desktop-dock-item"
                         aria-label="窗口总览"
+                        aria-keyshortcuts={DESKTOP_SHORTCUTS.overview.aria}
+                        title={`窗口总览（${DESKTOP_SHORTCUTS.overview.label}）`}
                         aria-pressed={overviewOpen}
                         onClick={onOverview}
                     >
-                        <LayoutGrid size={18} />
+                        <LayoutGrid size={20} />
                         <span>总览</span>
                     </Button>
                 )}

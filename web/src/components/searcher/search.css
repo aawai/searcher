@@ -155,9 +155,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.suggestion-match {
-    opacity: .55;
-}
 .suggestion-completion {
     font-weight: 600;
 }
@@ -288,4 +285,23 @@
     justify-content: center;
     gap: var(--space-control-gap);
     width: 100%;
+}
+
+.search-suggestions-status {
+    margin: 0;
+    padding: var(--space-control-gap) var(--space-3);
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+}
+
+@media (pointer: coarse) {
+    .search-frame {
+        padding-block: 0;
+    }
+    .search-engine,
+    .search-submit,
+    .suggestion-item {
+        min-height: var(--control-touch-target);
+        min-width: var(--control-touch-target);
+    }
 }

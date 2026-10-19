@@ -24,8 +24,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { Button } from "../../components/ui/button.tsx";
-import type { AiMessageDto, SourceCitation } from "./types.ts";
 import { MessageDetailsDialog } from "./MessageDetailsDialog.tsx";
+import type { AskMessageDto, SourceCitation } from "./types.ts";
+import { sanitizeFailureReason } from "./assistant-message-adapter.ts";
 import "../../components/searcher/markdown.css";
 
 function CodeBlock({
@@ -101,7 +102,9 @@ function CodeBlock({
 export function SearcherAssistantMessage() {
     const rawMessage = useAuiState(
         (s) =>
-            s.message?.metadata?.custom?.rawMessage as AiMessageDto | undefined,
+            s.message?.metadata?.custom?.rawMessage as
+                | AskMessageDto
+                | undefined,
     );
     const contentText = useAuiState(
         (s) => {
@@ -320,18 +323,45 @@ export function SearcherAssistantMessage() {
                 </ReactMarkdown>
             </div>
 
-            {/* Interrupted or Failed notification */}
             {(isInterrupted || isFailed) && (
-                <div className="ask-interrupted-banner mt-3">
-                    <div className="flex items-center gap-2 text-xs">
+                <div
+                    className="ask-interrupted-banner mt-3"
+                    role="alert"
+                >
+                    <div className="ask-interrupted-banner__content">
                         <AlertCircle
-                            size={14}
-                            className={isFailed
-                                ? "text-destructive"
-                                : "text-amber-500"}
+                            size={16}
+                            className={`ask-interrupted-banner__icon ${
+                                isFailed ? "is-failed" : "is-interrupted"
+                            }`}
                         />
-                        <span>{isFailed ? "生成失败" : "生成已中断"}</span>
+                        <div className="ask-interrupted-banner__message">
+                            <span className="font-medium">
+                                {isFailed ? "生成失败" : "生成已中断"}
+                            </span>
+                            <p>
+                                {isFailed
+                                    ? sanitizeFailureReason(
+                                        rawMessage?.failureReason,
+                                    )
+                                    : "已保留当前内容，可以重试继续生成。"}
+                            </p>
+                        </div>
                     </div>
+                    <ActionBarPrimitive.Root className="ask-interrupted-banner__actions">
+                        <ActionBarPrimitive.Reload asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="ask-message-retry"
+                                aria-label="重试生成"
+                                title="重试生成"
+                            >
+                                <RotateCcw size={14} />
+                                重试
+                            </Button>
+                        </ActionBarPrimitive.Reload>
+                    </ActionBarPrimitive.Root>
                 </div>
             )}
 
@@ -382,17 +412,19 @@ export function SearcherAssistantMessage() {
                         </Button>
                     </ActionBarPrimitive.Copy>
 
-                    <ActionBarPrimitive.Reload asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="ask-action-icon-btn h-7 w-7"
-                            aria-label="重新生成"
-                            title="重新生成"
-                        >
-                            <RotateCcw size={13} />
-                        </Button>
-                    </ActionBarPrimitive.Reload>
+                    {!isInterrupted && !isFailed && (
+                        <ActionBarPrimitive.Reload asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="ask-action-icon-btn h-7 w-7"
+                                aria-label="重新生成"
+                                title="重新生成"
+                            >
+                                <RotateCcw size={13} />
+                            </Button>
+                        </ActionBarPrimitive.Reload>
+                    )}
 
                     {rawMessage && (
                         <Button

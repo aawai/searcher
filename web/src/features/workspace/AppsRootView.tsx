@@ -230,6 +230,11 @@ export function AppsRootView({
                     ariaLabel="搜索应用"
                 />
             </div>
+            <p className="apps-management-help" role="note">
+                右键或长按应用图标可整理、移动、固定或移至回收站；键盘用户可按
+                {" "}
+                Shift+F10 或菜单键打开操作菜单。
+            </p>
             {isArranging && (
                 <p className="apps-arrange-help">
                     拖动应用或文件夹调整顺序，应用可移入文件夹

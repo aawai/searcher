@@ -1,9 +1,10 @@
 import { type Dispatch, useEffect, useState } from "react";
 import {
-    AppWindow,
+    LayoutGrid,
     Maximize2,
     Minimize2,
     Minus,
+    MoreHorizontal,
     PanelLeft,
     PanelRight,
     X,
@@ -17,12 +18,14 @@ import {
 } from "../../components/ui/dropdown-menu.tsx";
 import type { DesktopGeometry, SnapMode } from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
+import { DESKTOP_SHORTCUTS } from "./desktop-shortcuts.ts";
 
 export interface WindowMenuProps {
     window: DesktopWindowState;
     rect: DesktopGeometry;
     dispatch: Dispatch<DesktopAction>;
     onClose?: () => void;
+    onOverview?: () => void;
     showMinimize?: boolean;
     showMaximize?: boolean;
     disabled?: boolean;
@@ -37,6 +40,7 @@ export function WindowMenu({
     rect,
     dispatch,
     onClose,
+    onOverview,
     showMinimize = true,
     showMaximize = true,
     disabled = false,
@@ -102,6 +106,10 @@ export function WindowMenu({
             dispatch({ type: "CLOSE", id: win.id });
         }
     };
+    const handleOverview = () => {
+        handleOpenChange(false);
+        onOverview?.();
+    };
 
     const isMaximized = win.mode === "maximized";
     const isNormal = win.mode === "normal";
@@ -124,9 +132,10 @@ export function WindowMenu({
                             className ?? "",
                         ].filter(Boolean).join(" ")}
                         aria-label="窗口系统菜单"
-                        title="窗口系统菜单"
+                        aria-keyshortcuts={DESKTOP_SHORTCUTS.menu.aria}
+                        title={`窗口系统菜单（${DESKTOP_SHORTCUTS.menu.label}）`}
                     >
-                        <AppWindow className="desktop-window-chrome-icon h-4 w-4" />
+                        <MoreHorizontal className="desktop-window-chrome-icon h-4 w-4" />
                     </Button>
                 }
             />
@@ -176,6 +185,21 @@ export function WindowMenu({
                     </DropdownMenuItem>
                 )}
 
+                {isDesktop && onOverview && (
+                    <DropdownMenuItem
+                        onClick={handleOverview}
+                        data-action="overview"
+                        data-testid="window-menu-item-overview"
+                        aria-keyshortcuts={DESKTOP_SHORTCUTS.overview.aria}
+                        className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
+                    >
+                        <LayoutGrid className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                        <span>窗口总览</span>
+                        <kbd className="ml-auto" aria-hidden="true">
+                            {DESKTOP_SHORTCUTS.overview.label}
+                        </kbd>
+                    </DropdownMenuItem>
+                )}
                 {/* 桌面分屏 (Desktop Snap) - Tablet禁用或仅桌面展示 */}
                 {isDesktop && !disabled && rect.usable && (
                     <>
@@ -183,20 +207,28 @@ export function WindowMenu({
                             onClick={() => handleSnap("left")}
                             data-action="snap-left"
                             data-testid="window-menu-item-snap-left"
+                            aria-keyshortcuts={DESKTOP_SHORTCUTS.snapLeft.aria}
                             className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                         >
                             <PanelLeft className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
                             <span>靠左分屏</span>
+                            <kbd className="ml-auto" aria-hidden="true">
+                                {DESKTOP_SHORTCUTS.snapLeft.label}
+                            </kbd>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
                             onClick={() => handleSnap("right")}
                             data-action="snap-right"
                             data-testid="window-menu-item-snap-right"
+                            aria-keyshortcuts={DESKTOP_SHORTCUTS.snapRight.aria}
                             className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                         >
                             <PanelRight className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
                             <span>靠右分屏</span>
+                            <kbd className="ml-auto" aria-hidden="true">
+                                {DESKTOP_SHORTCUTS.snapRight.label}
+                            </kbd>
                         </DropdownMenuItem>
                     </>
                 )}

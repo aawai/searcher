@@ -1,8 +1,27 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
 
-function Dialog(props: DialogPrimitive.Root.Props) {
-    return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+function Dialog({
+    open,
+    defaultOpen,
+    onOpenChange,
+    ...props
+}: DialogPrimitive.Root.Props) {
+    const handleOpenChange = useEscapeLayerForOpenState(
+        open,
+        defaultOpen,
+        onOpenChange,
+    );
+    return (
+        <DialogPrimitive.Root
+            data-slot="dialog"
+            {...props}
+            open={open}
+            defaultOpen={defaultOpen}
+            onOpenChange={handleOpenChange}
+        />
+    );
 }
 
 function DialogTrigger(props: DialogPrimitive.Trigger.Props) {

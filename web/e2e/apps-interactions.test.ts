@@ -439,7 +439,7 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                         name: /的更多操作/,
                     }).click();
                     await page.getByRole("menuitem", {
-                        name: "删除",
+                        name: "移至回收站",
                         exact: true,
                     }).click();
                     const undo = page.locator(
@@ -480,8 +480,10 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                     name: /的更多操作/,
                 }).click();
                 await page.clock.runFor(300);
-                await page.getByRole("menuitem", { name: "删除", exact: true })
-                    .click();
+                await page.getByRole("menuitem", {
+                    name: "移至回收站",
+                    exact: true,
+                }).click();
                 const toast = page.locator(".undo-toast");
                 await toast.waitFor();
                 const liveRegion = await toast.elementHandle();
@@ -513,7 +515,7 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                     ),
                     true,
                 );
-                await page.clock.runFor(1500);
+                await page.clock.runFor(6_700);
                 await toast.waitFor({ state: "detached" });
                 await liveRegion?.dispose();
             },
@@ -540,29 +542,49 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                 await root.locator(".apps-search-row").getByRole("button", {
                     name: /的更多操作/,
                 }).click();
-                await page.getByRole("menuitem", { name: "删除", exact: true })
-                    .click();
+                await page.getByRole("menuitem", {
+                    name: "移至回收站",
+                    exact: true,
+                }).click();
+                let restoreAttempts = 0;
                 await page.route(
                     "**/api/webapps/*/restore",
-                    (route) =>
-                        route.fulfill({
-                            status: 503,
-                            json: {
-                                status: false,
-                                message: "恢复服务暂时不可用",
-                            },
-                        }),
+                    (route) => {
+                        restoreAttempts++;
+                        if (restoreAttempts === 1) {
+                            return route.fulfill({
+                                status: 503,
+                                json: {
+                                    success: false,
+                                    error: "恢复服务暂时不可用",
+                                },
+                            });
+                        }
+                        return route.continue();
+                    },
                 );
-                const undo = page.locator(
+                const toast = page.locator(
                     ".workspace-panel--mobile .undo-toast",
-                ).getByRole("button", { name: "撤销", exact: true });
+                );
+                const undo = toast.getByRole("button", {
+                    name: "撤销",
+                    exact: true,
+                });
                 await undo.focus();
                 await undo.press("Space");
-                await page.locator(".workspace-panel--mobile").getByRole(
-                    "alert",
-                ).filter({ hasText: "恢复服务暂时不可用" }).waitFor();
+                await toast.getByText(/恢复.*失败/).waitFor();
                 assertEquals(await root.locator(".apps-search-row").count(), 0);
-                assertEquals(await page.locator(".undo-toast").count(), 0);
+                assertEquals(await page.locator(".undo-toast").count(), 1);
+                assertEquals(restoreAttempts, 1);
+                await toast.getByRole("button", {
+                    name: "重试撤销",
+                    exact: true,
+                }).click();
+                await root.locator(".apps-search-row").waitFor({
+                    state: "visible",
+                });
+                await toast.waitFor({ state: "detached" });
+                assertEquals(restoreAttempts, 2);
             },
         );
     } finally {

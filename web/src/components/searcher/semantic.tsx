@@ -180,6 +180,10 @@ export function UndoToast(
         className,
         placement = "floating",
         host,
+        undoLabel = "撤销",
+        undoDisabled = false,
+        actions,
+        onPauseChange,
         ...props
     }: ComponentProps<"div"> & {
         message: ReactNode;
@@ -187,8 +191,23 @@ export function UndoToast(
         onClose?: () => void;
         placement?: "floating" | "inline";
         host?: HTMLElement | null;
+        undoLabel?: string;
+        undoDisabled?: boolean;
+        actions?: ReactNode;
+        onPauseChange?: (paused: boolean) => void;
     },
 ) {
+    const pointerInside = useRef(false);
+    const focusInside = useRef(false);
+    const paused = useRef(false);
+    const pauseChangeRef = useRef(onPauseChange);
+    pauseChangeRef.current = onPauseChange;
+    function updatePause() {
+        const next = pointerInside.current || focusInside.current;
+        if (next === paused.current) return;
+        paused.current = next;
+        pauseChangeRef.current?.(next);
+    }
     const [container] = useState(() =>
         host !== undefined ? document.createElement("div") : null
     );
@@ -204,9 +223,40 @@ export function UndoToast(
             className={cn("undo-toast", className)}
             data-placement={placement}
             role="status"
+            aria-live="polite"
+            onPointerEnter={(event) => {
+                if (event.pointerType === "touch") return;
+                pointerInside.current = true;
+                updatePause();
+            }}
+            onPointerLeave={(event) => {
+                if (event.pointerType === "touch") return;
+                pointerInside.current = false;
+                updatePause();
+            }}
+            onFocusCapture={() => {
+                focusInside.current = true;
+                updatePause();
+            }}
+            onBlurCapture={(event) => {
+                if (
+                    event.currentTarget.contains(
+                        event.relatedTarget as Node | null,
+                    )
+                ) return;
+                focusInside.current = false;
+                updatePause();
+            }}
         >
             <span>{message}</span>
-            <Button variant="ghost" onClick={onUndo}>撤销</Button>
+            <Button
+                variant="ghost"
+                disabled={undoDisabled}
+                onClick={onUndo}
+            >
+                {undoLabel}
+            </Button>
+            {actions && <div className="undo-toast-actions">{actions}</div>}
             {onClose && (
                 <Button
                     variant="ghost"

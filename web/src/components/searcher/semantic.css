@@ -196,7 +196,8 @@
 .loading-state[data-density="compact"] {
     padding: var(--space-row-gap);
 }
-.status-banner[data-presentation="floating"] {
+.status-banner[data-presentation="floating"],
+.undo-toast[data-placement="floating"] {
     width: max-content;
 }
 .status-banner[data-presentation="floating"],
@@ -208,6 +209,7 @@
     max-width: calc(100% - 2 * var(--space-page-inline));
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-control-gap);
     padding: var(--space-row-block) var(--space-card-padding);
     border: 1px solid var(--accent-border);
@@ -222,6 +224,9 @@
         inset-block-end: calc(env(safe-area-inset-bottom, 0px) +
             var(--control-touch-target) + var(--space-8));
     }
+}
+.undo-toast[hidden] {
+    display: none;
 }
 .undo-toast[data-placement="inline"] {
     position: static;
@@ -238,6 +243,22 @@
 }
 .undo-toast button {
     flex-shrink: 0;
+}
+
+.undo-toast-actions {
+    display: flex;
+    align-items: center;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: var(--space-control-gap);
+    min-width: 0;
+}
+.undo-toast-actions > button {
+    min-width: 0;
+    max-width: 100%;
+    flex-shrink: 1;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 .status-banner[data-tone="success"] {
     color: var(--success);

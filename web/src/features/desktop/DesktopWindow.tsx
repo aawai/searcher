@@ -33,6 +33,7 @@ export interface DesktopWindowProps {
     backLabel?: string;
     onClose?: () => void;
     onBack?: () => void;
+    onOverview?: () => void;
     leading?: ReactNode;
     headerMenu?: ReactNode;
     closeBtnRef?: RefObject<HTMLButtonElement | null>;
@@ -59,6 +60,7 @@ export function DesktopWindow({
     backLabel,
     onClose,
     onBack,
+    onOverview,
     leading,
     headerMenu,
     closeBtnRef,
@@ -144,6 +146,7 @@ export function DesktopWindow({
                     backLabel={backLabel}
                     onClose={onClose}
                     onBack={onBack}
+                    onOverview={onOverview}
                     leading={leading}
                     headerMenu={headerMenu}
                     closeBtnRef={closeBtnRef}

@@ -2,11 +2,28 @@ import type * as React from "react";
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 import { cn } from "../../lib/utils.ts";
 import { Button, type ButtonProps, buttonVariants } from "./button.tsx";
+import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 
-function AlertDialog(
-    { ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>,
-) {
-    return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
+function AlertDialog({
+    open,
+    defaultOpen,
+    onOpenChange,
+    ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
+    const handleOpenChange = useEscapeLayerForOpenState(
+        open,
+        defaultOpen,
+        onOpenChange,
+    );
+    return (
+        <AlertDialogPrimitive.Root
+            data-slot="alert-dialog"
+            {...props}
+            open={open}
+            defaultOpen={defaultOpen}
+            onOpenChange={handleOpenChange}
+        />
+    );
 }
 
 function AlertDialogTrigger({

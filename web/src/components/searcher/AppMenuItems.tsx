@@ -61,7 +61,7 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
                 更换图标
             </Item>
             <Item onClick={() => actions.onDelete(app)}>
-                删除
+                移至回收站
             </Item>
         </>
     );

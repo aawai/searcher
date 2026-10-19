@@ -225,7 +225,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             contentPatches.push(request.postData() ?? "");
         }
     });
-    await win.getByRole("button", { name: "页面", exact: true }).click();
+    await win.getByRole("button", { name: "分页", exact: true }).click();
     await page.waitForFunction(() =>
         document.querySelector(".pagination-viewport")
             ?.getAttribute("data-page-count") === "3"
@@ -659,7 +659,14 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             selection: selectionBeforeSettings,
         },
     ) {
-        await win.getByRole("button", { name: "纸张", exact: true }).click();
+        await win.getByRole("button", {
+            name: "更多文档操作",
+            exact: true,
+        }).click();
+        await page.getByRole("menuitem", {
+            name: "纸张设置",
+            exact: true,
+        }).click();
         const dialog = page.getByRole("dialog");
         await dialog.getByLabel("纸张规格", { exact: true }).selectOption(size);
         await dialog.getByLabel("版面方向", { exact: true })
@@ -724,7 +731,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         await matrixPage.locator(`[data-document-id="${doc.id}"] h4 button`)
             .click();
         await matrixPage.locator(".ProseMirror").waitFor();
-        await matrixPage.getByRole("button", { name: "页面", exact: true })
+        await matrixPage.getByRole("button", { name: "分页", exact: true })
             .click();
         await stableLayout(matrixPage);
         await matrixPage.waitForFunction(() =>
@@ -1048,14 +1055,15 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         "# One tall editable row\n\n| Short | Tall |\n| --- | --- |\n| Short cell | " +
         repeatedTallCell.repeat(160) +
         " |\n| NEXT_ROW_147 | Text after the tall row |\n\nEND_DOCUMENT_147";
-    await win.getByRole("button", { name: "源码", exact: true }).click();
+    await win.getByRole("button", { name: "Markdown 源码", exact: true })
+        .click();
     const source = win.getByRole("textbox", {
         name: "Markdown 源码正文",
         exact: true,
     });
     await source.waitFor();
     await source.fill(tallRowBody);
-    await win.getByRole("button", { name: "页面", exact: true }).click();
+    await win.getByRole("button", { name: "分页", exact: true }).click();
     await page.waitForFunction(() =>
         !!document.querySelector(
             '[data-pagination-mode="page"][data-page-count]',
@@ -1146,14 +1154,15 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     }
 
     async function sourceFixture(markdown: string, expectedPages: number) {
-        await win.getByRole("button", { name: "源码", exact: true }).click();
+        await win.getByRole("button", { name: "Markdown 源码", exact: true })
+            .click();
         const markdownBody = win.getByRole("textbox", {
             name: "Markdown 源码正文",
             exact: true,
         });
         await markdownBody.waitFor();
         await markdownBody.fill(markdown);
-        await win.getByRole("button", { name: "页面", exact: true }).click();
+        await win.getByRole("button", { name: "分页", exact: true }).click();
         await page.waitForFunction((pages) => {
             const viewport = document.querySelector<HTMLElement>(
                 ".pagination-viewport",
@@ -1180,7 +1189,14 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             fixture.breaks,
             `${fixture.name} retains its canonical editor breaks`,
         );
-        await win.getByRole("button", { name: "打印", exact: true }).click();
+        await win.getByRole("button", {
+            name: "更多文档操作",
+            exact: true,
+        }).click();
+        await page.getByRole("menuitem", {
+            name: "打印或另存为 PDF",
+            exact: true,
+        }).click();
         const printRoot = page.locator(
             ".document-print-root[data-print-active]",
         );

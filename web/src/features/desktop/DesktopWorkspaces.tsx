@@ -4,12 +4,17 @@ import {
     type ReactNode,
     type RefObject,
     Suspense,
+    useCallback,
     useEffect,
     useLayoutEffect,
     useRef,
     useState,
 } from "react";
-import { Maximize2 } from "lucide-react";
+import { AppWindow, Maximize2 } from "lucide-react";
+import {
+    useEscapeLayer,
+    useEscapeLayerStack,
+} from "../../components/ui/escape-layer-stack.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -44,6 +49,7 @@ import "./desktop.css";
 import type { DocumentDto } from "@shared/documents.ts";
 import { DocumentEntityWindow } from "./DocumentEntityWindow.tsx";
 import { useDocumentImmersion } from "./useDocumentImmersion.ts";
+import { matchesDesktopShortcut } from "./desktop-shortcuts.ts";
 
 const NoteEditor = lazy(() =>
     import("../../components/searcher/NoteEditor.tsx").then((module) => ({
@@ -157,6 +163,7 @@ export function DesktopWorkspaces({
     onDocumentsChanged,
 }: DesktopWorkspacesProps) {
     const dockNavRef = useRef<HTMLElement | null>(null);
+    const escapeStack = useEscapeLayerStack();
 
     const chromeRefs = useRef<
         Record<
@@ -202,6 +209,11 @@ export function DesktopWorkspaces({
         userId,
         !isMobile && !isConstrained && rect.usable,
     );
+    const openOverview = useCallback(() => {
+        immersion.exit(false);
+        overviewSelection.current = null;
+        setOverviewOpen(true);
+    }, [immersion.exit]);
     const immersiveId = immersion.immersiveDocumentId;
 
     // DesktopState.windows is the single source of truth for window visibility
@@ -261,50 +273,77 @@ export function DesktopWorkspaces({
         models.documents.route.view,
         chromeRefs,
     ]);
-    // Active workspace kind determination for Escape key
     const activeWinId = state.activeId ??
         getTopmostVisibleWindowId(openWindows);
     const activeKind = activeWinId && isWorkspaceKind(activeWinId)
         ? activeWinId
         : null;
+    const escapeKind = activeKind ??
+        (isConstrained && activeWinId?.startsWith("note:")
+            ? "notes"
+            : isConstrained && activeWinId?.startsWith("document:")
+            ? "documents"
+            : null);
 
+    useEscapeLayer(
+        isConstrained && escapeKind !== null,
+        () => {
+            if (escapeKind) onClose(escapeKind);
+        },
+        "host",
+    );
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
+        const handleShortcut = (event: KeyboardEvent) => {
+            const overviewShortcut = matchesDesktopShortcut(
+                event,
+                "overview",
+            );
+            const snapLeft = matchesDesktopShortcut(event, "snapLeft");
+            const snapRight = matchesDesktopShortcut(event, "snapRight");
+            if (!overviewShortcut && !snapLeft && !snapRight) return;
             if (
-                !isConstrained || activeKind === "apps" ||
-                event.key !== "Escape" ||
-                event.isComposing || event.defaultPrevented
+                isMobile || isConstrained || event.defaultPrevented ||
+                event.isComposing || escapeStack.hasLayer("overlay")
             ) return;
-            // Avoid closing window if any popup, menu, or dialog is currently open
+            const target = event.target;
             if (
-                document.querySelector(
-                    '[role="menu"], [data-slot="dropdown-menu-content"], [data-slot="context-menu-content"], [data-slot="popover-content"], [role="dialog"], [role="alertdialog"]',
+                target instanceof Element &&
+                target.closest(
+                    'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]',
                 )
-            ) {
+            ) return;
+
+            if (overviewShortcut) {
+                event.preventDefault();
+                openOverview();
                 return;
             }
-            if (activeKind) {
-                event.preventDefault();
-                onClose(activeKind);
-            } else if (
-                activeWinId &&
-                openWindows.some((w) =>
-                    w.id === activeWinId && w.kind === "note"
-                )
-            ) {
-                event.preventDefault();
-                dispatch({ type: "CLOSE", id: activeWinId });
-            }
+            if (immersiveId || !rect.usable) return;
+            const activeWindow = openWindows.find((win) =>
+                win.id === activeWinId && win.mode !== "minimized"
+            );
+            if (!activeWindow) return;
+
+            event.preventDefault();
+            dispatch({
+                type: "SNAP",
+                id: activeWindow.id,
+                snap: snapLeft ? "left" : "right",
+                rect,
+            });
         };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleShortcut);
+        return () => document.removeEventListener("keydown", handleShortcut);
     }, [
-        activeKind,
         activeWinId,
-        openWindows,
-        onClose,
         dispatch,
+        escapeStack,
+        immersiveId,
         isConstrained,
+        isMobile,
+        openWindows,
+        rect,
+        openOverview,
     ]);
     useEffect(() => {
         if (isMobile || isConstrained) setOverviewOpen(false);
@@ -525,6 +564,15 @@ export function DesktopWorkspaces({
                                 : "返回上一级"}
                             onClose={() => onClose(kind)}
                             onBack={isNested ? () => onBack(kind) : undefined}
+                            onOverview={openOverview}
+                            leading={kind === "apps"
+                                ? (
+                                    <AppWindow
+                                        size={16}
+                                        aria-hidden="true"
+                                    />
+                                )
+                                : undefined}
                             headerMenu={isConstrained
                                 ? (
                                     <ConstrainedSizeMenu
@@ -596,11 +644,7 @@ export function DesktopWorkspaces({
                 onPointerLeave={immersion.onDockLeave}
                 onFocus={immersion.showDock}
                 onBlur={immersion.onDockBlur}
-                onOverview={isConstrained ? undefined : () => {
-                    immersion.exit(false);
-                    overviewSelection.current = null;
-                    setOverviewOpen(true);
-                }}
+                onOverview={isConstrained ? undefined : openOverview}
             />
             {immersiveId && (
                 <Button
