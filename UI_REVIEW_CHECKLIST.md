@@ -38,6 +38,11 @@
       aria-label。迁移为AI链接的语义前缀，Zen按动画结束条件等待后仍断言零running，
       无固定sleep或重发操作。完整bundle-loading、route-style-stability、
       zen-inline-notes本地复查3 passed/8 steps，lint/format通过。
+- [x] 第二轮CI Bundle及其余六项检查通过；Workspace为55 passed/1 failed （138
+      steps），失败在代码滚动测试直接hover被相邻叠放便签遮挡的中心。
+      改为先hover露出的标题按已有board规则置顶，再操作代码区，保留原滚动、
+      scrollbar及无溢出断言；未使用force或修改产品叠层。完整home-notes-order
+      本地复查3 passed/8 steps，lint/format通过。
 
 ## Issues #207 / #212 / #213 无障碍修复
 
