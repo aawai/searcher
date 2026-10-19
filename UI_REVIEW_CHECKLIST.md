@@ -9,6 +9,13 @@
 - [x] 获取 PR 分支并合入当前 main；保留两侧 CHANGELOG 新增内容。
       搜索组合态方向键、Enter、form submit 与 Safari 风格 `keyCode=229`
       事件顺序有生产页面回归；旧产物在 ArrowUp 被抢占处失败，新产物通过。
+- [x] 推送后首轮完整 Workspace CI 为55 passed / 1 failed（2 steps）：
+      `workspace.test.ts` 仍使用“先更新 clean
+      云端，再输入本地内容”的旧冲突时序，
+      远端已被正确静默接受，因此不再产生预期冲突；后续用例被未关闭窗口遮挡。
+      改为先建立 dirty 本地草稿再更新云端，保留正文、版本递增与后续保存断言。
+      本地完整 `workspace.test.ts` 复查为1 passed / 8 steps、0 failed，
+      lint/format 通过；不改产品行为、不重发操作、不放宽验收。
 - [x] 便签订阅真实的具名 `note.updated` 失效事件，等待 mutation queue 后按版本
       GET 最新 DTO。clean 远端更新静默同步，dirty 才冲突；自己保存不误报，
       合并初值保持本地正文。无 SSE 时仍经 409 保护旧版本写入。
