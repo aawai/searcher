@@ -13,6 +13,7 @@ const buttonVariants = cva(
                 destructive: "button--danger",
                 ghost: "button--ghost",
                 link: "button--link",
+                content: "button--content",
             },
             size: {
                 default: "",

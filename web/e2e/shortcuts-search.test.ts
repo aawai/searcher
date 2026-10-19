@@ -113,6 +113,98 @@ Deno.test("production search shortcuts respect editable focus and submit command
         },
     );
     await t.step(
+        "IME candidate keys and submit do not select commands, then normal Enter works",
+        async () => {
+            await page.goto(origin);
+            await search.waitFor();
+            await search.fill("/g");
+            await page.getByRole("option").filter({ hasText: "/g" }).first()
+                .waitFor();
+
+            const engine = page.locator(".search-engine");
+            const initialEngine = await engine.getAttribute("aria-label");
+            await search.evaluate((element) => {
+                element.dispatchEvent(
+                    new CompositionEvent("compositionstart", {
+                        bubbles: true,
+                    }),
+                );
+            });
+            for (const key of ["ArrowUp", "ArrowDown"]) {
+                const candidateKeyWasNotCancelled = await search.evaluate(
+                    (element, key) =>
+                        element.dispatchEvent(
+                            new KeyboardEvent("keydown", {
+                                key,
+                                bubbles: true,
+                                cancelable: true,
+                                isComposing: true,
+                            }),
+                        ),
+                    key,
+                );
+                assert(
+                    candidateKeyWasNotCancelled,
+                    `${key} remains available to the IME candidate UI`,
+                );
+                assertEquals(
+                    await page.getByRole("option").first().getAttribute(
+                        "aria-selected",
+                    ),
+                    "false",
+                );
+            }
+
+            await search.evaluate((element) => {
+                element.dispatchEvent(
+                    new KeyboardEvent("keydown", {
+                        key: "Enter",
+                        bubbles: true,
+                        cancelable: true,
+                        isComposing: true,
+                    }),
+                );
+            });
+            await page.getByRole("button", { name: "搜索", exact: true })
+                .click();
+            assertEquals(await search.inputValue(), "/g");
+            assertEquals(
+                await engine.getAttribute("aria-label"),
+                initialEngine,
+            );
+
+            await search.evaluate((element) => {
+                element.dispatchEvent(
+                    new CompositionEvent("compositionend", {
+                        bubbles: true,
+                        data: "g",
+                    }),
+                );
+                element.dispatchEvent(
+                    new KeyboardEvent("keydown", {
+                        key: "Enter",
+                        keyCode: 229,
+                        which: 229,
+                        bubbles: true,
+                        cancelable: true,
+                    }),
+                );
+            });
+            assertEquals(await search.inputValue(), "/g");
+            assertEquals(
+                await engine.getAttribute("aria-label"),
+                initialEngine,
+            );
+
+            await search.focus();
+            await search.press("Enter");
+            assertEquals(await search.inputValue(), "");
+            assert(
+                (await engine.getAttribute("aria-label"))?.includes("Google"),
+            );
+        },
+    );
+    await t.step(
         "late suggestions do not reopen the listbox after search loses focus",
         async () => {
             const gate = Promise.withResolvers<void>();

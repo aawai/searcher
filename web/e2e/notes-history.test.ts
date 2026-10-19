@@ -111,6 +111,7 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
     await editor.locator(".save-saved").waitFor();
     assertEquals((await state()).body, "离线草稿");
     const synced = await state();
+    await source.fill("冲突草稿");
     await page.evaluate(async ({ id, version }) => {
         const response = await fetch(`/api/notes/${id}`, {
             method: "PATCH",
@@ -123,7 +124,6 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
         });
         if (!response.ok) throw new Error(await response.text());
     }, { id, version: synced.version });
-    await source.fill("冲突草稿");
     await editor.getByRole("button", { name: "版本历史", exact: true }).click();
     await page.getByRole("button", { name: "使用云端", exact: true }).waitFor();
     assertEquals(await editor.locator(".note-history").count(), 0);

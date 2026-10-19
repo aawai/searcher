@@ -103,6 +103,38 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   超出可用高度时，editor container 滚动 chrome，而不是把正文 flex viewport
   压成零。此约束适用于所有 Host，不增加按设备的临时分支，也不改 Host geometry。
 
+### Zen inline note preview
+
+- Issue #191：仅 Zen `<768px` 的首页固定便签使用透明正常流预览；它是 secondary
+  content，不新增 surface/elevation，不复用纸张 Card。无背景、边框、
+  阴影、折角、常驻管理栏或数值分页；桌面 Zen 与 Widgets 保持原 presentation。
+- `home-layouts` 的 `ZenHomeNotes` 持有设备账号视图状态，`ZenInlineNotes` 仅持有
+  预览布局与手势；`isHomeFixed`、排序、编辑会话与管理操作仍由现有 Notes owner
+  持有。 固定集合按 sortOrder/id 排序，当前 ID 复用 DocumentEditor 的同步
+  localStorage 视图状态约定，按账号 key
+  隔离；选择先写入再发布，避免立即刷新丢失当前项。
+  存储不可用时内存浏览仍可用，集合清空时清除记录，不写入 note_layouts
+  或外观偏好。
+- 标题使用 component title，正文使用 body；标题与正文作为同一内容组使用
+  `--space-inline-gap`（当前 8px），不得为单行标题预留空白第二行。
+  便签标题与正文在中轴默认居中排版，与首页
+  Search、桌面场景和底部导航保持一致视觉语言。 只展示安全文本摘要，不挂载完整
+  Markdown 或编辑器，不产生嵌套滚动。
+- `home-layouts.css` 拥有正文最多 4 行、标题最多 2 行、
+  `--zen-note-swipe-distance`（32 CSS px）与 `--zen-note-position-size`（4px）；
+  由上述最大文字预算与 inline gap 派生外层固定阅读窗口，实际标题/正文自然占高，
+  内容组在窗口中垂直居中；无标题时不渲染占位。阅读列、触摸空间与位置标记间距
+  派生自既有 spacing/typography Token。同视口和字体下预览窗口高度稳定；
+  位置标记最多显示 5 个，不可点击。
+- 内容触发器使用共享 Button 的 `content` 语义变体：透明、无控件外框与固定高度，
+  不改变字体、焦点环或禁用状态。仅表达内容消费入口，不作为普通操作按钮使用。
+- Search、应用网格、便签阅读区与移动导航共用中轴；应用网格保持既有布局，不改动图标排列与对齐逻辑。
+- 左右手势、区域方向键和辅助技术专用操作切换当前项；首尾停止，不自动播放。
+  内容点击复用原编辑 Sheet/opener；滑动不产生点击。没有切换位移动画，
+  reduced-motion 下保持同一静态语义。
+- 文字消费主题前景色，不以低对比或局部遮罩实现“融合”；默认/支持壁纸组合
+  实页验收可读性，极端自定义图片沿用 Constitution 的既有例外。
+
 ### Notes Markdown editor
 
 - 标题、当前 Live Preview 或 Source textarea 与 NoteMarkdownToolbar 使用同一
@@ -110,7 +142,9 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   debounce。模式 Tab 保留不保存例外，历史、颜色和外部控件仍是真正离开。
 - 仅 dirty 草稿真正离开时执行一次 manual flush；clean 离开不提交，显式
   Ctrl/Cmd+S 语义不变。初始化与云端替换不保存；标题/正文 IME composition
-  期间不执行格式命令、Enter 跳转或提交半成品。卸载不补发延迟保存。
+  期间不执行格式命令、Enter
+  跳转或提交半成品。关闭、Esc、切换便签时提交非组合态、 无冲突的 dirty
+  草稿，同一草稿不重复排队；组合态关闭保留设备草稿供恢复。
 - NoteEditor 持有 canonical Markdown、1500ms autosave、IndexedDB 草稿及 mutation
   queue；NoteLivePreviewEditor 仅持有共享 runtime 的实例生命周期、选区与
   composition bridge，不拥有云端业务。详见
@@ -129,15 +163,15 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   恢复块代码的透明背景、零 padding/radius 与继承字号/行高， 以 intrinsic-width
   block 保留两端滚动 padding。长行保持不换行， 首尾字符均可完整滚入视区；行内
   code 与工作区不变。
-- Zen 默认固定便签由 `SearchHome` 复用 `useDesktopGeometry` 的 safe rect；
-  `ZenLayout` 仅测量 Search 实际 viewport
+- Zen `>=768px` 的默认固定便签由 `SearchHome` 复用 `useDesktopGeometry` 的 safe
+  rect； `ZenLayout` 仅在该 presentation 下测量 Search 实际 viewport
   bounds，并在字体就绪、布局或滚动后更新。 exclusion 保留当前 bounds
   与未滚动时实测占位的并集，避免回流内容随滚动被移回画布、
   页面缩短并重置滚动。`FloatingNotes` 将无 desktop x/y 的便签尺寸交给纯
-  placement， 避开 Search，
-  仅放入当前可用区；空间不足的默认便签复用流式网格，<=960px 全部保持 flow。
-  测量阶段的隐藏卡片不参与交互，Markdown 与字体就绪后才发布默认位置。 已保存的
-  desktop 坐标不自动重排；展开、折叠和置顶不将默认位置写入账号布局，
+  placement， 避开 Search， 仅放入当前可用区；空间不足时复用流式网格，768–960px
+  保持 flow，<768px 使用 inline 预览。 测量阶段的隐藏卡片不参与交互，Markdown
+  与字体就绪后才发布默认位置。 已保存的 desktop
+  坐标不自动重排；展开、折叠和置顶不将默认位置写入账号布局，
   只有用户拖动建立坐标。无数据库、storage key 或桌面 v4 迁移；不改搜索 anchor
   或全局 elevation，可独立回滚 bounds props 与默认 placement。 Zen
   仅在存在固定便签时按需加载该模块，Search 与个人应用不等待便签代码； 复用 React
@@ -344,8 +378,8 @@ AlertDialog）具有严格不同的交互与视觉语义：
   控件执行 popup focus restore。
 - `WorkspaceShell` 在 closed→open 时保存实际 opener，Apps/Notes 内部切换不覆盖；
   Close/Escape 后使用 `preventScroll` 归还焦点。原元素已卸载时才回退到打开时
-  的工作区入口。Zen 仅保留 edge trigger 与 FloatingNotes（`note_layouts`），
-  不引入 Widgets Dock、window geometry 或 Snap/Overview。
+  的工作区入口。Zen 保留 edge trigger、桌面 FloatingNotes（`note_layouts`）
+  与移动 inline 预览，不引入 Widgets Dock、window geometry 或 Snap/Overview。
 
 #### Shared Workspace Core 与 Presenter Contract
 
@@ -1025,6 +1059,10 @@ WorkspaceNavigation、AppForm、NotesWorkspace 组合，替代原废弃的 Conte
   prop，不以 feature selector 重写 SettingsCard。
 - 不可逆操作统一使用 AlertDialog；取消和 Escape 不执行保存或删除，pending
   禁用确认/取消，关闭恢复到触发控件。图标重取失败不保存网址或覆盖原图标。
+- AlertDialog 的 overlay/popup 使用现有 `--elevation-modal`，按 Portal DOM
+  次序叠在原 Dialog 之后；不使用低于原 Dialog 的固定 `z-50`， 也不为 feature
+  添加临时 z-index。嵌套确认必须通过真实 pointer hit-test， 不能只凭 DOM
+  可见或键盘可达判定完成。
 
 PageShell 的 Utility / Management / Workbench / Search archetype 唯一拥有页面
 width、max-width、margin 与 page spacing；不得叠加 legacy .page，或以 feature
@@ -1036,6 +1074,10 @@ root 的居中 margin + layout max-width 再建一套页面 geometry。
   可辨识；selected 不仅改变颜色，使用 check/current/ARIA；loading 保留位置。
 - hover/selected 不改尺寸，不用 hover transform 模拟 elevation；focus-visible 用
   --ring；disabled 可读；error 有文字和 role=alert。
+- `--ring` 使用不透明 `--accent`；共享 Input、Textarea、NativeSelect、Checkbox、
+  Switch、Radio 与 Slider 的必要边界使用 `--border-control`，装饰分隔继续使用
+  `--border`。控件 default/hover 边界与焦点环在支持的明暗表面上满足至少 3:1，
+  禁用态及任意自定义壁纸沿用既有可读性边界。
 - 遵循 prefers-reduced-motion，不用 motion 表示唯一状态。
 - 小屏 actions wrap、控件不溢出；设置行由 settings-panel container query
   重排；touch target 不缩小。

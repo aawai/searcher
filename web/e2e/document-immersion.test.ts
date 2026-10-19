@@ -413,15 +413,86 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         "true",
         "conflict dialog takes priority over immersive Escape",
     );
-    // Escape 仅关闭冲突弹窗（暂不处理），冲突仍待处理，可从编辑器头部重新打开。
     await page.getByRole("dialog").waitFor({ state: "hidden" });
-    await page.getByRole("button", { name: "处理冲突", exact: true }).click();
-    await page.getByRole("button", { name: "覆盖为本地版本", exact: true })
-        .click();
-    // 覆盖云端属破坏性操作，需二次确认。
-    await page.getByRole("button", { name: "确认覆盖云端", exact: true })
-        .click();
+    await win.getByRole("button", { name: "处理冲突", exact: true }).click();
+    await page.getByRole("button", { name: "暂不处理", exact: true }).click();
     await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await win.getByRole("button", { name: "处理冲突", exact: true }).click();
+    await page.locator('[data-slot="dialog-backdrop"]').click({
+        position: { x: 5, y: 5 },
+    });
+    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await win.getByRole("button", { name: "处理冲突", exact: true }).click();
+
+    await page.getByRole("button", {
+        name: "保留云端版本",
+        exact: true,
+    }).click();
+    const cloudConfirmation = page.getByRole("alertdialog");
+    await cloudConfirmation.waitFor();
+    await cloudConfirmation.getByRole("button", {
+        name: "返回",
+        exact: true,
+    }).click();
+    await cloudConfirmation.waitFor({ state: "hidden" });
+
+    let failConflictResolution = true;
+    await page.route(`**/api/documents/${doc.id}`, async (route) => {
+        const request = route.request();
+        const payload = request.method() === "PATCH"
+            ? request.postDataJSON() as { origin?: string }
+            : null;
+        if (
+            payload?.origin === "conflict_resolution" &&
+            failConflictResolution
+        ) {
+            failConflictResolution = false;
+            await route.abort("failed");
+        } else {
+            await route.continue();
+        }
+    });
+    await page.getByRole("button", {
+        name: "覆盖为本地版本",
+        exact: true,
+    }).click();
+    const localConfirmation = page.getByRole("alertdialog");
+    await localConfirmation.waitFor();
+    await localConfirmation.getByRole("button", {
+        name: "确认覆盖云端",
+        exact: true,
+    }).click();
+    const conflictDialog = page.getByRole("dialog");
+    await conflictDialog.getByRole("alert").waitFor();
+    assert(
+        (await conflictDialog.getByRole("alert").textContent())?.includes(
+            "处理冲突失败",
+        ),
+        "failed conflict resolution must be reported in the dialog",
+    );
+    assert(
+        (await win.locator(".ProseMirror").textContent())?.includes(
+            "local-conflict-draft",
+        ),
+        "failed conflict resolution must preserve local editor content",
+    );
+
+    await page.keyboard.press("Escape");
+    await conflictDialog.waitFor({ state: "hidden" });
+    await win.getByRole("button", { name: "处理冲突", exact: true }).click();
+    await conflictDialog.locator("pre").filter({
+        hasText: "local-conflict-draft",
+    }).waitFor();
+    await page.getByRole("button", {
+        name: "覆盖为本地版本",
+        exact: true,
+    }).click();
+    await page.getByRole("alertdialog").getByRole("button", {
+        name: "确认覆盖云端",
+        exact: true,
+    }).click();
+    await conflictDialog.waitFor({ state: "hidden" });
+    await page.unroute(`**/api/documents/${doc.id}`);
     await waitForDocument(
         page,
         doc.id,

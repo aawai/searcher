@@ -75,7 +75,7 @@
 
 .radio-item:hover {
     background: var(--surface);
-    border-color: var(--accent-border);
+    border-color: var(--accent);
 }
 
 .radio-item[data-checked] {
@@ -393,6 +393,21 @@
 
 .button--link:hover {
     text-decoration: underline;
+}
+
+/* A content consumption trigger, not a conventional action control. */
+.button.button--content {
+    display: block;
+    min-height: var(--control-touch-target);
+    min-width: var(--control-touch-target);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    white-space: normal;
+    transition: none;
 }
 
 .button--danger {

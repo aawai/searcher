@@ -95,6 +95,7 @@
 - [[sources/obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug]] — Observation: SearcherSearchInput unguided async suggestions reopening bug *(created: 2026-10-15)*
 - [[sources/obs-2026-10-16-issue-177-widgets-pr-184]] — Observation: Issue 177 Widgets 首页反馈经 PR 184 合并关闭 *(created: 2026-10-16)*
 - [[sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186]] — Observation: Issue 179 Zen chrome inset 经 PR 186 合并关闭 *(created: 2026-10-17)*
+- [[sources/obs-2026-10-18-zen-remark]] — Observation: Zen 便签预览避免 remark 根入口拉入编辑器包 *(created: 2026-10-18)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -151,4 +152,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-17T01:18:17.529Z* | *Total pages: 136*
+*Last updated: 2026-10-18T14:03:55.895Z* | *Total pages: 137*

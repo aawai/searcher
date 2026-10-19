@@ -28,6 +28,7 @@ export const suites = {
         "notes-menu",
         "notes-color",
         "home-notes-order",
+        "zen-inline-notes",
         "bento",
         "workspace-contract",
         "workspace-matrix",
@@ -44,7 +45,11 @@ export const suites = {
     wallpaper: ["wallpaper"],
     "desktop-scenes": ["desktop-scenes"],
     bundle: ["bundle-loading", "route-style-stability"],
-    "home-notes": ["home-notes-order", "home-notes-persistence"],
+    "home-notes": [
+        "home-notes-order",
+        "home-notes-persistence",
+        "zen-inline-notes",
+    ],
     supplemental: [
         "ui-ownership",
         "settings-shortcuts",
