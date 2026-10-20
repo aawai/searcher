@@ -173,7 +173,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                                 `/api/documents/${doc.id}`,
                             );
                             await page.getByRole("button", {
-                                name: "连续",
+                                name: "编辑",
                                 exact: true,
                             }).click();
                             const editor = page.locator(".ProseMirror");
@@ -188,7 +188,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             const element = await editor.elementHandle();
                             assert(element);
                             await page.getByRole("button", {
-                                name: "页面",
+                                name: "分页",
                                 exact: true,
                             }).click();
                             await page.waitForFunction(() =>
@@ -207,7 +207,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                                 `${width}x${height}-${style}-${theme}-page`,
                             );
                             await page.getByRole("button", {
-                                name: "源码",
+                                name: "Markdown 源码",
                                 exact: true,
                             }).click();
                             const source = page.getByRole("textbox", {
@@ -223,7 +223,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                                 `${width}x${height}-${style}-${theme}-source`,
                             );
                             await page.getByRole("button", {
-                                name: "连续",
+                                name: "编辑",
                                 exact: true,
                             }).click();
                             assertEquals(
@@ -248,11 +248,388 @@ Deno.test("Documents production responsive modes and large-document integrity (#
     }
     assert(
         await t.step(
+            "390px document toolbar keeps a single keyboard entry and caret clear of the viewport edge",
+            async () => {
+                await page.setViewportSize({ width: 390, height: 844 });
+                await resetHome("widgets", "dark");
+                await page.getByRole("button", {
+                    name: "编辑",
+                    exact: true,
+                }).click();
+                const toolbar = page.getByRole("toolbar", {
+                    name: "文档编辑格式工具栏",
+                    exact: true,
+                });
+                await toolbar.waitFor({ state: "visible" });
+                const viewModeGroup = page.getByRole("group", {
+                    name: "视图模式",
+                    exact: true,
+                });
+                const viewModeDescription = page.getByText(
+                    "编辑正文、分页预览，或直接编写 Markdown 源码。",
+                    { exact: true },
+                );
+                await viewModeDescription.waitFor({ state: "visible" });
+                assertEquals(
+                    await viewModeGroup.getAttribute("aria-describedby"),
+                    await viewModeDescription.getAttribute("id"),
+                    "view mode group should reference its explanation",
+                );
+                assertEquals(
+                    await page.getByRole("button", {
+                        name: "编辑",
+                        exact: true,
+                    }).getAttribute("aria-pressed"),
+                    "true",
+                );
+
+                const toolbarGeometry = await toolbar.evaluate((element) => {
+                    const buttons = Array.from(
+                        element.querySelectorAll<HTMLButtonElement>("button"),
+                    );
+                    return {
+                        width: element.clientWidth,
+                        scrollWidth: element.scrollWidth,
+                        rowCount: new Set(
+                            buttons.map((button) =>
+                                Math.round(button.getBoundingClientRect().top)
+                            ),
+                        ).size,
+                        tabStopCount: buttons.filter((button) =>
+                            !button.disabled && button.tabIndex === 0
+                        ).length,
+                        titleMismatchCount: buttons.filter((button) =>
+                            button.title !== button.getAttribute("aria-label")
+                        ).length,
+                        hasInternalPagebreakLabel: buttons.some((button) =>
+                            button.title.includes("<!--")
+                        ),
+                    };
+                });
+                assert(
+                    toolbarGeometry.scrollWidth > toolbarGeometry.width,
+                    "390px toolbar should expose its remaining commands through horizontal scrolling",
+                );
+                assertEquals(toolbarGeometry.rowCount, 1);
+                assertEquals(toolbarGeometry.tabStopCount, 1);
+                assertEquals(toolbarGeometry.titleMismatchCount, 0);
+                assertEquals(toolbarGeometry.hasInternalPagebreakLabel, false);
+
+                const headerTargets = await page.locator(
+                    ".document-editor-header button",
+                ).evaluateAll((buttons) => {
+                    const target = Number.parseFloat(
+                        getComputedStyle(document.documentElement)
+                            .getPropertyValue("--control-touch-target"),
+                    );
+                    return buttons.map((button) => {
+                        const rect = (button as HTMLElement)
+                            .getBoundingClientRect();
+                        return rect.width >= target - 1 &&
+                            rect.height >= target - 1;
+                    });
+                });
+                assert(
+                    headerTargets.length > 0 && headerTargets.every(Boolean),
+                    "coarse-width header buttons must meet the shared touch target",
+                );
+
+                await page.getByRole("textbox", {
+                    name: "文档标题",
+                    exact: true,
+                }).focus();
+                await page.keyboard.press("Tab");
+                assertEquals(
+                    await page.evaluate(() =>
+                        (document.activeElement as HTMLElement | null)
+                            ?.getAttribute("aria-label")
+                    ),
+                    "撤销",
+                    "Tab should enter the toolbar through its sole tab stop",
+                );
+                await page.keyboard.press("ArrowRight");
+                assertEquals(
+                    await page.evaluate(() =>
+                        (document.activeElement as HTMLElement | null)
+                            ?.getAttribute("aria-label")
+                    ),
+                    "重做",
+                    "right arrow should move focus within the toolbar",
+                );
+                await page.keyboard.press("Tab");
+                assertEquals(
+                    await toolbar.evaluate((element) =>
+                        element.contains(document.activeElement)
+                    ),
+                    false,
+                    "Tab should leave the toolbar after its single roving stop",
+                );
+
+                const editor = page.locator(".ProseMirror");
+                await editor.focus();
+                await page.keyboard.press("Control+End");
+                await page.keyboard.insertText(" 菜单焦点草稿");
+                await page.waitForFunction(() =>
+                    document.querySelector(".document-save-status")
+                        ?.getAttribute("data-status") === "dirty"
+                );
+                const more = page.getByRole("button", {
+                    name: "更多文档操作",
+                    exact: true,
+                });
+                await more.focus();
+                await page.keyboard.press("Enter");
+                const menu = page.getByRole("menu");
+                await menu.waitFor({ state: "visible" });
+                assertEquals(
+                    await page.locator(".document-save-status")
+                        .getAttribute("data-status"),
+                    "dirty",
+                    "opening More must not flush an in-progress draft",
+                );
+                for (
+                    const name of [
+                        "纸张设置",
+                        "打印或另存为 PDF",
+                        "复制 Markdown 正文（不含标题）",
+                        "导出 Markdown 文件",
+                    ]
+                ) {
+                    await page.getByRole("menuitem", { name, exact: true })
+                        .waitFor({ state: "visible" });
+                }
+                await page.getByRole("button", { name: "大纲", exact: true })
+                    .waitFor({ state: "visible" });
+                await page.getByRole("button", { name: "历史", exact: true })
+                    .waitFor({ state: "visible" });
+                await page.keyboard.press("Escape");
+                await menu.waitFor({ state: "hidden" });
+                assertEquals(
+                    await page.locator(".document-save-status")
+                        .getAttribute("data-status"),
+                    "dirty",
+                    "dismissing More must leave the in-progress draft unsaved",
+                );
+
+                await editor.locator("h1").first().click();
+                await page.keyboard.press("Home");
+                await page.keyboard.press("Shift+End");
+                const bold = toolbar.getByRole("button", {
+                    name: "粗体",
+                    exact: true,
+                });
+                await bold.click();
+                await page.waitForFunction(() =>
+                    document.querySelector<HTMLButtonElement>(
+                        '[role="toolbar"] button[aria-label="粗体"]',
+                    )?.getAttribute("aria-pressed") === "true"
+                );
+                await editor.focus();
+                await page.keyboard.press("Control+End");
+                await page.keyboard.press("Shift+ArrowLeft");
+                await page.setViewportSize({ width: 390, height: 360 });
+                await page.waitForFunction(() => {
+                    const viewport = globalThis.visualViewport;
+                    const workspace = document.querySelector<HTMLElement>(
+                        ".workspace-panel--mobile",
+                    );
+                    if (!viewport || !workspace) return false;
+                    const height = Number.parseFloat(
+                        getComputedStyle(workspace).getPropertyValue(
+                            "--workspace-visible-height",
+                        ),
+                    );
+                    return Math.abs(height - viewport.height) <= 1;
+                });
+                const viewportGeometryIsReady = () => {
+                    const toolbar = document.querySelector<HTMLElement>(
+                        '[role="toolbar"]',
+                    );
+                    const viewport = globalThis.visualViewport;
+                    const selection = globalThis.getSelection();
+                    const caret = selection?.rangeCount
+                        ? selection.getRangeAt(0).getBoundingClientRect()
+                        : null;
+                    if (!toolbar || !viewport || !caret) return false;
+
+                    const toolbarRect = toolbar.getBoundingClientRect();
+                    const viewportBottom = viewport.offsetTop +
+                        viewport.height;
+                    return toolbarRect.top >= viewport.offsetTop - 1 &&
+                        toolbarRect.bottom <= viewportBottom + 1 &&
+                        caret.top >= toolbarRect.bottom - 1 &&
+                        caret.bottom <= viewportBottom + 1;
+                };
+                try {
+                    await page.waitForFunction(
+                        viewportGeometryIsReady,
+                        undefined,
+                        { timeout: 5000 },
+                    );
+                } catch (error) {
+                    const diagnostics = await page.evaluate(() => {
+                        const toolbar = document.querySelector<HTMLElement>(
+                            '[role="toolbar"]',
+                        );
+                        const viewport = globalThis.visualViewport;
+                        const selection = globalThis.getSelection();
+                        const caret = selection?.rangeCount
+                            ? selection.getRangeAt(0).getBoundingClientRect()
+                            : null;
+                        const hit = caret
+                            ? document.elementFromPoint(
+                                caret.left + caret.width / 2,
+                                caret.top + caret.height / 2,
+                            )
+                            : null;
+                        const selectors = [
+                            ".workspace-panel--mobile",
+                            ".workspace-body",
+                            ".document-editor-container",
+                            ".document-editor-header",
+                            ".document-editor-toolbar",
+                            ".document-editor-content-layout",
+                            ".document-editor-scroll-area",
+                            ".ProseMirror",
+                        ];
+                        return {
+                            viewport: viewport && {
+                                offsetTop: viewport.offsetTop,
+                                height: viewport.height,
+                                bottom: viewport.offsetTop + viewport.height,
+                            },
+                            toolbar: toolbar?.getBoundingClientRect().toJSON(),
+                            caret: caret?.toJSON(),
+                            caretHit: hit && {
+                                tag: hit.tagName,
+                                className: hit.getAttribute("class"),
+                                ariaLabel: hit.getAttribute("aria-label"),
+                            },
+                            activeElement: document.activeElement && {
+                                tag: document.activeElement.tagName,
+                                className: document.activeElement.getAttribute(
+                                    "class",
+                                ),
+                            },
+                            scrollChain: selectors.map((selector) => {
+                                const element = document.querySelector<
+                                    HTMLElement
+                                >(selector);
+                                if (!element) {
+                                    return { selector, missing: true };
+                                }
+                                const rect = element.getBoundingClientRect();
+                                const style = getComputedStyle(element);
+                                return {
+                                    selector,
+                                    rect: rect.toJSON(),
+                                    scrollTop: element.scrollTop,
+                                    scrollHeight: element.scrollHeight,
+                                    clientHeight: element.clientHeight,
+                                    overflowY: style.overflowY,
+                                    position: style.position,
+                                };
+                            }),
+                        };
+                    });
+                    const screenshotDirectory = evidenceDirectory ??
+                        await Deno.makeTempDir({
+                            prefix: "documents-viewport-failure-",
+                        });
+                    await Deno.mkdir(screenshotDirectory, {
+                        recursive: true,
+                    });
+                    const screenshotPath =
+                        `${screenshotDirectory}/toolbar-viewport.png`;
+                    await page.screenshot({ path: screenshotPath });
+                    throw new Error(
+                        `视口几何未在 5000ms 内稳定：${
+                            JSON.stringify(diagnostics)
+                        }；截图：${screenshotPath}；${String(error)}`,
+                    );
+                }
+
+                const visibleGeometry = await page.evaluate(() => {
+                    const toolbar = document.querySelector<HTMLElement>(
+                        '[role="toolbar"]',
+                    );
+                    const viewport = globalThis.visualViewport;
+                    const selection = globalThis.getSelection();
+                    const caret = selection?.rangeCount
+                        ? selection.getRangeAt(0).getBoundingClientRect()
+                        : null;
+                    const workspace = document.querySelector<HTMLElement>(
+                        ".workspace-panel--mobile",
+                    );
+                    if (!toolbar || !viewport || !caret || !workspace) {
+                        return null;
+                    }
+                    const toolbarRect = toolbar.getBoundingClientRect();
+                    return {
+                        visualTop: viewport.offsetTop,
+                        visualBottom: viewport.offsetTop + viewport.height,
+                        toolbarTop: toolbarRect.top,
+                        toolbarBottom: toolbarRect.bottom,
+                        caretTop: caret.top,
+                        caretBottom: caret.bottom,
+                        workspaceHeight: Number.parseFloat(
+                            getComputedStyle(workspace).getPropertyValue(
+                                "--workspace-visible-height",
+                            ),
+                        ),
+                        visualHeight: viewport.height,
+                    };
+                });
+                assert(visibleGeometry);
+                assert(
+                    visibleGeometry.workspaceHeight <=
+                        visibleGeometry.visualHeight + 1,
+                    "mobile workspace height should follow the visual viewport",
+                );
+                assert(
+                    visibleGeometry.toolbarTop >=
+                            visibleGeometry.visualTop - 1 &&
+                        visibleGeometry.toolbarBottom <=
+                            visibleGeometry.visualBottom + 1,
+                    "toolbar should remain inside the reduced visual viewport",
+                );
+                assert(
+                    visibleGeometry.caretTop >=
+                            visibleGeometry.toolbarBottom - 1 &&
+                        visibleGeometry.caretBottom <=
+                            visibleGeometry.visualBottom + 1,
+                    "the focused caret should remain visible below the toolbar",
+                );
+
+                await page.getByRole("button", {
+                    name: "Markdown 源码",
+                    exact: true,
+                }).click();
+                const disabledToolbar = await toolbar.evaluate((element) => ({
+                    allDisabled: Array.from(
+                        element.querySelectorAll<HTMLButtonElement>("button"),
+                    ).every((button) => button.disabled),
+                    tabIndex: element.tabIndex,
+                }));
+                assertEquals(disabledToolbar.allDisabled, true);
+                assertEquals(
+                    disabledToolbar.tabIndex,
+                    0,
+                    "a toolbar with no enabled command remains one Tab stop",
+                );
+            },
+        ),
+    );
+    assert(
+        await t.step(
             "short viewport keeps the focused source text visible and saves typed content",
             async () => {
                 await page.setViewportSize({ width: 390, height: 400 });
                 await resetHome("widgets", "dark");
-                await page.getByRole("button", { name: "源码", exact: true })
+                await page.getByRole("button", {
+                    name: "Markdown 源码",
+                    exact: true,
+                })
                     .click();
                 const source = page.getByRole("textbox", {
                     name: "Markdown 源码正文",
@@ -374,7 +751,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     30,
                 );
                 assertEquals(saved.body.match(/asset:\/\//g)?.length, 50);
-                await page.getByRole("button", { name: "页面", exact: true })
+                await page.getByRole("button", { name: "分页", exact: true })
                     .click();
                 await page.waitForFunction(() =>
                     Number(
@@ -382,7 +759,10 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             ?.getAttribute("data-page-count"),
                     ) >= 31
                 );
-                await page.getByRole("button", { name: "源码", exact: true })
+                await page.getByRole("button", {
+                    name: "Markdown 源码",
+                    exact: true,
+                })
                     .click();
                 assertEquals(
                     await page.getByRole("textbox", {
@@ -391,7 +771,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     }).inputValue(),
                     saved.body,
                 );
-                await page.getByRole("button", { name: "连续", exact: true })
+                await page.getByRole("button", { name: "编辑", exact: true })
                     .click();
                 await editor.waitFor();
                 await page.waitForFunction(() =>

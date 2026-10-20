@@ -291,50 +291,6 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 "Send button left edge must be within composer surface",
             );
 
-            // Record Ask control styles in /settings -> /ask order
-            const askNavigatedControls = await page.evaluate(() => {
-                const pill = document.querySelector(
-                    ".ask-composer__action-pill",
-                );
-                const send = document.querySelector(
-                    '[data-slot="button"].ask-composer__send-btn',
-                );
-                const trigger = document.querySelector(".model-trigger");
-                const pillCs = pill ? globalThis.getComputedStyle(pill) : null;
-                const sendCs = send ? globalThis.getComputedStyle(send) : null;
-                const triggerCs = trigger
-                    ? globalThis.getComputedStyle(trigger)
-                    : null;
-                return {
-                    pill: pillCs
-                        ? {
-                            display: pillCs.display,
-                            height: pillCs.height,
-                            borderRadius: pillCs.borderRadius,
-                        }
-                        : null,
-                    send: sendCs
-                        ? {
-                            display: sendCs.display,
-                            borderRadius: sendCs.borderRadius,
-                        }
-                        : null,
-                    trigger: triggerCs
-                        ? {
-                            display: triggerCs.display,
-                            height: triggerCs.height,
-                        }
-                        : null,
-                };
-            });
-            assert(
-                askNavigatedControls.send,
-                "Send button styles must be captured",
-            );
-            assert(
-                askNavigatedControls.pill,
-                "Action pill styles must be captured",
-            );
             // Capture Ask 1440 screenshots
             await page.screenshot({
                 path: `${artifactDir}/ask-workbench-1440.png`,
@@ -389,7 +345,6 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 motionLevelSegments: levelCount,
                 motionLevelWidthDiff: levelWidthDiff,
             };
-            metricsRecord["askNavigatedControls"] = askNavigatedControls;
 
             await context.close();
         },

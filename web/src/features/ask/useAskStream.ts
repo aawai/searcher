@@ -11,7 +11,12 @@ import type {
     SourceCitation,
     ToolsConfig,
 } from "../../../../src/features/ai/types.ts";
-import type { ConversationFullData, StreamMeta } from "./types.ts";
+import type {
+    AskMessageDto,
+    ConversationFullData,
+    StreamMeta,
+} from "./types.ts";
+import { sanitizeFailureReason } from "./assistant-message-adapter.ts";
 
 export interface SendChatRequestOptions {
     editMessageId?: string;
@@ -182,6 +187,8 @@ export function createOptimisticStreamSnapshot(params: {
     providerId: string;
     modelId: string;
     isAborted: boolean;
+    isFailed?: boolean;
+    failureReason?: string;
     timestamp: number;
     effectiveHistoryEnabled: boolean;
     effectiveSystemInstruction: string | null;
@@ -198,6 +205,8 @@ export function createOptimisticStreamSnapshot(params: {
         providerId,
         modelId,
         isAborted,
+        isFailed,
+        failureReason,
         timestamp,
         effectiveHistoryEnabled,
         effectiveSystemInstruction,
@@ -242,7 +251,7 @@ export function createOptimisticStreamSnapshot(params: {
         createdAt: timestamp,
     };
 
-    const assistantMessage: AiMessageDto = {
+    const assistantMessage: AskMessageDto = {
         id: assistantMessageId,
         conversationId: meta.conversationId,
         parentMessageId: userMessageId,
@@ -251,7 +260,10 @@ export function createOptimisticStreamSnapshot(params: {
         parts: [{ type: "text", text: liveText }, ...liveParts],
         providerId,
         modelId,
-        status: isAborted ? "interrupted" : "streaming",
+        status: isAborted ? "interrupted" : isFailed ? "failed" : "streaming",
+        ...(isFailed && failureReason
+            ? { failureReason: sanitizeFailureReason(failureReason) }
+            : {}),
         variantGroupId: options?.regenerateMessageId ?? null,
         inputTokens: null,
         outputTokens: null,
@@ -280,24 +292,69 @@ export function createOptimisticStreamSnapshot(params: {
         ],
     };
 }
+export function mergeCanonicalConversation(params: {
+    canonical: ConversationFullData;
+    previous: ConversationFullData | null;
+    currentFailure?: {
+        assistantMessageId: string;
+        reason: string;
+    };
+}): ConversationFullData {
+    let previousFailureReasons: Map<string, string> | undefined;
+    for (const message of params.previous?.messages ?? []) {
+        if (message.status === "failed" && message.failureReason) {
+            previousFailureReasons ??= new Map();
+            previousFailureReasons.set(
+                message.id,
+                sanitizeFailureReason(message.failureReason),
+            );
+        }
+    }
+
+    const currentFailureReason = params.currentFailure
+        ? sanitizeFailureReason(params.currentFailure.reason)
+        : undefined;
+    if (!previousFailureReasons && !currentFailureReason) {
+        return params.canonical;
+    }
+
+    return {
+        ...params.canonical,
+        messages: params.canonical.messages.map((message) => {
+            const failureReason = message.id ===
+                    params.currentFailure?.assistantMessageId
+                ? currentFailureReason
+                : message.status === "failed"
+                ? previousFailureReasons?.get(message.id) ??
+                    message.failureReason
+                : message.failureReason;
+            if (
+                !failureReason || failureReason === message.failureReason
+            ) {
+                return message;
+            }
+            return { ...message, failureReason };
+        }),
+    };
+}
+
 /**
  * Determines whether canonical conversation data from the backend should update
- * the client conversation state. If the user aborted the stream but the backend
- * still reports "streaming" for the assistant message (in-flight persistence),
- * the client retains the observed stream snapshot until canonical data is terminal.
+ * the client conversation state. If an aborted or failed stream has not yet
+ * reached a terminal status on the server, retain the local terminal snapshot.
  */
 export function shouldApplyCanonicalConversation(params: {
     isAborted: boolean;
+    isFailed?: boolean;
     canonicalMessages: AiMessageDto[];
     assistantMessageId?: string;
 }): boolean {
-    if (!params.isAborted) return true;
+    if (!params.isAborted && !params.isFailed) return true;
     if (!params.assistantMessageId) return true;
-    const responseStillStreaming = params.canonicalMessages.some((message) =>
-        message.id === params.assistantMessageId &&
-        message.status === "streaming"
+    const response = params.canonicalMessages.find((message) =>
+        message.id === params.assistantMessageId
     );
-    return !responseStillStreaming;
+    return response !== undefined && response.status !== "streaming";
 }
 
 /**
@@ -443,6 +500,8 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                         providerId: model!.providerId,
                         modelId: model!.modelId,
                         isAborted: controller.signal.aborted,
+                        isFailed: acc.streamFailed,
+                        failureReason: acc.errorMessage,
                         timestamp: now,
                         effectiveHistoryEnabled,
                         effectiveSystemInstruction,
@@ -536,9 +595,12 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
             } catch (e) {
                 if (!controller.signal.aborted) {
                     acc.streamFailed = true;
-                    setErrorRef.current(
-                        e instanceof Error ? e.message : errorMessage(e),
-                    );
+                    const failureReason = e instanceof Error
+                        ? e.message
+                        : errorMessage(e);
+                    acc.errorMessage = failureReason;
+                    setErrorRef.current(failureReason);
+                    publishStream();
                 }
             } finally {
                 if (controller.signal.aborted) publishStream();
@@ -568,12 +630,28 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                             if (
                                 shouldApplyCanonicalConversation({
                                     isAborted: controller.signal.aborted,
+                                    isFailed: acc.streamFailed,
                                     canonicalMessages: currentConv.messages,
                                     assistantMessageId: acc.meta
                                         ?.assistantMessageId,
                                 })
                             ) {
-                                setConversationRef.current(currentConv);
+                                const assistantMessageId = acc.meta
+                                    ?.assistantMessageId;
+                                const failureReason = acc.streamFailed &&
+                                        acc.errorMessage && assistantMessageId
+                                    ? {
+                                        assistantMessageId,
+                                        reason: acc.errorMessage,
+                                    }
+                                    : undefined;
+                                setConversationRef.current(
+                                    mergeCanonicalConversation({
+                                        canonical: currentConv,
+                                        previous: currentConversation,
+                                        currentFailure: failureReason,
+                                    }),
+                                );
                             }
                             setHistoryRef.current(items);
                         }

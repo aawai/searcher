@@ -8,6 +8,10 @@ import {
 } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    useEscapeLayer,
+    useEscapeLayerStack,
+} from "../../components/ui/escape-layer-stack.tsx";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
 
 export type WorkspacePresentation = "panel" | "window" | "sheet";
@@ -59,6 +63,8 @@ export function WorkspaceSurface(
     },
 ) {
     const mobile = presentation === "sheet";
+    const escapeStack = useEscapeLayerStack();
+    useEscapeLayer(!escapeManaged, onEscape, "host");
     const back = useRef<HTMLButtonElement>(null);
     const close = useRef<HTMLButtonElement>(null);
     const touchY = useRef<number | null>(null);
@@ -101,28 +107,6 @@ export function WorkspaceSurface(
         const frame = requestAnimationFrame(focusChrome);
         return () => cancelAnimationFrame(frame);
     }, [routeKey, mobile, nested]);
-    useEffect(() => {
-        if (mobile || escapeManaged) return;
-        const escape = (event: KeyboardEvent) => {
-            if (
-                event.key !== "Escape" || event.defaultPrevented ||
-                event.isComposing
-            ) return;
-            if (
-                (event.target instanceof Element &&
-                    event.target.closest(
-                        '[role="menu"], [role="alertdialog"]',
-                    )) ||
-                document.querySelector(
-                    '[role="menu"], [data-slot="popover-content"], [role="dialog"], [role="alertdialog"]',
-                )
-            ) return;
-            event.preventDefault();
-            onEscape();
-        };
-        document.addEventListener("keydown", escape);
-        return () => document.removeEventListener("keydown", escape);
-    }, [mobile, onEscape, escapeManaged]);
     const content = (
         <>
             <header
@@ -186,37 +170,13 @@ export function WorkspaceSurface(
         ? (
             <Sheet
                 open
+                escapeLayer={false}
                 onOpenChange={(open, details) => {
-                    const target = details.event.target;
-                    if (
-                        !open && details.reason === "escape-key" &&
-                        escapeManaged
-                    ) {
-                        details.cancel();
-                        return;
-                    }
-                    if (
-                        !open && details.reason === "escape-key" &&
-                        target instanceof Element &&
-                        target.closest(
-                            '[role="menu"], [role="alertdialog"], [data-workspace-escape-boundary]',
-                        )
-                    ) {
-                        details.cancel();
-                        return;
-                    }
                     if (!open && details.reason === "escape-key") {
                         details.cancel();
-                        if (
-                            details.event instanceof KeyboardEvent &&
-                            details.event.isComposing
-                        ) return;
-                        if (
-                            document.querySelector(
-                                '[role="menu"], [data-slot="popover-content"], [role="alertdialog"], [role="dialog"]:not(.workspace-panel)',
-                            )
-                        ) return;
-                        onEscape();
+                        if (details.event instanceof KeyboardEvent) {
+                            escapeStack.dispatch(details.event);
+                        }
                         return;
                     }
                     if (!open) onClose();

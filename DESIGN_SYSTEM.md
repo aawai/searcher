@@ -46,6 +46,32 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   入口使用 caption（13px）与 foreground，桌面最小命中高度为
   `--control-compact-height`，coarse/no-hover/any-pointer:coarse 时为
   `--control-touch-target`。焦点沿用全局 focus-visible。
+- 搜索建议由 input combobox 持有焦点，listbox 的 option 使用稳定 ID 与
+  `aria-activedescendant` 关联，不进入 Tab 顺序；数量由 polite status 播报， IME
+  组合态不消费候选键。Escape 只关闭建议并保留输入焦点。
+  在线建议失败显示“在线联想暂不可用”，不暴露诊断，保留本地历史与应用；
+  粗指针搜索按钮与 option 消费 `--control-touch-target`，不增大 Search frame。
+- `components/ui/escape-layer-stack.tsx` 拥有全应用 Escape
+  层栈。每次按键在捕获阶段 快照顶层，按 overlay → immersive → host
+  优先级只消费一次；Base UI 继续拥有浮层关闭，已处理事件与 IME
+  不再派发。浮层注销不能让同一次按键落到窗口。
+- Widgets 窗口菜单常驻可见，点击或 Enter 打开；`Ctrl+Alt+Shift+M` 打开菜单，
+  `Ctrl+Alt+Shift+←/→` 左右吸附，`Ctrl+Alt+Shift+O` 进入总览。 菜单、Dock
+  与总览提供可见说明及 `aria-keyshortcuts`；编辑控件与浮层不抢占。 受约束窗口的
+  Apps/Notes/Documents 按同一规则关闭当前工作区，普通桌面其他窗口 不因 Escape
+  关闭；应用内部 query、整理、文件夹与脏表单仍逐层处理。
+
+### 工作区图标
+
+| 语义   | Lucide 图标 | 尺寸                                    |
+| ------ | ----------- | --------------------------------------- |
+| 应用   | AppWindow   | Dock 20px；导航、标题栏与总览缩略图16px |
+| 便签   | StickyNote  | 沿用既有尺寸，完整三档收敛见 #210       |
+| 笔记   | NotebookPen | 沿用既有尺寸，完整三档收敛见 #210       |
+| 总览   | LayoutGrid  | 20px                                    |
+| 文件夹 | Folder      | 领域文件夹，不代表应用工作区            |
+
+应用入口使用 md16 / lg20 两档，图标变更不改变控件命中区或 accessible name。
 
 ### Desktop scene decorative layer
 
@@ -91,6 +117,9 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
 - 新 UI 先复用 `components/ui`；跨页面语义进入 shared semantic；Workspace
   信息架构进入 Workspace layer；Apps / Notes domain presentation 留在对应
   feature owner。
+- 首页有应用时在网格外提供一次性整理提示，关闭状态仅在当前设备按账号保存；
+  说明右键、长按和 Shift+F10／菜单键，设置及 Apps 根工作区保持可发现说明。
+  提示是 secondary content，不覆盖网格、不增加图标省略号或改变 tile geometry。
 - Documents Library 使用同一 WorkspaceSection、状态组件和 canonical
   dialog/menu，不建立第二层 window chrome。内容区域宽度小于 640px
   时导航与列表单栏排列；达到 640px 后采用内部侧栏，宽度由系统 Token
@@ -117,6 +146,14 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   `--editor-min-content-height`（240px，约十行正文）拥有；header/toolbar
   超出可用高度时，editor container 滚动 chrome，而不是把正文 flex viewport
   压成零。此约束适用于所有 Host，不增加按设备的临时分支，也不改 Host geometry。
+- Documents 视图名为“编辑 / 分页 / Markdown 源码”，共享同一 canonical Markdown。
+  纸张、打印、复制和导出位于“更多文档操作”，大纲与历史保持直接可达。
+  工具栏只有一个 Tab 入口，左右方向键及 Home/End 移动，禁用项跳过； 选区状态使用
+  `aria-pressed`，由 Documents 消费侧 plugin 观察，不进入 shared runtime。
+  窄屏工具栏为单行横向滚动与 sticky，粗指针头部控件消费 touch target Token。
+  菜单 Portal 标记对应编辑实例，移动焦点不误触发保存；视图说明 ID 按实例隔离。
+  软键盘导致 visualViewport 变化时，按实例的实际几何调整滚动，保持工具栏与
+  光标可见；短高度仍允许整个 editor 滚动，不强制锁住 chrome 的 scrollTop。
 
 ### Zen inline note preview
 
@@ -661,16 +698,16 @@ Apps 与 Notes 共享 Root chrome 与语义 token，Widgets 分别显示在 doma
   以文件/表达式限定，不开放 feature raw visual value。
 - Home 唯一 `UndoToast` 使用 semantic `placement` / `host`，移动时将同一个
   portal container 移到活动 Sheet Body 与 Footer 间的 feedback slot；无 Sheet
-  时移回全局 host。移动不重建 live region、不抢焦点、不重启业务 owner 的 5000ms
-  timer，应用/便签优先级与 Ask 契约不变。 全局移动反馈留出导航触控高度，不能阻挡
-  Zen/Widgets 的工作区入口； 恢复失败在当前 Sheet feedback slot 内显示 error
-  Banner，不假恢复。
-- `useAppsEscape` 是当前 active 应用工作区唯一领域裁决器，window capture
-  先处理所属业务确认，再按事件所属控件让菜单/Popover 自行处理；不查询页面任意
-  dialog 作为全局跳过条件。应用 Sheet 取消 Base UI 默认 Escape-dismiss，
-  Panel/Window 不注册第二个应用 dismiss listener。一次只退一层，IME composing
-  不导航；空格 query 也清空，返回文件夹恢复 tile focus，表单返回经过 dirty
-  保护；X/backdrop/swipe 表示关闭整个工作区，其他领域保留既有语义。
+  时使用浮动锚点，不推移 Search。应用与便签均为“移至回收站”，按账号维护每项
+  10秒撤销窗口，展示名称、逐项/批量撤销及回收站链接；悬停或聚焦时暂停。
+  菜单/弹窗打开时订阅 Escape 栈的 overlay 状态，暂停并暂藏同一提示节点，
+  关闭后恢复剩余时间，不改变全局 elevation。恢复失败保留对应项目和错误供重试；
+  长名称可换行且不超出视口。Ask 会话自己的撤销契约不变。
+- `useAppsEscape` 是当前 active 应用工作区唯一领域裁决器，作为 host 注册到共享
+  Escape 层栈；菜单、Popover 和 Dialog 在更高层消费，不查询页面浮层 DOM。 应用
+  Sheet 取消 Base UI 默认 Escape-dismiss，Panel/Window 不另注册应用 dismiss
+  listener。空格 query 也清空，返回文件夹恢复 tile focus，表单返回经过 dirty
+  保护；X/backdrop/swipe 表示关闭整个工作区。
 - 图标默认仅预览/来源摘要，展开隐藏不清会话；“更换图标”快捷入口进入展开编辑，
   普通编辑默认折叠。打开方式始终显示；图标错误自动展开。
 - 文件夹标题只有返回、名称、count、更多一组。搜索按原匹配规则分组为文件夹/
@@ -1062,6 +1099,13 @@ Thread、Message、Composer、编辑、重新生成和分支导航。
   sampling 参数，不显示虚假附件或工具能力。
 - 900px 以下历史使用 Sheet，宽屏使用侧栏；触屏核心操作目标至少
   44px。跳到最新按钮锚定于 Dock 上方，不盖住输入框。
+- 失败或中断在对应 assistant 消息中显示 alert 与明确“重试”动作；错误原因去除
+  控制字符并限长，canonical 同步按消息 ID 保留本地失败详情，不只保留本轮。
+  流式状态由独立 polite region 播报开始、结束及失败，进度最多每10秒更新， 不把逐
+  token 正文放入 live region。
+- Composer 默认仅保留附件、模型、更多设置与发送；推理、检索及生成参数归入设置
+  Popover。不支持工具的模型提供可见原因；已启用的工具在输入框上方显示标签。
+  空态提供三个示例问题，点击即填入当前 runtime composer 并聚焦，不自动发送。
 - Enter 发送、Shift+Enter 换行，保留 IME 合成保护；textarea
   自动增长到最大高度后内部滚动。复制反馈只在真正复制成功后显示，代码复制被拒绝时提供可见提示。减少动态偏好关闭工作区
   transition 和流式光标动画。

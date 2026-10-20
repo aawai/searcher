@@ -8,6 +8,7 @@ import {
 import {
     AlertCircle,
     ArrowUp,
+    Ellipsis,
     Paperclip,
     Square,
     Wrench,
@@ -18,10 +19,15 @@ import {
     ModelSelector,
 } from "../../components/searcher/ModelSelector.tsx";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu.tsx";
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "../../components/ui/popover.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import { Switch } from "../../components/ui/switch.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
@@ -138,11 +144,15 @@ export function SearcherComposer({
         }
     };
 
-    const hasActiveTools = supportsTools && (
-        Boolean(toolsConfig.notes) ||
-        Boolean(toolsConfig.apps) ||
-        Boolean(toolsConfig.webSearch)
-    );
+    const activeTools = [
+        supportsTools && toolsConfig.notes ? "笔记检索" : undefined,
+        supportsTools && toolsConfig.apps ? "应用检索" : undefined,
+        supportsTools && toolsConfig.webSearch &&
+            capabilities?.tools.webSearch !== false
+            ? "联网搜索"
+            : undefined,
+    ].filter((tool): tool is string => tool !== undefined);
+    const hasActiveTools = activeTools.length > 0;
     return (
         <div className="ask-composer-container">
             <ComposerPrimitive.Root
@@ -158,6 +168,22 @@ export function SearcherComposer({
                         }}
                     />
                 </div>
+                {activeTools.length > 0 && (
+                    <div
+                        className="ask-composer__active-tools"
+                        role="group"
+                        aria-label="已启用的检索工具"
+                    >
+                        {activeTools.map((tool) => (
+                            <span
+                                key={tool}
+                                className="ask-composer__tool-chip"
+                            >
+                                {tool}
+                            </span>
+                        ))}
+                    </div>
+                )}
 
                 {/* User-Visible Attachment Error Banner */}
                 {attachmentError && (
@@ -184,7 +210,7 @@ export function SearcherComposer({
 
                 {/* Assistant-UI Auto-Growing Accessible Input */}
                 <ComposerPrimitive.Input
-                    placeholder="输入问题，Enter 发送，Shift+Enter 换行 (支持拖拽/粘贴图片与文档)..."
+                    placeholder="输入问题…"
                     className="ask-composer__textarea"
                     rows={1}
                     autoFocus
@@ -195,20 +221,28 @@ export function SearcherComposer({
                 <div className="ask-composer__toolbar">
                     <div className="ask-composer__tools-left">
                         {/* Assistant-UI Add Attachment Button */}
-                        <ComposerPrimitive.AddAttachment asChild>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="ask-composer__icon-btn"
-                                aria-label="添加附件 (图片/文档)"
-                                title={supportsVision
-                                    ? "添加附件 (支持 PNG/JPEG/WebP 图片及 TXT/MD 文档)"
-                                    : "添加附件 (当前模型仅支持文本文档)"}
-                            >
-                                <Paperclip size={16} />
-                            </Button>
-                        </ComposerPrimitive.AddAttachment>
+                        <Tooltip>
+                            <ComposerPrimitive.AddAttachment asChild>
+                                <TooltipTrigger
+                                    render={
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="ask-composer__icon-btn"
+                                            aria-label="添加附件 (图片/文档)"
+                                        />
+                                    }
+                                >
+                                    <Paperclip size={16} />
+                                </TooltipTrigger>
+                            </ComposerPrimitive.AddAttachment>
+                            <TooltipContent>
+                                {supportsVision
+                                    ? "添加图片或文档，也可拖拽文件到输入框"
+                                    : "添加文档，也可拖拽文件到输入框"}
+                            </TooltipContent>
+                        </Tooltip>
 
                         {/* Model Selector */}
                         <ModelSelector
@@ -217,142 +251,148 @@ export function SearcherComposer({
                             onChange={onSelectModel}
                         />
 
-                        {/* Reasoning Effort Selector */}
-                        <ReasoningSelector
-                            model={activeModel}
-                            value={generationConfig.reasoningEffort}
-                            onChange={(reasoningEffort) =>
-                                onChangeGenerationConfig({
-                                    ...generationConfig,
-                                    reasoningEffort,
-                                })}
-                        />
-
-                        {/* Tools Menu (Notes, Apps, Web Search) - gated by supportsTools */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
+                        {/* Low-frequency controls in one shared settings panel */}
+                        <Popover>
+                            <PopoverTrigger
                                 render={
                                     <Button
                                         type="button"
-                                        variant="outline"
-                                        className={`ask-composer__action-pill ${
-                                            hasActiveTools
-                                                ? "is-tool-active text-accent"
-                                                : ""
-                                        } ${
-                                            !supportsTools
-                                                ? "opacity-50"
-                                                : ""
-                                        }`}
-                                        aria-label="工具集成与检索"
-                                        title={supportsTools
-                                            ? "工具集成与搜索设置"
-                                            : "当前模型不支持工具调用"}
-                                        disabled={!supportsTools}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ask-composer__icon-btn ask-composer__settings-trigger"
+                                        aria-label="更多设置"
+                                        title="推理、检索与生成设置"
                                     />
                                 }
                             >
-                                <Wrench
-                                    size={13}
-                                    className="ask-composer__pill-icon"
-                                />
-                                <span className="ask-composer__pill-text">
-                                    工具
-                                    {hasActiveTools && (
-                                        <span className="ask-composer__active-dot" />
-                                    )}
-                                </span>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                sideOffset={6}
-                                className="w-56 p-2 space-y-2"
+                                <Ellipsis size={17} />
+                                {hasActiveTools && (
+                                    <span
+                                        className="ask-composer__active-dot"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                            </PopoverTrigger>
+                            <PopoverContent
+                                side="top"
+                                align="end"
+                                sideOffset={8}
+                                className="ask-composer__settings-panel"
+                                aria-label="问答设置"
                             >
-                                <div className="text-xs font-semibold px-2 py-1 text-muted border-b border-border/40">
-                                    问答扩展检索能力 (默认关闭)
+                                <div className="ask-composer__settings-heading">
+                                    <Wrench size={14} />
+                                    <span>问答设置</span>
                                 </div>
 
-                                <div className="flex items-center justify-between px-2 py-1">
-                                    <label
-                                        htmlFor="tool-notes"
-                                        className="text-xs cursor-pointer"
-                                    >
-                                        查询个人笔记
-                                    </label>
-                                    <Switch
-                                        id="tool-notes"
-                                        aria-label="查询个人笔记"
-                                        size="sm"
-                                        checked={Boolean(toolsConfig.notes)}
-                                        onCheckedChange={(checked) =>
-                                            onChangeToolsConfig({
-                                                ...toolsConfig,
-                                                notes: checked,
-                                            })}
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between px-2 py-1">
-                                    <label
-                                        htmlFor="tool-apps"
-                                        className="text-xs cursor-pointer"
-                                    >
-                                        查询已添加应用
-                                    </label>
-                                    <Switch
-                                        id="tool-apps"
-                                        aria-label="查询已添加应用"
-                                        size="sm"
-                                        checked={Boolean(toolsConfig.apps)}
-                                        onCheckedChange={(checked) =>
-                                            onChangeToolsConfig({
-                                                ...toolsConfig,
-                                                apps: checked,
-                                            })}
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between px-2 py-1">
-                                    <div className="flex flex-col">
-                                        <label
-                                            htmlFor="tool-web"
-                                            className="text-xs cursor-pointer"
+                                <section className="ask-composer__tools-panel">
+                                    <h3>扩展检索</h3>
+                                    {!supportsTools && (
+                                        <p
+                                            className="ask-composer__tools-unavailable"
+                                            role="status"
                                         >
-                                            联网搜索 (SearXNG)
-                                        </label>
-                                        {capabilities?.tools.webSearch ===
-                                                false && (
-                                            <span className="text-xs text-muted">
-                                                服务端未配置
-                                            </span>
-                                        )}
+                                            当前模型不支持工具调用。切换到支持工具的模型后，可使用笔记、应用和联网搜索。
+                                        </p>
+                                    )}
+                                    <div className="ask-composer__tool-options">
+                                        <div className="ask-composer__tool-option">
+                                            <label htmlFor="tool-notes">
+                                                查询个人笔记
+                                            </label>
+                                            <Switch
+                                                id="tool-notes"
+                                                aria-label="查询个人笔记"
+                                                size="sm"
+                                                disabled={!supportsTools}
+                                                checked={Boolean(
+                                                    toolsConfig.notes,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    onChangeToolsConfig({
+                                                        ...toolsConfig,
+                                                        notes: checked,
+                                                    })}
+                                            />
+                                        </div>
+
+                                        <div className="ask-composer__tool-option">
+                                            <label htmlFor="tool-apps">
+                                                查询已添加应用
+                                            </label>
+                                            <Switch
+                                                id="tool-apps"
+                                                aria-label="查询已添加应用"
+                                                size="sm"
+                                                disabled={!supportsTools}
+                                                checked={Boolean(
+                                                    toolsConfig.apps,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    onChangeToolsConfig({
+                                                        ...toolsConfig,
+                                                        apps: checked,
+                                                    })}
+                                            />
+                                        </div>
+
+                                        <div className="ask-composer__tool-option">
+                                            <div>
+                                                <label htmlFor="tool-web">
+                                                    联网搜索 (SearXNG)
+                                                </label>
+                                                {capabilities?.tools
+                                                            .webSearch ===
+                                                        false && (
+                                                    <span className="ask-composer__tool-note">
+                                                        服务端未配置
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <Switch
+                                                id="tool-web"
+                                                aria-label="联网搜索 (SearXNG)"
+                                                size="sm"
+                                                disabled={!supportsTools ||
+                                                    capabilities?.tools
+                                                            .webSearch ===
+                                                        false}
+                                                checked={Boolean(
+                                                    toolsConfig.webSearch,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    onChangeToolsConfig({
+                                                        ...toolsConfig,
+                                                        webSearch: checked,
+                                                    })}
+                                            />
+                                        </div>
                                     </div>
-                                    <Switch
-                                        id="tool-web"
-                                        aria-label="联网搜索 (SearXNG)"
-                                        size="sm"
-                                        disabled={capabilities?.tools
-                                            .webSearch === false}
-                                        checked={Boolean(toolsConfig.webSearch)}
-                                        onCheckedChange={(checked) =>
-                                            onChangeToolsConfig({
-                                                ...toolsConfig,
-                                                webSearch: checked,
+                                </section>
+
+                                <div className="ask-composer__generation-controls">
+                                    <ReasoningSelector
+                                        model={activeModel}
+                                        value={generationConfig.reasoningEffort}
+                                        onChange={(reasoningEffort) =>
+                                            onChangeGenerationConfig({
+                                                ...generationConfig,
+                                                reasoningEffort,
                                             })}
                                     />
+                                    <GenerationSettings
+                                        config={generationConfig}
+                                        onChange={onChangeGenerationConfig}
+                                        model={activeModel}
+                                        isReasoningStrict={activeModel
+                                            ?.isReasoningStrict}
+                                        onSaveDefault={onSaveDefaultGenerationConfig}
+                                        onResetDefault={onResetDefaultGenerationConfig}
+                                        isDefault={isDefaultGenerationConfig}
+                                    />
                                 </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* Generation Settings Popover (⚙) */}
-                        <GenerationSettings
-                            config={generationConfig}
-                            onChange={onChangeGenerationConfig}
-                            model={activeModel}
-                            isReasoningStrict={activeModel?.isReasoningStrict}
-                            onSaveDefault={onSaveDefaultGenerationConfig}
-                            onResetDefault={onResetDefaultGenerationConfig}
-                            isDefault={isDefaultGenerationConfig}
-                        />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <div className="ask-composer__tools-right">
                         <ThreadPrimitive.If running={false}>

@@ -6,6 +6,7 @@ import {
     useState,
 } from "react";
 import type { DesktopState } from "./desktop-state.ts";
+import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 
 export interface DocumentImmersion {
     immersiveDocumentId: string | null;
@@ -108,6 +109,7 @@ export function useDocumentImmersion(
             });
         }
     }, [id]);
+    useEscapeLayer(Boolean(id), () => exit(), "immersive");
 
     const enter = useCallback((windowId: string) => {
         if (
@@ -165,29 +167,6 @@ export function useDocumentImmersion(
             }
         };
     }, [id]);
-
-    useEffect(() => {
-        if (!id) return;
-        const onEscape = (event: KeyboardEvent) => {
-            if (
-                event.key !== "Escape" || event.defaultPrevented ||
-                event.isComposing
-            ) return;
-            const overlays = document.querySelectorAll<HTMLElement>(
-                '[role="alertdialog"], [role="dialog"], [role="menu"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="context-menu-content"]',
-            );
-            if (
-                [...overlays].some((element) =>
-                    element.getClientRects().length > 0 &&
-                    getComputedStyle(element).visibility !== "hidden"
-                )
-            ) return;
-            event.preventDefault();
-            exit();
-        };
-        document.addEventListener("keydown", onEscape);
-        return () => document.removeEventListener("keydown", onEscape);
-    }, [id, exit]);
 
     const hideDockWhenOutside = useCallback(() => {
         if (dockHideFrame.current !== null) {

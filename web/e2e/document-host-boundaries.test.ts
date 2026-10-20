@@ -28,8 +28,33 @@ async function visiblePoint(locator: Locator, minimumHeight = 24) {
                 bottom = Math.min(bottom, clip.bottom);
             }
         }
-        const x = (left + right) / 2, y = (top + bottom) / 2;
-        const hit = document.elementFromPoint(x, y);
+        const x = (left + right) / 2;
+        let y = (top + bottom) / 2;
+        let hit = document.elementFromPoint(x, y);
+        // Sticky chrome can cover part of an otherwise unclipped body. Measure
+        // the remaining painted area rather than assuming its center is usable.
+        while (hit && hit !== node && !node.contains(hit) && bottom > top) {
+            let occluder = hit;
+            for (
+                let parent = hit.parentElement;
+                parent && !parent.contains(node);
+                parent = parent.parentElement
+            ) {
+                const position = getComputedStyle(parent).position;
+                if (position === "sticky" || position === "fixed") {
+                    occluder = parent;
+                    break;
+                }
+            }
+            const cover = occluder.getBoundingClientRect();
+            if (cover.top - top >= bottom - cover.bottom) {
+                bottom = Math.min(bottom, cover.top);
+            } else {
+                top = Math.max(top, cover.bottom);
+            }
+            y = (top + bottom) / 2;
+            hit = bottom > top ? document.elementFromPoint(x, y) : null;
+        }
         return {
             x,
             y,
@@ -121,14 +146,14 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     `[data-document-id="${doc.id}"] h4 button`,
                 );
                 await row.click();
-                await host.getByRole("button", { name: "连续", exact: true })
+                await host.getByRole("button", { name: "编辑", exact: true })
                     .click();
                 await host.locator(".ProseMirror").waitFor();
                 assertEquals(
                     await host.getAttribute("data-presentation"),
                     width < 768 ? "sheet" : "panel",
                 );
-                await host.getByRole("button", { name: "页面", exact: true })
+                await host.getByRole("button", { name: "分页", exact: true })
                     .click();
                 await page.waitForFunction(() =>
                     Number(
@@ -262,7 +287,10 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     }),
                     10,
                 );
-                await host.getByRole("button", { name: "源码", exact: true })
+                await host.getByRole("button", {
+                    name: "Markdown 源码",
+                    exact: true,
+                })
                     .click();
                 const source = host.getByRole("textbox", {
                     name: "Markdown 源码正文",

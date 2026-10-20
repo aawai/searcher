@@ -4,6 +4,7 @@ import {
     type KeyboardEvent,
     useCallback,
     useEffect,
+    useId,
     useMemo,
     useRef,
     useState,
@@ -23,8 +24,15 @@ import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
 import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu.tsx";
 import { Input } from "../../components/ui/input.tsx";
-import { TextSelection } from "@milkdown/prose/state";
+import { type EditorState, TextSelection } from "@milkdown/prose/state";
+import type { Node as ProseMirrorNode } from "@milkdown/prose/model";
 import {
     Dialog,
     DialogContent,
@@ -42,6 +50,7 @@ import {
     Eye,
     File,
     History,
+    MoreHorizontal,
     Printer,
     RefreshCw,
     Settings,
@@ -71,6 +80,131 @@ if (typeof Deno === "undefined") {
     void import("./document-editor.css");
 }
 
+type DocumentToolbarActiveCommands = Partial<
+    Record<MarkdownEditorCommand, boolean | "mixed">
+>;
+
+interface DocumentTextBlock {
+    node: ProseMirrorNode;
+    position: number;
+}
+
+function summarizeToolbarState(states: boolean[]): boolean | "mixed" {
+    if (states.length === 0) return false;
+    const activeCount = states.filter(Boolean).length;
+    return activeCount === 0
+        ? false
+        : activeCount === states.length
+        ? true
+        : "mixed";
+}
+
+function selectedTextBlocks(state: EditorState): DocumentTextBlock[] {
+    const { selection } = state;
+    if (selection.empty) {
+        const { $from } = selection;
+        return $from.parent.isTextblock
+            ? [{ node: $from.parent, position: $from.before($from.depth) }]
+            : [];
+    }
+
+    const blocks: DocumentTextBlock[] = [];
+    state.doc.nodesBetween(selection.from, selection.to, (node, position) => {
+        if (node.isTextblock) blocks.push({ node, position });
+    });
+    return blocks;
+}
+
+function documentMarkState(
+    state: EditorState,
+    markName: string,
+): boolean | "mixed" {
+    const markType = state.schema.marks[markName];
+    if (!markType) return false;
+    const { selection } = state;
+    if (selection.empty) {
+        const marks = state.storedMarks ?? selection.$from.marks();
+        return marks.some((mark) => mark.type === markType);
+    }
+
+    const states: boolean[] = [];
+    state.doc.nodesBetween(selection.from, selection.to, (node) => {
+        if (node.isText) {
+            states.push(node.marks.some((mark) => mark.type === markType));
+        }
+    });
+    return summarizeToolbarState(states);
+}
+
+function documentListKind(
+    state: EditorState,
+    block: DocumentTextBlock,
+): "bulletList" | "orderedList" | "taskList" | null {
+    const position = state.doc.resolve(block.position + 1);
+    for (let depth = position.depth; depth > 0; depth--) {
+        const item = position.node(depth);
+        if (item.type.name !== "list_item") continue;
+        const list = position.node(depth - 1);
+        if (list.type.name === "ordered_list") return "orderedList";
+        if (list.type.name === "bullet_list") {
+            return item.attrs.checked === null ||
+                    item.attrs.checked === undefined
+                ? "bulletList"
+                : "taskList";
+        }
+    }
+    return null;
+}
+
+function documentBlockHasAncestor(
+    state: EditorState,
+    block: DocumentTextBlock,
+    typeName: string,
+): boolean {
+    const position = state.doc.resolve(block.position + 1);
+    for (let depth = position.depth; depth > 0; depth--) {
+        if (position.node(depth).type.name === typeName) return true;
+    }
+    return false;
+}
+
+function getDocumentToolbarState(
+    state: EditorState,
+): DocumentToolbarActiveCommands {
+    const blocks = selectedTextBlocks(state);
+    const blockState = (isActive: (block: DocumentTextBlock) => boolean) =>
+        summarizeToolbarState(blocks.map(isActive));
+    return {
+        bold: documentMarkState(state, "strong"),
+        italic: documentMarkState(state, "emphasis"),
+        strike: documentMarkState(state, "strikethrough"),
+        inlineCode: documentMarkState(state, "inlineCode"),
+        link: documentMarkState(state, "link"),
+        heading1: blockState(({ node }) =>
+            node.type.name === "heading" && node.attrs.level === 1
+        ),
+        heading2: blockState(({ node }) =>
+            node.type.name === "heading" && node.attrs.level === 2
+        ),
+        heading3: blockState(({ node }) =>
+            node.type.name === "heading" && node.attrs.level === 3
+        ),
+        codeBlock: blockState(({ node }) => node.type.name === "code_block"),
+        blockquote: blockState((block) =>
+            documentBlockHasAncestor(state, block, "blockquote")
+        ),
+        bulletList: blockState((block) =>
+            documentListKind(state, block) === "bulletList"
+        ),
+        orderedList: blockState((block) =>
+            documentListKind(state, block) === "orderedList"
+        ),
+        taskList: blockState((block) =>
+            documentListKind(state, block) === "taskList"
+        ),
+    };
+}
+
 export interface DocumentEditorProps {
     documentId: string;
     userId: string;
@@ -95,6 +229,9 @@ export function DocumentEditor({
     onSaveStatusChange,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
+    const documentEditorOwner = useId();
+    const viewModeDescriptionId =
+        `${documentEditorOwner}-view-mode-description`;
     const session = useMemo(() => {
         return createDocumentSession({ userId, documentId });
     }, [userId, documentId]);
@@ -151,6 +288,9 @@ export function DocumentEditor({
     const [linkHref, setLinkHref] = useState("");
     const [showOutline, setShowOutline] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [activeCommands, setActiveCommands] = useState<
+        DocumentToolbarActiveCommands
+    >({});
     const [copied, setCopied] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [initError, setInitError] = useState<string | null>(null);
@@ -208,6 +348,145 @@ export function DocumentEditor({
     const lastEditorBodyRef = useRef<string>("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const sourceTextareaRef = useRef<HTMLTextAreaElement>(null);
+    // Keep mobile keyboard resizes from leaving the toolbar or focused editor
+    // caret outside the visual viewport.
+    useEffect(() => {
+        const container = editorRootRef.current?.closest<HTMLElement>(
+            ".document-editor-container",
+        );
+        if (!container) return;
+
+        const viewport = globalThis.visualViewport;
+        let frame = 0;
+        const adjustForViewport = () => {
+            frame = 0;
+            if (
+                !container.isConnected ||
+                !container.contains(document.activeElement) ||
+                !globalThis.matchMedia("(pointer: coarse), (max-width: 640px)")
+                    .matches
+            ) return;
+
+            const toolbar = container.querySelector<HTMLElement>(
+                ".document-editor-toolbar",
+            );
+            const scrollArea = container.querySelector<HTMLElement>(
+                ".document-editor-scroll-area",
+            );
+            if (!toolbar || !scrollArea) return;
+
+            const view = editorHandleRef.current?.view;
+            const hasEditorFocus = Boolean(
+                view?.dom.contains(document.activeElement),
+            );
+            const previousContainerBehavior = container.style.scrollBehavior;
+            const previousAreaBehavior = scrollArea.style.scrollBehavior;
+            container.style.scrollBehavior = "auto";
+            scrollArea.style.scrollBehavior = "auto";
+            try {
+                const viewportTop = viewport?.offsetTop ?? 0;
+                const viewportBottom = viewportTop +
+                    (viewport?.height ?? globalThis.innerHeight);
+                const containerRect = container.getBoundingClientRect();
+                const toolbarRect = toolbar.getBoundingClientRect();
+                const toolbarTop = Math.max(containerRect.top, viewportTop);
+                const toolbarBottom = Math.min(
+                    containerRect.bottom,
+                    viewportBottom,
+                );
+                if (
+                    toolbarRect.top < toolbarTop - 1 ||
+                    toolbarRect.bottom > toolbarBottom + 1
+                ) {
+                    container.scrollTop += toolbarRect.top - toolbarTop;
+                }
+
+                if (!view || !hasEditorFocus) return;
+
+                const getVisibleContentBounds = () => {
+                    const rootRect = container.getBoundingClientRect();
+                    const areaRect = scrollArea.getBoundingClientRect();
+                    const currentToolbarRect = toolbar.getBoundingClientRect();
+                    return {
+                        top: Math.max(
+                            rootRect.top,
+                            areaRect.top,
+                            currentToolbarRect.bottom,
+                            viewportTop,
+                        ),
+                        bottom: Math.min(
+                            rootRect.bottom,
+                            areaRect.bottom,
+                            viewportBottom,
+                        ),
+                    };
+                };
+
+                for (let attempt = 0; attempt < 2; attempt += 1) {
+                    const bounds = getVisibleContentBounds();
+                    const caret = view.coordsAtPos(
+                        view.state.selection.head,
+                    );
+                    if (caret.top < bounds.top - 1) {
+                        scrollArea.scrollTop -= bounds.top - caret.top;
+                    } else if (caret.bottom > bounds.bottom + 1) {
+                        scrollArea.scrollTop += caret.bottom -
+                            bounds.bottom;
+                    }
+
+                    const updatedBounds = getVisibleContentBounds();
+                    const updatedCaret = view.coordsAtPos(
+                        view.state.selection.head,
+                    );
+                    if (
+                        updatedCaret.top >= updatedBounds.top - 1 &&
+                        updatedCaret.bottom <= updatedBounds.bottom + 1
+                    ) break;
+
+                    if (
+                        updatedCaret.bottom > updatedBounds.bottom + 1 &&
+                        scrollArea.scrollTop >=
+                            scrollArea.scrollHeight -
+                                scrollArea.clientHeight - 1
+                    ) {
+                        container.scrollTop += updatedCaret.bottom -
+                            updatedBounds.bottom;
+                    } else if (
+                        updatedCaret.top < updatedBounds.top - 1 &&
+                        scrollArea.scrollTop <= 1
+                    ) {
+                        container.scrollTop = Math.max(
+                            0,
+                            container.scrollTop -
+                                (updatedBounds.top - updatedCaret.top),
+                        );
+                    }
+                }
+            } finally {
+                container.style.scrollBehavior = previousContainerBehavior;
+                scrollArea.style.scrollBehavior = previousAreaBehavior;
+            }
+        };
+        const scheduleAdjustment = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                frame = requestAnimationFrame(adjustForViewport);
+            });
+        };
+
+        globalThis.addEventListener("resize", scheduleAdjustment);
+        viewport?.addEventListener("resize", scheduleAdjustment);
+        viewport?.addEventListener("scroll", scheduleAdjustment, {
+            passive: true,
+        });
+        return () => {
+            cancelAnimationFrame(frame);
+            globalThis.removeEventListener("resize", scheduleAdjustment);
+            viewport?.removeEventListener("resize", scheduleAdjustment);
+            viewport?.removeEventListener("scroll", scheduleAdjustment);
+        };
+    }, [editorReady, richMode]);
+
     useEffect(() => {
         if (snapshot.document) onDocumentChanged?.(snapshot.document);
     }, [snapshot.document, onDocumentChanged]);
@@ -318,6 +597,10 @@ export function DocumentEditor({
                     documentId,
                     onUpload: handleUpload,
                     onError: handleUploadError,
+                    onToolbarStateChange: (view) =>
+                        setActiveCommands(
+                            getDocumentToolbarState(view.state),
+                        ),
                 });
                 const paper = paperSettingsRef.current;
                 if (paper && paginationViewportRef.current) {
@@ -591,9 +874,15 @@ export function DocumentEditor({
 
     // 14. Composite focusout / blur check: autosave when focus leaves editor entirely
     const handleContainerBlur = (e: FocusEvent<HTMLDivElement>) => {
+        const relatedTarget = e.relatedTarget;
+        const belongsToDocumentMenu = relatedTarget instanceof Element &&
+            relatedTarget.closest("[data-document-editor-owner]")
+                    ?.getAttribute("data-document-editor-owner") ===
+                documentEditorOwner;
         if (
             e.currentTarget &&
-            !e.currentTarget.contains(e.relatedTarget as Node | null)
+            !e.currentTarget.contains(relatedTarget as Node | null) &&
+            !belongsToDocumentMenu
         ) {
             void session.save("autosave");
         }
@@ -661,6 +950,7 @@ export function DocumentEditor({
     return (
         <div
             className="document-editor-container"
+            data-workspace-editor
             data-immersive={immersive || undefined}
             onKeyDown={handleContainerKeyDown}
             onBlur={handleContainerBlur}
@@ -778,42 +1068,63 @@ export function DocumentEditor({
             <header className="document-editor-header">
                 <div className="document-editor-header-main">
                     {/* One document, three presentations. */}
-                    <div
-                        className="inline-flex rounded-md border border-[var(--border-subtle)] p-0.5 bg-[var(--surface-soft)]"
-                        role="group"
-                        aria-label="视图模式切换"
-                    >
-                        <Button
-                            type="button"
-                            variant={viewMode === "continuous"
-                                ? "default"
-                                : "ghost"}
-                            size="sm"
-                            className="h-7 text-xs px-2.5"
-                            onClick={() => handleViewChange("continuous")}
+                    <div className="document-editor-view-controls">
+                        <div
+                            className="inline-flex rounded-md border border-[var(--border-subtle)] p-0.5 bg-[var(--surface-soft)]"
+                            role="group"
+                            aria-label="视图模式"
+                            aria-describedby={viewModeDescriptionId}
                         >
-                            <Eye size={13} className="mr-1" />
-                            连续
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={viewMode === "page" ? "default" : "ghost"}
-                            size="sm"
-                            disabled={!paperSettings}
-                            onClick={() => handleViewChange("page")}
+                            <Button
+                                type="button"
+                                variant={viewMode === "continuous"
+                                    ? "default"
+                                    : "ghost"}
+                                size="sm"
+                                aria-label="编辑"
+                                title="编辑"
+                                aria-pressed={viewMode === "continuous"}
+                                onClick={() => handleViewChange("continuous")}
+                            >
+                                <Eye size={13} className="mr-1" />
+                                <span>编辑</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={viewMode === "page"
+                                    ? "default"
+                                    : "ghost"}
+                                size="sm"
+                                aria-label="分页"
+                                title="分页"
+                                aria-pressed={viewMode === "page"}
+                                disabled={!paperSettings}
+                                onClick={() => handleViewChange("page")}
+                            >
+                                <File size={13} className="mr-1" />
+                                <span>分页</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={viewMode === "source"
+                                    ? "default"
+                                    : "ghost"}
+                                size="sm"
+                                aria-label="Markdown 源码"
+                                title="Markdown 源码"
+                                aria-pressed={viewMode === "source"}
+                                onClick={() => handleViewChange("source")}
+                            >
+                                <Code size={13} className="mr-1" />
+                                <span>Markdown 源码</span>
+                            </Button>
+                        </div>
+                        <p
+                            id={viewModeDescriptionId}
+                            className="document-view-mode-description"
                         >
-                            <File size={13} className="mr-1" />页面
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={viewMode === "source"
-                                ? "default"
-                                : "ghost"}
-                            size="sm"
-                            onClick={() => handleViewChange("source")}
-                        >
-                            <Code size={13} className="mr-1" />源码
-                        </Button>
+                            编辑正文、分页预览，或直接编写 Markdown 源码。
+                        </p>
                     </div>
                     {/* Metadata & Word Count */}
                     <div className="document-metadata-bar">
@@ -853,72 +1164,110 @@ export function DocumentEditor({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            disabled={!paperSettings}
-                            onClick={() => setPaperOpen(true)}
-                            title="纸张设置"
-                        >
-                            <Settings size={13} />纸张
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            disabled={!paperSettings}
-                            onClick={() => {
-                                if (!richMode) handleViewChange("continuous");
-                                setPrintRequested(true);
-                            }}
-                            title="打印或另存为 PDF"
-                        >
-                            <Printer size={13} />打印
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs px-2"
-                            title="查看大纲"
+                            aria-label="大纲"
+                            title="大纲"
+                            aria-pressed={showOutline}
                             disabled={viewMode === "source"}
                             onClick={() => setShowOutline(!showOutline)}
                         >
                             <BookOpen size={13} className="mr-1" />
-                            大纲
+                            <span>大纲</span>
                         </Button>
                         <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs px-2"
-                            title="历史版本"
+                            aria-label="历史"
+                            title="历史"
                             onClick={() => setHistoryOpen(true)}
                         >
                             <History size={13} className="mr-1" />
-                            历史
+                            <span>历史</span>
                         </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs px-2"
-                            title="复制 Markdown 正文（不含标题）"
-                            onClick={() => void handleCopyMarkdown()}
-                        >
-                            {copied
-                                ? <Check size={13} className="mr-1" />
-                                : <Copy size={13} className="mr-1" />}
-                            {copied ? "已复制" : "复制"}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs px-2"
-                            title="导出为 .md 文件"
-                            onClick={handleExportMarkdown}
-                        >
-                            <Download size={13} className="mr-1" />
-                            导出
-                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="更多文档操作"
+                                        title="更多文档操作"
+                                    >
+                                        <MoreHorizontal
+                                            size={16}
+                                            aria-hidden="true"
+                                        />
+                                    </Button>
+                                }
+                                aria-label="更多文档操作"
+                            />
+                            <DropdownMenuContent
+                                sideOffset={4}
+                                data-document-editor-owner={documentEditorOwner}
+                            >
+                                <DropdownMenuItem
+                                    disabled={!paperSettings}
+                                    onClick={() => setPaperOpen(true)}
+                                >
+                                    <Settings
+                                        className="size-4 mr-2"
+                                        aria-hidden="true"
+                                    />
+                                    <span>纸张设置</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    disabled={!paperSettings}
+                                    onClick={() => {
+                                        if (!richMode) {
+                                            handleViewChange("continuous");
+                                        }
+                                        setPrintRequested(true);
+                                    }}
+                                >
+                                    <Printer
+                                        className="size-4 mr-2"
+                                        aria-hidden="true"
+                                    />
+                                    <span>打印或另存为 PDF</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => void handleCopyMarkdown()}
+                                >
+                                    {copied
+                                        ? (
+                                            <Check
+                                                className="size-4 mr-2"
+                                                aria-hidden="true"
+                                            />
+                                        )
+                                        : (
+                                            <Copy
+                                                className="size-4 mr-2"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                    <span>复制 Markdown 正文（不含标题）</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={handleExportMarkdown}
+                                >
+                                    <Download
+                                        className="size-4 mr-2"
+                                        aria-hidden="true"
+                                    />
+                                    <span>导出 Markdown 文件</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        {copied && (
+                            <span
+                                className="document-copy-status"
+                                role="status"
+                            >
+                                已复制
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -945,6 +1294,9 @@ export function DocumentEditor({
             {/* Toolbar: Formatting disabled in source mode per §32 */}
             <DocumentToolbar
                 disabled={viewMode === "source" || isUploading}
+                activeCommands={viewMode === "source"
+                    ? undefined
+                    : activeCommands}
                 onUndo={() => {
                     if (richMode && editorHandleRef.current) {
                         editorHandleRef.current.undo();

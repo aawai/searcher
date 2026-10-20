@@ -4,6 +4,60 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issues #198 / #197 / #201 / #200 / #215 / #204 / #202
+
+- [x] 在 `.worktrees/issues-197-215` 隔离实施，按用户指定的五组拆分：
+      #198、#197+#201、#200+#215、#204、#202。#197 采用推荐方案 A；
+      不添加图标省略号，不修改既有 tile 几何。
+- [x] 搜索旧产物因缺少 combobox role 红测，新产物完整搜索文件8 steps通过， 包含
+      IME/229、active descendant、Tab、Esc、503不泄漏诊断。
+      Chromium辅助技术树显示展开、选中与建议数量；本地历史在503时仍可选择。
+      粗指针引擎/提交/建议均≥44px，移动 frame仍52px。
+      原生桌面及读屏环境不可用，用户明确授权以 Chromium AX/ARIA/键盘替代后合并；
+      **NVDA/VoiceOver 未实测**。
+- [x] 首页首次提示可读、可关闭并按账号隔离；刷新后不再出现。
+      Shift+F10打开应用菜单，设置与应用根工作区有常驻操作说明。 相关
+      launcher、apps-interactions、workspace-shell 回归通过。
+- [x] 应用与便签软删使用“移至回收站”；连续3项可逐项/批量恢复，
+      10秒、hover/focus暂停、失败保留重试及回收站入口有生产交互回归。
+      390px菜单打开时暂藏同一提示并暂停，关闭后恢复；模拟经过10.5秒仍保留。
+      80字连续名称不超出视口。最终实页三次删除、批量恢复3项、
+      菜单期间隐藏、Search Y不变及overflow=0； `/tmp/issues-201-queue-390.png`。
+- [x] 标题栏可见菜单与Enter路径、Ctrl+Alt+Shift+M、左右吸附与总览快捷键通过。
+      Escape只关菜单或总览，保留窗口；移动文档More菜单Esc后Sheet仍在。
+      Escape单测覆盖优先级、注销后的快照、不重复派发、已处理事件与overlay订阅；
+      应用入口AppWindow与Folder区分，名称不变。
+- [x] Ask确定性SSE覆盖失败/中断→重试、原因清理、开始/结束及节流播报、
+      工具能力说明/标签、示例问题即时填入与390px控件无溢出。
+      人工SSE冒烟从消息内重试恢复正常回答；
+      `/tmp/omp-sshots-15acec46e9cd8508.webp` 与
+      `/tmp/omp-sshots-15acec51e3cd8509.webp`。
+- [x] Documents toolbar单个Tab入口、方向键、aria-pressed、More菜单与Portal
+      保存边界通过。390×360真实页面的模拟键盘视口中，toolbar Y145.20–206.20，
+      选区Y327.73–343.73，均在360px内；
+      `/tmp/issues-documents-short-360.png`。390×240正文露出至少24px且原生wheel
+      只滚正文、不滚chrome。未实测原生软键盘，使用既有visualViewport缩小契约。
+- [x] 首页Zen/Widgets十二组、Ask与Documents各六组： 390×844、768×1024、1440×900
+      × light/dark实页截图逐张审阅，横向overflow均0。
+      `/tmp/issues-home-{zen,widgets}-{390,768,1440}-{light,dark}.png`、
+      `/tmp/issues-{ask,documents}-{390,768,1440}-{light,dark}.png`。
+      首轮主题过渡截图无效，已等待实际computed color与动画结束后复采；
+      文档使用隔离设备状态，避免恢复中的旧窗口抢占入口。
+- [x] 首次完整生产E2E为79 tests / 295 steps通过、5 tests失败。
+      应用密度入口先滚入视口后保留hit-test；删除已移除Ask
+      pill的存在性/样式采样； 长名fixture按accessible name定位，修复相对has
+      locator作用域。
+      文档等待真实几何就绪，visiblePoint扣除实际sticky遮挡后仍要求≥24px与命中。
+      五个失败文件最终均完整定向通过；最终documents/host为2 tests / 26
+      steps通过。 **这是分批通过证据，不是完整命令一次全绿**。
+- [x] 领域测试首轮710通过/1失败：沉浸式单测缺少新应用Provider。
+      补Provider后相关20条模块通过；快捷键2条通过。
+      审查发现并修复遗漏Hook/组件import、canonical丢失旧失败详情及文档根class遗漏；
+      最终前端typecheck、受影响源码/测试lint与format通过。
+- [x] 最终UI ownership/visual均0 violations，Guard测试102条通过， E2E
+      manifest覆盖53文件；入口JS gzip283256 B，全部bundle预算与 Markdown
+      lazy/consumer依赖边界门禁通过，没有提高预算。
+
 ## Issues #205 / #206 / #209 / #208 系统层级、强调色与中文排版
 
 - [x] 按用户指定顺序先实施 #205/#206，再实施 #209/#208；所有改动在隔离

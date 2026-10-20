@@ -25,13 +25,14 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
 
-        await page.evaluate(async () => {
+        const longAppName = "A".repeat(80);
+        await page.evaluate(async (longName) => {
             for (let index = 0; index < 6; index++) {
                 const response = await fetch("/api/webapps", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        name: "Pinned " + index,
+                        name: index === 0 ? longName : "Pinned " + index,
                         url: "https://pinned-" + index + ".example/",
                         isPinned: true,
                         sortOrder: index,
@@ -43,7 +44,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     );
                 }
             }
-        });
+        }, longAppName);
         const setStyle = async (style: "zen" | "widgets") => {
             const status = await page.evaluate(async (value) => {
                 const response = await fetch("/api/preferences", {
@@ -98,12 +99,183 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             }, expected);
         };
         await waitForHomeColumns(5);
+        const hint = page.locator(".launcher-management-hint");
+        await hint.waitFor({ state: "visible" });
+        assertEquals(await hint.getAttribute("role"), "status");
+        assertEquals(await hint.getAttribute("aria-live"), "polite");
+        const keyboardTrigger = grid.locator(".launcher-tile").first()
+            .locator(".webapp-icon");
+        const appMenu = page.getByRole("menu");
+        await keyboardTrigger.focus();
+        await keyboardTrigger.press("Shift+F10");
+        await appMenu.waitFor({ state: "visible" });
+        await page.keyboard.press("Escape");
+        await appMenu.waitFor({ state: "hidden" });
+        await keyboardTrigger.press("ContextMenu");
+        await appMenu.waitFor({ state: "visible" });
+        await page.keyboard.press("Escape");
+        await appMenu.waitFor({ state: "hidden" });
+        const hintText = await hint.innerText();
+        assert(hintText.includes("右键或长按"));
+        assert(hintText.includes("Shift+F10"));
+        await hint.getByRole("button", {
+            name: "关闭应用整理提示",
+            exact: true,
+        }).click();
+        await page.reload();
+        await waitForHomeColumns(5);
+        assertEquals(await hint.count(), 0);
         assertEquals(
             await page.evaluate(() =>
                 matchMedia("(pointer: coarse), (hover: none)").matches
             ),
             true,
         );
+        const undoClockStart = new Date("2030-01-01T00:00:00Z");
+        await page.clock.install({ time: undoClockStart });
+        await page.clock.pauseAt(
+            new Date(undoClockStart.getTime() + 1000),
+        );
+        const searchTop = await page.locator(".search-form-wrap").evaluate((
+            search,
+        ) => search.getBoundingClientRect().top);
+        // A floating undo toast must not intercept a second app menu's
+        // pointer target during its undo window.
+        const longHomeIcon = grid.getByRole("button", {
+            name: `打开 ${longAppName}`,
+            exact: true,
+        });
+        await longHomeIcon.waitFor({ state: "visible" });
+        const firstHomeTile = grid.locator(":scope > .launcher-tile").filter({
+            has: page.getByRole("button", {
+                name: `打开 ${longAppName}`,
+                exact: true,
+            }),
+        });
+        const firstHomeTileId = await firstHomeTile.getAttribute(
+            "data-tile-id",
+        );
+        assert(firstHomeTileId);
+        const firstHomeTileLabel = await longHomeIcon.getAttribute(
+            "aria-label",
+        );
+        const homeTileIds = await grid.locator(":scope > .launcher-tile")
+            .evaluateAll((tiles) =>
+                tiles.map((tile) => tile.getAttribute("data-tile-id"))
+            );
+        const secondHomeTileId = homeTileIds.find((tileId) =>
+            tileId !== firstHomeTileId
+        );
+        assert(firstHomeTileLabel);
+        assert(secondHomeTileId);
+        await firstHomeTile.locator(".webapp-icon").click({
+            button: "right",
+        });
+        await page.getByRole("menuitem", {
+            name: "移至回收站",
+            exact: true,
+        }).click();
+        const deletedHomeTile = grid.locator(
+            `:scope > .launcher-tile[data-tile-id="${firstHomeTileId}"]`,
+        );
+        await deletedHomeTile.waitFor({ state: "detached" });
+        const undoToast = page.locator(".undo-toast");
+        await undoToast.waitFor({ state: "visible" });
+        const liveRegion = await undoToast.elementHandle();
+        assert(liveRegion);
+        const remainingHomeTile = grid.locator(
+            `:scope > .launcher-tile[data-tile-id="${secondHomeTileId}"]`,
+        );
+        await remainingHomeTile.locator(".webapp-icon").focus();
+        await remainingHomeTile.locator(".webapp-icon").press("Shift+F10");
+        const secondDeleteItem = page.getByRole("menuitem", {
+            name: "移至回收站",
+            exact: true,
+        });
+        await secondDeleteItem.waitFor({ state: "visible" });
+        await undoToast.waitFor({ state: "hidden" });
+        await page.clock.runFor(10_500);
+        assertEquals(
+            await undoToast.evaluate(
+                (toast, original) => toast === original,
+                liveRegion,
+            ),
+            true,
+        );
+        await secondDeleteItem.click();
+        await remainingHomeTile.waitFor({ state: "detached" });
+        await undoToast.waitFor({ state: "visible" });
+        assertEquals(
+            await undoToast.evaluate(
+                (toast, original) => toast === original,
+                liveRegion,
+            ),
+            true,
+        );
+        assertEquals(
+            await page.locator(".search-form-wrap").evaluate((search) =>
+                search.getBoundingClientRect().top
+            ),
+            searchTop,
+        );
+        const longUndoLabel = `撤销 ${longAppName}`;
+        const longUndoAction = undoToast.getByRole("button", {
+            name: longUndoLabel,
+            exact: true,
+        });
+        await longUndoAction.waitFor({ state: "visible" });
+        assert((await undoToast.textContent() ?? "").includes(longAppName));
+        assertEquals(
+            await longUndoAction.getAttribute("aria-label"),
+            longUndoLabel,
+        );
+        const toastLayout = await undoToast.evaluate((toast, actionLabel) => {
+            const message = toast.querySelector<HTMLElement>(":scope > span");
+            const action = Array.from(
+                toast.querySelectorAll<HTMLButtonElement>("button"),
+            ).find((button) =>
+                button.getAttribute("aria-label") === actionLabel
+            );
+            if (!message || !action) {
+                throw new Error("Missing toast message or long undo action");
+            }
+            const rect = toast.getBoundingClientRect();
+            return {
+                position: getComputedStyle(toast).position,
+                top: rect.top,
+                left: rect.left,
+                right: rect.right,
+                bottom: rect.bottom,
+                viewportWidth: document.documentElement.clientWidth,
+                viewportHeight: globalThis.innerHeight,
+                messageFits: message.scrollWidth <= message.clientWidth + 1,
+                actionFits: action.scrollWidth <= action.clientWidth + 1,
+                actionRight: action.getBoundingClientRect().right,
+            };
+        }, longUndoLabel);
+        assertEquals(toastLayout.position, "fixed");
+        assert(toastLayout.top >= 0);
+        assert(toastLayout.left >= 0);
+        assert(toastLayout.right <= toastLayout.viewportWidth);
+        assert(toastLayout.bottom <= toastLayout.viewportHeight);
+        assert(toastLayout.messageFits);
+        assert(toastLayout.actionFits);
+        assert(toastLayout.actionRight <= toastLayout.viewportWidth);
+        await undoToast.getByRole("button", {
+            name: "全部撤销",
+            exact: true,
+        }).click();
+        await page.getByRole("button", {
+            name: firstHomeTileLabel,
+            exact: true,
+        }).waitFor({ state: "visible" });
+        await page.waitForFunction(() =>
+            document.querySelectorAll(
+                ".pinned-area .launcher-grid--home > .launcher-tile",
+            ).length === 6
+        );
+        await undoToast.waitFor({ state: "detached" });
+        await page.clock.resume();
 
         for (
             const { width, columns } of [
@@ -657,6 +829,50 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         } finally {
             await fineContext.close();
         }
+        const otherContext = await browser.newContext({
+            colorScheme: "light",
+            viewport: { width: 390, height: 844 },
+        });
+        const otherPage = await otherContext.newPage();
+        await otherPage.goto(app.origin + "/register");
+        await otherPage.locator("#auth-username").fill(
+            "zen_pinned_other_account",
+        );
+        await otherPage.locator("#auth-display-name").fill(
+            "Other account",
+        );
+        await otherPage.locator("#auth-password").fill(
+            "Other-account-Password-150!",
+        );
+        await otherPage.locator('form button[type="submit"]').click();
+        await otherPage.waitForURL(app.origin + "/");
+        const otherSession = (await otherContext.cookies(app.origin)).find(
+            (cookie) => cookie.name === "searcher_session",
+        );
+        assert(otherSession);
+        await context.addCookies([otherSession]);
+        await page.reload();
+        await page.evaluate(async () => {
+            const response = await fetch("/api/webapps", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: "Other Account App",
+                    url: "https://other-account.example/",
+                    isPinned: true,
+                }),
+            });
+            if (!response.ok) {
+                throw new Error(
+                    "Seed other account app: " + await response.text(),
+                );
+            }
+        });
+        await page.reload();
+        await page.locator(".launcher-management-hint").waitFor({
+            state: "visible",
+        });
+        await otherContext.close();
     } finally {
         await browser.close();
         await app.close();

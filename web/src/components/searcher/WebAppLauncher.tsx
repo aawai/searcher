@@ -45,6 +45,21 @@ import {
 } from "../../features/workspace/FolderNameDialog.tsx";
 
 import { AppMenuItems } from "./AppMenuItems.tsx";
+import { useAppState } from "../../app/state.tsx";
+
+const LAUNCHER_MANAGEMENT_HINT_STORAGE_KEY =
+    "searcher.launcher-management-hint.";
+
+function hasDismissedManagementHint(userId: string): boolean {
+    try {
+        return globalThis.localStorage.getItem(
+            LAUNCHER_MANAGEMENT_HINT_STORAGE_KEY + userId,
+        ) === "dismissed";
+    } catch {
+        return false;
+    }
+}
+
 interface Actions {
     onOpen: (app: LauncherApp) => void;
     onEdit: (app: LauncherApp) => void;
@@ -637,6 +652,19 @@ export function WebAppLauncher({
     onReorderRoot,
     onReorderFolder,
 }: WebAppLauncherProps) {
+    const { user } = useAppState();
+    const [managementHintDismissal, setManagementHintDismissal] = useState(
+        () => ({
+            userId: user?.id ?? null,
+            dismissed: user?.id ? hasDismissedManagementHint(user.id) : true,
+        }),
+    );
+    const accountId = user?.id ?? null;
+    const managementHintDismissed = managementHintDismissal.userId === accountId
+        ? managementHintDismissal.dismissed
+        : accountId
+        ? hasDismissedManagementHint(accountId)
+        : true;
     const tiles = useMemo(
         (): LauncherTile[] =>
             showFolders ? launcherTiles(apps, groups) : apps.map((app) => ({
@@ -646,6 +674,8 @@ export function WebAppLauncher({
             })),
         [apps, groups, showFolders],
     );
+    const showManagementHint = presentation !== "workspace" &&
+        tiles.length > 0 && Boolean(accountId) && !managementHintDismissed;
     const largeFolderCount = showFolders
         ? tiles.filter((tile) => tile.group?.folderSize === "large").length
         : 0;
@@ -1069,6 +1099,41 @@ export function WebAppLauncher({
                         : null}
                 </DragOverlay>,
                 document.body,
+            )}
+            {showManagementHint && (
+                <p
+                    className="launcher-management-hint"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <span>
+                        右键或长按应用图标可打开操作菜单；键盘用户可按 Shift+F10
+                        或菜单键。
+                    </span>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="关闭应用整理提示"
+                        onClick={() => {
+                            if (!accountId) return;
+                            try {
+                                globalThis.localStorage.setItem(
+                                    LAUNCHER_MANAGEMENT_HINT_STORAGE_KEY +
+                                        accountId,
+                                    "dismissed",
+                                );
+                            } catch {
+                                // A denied device store must not block use of the launcher.
+                            }
+                            setManagementHintDismissal({
+                                userId: accountId,
+                                dismissed: true,
+                            });
+                        }}
+                    >
+                        关闭提示
+                    </Button>
+                </p>
             )}
         </DndContext>
     );

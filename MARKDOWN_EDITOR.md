@@ -117,6 +117,16 @@ editor
 parser/serializer。根列表动态加载并按当前实例id/body缓存结果，query变化只生成
 文本节点/mark片段；隐藏URL或Markdown语法匹配回退到escaped源码，不执行HTML。
 
+Documents 的格式状态观察保留在 `features/documents/editor-extensions.ts`，
+只读取当前实例的 selection / stored marks / document，通过 consumer callback
+更新工具栏 `aria-pressed`，不改变 canonical Markdown、history 或 transaction
+origin。 其 More 菜单 Portal 以实例 owner 关联编辑焦点边界；roving
+tabindex、单行滚动与 触屏 header 由 Documents consumer 和 document-editor.css
+拥有，不导入 Notes 或 shared runtime 初始依赖图。 visualViewport
+缩小时，Documents consumer 在布局更新后依据实际工具栏、正文与
+选区几何调整滚动，保持工具栏可见且光标位于其下方；监听与 RAF 随实例清理。
+不修改正文、选区或共享 runtime。
+
 ## Bundle gate
 
 `deno task check:bundle` 使用 production manifest 的静态依赖闭包，扣除 initial

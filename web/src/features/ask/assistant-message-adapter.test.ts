@@ -160,7 +160,7 @@ Deno.test("assistant-message-adapter: ExportedMessageRepository preserves assist
     assertEquals(failedMsg?.status, {
         type: "incomplete",
         reason: "error",
-        error: "生成失败",
+        error: "模型生成失败，请重试。",
     });
 
     // 4. Complete message -> complete / stop reason with full content

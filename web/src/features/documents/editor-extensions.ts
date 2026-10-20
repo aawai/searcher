@@ -27,6 +27,7 @@ export interface DocumentExtensionOptions {
     documentId: string;
     onUpload: (file: File) => Promise<string>;
     onError: (message: string) => void;
+    onToolbarStateChange?: (view: EditorView) => void;
 }
 
 interface MdastNode {
@@ -151,6 +152,28 @@ export const trailingPageBreakNormalizerPlugin = $prose(() => {
         },
     });
 });
+
+function createDocumentToolbarStatePlugin(
+    onToolbarStateChange: (view: EditorView) => void,
+): MilkdownPlugin {
+    return $prose(() =>
+        new Plugin({
+            view(view) {
+                onToolbarStateChange(view);
+                return {
+                    update(view, previousState) {
+                        if (
+                            view.state.selection.eq(previousState.selection) &&
+                            view.state.doc.eq(previousState.doc) &&
+                            view.state.storedMarks === previousState.storedMarks
+                        ) return;
+                        onToolbarStateChange(view);
+                    },
+                };
+            },
+        })
+    );
+}
 
 /**
  * Resolves an image URL safely:
@@ -590,6 +613,7 @@ export function insertDocumentPageBreak(handle: MarkdownEditorHandle): void {
  * 3. Trailing pagebreak normalizer plugin
  * 4. Document image NodeView plugin (resolves canonical asset:// to owner endpoint safely)
  * 5. Document image paste & drop upload plugin (with MIME/size checks & async position tracking)
+ * 6. Optional toolbar state observer (selection, stored marks and document updates)
  */
 export function createDocumentExtensions(
     options: DocumentExtensionOptions,
@@ -601,5 +625,8 @@ export function createDocumentExtensions(
         trailingPageBreakNormalizerPlugin,
         createDocumentImageNodeViewPlugin(options.documentId),
         createDocumentImageUploadPlugin(options),
+        ...(options.onToolbarStateChange
+            ? [createDocumentToolbarStatePlugin(options.onToolbarStateChange)]
+            : []),
     ];
 }

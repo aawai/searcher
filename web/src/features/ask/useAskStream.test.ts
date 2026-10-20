@@ -2,12 +2,17 @@ import { assertEquals, assertNotEquals } from "@std/assert";
 import {
     applySseEvent,
     createOptimisticStreamSnapshot,
+    mergeCanonicalConversation,
     parseSseBlock,
     shouldApplyCanonicalConversation,
     type StreamAccumulator,
 } from "./useAskStream.ts";
 import type { ConversationFullData, StreamMeta } from "./types.ts";
 import type { AiMessageDto } from "../../../../src/features/ai/types.ts";
+import {
+    convertAiMessageToThreadMessageLike,
+    sanitizeFailureReason,
+} from "./assistant-message-adapter.ts";
 
 function createMockMsg(
     id: string,
@@ -500,4 +505,168 @@ Deno.test("useAskStream: shouldApplyCanonicalConversation preserves client snaps
         assistantMessageId: "a-1",
     });
     assertEquals(shouldApplyNormal, true);
+});
+Deno.test("useAskStream: failed optimistic messages keep a sanitized local reason", () => {
+    const meta: StreamMeta = {
+        type: "meta",
+        conversationId: "conv-failed",
+        userMessageId: "user-failed",
+        assistantMessageId: "assistant-failed",
+    };
+    const snapshot = createOptimisticStreamSnapshot({
+        previous: null,
+        meta,
+        userId: "user-1",
+        submittedText: "Explain this",
+        attachments: [],
+        liveText: "Partial answer",
+        liveParts: [],
+        providerId: "provider-1",
+        modelId: "model-1",
+        isAborted: false,
+        isFailed: true,
+        failureReason: "Provider failed\u0000\nPlease retry",
+        timestamp: 1000,
+        effectiveHistoryEnabled: true,
+        effectiveSystemInstruction: null,
+    });
+    const assistantMessage = snapshot.messages.find((message) =>
+        message.id === "assistant-failed"
+    );
+    assertEquals(assistantMessage?.status, "failed");
+    assertEquals(
+        assistantMessage?.failureReason,
+        "Provider failed Please retry",
+    );
+});
+
+Deno.test("useAskStream: failure reasons remove controls and stay bounded", () => {
+    assertEquals(
+        sanitizeFailureReason("  provider\u0000 error\ntry again  "),
+        "provider error try again",
+    );
+    assertEquals(sanitizeFailureReason("\u0000 \n"), "模型生成失败，请重试。");
+    assertEquals(
+        Array.from(sanitizeFailureReason("x".repeat(200))).length,
+        180,
+    );
+});
+
+Deno.test("useAskStream: keeps terminal local failures while backend persists", () => {
+    const streamingMessage: AiMessageDto = {
+        ...createMockMsg("a-1", "u-1", "assistant", "Partial answer", 200),
+        status: "streaming",
+    };
+    assertEquals(
+        shouldApplyCanonicalConversation({
+            isAborted: false,
+            isFailed: true,
+            canonicalMessages: [streamingMessage],
+            assistantMessageId: "a-1",
+        }),
+        false,
+    );
+    assertEquals(
+        shouldApplyCanonicalConversation({
+            isAborted: true,
+            canonicalMessages: [],
+            assistantMessageId: "a-1",
+        }),
+        false,
+    );
+    assertEquals(
+        shouldApplyCanonicalConversation({
+            isAborted: false,
+            isFailed: true,
+            canonicalMessages: [
+                {
+                    ...streamingMessage,
+                    status: "failed",
+                },
+            ],
+            assistantMessageId: "a-1",
+        }),
+        true,
+    );
+});
+
+Deno.test("useAskStream: preserves prior failure details after a later successful turn", () => {
+    const makeConversation = (
+        messages: AiMessageDto[],
+    ): ConversationFullData => ({
+        conversation: {
+            id: "c-1",
+            userId: "u-1",
+            title: "Follow-up",
+            historyEnabled: true,
+            activeLeafMessageId: messages.at(-1)?.id ?? null,
+            systemInstruction: null,
+            createdAt: 1,
+            updatedAt: 1,
+        },
+        messages,
+    });
+    const originalUser = createMockMsg(
+        "u-1",
+        null,
+        "user",
+        "Explain this",
+        100,
+    );
+    const failedAssistant: AiMessageDto = {
+        ...createMockMsg(
+            "assistant-failed",
+            "u-1",
+            "assistant",
+            "Partial answer",
+            200,
+        ),
+        status: "failed",
+    };
+    const localFailure = mergeCanonicalConversation({
+        canonical: makeConversation([originalUser, failedAssistant]),
+        previous: null,
+        currentFailure: {
+            assistantMessageId: "assistant-failed",
+            reason: "Provider failure\u0000\nPlease retry",
+        },
+    });
+    const followUpUser = createMockMsg(
+        "u-2",
+        "assistant-failed",
+        "user",
+        "Try another explanation",
+        300,
+    );
+    const successfulAssistant = createMockMsg(
+        "assistant-success",
+        "u-2",
+        "assistant",
+        "Here is another explanation",
+        400,
+    );
+    const afterSuccessfulTurn = mergeCanonicalConversation({
+        canonical: makeConversation([
+            originalUser,
+            failedAssistant,
+            followUpUser,
+            successfulAssistant,
+        ]),
+        previous: localFailure,
+    });
+    const retainedFailure = afterSuccessfulTurn.messages.find((message) =>
+        message.id === "assistant-failed"
+    );
+    assertEquals(
+        retainedFailure?.failureReason,
+        "Provider failure Please retry",
+    );
+    assertEquals(
+        convertAiMessageToThreadMessageLike(retainedFailure!).status,
+        {
+            type: "incomplete",
+            reason: "error",
+            error: "Provider failure Please retry",
+        },
+    );
 });

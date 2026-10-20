@@ -901,6 +901,23 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             const undoAppId = "app-undo-test-1";
             const undoNoteId = "note-undo-test-1";
             const undoConvId = "conv-undo-test-1";
+            const undoBatchApps = [
+                {
+                    id: "app-undo-batch-a",
+                    name: "Undo Batch App A",
+                    url: "https://example.com/undo-batch-a",
+                },
+                {
+                    id: "app-undo-batch-b",
+                    name: "Undo Batch App B",
+                    url: "https://example.com/undo-batch-b",
+                },
+                {
+                    id: "app-undo-batch-c",
+                    name: "Undo Batch App C",
+                    url: "https://example.com/undo-batch-c",
+                },
+            ] as const;
             const now = Date.now();
 
             // Seed 1 app, 1 note, and 1 conversation for undo tests
@@ -914,6 +931,15 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                     createdAt: now,
                     updatedAt: now,
                 });
+                await db.insert(webapps).values(
+                    undoBatchApps.map((app, index) => ({
+                        ...app,
+                        userId: user.id,
+                        sortOrder: 21 + index,
+                        createdAt: now,
+                        updatedAt: now,
+                    })),
+                );
                 await db.insert(notes).values({
                     id: undoNoteId,
                     userId: user.id,
@@ -966,15 +992,16 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // Delete app via context menu
             await appTile.click({ button: "right" });
-            const deleteMenuItem = page.locator(
-                '[role="menuitem"]:has-text("删除")',
-            );
+            const deleteMenuItem = page.getByRole("menuitem", {
+                name: "移至回收站",
+                exact: true,
+            });
             await deleteMenuItem.waitFor({ state: "visible" });
             await deleteMenuItem.click();
 
             // UndoToast appears
             const appUndoToast = page.locator(
-                ".undo-toast:has-text('应用已移至回收站')",
+                ".undo-toast:has-text('Undo Target WebApp')",
             );
             await appUndoToast.waitFor({ state: "visible" });
             await appTile.waitFor({ state: "hidden" });
@@ -986,8 +1013,136 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             });
             await undoAppBtn.click();
             assertEquals(appRestored, true);
+            await page.unroute("**/api/webapps/*/restore");
             await appUndoToast.waitFor({ state: "hidden" });
             await appTile.waitFor({ state: "visible" });
+            const clockStart = new Date("2030-01-01T00:00:00Z");
+            await page.clock.install({ time: clockStart });
+            await page.clock.pauseAt(
+                new Date(clockStart.getTime() + 1000),
+            );
+            const batchAppTiles = undoBatchApps.map((app) =>
+                aside.locator(`.launcher-tile:has-text('${app.name}')`)
+            );
+            for (const tile of batchAppTiles) {
+                await tile.click({ button: "right" });
+                await page.getByRole("menuitem", {
+                    name: "移至回收站",
+                    exact: true,
+                }).click();
+                await tile.waitFor({ state: "hidden" });
+            }
+            const batchToast = page.locator(".undo-toast");
+            await batchToast.waitFor({ state: "visible" });
+            assertEquals(await batchToast.getAttribute("role"), "status");
+            assertEquals(
+                await batchToast.getAttribute("aria-live"),
+                "polite",
+            );
+            assertEquals(
+                await batchToast.getByRole("link", {
+                    name: "前往回收站",
+                    exact: true,
+                }).count(),
+                1,
+            );
+            for (const app of undoBatchApps) {
+                assertStringIncludes(
+                    await batchToast.textContent() ?? "",
+                    app.name,
+                );
+            }
+            await batchToast.hover();
+            await page.clock.runFor(10_500);
+            await batchToast.waitFor({ state: "visible" });
+            await batchToast.getByRole("button", {
+                name: "撤销 Undo Batch App B",
+                exact: true,
+            }).click();
+            await batchAppTiles[1].waitFor({ state: "visible" });
+            await batchToast.waitFor({ state: "visible" });
+            assertEquals(
+                (await batchToast.textContent() ?? "").includes(
+                    undoBatchApps[1].name,
+                ),
+                false,
+            );
+            await batchToast.getByRole("button", {
+                name: "全部撤销",
+                exact: true,
+            }).click();
+            await batchToast.waitFor({ state: "hidden" });
+            await batchAppTiles[0].waitFor({ state: "visible" });
+            await batchAppTiles[2].waitFor({ state: "visible" });
+
+            let retryRestoreRequests = 0;
+            await page.route(
+                `**/api/webapps/${undoBatchApps[0].id}/restore`,
+                async (route) => {
+                    retryRestoreRequests++;
+                    if (retryRestoreRequests === 1) {
+                        await route.fulfill({
+                            status: 503,
+                            contentType: "application/json",
+                            body: JSON.stringify({
+                                success: false,
+                                error: "restore unavailable",
+                            }),
+                        });
+                        return;
+                    }
+                    await route.continue();
+                },
+            );
+            await batchAppTiles[0].click({ button: "right" });
+            await page.getByRole("menuitem", {
+                name: "移至回收站",
+                exact: true,
+            }).click();
+            await batchAppTiles[0].waitFor({ state: "hidden" });
+            const retryToast = page.locator(".undo-toast");
+            await retryToast.waitFor({ state: "visible" });
+            await retryToast.getByRole("button", {
+                name: "撤销",
+                exact: true,
+            }).focus();
+            await page.mouse.move(1, 1);
+            await page.clock.runFor(10_500);
+            await retryToast.waitFor({ state: "visible" });
+            await retryToast.getByRole("button", {
+                name: "撤销",
+                exact: true,
+            }).click();
+            await retryToast.getByText(/恢复.*失败/).waitFor({
+                state: "visible",
+            });
+            await batchAppTiles[0].waitFor({ state: "hidden" });
+            assertEquals(retryRestoreRequests, 1);
+            await retryToast.getByRole("button", {
+                name: "重试撤销",
+                exact: true,
+            }).click();
+            await batchAppTiles[0].waitFor({ state: "visible" });
+            await retryToast.waitFor({ state: "hidden" });
+            assertEquals(retryRestoreRequests, 2);
+            await page.unroute(
+                `**/api/webapps/${undoBatchApps[0].id}/restore`,
+            );
+
+            await batchAppTiles[0].click({ button: "right" });
+            await page.getByRole("menuitem", {
+                name: "移至回收站",
+                exact: true,
+            }).click();
+            await batchAppTiles[0].waitFor({ state: "hidden" });
+            const expiryToast = page.locator(".undo-toast");
+            await expiryToast.waitFor({ state: "visible" });
+            await page.mouse.move(1, 1);
+            await page.clock.runFor(9_999);
+            await expiryToast.waitFor({ state: "visible" });
+            await page.clock.runFor(1);
+            await expiryToast.waitFor({ state: "hidden" });
+            await page.clock.resume();
 
             // 2. Home / Notes workspace: Note delete and UndoToast restoration
             const notesNavBtn = page.locator(
@@ -1016,7 +1171,8 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 "button[aria-label='更多操作']",
             );
             await noteCard.hover();
-            await noteMoreBtn.click({ force: true });
+            await noteMoreBtn.waitFor({ state: "visible" });
+            await noteMoreBtn.click();
             const deleteNoteItem = page.locator(
                 '[role="menuitem"]:has-text("移至回收站")',
             );
@@ -1025,7 +1181,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // UndoToast appears
             const noteUndoToast = page.locator(
-                ".undo-toast:has-text('便签已移至回收站')",
+                ".undo-toast:has-text('Undo Target Note')",
             );
             await noteUndoToast.waitFor({ state: "visible" });
             await noteCard.waitFor({ state: "hidden" });

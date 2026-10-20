@@ -46,6 +46,26 @@
     margin-left: auto;
 }
 
+.document-editor-view-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+}
+
+.document-view-mode-description {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+}
+
+.document-copy-status {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    white-space: nowrap;
+}
+
 /* Document Title Input (Separate from Markdown body, no implicit H1) */
 .document-title-wrapper {
     width: 100%;
@@ -141,6 +161,7 @@
 .document-editor-toolbar-group {
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
     gap: var(--space-1);
 }
 
@@ -151,17 +172,34 @@
     margin: 0 var(--space-1);
 }
 
-/* Mobile / Narrow Wrapping & Semantic Touch44 */
+/* Narrow / coarse-pointer editor controls remain touch sized and horizontally scrollable. */
 @media (pointer: coarse), (max-width: 640px) {
+    .document-editor-header button,
+    .document-editor-header [role="button"],
     .document-editor-toolbar button,
     .document-editor-toolbar [role="button"] {
-        min-height: 44px;
-        min-width: 44px;
+        min-height: var(--control-touch-target);
+        min-width: var(--control-touch-target);
         padding: var(--space-2);
     }
     .document-editor-toolbar {
+        position: sticky;
+        top: 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scroll-padding-inline: var(--space-3);
         padding: var(--space-2);
         gap: var(--space-1);
+    }
+    .document-editor-toolbar-divider {
+        flex: 0 0 1px;
+    }
+    .document-editor-container {
+        scroll-padding-block-start: calc(
+            var(--control-touch-target) + var(--space-4) + 1px
+        );
     }
 }
 

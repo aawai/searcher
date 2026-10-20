@@ -126,6 +126,19 @@
     padding: var(--space-2) 0;
 }
 
+.launcher-management-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-control-gap);
+    margin-block-start: var(--space-inline-gap);
+    color: var(--muted);
+    font-size: var(--font-caption-size);
+    line-height: var(--font-caption-line-height);
+    text-align: center;
+}
+
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.
    [INVARIANT] Square Cell Grid System:
    1. --launcher-row-h MUST ALWAYS equal var(--launcher-col-w) (aspect-ratio 1:1).

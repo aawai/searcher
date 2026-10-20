@@ -1,8 +1,27 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
 
-function Popover(props: PopoverPrimitive.Root.Props) {
-    return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+function Popover({
+    open,
+    defaultOpen,
+    onOpenChange,
+    ...props
+}: PopoverPrimitive.Root.Props) {
+    const handleOpenChange = useEscapeLayerForOpenState(
+        open,
+        defaultOpen,
+        onOpenChange,
+    );
+    return (
+        <PopoverPrimitive.Root
+            data-slot="popover"
+            {...props}
+            open={open}
+            defaultOpen={defaultOpen}
+            onOpenChange={handleOpenChange}
+        />
+    );
 }
 
 function PopoverTrigger(props: PopoverPrimitive.Trigger.Props) {

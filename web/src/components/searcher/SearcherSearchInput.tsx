@@ -1,7 +1,7 @@
 import { ArrowUpRight, Globe, History, Search, Sparkles } from "lucide-react";
 import { EngineIcon, EngineSelector } from "./EngineSelector.tsx";
 import { type ModelOption, ModelSelector } from "./ModelSelector.tsx";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { type EngineId } from "@shared/engines.ts";
 import { Button } from "../ui/button.tsx";
 import { api } from "../../lib/api.ts";
@@ -115,9 +115,17 @@ export function SearcherSearchInput(
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [selectedIndex, setSelectedIndex] = useState<number>(-1);
     const [isOpen, setIsOpen] = useState(false);
+    const [onlineUnavailable, setOnlineUnavailable] = useState(false);
+    const suggestionsId = useId();
     const field = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<AbortController | null>(null);
+
+    useEffect(() => {
+        if (!isOpen || selectedIndex < 0) return;
+        document.getElementById(`${suggestionsId}-${selectedIndex}`)
+            ?.scrollIntoView({ block: "nearest" });
+    }, [isOpen, selectedIndex, suggestionsId]);
     // IME 组合态：组合期间的方向键、Enter 属于输入法候选操作，不能驱动联想或提交。
     const composingRef = useRef(false);
 
@@ -156,9 +164,10 @@ export function SearcherSearchInput(
     // Sources:
     // 1. Web App name / URL matches
     // 2. Local search history (stored in IndexedDB / local storage for visitors and offline)
-    // 3. Google/Bing suggestion adapters (with silent degradation)
+    // 3. Google/Bing suggestion adapters (local results survive online failure)
     useEffect(() => {
         const trimmed = query.trim();
+        setOnlineUnavailable(false);
         if (!trimmed || mode === "ai") {
             setSuggestions((prev) => prev.length === 0 ? prev : []);
             setIsOpen(false);
@@ -226,6 +235,7 @@ export function SearcherSearchInput(
 
         const timer = setTimeout(async () => {
             const combined: SuggestionItem[] = [];
+            let onlineFailed = false;
             const seen = new Set<string>();
 
             // 1. Web App candidates (Name and URL)
@@ -287,16 +297,17 @@ export function SearcherSearchInput(
                     }
                 }
             } catch {
-                // Silently degrade on fetch error / abort
+                onlineFailed = !controller.signal.aborted;
             }
 
-            if (!isCancelled) {
+            if (!isCancelled && !controller.signal.aborted) {
                 setSuggestions(combined);
+                setOnlineUnavailable(onlineFailed);
                 // Late responses must not reopen the listbox after blur.
                 // Focus can return via keyboard/mouse, and onFocus reopens.
                 const focused = typeof document !== "undefined" &&
                     document.activeElement === field.current;
-                setIsOpen(focused && combined.length > 0);
+                setIsOpen(focused && (combined.length > 0 || onlineFailed));
                 setSelectedIndex(-1);
             }
         }, 120);
@@ -390,7 +401,9 @@ export function SearcherSearchInput(
     function submit(event: FormEvent, newTab = false) {
         event.preventDefault();
         if (composingRef.current) return;
-        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+        if (
+            isOpen && selectedIndex >= 0 && selectedIndex < suggestions.length
+        ) {
             const chosen = suggestions[selectedIndex];
             selectSuggestion(chosen, newTab);
             return;
@@ -398,7 +411,7 @@ export function SearcherSearchInput(
         executeSubmit(query, newTab);
     }
 
-    function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
+    function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
         // Safari 的 compositionend 先于最后一次 keydown，此时 isComposing 已为
         // false，但 keyCode 仍是 229；两者都要识别为输入法按键。
         if (
@@ -408,6 +421,16 @@ export function SearcherSearchInput(
             if (event.key === "Enter") event.preventDefault();
             return;
         }
+        if (event.key === "Escape" && isOpen) {
+            event.preventDefault();
+            event.stopPropagation();
+            abortRef.current?.abort();
+            setIsOpen(false);
+            setSelectedIndex(-1);
+            field.current?.focus();
+            return;
+        }
+        if (event.target !== field.current) return;
 
         if (matchesShortcut(event, SHORTCUTS.searchNewTab.binding)) {
             event.preventDefault();
@@ -427,10 +450,6 @@ export function SearcherSearchInput(
             setSelectedIndex((
                 prev,
             ) => (prev > 0 ? prev - 1 : suggestions.length - 1));
-        } else if (event.key === "Escape") {
-            event.preventDefault();
-            setIsOpen(false);
-            setSelectedIndex(-1);
         }
     }
 
@@ -438,12 +457,15 @@ export function SearcherSearchInput(
     const matchingQuery = command?.hasSpace ? command.rest : query.trim();
 
     return (
-        <div className="search-form-wrap" ref={containerRef}>
+        <div
+            className="search-form-wrap"
+            ref={containerRef}
+            onKeyDown={handleKeyDown}
+        >
             <form
                 className="search-form"
                 role="search"
                 onSubmit={submit}
-                onKeyDown={handleKeyDown}
             >
                 <div className="search-frame">
                     <EngineSelector
@@ -472,6 +494,14 @@ export function SearcherSearchInput(
                         ref={field}
                         id="search-query"
                         autoComplete="off"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={isOpen}
+                        aria-controls={isOpen ? suggestionsId : undefined}
+                        aria-activedescendant={isOpen && selectedIndex >= 0 &&
+                                selectedIndex < suggestions.length
+                            ? `${suggestionsId}-${selectedIndex}`
+                            : undefined}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onCompositionStart={() => {
@@ -481,18 +511,13 @@ export function SearcherSearchInput(
                             composingRef.current = false;
                         }}
                         onFocus={() => {
-                            if (suggestions.length > 0) setIsOpen(true);
-                        }}
-                        onBlur={(event) => {
-                            // Suggestion buttons live inside the container,
-                            // so selecting one keeps the listbox open.
                             if (
-                                !containerRef.current?.contains(
-                                    event.relatedTarget as Node | null,
-                                )
-                            ) {
-                                setIsOpen(false);
-                            }
+                                suggestions.length > 0 || onlineUnavailable
+                            ) setIsOpen(true);
+                        }}
+                        onBlur={() => {
+                            setIsOpen(false);
+                            setSelectedIndex(-1);
                         }}
                         placeholder={mode === "ai"
                             ? "输入问题，开始对话"
@@ -521,115 +546,133 @@ export function SearcherSearchInput(
                 </div>
             </form>
 
-            {isOpen && suggestions.length > 0 && (
-                <div
-                    className="search-suggestions"
-                    role="listbox"
-                    aria-label="搜索建议"
-                >
-                    {suggestions.map((item, idx) => {
-                        const isSelected = idx === selectedIndex;
-                        const label = item.source === "command"
-                            ? item.text
-                            : item.description || item.text;
-                        const segments = splitSuggestionLabel(
-                            label,
-                            matchingQuery,
-                        );
-                        return (
-                            <button
-                                key={`${item.source}-${item.text}-${idx}`}
-                                type="button"
-                                role="option"
-                                aria-selected={isSelected}
-                                className={`suggestion-item ${
-                                    isSelected ? "active" : ""
-                                }`}
-                                onClick={() => {
-                                    selectSuggestion(item, false);
-                                }}
-                                onMouseEnter={() => setSelectedIndex(idx)}
-                            >
-                                <div className="suggestion-item-main">
-                                    {item.source === "command" && (
-                                        item.engine
+            <span
+                className="sr-only"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
+                {isOpen ? `${suggestions.length} 条建议` : ""}
+            </span>
+            {isOpen && (
+                <div className="search-suggestions">
+                    <div
+                        id={suggestionsId}
+                        role="listbox"
+                        aria-label="搜索建议"
+                    >
+                        {suggestions.map((item, idx) => {
+                            const isSelected = idx === selectedIndex;
+                            const label = item.source === "command"
+                                ? item.text
+                                : item.description || item.text;
+                            const segments = splitSuggestionLabel(
+                                label,
+                                matchingQuery,
+                            );
+                            return (
+                                <div
+                                    key={`${item.source}-${item.text}-${idx}`}
+                                    id={`${suggestionsId}-${idx}`}
+                                    role="option"
+                                    tabIndex={-1}
+                                    aria-selected={isSelected}
+                                    className={`suggestion-item ${
+                                        isSelected ? "active" : ""
+                                    }`}
+                                    onPointerDown={(event) =>
+                                        event.preventDefault()}
+                                    onClick={() => {
+                                        selectSuggestion(item, false);
+                                    }}
+                                    onMouseEnter={() => setSelectedIndex(idx)}
+                                >
+                                    <div className="suggestion-item-main">
+                                        {item.source === "command" && (
+                                            item.engine
+                                                ? (
+                                                    <EngineIcon
+                                                        id={item.engine}
+                                                        size={16}
+                                                    />
+                                                )
+                                                : (
+                                                    <Sparkles
+                                                        size={16}
+                                                        className="text-accent"
+                                                    />
+                                                )
+                                        )}
+                                        {item.source === "history" && (
+                                            <History
+                                                size={16}
+                                                className="text-muted"
+                                            />
+                                        )}
+                                        {item.source === "webapp" && (
+                                            <Globe
+                                                size={16}
+                                                className="text-accent"
+                                            />
+                                        )}
+                                        {item.source === "engine" && (
+                                            <Search
+                                                size={16}
+                                                className="text-muted"
+                                            />
+                                        )}
+                                        <span className="suggestion-text">
+                                            {segments.map((segment, index) => (
+                                                <span
+                                                    key={index}
+                                                    className={segment.kind ===
+                                                            "plain"
+                                                        ? undefined
+                                                        : "suggestion-" +
+                                                            segment.kind}
+                                                >
+                                                    {segment.text}
+                                                </span>
+                                            ))}
+                                            {item.source === "command" &&
+                                                item.description?.slice(
+                                                    item.text.length,
+                                                )}
+                                        </span>
+                                    </div>
+                                    {(() => {
+                                        const badge = item.source === "command"
+                                            ? "快捷命令"
+                                            : item.source === "webapp"
+                                            ? (item.url
+                                                ? item.url.replace(
+                                                    /^https?:\/\//,
+                                                    "",
+                                                ).replace(/\/$/, "")
+                                                : "网站")
+                                            : item.source === "history"
+                                            ? "历史"
+                                            : (item.engine &&
+                                                    item.engine !== engine)
+                                            ? item.engine
+                                            : null;
+                                        return badge
                                             ? (
-                                                <EngineIcon
-                                                    id={item.engine}
-                                                    size={16}
-                                                />
+                                                <span className="suggestion-badge">
+                                                    {badge}
+                                                </span>
                                             )
-                                            : (
-                                                <Sparkles
-                                                    size={16}
-                                                    className="text-accent"
-                                                />
-                                            )
-                                    )}
-                                    {item.source === "history" && (
-                                        <History
-                                            size={16}
-                                            className="text-muted"
-                                        />
-                                    )}
-                                    {item.source === "webapp" && (
-                                        <Globe
-                                            size={16}
-                                            className="text-accent"
-                                        />
-                                    )}
-                                    {item.source === "engine" && (
-                                        <Search
-                                            size={16}
-                                            className="text-muted"
-                                        />
-                                    )}
-                                    <span className="suggestion-text">
-                                        {segments.map((segment, index) => (
-                                            <span
-                                                key={index}
-                                                className={segment.kind ===
-                                                        "plain"
-                                                    ? undefined
-                                                    : "suggestion-" +
-                                                        segment.kind}
-                                            >
-                                                {segment.text}
-                                            </span>
-                                        ))}
-                                        {item.source === "command" &&
-                                            item.description?.slice(
-                                                item.text.length,
-                                            )}
-                                    </span>
+                                            : null;
+                                    })()}
                                 </div>
-                                {(() => {
-                                    const badge = item.source === "command"
-                                        ? "快捷命令"
-                                        : item.source === "webapp"
-                                        ? (item.url
-                                            ? item.url.replace(
-                                                /^https?:\/\//,
-                                                "",
-                                            ).replace(/\/$/, "")
-                                            : "网站")
-                                        : item.source === "history"
-                                        ? "历史"
-                                        : (item.engine &&
-                                                item.engine !== engine)
-                                        ? item.engine
-                                        : null;
-                                    return badge
-                                        ? (
-                                            <span className="suggestion-badge">
-                                                {badge}
-                                            </span>
-                                        )
-                                        : null;
-                                })()}
-                            </button>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
+                    {onlineUnavailable && (
+                        <p className="search-suggestions-status" role="status">
+                            在线联想暂不可用
+                        </p>
+                    )}
                 </div>
             )}
         </div>

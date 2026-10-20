@@ -4,10 +4,11 @@ import {
     GuestAiUnavailable,
 } from "../components/searcher/GuestAiUnavailable.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     useCallback,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useReducer,
     useRef,
@@ -25,13 +26,15 @@ import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
 import { mergeNoteOrder } from "../features/home-layouts/noteOrder.ts";
-import type {
-    NoteItem,
-    NoteLayoutDto,
+import {
+    getNoteDisplayTitle,
+    type NoteItem,
+    type NoteLayoutDto,
 } from "../components/searcher/NoteCard.tsx";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import type { WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
+import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -99,6 +102,33 @@ export interface ExtendedWebApp extends WebAppItem {
     openMode?: "global" | "current" | "new_tab";
     groupId?: string | null;
 }
+type UndoRecordBase = {
+    id: string;
+    userId: string;
+    expiresAt: number | null;
+    remainingMs: number;
+    isRestoring: boolean;
+    error?: string;
+};
+
+type AppUndoRecord = UndoRecordBase & {
+    kind: "app";
+    item: ExtendedWebApp;
+};
+
+type NoteUndoRecord = UndoRecordBase & {
+    kind: "note";
+    item: NoteItem;
+};
+
+type DeletionUndoRecord = AppUndoRecord | NoteUndoRecord;
+
+type UndoRestoreResult =
+    | { id: string; kind: "app"; restored: ExtendedWebApp }
+    | { id: string; kind: "note"; restored: NoteItem }
+    | { id: string; error: string };
+
+const UNDO_DURATION_MS = 10_000;
 
 const EMPTY_APPS: ExtendedWebApp[] = [];
 const EMPTY_GROUPS: WebAppGroup[] = [];
@@ -116,6 +146,16 @@ type PendingAction =
 
 export function SearchHome() {
     const { user, appearance } = useAppState();
+    const overlayActive = useEscapeLayerActive("overlay");
+    const currentUserIdRef = useRef<string | null>(user?.id ?? null);
+    currentUserIdRef.current = user?.id ?? null;
+    const componentMountedRef = useRef(true);
+    useEffect(() => {
+        componentMountedRef.current = true;
+        return () => {
+            componentMountedRef.current = false;
+        };
+    }, []);
     const navigate = useNavigate();
     const layoutStyle = appearance.style;
     const updatingNotesRef = useRef<Set<string>>(new Set());
@@ -513,18 +553,89 @@ export function SearchHome() {
         setNotes([]);
         setNotesError("");
         setError("");
-        setUndoApp(null);
-        setNoteUndo(null);
+        setUndoQueue([]);
+        undoQueueRef.current = [];
+        undoInteractionPausedRef.current = false;
+        undoPausedRef.current = undoOverlayPausedRef.current;
+        setUndoPaused(undoOverlayPausedRef.current);
+        restoringUndoIdsRef.current.clear();
     }, [user?.id, cancelPendingAction]);
     const [error, setError] = useState("");
-    const [noteUndo, setNoteUndo] = useState<
-        { note: NoteItem; timer: ReturnType<typeof setTimeout> } | null
-    >(null);
+    const [undoQueue, setUndoQueue] = useState<DeletionUndoRecord[]>([]);
+    const [undoPaused, setUndoPaused] = useState(false);
     const [isManagingApps, setIsManagingApps] = useState(false);
-    const [undoApp, setUndoApp] = useState<
-        { app: ExtendedWebApp; timer: ReturnType<typeof setTimeout> } | null
-    >(null);
+    const undoQueueRef = useRef(undoQueue);
+    undoQueueRef.current = undoQueue;
+    const undoPausedRef = useRef(false);
+    const undoInteractionPausedRef = useRef(false);
+    const undoOverlayPausedRef = useRef(overlayActive);
+    undoOverlayPausedRef.current = overlayActive;
+    const restoringUndoIdsRef = useRef<Set<string>>(new Set());
+    const undoIdRef = useRef(0);
     const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+    useEffect(() => {
+        if (undoPaused) return;
+        const timers: ReturnType<typeof globalThis.setTimeout>[] = [];
+        const now = Date.now();
+        for (const record of undoQueue) {
+            if (record.isRestoring || record.expiresAt === null) continue;
+            timers.push(globalThis.setTimeout(() => {
+                if (
+                    !componentMountedRef.current ||
+                    currentUserIdRef.current !== record.userId
+                ) return;
+                setUndoQueue((items) =>
+                    items.filter((item) =>
+                        item.id !== record.id || item.isRestoring ||
+                        item.expiresAt === null || item.expiresAt > Date.now()
+                    )
+                );
+            }, Math.max(0, record.expiresAt - now)));
+        }
+        return () => {
+            timers.forEach(globalThis.clearTimeout);
+        };
+    }, [undoPaused, undoQueue]);
+    useEffect(() => {
+        if (undoQueue.length === 0 && undoInteractionPausedRef.current) {
+            undoInteractionPausedRef.current = false;
+            updateUndoPauseState();
+        }
+    }, [undoQueue.length]);
+    function updateUndoPauseState() {
+        const paused = undoInteractionPausedRef.current ||
+            undoOverlayPausedRef.current;
+        if (undoPausedRef.current === paused) return;
+        undoPausedRef.current = paused;
+        setUndoPaused(paused);
+        const now = Date.now();
+        setUndoQueue((items) =>
+            items.map((record) => {
+                if (record.isRestoring) return record;
+                return paused
+                    ? {
+                        ...record,
+                        remainingMs: Math.max(
+                            0,
+                            (record.expiresAt ?? now) - now,
+                        ),
+                        expiresAt: null,
+                    }
+                    : {
+                        ...record,
+                        expiresAt: now + record.remainingMs,
+                    };
+            })
+        );
+    }
+    function pauseUndoQueue(paused: boolean) {
+        undoInteractionPausedRef.current = paused;
+        updateUndoPauseState();
+    }
+    useLayoutEffect(() => {
+        undoOverlayPausedRef.current = overlayActive;
+        updateUndoPauseState();
+    }, [overlayActive]);
     const appRoute = host.models.apps.route;
     const appSessionOptions: AppSessionOptions = {
         sessionKey: user && appsOwnerId === user.id &&
@@ -831,35 +942,140 @@ export function SearchHome() {
     }
 
     async function softDeleteApp(app: ExtendedWebApp) {
+        const ownerId = currentUserIdRef.current;
+        if (!ownerId) return;
         setError("");
         try {
             await api(`/api/webapps/${app.id}`, { method: "DELETE" });
+            if (
+                !componentMountedRef.current ||
+                currentUserIdRef.current !== ownerId
+            ) return;
             setApps((items) => items.filter((item) => item.id !== app.id));
-
-            // Set up undo toast (5 seconds)
-            if (undoApp) clearTimeout(undoApp.timer);
-            const timer = setTimeout(() => {
-                setUndoApp(null);
-            }, 5000);
-            setUndoApp({ app, timer });
-        } catch (e) {
-            setError(errorMessage(e));
+            if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
+                undoPausedRef.current = false;
+                setUndoPaused(false);
+            }
+            const remainingMs = UNDO_DURATION_MS;
+            const record: AppUndoRecord = {
+                id: `${ownerId}:${++undoIdRef.current}`,
+                userId: ownerId,
+                kind: "app",
+                item: app,
+                expiresAt: undoPausedRef.current
+                    ? null
+                    : Date.now() + remainingMs,
+                remainingMs,
+                isRestoring: false,
+            };
+            setUndoQueue((items) => [...items, record]);
+        } catch (cause) {
+            if (
+                componentMountedRef.current &&
+                currentUserIdRef.current === ownerId
+            ) setError(errorMessage(cause));
         }
     }
 
-    async function undoDeleteApp() {
-        if (!undoApp) return;
-        const { app } = undoApp;
-        clearTimeout(undoApp.timer);
-        setUndoApp(null);
+    async function restoreUndoItems(ids: string[]) {
+        const ownerId = currentUserIdRef.current;
+        if (!ownerId || !componentMountedRef.current) return;
+        const requestedIds = new Set(ids);
+        const selected = undoQueueRef.current.filter((record) =>
+            requestedIds.has(record.id) && record.userId === ownerId &&
+            !record.isRestoring &&
+            !restoringUndoIdsRef.current.has(record.id)
+        );
+        if (selected.length === 0) return;
+
+        const selectedIds = new Set(selected.map((record) => record.id));
+        for (const record of selected) {
+            restoringUndoIdsRef.current.add(record.id);
+        }
+        setUndoQueue((records) =>
+            records.map((record) =>
+                selectedIds.has(record.id)
+                    ? { ...record, isRestoring: true, expiresAt: null }
+                    : record
+            )
+        );
+
         try {
-            const restored = await api<ExtendedWebApp>(
-                `/api/webapps/${app.id}/restore`,
-                json("POST", {}),
+            const results: UndoRestoreResult[] = await Promise.all(
+                selected.map(async (record): Promise<UndoRestoreResult> => {
+                    try {
+                        if (record.kind === "app") {
+                            return {
+                                id: record.id,
+                                kind: "app",
+                                restored: await api<ExtendedWebApp>(
+                                    `/api/webapps/${record.item.id}/restore`,
+                                    json("POST", {}),
+                                ),
+                            };
+                        }
+                        return {
+                            id: record.id,
+                            kind: "note",
+                            restored: await api<NoteItem>(
+                                "/api/notes/" +
+                                    encodeURIComponent(record.item.id) +
+                                    "/restore",
+                                json("POST", {}),
+                            ),
+                        };
+                    } catch (cause) {
+                        return {
+                            id: record.id,
+                            error: errorMessage(cause),
+                        };
+                    }
+                }),
             );
-            setApps((items) => [...items, restored]);
-        } catch (e) {
-            setError(errorMessage(e));
+            if (
+                !componentMountedRef.current ||
+                currentUserIdRef.current !== ownerId
+            ) return;
+
+            const restoredApps: ExtendedWebApp[] = [];
+            const restoredNotes: NoteItem[] = [];
+            const failures = new Map<string, string>();
+            for (const result of results) {
+                if ("error" in result) {
+                    failures.set(result.id, result.error);
+                } else if (result.kind === "app") {
+                    restoredApps.push(result.restored);
+                } else {
+                    restoredNotes.push(result.restored);
+                }
+            }
+            if (restoredApps.length > 0) {
+                setApps((items) => [...items, ...restoredApps]);
+            }
+            if (restoredNotes.length > 0) {
+                setNotes((items) => [...restoredNotes, ...items]);
+            }
+            setUndoQueue((records) =>
+                records.flatMap((record) => {
+                    if (!selectedIds.has(record.id)) return [record];
+                    const failure = failures.get(record.id);
+                    if (failure === undefined) return [];
+                    const remainingMs = UNDO_DURATION_MS;
+                    return [{
+                        ...record,
+                        isRestoring: false,
+                        error: failure,
+                        remainingMs,
+                        expiresAt: undoPausedRef.current
+                            ? null
+                            : Date.now() + remainingMs,
+                    }];
+                })
+            );
+        } finally {
+            for (const record of selected) {
+                restoringUndoIdsRef.current.delete(record.id);
+            }
         }
     }
     // Note actions
@@ -1003,6 +1219,8 @@ export function SearchHome() {
         await taskPromise;
     }
     async function deleteNote(note: NoteItem) {
+        const ownerId = currentUserIdRef.current;
+        if (!ownerId) return;
         setError("");
         try {
             await api(
@@ -1010,28 +1228,34 @@ export function SearchHome() {
                     note.version,
                 { method: "DELETE" },
             );
+            if (
+                !componentMountedRef.current ||
+                currentUserIdRef.current !== ownerId
+            ) return;
             setNotes((items) => items.filter((item) => item.id !== note.id));
             dispatchDesktop({ type: "CLOSE", id: `note:${note.id}` });
-            if (noteUndo) clearTimeout(noteUndo.timer);
-            const timer = setTimeout(() => setNoteUndo(null), 5000);
-            setNoteUndo({ note, timer });
-        } catch (e) {
-            setError(errorMessage(e));
-        }
-    }
-    async function undoDeleteNote() {
-        if (!noteUndo) return;
-        const { note } = noteUndo;
-        clearTimeout(noteUndo.timer);
-        setNoteUndo(null);
-        try {
-            const restored = await api<NoteItem>(
-                "/api/notes/" + encodeURIComponent(note.id) + "/restore",
-                json("POST", {}),
-            );
-            setNotes((items) => [restored, ...items]);
-        } catch (e) {
-            setError(errorMessage(e));
+            if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
+                undoPausedRef.current = false;
+                setUndoPaused(false);
+            }
+            const remainingMs = UNDO_DURATION_MS;
+            const record: NoteUndoRecord = {
+                id: `${ownerId}:${++undoIdRef.current}`,
+                userId: ownerId,
+                kind: "note",
+                item: note,
+                expiresAt: undoPausedRef.current
+                    ? null
+                    : Date.now() + remainingMs,
+                remainingMs,
+                isRestoring: false,
+            };
+            setUndoQueue((items) => [...items, record]);
+        } catch (cause) {
+            if (
+                componentMountedRef.current &&
+                currentUserIdRef.current === ownerId
+            ) setError(errorMessage(cause));
         }
     }
 
@@ -1327,18 +1551,87 @@ export function SearchHome() {
         );
     }
     const mobileFeedback = Boolean(user && mobile && host.activeKind);
-    const undoMessage = undoApp
-        ? "应用已移至回收站"
-        : noteUndo
-        ? "便签已移至回收站"
-        : "";
-    const undoFeedback = undoMessage && (
+    const currentUndoQueue = undoQueue.filter((record) =>
+        record.userId === user?.id
+    );
+    const undoItemNames = currentUndoQueue.map((record) =>
+        record.kind === "app"
+            ? record.item.name
+            : getNoteDisplayTitle(record.item.title, record.item.body)
+    );
+    const undoMessage = currentUndoQueue.length === 1
+        ? `已将“${undoItemNames[0]}”移至回收站`
+        : `已将 ${currentUndoQueue.length} 项移至回收站：${
+            undoItemNames.join("、")
+        }`;
+    const undoErrors = currentUndoQueue.flatMap((record) => {
+        if (!record.error) return [];
+        const name = record.kind === "app"
+            ? record.item.name
+            : getNoteDisplayTitle(record.item.title, record.item.body);
+        return [`恢复“${name}”失败：${record.error}，可以重试。`];
+    }).join(" ");
+    const undoableRecords = currentUndoQueue.filter((record) =>
+        !record.isRestoring
+    );
+    const undoLabel = undoableRecords.length > 1
+        ? "全部撤销"
+        : undoableRecords[0]?.error
+        ? "重试撤销"
+        : undoableRecords.length === 0
+        ? "恢复中…"
+        : "撤销";
+    const undoActions = (
+        <>
+            {currentUndoQueue.length > 1 && currentUndoQueue.map((record) => {
+                const name = record.kind === "app"
+                    ? record.item.name
+                    : getNoteDisplayTitle(
+                        record.item.title,
+                        record.item.body,
+                    );
+                return (
+                    <Button
+                        key={record.id}
+                        variant="ghost"
+                        size="sm"
+                        disabled={record.isRestoring}
+                        aria-label={record.error
+                            ? `重试恢复 ${name}`
+                            : `撤销 ${name}`}
+                        onClick={() => void restoreUndoItems([record.id])}
+                    >
+                        {record.isRestoring
+                            ? `正在恢复 ${name}`
+                            : record.error
+                            ? `重试 ${name}`
+                            : `撤销 ${name}`}
+                    </Button>
+                );
+            })}
+            <Button
+                variant="ghost"
+                size="sm"
+                render={<Link to={routes.trash} />}
+            >
+                前往回收站
+            </Button>
+        </>
+    );
+    const undoFeedback = currentUndoQueue.length > 0 && (
         <UndoToast
-            message={undoMessage}
+            message={undoErrors ? `${undoMessage} ${undoErrors}` : undoMessage}
+            hidden={overlayActive}
             host={feedbackHost}
             placement={mobileFeedback ? "inline" : "floating"}
             onUndo={() =>
-                undoApp ? void undoDeleteApp() : void undoDeleteNote()}
+                void restoreUndoItems(
+                    undoableRecords.map((record) => record.id),
+                )}
+            undoLabel={undoLabel}
+            undoDisabled={undoableRecords.length === 0}
+            actions={undoActions}
+            onPauseChange={pauseUndoQueue}
         />
     );
     const appWindow = desktop.windows.find((window) => window.id === "apps");

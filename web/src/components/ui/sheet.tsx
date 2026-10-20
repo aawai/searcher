@@ -1,8 +1,30 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
+import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
 
-function Sheet(props: SheetPrimitive.Root.Props) {
-    return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+function Sheet({
+    open,
+    defaultOpen,
+    onOpenChange,
+    escapeLayer = true,
+    ...props
+}: SheetPrimitive.Root.Props & { escapeLayer?: boolean }) {
+    const handleOpenChange = useEscapeLayerForOpenState(
+        open,
+        defaultOpen,
+        onOpenChange,
+        "overlay",
+        escapeLayer,
+    );
+    return (
+        <SheetPrimitive.Root
+            data-slot="sheet"
+            {...props}
+            open={open}
+            defaultOpen={defaultOpen}
+            onOpenChange={handleOpenChange}
+        />
+    );
 }
 
 function SheetTrigger(props: SheetPrimitive.Trigger.Props) {

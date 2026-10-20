@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert";
 import { Window } from "happy-dom";
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
+import { EscapeLayerProvider } from "../../components/ui/escape-layer-stack.tsx";
 import type { DesktopState } from "./desktop-state.ts";
 import {
     type DocumentImmersion,
@@ -79,7 +80,11 @@ Deno.test("document immersion rejects other domains and clears on user, host, vi
     const render = (next: DesktopState, userId = "user-a", enabled = true) => {
         act(() =>
             root.render(
-                React.createElement(Host, { state: next, userId, enabled }),
+                React.createElement(
+                    EscapeLayerProvider,
+                    null,
+                    React.createElement(Host, { state: next, userId, enabled }),
+                ),
             )
         );
     };

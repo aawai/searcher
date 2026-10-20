@@ -22,6 +22,7 @@ import {
 } from "./desktop-geometry.ts";
 import type { DesktopAction, DesktopWindowState } from "./desktop-state.ts";
 import { WindowMenu } from "./WindowMenu.tsx";
+import { matchesDesktopShortcut } from "./desktop-shortcuts.ts";
 
 export interface WindowChromeProps {
     window: DesktopWindowState;
@@ -39,6 +40,7 @@ export interface WindowChromeProps {
     backLabel?: string;
     onClose?: () => void;
     onBack?: () => void;
+    onOverview?: () => void;
     leading?: ReactNode;
     headerMenu?: ReactNode;
     closeBtnRef?: RefObject<HTMLButtonElement | null>;
@@ -81,6 +83,7 @@ export function WindowChrome({
     backLabel,
     onClose,
     onBack,
+    onOverview,
     leading,
     headerMenu,
     closeBtnRef,
@@ -496,11 +499,10 @@ export function WindowChrome({
         }
     };
 
-    // Keyboard geometry accessible & Alt+Space window menu
+    // Window menu is keyboard discoverable without a reserved system chord.
     const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
         if (!e.currentTarget.contains(e.target as Node)) return;
-        // Alt+Space opens window system menu
-        if (e.altKey && (e.code === "Space" || e.key === " ")) {
+        if (matchesDesktopShortcut(e, "menu")) {
             e.preventDefault();
             e.stopPropagation();
             if (showWindowMenu !== false) {
@@ -508,6 +510,8 @@ export function WindowChrome({
             }
             return;
         }
+        // Snap chords belong to the desktop host, not titlebar arrow movement.
+        if (e.ctrlKey && e.altKey && e.shiftKey && !e.metaKey) return;
 
         // Only move if chrome itself or title has focus, not controls/inputs
         const target = e.target as HTMLElement | null;
@@ -627,9 +631,9 @@ export function WindowChrome({
                             onClose={onClose}
                             showMinimize={showMinimize}
                             showMaximize={showMaximize}
-                            disabled={disableDrag}
                             closeLabel={closeLabel}
                             open={menuOpen}
+                            onOverview={onOverview}
                             onOpenChange={setMenuOpen}
                         />
                     )}

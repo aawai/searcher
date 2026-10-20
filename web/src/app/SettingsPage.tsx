@@ -851,6 +851,14 @@ export function SettingsPage() {
                                         />
                                     </SettingsCard>
                                 </SettingsSection>
+                                <SettingsSection title="应用管理">
+                                    <SettingsCard>
+                                        <SettingsRow
+                                            title="打开应用操作菜单"
+                                            description="在首页或应用工作区中右键或长按应用图标；键盘用户可按 Shift+F10 或菜单键。"
+                                        />
+                                    </SettingsCard>
+                                </SettingsSection>
                             </div>
                         )}
                         {tab === "appearance" && (

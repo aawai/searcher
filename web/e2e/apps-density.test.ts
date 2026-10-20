@@ -232,8 +232,10 @@ async function openAppsWorkspace(page: Page) {
     let opened = false;
     for (let index = 0; index < await triggers.count(); index++) {
         const trigger = triggers.nth(index);
+        if (!(await trigger.isVisible())) continue;
+        await trigger.scrollIntoViewIfNeeded();
         if (
-            await trigger.isVisible() && await trigger.evaluate((button) => {
+            await trigger.evaluate((button) => {
                 const r = button.getBoundingClientRect();
                 const hit = document.elementFromPoint(
                     r.x + r.width / 2,
@@ -246,6 +248,26 @@ async function openAppsWorkspace(page: Page) {
             opened = true;
             break;
         }
+    }
+    if (!opened) {
+        const evidence = await createEvidenceDirectory("apps-navigation");
+        await page.screenshot({ path: `${evidence}/unreachable.png` });
+        console.error({
+            evidence,
+            navigation: await triggers.evaluateAll((buttons) =>
+                buttons.map((button) => {
+                    const rect = button.getBoundingClientRect();
+                    return {
+                        label: button.getAttribute("aria-label"),
+                        rect: rect.toJSON(),
+                        hit: document.elementFromPoint(
+                            rect.x + rect.width / 2,
+                            rect.y + rect.height / 2,
+                        )?.outerHTML.slice(0, 240),
+                    };
+                })
+            ),
+        });
     }
     assert(opened, "No visible Apps workspace navigation control was found");
     await page.locator(".apps-workspace-root").waitFor({ state: "visible" });

@@ -1,3 +1,4 @@
+import { AppWindow } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     Dialog,
@@ -44,7 +45,8 @@ export function DesktopOverview(
                     <div>
                         <DialogTitle>窗口总览</DialogTitle>
                         <DialogDescription>
-                            选择窗口以恢复并聚焦；Escape 退出总览。
+                            选择窗口以恢复并聚焦；Ctrl+Alt+Shift+O
+                            打开总览，Escape 退出。
                         </DialogDescription>
                     </div>
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -72,6 +74,12 @@ export function DesktopOverview(
                                     onClick={() => onSelect(win.id)}
                                 >
                                     <span className="desktop-overview-type">
+                                        {win.kind === "apps" && (
+                                            <AppWindow
+                                                size={16}
+                                                aria-hidden="true"
+                                            />
+                                        )}
                                         {TYPE_LABELS[win.kind]}
                                         {win.minimized ? " · 已最小化" : ""}
                                     </span>

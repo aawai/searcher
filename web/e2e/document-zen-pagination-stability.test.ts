@@ -281,7 +281,7 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
                     ) patches.push(req.postData() ?? "");
                 };
                 page.on("request", listener);
-                await page.getByRole("button", { name: "页面", exact: true })
+                await page.getByRole("button", { name: "分页", exact: true })
                     .click();
                 const initial = await sample(page, 5000);
                 await ready(page);

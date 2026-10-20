@@ -218,6 +218,14 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             );
             await panel.waitFor();
             await panel.locator(".launcher-empty, .empty-state").waitFor();
+            const managementHint = panel.locator(".apps-management-help");
+            await managementHint.waitFor({ state: "visible" });
+            assertEquals(await managementHint.getAttribute("role"), "note");
+            assertStringIncludes(await managementHint.innerText(), "长按");
+            assertStringIncludes(
+                await managementHint.innerText(),
+                "Shift+F10",
+            );
             assertEquals(
                 await panel.locator(".launcher-empty, .empty-state").first()
                     .isVisible(),

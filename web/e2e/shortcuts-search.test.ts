@@ -113,6 +113,66 @@ Deno.test("production search shortcuts respect editable focus and submit command
         },
     );
     await t.step(
+        "combobox keeps focus, skips options on Tab and exposes online failure",
+        async () => {
+            await search.fill("/g");
+            const options = page.getByRole("option");
+            await options.first().waitFor();
+            assertEquals(await search.getAttribute("role"), "combobox");
+            assertEquals(await search.getAttribute("aria-expanded"), "true");
+            await search.press("ArrowDown");
+            assertEquals(
+                await search.getAttribute("aria-activedescendant"),
+                await options.first().getAttribute("id"),
+            );
+            assert(
+                await search.evaluate((el) => document.activeElement === el),
+            );
+            await search.press("Escape");
+            assertEquals(await search.getAttribute("aria-expanded"), "false");
+            assert(
+                await search.evaluate((el) => document.activeElement === el),
+            );
+            await search.fill("/b");
+            await options.first().waitFor();
+            await search.press("Tab");
+            assert(
+                await page.getByRole("button", { name: "搜索", exact: true })
+                    .evaluate((el) => document.activeElement === el),
+            );
+            await page.route(
+                /\/api\/search\/suggestions\?/,
+                (route) =>
+                    route.fulfill({
+                        status: 503,
+                        contentType: "application/json",
+                        body: JSON.stringify({
+                            status: false,
+                            message: "private upstream detail",
+                        }),
+                    }),
+            );
+            try {
+                await search.fill("unavailable unique query");
+                await page.getByText("在线联想暂不可用", { exact: true })
+                    .waitFor();
+                assertEquals(await options.count(), 0);
+                assertEquals(
+                    await page.getByText("private upstream detail").count(),
+                    0,
+                );
+                await search.press("Escape");
+                assertEquals(
+                    await search.getAttribute("aria-expanded"),
+                    "false",
+                );
+            } finally {
+                await page.unroute(/\/api\/search\/suggestions\?/);
+                await search.fill("");
+            }
+        },
+    );
+    await t.step(
         "IME candidate keys and submit do not select commands, then normal Enter works",
         async () => {
             await page.goto(origin);
@@ -295,10 +355,6 @@ Deno.test("production search shortcuts respect editable focus and submit command
             await page.getByRole("option").filter({ hasText: "/ai" }).waitFor();
             await search.press("Enter");
             await page.getByPlaceholder("输入问题，开始对话").waitFor();
-            assertEquals(
-                await search.getAttribute("placeholder"),
-                "输入问题，开始对话",
-            );
         },
     );
     await t.step(
@@ -321,6 +377,53 @@ Deno.test("production search shortcuts respect editable focus and submit command
             );
             assertEquals(new URL(page.url()).origin, origin);
             await popup.close();
+        },
+    );
+    await t.step(
+        "touch search targets stay usable inside the search frame",
+        async () => {
+            const touch = await browser.newContext({
+                hasTouch: true,
+                viewport: { width: 390, height: 844 },
+            });
+            try {
+                const mobile = await touch.newPage();
+                await mobile.goto(origin);
+                await mobile.getByRole("combobox").fill("/g");
+                await mobile.getByRole("option").first().waitFor();
+                const frame = await mobile.locator(".search-frame")
+                    .boundingBox();
+                assert(frame);
+                for (
+                    const target of [
+                        mobile.locator(".search-engine"),
+                        mobile.getByRole("button", {
+                            name: "搜索",
+                            exact: true,
+                        }),
+                        mobile.getByRole("option").first(),
+                    ]
+                ) {
+                    const box = await target.boundingBox();
+                    assert(box && box.width >= 44 && box.height >= 44);
+                }
+                const submit = await mobile.getByRole("button", {
+                    name: "搜索",
+                    exact: true,
+                }).boundingBox();
+                assert(
+                    submit && submit.y >= frame.y &&
+                        submit.y + submit.height <= frame.y + frame.height,
+                );
+                assertEquals(
+                    await mobile.evaluate(() =>
+                        document.documentElement.scrollWidth > innerWidth
+                    ),
+                    false,
+                );
+            } finally {
+                await touch.close();
+            }
         },
     );
 });

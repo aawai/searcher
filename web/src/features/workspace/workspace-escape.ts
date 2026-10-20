@@ -1,6 +1,5 @@
-import { useEffect } from "react";
+import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 
-// One active apps coordinator; presenters cancel their default apps dismiss.
 export function useAppsEscape({
     enabled,
     isForeground,
@@ -14,36 +13,17 @@ export function useAppsEscape({
     onDialogEscape: () => void;
     onEscape: () => void;
 }) {
-    useEffect(() => {
-        if (!enabled) return;
-        const escape = (event: KeyboardEvent) => {
-            if (
-                event.key !== "Escape" || event.isComposing ||
-                event.defaultPrevented || isForeground?.() === false
-            ) return;
-            if (hasDialog()) {
-                event.preventDefault();
-                onDialogEscape();
-                return;
-            }
-            // Owned popup state remains authoritative during its focus handoff.
-            if (
-                document.querySelector(
-                    '.apps-workspace [aria-expanded="true"][aria-haspopup]',
-                )
-            ) return;
-            const target = event.target;
-            if (target instanceof Element) {
-                if (target.closest("[data-workspace-escape-boundary]")) return;
-                const overlay = target.closest(
-                    '[role="menu"], [role="alertdialog"], [role="dialog"], [data-slot="popover-content"]',
-                );
-                if (overlay && !overlay.matches(".workspace-panel")) return;
-            }
-            event.preventDefault();
-            onEscape();
-        };
-        globalThis.addEventListener("keydown", escape, true);
-        return () => globalThis.removeEventListener("keydown", escape, true);
-    }, [enabled, isForeground, hasDialog, onDialogEscape, onEscape]);
+    useEscapeLayer(enabled, (event) => {
+        if (isForeground?.() === false) return;
+        if (hasDialog()) {
+            onDialogEscape();
+            return;
+        }
+        const target = event.target;
+        if (
+            target instanceof Element &&
+            target.closest("[data-workspace-escape-boundary]")
+        ) return;
+        onEscape();
+    });
 }

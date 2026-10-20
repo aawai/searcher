@@ -1,8 +1,27 @@
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
+import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
 
-function ContextMenu(props: ContextMenuPrimitive.Root.Props) {
-    return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
+function ContextMenu({
+    open,
+    defaultOpen,
+    onOpenChange,
+    ...props
+}: ContextMenuPrimitive.Root.Props) {
+    const handleOpenChange = useEscapeLayerForOpenState(
+        open,
+        defaultOpen,
+        onOpenChange,
+    );
+    return (
+        <ContextMenuPrimitive.Root
+            data-slot="context-menu"
+            {...props}
+            open={open}
+            defaultOpen={defaultOpen}
+            onOpenChange={handleOpenChange}
+        />
+    );
 }
 
 function ContextMenuTrigger(

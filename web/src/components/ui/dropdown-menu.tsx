@@ -1,8 +1,27 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
 
-function DropdownMenu(props: MenuPrimitive.Root.Props) {
-    return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+function DropdownMenu({
+    open,
+    defaultOpen,
+    onOpenChange,
+    ...props
+}: MenuPrimitive.Root.Props) {
+    const handleOpenChange = useEscapeLayerForOpenState(
+        open,
+        defaultOpen,
+        onOpenChange,
+    );
+    return (
+        <MenuPrimitive.Root
+            data-slot="dropdown-menu"
+            {...props}
+            open={open}
+            defaultOpen={defaultOpen}
+            onOpenChange={handleOpenChange}
+        />
+    );
 }
 
 function DropdownMenuTrigger(props: MenuPrimitive.Trigger.Props) {
