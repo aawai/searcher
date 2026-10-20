@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-18T14:03:55.895Z",
+  "last_updated": "2026-10-19T10:31:25.030Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1671,6 +1671,26 @@
       "source_context": "移动极简空间无容器便签实施，仍在执行完整交互与矩阵验收",
       "created": "2026-10-18",
       "updated": "2026-10-18"
+    },
+    "sources/obs-2026-10-19-issues-196-199-pr-219-main": {
+      "type": "source",
+      "title": "Observation: Issues 196/199 经 PR 219 合并 main",
+      "tags": [
+        "issues-196-199",
+        "pr-219",
+        "auth",
+        "guest",
+        "ui",
+        "ci",
+        "merged"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-19-issues-196-199-pr-219-main",
+      "relevance": "high",
+      "observed_at": "2026-10-19T10:31:24.994Z",
+      "source_context": "实现游客AI登录引导与注册规则/开关失败处理并合并main",
+      "created": "2026-10-19",
+      "updated": "2026-10-19"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",
