@@ -64,10 +64,6 @@
 .notes-workspace-editor .note-editor-toolbar {
     gap: var(--space-2);
 }
-.notes-workspace-editor .conflict-columns {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-}
 
 .notes-workspace-editor {
     height: 100%;

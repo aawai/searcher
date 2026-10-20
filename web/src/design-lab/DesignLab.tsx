@@ -1116,7 +1116,7 @@ export function DesignLab() {
                                             app={app}
                                             onOpen={() =>
                                                 setFeedbackMessage(
-                                                    `点击打开常用网站：${app.name}`,
+                                                    `点击打开常用应用：${app.name}`,
                                                 )}
                                         />
                                     ))}

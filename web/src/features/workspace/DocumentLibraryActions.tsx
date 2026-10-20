@@ -253,7 +253,7 @@ export function DocumentLibraryActions({
                         onClick={() => setTrashOpen(true)}
                     >
                         <Trash2 className="size-4 mr-2" />
-                        <span>移入废纸篓</span>
+                        <span>移至回收站</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -413,10 +413,10 @@ export function DocumentLibraryActions({
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>移入废纸篓</AlertDialogTitle>
+                        <AlertDialogTitle>移至回收站</AlertDialogTitle>
                         <AlertDialogDescription>
                             确定将笔记“{item
-                                .displayTitle}”移入废纸篓吗？可在废纸篓中恢复。
+                                .displayTitle}”移至回收站吗？可在回收站中恢复。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -442,7 +442,7 @@ export function DocumentLibraryActions({
                                 void handleTrashConfirm();
                             }}
                         >
-                            {isTrashing ? "正在移入废纸篓…" : "确认移入废纸篓"}
+                            {isTrashing ? "正在移至回收站…" : "确认移至回收站"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -1,6 +1,9 @@
-import { assertEquals, assertExists, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertExists, assertRejects } from "@std/assert";
 import { DatabaseSync } from "node:sqlite";
-import { DatabaseStore } from "../../db/database.ts";
+import { DatabaseStore, openDatabase } from "../../db/database.ts";
+import { migrateDatabase } from "../../db/migrate.ts";
+import { users } from "../../db/schema.ts";
+import { DocumentsService } from "../documents/service.ts";
 import { AiService } from "./service.ts";
 import { aiBlobs, aiConversations, aiMessages } from "../../db/ai-schema.ts";
 import { executeToolCall, isValidHttpUrl } from "./tools.ts";
@@ -63,6 +66,21 @@ function createTestStore(): DatabaseStore {
         INSERT INTO users (id, username, display_name, password_hash, role, created_at, updated_at)
         VALUES ('u1', 'testuser', 'Test User', 'hash', 'user', 1000, 1000);
     `);
+    return store;
+}
+async function createMigratedAiTestStore(): Promise<DatabaseStore> {
+    const store = openDatabase(":memory:");
+    await migrateDatabase(store);
+    await store.run(async (db) => {
+        await db.insert(users).values({
+            id: "u1",
+            username: "testuser",
+            displayName: "Test User",
+            passwordHash: "hash",
+            createdAt: 1000,
+            updatedAt: 1000,
+        });
+    });
     return store;
 }
 
@@ -667,6 +685,186 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
         await store.close();
     }
 });
+Deno.test("AskWorkspace: Document source citations stream and persist with document identity", async () => {
+    const store = await createMigratedAiTestStore();
+    try {
+        let completionsCallCount = 0;
+        const mockFetch: typeof fetch = (input) => {
+            const url = String(input);
+            if (url.endsWith("/models")) {
+                return Promise.resolve(
+                    new Response(
+                        JSON.stringify({
+                            data: [{
+                                id: "document-model",
+                                supports_tools: true,
+                            }],
+                        }),
+                        { headers: { "Content-Type": "application/json" } },
+                    ),
+                );
+            }
+            if (url.endsWith("/chat/completions")) {
+                completionsCallCount++;
+                if (completionsCallCount === 1) {
+                    const toolChunk = {
+                        choices: [{
+                            delta: {
+                                tool_calls: [{
+                                    index: 0,
+                                    id: "call_document_1",
+                                    function: {
+                                        name: "lookup_documents",
+                                        arguments: '{"query":"quartz"}',
+                                    },
+                                }],
+                            },
+                        }],
+                    };
+                    return Promise.resolve(
+                        new Response(
+                            `data: ${JSON.stringify(toolChunk)}\n\n` +
+                                "data: [DONE]\n\n",
+                            {
+                                headers: {
+                                    "Content-Type": "text/event-stream",
+                                },
+                            },
+                        ),
+                    );
+                }
+                return Promise.resolve(
+                    new Response(
+                        `data: ${
+                            JSON.stringify({
+                                choices: [{
+                                    delta: {
+                                        content:
+                                            "The document describes quartz.",
+                                    },
+                                }],
+                            })
+                        }\n\n` +
+                            `data: ${
+                                JSON.stringify({
+                                    choices: [],
+                                    usage: {
+                                        prompt_tokens: 15,
+                                        completion_tokens: 6,
+                                    },
+                                })
+                            }\n\n` +
+                            "data: [DONE]\n\n",
+                        {
+                            headers: { "Content-Type": "text/event-stream" },
+                        },
+                    ),
+                );
+            }
+            return Promise.resolve(new Response("Not found", { status: 404 }));
+        };
+
+        const documents = new DocumentsService(store);
+        const document = await documents.create("u1", {
+            title: "Quartz Field Manual",
+            body: "Long-form field notes about quartz formations.",
+        });
+        const service = new AiService({
+            store,
+            encryptionKey: TEST_KEY,
+            fetchFn: mockFetch,
+        });
+        const provider = await service.createProvider("u1", {
+            name: "P1",
+            baseUrl: "https://api.example.com/v1",
+            apiKey: "key",
+            scope: "user",
+        }, false);
+
+        const eventsReceived: Array<{ event: string; data: unknown }> = [];
+        let conversationId = "";
+        let assistantMessageId = "";
+        for await (
+            const event of service.streamChat("u1", {
+                providerId: provider.id,
+                modelId: "document-model",
+                message: "Find my quartz field manual",
+                tools: { documents: true },
+            })
+        ) {
+            eventsReceived.push(event);
+            if (
+                event.event === "meta" && typeof event.data === "object" &&
+                event.data !== null &&
+                "conversationId" in event.data &&
+                typeof event.data.conversationId === "string" &&
+                "assistantMessageId" in event.data &&
+                typeof event.data.assistantMessageId === "string"
+            ) {
+                conversationId = event.data.conversationId;
+                assistantMessageId = event.data.assistantMessageId;
+            }
+        }
+
+        const toolCall = eventsReceived.find((event) =>
+            event.event === "tool-call"
+        );
+        assertExists(toolCall);
+        if (
+            typeof toolCall.data !== "object" || toolCall.data === null ||
+            !("toolName" in toolCall.data)
+        ) {
+            throw new Error("Expected a document tool-call payload");
+        }
+        assertEquals(toolCall.data.toolName, "documents");
+
+        const sourceEvent = eventsReceived.find((event) =>
+            event.event === "sources"
+        );
+        assertExists(sourceEvent);
+        if (
+            typeof sourceEvent.data !== "object" ||
+            sourceEvent.data === null || !("sources" in sourceEvent.data) ||
+            !Array.isArray(sourceEvent.data.sources)
+        ) {
+            throw new Error("Expected a source citation event");
+        }
+        const streamedSource = sourceEvent.data.sources[0];
+        if (
+            typeof streamedSource !== "object" || streamedSource === null ||
+            !("type" in streamedSource) ||
+            !("documentId" in streamedSource) || !("title" in streamedSource)
+        ) {
+            throw new Error("Expected a document citation");
+        }
+        assertEquals(streamedSource.type, "document");
+        assertEquals(streamedSource.documentId, document.id);
+        assertEquals(streamedSource.title, document.displayTitle);
+
+        const conversation = await service.getConversation(
+            "u1",
+            conversationId,
+        );
+        const assistant = conversation.messages.find((message) =>
+            message.id === assistantMessageId
+        );
+        assertExists(assistant);
+        const sourcesPart = assistant.parts?.find((part) =>
+            part.type === "sources"
+        );
+        assertExists(sourcesPart);
+        const persistedSource = sourcesPart.sources[0];
+        if (persistedSource.type !== "document") {
+            throw new Error("Expected a persisted document citation");
+        }
+        assertEquals(persistedSource.documentId, document.id);
+        assertEquals(persistedSource.title, document.displayTitle);
+        assertEquals(persistedSource, streamedSource);
+        assertEquals(assistant.content, "The document describes quartz.");
+    } finally {
+        await store.close();
+    }
+});
 
 Deno.test("AskWorkspace: Empty message allowed on regenerate", async () => {
     const store = createTestStore();
@@ -904,6 +1102,7 @@ Deno.test("AskWorkspace: Live SearXNG HTTP mock smoke test verifies real query/s
             assertExists(res.sources);
             assertEquals(res.sources.length, 1);
             assertEquals(res.sources[0].title, "Searcher Documentation");
+            assert(res.sources[0].type !== "document");
             assertEquals(res.sources[0].url, "https://searcher.internal/docs");
         } finally {
             await searxngServer.shutdown();

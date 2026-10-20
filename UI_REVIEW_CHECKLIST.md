@@ -4,6 +4,38 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issues #203 / #216 术语、冲突与便签实时连接
+
+- [x] 在 `.worktrees/issues-203-216` 基于安静的 main 实施；开始时无打开的 PR。
+      用户确认便签/笔记/应用词表，并明确选择补齐真实长笔记 AI 检索。
+- [x] 用户可见长篇内容统一“笔记”，短便签保持“便签”，应用图块与网址字段分开；
+      软删除统一“移至回收站”。保留内部 `documents` 标识、DOM document 术语、
+      Markdown fixture、技术注释及历史规格，不做技术标识符重命名。
+- [x] 便签与笔记复用 ConflictDialog、shadcn Button/Dialog/AlertDialog；
+      用云端/用我的版本均二次确认，另存副本不覆盖云端，暂不处理可重开；
+      便签保留复制和合并。390/768/1440 × light/dark 六组便签冲突实页
+      已逐张审阅，横向 overflow 均0；修正移动端预览 flex 压缩裁切，
+      内容区可滚动且 footer 保持可操作。390px 笔记 Sheet 的相同三项动作及
+      确认框实页已核验，确认按钮44px、中心 hit-test 命中自身；
+      `/tmp/omp-sshots-15ada87421b664af.webp` 前一张是动画中间态，
+      最终静止确认框与独立工具设置画面在同次会话后续截图中复核。
+- [x] 三个便签窗口仅一条 `/api/notes/events` 请求；clean 更新静默同步， dirty
+      更新保留本地草稿，暂不处理/取消确认不丢数据。
+      另存副本首次网络失败保留原文，成功重试保留原云端并保存完整本地 Markdown；
+      最后一个窗口关闭及登出均使连接 CLOSED。管理器4条单测覆盖 noteId
+      分发、退订、无效事件与账号切换隔离。
+- [x] AI 三个本地开关为搜索便签/搜索笔记/搜索应用；实页单独启用搜索笔记时
+      另外两项仍关闭，真实 capabilities 返回 documents=true。 SQLite 冒烟调用
+      lookup_documents 返回 documentId 引用，关闭授权则明确拒绝；
+      工具/stream测试覆盖账号、回收站隔离及来源持久化。 来源导航等待账号
+      workspace reset 与桌面恢复完成，避免新路由打开后被重置。
+- [x] 基线712 tests/51 steps通过；实现后领域套件719 tests/51 steps通过，
+      focused工具/SSE测试35条通过。完整生产E2E首轮81 passed/4 failed；
+      修复来源导航生命周期、旧APP反馈定位、Markdown末尾换行的测试假设，
+      以及笔记编辑脚本未等待focus/dirty/saved与浏览器回调闭包问题。 Ask/UI
+      feedback最终3 tests/17 steps通过；共享连接和笔记presentation 最终2
+      tests通过。**这是分批通过，不是完整命令一次全绿。**
+
 ## Issues #198 / #197 / #201 / #200 / #215 / #204 / #202
 
 - [x] 在 `.worktrees/issues-197-215` 隔离实施，按用户指定的五组拆分：

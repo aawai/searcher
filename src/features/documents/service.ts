@@ -109,7 +109,7 @@ export class DocumentsService {
             }
             if (title.length > DOCUMENT_TITLE_MAX_LENGTH) {
                 throw new DocumentValidationError(
-                    `文档标题不能超过 ${DOCUMENT_TITLE_MAX_LENGTH} 个字符`,
+                    `笔记标题不能超过 ${DOCUMENT_TITLE_MAX_LENGTH} 个字符`,
                 );
             }
         }
@@ -122,7 +122,7 @@ export class DocumentsService {
             }
             if (body.length > DOCUMENT_BODY_MAX_LENGTH) {
                 throw new DocumentValidationError(
-                    `文档正文不能超过 ${DOCUMENT_BODY_MAX_LENGTH} 个字符`,
+                    `笔记正文不能超过 ${DOCUMENT_BODY_MAX_LENGTH} 个字符`,
                 );
             }
         }

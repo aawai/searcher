@@ -475,7 +475,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // Success banner and EmptyState appear
             const successBanner = desktopPage.locator(
-                ".status-banner:has-text('APP 已彻底删除')",
+                ".status-banner:has-text('应用已彻底删除')",
             );
             await successBanner.waitFor({ state: "visible" });
             const emptyState = desktopPage.locator(

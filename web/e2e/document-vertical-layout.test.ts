@@ -660,7 +660,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         },
     ) {
         await win.getByRole("button", {
-            name: "更多文档操作",
+            name: "更多笔记操作",
             exact: true,
         }).click();
         await page.getByRole("menuitem", {
@@ -1190,7 +1190,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             `${fixture.name} retains its canonical editor breaks`,
         );
         await win.getByRole("button", {
-            name: "更多文档操作",
+            name: "更多笔记操作",
             exact: true,
         }).click();
         await page.getByRole("menuitem", {

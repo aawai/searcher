@@ -1235,18 +1235,20 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await bodyInput.blur();
 
             // 3. Conflict dialog opens
-            const conflictDialog = page.locator(
-                '[role="alertdialog"][aria-label="便签版本冲突"]',
-            );
+            const conflictDialog = page.getByRole("dialog", {
+                name: "发现版本冲突",
+            });
             await conflictDialog.waitFor({ state: "visible" });
-            assertStringIncludes(
-                await conflictDialog.textContent() ?? "",
-                "另一台设备更新了这条便签",
-            );
+            await conflictDialog.getByRole("tab", { name: /云端最新版本/ })
+                .click();
             assertStringIncludes(
                 await conflictDialog.textContent() ?? "",
                 serverUpdatedBody,
             );
+            await conflictDialog.getByRole("tab", {
+                name: "本地修改 (未保存)",
+                exact: true,
+            }).click();
             assertStringIncludes(
                 await conflictDialog.textContent() ?? "",
                 "Local conflicting edit body",
@@ -1257,11 +1259,15 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 path: `${screenshotDir}/notes-conflict.png`,
             });
 
-            // 4. Test "使用云端" resolution:
-            const useCloudBtn = conflictDialog.locator(
-                'button:has-text("使用云端")',
-            );
-            await useCloudBtn.click();
+            // Accepting cloud data requires an explicit destructive confirmation.
+            await conflictDialog.getByRole("button", {
+                name: "用云端版本",
+                exact: true,
+            }).click();
+            await page.getByRole("alertdialog").getByRole("button", {
+                name: "确认用云端版本",
+                exact: true,
+            }).click();
             await conflictDialog.waitFor({ state: "detached" });
 
             // Draft is replaced by cloud version and saved
@@ -1318,11 +1324,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await bodyInput.blur();
             await conflictDialog.waitFor({ state: "visible" });
 
-            // Click "覆盖云端"
-            const overrideBtn = conflictDialog.locator(
-                'button:has-text("覆盖云端")',
-            );
-            await overrideBtn.click();
+            await conflictDialog.getByRole("button", {
+                name: "用我的版本",
+                exact: true,
+            }).click();
+            await page.getByRole("alertdialog").getByRole("button", {
+                name: "确认覆盖云端",
+                exact: true,
+            }).click();
             await conflictDialog.waitFor({ state: "detached" });
 
             await page.waitForFunction(() =>

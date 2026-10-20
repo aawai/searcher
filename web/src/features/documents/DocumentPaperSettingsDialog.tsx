@@ -436,7 +436,7 @@ export function DocumentPaperSettingsDialog({
                 <DialogHeader>
                     <DialogTitle>纸张与打印设置</DialogTitle>
                     <DialogDescription>
-                        配置文档的物理纸张规格、版面方向及打印边距（5mm–50mm）。
+                        配置笔记的物理纸张规格、版面方向及打印边距（5mm–50mm）。
                     </DialogDescription>
                 </DialogHeader>
 

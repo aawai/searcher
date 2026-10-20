@@ -4,7 +4,7 @@ import {
     GuestAiUnavailable,
 } from "../components/searcher/GuestAiUnavailable.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     useCallback,
     useEffect,
@@ -157,6 +157,12 @@ export function SearchHome() {
         };
     }, []);
     const navigate = useNavigate();
+    const location = useLocation();
+    const consumedDocumentNavigationRef = useRef<string | null>(null);
+    const [workspaceResetUserId, setWorkspaceResetUserId] = useState<
+        string | null
+    >(null);
+    const openDocumentRef = useRef<(id: string) => void>(() => {});
     const layoutStyle = appearance.style;
     const updatingNotesRef = useRef<Set<string>>(new Set());
     const noteLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
@@ -412,6 +418,51 @@ export function SearchHome() {
             });
         } else navigateWorkspace({ view: "documents/edit", id });
     }
+    openDocumentRef.current = openDocument;
+    useEffect(() => {
+        const routeState: unknown = location.state;
+        if (
+            !routeState || typeof routeState !== "object" ||
+            !("openDocumentId" in routeState)
+        ) return;
+        const documentId = routeState.openDocumentId;
+        if (
+            typeof documentId !== "string" || !documentId ||
+            consumedDocumentNavigationRef.current === location.key
+        ) {
+            return;
+        }
+
+        if (
+            !user || workspaceResetUserId !== user.id ||
+            !ownsCurrentUserData
+        ) return;
+
+        if (
+            appearance.style === "widgets" && geometry.usable &&
+            globalThis.innerWidth >= 1024 && !desktopRestored
+        ) return;
+
+        consumedDocumentNavigationRef.current = location.key;
+        navigate(
+            `${location.pathname}${location.search}${location.hash}`,
+            { replace: true, state: null },
+        );
+        openDocumentRef.current(documentId);
+    }, [
+        location.hash,
+        location.key,
+        location.pathname,
+        location.search,
+        location.state,
+        navigate,
+        appearance.style,
+        desktopRestored,
+        geometry,
+        ownsCurrentUserData,
+        user?.id,
+        workspaceResetUserId,
+    ]);
     function onDocumentDeleted(id: string) {
         dispatchDesktop({ type: "CLOSE", id: `document:${id}` });
         setDocumentPreviews((current) => {
@@ -559,6 +610,7 @@ export function SearchHome() {
         undoPausedRef.current = undoOverlayPausedRef.current;
         setUndoPaused(undoOverlayPausedRef.current);
         restoringUndoIdsRef.current.clear();
+        setWorkspaceResetUserId(user?.id ?? null);
     }, [user?.id, cancelPendingAction]);
     const [error, setError] = useState("");
     const [undoQueue, setUndoQueue] = useState<DeletionUndoRecord[]>([]);
@@ -860,7 +912,7 @@ export function SearchHome() {
                 globalThis.open(url.href, "_blank", "noopener,noreferrer");
             } else globalThis.location.assign(url.href);
         } catch {
-            setError("网站网址无效，请编辑后重试。");
+            setError("网址无效，请编辑后重试。");
         }
     }
 
@@ -1540,7 +1592,11 @@ export function SearchHome() {
                     })}
                 onSaved={(next) =>
                     setNotes((items) =>
-                        items.map((item) => item.id === next.id ? next : item)
+                        items.some((item) => item.id === next.id)
+                            ? items.map((item) =>
+                                item.id === next.id ? next : item
+                            )
+                            : [next, ...items]
                     )}
                 onReorder={reorderNotes}
                 actions={layoutProps}
@@ -1717,9 +1773,15 @@ export function SearchHome() {
                                 notes={currentNotes}
                                 onSaveNote={(saved) => {
                                     setNotes((items) =>
-                                        items.map((item) =>
-                                            item.id === saved.id ? saved : item
-                                        )
+                                        items.some((item) =>
+                                                item.id === saved.id
+                                            )
+                                            ? items.map((item) =>
+                                                item.id === saved.id
+                                                    ? saved
+                                                    : item
+                                            )
+                                            : [saved, ...items]
                                     );
                                 }}
                                 userId={user.id}

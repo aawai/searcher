@@ -35,6 +35,10 @@ import {
     useState,
 } from "react";
 import { hasUnsyncedNoteDrafts } from "../features/notes/local-drafts.ts";
+import {
+    createNoteEventSubscriptions,
+    type NoteEventSubscriptions,
+} from "../features/notes/note-event-subscriptions.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import {
@@ -181,7 +185,11 @@ export function normalizeAppearance(raw: unknown): Appearance {
     }
     return result;
 }
-type AuthSession = { userId: string | null; isCurrent: () => boolean };
+type AuthSession = {
+    userId: string | null;
+    isCurrent: () => boolean;
+    noteEvents: NoteEventSubscriptions;
+};
 
 type State = {
     user: UserDto | null;
@@ -216,10 +224,15 @@ export function AppState({ children }: { children: ReactNode }) {
     const [syncFailed, setSyncFailed] = useState(false);
     const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
-    const sessionRef = useRef<AuthSession>({
-        userId: null,
-        isCurrent: () => false,
-    });
+    const sessionRef = useRef<AuthSession | null>(null);
+    if (sessionRef.current === null) {
+        const session: AuthSession = {
+            userId: null,
+            isCurrent: () => sessionRef.current === session,
+            noteEvents: createNoteEventSubscriptions(),
+        };
+        sessionRef.current = session;
+    }
     // Object identity is the auth epoch, renewed even when the same account logs in again.
     const updateUser = useCallback((next: UserDto | null, renew = false) => {
         if (userRef.current?.id !== next?.id) {
@@ -227,14 +240,19 @@ export function AppState({ children }: { children: ReactNode }) {
             setValue(initial);
         }
         if (renew || userRef.current?.id !== next?.id) {
+            sessionRef.current!.noteEvents.dispose();
             const session: AuthSession = {
                 userId: next?.id ?? null,
                 isCurrent: () => sessionRef.current === session,
+                noteEvents: createNoteEventSubscriptions(),
             };
             sessionRef.current = session;
         }
         userRef.current = next;
         setUser(next);
+    }, []);
+    useEffect(() => () => {
+        sessionRef.current!.noteEvents.dispose();
     }, []);
     const sync = useRef<AppearanceSyncQueue>({
         owner: null,
@@ -274,7 +292,7 @@ export function AppState({ children }: { children: ReactNode }) {
     ), []);
 
     const checkAuth = useCallback(async () => {
-        const session = sessionRef.current;
+        const session = sessionRef.current!;
         try {
             const { user } = await api<{ user: UserDto }>("/api/auth/me", {
                 signal: AbortSignal.timeout(5000),
@@ -511,7 +529,7 @@ export function AppState({ children }: { children: ReactNode }) {
     };
 
     const logout = async (options?: { force?: boolean }) => {
-        const session = sessionRef.current;
+        const session = sessionRef.current!;
         if (!session.userId) return true;
         if (!options?.force) {
             try {
@@ -541,7 +559,7 @@ export function AppState({ children }: { children: ReactNode }) {
         <Context.Provider
             value={{
                 user,
-                authSession: sessionRef.current,
+                authSession: sessionRef.current!,
                 ready,
                 syncFailed,
                 connectionError: authConnectionError,

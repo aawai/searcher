@@ -317,13 +317,13 @@ export function DocumentNotebookNavigation({
     return (
         <nav
             className="documents-notebook-navigation"
-            aria-label="文档笔记本导航"
+            aria-label="笔记本导航"
         >
             {/* Scopes navigation buttons */}
             <div
                 className="documents-notebook-scopes"
                 role="group"
-                aria-label="文档分类视图"
+                aria-label="笔记范围视图"
             >
                 <Button
                     type="button"
@@ -780,7 +780,7 @@ export function DocumentNotebookNavigation({
                         <AlertDialogTitle>删除笔记本</AlertDialogTitle>
                         <AlertDialogDescription>
                             确定删除笔记本“{deleteTarget
-                                ?.name}”吗？笔记本中的文档将保留在未分类中，不会被删除；其下的子笔记本将被提升为根笔记本。
+                                ?.name}”吗？笔记本中的笔记会保留并移至未分类；其中的子笔记本会提升为根笔记本。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 

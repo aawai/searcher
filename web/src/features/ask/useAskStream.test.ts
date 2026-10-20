@@ -204,6 +204,47 @@ Deno.test("useAskStream: applySseEvent updates accumulator correctly", () => {
         type: "sources",
         sources: [{ title: "Deno manual", url: "https://deno.land" }],
     });
+    // 5b. Documents tool and source events
+    applySseEvent(acc, "tool-call", {
+        callId: "doc-call",
+        toolName: "documents",
+        args: { query: "release notes" },
+    });
+    applySseEvent(acc, "tool-result", {
+        callId: "doc-call",
+        toolName: "documents",
+        result: [{ id: "doc-1", title: "Release notes" }],
+    });
+    applySseEvent(acc, "sources", {
+        sources: [{
+            type: "document",
+            documentId: "doc-1",
+            title: "Release notes",
+            snippet: "Updated product changes",
+        }],
+    });
+    assertEquals(acc.liveParts[3], {
+        type: "tool-call",
+        callId: "doc-call",
+        toolName: "documents",
+        args: { query: "release notes" },
+    });
+    assertEquals(acc.liveParts[4], {
+        type: "tool-result",
+        callId: "doc-call",
+        toolName: "documents",
+        result: [{ id: "doc-1", title: "Release notes" }],
+        error: undefined,
+    });
+    assertEquals(acc.liveParts[5], {
+        type: "sources",
+        sources: [{
+            type: "document",
+            documentId: "doc-1",
+            title: "Release notes",
+            snippet: "Updated product changes",
+        }],
+    });
 
     // 6. Done event
     assertEquals(acc.receivedDone, false);

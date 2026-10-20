@@ -1,6 +1,9 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { DatabaseSync } from "node:sqlite";
-import { DatabaseStore } from "../../db/database.ts";
+import { DatabaseStore, openDatabase } from "../../db/database.ts";
+import { migrateDatabase } from "../../db/migrate.ts";
+import { users } from "../../db/schema.ts";
+import { DocumentsService } from "../documents/service.ts";
 import {
     buildToolDefinitions,
     executeToolCall,
@@ -47,10 +50,36 @@ function createInMemoryStore(): DatabaseStore {
     ]);
     return store;
 }
+async function createDocumentsStore(): Promise<DatabaseStore> {
+    const store = openDatabase(":memory:");
+    await migrateDatabase(store);
+    await store.run(async (db) => {
+        await db.insert(users).values([
+            {
+                id: "u1",
+                username: "user1",
+                displayName: "User One",
+                passwordHash: "h1",
+                createdAt: 100,
+                updatedAt: 100,
+            },
+            {
+                id: "u2",
+                username: "user2",
+                displayName: "User Two",
+                passwordHash: "h2",
+                createdAt: 100,
+                updatedAt: 100,
+            },
+        ]);
+    });
+    return store;
+}
 
 Deno.test("Tools: getAiCapabilities returns tool and attachment caps", () => {
     const caps = getAiCapabilities();
     assertEquals(caps.tools.notes, true);
+    assertEquals(caps.tools.documents, true);
     assertEquals(caps.tools.apps, true);
     assertEquals(caps.attachments.maxFiles, 4);
     assertEquals(caps.attachments.maxImageSize, 5 * 1024 * 1024);
@@ -60,6 +89,7 @@ Deno.test("Tools: getAiCapabilities returns tool and attachment caps", () => {
 Deno.test("Tools: buildToolDefinitions respects opt-in flags", () => {
     const empty = buildToolDefinitions({
         notes: false,
+        documents: false,
         apps: false,
         webSearch: false,
     });
@@ -68,7 +98,94 @@ Deno.test("Tools: buildToolDefinitions respects opt-in flags", () => {
     const withNotes = buildToolDefinitions({ notes: true, apps: true });
     assertEquals(withNotes.length, 2);
     assertEquals(withNotes[0].function.name, "lookup_notes");
+    assertEquals(
+        withNotes[0].function.description.includes("short sticky notes"),
+        true,
+    );
     assertEquals(withNotes[1].function.name, "lookup_apps");
+
+    const withDocuments = buildToolDefinitions({ documents: true });
+    assertEquals(withDocuments.length, 1);
+    assertEquals(withDocuments[0].function.name, "lookup_documents");
+    assertEquals(
+        withDocuments[0].function.description.includes("short sticky notes"),
+        true,
+    );
+    assertEquals(buildToolDefinitions({ documents: true }, false).length, 0);
+});
+Deno.test("Tools: lookup_documents searches owned live documents and returns document sources", async () => {
+    const store = await createDocumentsStore();
+    try {
+        const documents = new DocumentsService(store);
+        const owned = await documents.create("u1", {
+            title: "Owned Long Document",
+            body: "A long-form plan about stellar quartz.",
+        });
+        await documents.create("u2", {
+            title: "Another Account",
+            body: "A long-form plan about stellar quartz.",
+        });
+        const trashed = await documents.create("u1", {
+            title: "Trashed Long Document",
+            body: "A long-form plan about stellar quartz.",
+        });
+        await documents.softDelete("u1", trashed.id, trashed.version);
+
+        const result = await executeToolCall(
+            "lookup_documents",
+            { query: "stellar quartz" },
+            {
+                userId: "u1",
+                store,
+                allowedTools: { documents: true },
+            },
+        );
+
+        assertEquals(result.toolName, "documents");
+        const matches = result.result as Array<{
+            id: string;
+            title: string;
+            body: string;
+            snippet: string;
+        }>;
+        assertEquals(matches.map((item) => item.id), [owned.id]);
+        assertEquals(matches[0].title, owned.displayTitle);
+        assertEquals(matches[0].body, owned.body);
+        assertExists(result.sources);
+        assertEquals(result.sources, [{
+            type: "document",
+            documentId: owned.id,
+            title: owned.displayTitle,
+            snippet: matches[0].snippet,
+        }]);
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("Tools: lookup_documents rejects disabled and missing session opt-in", async () => {
+    const store = createInMemoryStore();
+    try {
+        for (const allowedTools of [{ documents: false }, undefined]) {
+            const result = await executeToolCall(
+                "lookup_documents",
+                { query: "private" },
+                {
+                    userId: "u1",
+                    store,
+                    allowedTools,
+                },
+            );
+            assertEquals(result.toolName, "documents");
+            assertEquals(result.result, null);
+            assertEquals(
+                result.error?.includes("未在当前会话中启用"),
+                true,
+            );
+        }
+    } finally {
+        await store.close();
+    }
 });
 
 Deno.test("Tools: executeToolCall notes lookup returns read-only notes", async () => {
@@ -166,8 +283,12 @@ Deno.test("Tools: executeToolCall web search queries SearXNG mock", async () => 
             assertEquals(res.toolName, "webSearch");
             assertExists(res.sources);
             assertEquals(res.sources.length, 1);
-            assertEquals(res.sources[0].title, "Deno Documentation");
-            assertEquals(res.sources[0].url, "https://deno.com");
+            const source = res.sources[0];
+            if (source.type === "document") {
+                throw new Error("Expected a web source citation");
+            }
+            assertEquals(source.title, "Deno Documentation");
+            assertEquals(source.url, "https://deno.com");
         } finally {
             await server.shutdown();
         }

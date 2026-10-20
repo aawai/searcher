@@ -574,7 +574,7 @@ export function AdminBackupRestore() {
                                             .users}
                                     </div>
                                     <div>
-                                        APP 数量：{validatedManifest.counts
+                                        应用数量：{validatedManifest.counts
                                             .webapps}
                                     </div>
                                     <div>

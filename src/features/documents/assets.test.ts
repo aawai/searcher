@@ -485,14 +485,14 @@ And plain text: See asset://${assetCode.assetId} for details.
             await assertRejects(
                 () => service.delete("user-1", "doc-ref", assetInline.assetId),
                 DocumentValidationError,
-                "无法删除正在被文档引用的资产",
+                "无法删除正在被笔记引用的资产",
             );
 
             // 2. Deleting assetDef is rejected with DocumentValidationError
             await assertRejects(
                 () => service.delete("user-1", "doc-ref", assetDef.assetId),
                 DocumentValidationError,
-                "无法删除正在被文档引用的资产",
+                "无法删除正在被笔记引用的资产",
             );
 
             // 3. Deleting assetCode SUCCEEDS because it is only in code / text, not an image reference!

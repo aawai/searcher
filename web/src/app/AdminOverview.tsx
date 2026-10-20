@@ -174,7 +174,7 @@ export function AdminOverview({
                                     {`${overview.totalWebApps} / ${overview.totalNotes}`}
                                 </div>
                                 <div className="admin-metric-card-sub">
-                                    已创建 APP 与 Markdown 便签
+                                    已创建应用与便签
                                 </div>
                             </div>
                             <Button

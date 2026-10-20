@@ -988,7 +988,7 @@ export function WebAppLauncher({
             >
                 <div
                     ref={gridRef}
-                    aria-label="网站启动器"
+                    aria-label="应用启动器"
                     className={`pinned-apps launcher-grid launcher-grid--${size}${
                         showFolders ? "" : " launcher-grid--home"
                     }${showAppLabels ? "" : " launcher-grid--icons-only"}${

@@ -133,7 +133,7 @@ export function ZenLayout(
                 )}
                 {!user && (
                     <p className="hero-caption">
-                        登录后同步常用网站与便签
+                        登录后同步应用与便签
                     </p>
                 )}
             </section>
@@ -148,12 +148,12 @@ export function ZenLayout(
                 <section className="pinned-area" aria-label="固定的个人内容">
                     {appsStatus === "loading" && (
                         <p role="status" className="launcher-empty">
-                            正在加载常用网站…
+                            正在加载常用应用…
                         </p>
                     )}
                     {appsStatus === "error" && (
                         <div role="alert" className="launcher-empty">
-                            网站加载失败：{appsError}{" "}
+                            应用加载失败：{appsError}{" "}
                             <Button
                                 variant="outline"
                                 onClick={onReloadApps}
@@ -179,7 +179,7 @@ export function ZenLayout(
                                     <span className="home-managing-text">
                                         <ArrowUpDown size={14} />
                                         <span>
-                                            正在整理常用网站（拖拽调整顺序）
+                                            正在整理常用应用（拖拽调整顺序）
                                         </span>
                                     </span>
                                     <div className="home-managing-actions">

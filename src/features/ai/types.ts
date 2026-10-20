@@ -118,11 +118,21 @@ export interface AiConversationDto {
 export type MessageRole = "system" | "user" | "assistant";
 export type MessageStatus = "streaming" | "complete" | "interrupted" | "failed";
 
-export interface SourceCitation {
+export interface WebSourceCitation {
+    type?: "web";
     title: string;
     url: string;
     snippet?: string;
 }
+
+export interface DocumentSourceCitation {
+    type: "document";
+    documentId: string;
+    title: string;
+    snippet?: string;
+}
+
+export type SourceCitation = WebSourceCitation | DocumentSourceCitation;
 
 export interface TextContentPart {
     type: "text";
@@ -142,14 +152,14 @@ export interface AttachmentPart {
 export interface ToolCallPart {
     type: "tool-call";
     callId: string;
-    toolName: "notes" | "apps" | "webSearch";
+    toolName: "notes" | "documents" | "apps" | "webSearch";
     args: Record<string, unknown>;
 }
 
 export interface ToolResultPart {
     type: "tool-result";
     callId: string;
-    toolName: "notes" | "apps" | "webSearch";
+    toolName: "notes" | "documents" | "apps" | "webSearch";
     result: unknown;
     error?: string;
 }
@@ -192,6 +202,7 @@ export interface AttachmentInput {
 
 export interface ToolsConfig {
     notes?: boolean;
+    documents?: boolean;
     apps?: boolean;
     webSearch?: boolean;
 }
@@ -213,6 +224,7 @@ export interface ChatStreamRequest extends GenerationConfig {
 export interface AiCapabilitiesDto {
     tools: {
         notes: boolean;
+        documents: boolean;
         apps: boolean;
         webSearch: boolean;
     };

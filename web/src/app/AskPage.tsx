@@ -56,6 +56,7 @@ export function AskPage() {
     );
     const [toolsConfig, setToolsConfig] = useState<ToolsConfig>({
         notes: false,
+        documents: false,
         apps: false,
         webSearch: false,
     });
@@ -175,6 +176,7 @@ export function AskPage() {
                     if (!activeModel.supportsTools) {
                         setToolsConfig({
                             notes: false,
+                            documents: false,
                             apps: false,
                             webSearch: false,
                         });
@@ -205,6 +207,7 @@ export function AskPage() {
             if (!newModel.supportsTools) {
                 setToolsConfig({
                     notes: false,
+                    documents: false,
                     apps: false,
                     webSearch: false,
                 });

@@ -102,7 +102,7 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                 )}
                 {!user && (
                     <p className="hero-caption">
-                        登录后同步常用网站与便签
+                        登录后同步应用与便签
                     </p>
                 )}
             </section>

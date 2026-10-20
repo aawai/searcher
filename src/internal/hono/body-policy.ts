@@ -49,12 +49,12 @@ export const LARGE_UPLOAD_POLICY: BodyPolicy = {
 
 export const DOCUMENT_JSON_POLICY: BodyPolicy = {
     maxSize: DOCUMENT_JSON_MAX_BYTES,
-    limitMessage: "文档请求体超过 8 MiB 上限",
+    limitMessage: "笔记请求体超过 8 MiB 上限",
     bodyType: "json",
 };
 export const DOCUMENT_ASSET_UPLOAD_POLICY: BodyPolicy = {
     maxSize: DOCUMENT_ASSET_MAX_BYTES + JSON_DEFAULT_MAX_SIZE,
-    limitMessage: "文档图片超过 10 MiB 上限",
+    limitMessage: "笔记图片超过 10 MiB 上限",
     bodyType: "multipart",
 };
 

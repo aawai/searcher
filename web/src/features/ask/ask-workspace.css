@@ -1038,6 +1038,22 @@
     color: inherit;
     min-width: 0;
 }
+.ask-source-card--button {
+    width: 100%;
+    appearance: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ask-source-card--button:hover {
+    border-color: var(--accent);
+}
+
+.ask-source-card--button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
 
 .ask-source-card__title {
     display: flex;
@@ -1061,6 +1077,12 @@
     min-width: 0;
 }
 
+.ask-source-card__kind {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    font-weight: 400;
+    flex: none;
+}
 .ask-source-card__snippet {
     font-size: var(--font-metadata-size);
     color: var(--muted);

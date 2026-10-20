@@ -262,7 +262,7 @@ export function createDocumentSession(
                     ...snapshot,
                     conflict: conflictDoc,
                     saveStatus: "conflict",
-                    error: err.message || "文档存在版本冲突",
+                    error: err.message || "笔记存在版本冲突",
                 };
                 await persistDraftToStorage(
                     snapshot.title,
@@ -276,7 +276,7 @@ export function createDocumentSession(
             snapshot = {
                 ...snapshot,
                 saveStatus: "error",
-                error: err instanceof Error ? err.message : "保存文档失败",
+                error: err instanceof Error ? err.message : "保存笔记失败",
             };
             await persistDraftToStorage(
                 snapshot.title,
@@ -428,7 +428,7 @@ export function createDocumentSession(
                         loading: false,
                         error: err instanceof Error
                             ? err.message
-                            : "加载文档失败",
+                            : "加载笔记失败",
                     };
                     notify();
                     throw err;
@@ -728,7 +728,7 @@ export function createDocumentSession(
                             : "error",
                         error: err instanceof Error
                             ? err.message
-                            : "创建新文档失败",
+                            : "创建新笔记失败",
                     };
                     await persistDraftToStorage(
                         snapshot.title,

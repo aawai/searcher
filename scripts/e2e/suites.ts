@@ -22,6 +22,7 @@ export const suites = {
         "notes-masonry",
         "notes-live-preview",
         "notes-live-editing",
+        "notes-shared-events",
         "notes-focus",
         "notes-ux",
         "notes-history",

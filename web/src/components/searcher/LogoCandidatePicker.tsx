@@ -159,7 +159,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     <Input
                         id="ai-description-input"
                         type="text"
-                        placeholder="例如：个人探索与常用网站启动器"
+                        placeholder="例如：个人探索与常用应用启动器"
                         maxLength={300}
                         value={description}
                         onChange={(event) => setDescription(event.target.value)}
