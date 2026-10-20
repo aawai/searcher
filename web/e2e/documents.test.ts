@@ -141,7 +141,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         await page.locator('button[data-workspace="documents"]').first()
             .click();
         await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
-        await page.getByRole("textbox", { name: "文档标题", exact: true })
+        await page.getByRole("textbox", { name: "笔记标题", exact: true })
             .waitFor();
     }
     for (
@@ -257,7 +257,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     exact: true,
                 }).click();
                 const toolbar = page.getByRole("toolbar", {
-                    name: "文档编辑格式工具栏",
+                    name: "笔记编辑格式工具栏",
                     exact: true,
                 });
                 await toolbar.waitFor({ state: "visible" });
@@ -335,7 +335,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 );
 
                 await page.getByRole("textbox", {
-                    name: "文档标题",
+                    name: "笔记标题",
                     exact: true,
                 }).focus();
                 await page.keyboard.press("Tab");
@@ -374,7 +374,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         ?.getAttribute("data-status") === "dirty"
                 );
                 const more = page.getByRole("button", {
-                    name: "更多文档操作",
+                    name: "更多笔记操作",
                     exact: true,
                 });
                 await more.focus();
@@ -687,7 +687,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 const large = await request<DocumentDto>(
                     "/api/documents",
                     "POST",
-                    { title: "大文档边界" },
+                    { title: "长笔记边界" },
                 );
                 const asset = await page.evaluate(async (id) => {
                     const bytes = Uint8Array.from(

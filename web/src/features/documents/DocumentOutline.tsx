@@ -16,7 +16,7 @@ export function DocumentOutline({
     return (
         <aside
             className="document-outline-sidebar"
-            aria-label="文档大纲"
+            aria-label="笔记大纲"
         >
             <div className="flex items-center justify-between pb-1">
                 <h3 className="document-outline-title">大纲</h3>

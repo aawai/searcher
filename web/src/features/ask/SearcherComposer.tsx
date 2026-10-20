@@ -145,8 +145,12 @@ export function SearcherComposer({
     };
 
     const activeTools = [
-        supportsTools && toolsConfig.notes ? "笔记检索" : undefined,
-        supportsTools && toolsConfig.apps ? "应用检索" : undefined,
+        supportsTools && toolsConfig.notes ? "搜索便签" : undefined,
+        supportsTools && toolsConfig.documents &&
+            capabilities?.tools.documents !== false
+            ? "搜索笔记"
+            : undefined,
+        supportsTools && toolsConfig.apps ? "搜索应用" : undefined,
         supportsTools && toolsConfig.webSearch &&
             capabilities?.tools.webSearch !== false
             ? "联网搜索"
@@ -230,7 +234,7 @@ export function SearcherComposer({
                                             variant="ghost"
                                             size="icon"
                                             className="ask-composer__icon-btn"
-                                            aria-label="添加附件 (图片/文档)"
+                                            aria-label="添加文件"
                                         />
                                     }
                                 >
@@ -239,8 +243,8 @@ export function SearcherComposer({
                             </ComposerPrimitive.AddAttachment>
                             <TooltipContent>
                                 {supportsVision
-                                    ? "添加图片或文档，也可拖拽文件到输入框"
-                                    : "添加文档，也可拖拽文件到输入框"}
+                                    ? "添加图片或文件，也可拖拽文件到输入框"
+                                    : "添加文件，也可拖拽文件到输入框"}
                             </TooltipContent>
                         </Tooltip>
 
@@ -292,17 +296,17 @@ export function SearcherComposer({
                                             className="ask-composer__tools-unavailable"
                                             role="status"
                                         >
-                                            当前模型不支持工具调用。切换到支持工具的模型后，可使用笔记、应用和联网搜索。
+                                            当前模型不支持工具调用。切换到支持工具的模型后，可使用搜索便签、搜索笔记、搜索应用和联网搜索。
                                         </p>
                                     )}
                                     <div className="ask-composer__tool-options">
                                         <div className="ask-composer__tool-option">
                                             <label htmlFor="tool-notes">
-                                                查询个人笔记
+                                                搜索便签
                                             </label>
                                             <Switch
                                                 id="tool-notes"
-                                                aria-label="查询个人笔记"
+                                                aria-label="搜索便签"
                                                 size="sm"
                                                 disabled={!supportsTools}
                                                 checked={Boolean(
@@ -315,14 +319,45 @@ export function SearcherComposer({
                                                     })}
                                             />
                                         </div>
+                                        <div className="ask-composer__tool-option">
+                                            <div>
+                                                <label htmlFor="tool-documents">
+                                                    搜索笔记
+                                                </label>
+                                                {capabilities?.tools
+                                                            .documents ===
+                                                        false && (
+                                                    <span className="ask-composer__tool-note">
+                                                        服务端未配置
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <Switch
+                                                id="tool-documents"
+                                                aria-label="搜索笔记"
+                                                size="sm"
+                                                disabled={!supportsTools ||
+                                                    capabilities?.tools
+                                                            .documents ===
+                                                        false}
+                                                checked={Boolean(
+                                                    toolsConfig.documents,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    onChangeToolsConfig({
+                                                        ...toolsConfig,
+                                                        documents: checked,
+                                                    })}
+                                            />
+                                        </div>
 
                                         <div className="ask-composer__tool-option">
                                             <label htmlFor="tool-apps">
-                                                查询已添加应用
+                                                搜索应用
                                             </label>
                                             <Switch
                                                 id="tool-apps"
-                                                aria-label="查询已添加应用"
+                                                aria-label="搜索应用"
                                                 size="sm"
                                                 disabled={!supportsTools}
                                                 checked={Boolean(

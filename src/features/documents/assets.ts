@@ -233,7 +233,7 @@ export class DocumentAssetsService {
                 const references = documentAssetReferences(doc.currentBody);
                 if (references.has(assetId)) {
                     throw new DocumentValidationError(
-                        "无法删除正在被文档引用的资产",
+                        "无法删除正在被笔记引用的资产",
                     );
                 }
 

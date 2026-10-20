@@ -200,7 +200,7 @@ export function DocumentToolbar({
         <div
             className="document-editor-toolbar"
             role="toolbar"
-            aria-label="文档编辑格式工具栏"
+            aria-label="笔记编辑格式工具栏"
             aria-orientation="horizontal"
             tabIndex={tabStopIndex < 0 ? 0 : -1}
             onFocusCapture={handleFocusCapture}

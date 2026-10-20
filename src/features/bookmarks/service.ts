@@ -59,14 +59,14 @@ export interface UpdateWebAppInput {
 }
 
 export class WebAppNotFoundError extends Error {
-    constructor(message = "Web App不存在") {
+    constructor(message = "应用不存在") {
         super(message);
         this.name = "WebAppNotFoundError";
     }
 }
 
 export class WebAppGroupNotFoundError extends Error {
-    constructor(message = "Web App 文件夹不存在") {
+    constructor(message = "应用文件夹不存在") {
         super(message);
         this.name = "WebAppGroupNotFoundError";
     }

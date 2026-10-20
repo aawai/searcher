@@ -1,6 +1,7 @@
 import type { DatabaseStore } from "../../db/database.ts";
 import { NotesService } from "../notes/service.ts";
 import { BookmarksService } from "../bookmarks/service.ts";
+import { DocumentsService } from "../documents/service.ts";
 import type {
     AiCapabilitiesDto,
     SourceCitation,
@@ -45,6 +46,7 @@ export function getAiCapabilities(): AiCapabilitiesDto {
     return {
         tools: {
             notes: true,
+            documents: true,
             apps: true,
             webSearch: isWebSearchEnabled(),
         },
@@ -72,7 +74,7 @@ export function buildToolDefinitions(
             function: {
                 name: "lookup_notes",
                 description:
-                    "Search user's personal notes by keywords or query (read-only)",
+                    "Search the user's short sticky notes, not long-form documents (use lookup_documents for those; read-only)",
                 parameters: {
                     type: "object",
                     properties: {
@@ -80,6 +82,27 @@ export function buildToolDefinitions(
                             type: "string",
                             description:
                                 "Search keywords to find relevant notes",
+                        },
+                    },
+                    required: ["query"],
+                },
+            },
+        });
+    }
+    if (tools.documents) {
+        defs.push({
+            type: "function",
+            function: {
+                name: "lookup_documents",
+                description:
+                    "Search and read the user's long-form documents, not short sticky notes (use lookup_notes for those). Read-only; searches only the current user's undeleted documents.",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        query: {
+                            type: "string",
+                            description:
+                                "Search query for the user's long-form documents",
                         },
                     },
                     required: ["query"],
@@ -142,7 +165,7 @@ export interface ToolExecutionContext {
 }
 
 export interface ToolExecutionResult {
-    toolName: "notes" | "apps" | "webSearch";
+    toolName: "notes" | "documents" | "apps" | "webSearch";
     result: unknown;
     sources?: SourceCitation[];
     error?: string;
@@ -153,9 +176,13 @@ export async function executeToolCall(
     args: Record<string, unknown>,
     ctx: ToolExecutionContext,
 ): Promise<ToolExecutionResult> {
-    let canonicalName: "notes" | "apps" | "webSearch";
+    let canonicalName: "notes" | "documents" | "apps" | "webSearch";
     if (callName === "lookup_notes" || callName === "notes") {
         canonicalName = "notes";
+    } else if (
+        callName === "lookup_documents" || callName === "documents"
+    ) {
+        canonicalName = "documents";
     } else if (callName === "lookup_apps" || callName === "apps") {
         canonicalName = "apps";
     } else if (callName === "web_search" || callName === "webSearch") {
@@ -168,7 +195,15 @@ export async function executeToolCall(
         };
     }
 
-    if (ctx.allowedTools) {
+    if (canonicalName === "documents") {
+        if (!ctx.allowedTools?.documents) {
+            return {
+                toolName: canonicalName,
+                result: null,
+                error: `工具 ${canonicalName} 未在当前会话中启用`,
+            };
+        }
+    } else if (ctx.allowedTools) {
         const isOptedIn = canonicalName === "notes"
             ? Boolean(ctx.allowedTools.notes)
             : canonicalName === "apps"
@@ -210,6 +245,56 @@ export async function executeToolCall(
             return { toolName: "notes", result: summary };
         }
 
+        if (canonicalName === "documents") {
+            const documentsService = new DocumentsService(ctx.store);
+            const query = typeof args.query === "string"
+                ? args.query.trim()
+                : "";
+            if (!query) {
+                return {
+                    toolName: "documents",
+                    result: [],
+                    sources: [],
+                };
+            }
+
+            const page = await documentsService.search(ctx.userId, query, {
+                limit: 5,
+            });
+            const results: Array<{
+                id: string;
+                title: string;
+                body: string;
+                snippet: string;
+                updatedAt: number;
+            }> = [];
+            const sources: SourceCitation[] = [];
+            for (const item of page.items) {
+                const document = await documentsService.get(
+                    ctx.userId,
+                    item.id,
+                );
+                results.push({
+                    id: document.id,
+                    title: document.displayTitle,
+                    body: document.body,
+                    snippet: item.snippet,
+                    updatedAt: document.updatedAt,
+                });
+                sources.push({
+                    type: "document",
+                    documentId: document.id,
+                    title: document.displayTitle,
+                    snippet: item.snippet,
+                });
+            }
+
+            return {
+                toolName: "documents",
+                result: results,
+                sources,
+            };
+        }
         if (canonicalName === "apps") {
             const bookmarksService = new BookmarksService(ctx.store);
             const apps = await bookmarksService.listWebApps(ctx.userId, {

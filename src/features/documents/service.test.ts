@@ -137,7 +137,7 @@ Deno.test("DocumentsService - create: title & body validation limits", async () 
                 title: "A".repeat(DOCUMENT_TITLE_MAX_LENGTH + 1),
             }),
         DocumentValidationError,
-        "文档标题不能超过",
+        "笔记标题不能超过",
     );
 
     // Body exceeds 1,000,000 chars
@@ -147,7 +147,7 @@ Deno.test("DocumentsService - create: title & body validation limits", async () 
                 body: "B".repeat(DOCUMENT_BODY_MAX_LENGTH + 1),
             }),
         DocumentValidationError,
-        "文档正文不能超过",
+        "笔记正文不能超过",
     );
 });
 

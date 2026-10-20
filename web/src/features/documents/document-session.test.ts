@@ -914,7 +914,7 @@ Deno.test("Conflict 409 preserves local draft in storage and sets conflict state
         request: <T>(_path: string, init?: RequestInit): Promise<T> => {
             if (init?.method === "PATCH") {
                 return Promise.reject(
-                    new ApiError(409, "文档版本冲突", {
+                    new ApiError(409, "笔记版本冲突", {
                         currentDocument: serverConflictDoc,
                     }),
                 );

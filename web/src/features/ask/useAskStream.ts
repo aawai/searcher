@@ -126,7 +126,7 @@ export function applySseEvent(
     } else if (event === "tool-call" && data && typeof data === "object") {
         const call = data as {
             callId: string;
-            toolName: "notes" | "apps" | "webSearch";
+            toolName: "notes" | "documents" | "apps" | "webSearch";
             args: Record<string, unknown>;
         };
         acc.liveParts.push({
@@ -138,7 +138,7 @@ export function applySseEvent(
     } else if (event === "tool-result" && data && typeof data === "object") {
         const res = data as {
             callId: string;
-            toolName: "notes" | "apps" | "webSearch";
+            toolName: "notes" | "documents" | "apps" | "webSearch";
             result: unknown;
             error?: string;
         };

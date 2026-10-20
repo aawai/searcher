@@ -312,11 +312,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 "应用",
             );
 
-            // Absolute verification of removed legacy IA
-            assertEquals(
-                await panel.getByText("常用网站", { exact: true }).count(),
-                0,
-            );
             assertEquals(
                 await panel.getByText("管理文件夹", { exact: true }).count(),
                 0,

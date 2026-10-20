@@ -674,21 +674,34 @@ Deno.test("production workspace contracts", async (t) => {
             await page.keyboard.press("Control+s");
 
             // Conflict alert dialog appears
-            const conflictAlert = page.locator(
-                '[role="alertdialog"][aria-label="便签版本冲突"]',
-            );
+            const conflictAlert = page.getByRole("dialog", {
+                name: "发现版本冲突",
+            });
             await conflictAlert.waitFor();
+            await conflictAlert.getByRole("tab", { name: /云端最新版本/ })
+                .click();
             assertStringIncludes(
                 await conflictAlert.textContent() ?? "",
                 "Server concurrent edit body",
             );
+            await conflictAlert.getByRole("tab", {
+                name: "本地修改 (未保存)",
+                exact: true,
+            }).click();
             assertStringIncludes(
                 await conflictAlert.textContent() ?? "",
                 "Client conflicting edit",
             );
             // A stale parent render must not undo acceptance of the cloud version.
-            await conflictAlert.getByRole("button", { name: "覆盖云端" })
+            await conflictAlert.getByRole("button", {
+                name: "用我的版本",
+                exact: true,
+            })
                 .click();
+            await page.getByRole("alertdialog").getByRole("button", {
+                name: "确认覆盖云端",
+                exact: true,
+            }).click();
             await conflictAlert.waitFor({ state: "detached" });
             const resolved = await page.evaluate(async (id) => {
                 const response = await fetch("/api/notes/" + id);

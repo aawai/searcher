@@ -124,13 +124,19 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
         });
         if (!response.ok) throw new Error(await response.text());
     }, { id, version: synced.version });
-    await editor.getByRole("button", { name: "版本历史", exact: true }).click();
-    await page.getByRole("button", { name: "使用云端", exact: true }).waitFor();
+    await page.getByRole("button", { name: "用云端版本", exact: true })
+        .waitFor();
     assertEquals(await editor.locator(".note-history").count(), 0);
-    await page.getByRole("button", { name: "使用云端", exact: true }).click();
-    await page.getByRole("button", { name: "使用云端", exact: true }).waitFor({
-        state: "detached",
-    });
+    await page.getByRole("button", { name: "用云端版本", exact: true }).click();
+    await page.getByRole("alertdialog").getByRole("button", {
+        name: "确认用云端版本",
+        exact: true,
+    }).click();
+    await page.getByRole("button", { name: "用云端版本", exact: true }).waitFor(
+        {
+            state: "detached",
+        },
+    );
     await editor.getByRole("button", { name: "版本历史", exact: true }).click();
     await editor.locator(".note-history-list button").filter({
         hasText: "版本 2 ·",

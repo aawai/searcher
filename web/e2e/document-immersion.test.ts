@@ -307,7 +307,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
             await win.getByRole("button", { name: "进入沉浸式", exact: true })
                 .click();
         } else {await win.getByRole("textbox", {
-                name: "文档标题",
+                name: "笔记标题",
                 exact: true,
             }).focus();}
         await waitForDocument(
@@ -401,7 +401,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
     await win.locator(".ProseMirror").click();
     await page.keyboard.press("Control+End");
     await page.keyboard.insertText(" local-conflict-draft");
-    await page.getByRole("button", { name: "覆盖为本地版本", exact: true })
+    await page.getByRole("button", { name: "用我的版本", exact: true })
         .waitFor();
     assertEquals(
         await win.getAttribute("data-window-immersive"),
@@ -426,7 +426,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
     await win.getByRole("button", { name: "处理冲突", exact: true }).click();
 
     await page.getByRole("button", {
-        name: "保留云端版本",
+        name: "用云端版本",
         exact: true,
     }).click();
     const cloudConfirmation = page.getByRole("alertdialog");
@@ -454,7 +454,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         }
     });
     await page.getByRole("button", {
-        name: "覆盖为本地版本",
+        name: "用我的版本",
         exact: true,
     }).click();
     const localConfirmation = page.getByRole("alertdialog");
@@ -485,7 +485,7 @@ Deno.test("#147: document immersion preserves the editor and normal window seman
         hasText: "local-conflict-draft",
     }).waitFor();
     await page.getByRole("button", {
-        name: "覆盖为本地版本",
+        name: "用我的版本",
         exact: true,
     }).click();
     await page.getByRole("alertdialog").getByRole("button", {

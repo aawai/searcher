@@ -150,7 +150,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                 <PageHeader
                     title={kind === "login" ? "登录 Searcher" : "创建账户"}
                     description={kind === "login"
-                        ? "登录后同步 APP、便签与偏好。"
+                        ? "登录后同步应用、便签与偏好。"
                         : "账户数据只保存在你的 Searcher 服务上。"}
                     items={[{ label: "首页", to: routes.home }, {
                         label: kind === "login" ? "登录" : "注册",

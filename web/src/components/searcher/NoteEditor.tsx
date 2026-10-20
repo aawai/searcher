@@ -25,6 +25,7 @@ import {
 } from "../../features/notes/local-drafts.ts";
 import { Button } from "../ui/button.tsx";
 import { StatusBanner } from "./semantic.tsx";
+import { ConflictDialog } from "./ConflictDialog.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import {
@@ -92,6 +93,7 @@ export function NoteEditor(
     const [versionError, setVersionError] = useState("");
     const [conflict, setConflict] = useState<NoteItem | null>(null);
     const [merge, setMerge] = useState("");
+    const [conflictDismissed, setConflictDismissed] = useState(false);
     const [copiedDraft, setCopiedDraft] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
     const [historyBusy, setHistoryBusy] = useState(false);
@@ -239,46 +241,35 @@ export function NoteEditor(
 
     useEffect(() => {
         let active = true;
-        const es = new EventSource("/api/notes/events");
-        es.addEventListener("note.updated", (event) => {
-            let data: unknown;
-            try {
-                data = JSON.parse(event.data);
-            } catch {
-                return;
-            }
-            if (
-                !data || typeof data !== "object" ||
-                !("noteId" in data) || data.noteId !== note.id ||
-                !("version" in data) || typeof data.version !== "number" ||
-                !Number.isSafeInteger(data.version)
-            ) return;
-            const version = data.version;
-            // The stream contains invalidation metadata, not a full note. Wait for
-            // local writes before checking versions, including our own broadcasts.
-            void (async () => {
-                await mutationQueue.current;
-                if (
-                    !active || !isCurrent() ||
-                    version <= latestNoteRef.current.version
-                ) return;
-                const serverNote = await api<NoteItem>(
-                    `/api/notes/${encodeURIComponent(note.id)}`,
-                );
-                await mutationQueue.current;
-                if (active && isCurrent()) {
-                    setRemoteError(false);
-                    remoteUpdateRef.current(serverNote);
-                }
-            })().catch(() => {
-                if (active && isCurrent()) setRemoteError(true);
-            });
-        });
+        const unsubscribe = authSession.noteEvents.subscribe(
+            note.id,
+            (version) => {
+                // The stream contains invalidation metadata, not a full note. Wait for
+                // local writes before checking versions, including our own broadcasts.
+                void (async () => {
+                    await mutationQueue.current;
+                    if (
+                        !active || !isCurrent() ||
+                        version <= latestNoteRef.current.version
+                    ) return;
+                    const serverNote = await api<NoteItem>(
+                        `/api/notes/${encodeURIComponent(note.id)}`,
+                    );
+                    await mutationQueue.current;
+                    if (active && isCurrent()) {
+                        setRemoteError(false);
+                        remoteUpdateRef.current(serverNote);
+                    }
+                })().catch(() => {
+                    if (active && isCurrent()) setRemoteError(true);
+                });
+            },
+        );
         return () => {
             active = false;
-            es.close();
+            unsubscribe();
         };
-    }, [note.id]);
+    }, [authSession, note.id]);
 
     // Close, Escape, and note switches must persist the debounce-window draft.
     const flushOnUnmountRef = useRef<() => void>(() => {});
@@ -656,6 +647,7 @@ export function NoteEditor(
         timer.current = undefined;
         conflictRef.current = serverNote;
         setConflict(serverNote);
+        setConflictDismissed(false);
         if (!currentConflict) setMerge(localBody);
     }
 
@@ -697,7 +689,9 @@ export function NoteEditor(
         if (newestConflict) acceptCloud(newestConflict);
     }
 
-    function resolve(body: string) {
+    async function resolve(body: string) {
+        await mutationQueue.current;
+        if (!isCurrent()) return;
         const currentConflict = conflictRef.current;
         if (!currentConflict) return;
         latestNoteRef.current = currentConflict;
@@ -707,7 +701,26 @@ export function NoteEditor(
         const next = { ...draftRef.current, body };
         draftRef.current = next;
         setDraft(next);
-        void save(next, "conflict_resolution");
+        await save(next, "conflict_resolution");
+        if (saveFailed.current) {
+            throw new Error("保存失败，请检查云端最新版本后重试");
+        }
+    }
+
+    async function saveConflictCopy() {
+        await mutationQueue.current;
+        if (!isCurrent() || !conflictRef.current) return;
+        const copy = await api<NoteItem>(
+            "/api/notes",
+            json("POST", {
+                title: draftRef.current.title.trim() || null,
+                body: draftRef.current.body,
+                color,
+            }),
+        );
+        if (!isCurrent()) return;
+        onSaved(copy);
+        await useCloud();
     }
 
     function rememberEditing() {
@@ -1021,56 +1034,60 @@ export function NoteEditor(
                         </div>
                     )}
                     {conflict && (
-                        <div
-                            className="conflict"
-                            role="alertdialog"
-                            aria-label="便签版本冲突"
-                        >
-                            <h3>另一台设备更新了这条便签</h3>
-                            <div className="conflict-columns">
-                                <div>
-                                    <h4>云端版本</h4>
-                                    {markdown(conflict.body)}
-                                </div>
-                                <div>
-                                    <h4>本地草稿</h4>
-                                    {markdown(draft.body)}
-                                </div>
-                            </div>
-                            <label className="field">
-                                合并内容<textarea
-                                    value={merge}
-                                    onChange={(event) =>
-                                        setMerge(event.target.value)}
-                                />
-                            </label>
-                            <div className="choice-row">
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        void navigator.clipboard.writeText(
-                                            draft.body,
-                                        )}
-                                >
-                                    复制本地草稿
-                                </button>
-                                <button type="button" onClick={useCloud}>
-                                    使用云端
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => resolve(draft.body)}
-                                >
-                                    覆盖云端
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => resolve(merge)}
-                                >
-                                    合并并保存
-                                </button>
-                            </div>
-                        </div>
+                        <>
+                            {conflictDismissed && (
+                                <StatusBanner tone="warning" density="compact">
+                                    <span>
+                                        版本冲突尚未处理，本地草稿已保留。
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setConflictDismissed(false)}
+                                    >
+                                        处理版本冲突
+                                    </Button>
+                                </StatusBanner>
+                            )}
+                            <ConflictDialog
+                                open={!conflictDismissed}
+                                serverVersion={conflict}
+                                localTitle={draft.title}
+                                localBody={draft.body}
+                                onDismiss={() => setConflictDismissed(true)}
+                                onResolve={async (choice) => {
+                                    if (choice === "server") await useCloud();
+                                    else if (choice === "local") {
+                                        await resolve(draftRef.current.body);
+                                    } else await saveConflictCopy();
+                                }}
+                                mergeContent={
+                                    <>
+                                        <label className="field">
+                                            合并内容
+                                            <Textarea
+                                                value={merge}
+                                                onChange={(event) =>
+                                                    setMerge(
+                                                        event.target.value,
+                                                    )}
+                                            />
+                                        </label>
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() =>
+                                                void copyDraftToClipboard()}
+                                        >
+                                            {copiedDraft
+                                                ? "已复制草稿"
+                                                : "复制本地草稿"}
+                                        </Button>
+                                    </>
+                                }
+                                onMerge={() => resolve(merge)}
+                            />
+                        </>
                     )}
                     <div className="note-editor-body">{bodyEditor()}</div>
                 </Tabs>

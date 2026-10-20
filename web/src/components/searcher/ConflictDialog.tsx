@@ -1,5 +1,4 @@
-import { useState } from "react";
-import type { DocumentDto } from "@shared/documents.ts";
+import { type ReactNode, useState } from "react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -9,7 +8,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "../../components/ui/alert-dialog.tsx";
+} from "../ui/alert-dialog.tsx";
 import {
     Dialog,
     DialogContent,
@@ -17,23 +16,22 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "../../components/ui/dialog.tsx";
-import { Button } from "../../components/ui/button.tsx";
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "../../components/ui/tabs.tsx";
+} from "../ui/dialog.tsx";
+import { Button } from "../ui/button.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 
-export interface DocumentConflictDialogProps {
+export interface ConflictDialogProps {
     open: boolean;
-    serverDocument: DocumentDto | null;
+    serverVersion:
+        | { title?: string | null; body: string; version: number }
+        | null;
     localTitle: string;
     localBody: string;
     onResolve: (choice: "server" | "local" | "new") => Promise<void>;
     /** 暂不处理：关闭弹窗并保留编辑状态，冲突仍待解决。 */
     onDismiss: () => void;
+    mergeContent?: ReactNode;
+    onMerge?: () => Promise<void>;
 }
 
 type ConflictChoice = "server" | "local" | "new";
@@ -43,28 +41,33 @@ const DESTRUCTIVE_CONFIRM: Record<"server" | "local", string> = {
     local: "将用你的本地修改覆盖云端版本，对方的更新会被替换。",
 };
 
-export function DocumentConflictDialog({
+export function ConflictDialog({
     open,
-    serverDocument,
+    serverVersion,
     localTitle,
     localBody,
     onResolve,
     onDismiss,
-}: DocumentConflictDialogProps) {
+    mergeContent,
+    onMerge,
+}: ConflictDialogProps) {
     const [submittingChoice, setSubmittingChoice] = useState<
         ConflictChoice | null
     >(null);
-    const [confirming, setConfirming] = useState<"server" | "local" | null>(
+    const [confirming, setConfirming] = useState<
+        "server" | "local" | "merge" | null
+    >(
         null,
     );
     const [error, setError] = useState("");
 
-    const handleChoice = async (choice: ConflictChoice) => {
+    const handleChoice = async (choice: ConflictChoice | "merge") => {
         setError("");
         setConfirming(null);
         try {
-            setSubmittingChoice(choice);
-            await onResolve(choice);
+            setSubmittingChoice(choice === "merge" ? "local" : choice);
+            if (choice === "merge") await onMerge?.();
+            else await onResolve(choice);
         } catch (err) {
             const reason = err instanceof Error && err.message
                 ? err.message
@@ -89,25 +92,25 @@ export function DocumentConflictDialog({
             }}
         >
             <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-                <DialogHeader>
+                <DialogHeader className="shrink-0">
                     <DialogTitle>发现版本冲突</DialogTitle>
                     <DialogDescription>
-                        云端已更新至版本 #{serverDocument?.version ?? "?"}
+                        云端已更新至版本 #{serverVersion?.version ?? "?"}
                         ，您的本地编辑基于较早版本。请选择如何解决冲突：
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 min-h-0 flex flex-col gap-3 py-2">
+                <div className="flex-1 min-h-0 flex flex-col gap-3 py-2 overflow-y-auto">
                     <Tabs
                         defaultValue="local"
-                        className="flex-1 flex flex-col min-h-0"
+                        className="shrink-0 flex flex-col"
                     >
                         <TabsList className="grid grid-cols-2">
                             <TabsTrigger value="local">
                                 本地修改 (未保存)
                             </TabsTrigger>
                             <TabsTrigger value="server">
-                                云端最新版本 (#{serverDocument?.version ?? "?"})
+                                云端最新版本 (#{serverVersion?.version ?? "?"})
                             </TabsTrigger>
                         </TabsList>
 
@@ -142,7 +145,7 @@ export function DocumentConflictDialog({
                                     云端标题
                                 </span>
                                 <p className="font-medium text-sm text-[var(--foreground)] mt-0.5">
-                                    {serverDocument?.title || "（未命名标题）"}
+                                    {serverVersion?.title || "（未命名标题）"}
                                 </p>
                             </div>
                             <div>
@@ -150,11 +153,12 @@ export function DocumentConflictDialog({
                                     云端正文内容
                                 </span>
                                 <pre className="text-xs font-mono whitespace-pre-wrap text-[var(--foreground)] mt-1 max-h-[220px] overflow-y-auto">
-                                    {serverDocument?.body || "（正文为空）"}
+                                    {serverVersion?.body || "（正文为空）"}
                                 </pre>
                             </div>
                         </TabsContent>
                     </Tabs>
+                    {mergeContent}
                 </div>
 
                 {error && (
@@ -166,12 +170,14 @@ export function DocumentConflictDialog({
                     </p>
                 )}
 
-                <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
+                <DialogFooter className="shrink-0 flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
                     <Button
                         type="button"
                         variant="ghost"
                         disabled={busy}
-                        onClick={onDismiss}
+                        onClick={() => {
+                            if (!busy) onDismiss();
+                        }}
                     >
                         暂不处理
                     </Button>
@@ -181,7 +187,7 @@ export function DocumentConflictDialog({
                         disabled={busy}
                         onClick={() => setConfirming("server")}
                     >
-                        保留云端版本
+                        用云端版本
                     </Button>
                     <Button
                         type="button"
@@ -189,7 +195,7 @@ export function DocumentConflictDialog({
                         disabled={busy}
                         onClick={() => setConfirming("local")}
                     >
-                        覆盖为本地版本
+                        用我的版本
                     </Button>
                     <Button
                         type="button"
@@ -197,10 +203,18 @@ export function DocumentConflictDialog({
                         disabled={busy}
                         onClick={() => void handleChoice("new")}
                     >
-                        {submittingChoice === "new"
-                            ? "创建中…"
-                            : "另存为新笔记"}
+                        {submittingChoice === "new" ? "创建中…" : "另存副本"}
                     </Button>
+                    {onMerge && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() => setConfirming("merge")}
+                        >
+                            合并并保存
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
             <AlertDialog
@@ -212,7 +226,7 @@ export function DocumentConflictDialog({
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            保留云端版本？
+                            用云端版本？
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             {DESTRUCTIVE_CONFIRM.server}
@@ -225,13 +239,13 @@ export function DocumentConflictDialog({
                             disabled={busy}
                             onClick={() => void handleChoice("server")}
                         >
-                            确认保留云端版本
+                            确认用云端版本
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog
-                open={confirming === "local"}
+                open={confirming === "local" || confirming === "merge"}
                 onOpenChange={(next) => {
                     if (!next && !busy) setConfirming(null);
                 }}
@@ -250,7 +264,10 @@ export function DocumentConflictDialog({
                         <AlertDialogAction
                             type="button"
                             disabled={busy}
-                            onClick={() => void handleChoice("local")}
+                            onClick={() =>
+                                void handleChoice(
+                                    confirming === "merge" ? "merge" : "local",
+                                )}
                         >
                             确认覆盖云端
                         </AlertDialogAction>

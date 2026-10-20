@@ -1,7 +1,7 @@
 import type { DocumentDto } from "../../shared/documents.ts";
 
 export class DocumentNotFoundError extends Error {
-    constructor(message = "文档不存在") {
+    constructor(message = "笔记不存在") {
         super(message);
         this.name = "DocumentNotFoundError";
     }
@@ -14,7 +14,7 @@ export class DocumentValidationError extends Error {
 }
 export class DocumentConflictError extends Error {
     constructor(public readonly currentDocument: DocumentDto) {
-        super("文档版本冲突");
+        super("笔记版本冲突");
         this.name = "DocumentConflictError";
     }
 }

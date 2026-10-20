@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     ActionBarPrimitive,
     BranchPickerPrimitive,
@@ -7,15 +8,16 @@ import {
 } from "@assistant-ui/react";
 import {
     AlertCircle,
+    ArrowRight,
     Check,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     Copy,
     ExternalLink,
-    Globe,
     Info,
     RotateCcw,
+    Search,
     Sparkles,
     Terminal,
     Wrench,
@@ -26,6 +28,7 @@ import rehypeSanitize from "rehype-sanitize";
 import { Button } from "../../components/ui/button.tsx";
 import { MessageDetailsDialog } from "./MessageDetailsDialog.tsx";
 import type { AskMessageDto, SourceCitation } from "./types.ts";
+import { routes } from "../../app/routes.ts";
 import { sanitizeFailureReason } from "./assistant-message-adapter.ts";
 import "../../components/searcher/markdown.css";
 
@@ -123,6 +126,7 @@ export function SearcherAssistantMessage() {
     );
 
     const copied = useAuiState((s) => s.message.isCopied);
+    const navigate = useNavigate();
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [toolsExpanded, setToolsExpanded] = useState(false);
 
@@ -166,33 +170,82 @@ export function SearcherAssistantMessage() {
             {allSources.length > 0 && (
                 <div className="ask-sources-section mb-3">
                     <div className="text-xs font-medium text-muted flex items-center gap-1.5 mb-1.5">
-                        <Globe size={13} className="text-accent" />
+                        <Search size={13} className="text-accent" />
                         <span>搜索参考来源 ({allSources.length})</span>
                     </div>
                     <div className="ask-sources-grid">
-                        {allSources.map((source, idx) => (
-                            <a
-                                key={source.url || `source-${idx}`}
-                                href={source.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="ask-source-card"
-                                title={source.title}
-                            >
-                                <div className="ask-source-card__title">
-                                    <span>{source.title || source.url}</span>
-                                    <ExternalLink
-                                        size={11}
-                                        className="ask-source-card__icon"
-                                    />
-                                </div>
-                                {source.snippet && (
-                                    <p className="ask-source-card__snippet">
-                                        {source.snippet}
-                                    </p>
-                                )}
-                            </a>
-                        ))}
+                        {allSources.map((source, idx) => {
+                            const key = source.type === "document"
+                                ? `document:${source.documentId}`
+                                : source.url || `source-${idx}`;
+                            const title = source.type === "document"
+                                ? source.title
+                                : source.title || source.url;
+                            const content = (
+                                <>
+                                    <div className="ask-source-card__title">
+                                        <span>{title}</span>
+                                        {source.type === "document"
+                                            ? (
+                                                <>
+                                                    <span className="ask-source-card__kind">
+                                                        笔记
+                                                    </span>
+                                                    <ArrowRight
+                                                        size={11}
+                                                        className="ask-source-card__icon"
+                                                    />
+                                                </>
+                                            )
+                                            : (
+                                                <ExternalLink
+                                                    size={11}
+                                                    className="ask-source-card__icon"
+                                                />
+                                            )}
+                                    </div>
+                                    {source.snippet && (
+                                        <p className="ask-source-card__snippet">
+                                            {source.snippet}
+                                        </p>
+                                    )}
+                                </>
+                            );
+
+                            if (source.type === "document") {
+                                return (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        className="ask-source-card ask-source-card--button"
+                                        title={source.title}
+                                        aria-label={`打开笔记：${source.title}`}
+                                        onClick={() =>
+                                            navigate(routes.home, {
+                                                state: {
+                                                    openDocumentId:
+                                                        source.documentId,
+                                                },
+                                            })}
+                                    >
+                                        {content}
+                                    </button>
+                                );
+                            }
+
+                            return (
+                                <a
+                                    key={key}
+                                    href={source.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ask-source-card"
+                                    title={source.title}
+                                >
+                                    {content}
+                                </a>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -242,8 +295,11 @@ export function SearcherAssistantMessage() {
                                                 {call.toolName === "webSearch"
                                                     ? "网页搜索 (SearXNG)"
                                                     : call.toolName === "notes"
-                                                    ? "笔记检索"
-                                                    : "应用检索"}
+                                                    ? "搜索便签"
+                                                    : call.toolName ===
+                                                            "documents"
+                                                    ? "搜索笔记"
+                                                    : "搜索应用"}
                                             </span>
                                             <span
                                                 className={`text-xs ${

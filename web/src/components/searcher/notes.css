@@ -613,8 +613,7 @@
     margin: var(--space-control-gap) 0;
 }
 
-.note-versions button,
-.conflict button {
+.note-versions button {
     min-height: 44px;
 }
 

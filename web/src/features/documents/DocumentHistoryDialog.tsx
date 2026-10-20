@@ -108,7 +108,7 @@ export function DocumentHistoryDialog({
                 <DialogHeader>
                     <DialogTitle>历史版本</DialogTitle>
                     <DialogDescription>
-                        浏览或恢复文档的历史版本。恢复历史版本将创建新的当前版本，不会丢失任何历史记录。
+                        浏览或恢复笔记的历史版本。恢复历史版本将创建新的当前版本，不会丢失任何历史记录。
                     </DialogDescription>
                 </DialogHeader>
 
@@ -230,7 +230,7 @@ export function DocumentHistoryDialog({
                                     <div className="flex-1 overflow-y-auto mt-2 p-3 bg-[var(--surface-soft)] rounded border border-[var(--border-subtle)]">
                                         <pre className="text-xs font-mono whitespace-pre-wrap text-[var(--foreground)]">
                                             {selectedVersion.body ||
-                                                "（空文档）"}
+                                                "（空笔记）"}
                                         </pre>
                                     </div>
                                 </div>

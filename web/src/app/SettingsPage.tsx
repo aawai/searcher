@@ -826,8 +826,8 @@ export function SettingsPage() {
                                             select={(v) => set("target", v)}
                                         />
                                         <Choices
-                                            title="首页快捷方式数量"
-                                            description="在搜索主页固定的常用网站展示上限"
+                                            title="首页应用数量"
+                                            description="设置搜索主页展示的固定应用数量上限"
                                             control="select"
                                             value={String(
                                                 appearance.webAppHomeLimit,
@@ -991,8 +991,8 @@ export function SettingsPage() {
                                             </div>
                                         </div>
                                         <Choices
-                                            title="网站图标大小"
-                                            description="调整工作区与首页快捷方式的图标尺度"
+                                            title="应用图标大小"
+                                            description="调整工作区与首页应用图标的显示尺寸"
                                             control="select"
                                             value={appearance.webAppIconSize}
                                             values={[
@@ -1022,7 +1022,7 @@ export function SettingsPage() {
                                                         "showAppLabels",
                                                         checked,
                                                     )}
-                                                    aria-label="显示 APP 名称"
+                                                    aria-label="显示应用名称"
                                                 />
                                             </div>
                                         </div>
@@ -1753,7 +1753,7 @@ export function SettingsPage() {
                             <div className="settings-content">
                                 <SettingsSection
                                     title="同步"
-                                    description="登录后将偏好设置、网站书签与便签实时同步到您的账户"
+                                    description="登录后将偏好设置、应用与便签实时同步到您的账户"
                                 >
                                     <SettingsActionCard
                                         title={user
@@ -1780,7 +1780,7 @@ export function SettingsPage() {
                                     {user && (
                                         <SettingsActionCard
                                             title="回收站"
-                                            description="查看或彻底清理已删除的网站和便签"
+                                            description="查看已删除的应用和便签，或将其彻底删除"
                                         >
                                             <Button
                                                 variant="outline"
@@ -1854,14 +1854,14 @@ export function SettingsPage() {
                         <AlertDialogTitle>
                             {deleteTarget &&
                                     appearance.wallpaper === deleteTarget.url
-                                ? "移除当前壁纸？"
+                                ? "删除当前壁纸？"
                                 : "删除壁纸？"}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             {deleteTarget &&
                                     appearance.wallpaper === deleteTarget.url
-                                ? "该图片正在使用中。删除后将同时恢复默认背景，图片也会从最近上传中永久移除。"
-                                : "该图片将从最近上传中永久移除。此操作无法撤销。"}
+                                ? "该图片正在使用中。删除后将同时恢复默认背景，图片也会从最近上传中永久删除。"
+                                : "该图片将从最近上传中永久删除。此操作无法撤销。"}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

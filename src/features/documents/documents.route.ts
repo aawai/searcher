@@ -288,7 +288,7 @@ export function registerDocumentsRoutes(
                     return c.fail(400, "需要上传 file");
                 }
                 if (file.size > DOCUMENT_ASSET_MAX_BYTES) {
-                    return c.fail(400, "文档图片超过 10 MiB 上限");
+                    return c.fail(400, "笔记图片超过 10 MiB 上限");
                 }
                 return c.success(
                     await assets.upload(c.get("user").id, data.id, {

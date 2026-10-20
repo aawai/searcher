@@ -313,7 +313,7 @@ export function registerBookmarksRoutes(
             const user = c.get("user");
             try {
                 await service.softDeleteWebApp(user.id, data.id);
-                return c.success(undefined, "Web App已移至回收站");
+                return c.success(undefined, "应用已移入回收站");
             } catch (error) {
                 if (error instanceof WebAppNotFoundError) {
                     return c.fail(STATUS_CODE.NotFound, error.message);
@@ -333,7 +333,7 @@ export function registerBookmarksRoutes(
             const user = c.get("user");
             try {
                 const app = await service.restoreWebApp(user.id, data.id);
-                return c.success(app, "Web App已恢复");
+                return c.success(app, "应用已恢复");
             } catch (error) {
                 if (error instanceof WebAppNotFoundError) {
                     return c.fail(STATUS_CODE.NotFound, error.message);
@@ -353,7 +353,7 @@ export function registerBookmarksRoutes(
             const user = c.get("user");
             try {
                 await service.permanentDeleteWebApp(user.id, data.id);
-                return c.success(undefined, "Web App已彻底删除");
+                return c.success(undefined, "应用已彻底删除");
             } catch (error) {
                 if (error instanceof WebAppNotFoundError) {
                     return c.fail(STATUS_CODE.NotFound, error.message);

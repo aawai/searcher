@@ -524,7 +524,7 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
                     state: "visible",
                 },
             );
-            await page.getByText("没有已删除的网站快捷方式").waitFor({
+            await page.getByText("没有已删除的应用").waitFor({
                 state: "visible",
             });
 

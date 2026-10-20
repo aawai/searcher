@@ -72,7 +72,7 @@ import { analyzeDocumentMarkdown } from "./editor-content.ts";
 import { DocumentToolbar } from "./DocumentToolbar.tsx";
 import { DocumentOutline } from "./DocumentOutline.tsx";
 import { DocumentHistoryDialog } from "./DocumentHistoryDialog.tsx";
-import { DocumentConflictDialog } from "./DocumentConflictDialog.tsx";
+import { ConflictDialog } from "../../components/searcher/ConflictDialog.tsx";
 
 // Exception (Bundler-only asset):
 // CSS module import is bundled by Vite for browsers but not supported in Deno test runner.
@@ -247,7 +247,7 @@ export function DocumentEditor({
             if (error instanceof ApiError && error.code === 404) {
                 onUnavailable?.();
             } else {setInitError(
-                    error instanceof Error ? error.message : "加载文档失败",
+                    error instanceof Error ? error.message : "加载笔记失败",
                 );}
         });
         return () => {
@@ -915,7 +915,7 @@ export function DocumentEditor({
     if (snapshot.loading && !snapshot.document) {
         return (
             <div className="document-editor-container flex items-center justify-center p-8">
-                <LoadingState density="default">正在加载文档…</LoadingState>
+                <LoadingState density="default">正在加载笔记…</LoadingState>
             </div>
         );
     }
@@ -935,7 +935,7 @@ export function DocumentEditor({
                                 setInitError(
                                     error instanceof Error
                                         ? error.message
-                                        : "加载文档失败",
+                                        : "加载笔记失败",
                                 )
                             );
                         }}
@@ -1191,8 +1191,8 @@ export function DocumentEditor({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        aria-label="更多文档操作"
-                                        title="更多文档操作"
+                                        aria-label="更多笔记操作"
+                                        title="更多笔记操作"
                                     >
                                         <MoreHorizontal
                                             size={16}
@@ -1200,7 +1200,7 @@ export function DocumentEditor({
                                         />
                                     </Button>
                                 }
-                                aria-label="更多文档操作"
+                                aria-label="更多笔记操作"
                             />
                             <DropdownMenuContent
                                 sideOffset={4}
@@ -1276,8 +1276,8 @@ export function DocumentEditor({
                     <input
                         type="text"
                         className="document-title-input"
-                        placeholder="未命名文档…"
-                        aria-label="文档标题"
+                        placeholder="未命名笔记…"
+                        aria-label="笔记标题"
                         value={snapshot.title}
                         onChange={(e) =>
                             session.edit({ title: e.target.value })}
@@ -1427,9 +1427,9 @@ export function DocumentEditor({
             />
 
             {/* Conflict Dialog */}
-            <DocumentConflictDialog
+            <ConflictDialog
                 open={hasConflict && !conflictDismissed}
-                serverDocument={snapshot.conflict}
+                serverVersion={snapshot.conflict}
                 localTitle={snapshot.title}
                 localBody={snapshot.body}
                 onResolve={handleResolveConflict}

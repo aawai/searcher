@@ -1002,9 +1002,11 @@ Deno.test("closing a recovered note conflict preserves its original draft baseli
         hasText: fixture.note.title,
     });
     await noteTitle.click();
-    const conflict = page.locator('.note-editor [role="alertdialog"]');
+    const conflict = page.getByRole("dialog", { name: "发现版本冲突" });
     await conflict.waitFor();
     assertEquals(await conflict.locator("textarea").inputValue(), localBody);
+    await conflict.getByRole("button", { name: "暂不处理", exact: true })
+        .click();
     await page.getByRole("button", { name: "返回便签列表", exact: true })
         .click();
     await page.locator(".note-editor").waitFor({ state: "detached" });

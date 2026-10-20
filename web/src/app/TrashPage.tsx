@@ -110,7 +110,7 @@ export function TrashPage() {
             await api(`/api/webapps/${encodeURIComponent(id)}/restore`, {
                 method: "POST",
             });
-            setStatus("APP 已恢复");
+            setStatus("应用已恢复");
             setWebapps((prev) => prev.filter((item) => item.id !== id));
         } catch (e) {
             setError(errorMessage(e));
@@ -135,7 +135,7 @@ export function TrashPage() {
                         method: "DELETE",
                     },
                 );
-                setStatus("APP 已彻底删除");
+                setStatus("应用已彻底删除");
                 setWebapps((prev) =>
                     prev.filter((item) => item.id !== deleteTarget.id)
                 );
@@ -220,7 +220,7 @@ export function TrashPage() {
         <PageShell archetype="management" className="trash-page">
             <PageHeader
                 title="回收站"
-                description="已删除的 APP 与便签将在此保留 30 天，可随时恢复或彻底删除。"
+                description="已删除的应用与便签将在此保留 30 天，可随时恢复或彻底删除。"
                 items={[{ label: "首页", to: routes.home }, {
                     label: "回收站",
                 }]}
@@ -248,7 +248,7 @@ export function TrashPage() {
             >
                 <TabsList className="mb-4">
                     <TabsTrigger value="webapps">
-                        APP ({webapps.length})
+                        应用 ({webapps.length})
                     </TabsTrigger>
                     <TabsTrigger value="notes">
                         便签 ({notes.length})
@@ -269,7 +269,7 @@ export function TrashPage() {
             {tab === "webapps" && (
                 <section
                     className="trash-list-section"
-                    aria-label="已删除的 APP"
+                    aria-label="已删除的应用"
                 >
                     {(!initialized || loading) && webapps.length === 0
                         ? <LoadingState>正在载入回收站内容…</LoadingState>
@@ -277,7 +277,7 @@ export function TrashPage() {
                         ? (
                             <EmptyState
                                 title="回收站空空如也"
-                                description="没有已删除的网站快捷方式"
+                                description="没有已删除的应用"
                                 action={
                                     <Button
                                         variant="outline"

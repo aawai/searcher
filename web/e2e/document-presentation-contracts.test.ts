@@ -675,7 +675,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         ? "letter"
         : "a4";
     await page.getByRole("button", {
-        name: "更多文档操作",
+        name: "更多笔记操作",
         exact: true,
     }).click();
     await page.getByRole("menuitem", {
@@ -987,31 +987,57 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
             (await editor.textContent() ?? "").includes(IN_FLIGHT_MARKER),
         "rich page mode still shows both saved user edits",
     );
-    await editor.focus();
+    await editor.evaluate((node) => (node as HTMLElement).focus());
+    await page.waitForFunction(() => {
+        const activeEditor = document.querySelector(".ProseMirror");
+        return activeEditor !== null && document.activeElement === activeEditor;
+    });
     await page.keyboard.press("Control+End");
     await page.keyboard.insertText("字");
+    await page.waitForFunction((marker) => {
+        const editorText =
+            document.querySelector(".ProseMirror")?.textContent ??
+                "";
+        const saveStatus = document.querySelector(".document-save-status")
+            ?.getAttribute("data-status");
+        return editorText.includes(marker) &&
+            editorText.endsWith("字") &&
+            saveStatus === "dirty";
+    }, IN_FLIGHT_MARKER);
     await page.keyboard.press("Control+s");
     const oneCharacter = await waitForDocument(
         page,
         fixtureDocument.id,
         (saved) => saved.body.trimEnd().endsWith(`${IN_FLIGHT_MARKER}字`),
     );
+    await page.locator('.document-save-status[data-status="saved"]')
+        .waitFor({ state: "attached" });
     assertEquals(oneCharacter.version, finalSaved.version + 1);
     await page.keyboard.press("Control+z");
+    await page.locator('.document-save-status[data-status="dirty"]').waitFor({
+        state: "attached",
+    });
     await page.keyboard.press("Control+s");
     const characterUndone = await waitForDocument(
         page,
         fixtureDocument.id,
         (saved) => saved.body === finalSaved.body,
     );
+    await page.locator('.document-save-status[data-status="saved"]')
+        .waitFor({ state: "attached" });
     assertEquals(characterUndone.version, oneCharacter.version + 1);
     await page.keyboard.press("Control+Shift+z");
+    await page.locator('.document-save-status[data-status="dirty"]').waitFor({
+        state: "attached",
+    });
     await page.keyboard.press("Control+s");
     const characterRedone = await waitForDocument(
         page,
         fixtureDocument.id,
         (saved) => saved.body === oneCharacter.body,
     );
+    await page.locator('.document-save-status[data-status="saved"]')
+        .waitFor({ state: "attached" });
     assertEquals(characterRedone.version, characterUndone.version + 1);
     assertEquals(pageErrors, [], "real browser interaction has no page errors");
 });

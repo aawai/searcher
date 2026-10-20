@@ -149,11 +149,14 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
                 });
                 if (!response.ok) throw new Error("Cloud edit failed");
             }, id);
-            await page.locator(".note-editor").getByRole("alertdialog")
-                .waitFor();
+            await page.getByRole("dialog", { name: "发现版本冲突" }).waitFor();
             const before = writes.length;
-            await page.getByRole("button", { name: "使用云端", exact: true })
+            await page.getByRole("button", { name: "用云端版本", exact: true })
                 .click();
+            await page.getByRole("alertdialog").getByRole("button", {
+                name: "确认用云端版本",
+                exact: true,
+            }).click();
             await live.locator("h2").waitFor();
             assertEquals(
                 await live.locator("h2").textContent(),
@@ -265,9 +268,7 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
             await source.fill(localBody);
             const dirtyStart = writes.length;
             await updateRemote("云端冲突更新");
-            const conflict = page.locator(
-                '.note-editor [role="alertdialog"]',
-            );
+            const conflict = page.getByRole("dialog", { name: "发现版本冲突" });
             await conflict.waitFor();
             const merge = conflict.locator("textarea");
             const mergeInitial = await merge.inputValue();
@@ -286,6 +287,10 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
                 name: "合并并保存",
                 exact: true,
             }).click();
+            await page.getByRole("alertdialog").getByRole("button", {
+                name: "确认覆盖云端",
+                exact: true,
+            }).click();
             assertEquals((await mergeSave).status(), 200);
             await conflict.waitFor({ state: "detached" });
 
@@ -299,7 +304,7 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
             assertEquals((await ownSave).status(), 200);
             await page.waitForTimeout(1800);
             assertEquals(
-                await page.locator(".note-editor [role='alertdialog']")
+                await page.getByRole("dialog", { name: "发现版本冲突" })
                     .count(),
                 0,
             );
