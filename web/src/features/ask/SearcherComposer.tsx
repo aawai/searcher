@@ -77,7 +77,10 @@ function ComposerAttachmentChip() {
                 />
             )}
             {isError && (
-                <AlertCircle size={12} className="shrink-0 text-danger" />
+                <AlertCircle
+                    size="1em"
+                    className="icon-sm shrink-0 text-danger"
+                />
             )}
             <span className="ask-composer__attachment-name">
                 <AttachmentPrimitive.Name />
@@ -90,7 +93,7 @@ function ComposerAttachmentChip() {
                     className="ask-composer__attachment-remove"
                     aria-label="移除附件"
                 >
-                    <X size={12} />
+                    <X size="1em" className="icon-sm" />
                 </Button>
             </AttachmentPrimitive.Remove>
         </AttachmentPrimitive.Root>
@@ -196,7 +199,10 @@ export function SearcherComposer({
                         className="ask-composer__attachment-error"
                     >
                         <div className="flex items-center gap-1.5 overflow-hidden">
-                            <AlertCircle size={13} className="shrink-0" />
+                            <AlertCircle
+                                size="1em"
+                                className="icon-sm shrink-0"
+                            />
                             <span className="truncate">{attachmentError}</span>
                         </div>
                         <Button
@@ -207,7 +213,7 @@ export function SearcherComposer({
                             className="h-5 w-5 p-0 hover:bg-transparent"
                             aria-label="关闭附件错误"
                         >
-                            <X size={12} />
+                            <X size="1em" className="icon-sm" />
                         </Button>
                     </div>
                 )}
@@ -238,7 +244,7 @@ export function SearcherComposer({
                                         />
                                     }
                                 >
-                                    <Paperclip size={16} />
+                                    <Paperclip size="1em" className="icon-md" />
                                 </TooltipTrigger>
                             </ComposerPrimitive.AddAttachment>
                             <TooltipContent>
@@ -269,7 +275,7 @@ export function SearcherComposer({
                                     />
                                 }
                             >
-                                <Ellipsis size={17} />
+                                <Ellipsis size="1em" className="icon-md" />
                                 {hasActiveTools && (
                                     <span
                                         className="ask-composer__active-dot"
@@ -285,7 +291,7 @@ export function SearcherComposer({
                                 aria-label="问答设置"
                             >
                                 <div className="ask-composer__settings-heading">
-                                    <Wrench size={14} />
+                                    <Wrench size="1em" className="icon-sm" />
                                     <span>问答设置</span>
                                 </div>
 
@@ -439,7 +445,7 @@ export function SearcherComposer({
                                     aria-label="发送问题 (Enter)"
                                     title="发送问题 (Enter)"
                                 >
-                                    <ArrowUp size={16} />
+                                    <ArrowUp size="1em" className="icon-md" />
                                 </Button>
                             </ComposerPrimitive.Send>
                         </ThreadPrimitive.If>
@@ -453,7 +459,7 @@ export function SearcherComposer({
                                     aria-label="停止生成"
                                     title="停止生成"
                                 >
-                                    <Square size={15} />
+                                    <Square size="1em" className="icon-md" />
                                 </Button>
                             </ComposerPrimitive.Cancel>
                         </ThreadPrimitive.If>

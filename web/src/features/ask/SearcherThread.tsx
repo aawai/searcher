@@ -149,8 +149,8 @@ export function SearcherThread({
                                     className="button button--primary ask-empty-hero__cta"
                                 >
                                     <SlidersHorizontal
-                                        size={14}
-                                        className="mr-1.5"
+                                        size="1em"
+                                        className="icon-sm mr-1.5"
                                     />
                                     <span>配置 AI 模型与 Provider</span>
                                 </Link>
@@ -232,7 +232,7 @@ export function SearcherThread({
                             className="ask-jump-latest"
                             aria-label="跳到最新内容"
                         >
-                            <ArrowDown size={14} />
+                            <ArrowDown size="1em" className="icon-sm" />
                             <span>跳到最新</span>
                         </Button>
                     </ThreadPrimitive.ScrollToBottom>

@@ -217,7 +217,7 @@ export function DocumentLibraryActions({
                             aria-label={`笔记操作：${item.displayTitle}`}
                             title={`笔记操作：${item.displayTitle}`}
                         >
-                            <MoreHorizontal className="size-4" />
+                            <MoreHorizontal className="size-[var(--icon-md)]" />
                         </Button>
                     }
                     aria-label={`笔记操作：${item.displayTitle}`}
@@ -226,7 +226,7 @@ export function DocumentLibraryActions({
                     <DropdownMenuItem
                         onClick={() => setRenameOpen(true)}
                     >
-                        <Pencil className="size-4 mr-2" />
+                        <Pencil className="size-[var(--icon-md)] mr-2" />
                         <span>重命名</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -235,7 +235,7 @@ export function DocumentLibraryActions({
                     >
                         <Star
                             className={cn(
-                                "size-4 mr-2",
+                                "size-[var(--icon-md)] mr-2",
                                 item.isFavorite &&
                                     "fill-current text-[var(--warning)]",
                             )}
@@ -245,14 +245,14 @@ export function DocumentLibraryActions({
                     <DropdownMenuItem
                         onClick={() => setMoveOpen(true)}
                     >
-                        <FolderInput className="size-4 mr-2" />
+                        <FolderInput className="size-[var(--icon-md)] mr-2" />
                         <span>移动笔记本</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         className="text-[var(--danger)] focus:text-[var(--danger)]"
                         onClick={() => setTrashOpen(true)}
                     >
-                        <Trash2 className="size-4 mr-2" />
+                        <Trash2 className="size-[var(--icon-md)] mr-2" />
                         <span>移至回收站</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -553,7 +553,7 @@ export function CreateLibraryDocument({
                 variant="default"
                 onClick={() => setOpen(true)}
             >
-                <Plus className="size-4 mr-1.5" />
+                <Plus className="size-[var(--icon-md)] mr-1.5" />
                 新建笔记
             </Button>
 

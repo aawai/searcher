@@ -85,7 +85,7 @@ export function LayoutModeSelector(
                             <span>{mode.name}</span>
                             {isSelected && (
                                 <span className="layout-mode-check">
-                                    <Check size={16} strokeWidth={2.5} />
+                                    <Check size="1em" className="icon-md" />
                                 </span>
                             )}
                         </div>

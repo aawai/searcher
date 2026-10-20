@@ -101,7 +101,7 @@ export function NoteMarkdownToolbar(
                     aria-label={label}
                     title={label}
                 >
-                    <Icon aria-hidden="true" />
+                    <Icon size="1em" className="icon-md" aria-hidden="true" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                     data-note-editor-owner={editorId}
@@ -114,7 +114,11 @@ export function NoteMarkdownToolbar(
                             key={value}
                             onClick={() => onCommand(value)}
                         >
-                            <ItemIcon aria-hidden="true" />
+                            <ItemIcon
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
                             {name}
                         </DropdownMenuItem>
                     ))}
@@ -158,7 +162,11 @@ export function NoteMarkdownToolbar(
                                 }}
                                 onClick={() => onCommand(command)}
                             >
-                                <Icon aria-hidden="true" />
+                                <Icon
+                                    size="1em"
+                                    className="icon-md"
+                                    aria-hidden="true"
+                                />
                             </Button>
                         );
                     },

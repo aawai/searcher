@@ -317,8 +317,8 @@ export function AdminBackupRestore() {
             <StatusBanner tone="info">
                 <div className="flex items-start gap-3">
                     <HardDrive
-                        size={20}
-                        className="text-accent shrink-0 mt-0.5"
+                        size="1em"
+                        className="icon-lg text-accent shrink-0 mt-0.5"
                     />
                     <div className="leading-relaxed">
                         <strong className="text-foreground">
@@ -345,7 +345,10 @@ export function AdminBackupRestore() {
                 {configError && (
                     <StatusBanner tone="error">
                         <div className="flex items-center gap-2">
-                            <AlertCircle size={16} className="shrink-0" />
+                            <AlertCircle
+                                size="1em"
+                                className="icon-md shrink-0"
+                            />
                             <span>{configError}</span>
                         </div>
                     </StatusBanner>
@@ -354,7 +357,10 @@ export function AdminBackupRestore() {
                 {configSuccess && (
                     <StatusBanner tone="success">
                         <div className="flex items-center gap-2">
-                            <CheckCircle2 size={16} className="shrink-0" />
+                            <CheckCircle2
+                                size="1em"
+                                className="icon-md shrink-0"
+                            />
                             <span>{configSuccess}</span>
                         </div>
                     </StatusBanner>
@@ -367,7 +373,7 @@ export function AdminBackupRestore() {
                             variant="outline"
                             onClick={handleExportConfig}
                         >
-                            <Download size={16} />
+                            <Download size="1em" className="icon-md" />
                             <span>导出系统配置 (JSON)</span>
                         </Button>
 
@@ -379,7 +385,7 @@ export function AdminBackupRestore() {
                                 ? "正在导入…"
                                 : "导入系统配置 (JSON)"}
                             buttonVariant="outline"
-                            icon={<Upload size={16} />}
+                            icon={<Upload size="1em" className="icon-md" />}
                             disabled={configImporting}
                             selectedFileName={selectedConfigFileName}
                             onFileSelect={handleConfigFileChange}
@@ -459,7 +465,10 @@ export function AdminBackupRestore() {
                 {restoreError && (
                     <StatusBanner tone="error">
                         <div className="flex items-center gap-2">
-                            <AlertCircle size={16} className="shrink-0" />
+                            <AlertCircle
+                                size="1em"
+                                className="icon-md shrink-0"
+                            />
                             <span>{restoreError}</span>
                         </div>
                     </StatusBanner>
@@ -468,7 +477,10 @@ export function AdminBackupRestore() {
                 {restoreSuccess && (
                     <StatusBanner tone="success">
                         <div className="flex items-center gap-3">
-                            <CheckCircle2 size={16} className="shrink-0" />
+                            <CheckCircle2
+                                size="1em"
+                                className="icon-md shrink-0"
+                            />
                             <div className="flex-1">{restoreSuccess}</div>
                             <Button
                                 type="button"
@@ -494,7 +506,7 @@ export function AdminBackupRestore() {
                                 onClick={handleExportFullBackup}
                                 disabled={backupExporting}
                             >
-                                <Download size={16} />
+                                <Download size="1em" className="icon-md" />
                                 <span>
                                     {backupExporting
                                         ? "正在生成备份…"
@@ -518,7 +530,7 @@ export function AdminBackupRestore() {
                                 accept=".zip,application/zip"
                                 buttonText="选择备份文件 (ZIP)"
                                 buttonVariant="outline"
-                                icon={<Upload size={16} />}
+                                icon={<Upload size="1em" className="icon-md" />}
                                 selectedFileName={selectedZipFile
                                     ? selectedZipFile.name
                                     : null}
@@ -532,7 +544,7 @@ export function AdminBackupRestore() {
                                 onClick={handlePreValidate}
                                 disabled={!selectedZipFile || validating}
                             >
-                                <FileCheck size={16} />
+                                <FileCheck size="1em" className="icon-md" />
                                 <span>
                                     {validating
                                         ? "正在预检验证…"
@@ -545,8 +557,8 @@ export function AdminBackupRestore() {
                             <StatusBanner tone="error">
                                 <div className="flex items-center gap-2">
                                     <AlertCircle
-                                        size={16}
-                                        className="shrink-0"
+                                        size="1em"
+                                        className="icon-md shrink-0"
                                     />
                                     <span>预检失败: {validationError}</span>
                                 </div>
@@ -556,7 +568,10 @@ export function AdminBackupRestore() {
                         {validatedManifest && (
                             <div className="admin-validated-card">
                                 <div className="admin-validated-header">
-                                    <CheckCircle2 size={18} />
+                                    <CheckCircle2
+                                        size="1em"
+                                        className="icon-md"
+                                    />
                                     <span>
                                         备份验证通过 (SQLite
                                         数据库完整性正常，外键校验无违规)
@@ -602,7 +617,10 @@ export function AdminBackupRestore() {
                                         onClick={() =>
                                             setRestoreModalOpen(true)}
                                     >
-                                        <RotateCcw size={16} />
+                                        <RotateCcw
+                                            size="1em"
+                                            className="icon-md"
+                                        />
                                         <span>确认还原此备份…</span>
                                     </Button>
                                 </div>
@@ -624,7 +642,11 @@ export function AdminBackupRestore() {
                 >
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-destructive">
-                            <ShieldAlert size={20} aria-hidden="true" />
+                            <ShieldAlert
+                                size="1em"
+                                className="icon-lg"
+                                aria-hidden="true"
+                            />
                             <span>警告：即将执行全量数据还原</span>
                         </DialogTitle>
                         <DialogDescription>
@@ -652,7 +674,11 @@ export function AdminBackupRestore() {
                             onClick={handleExecuteRestore}
                             disabled={restoring}
                         >
-                            <RotateCcw size={16} aria-hidden="true" />
+                            <RotateCcw
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
                             <span>
                                 {restoring ? "正在还原中…" : "确认覆盖并还原"}
                             </span>

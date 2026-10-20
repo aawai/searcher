@@ -231,7 +231,7 @@ function Layout() {
                         aria-label={user ? "AI 问答" : "AI 问答，登录后可用"}
                         title={user ? "AI 问答" : "AI 问答，登录后可用"}
                     >
-                        <Sparkles size={19} />
+                        <Sparkles size="1em" className="icon-lg" />
                         {!user && (
                             <span className="topbar-guest-ai-label">
                                 登录后可用
@@ -245,10 +245,10 @@ function Layout() {
                         title={themeLabel}
                     >
                         {appearance.theme === "dark"
-                            ? <Sun size={20} />
+                            ? <Sun size="1em" className="icon-lg" />
                             : appearance.theme === "light"
-                            ? <Moon size={20} />
-                            : <Monitor size={20} />}
+                            ? <Moon size="1em" className="icon-lg" />
+                            : <Monitor size="1em" className="icon-lg" />}
                     </button>
                     <Link
                         to={routes.settings()}
@@ -258,7 +258,7 @@ function Layout() {
                         aria-label="设置"
                         title="设置"
                     >
-                        <Settings size={20} />
+                        <Settings size="1em" className="icon-lg" />
                     </Link>
                     <span className="sync-status" role="status">
                         {syncFailed && (
@@ -268,7 +268,11 @@ function Layout() {
                                 aria-label="偏好设置同步失败，点击查看"
                                 title="部分设置未能同步到云端，点击前往设置检查"
                             >
-                                <AlertTriangle size={16} aria-hidden="true" />
+                                <AlertTriangle
+                                    size="1em"
+                                    className="icon-md"
+                                    aria-hidden="true"
+                                />
                                 <span>同步失败</span>
                             </Link>
                         )}
@@ -299,8 +303,8 @@ function Layout() {
                                         onClick={() => navigate(routes.account)}
                                     >
                                         <UserRound
-                                            size={15}
-                                            className="mr-2"
+                                            size="1em"
+                                            className="icon-md mr-2"
                                         />
                                         <span>账户与安全</span>
                                     </DropdownMenuItem>
@@ -309,8 +313,8 @@ function Layout() {
                                             navigate(routes.settings())}
                                     >
                                         <Settings
-                                            size={15}
-                                            className="mr-2"
+                                            size="1em"
+                                            className="icon-md mr-2"
                                         />
                                         <span>偏好设置</span>
                                     </DropdownMenuItem>
@@ -320,8 +324,8 @@ function Layout() {
                                                 navigate(routes.admin())}
                                         >
                                             <Shield
-                                                size={15}
-                                                className="mr-2"
+                                                size="1em"
+                                                className="icon-md mr-2"
                                             />
                                             <span>管理后台</span>
                                         </DropdownMenuItem>
@@ -333,8 +337,8 @@ function Layout() {
                                         onClick={() => void requestLogout()}
                                     >
                                         <LogIn
-                                            size={15}
-                                            className="mr-2 rotate-180"
+                                            size="1em"
+                                            className="icon-md mr-2 rotate-180"
                                         />
                                         <span>退出登录</span>
                                     </DropdownMenuItem>
@@ -348,7 +352,7 @@ function Layout() {
                                 className="user-link"
                                 aria-label="登录"
                             >
-                                <LogIn size={19} />
+                                <LogIn size="1em" className="icon-lg" />
                                 <span>登录</span>
                             </Link>
                         )}

@@ -47,7 +47,7 @@ export function ConversationSearchDialog({
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base">
-                        <Search size={18} className="text-accent" />
+                        <Search size="1em" className="icon-md text-accent" />
                         <span>会话内搜索</span>
                     </DialogTitle>
                     <DialogDescription>
@@ -74,7 +74,7 @@ export function ConversationSearchDialog({
                                 className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground h-6 w-6"
                                 aria-label="清空搜索"
                             >
-                                <X size={14} />
+                                <X size="1em" className="icon-sm" />
                             </Button>
                         )}
                     </div>

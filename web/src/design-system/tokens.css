@@ -218,7 +218,9 @@
     --control-input-height: 40px;
     --control-touch-target: 44px;
     --launcher-touch-cell-size: 88px;
-    --control-icon-size: 16px;
+    --icon-sm: 14px;
+    --icon-md: 16px;
+    --icon-lg: 20px;
 
     /* Local child layers are meaningful only inside their owning stack. */
     --elevation-local-0: 0;
@@ -384,4 +386,19 @@
     --color-border: var(--border);
     --radius-control: var(--control-radius);
     --radius-input: var(--input-radius);
+}
+
+@utility icon-sm {
+    width: var(--icon-sm);
+    height: var(--icon-sm);
+}
+
+@utility icon-md {
+    width: var(--icon-md);
+    height: var(--icon-md);
+}
+
+@utility icon-lg {
+    width: var(--icon-lg);
+    height: var(--icon-lg);
 }

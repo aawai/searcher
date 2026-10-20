@@ -334,7 +334,7 @@ export function DocumentNotebookNavigation({
                     aria-pressed={scope.type === "all"}
                     onClick={() => onScopeChange({ type: "all" })}
                 >
-                    <Files size={15} />
+                    <Files size="1em" className="icon-md" />
                     <span>全部笔记</span>
                 </Button>
                 <Button
@@ -346,7 +346,7 @@ export function DocumentNotebookNavigation({
                     aria-pressed={scope.type === "recent"}
                     onClick={() => onScopeChange({ type: "recent" })}
                 >
-                    <Clock size={15} />
+                    <Clock size="1em" className="icon-md" />
                     <span>最近笔记</span>
                 </Button>
                 <Button
@@ -358,7 +358,7 @@ export function DocumentNotebookNavigation({
                     aria-pressed={scope.type === "favorite"}
                     onClick={() => onScopeChange({ type: "favorite" })}
                 >
-                    <Star size={15} />
+                    <Star size="1em" className="icon-md" />
                     <span>收藏笔记</span>
                 </Button>
             </div>
@@ -381,7 +381,7 @@ export function DocumentNotebookNavigation({
                         setCreateOpen(true);
                     }}
                 >
-                    <Plus size={14} />
+                    <Plus size="1em" className="icon-sm" />
                     <span>新建笔记本</span>
                 </Button>
             </div>
@@ -433,7 +433,7 @@ export function DocumentNotebookNavigation({
                                         notebookId: notebook.id,
                                     })}
                             >
-                                <Folder size={15} />
+                                <Folder size="1em" className="icon-md" />
                                 <span className="documents-notebook-name">
                                     {notebook.name}
                                 </span>
@@ -450,7 +450,10 @@ export function DocumentNotebookNavigation({
                                             aria-label={`笔记本操作：${notebook.name}`}
                                             title={`笔记本操作：${notebook.name}`}
                                         >
-                                            <MoreHorizontal size={14} />
+                                            <MoreHorizontal
+                                                size="1em"
+                                                className="icon-sm"
+                                            />
                                         </Button>
                                     }
                                 />
@@ -463,7 +466,10 @@ export function DocumentNotebookNavigation({
                                         }}
                                         disabled={isPending}
                                     >
-                                        <Pencil size={14} />
+                                        <Pencil
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>重命名</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -476,7 +482,10 @@ export function DocumentNotebookNavigation({
                                         }}
                                         disabled={isPending || hasChildren}
                                     >
-                                        <FolderInput size={14} />
+                                        <FolderInput
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>移动</span>
                                     </DropdownMenuItem>
                                     {depth === 0 && (
@@ -489,7 +498,10 @@ export function DocumentNotebookNavigation({
                                             }}
                                             disabled={isPending}
                                         >
-                                            <Plus size={14} />
+                                            <Plus
+                                                size="1em"
+                                                className="icon-sm"
+                                            />
                                             <span>新建子笔记本</span>
                                         </DropdownMenuItem>
                                     )}
@@ -498,7 +510,10 @@ export function DocumentNotebookNavigation({
                                             handleReorder(notebook, "up")}
                                         disabled={!canMoveUp || isPending}
                                     >
-                                        <ArrowUp size={14} />
+                                        <ArrowUp
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>上移</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -506,7 +521,10 @@ export function DocumentNotebookNavigation({
                                             handleReorder(notebook, "down")}
                                         disabled={!canMoveDown || isPending}
                                     >
-                                        <ArrowDown size={14} />
+                                        <ArrowDown
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>下移</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -517,7 +535,10 @@ export function DocumentNotebookNavigation({
                                         disabled={isPending}
                                         className="text-[var(--danger)] focus:text-[var(--danger)]"
                                     >
-                                        <Trash2 size={14} />
+                                        <Trash2
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>删除</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>

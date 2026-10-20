@@ -355,7 +355,7 @@ export function AiSettings() {
             description="配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存"
             actions={
                 <Button variant="default" onClick={openAdd}>
-                    <Plus size={16} />
+                    <Plus size="1em" className="icon-md" />
                     <span>添加 Provider</span>
                 </Button>
             }
@@ -447,8 +447,18 @@ export function AiSettings() {
                                     title={showApiKey ? "隐藏" : "显示"}
                                 >
                                     {showApiKey
-                                        ? <EyeOff size={16} />
-                                        : <Eye size={16} />}
+                                        ? (
+                                            <EyeOff
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                        )
+                                        : (
+                                            <Eye
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                        )}
                                 </Button>
                             </div>
                             <p className="muted ai-api-key-help">
@@ -511,7 +521,7 @@ export function AiSettings() {
                     description="添加 Provider 并验证模型后，即可在主页直接切换使用 AI 问答。"
                 >
                     <Button variant="outline" onClick={openAdd}>
-                        <Plus size={16} />
+                        <Plus size="1em" className="icon-md" />
                         <span>添加第一个 Provider</span>
                     </Button>
                 </SettingsActionCard>
@@ -705,7 +715,10 @@ export function AiSettings() {
                                                     openModelConfig(model)}
                                                 title="手动配置该模型的推理能力与强度"
                                             >
-                                                <Settings2 size={14} />
+                                                <Settings2
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                />
                                                 <span>配置推理</span>
                                             </Button>
                                         </ActionGroup>
@@ -858,7 +871,7 @@ export function AiSettings() {
                                     onClick={revertModelConfig}
                                     title="清除手动配置，恢复为 Provider 自动发现或预设"
                                 >
-                                    <RotateCcw size={14} />
+                                    <RotateCcw size="1em" className="icon-sm" />
                                     <span>恢复自动发现</span>
                                 </Button>
                                 <div className="model-config-action-group">

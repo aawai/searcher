@@ -315,9 +315,9 @@ export function AccountPage() {
                             to={routes.admin()}
                             className="button button--subtle"
                         >
-                            <Shield size={18} />
+                            <Shield size="1em" className="icon-md" />
                             <span>管理后台</span>
-                            <ArrowRight size={16} />
+                            <ArrowRight size="1em" className="icon-md" />
                         </Link>
                     )
                     : undefined}
@@ -453,7 +453,10 @@ export function AccountPage() {
                 >
                     <CardHeader className="account-card-header">
                         <div className="account-card-title-row">
-                            <Key size={20} className="account-card-icon" />
+                            <Key
+                                size="1em"
+                                className="icon-lg account-card-icon"
+                            />
                             <CardTitle className="account-card-title">
                                 {user.mustChangePassword
                                     ? "重置密码 (必须修改)"
@@ -549,8 +552,8 @@ export function AccountPage() {
                         <div className="account-card-header-between">
                             <div className="account-card-title-row">
                                 <Laptop
-                                    size={20}
-                                    className="account-card-icon"
+                                    size="1em"
+                                    className="icon-lg account-card-icon"
                                 />
                                 <CardTitle className="account-card-title">
                                     设备会话管理
@@ -570,10 +573,10 @@ export function AccountPage() {
                                     aria-label="刷新设备列表"
                                 >
                                     <RefreshCw
-                                        size={15}
-                                        className={devicesLoading
-                                            ? "animate-spin"
-                                            : ""}
+                                        size="1em"
+                                        className={`icon-md ${
+                                            devicesLoading ? "animate-spin" : ""
+                                        }`}
                                     />
                                     <span>
                                         {devicesLoading ? "刷新中…" : "刷新"}
@@ -590,7 +593,10 @@ export function AccountPage() {
                                             revokeOthersPending ||
                                             logoutCurrentPending}
                                     >
-                                        <LogOut size={15} />
+                                        <LogOut
+                                            size="1em"
+                                            className="icon-md"
+                                        />
                                         <span>退出其他所有设备</span>
                                     </Button>
                                 )}
@@ -652,26 +658,30 @@ export function AccountPage() {
                                                                 "mobile"
                                                             ? (
                                                                 <Smartphone
-                                                                    size={20}
+                                                                    size="1em"
+                                                                    className="icon-lg"
                                                                 />
                                                             )
                                                             : parsed.type ===
                                                                     "tablet"
                                                             ? (
                                                                 <Laptop
-                                                                    size={20}
+                                                                    size="1em"
+                                                                    className="icon-lg"
                                                                 />
                                                             )
                                                             : parsed.type ===
                                                                     "desktop"
                                                             ? (
                                                                 <Laptop
-                                                                    size={20}
+                                                                    size="1em"
+                                                                    className="icon-lg"
                                                                 />
                                                             )
                                                             : (
                                                                 <Globe
-                                                                    size={20}
+                                                                    size="1em"
+                                                                    className="icon-lg"
                                                                 />
                                                             )}
                                                     </div>

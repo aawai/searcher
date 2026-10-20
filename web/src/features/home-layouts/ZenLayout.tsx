@@ -177,7 +177,10 @@ export function ZenLayout(
                                     aria-live="polite"
                                 >
                                     <span className="home-managing-text">
-                                        <ArrowUpDown size={14} />
+                                        <ArrowUpDown
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>
                                             正在整理常用应用（拖拽调整顺序）
                                         </span>
@@ -209,7 +212,10 @@ export function ZenLayout(
                                             onClick={() =>
                                                 setIsManagingApps(false)}
                                         >
-                                            <Check size={13} />
+                                            <Check
+                                                size="1em"
+                                                className="icon-sm"
+                                            />
                                             <span>完成</span>
                                         </Button>
                                     </div>
@@ -287,7 +293,7 @@ export function ZenLayout(
                         data-workspace="apps"
                         onClick={() => openWorkspace("apps")}
                     >
-                        <Folder size={13} />
+                        <Folder size="1em" className="icon-sm" />
                         <span>应用 · {apps.length}</span>
                     </button>
                     <button
@@ -296,7 +302,7 @@ export function ZenLayout(
                         data-workspace="notes"
                         onClick={() => openWorkspace("notes")}
                     >
-                        <StickyNote size={13} />
+                        <StickyNote size="1em" className="icon-sm" />
                         <span>便签 · {notes.length}</span>
                     </button>
                     <Button
@@ -306,7 +312,7 @@ export function ZenLayout(
                         data-workspace="documents"
                         onClick={() => openWorkspace("documents")}
                     >
-                        <NotebookPen size={13} />
+                        <NotebookPen size="1em" className="icon-sm" />
                         <span>笔记</span>
                     </Button>
                 </nav>

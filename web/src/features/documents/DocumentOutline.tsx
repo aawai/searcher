@@ -29,7 +29,7 @@ export function DocumentOutline({
                         aria-label="收起大纲"
                         onClick={onClose}
                     >
-                        <X size={14} />
+                        <X size="1em" className="icon-sm" />
                     </Button>
                 )}
             </div>

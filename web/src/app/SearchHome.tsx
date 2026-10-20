@@ -1734,7 +1734,7 @@ export function SearchHome() {
                             onClick={() =>
                                 setError("")}
                         >
-                            <X size={16} />
+                            <X size="1em" className="icon-md" />
                         </Button>
                     </StatusBanner>
                 )}

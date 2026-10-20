@@ -117,13 +117,16 @@ export function AppForm() {
                         {/* URL 状态反馈 */}
                         {urlFetchStatus === "loading" && (
                             <div className="app-dialog-url-status loading">
-                                <Loader2 size={13} className="animate-spin" />
+                                <Loader2
+                                    size="1em"
+                                    className="icon-sm animate-spin"
+                                />
                                 <span>{urlFetchMessage}</span>
                             </div>
                         )}
                         {urlFetchStatus === "success" && (
                             <div className="app-dialog-url-status success">
-                                <Check size={13} />
+                                <Check size="1em" className="icon-sm" />
                                 <span>{urlFetchMessage}</span>
                             </div>
                         )}
@@ -396,11 +399,16 @@ export function AppForm() {
                                             {urlFetchStatus === "loading"
                                                 ? (
                                                     <Loader2
-                                                        size={12}
-                                                        className="animate-spin"
+                                                        size="1em"
+                                                        className="icon-sm animate-spin"
                                                     />
                                                 )
-                                                : <RefreshCw size={12} />}
+                                                : (
+                                                    <RefreshCw
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                    />
+                                                )}
                                             <span>
                                                 {urlFetchStatus === "loading"
                                                     ? "正在抓取…"
@@ -414,8 +422,8 @@ export function AppForm() {
                                     <div className="app-dialog-icon-subpanel">
                                         <label className="app-upload-dropzone">
                                             <Upload
-                                                size={18}
-                                                className="app-upload-icon"
+                                                size="1em"
+                                                className="icon-lg app-upload-icon"
                                             />
                                             <span className="app-upload-text">
                                                 {isUploadingIcon

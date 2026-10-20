@@ -31,7 +31,7 @@ export function MessageDetailsDialog({
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base">
-                        <Info size={18} className="text-accent" />
+                        <Info size="1em" className="icon-md text-accent" />
                         <span>消息详情</span>
                     </DialogTitle>
                     <DialogDescription>

@@ -568,7 +568,8 @@ export function DesktopWorkspaces({
                             leading={kind === "apps"
                                 ? (
                                     <AppWindow
-                                        size={16}
+                                        size="1em"
+                                        className="icon-md"
                                         aria-hidden="true"
                                     />
                                 )

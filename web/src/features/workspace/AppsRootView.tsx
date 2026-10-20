@@ -159,7 +159,7 @@ export function AppsRootView({
                         aria-label="应用更多操作"
                         data-app-arrange
                     >
-                        <MoreHorizontal size={18} />
+                        <MoreHorizontal size="1em" className="icon-md" />
                     </Button>
                 }
             />
@@ -257,7 +257,7 @@ export function AppsRootView({
                                 aria-label="返回应用列表"
                                 onClick={() => onFolderChange?.(null)}
                             >
-                                <ArrowLeft size={18} />
+                                <ArrowLeft size="1em" className="icon-lg" />
                             </Button>
                         )}
                     >
@@ -313,7 +313,8 @@ export function AppsRootView({
                                                                     }}
                                                                 >
                                                                     <Folder
-                                                                        size={18}
+                                                                        size="1em"
+                                                                        className="icon-md"
                                                                     />
                                                                     <span className="apps-workspace-group-card-info">
                                                                         {group
@@ -380,7 +381,8 @@ export function AppsRootView({
                                                                                 aria-label={`${app.name} 的更多操作`}
                                                                             >
                                                                                 <MoreHorizontal
-                                                                                    size={18}
+                                                                                    size="1em"
+                                                                                    className="icon-md"
                                                                                 />
                                                                             </Button>
                                                                         }

@@ -30,10 +30,10 @@ export function WorkspaceNavigation(
                     onClick={() => onSelect(workspace)}
                 >
                     {workspace === "apps"
-                        ? <AppWindow size={16} />
+                        ? <AppWindow size="1em" className="icon-lg" />
                         : workspace === "notes"
-                        ? <StickyNote size={18} />
-                        : <NotebookPen size={18} />}
+                        ? <StickyNote size="1em" className="icon-lg" />
+                        : <NotebookPen size="1em" className="icon-lg" />}
                     <span>
                         {workspace === "apps"
                             ? "应用"

@@ -86,8 +86,10 @@ export function AdminOverview({
                         disabled={loading}
                     >
                         <RefreshCw
-                            size={15}
-                            className={loading ? "animate-spin" : ""}
+                            size="1em"
+                            className={`icon-md ${
+                                loading ? "animate-spin" : ""
+                            }`}
                         />
                         <span>{loading ? "刷新中…" : "刷新概览"}</span>
                     </Button>
@@ -98,7 +100,10 @@ export function AdminOverview({
                 <StatusBanner tone="error">
                     <div className="flex items-center justify-between gap-4 w-full">
                         <div className="flex items-center gap-2">
-                            <AlertCircle size={16} className="shrink-0" />
+                            <AlertCircle
+                                size="1em"
+                                className="icon-md shrink-0"
+                            />
                             <span>{error}</span>
                         </div>
                         <Button
@@ -109,8 +114,10 @@ export function AdminOverview({
                             disabled={loading}
                         >
                             <RefreshCw
-                                size={14}
-                                className={loading ? "animate-spin" : ""}
+                                size="1em"
+                                className={`icon-sm ${
+                                    loading ? "animate-spin" : ""
+                                }`}
                             />
                             <span>{loading ? "正在重试…" : "重试"}</span>
                         </Button>
@@ -133,7 +140,7 @@ export function AdminOverview({
                                     用户规模
                                 </span>
                                 <div className="admin-metric-card-icon">
-                                    <Users size={18} />
+                                    <Users size="1em" className="icon-md" />
                                 </div>
                             </div>
                             <div>
@@ -166,7 +173,7 @@ export function AdminOverview({
                                     应用与便签
                                 </span>
                                 <div className="admin-metric-card-icon">
-                                    <Globe size={18} />
+                                    <Globe size="1em" className="icon-md" />
                                 </div>
                             </div>
                             <div>
@@ -193,7 +200,7 @@ export function AdminOverview({
                                     AI 服务与模型
                                 </span>
                                 <div className="admin-metric-card-icon">
-                                    <Bot size={18} />
+                                    <Bot size="1em" className="icon-md" />
                                 </div>
                             </div>
                             <div>
@@ -220,7 +227,7 @@ export function AdminOverview({
                                     安全审计日志
                                 </span>
                                 <div className="admin-metric-card-icon">
-                                    <FileText size={18} />
+                                    <FileText size="1em" className="icon-md" />
                                 </div>
                             </div>
                             <div>

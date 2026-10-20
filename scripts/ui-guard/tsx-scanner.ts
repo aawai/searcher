@@ -183,6 +183,53 @@ function checkTailwindClass(
     return null;
 }
 
+function numericIconSizes(expression: ts.Expression): string[] {
+    if (ts.isNumericLiteral(expression)) return [expression.text];
+    if (ts.isStringLiteral(expression)) {
+        return /^-?\d+(?:\.\d+)?(?:px)?$/.test(expression.text)
+            ? [expression.text]
+            : [];
+    }
+    if (
+        ts.isParenthesizedExpression(expression) ||
+        ts.isAsExpression(expression)
+    ) {
+        return numericIconSizes(expression.expression);
+    }
+    if (
+        ts.isPrefixUnaryExpression(expression) &&
+        ts.isNumericLiteral(expression.operand)
+    ) {
+        return [expression.getText()];
+    }
+    if (ts.isConditionalExpression(expression)) {
+        return [
+            ...numericIconSizes(expression.whenTrue),
+            ...numericIconSizes(expression.whenFalse),
+        ];
+    }
+    return [];
+}
+
+function geometryCssVariables(expression: ts.Expression): string[] {
+    if (ts.isStringLiteralLike(expression)) {
+        return expression.text.includes("var(") ? [expression.text] : [];
+    }
+    if (
+        ts.isParenthesizedExpression(expression) ||
+        ts.isAsExpression(expression)
+    ) {
+        return geometryCssVariables(expression.expression);
+    }
+    if (ts.isConditionalExpression(expression)) {
+        return [
+            ...geometryCssVariables(expression.whenTrue),
+            ...geometryCssVariables(expression.whenFalse),
+        ];
+    }
+    return [];
+}
+
 export function scanTsxCode(file: string, code: string): UiViolation[] {
     const sourceFile = ts.createSourceFile(
         file,
@@ -197,6 +244,58 @@ export function scanTsxCode(file: string, code: string): UiViolation[] {
     function visit(node: ts.Node) {
         if (ts.isJsxAttribute(node)) {
             const attrName = node.name.getText(sourceFile);
+            if (["size", "width", "height"].includes(attrName)) {
+                const element = node.parent.parent;
+                if (
+                    ts.isJsxOpeningElement(element) ||
+                    ts.isJsxSelfClosingElement(element)
+                ) {
+                    const tag = element.tagName.getText(sourceFile);
+                    const initializer = node.initializer;
+                    const expression =
+                        initializer && ts.isJsxExpression(initializer)
+                            ? initializer.expression
+                            : initializer;
+                    if ((/^[A-Z]/.test(tag) || tag === "svg") && expression) {
+                        for (const value of geometryCssVariables(expression)) {
+                            const { line, character } = sourceFile
+                                .getLineAndCharacterOfPosition(node.getStart());
+                            violations.push({
+                                file,
+                                rule: "svg-attribute-css-variable",
+                                property: attrName,
+                                value,
+                                line: line + 1,
+                                column: character + 1,
+                                fingerprint:
+                                    `svg-attribute-css-variable:${attrName}:${value}`,
+                            });
+                        }
+                    }
+                    // Component size props are icon geometry; native input.size is character count.
+                    if (
+                        attrName === "size" && /^[A-Z]/.test(tag) && expression
+                    ) {
+                        for (const value of numericIconSizes(expression)) {
+                            if (
+                                [14, 16, 20].includes(Number.parseFloat(value))
+                            ) continue;
+                            const { line, character } = sourceFile
+                                .getLineAndCharacterOfPosition(node.getStart());
+                            violations.push({
+                                file,
+                                rule: "nonstandard-icon-size",
+                                property: "size",
+                                value,
+                                line: line + 1,
+                                column: character + 1,
+                                fingerprint:
+                                    `nonstandard-icon-size:size:${value}`,
+                            });
+                        }
+                    }
+                }
+            }
 
             // 1. Inspect className attribute
             if (attrName === "className") {

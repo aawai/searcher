@@ -17,7 +17,7 @@ export function WallpaperStageContextPreview() {
                 </span>
                 <div className="wallpaper-stage-context-preview__search-bar">
                     <div className="wallpaper-stage-context-preview__icon">
-                        <Search size={14} />
+                        <Search size="1em" className="icon-sm" />
                     </div>
                     <span className="wallpaper-stage-context-preview__placeholder">
                         搜索你想知道的…

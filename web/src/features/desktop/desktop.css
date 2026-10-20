@@ -241,8 +241,8 @@
 }
 
 .desktop-window-chrome-icon {
-    width: calc((var(--window-chrome-height) - var(--space-window-gap)) * 0.5);
-    height: calc((var(--window-chrome-height) - var(--space-window-gap)) * 0.5);
+    width: var(--icon-md);
+    height: var(--icon-md);
 }
 
 /* Window Content Body */

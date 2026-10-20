@@ -307,3 +307,63 @@ Deno.test("tsx-scanner - rejects static numeric z-index but allows tokens and ru
         ],
     );
 });
+
+Deno.test("tsx-scanner - prevents nonstandard control icon sizes, including conditional branches", () => {
+    const code = `
+        const view = <>
+            <Search size={13} />
+            <Icon size={18} />
+            <ArrowUpRight size={22} />
+            <Check size={compact ? 12 : 18} />
+            <X size="15" />
+        </>;
+    `;
+    assertEquals(
+        scanTsxCode("web/src/app/SettingsPage.tsx", code).map((violation) => [
+            violation.rule,
+            violation.property,
+            violation.value,
+        ]),
+        [
+            ["nonstandard-icon-size", "size", "13"],
+            ["nonstandard-icon-size", "size", "18"],
+            ["nonstandard-icon-size", "size", "22"],
+            ["nonstandard-icon-size", "size", "12"],
+            ["nonstandard-icon-size", "size", "18"],
+            ["nonstandard-icon-size", "size", "15"],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - keeps standard glyphs and native control geometry valid", () => {
+    const controls = `
+        const view = <>
+            <Search size={14} /><Search size={16} /><Search size={20} />
+            <Search size="1em" className="icon-md" />
+            <Brand size="1em" className="launcher-folder-empty-icon" />
+            <input size={30} />
+        </>;
+    `;
+    assertEquals(scanTsxCode("web/src/app/SettingsPage.tsx", controls), []);
+});
+
+Deno.test("tsx-scanner - rejects CSS variables in SVG geometry attributes", () => {
+    const code = `
+        const view = <>
+            <Search size="var(--icon-md)" />
+            <svg width="var(--icon-md)" height={"var(--icon-lg)"} />
+        </>;
+    `;
+    assertEquals(
+        scanTsxCode("web/src/app/SettingsPage.tsx", code).map((violation) => [
+            violation.rule,
+            violation.property,
+            violation.value,
+        ]),
+        [
+            ["svg-attribute-css-variable", "size", "var(--icon-md)"],
+            ["svg-attribute-css-variable", "width", "var(--icon-md)"],
+            ["svg-attribute-css-variable", "height", "var(--icon-lg)"],
+        ],
+    );
+});

@@ -58,8 +58,8 @@ export function SearcherUserMessage() {
                                         )
                                         : (
                                             <FileText
-                                                size={14}
-                                                className="text-muted"
+                                                size="1em"
+                                                className="icon-sm text-muted"
                                             />
                                         )}
                                     <span
@@ -86,7 +86,10 @@ export function SearcherUserMessage() {
                             <div className="ask-user-edit-actions">
                                 <ComposerPrimitive.Cancel asChild>
                                     <Button variant="outline" size="sm">
-                                        <X size={12} className="mr-1" />取消
+                                        <X
+                                            size="1em"
+                                            className="icon-sm mr-1"
+                                        />取消
                                     </Button>
                                 </ComposerPrimitive.Cancel>
                                 <ComposerPrimitive.Send asChild>
@@ -115,7 +118,7 @@ export function SearcherUserMessage() {
                             className="ask-branch-pager__btn h-6 w-6"
                             aria-label="上一个提问版本"
                         >
-                            <ChevronLeft size={13} />
+                            <ChevronLeft size="1em" className="icon-sm" />
                         </Button>
                     </BranchPickerPrimitive.Previous>
                     <span className="ask-branch-pager__indicator">
@@ -129,7 +132,7 @@ export function SearcherUserMessage() {
                             className="ask-branch-pager__btn h-6 w-6"
                             aria-label="下一个提问版本"
                         >
-                            <ChevronRight size={13} />
+                            <ChevronRight size="1em" className="icon-sm" />
                         </Button>
                     </BranchPickerPrimitive.Next>
                 </BranchPickerPrimitive.Root>
@@ -144,8 +147,13 @@ export function SearcherUserMessage() {
                             title={copied ? "已复制" : "复制"}
                         >
                             {copied
-                                ? <Check size={13} className="text-accent" />
-                                : <Copy size={13} />}
+                                ? (
+                                    <Check
+                                        size="1em"
+                                        className="icon-sm text-accent"
+                                    />
+                                )
+                                : <Copy size="1em" className="icon-sm" />}
                         </Button>
                     </ActionBarPrimitive.Copy>
 
@@ -158,7 +166,7 @@ export function SearcherUserMessage() {
                                 aria-label="编辑提问"
                                 title="编辑提问并从此处分支"
                             >
-                                <Pencil size={13} />
+                                <Pencil size="1em" className="icon-sm" />
                             </Button>
                         </ActionBarPrimitive.Edit>
                     )}

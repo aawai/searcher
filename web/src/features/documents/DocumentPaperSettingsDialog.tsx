@@ -184,7 +184,7 @@ function DocumentPaperSettingsForm({
                     role="alert"
                     aria-live="assertive"
                 >
-                    <AlertCircle className="size-4 shrink-0" />
+                    <AlertCircle className="size-[var(--icon-md)] shrink-0" />
                     <span className="flex-1">{error}</span>
                 </div>
             )}

@@ -89,7 +89,10 @@ export function AdminSystemSettings() {
                 <StatusBanner tone="error">
                     <div className="flex items-center justify-between gap-4 w-full">
                         <div className="flex items-center gap-2">
-                            <AlertCircle size={16} className="shrink-0" />
+                            <AlertCircle
+                                size="1em"
+                                className="icon-md shrink-0"
+                            />
                             <span>{error}</span>
                         </div>
                         <Button
@@ -100,8 +103,10 @@ export function AdminSystemSettings() {
                             disabled={loading}
                         >
                             <RefreshCw
-                                size={14}
-                                className={loading ? "animate-spin" : ""}
+                                size="1em"
+                                className={`icon-sm ${
+                                    loading ? "animate-spin" : ""
+                                }`}
                             />
                             <span>{loading ? "正在重试…" : "重试"}</span>
                         </Button>
@@ -112,7 +117,7 @@ export function AdminSystemSettings() {
             {successMessage && (
                 <StatusBanner tone="success">
                     <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="shrink-0" />
+                        <CheckCircle2 size="1em" className="icon-md shrink-0" />
                         <span>{successMessage}</span>
                     </div>
                 </StatusBanner>
@@ -279,7 +284,7 @@ export function AdminSystemSettings() {
                             type="submit"
                             disabled={saving || loading}
                         >
-                            <Save size={16} />
+                            <Save size="1em" className="icon-md" />
                             <span>{saving ? "正在保存…" : "保存系统设置"}</span>
                         </Button>
                     </div>

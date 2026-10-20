@@ -47,11 +47,17 @@ export function ReasoningSelector({
                     />
                 }
             >
-                <Brain size={14} className="ask-composer__pill-icon" />
+                <Brain
+                    size="1em"
+                    className="icon-sm ask-composer__pill-icon"
+                />
                 <span className="ask-composer__pill-text">
                     推理: {currentLabel}
                 </span>
-                <ChevronDown size={12} className="ask-composer__pill-arrow" />
+                <ChevronDown
+                    size="1em"
+                    className="icon-sm ask-composer__pill-arrow"
+                />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={6} aria-label="可用推理强度">
                 <DropdownMenuItem

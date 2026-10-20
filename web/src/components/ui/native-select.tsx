@@ -38,7 +38,7 @@ function NativeSelect({
             </select>
             <ChevronDownIcon
                 data-slot="native-select-indicator"
-                className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-[var(--muted)] transition-transform group-focus-within/native-select:text-[var(--foreground)]"
+                className="pointer-events-none absolute top-1/2 right-2.5 size-[var(--icon-md)] -translate-y-1/2 text-[var(--muted)] transition-transform group-focus-within/native-select:text-[var(--foreground)]"
                 aria-hidden="true"
             />
         </div>

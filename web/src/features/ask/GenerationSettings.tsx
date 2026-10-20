@@ -113,7 +113,7 @@ export function GenerationSettings({
                     />
                 }
             >
-                <Settings2 size={16} />
+                <Settings2 size="1em" className="icon-md" />
                 {isCustomized && <span className="ask-composer__active-dot" />}
             </PopoverTrigger>
 
@@ -140,7 +140,7 @@ export function GenerationSettings({
                                 className="h-6 text-xs px-1.5 flex items-center gap-1"
                                 title="恢复默认参数"
                             >
-                                <RotateCcw size={12} />
+                                <RotateCcw size="1em" className="icon-sm" />
                                 <span>重置</span>
                             </Button>
                         )}
@@ -155,7 +155,7 @@ export function GenerationSettings({
                                 />
                             }
                         >
-                            <X size={14} />
+                            <X size="1em" className="icon-sm" />
                         </PopoverClose>
                     </div>
                 </div>
@@ -274,15 +274,18 @@ export function GenerationSettings({
                                             ? (
                                                 <>
                                                     <Check
-                                                        size={12}
-                                                        className="text-accent"
+                                                        size="1em"
+                                                        className="icon-sm text-accent"
                                                     />
                                                     <span>已保存默认</span>
                                                 </>
                                             )
                                             : (
                                                 <>
-                                                    <Save size={12} />
+                                                    <Save
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                    />
                                                     <span>
                                                         {saving
                                                             ? "保存中..."

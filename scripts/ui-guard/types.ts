@@ -5,6 +5,8 @@ export type RuleId =
     | "raw-border-radius"
     | "raw-spacing-literal"
     | "inline-visual-style"
+    | "nonstandard-icon-size"
+    | "svg-attribute-css-variable"
     | "arbitrary-tailwind";
 
 export interface UiViolation {

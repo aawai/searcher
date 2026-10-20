@@ -135,7 +135,7 @@ export function WindowMenu({
                         aria-keyshortcuts={DESKTOP_SHORTCUTS.menu.aria}
                         title={`窗口系统菜单（${DESKTOP_SHORTCUTS.menu.label}）`}
                     >
-                        <MoreHorizontal className="desktop-window-chrome-icon h-4 w-4" />
+                        <MoreHorizontal className="desktop-window-chrome-icon" />
                     </Button>
                 }
             />
@@ -153,7 +153,7 @@ export function WindowMenu({
                     data-testid="window-menu-item-restore"
                     className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                 >
-                    <Minimize2 className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                    <Minimize2 className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0 opacity-70" />
                     <span>还原</span>
                 </DropdownMenuItem>
 
@@ -166,7 +166,7 @@ export function WindowMenu({
                         data-testid="window-menu-item-minimize"
                         className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                     >
-                        <Minus className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                        <Minus className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0 opacity-70" />
                         <span>最小化</span>
                     </DropdownMenuItem>
                 )}
@@ -180,7 +180,7 @@ export function WindowMenu({
                         data-testid="window-menu-item-maximize"
                         className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                     >
-                        <Maximize2 className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                        <Maximize2 className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0 opacity-70" />
                         <span>最大化</span>
                     </DropdownMenuItem>
                 )}
@@ -193,7 +193,7 @@ export function WindowMenu({
                         aria-keyshortcuts={DESKTOP_SHORTCUTS.overview.aria}
                         className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                     >
-                        <LayoutGrid className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                        <LayoutGrid className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0 opacity-70" />
                         <span>窗口总览</span>
                         <kbd className="ml-auto" aria-hidden="true">
                             {DESKTOP_SHORTCUTS.overview.label}
@@ -210,7 +210,7 @@ export function WindowMenu({
                             aria-keyshortcuts={DESKTOP_SHORTCUTS.snapLeft.aria}
                             className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                         >
-                            <PanelLeft className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                            <PanelLeft className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0 opacity-70" />
                             <span>靠左分屏</span>
                             <kbd className="ml-auto" aria-hidden="true">
                                 {DESKTOP_SHORTCUTS.snapLeft.label}
@@ -224,7 +224,7 @@ export function WindowMenu({
                             aria-keyshortcuts={DESKTOP_SHORTCUTS.snapRight.aria}
                             className="desktop-window-menu-item flex items-center gap-2 cursor-pointer"
                         >
-                            <PanelRight className="desktop-window-menu-item-icon h-4 w-4 shrink-0 opacity-70" />
+                            <PanelRight className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0 opacity-70" />
                             <span>靠右分屏</span>
                             <kbd className="ml-auto" aria-hidden="true">
                                 {DESKTOP_SHORTCUTS.snapRight.label}
@@ -240,7 +240,7 @@ export function WindowMenu({
                     data-testid="window-menu-item-close"
                     className="desktop-window-menu-item flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
                 >
-                    <X className="desktop-window-menu-item-icon h-4 w-4 shrink-0" />
+                    <X className="desktop-window-menu-item-icon size-[var(--icon-md)] shrink-0" />
                     <span>{closeLabel}</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
