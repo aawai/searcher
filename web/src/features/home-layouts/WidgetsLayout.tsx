@@ -132,7 +132,8 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                 <div className="widgets-bento-header-left">
                                     <div className="widgets-bento-title">
                                         <Sparkles
-                                            size={15}
+                                            size="1em"
+                                            className="icon-md"
                                             aria-hidden="true"
                                         />
                                         <span>常用应用</span>
@@ -245,7 +246,8 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                 <div className="widgets-bento-header-left">
                                     <div className="widgets-bento-title">
                                         <StickyNote
-                                            size={15}
+                                            size="1em"
+                                            className="icon-md"
                                             aria-hidden="true"
                                         />
                                         <span>随手便签</span>
@@ -268,7 +270,11 @@ export function WidgetsLayout(props: HomeLayoutProps) {
                                         title="新建便签"
                                         aria-label="新建便签"
                                     >
-                                        <Plus size={14} aria-hidden="true" />
+                                        <Plus
+                                            size="1em"
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
                                         <span>新建</span>
                                     </Button>
                                 </div>

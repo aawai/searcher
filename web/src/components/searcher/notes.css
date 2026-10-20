@@ -682,10 +682,6 @@
     gap: var(--space-inline-gap);
     min-width: 0;
 }
-.note-markdown-toolbar svg {
-    width: var(--control-icon-size);
-    height: var(--control-icon-size);
-}
 .note-body-textarea {
     flex: 1;
     min-width: 0;

@@ -240,7 +240,11 @@ export function DocumentToolbar({
                                     button.onAction();
                                 }}
                             >
-                                <Icon size={16} aria-hidden="true" />
+                                <Icon
+                                    size="1em"
+                                    className="icon-md"
+                                    aria-hidden="true"
+                                />
                             </Button>
                         );
                     })}

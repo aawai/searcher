@@ -160,7 +160,7 @@ function WorkspaceNoteContent({
                                 event.stopPropagation();
                             }}
                         >
-                            <GripVertical size={14} />
+                            <GripVertical size="1em" className="icon-sm" />
                         </Button>
                     )}
                 onTogglePin={() =>
@@ -236,7 +236,7 @@ function WorkspaceNote(
                         {...(interactive ? attributes : {})}
                         {...(interactive ? listeners : {})}
                     >
-                        <GripVertical size={14} />
+                        <GripVertical size="1em" className="icon-sm" />
                     </Button>
                 }
             />

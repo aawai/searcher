@@ -80,17 +80,50 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   Apps/Notes/Documents 按同一规则关闭当前工作区，普通桌面其他窗口 不因 Escape
   关闭；应用内部 query、整理、文件夹与脏表单仍逐层处理。
 
-### 工作区图标
+### 图标尺寸与工作区语义
 
-| 语义   | Lucide 图标 | 尺寸                                    |
-| ------ | ----------- | --------------------------------------- |
-| 应用   | AppWindow   | Dock 20px；导航、标题栏与总览缩略图16px |
-| 便签   | StickyNote  | 沿用既有尺寸，完整三档收敛见 #210       |
-| 笔记   | NotebookPen | 沿用既有尺寸，完整三档收敛见 #210       |
-| 总览   | LayoutGrid  | 20px                                    |
-| 文件夹 | Folder      | 领域文件夹，不代表应用工作区            |
+| 常规档位 | Token       | 尺寸 | 用途                                       |
+| -------- | ----------- | ---- | ------------------------------------------ |
+| sm       | `--icon-sm` | 14px | 紧凑导航、metadata、徽标、行内提示与小箭头 |
+| md       | `--icon-md` | 16px | 工具栏、菜单、表单及普通控件图标           |
+| lg       | `--icon-lg` | 20px | 顶栏、Dock、独立导航与主操作图标           |
 
-应用入口使用 md16 / lg20 两档，图标变更不改变控件命中区或 accessible name。
+- 普通 Lucide 图标使用 `size="1em"` 与 `icon-sm` / `icon-md` / `icon-lg` CSS
+  utility；utility 同时设置 width/height 并消费三档 token。无需包装组件、 额外
+  DOM 容器或重复的 TypeScript 数值表。没有 size prop 的动态工具栏图标由 对应 CSS
+  owner 的 md token 控制；shadcn 内的 SVG utility 也消费相同 token。
+- 图标尺寸不等于按钮尺寸；控件继续消费原有 control height/touch target。
+  粗指针至少44px的命中区不得随图标缩小。Lucide 使用默认 strokeWidth=2，
+  不为选中勾号单独加粗。
+- `check:ui` 拒绝常规组件 `size={n}` 中非14/16/20的数值，覆盖字面量、
+  数字字符串与条件表达式分支；原生 input.size 的字符列数不是图标尺寸。
+  同时禁止把 CSS `var()` 直接写入 SVG size/width/height 几何属性：
+  Chromium141会将它们解析为异常画布尺寸。必须通过 CSS 类消费 token， 再以 `1em`
+  作为 SVG 属性的兼容回退；品牌 SVG 同样遵守，不改 path/viewBox。
+
+| 工作区语义 | Lucide 图标 |
+| ---------- | ----------- |
+| 应用       | AppWindow   |
+| 便签       | StickyNote  |
+| 笔记       | NotebookPen |
+| 总览       | LayoutGrid  |
+| 文件夹     | Folder      |
+
+Dock 与运行项使用 lg，总览缩略图与窗口图标使用 md；紧凑入口消费 sm。
+文件夹仍是领域文件夹，不代表应用工作区；accessible name 保持不变。
+
+专用尺寸白名单只表达领域图形，不扩充常规控件三档：
+
+- 应用 logo/字形画布由 `launcher.css` 的 `--launcher-webapp-glyph-size`
+  （56px）、`-compact`（48px）、`-large`（64px）拥有；编辑预览由 `apps.css` 的
+  `--app-dialog-preview-icon-size`（38px）拥有。它们是可配置应用 artwork，
+  不是按钮内的控制图标。
+- 空文件夹预览插图由 `launcher.css` 的 `--launcher-folder-empty-icon-size`
+  （22px）与 `-large`（38px）拥有；保持与文件夹预览画布的原有比例。
+- 搜索引擎多色 SVG 的 path/viewBox 保持品牌几何；未知引擎首字母 fallback mark
+  使用 `search.css` 中归属 `.engine-mark` 的 `--engine-mark-size`（23px）。
+- 场景预览是填满容器的320×100插画，场景 SVG 的笔画与坐标不是 Lucide 控件；
+  Checkbox 根控件的16px几何也不是子 SVG 图标，均不受图标 prop 规则误判。
 
 ### Desktop scene decorative layer
 
@@ -258,7 +291,7 @@ owner、state、token、a11y 和 responsive contract。否则保持 feature comp
   标题与正文阅读列居中；Host 保留唯一外框，Live 不再叠加卡片边框。
 - 工具栏按实际 inline-size 的640px边界切换6/13个入口，标题命令始终合并； Portal
   使用实例归属标记，菜单选区、键盘操作与 Escape 不提前保存、不重启 debounce。
-  图标消费 `--control-icon-size`；颜色使用带名称和选中状态的5项 Menu radio。
+  图标消费 `--icon-md`；颜色使用带名称和选中状态的5项 Menu radio。
 - 历史是保留编辑实例的内部子视图；dirty flush 和在途 queue 完成后读取版本，
   失败/409留在编辑。历史按实际容器640px分栏，返回编辑恢复焦点、选区和滚动；
   恢复先 AlertDialog 确认，再进入原 mutation queue，以服务端 DTO

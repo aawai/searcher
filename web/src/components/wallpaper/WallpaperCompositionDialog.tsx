@@ -255,7 +255,7 @@ export function WallpaperCompositionDialog({
                         data-testid="wallpaper-focal-reset-btn"
                         className="gap-1.5"
                     >
-                        <RotateCcw size={14} />
+                        <RotateCcw size="1em" className="icon-sm" />
                         <span>居中重置</span>
                     </Button>
                 </div>
@@ -264,7 +264,7 @@ export function WallpaperCompositionDialog({
                     {/* Desktop 16:9 preview */}
                     <div className="wallpaper-composition-preview-card wallpaper-composition-preview-card--desktop">
                         <div className="wallpaper-composition-preview-card__header">
-                            <Monitor size={15} />
+                            <Monitor size="1em" className="icon-md" />
                             <span>桌面视图 (16:9)</span>
                         </div>
                         <div
@@ -302,7 +302,7 @@ export function WallpaperCompositionDialog({
                     {/* Mobile 9:19.5 preview */}
                     <div className="wallpaper-composition-preview-card wallpaper-composition-preview-card--mobile">
                         <div className="wallpaper-composition-preview-card__header">
-                            <Smartphone size={15} />
+                            <Smartphone size="1em" className="icon-md" />
                             <span>移动端竖屏 (9:19.5)</span>
                         </div>
                         <div

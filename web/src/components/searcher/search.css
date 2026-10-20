@@ -48,8 +48,9 @@
     cursor: pointer;
 }
 .engine-mark {
-    width: 23px;
-    height: 23px;
+    --engine-mark-size: 23px;
+    width: var(--engine-mark-size);
+    height: var(--engine-mark-size);
     display: grid;
     place-items: center;
     background: var(--accent-subtle);

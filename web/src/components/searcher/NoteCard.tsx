@@ -131,7 +131,11 @@ export function NoteCard(
                             aria-label="已置顶"
                             title="已置顶"
                         >
-                            <Pin size={13} aria-hidden="true" />
+                            <Pin
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
                         </span>
                     )}
                 </div>
@@ -157,8 +161,8 @@ export function NoteCard(
                             title={isCompact ? "展开" : "折叠"}
                         >
                             {isCompact
-                                ? <Maximize2 size={14} />
-                                : <Minimize2 size={14} />}
+                                ? <Maximize2 size="1em" className="icon-sm" />
+                                : <Minimize2 size="1em" className="icon-sm" />}
                         </Button>
                     )}
 
@@ -170,7 +174,10 @@ export function NoteCard(
                                 aria-label="更多操作"
                                 title="更多选项"
                             >
-                                <MoreHorizontal size={14} />
+                                <MoreHorizontal
+                                    size="1em"
+                                    className="icon-sm"
+                                />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 sideOffset={8}
@@ -189,10 +196,12 @@ export function NoteCard(
                                         }}
                                     >
                                         <Pin
-                                            size={13}
-                                            className={note.isPinned
-                                                ? "fill-current"
-                                                : ""}
+                                            size="1em"
+                                            className={`icon-sm ${
+                                                note.isPinned
+                                                    ? "fill-current"
+                                                    : ""
+                                            }`}
                                         />
                                         <span>
                                             {note.isPinned
@@ -209,10 +218,12 @@ export function NoteCard(
                                         }}
                                     >
                                         <Bookmark
-                                            size={13}
-                                            className={note.isHomeFixed
-                                                ? "fill-current"
-                                                : ""}
+                                            size="1em"
+                                            className={`icon-sm ${
+                                                note.isHomeFixed
+                                                    ? "fill-current"
+                                                    : ""
+                                            }`}
                                         />
                                         <span>
                                             {note.isHomeFixed
@@ -228,7 +239,10 @@ export function NoteCard(
                                             onOpen();
                                         }}
                                     >
-                                        <ExternalLink size={13} />
+                                        <ExternalLink
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>编辑便签</span>
                                     </DropdownMenuItem>
                                 )}
@@ -246,7 +260,10 @@ export function NoteCard(
                                             onDelete();
                                         }}
                                     >
-                                        <Trash2 size={13} />
+                                        <Trash2
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
                                         <span>移至回收站</span>
                                     </DropdownMenuItem>
                                 )}

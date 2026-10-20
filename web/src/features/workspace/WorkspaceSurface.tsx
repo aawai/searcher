@@ -134,7 +134,7 @@ export function WorkspaceSurface(
                         aria-label={backLabel}
                         onClick={onBack}
                     >
-                        <ArrowLeft size={18} />
+                        <ArrowLeft size="1em" className="icon-lg" />
                     </Button>
                 )}
                 {mobile
@@ -152,7 +152,7 @@ export function WorkspaceSurface(
                     aria-label="收起工作区"
                     onClick={onClose}
                 >
-                    <X size={18} />
+                    <X size="1em" className="icon-lg" />
                 </Button>
             </header>
             <div

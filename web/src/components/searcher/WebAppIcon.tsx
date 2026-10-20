@@ -87,15 +87,15 @@ export function WebAppIcon({
                                 className="launcher-drag-cue"
                                 aria-hidden="true"
                             >
-                                <GripVertical size={14} />
+                                <GripVertical size="1em" className="icon-sm" />
                             </span>
                         )}
                         {showLabel && (
                             <span className="webapp-name">{app.name}</span>
                         )}
                         <ArrowUpRight
-                            className="webapp-arrow"
-                            size={13}
+                            className="webapp-arrow icon-sm"
+                            size="1em"
                             aria-hidden="true"
                         />
                     </button>

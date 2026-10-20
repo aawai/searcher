@@ -4,6 +4,35 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## Issue #210 图标尺寸收敛
+
+- [x] 基于 #203/#216 合并后的 main，在 `.worktrees/issue-210` 隔离实施。
+      普通图标采用 `--icon-sm/md/lg`（14/16/20px）与 `size="1em"` +
+      `icon-sm/md/lg` CSS utility，无新增包装组件或 DOM。 清除
+      `--control-icon-size` 与 LayoutModeSelector 的独立加粗描边。
+- [x] 品牌 SVG 保留路径及颜色；应用预览、启动器图块、文件夹空态和
+      引擎后备标记保留专用 CSS token，语义和尺寸例外见 DESIGN_SYSTEM。 shadcn
+      控件盒尺寸不冒充图标尺寸，也不缩小原有命中区。
+- [x] Chromium 141 真实生产页面：工作区/Dock、设置、笔记编辑器各自 390/768/1440
+      × light/dark，共18张截图逐张审阅；横向 overflow 均0， 普通 glyph
+      仅14/16/20px，笔记工具栏16px；390px真实粗指针下
+      工具栏按钮均至少44px。截图：
+      `/tmp/issue210-final141-{workspace,settings,editor}-{390,768,1440}-{light,dark}.png`。
+- [x] 初次完整 E2E 为33 passed/55 failed，定位为 Chromium 141 不支持 SVG
+      width/height 属性直接引用 CSS var，导致图标按大画布布局。 改用 CSS utility
+      控制几何，并增加 guard 拒绝这类属性。
+      同时覆盖非三档数字、数字字符串和条件表达式；guard模块105条通过。
+      便签实页补查还发现标题/更多菜单未显式设尺寸，已补齐相同约定。
+- [x] CSS 兼容性修正后完整生产 E2E 一次运行85 tests / 300 steps全部通过。
+      其后仅补齐便签菜单图标，相关路径另行定向复验，不冒充相同产物的完整套件结果。
+      领域基线719 tests / 51
+      steps通过；前端typecheck、受影响源码lint及format通过， `check:ui`
+      ownership 228 files / visual 155 files均0 violations。
+- [x] 最终重建后便签编辑/格式菜单 E2E 2 tests / 8 steps通过； Chromium 141
+      的390px粗指针实页所有便签工具栏图标16px、按钮44px， 编辑器就绪截图
+      `/tmp/omp-sshots-15adbd083d59d0db.png`。 最终 bundle 初始静态 JS
+      gzip283970 B，全部预算与依赖边界门禁通过，未提高预算。
+
 ## Issues #203 / #216 术语、冲突与便签实时连接
 
 - [x] 在 `.worktrees/issues-203-216` 基于安静的 main 实施；开始时无打开的 PR。

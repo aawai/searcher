@@ -1086,7 +1086,7 @@ export function DocumentEditor({
                                 aria-pressed={viewMode === "continuous"}
                                 onClick={() => handleViewChange("continuous")}
                             >
-                                <Eye size={13} className="mr-1" />
+                                <Eye size="1em" className="icon-sm mr-1" />
                                 <span>编辑</span>
                             </Button>
                             <Button
@@ -1101,7 +1101,7 @@ export function DocumentEditor({
                                 disabled={!paperSettings}
                                 onClick={() => handleViewChange("page")}
                             >
-                                <File size={13} className="mr-1" />
+                                <File size="1em" className="icon-sm mr-1" />
                                 <span>分页</span>
                             </Button>
                             <Button
@@ -1115,7 +1115,7 @@ export function DocumentEditor({
                                 aria-pressed={viewMode === "source"}
                                 onClick={() => handleViewChange("source")}
                             >
-                                <Code size={13} className="mr-1" />
+                                <Code size="1em" className="icon-sm mr-1" />
                                 <span>Markdown 源码</span>
                             </Button>
                         </div>
@@ -1141,8 +1141,8 @@ export function DocumentEditor({
                         >
                             {snapshot.saveStatus === "saving" && (
                                 <RefreshCw
-                                    size={11}
-                                    className="animate-spin mr-1"
+                                    size="1em"
+                                    className="icon-sm animate-spin mr-1"
                                 />
                             )}
                             {saveStatusLabel}
@@ -1170,7 +1170,7 @@ export function DocumentEditor({
                             disabled={viewMode === "source"}
                             onClick={() => setShowOutline(!showOutline)}
                         >
-                            <BookOpen size={13} className="mr-1" />
+                            <BookOpen size="1em" className="icon-sm mr-1" />
                             <span>大纲</span>
                         </Button>
                         <Button
@@ -1181,7 +1181,7 @@ export function DocumentEditor({
                             title="历史"
                             onClick={() => setHistoryOpen(true)}
                         >
-                            <History size={13} className="mr-1" />
+                            <History size="1em" className="icon-sm mr-1" />
                             <span>历史</span>
                         </Button>
                         <DropdownMenu>
@@ -1195,7 +1195,8 @@ export function DocumentEditor({
                                         title="更多笔记操作"
                                     >
                                         <MoreHorizontal
-                                            size={16}
+                                            size="1em"
+                                            className="icon-md"
                                             aria-hidden="true"
                                         />
                                     </Button>
@@ -1211,7 +1212,7 @@ export function DocumentEditor({
                                     onClick={() => setPaperOpen(true)}
                                 >
                                     <Settings
-                                        className="size-4 mr-2"
+                                        className="size-[var(--icon-md)] mr-2"
                                         aria-hidden="true"
                                     />
                                     <span>纸张设置</span>
@@ -1226,7 +1227,7 @@ export function DocumentEditor({
                                     }}
                                 >
                                     <Printer
-                                        className="size-4 mr-2"
+                                        className="size-[var(--icon-md)] mr-2"
                                         aria-hidden="true"
                                     />
                                     <span>打印或另存为 PDF</span>
@@ -1237,13 +1238,13 @@ export function DocumentEditor({
                                     {copied
                                         ? (
                                             <Check
-                                                className="size-4 mr-2"
+                                                className="size-[var(--icon-md)] mr-2"
                                                 aria-hidden="true"
                                             />
                                         )
                                         : (
                                             <Copy
-                                                className="size-4 mr-2"
+                                                className="size-[var(--icon-md)] mr-2"
                                                 aria-hidden="true"
                                             />
                                         )}
@@ -1253,7 +1254,7 @@ export function DocumentEditor({
                                     onClick={handleExportMarkdown}
                                 >
                                     <Download
-                                        className="size-4 mr-2"
+                                        className="size-[var(--icon-md)] mr-2"
                                         aria-hidden="true"
                                     />
                                     <span>导出 Markdown 文件</span>

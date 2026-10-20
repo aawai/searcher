@@ -791,7 +791,7 @@ export function SettingsPage() {
                                         ? "page"
                                         : undefined}
                                 >
-                                    <Icon size={18} />
+                                    <Icon size="1em" className="icon-md" />
                                     <span>{tabs[id].label}</span>
                                 </button>
                             );
@@ -1046,7 +1046,10 @@ export function SettingsPage() {
                                             }}
                                             title="恢复壁纸与效果默认值"
                                         >
-                                            <RotateCcw size={13} />
+                                            <RotateCcw
+                                                size="1em"
+                                                className="icon-sm"
+                                            />
                                             <span>恢复默认</span>
                                         </Button>
                                     }
@@ -1101,7 +1104,10 @@ export function SettingsPage() {
                                                     aria-label="上传本地图片"
                                                     data-testid="wallpaper-upload-btn"
                                                 >
-                                                    <Upload size={16} />
+                                                    <Upload
+                                                        size="1em"
+                                                        className="icon-md"
+                                                    />
                                                 </Button>
                                                 <Input
                                                     id="wallpaper-input"
@@ -1218,7 +1224,8 @@ export function SettingsPage() {
                                                                 data-testid="wallpaper-current-adjust-focal-btn"
                                                             >
                                                                 <SlidersHorizontal
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     调整当前壁纸构图
@@ -1233,7 +1240,8 @@ export function SettingsPage() {
                                                                 data-testid="wallpaper-clear-btn"
                                                             >
                                                                 <RotateCcw
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     停止使用
@@ -1308,8 +1316,8 @@ export function SettingsPage() {
                                                                                             data-testid="wallpaper-current-badge"
                                                                                         >
                                                                                             <Check
-                                                                                                size={12}
-                                                                                                className="shrink-0"
+                                                                                                size="1em"
+                                                                                                className="icon-sm shrink-0"
                                                                                             />
                                                                                             <span>
                                                                                                 当前壁纸
@@ -1328,7 +1336,8 @@ export function SettingsPage() {
                                                                                         data-testid={`wallpaper-menu-trigger-${record.id}`}
                                                                                     >
                                                                                         <MoreVertical
-                                                                                            size={16}
+                                                                                            size="1em"
+                                                                                            className="icon-md"
                                                                                         />
                                                                                     </DropdownMenuTrigger>
                                                                                     <DropdownMenuContent>

@@ -74,13 +74,16 @@ function CodeBlock({
                     {copied
                         ? (
                             <>
-                                <Check size={12} className="text-accent" />
+                                <Check
+                                    size="1em"
+                                    className="icon-sm text-accent"
+                                />
                                 <span>已复制</span>
                             </>
                         )
                         : (
                             <>
-                                <Copy size={12} />
+                                <Copy size="1em" className="icon-sm" />
                                 <span>复制</span>
                             </>
                         )}
@@ -159,7 +162,7 @@ export function SearcherAssistantMessage() {
         >
             <header className="ask-assistant-header">
                 <div className="flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-accent" />
+                    <Sparkles size="1em" className="icon-sm text-accent" />
                     <span className="font-semibold text-xs tracking-wide">
                         AI
                     </span>
@@ -170,7 +173,7 @@ export function SearcherAssistantMessage() {
             {allSources.length > 0 && (
                 <div className="ask-sources-section mb-3">
                     <div className="text-xs font-medium text-muted flex items-center gap-1.5 mb-1.5">
-                        <Search size={13} className="text-accent" />
+                        <Search size="1em" className="icon-sm text-accent" />
                         <span>搜索参考来源 ({allSources.length})</span>
                     </div>
                     <div className="ask-sources-grid">
@@ -192,15 +195,15 @@ export function SearcherAssistantMessage() {
                                                         笔记
                                                     </span>
                                                     <ArrowRight
-                                                        size={11}
-                                                        className="ask-source-card__icon"
+                                                        size="1em"
+                                                        className="icon-sm ask-source-card__icon"
                                                     />
                                                 </>
                                             )
                                             : (
                                                 <ExternalLink
-                                                    size={11}
-                                                    className="ask-source-card__icon"
+                                                    size="1em"
+                                                    className="icon-sm ask-source-card__icon"
                                                 />
                                             )}
                                     </div>
@@ -261,14 +264,17 @@ export function SearcherAssistantMessage() {
                         aria-expanded={toolsExpanded}
                     >
                         <div className="flex items-center gap-2">
-                            <Wrench size={13} className="text-accent" />
+                            <Wrench
+                                size="1em"
+                                className="icon-sm text-accent"
+                            />
                             <span className="text-xs font-medium">
                                 工具调用与检索 ({toolCallParts.length})
                             </span>
                         </div>
                         <ChevronDown
-                            size={14}
-                            className={`transform transition-transform ${
+                            size="1em"
+                            className={`icon-sm transform transition-transform ${
                                 toolsExpanded ? "rotate-180" : ""
                             }`}
                         />
@@ -291,7 +297,10 @@ export function SearcherAssistantMessage() {
                                     >
                                         <div className="flex items-center justify-between text-xs mb-1">
                                             <span className="font-mono font-semibold text-accent flex items-center gap-1">
-                                                <Terminal size={12} />
+                                                <Terminal
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                />
                                                 {call.toolName === "webSearch"
                                                     ? "网页搜索 (SearXNG)"
                                                     : call.toolName === "notes"
@@ -386,8 +395,8 @@ export function SearcherAssistantMessage() {
                 >
                     <div className="ask-interrupted-banner__content">
                         <AlertCircle
-                            size={16}
-                            className={`ask-interrupted-banner__icon ${
+                            size="1em"
+                            className={`icon-md ask-interrupted-banner__icon ${
                                 isFailed ? "is-failed" : "is-interrupted"
                             }`}
                         />
@@ -413,7 +422,7 @@ export function SearcherAssistantMessage() {
                                 aria-label="重试生成"
                                 title="重试生成"
                             >
-                                <RotateCcw size={14} />
+                                <RotateCcw size="1em" className="icon-sm" />
                                 重试
                             </Button>
                         </ActionBarPrimitive.Reload>
@@ -434,7 +443,7 @@ export function SearcherAssistantMessage() {
                             className="ask-branch-pager__btn h-6 w-6"
                             aria-label="上一个回答版本"
                         >
-                            <ChevronLeft size={13} />
+                            <ChevronLeft size="1em" className="icon-sm" />
                         </Button>
                     </BranchPickerPrimitive.Previous>
                     <span className="ask-branch-pager__indicator">
@@ -448,7 +457,7 @@ export function SearcherAssistantMessage() {
                             className="ask-branch-pager__btn h-6 w-6"
                             aria-label="下一个回答版本"
                         >
-                            <ChevronRight size={13} />
+                            <ChevronRight size="1em" className="icon-sm" />
                         </Button>
                     </BranchPickerPrimitive.Next>
                 </BranchPickerPrimitive.Root>
@@ -463,8 +472,13 @@ export function SearcherAssistantMessage() {
                             title={copied ? "已复制全文" : "复制全文"}
                         >
                             {copied
-                                ? <Check size={13} className="text-accent" />
-                                : <Copy size={13} />}
+                                ? (
+                                    <Check
+                                        size="1em"
+                                        className="icon-sm text-accent"
+                                    />
+                                )
+                                : <Copy size="1em" className="icon-sm" />}
                         </Button>
                     </ActionBarPrimitive.Copy>
 
@@ -477,7 +491,7 @@ export function SearcherAssistantMessage() {
                                 aria-label="重新生成"
                                 title="重新生成"
                             >
-                                <RotateCcw size={13} />
+                                <RotateCcw size="1em" className="icon-sm" />
                             </Button>
                         </ActionBarPrimitive.Reload>
                     )}
@@ -491,7 +505,7 @@ export function SearcherAssistantMessage() {
                             aria-label="消息详情"
                             title="消息详情 (Token 与运行时)"
                         >
-                            <Info size={13} />
+                            <Info size="1em" className="icon-sm" />
                         </Button>
                     )}
                 </ActionBarPrimitive.Root>

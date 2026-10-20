@@ -102,7 +102,11 @@ function HomeNote({
                                     event.stopPropagation();
                                 }}
                             >
-                                <GripVertical size={14} aria-hidden="true" />
+                                <GripVertical
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
                             </Button>
                         )
                         : undefined}

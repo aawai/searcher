@@ -520,7 +520,10 @@ export function AdminPage() {
                     {userError && (
                         <StatusBanner tone="error">
                             <div className="flex items-center gap-2">
-                                <AlertCircle size={16} className="shrink-0" />
+                                <AlertCircle
+                                    size="1em"
+                                    className="icon-md shrink-0"
+                                />
                                 <span>{userError}</span>
                             </div>
                         </StatusBanner>
@@ -541,8 +544,8 @@ export function AdminPage() {
                         >
                             <div className="admin-search-input-wrapper">
                                 <Search
-                                    size={16}
-                                    className="admin-search-icon"
+                                    size="1em"
+                                    className="icon-md admin-search-icon"
                                     aria-hidden="true"
                                 />
                                 <Input
@@ -581,10 +584,10 @@ export function AdminPage() {
                                 title="刷新用户列表"
                             >
                                 <RefreshCw
-                                    size={15}
-                                    className={usersLoading
-                                        ? "animate-spin"
-                                        : ""}
+                                    size="1em"
+                                    className={`icon-md ${
+                                        usersLoading ? "animate-spin" : ""
+                                    }`}
                                 />
                                 <span>{usersLoading ? "刷新中…" : "刷新"}</span>
                             </Button>
@@ -598,7 +601,7 @@ export function AdminPage() {
                                     setCreateModalOpen(true);
                                 }}
                             >
-                                <UserPlus size={16} />
+                                <UserPlus size="1em" className="icon-md" />
                                 <span>添加新用户</span>
                             </Button>
                         </ActionGroup>
@@ -766,7 +769,8 @@ export function AdminPage() {
                                                                 title="重置用户密码"
                                                             >
                                                                 <KeyRound
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     重置密码
@@ -790,12 +794,14 @@ export function AdminPage() {
                                                                     {u.disabled
                                                                         ? (
                                                                             <UserCheck
-                                                                                size={14}
+                                                                                size="1em"
+                                                                                className="icon-sm"
                                                                             />
                                                                         )
                                                                         : (
                                                                             <UserX
-                                                                                size={14}
+                                                                                size="1em"
+                                                                                className="icon-sm"
                                                                             />
                                                                         )}
                                                                     <span>
@@ -829,7 +835,8 @@ export function AdminPage() {
                                                                     title="删除用户"
                                                                 >
                                                                     <Trash2
-                                                                        size={14}
+                                                                        size="1em"
+                                                                        className="icon-sm"
                                                                     />
                                                                     <span>
                                                                         删除
@@ -869,7 +876,8 @@ export function AdminPage() {
                                                                     }
                                                                 >
                                                                     <MoreHorizontal
-                                                                        size={14}
+                                                                        size="1em"
+                                                                        className="icon-sm"
                                                                     />
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent
@@ -890,8 +898,8 @@ export function AdminPage() {
                                                                         }}
                                                                     >
                                                                         <KeyRound
-                                                                            size={14}
-                                                                            className="mr-2"
+                                                                            size="1em"
+                                                                            className="icon-sm mr-2"
                                                                         />
                                                                         <span>
                                                                             重置密码
@@ -910,14 +918,14 @@ export function AdminPage() {
                                                                                 {u.disabled
                                                                                     ? (
                                                                                         <UserCheck
-                                                                                            size={14}
-                                                                                            className="mr-2"
+                                                                                            size="1em"
+                                                                                            className="icon-sm mr-2"
                                                                                         />
                                                                                     )
                                                                                     : (
                                                                                         <UserX
-                                                                                            size={14}
-                                                                                            className="mr-2"
+                                                                                            size="1em"
+                                                                                            className="icon-sm mr-2"
                                                                                         />
                                                                                     )}
                                                                                 <span>
@@ -951,8 +959,8 @@ export function AdminPage() {
                                                                                 }}
                                                                             >
                                                                                 <Trash2
-                                                                                    size={14}
-                                                                                    className="mr-2"
+                                                                                    size="1em"
+                                                                                    className="icon-sm mr-2"
                                                                                 />
                                                                                 <span>
                                                                                     删除用户
@@ -984,7 +992,10 @@ export function AdminPage() {
                                             onClick={() =>
                                                 void loadUsers(userPage - 1)}
                                         >
-                                            <ChevronLeft size={16} />
+                                            <ChevronLeft
+                                                size="1em"
+                                                className="icon-md"
+                                            />
                                             <span>上一页</span>
                                         </Button>
                                         <Button
@@ -996,7 +1007,10 @@ export function AdminPage() {
                                                 void loadUsers(userPage + 1)}
                                         >
                                             <span>下一页</span>
-                                            <ChevronRight size={16} />
+                                            <ChevronRight
+                                                size="1em"
+                                                className="icon-md"
+                                            />
                                         </Button>
                                     </ActionGroup>
                                 </div>
@@ -1016,7 +1030,10 @@ export function AdminPage() {
                     {auditError && (
                         <StatusBanner tone="error">
                             <div className="flex items-center gap-2">
-                                <AlertCircle size={16} className="shrink-0" />
+                                <AlertCircle
+                                    size="1em"
+                                    className="icon-md shrink-0"
+                                />
                                 <span>{auditError}</span>
                             </div>
                         </StatusBanner>
@@ -1081,10 +1098,10 @@ export function AdminPage() {
                                 title="刷新审计日志"
                             >
                                 <RefreshCw
-                                    size={14}
-                                    className={auditLoading
-                                        ? "animate-spin"
-                                        : ""}
+                                    size="1em"
+                                    className={`icon-sm ${
+                                        auditLoading ? "animate-spin" : ""
+                                    }`}
                                 />
                                 <span>{auditLoading ? "刷新中…" : "刷新"}</span>
                             </Button>
@@ -1159,7 +1176,10 @@ export function AdminPage() {
                                                 <TableRow key={log.id}>
                                                     <TableCell className="text-muted text-sm whitespace-nowrap">
                                                         <div className="flex items-center gap-1.5">
-                                                            <Clock size={14} />
+                                                            <Clock
+                                                                size="1em"
+                                                                className="icon-sm"
+                                                            />
                                                             <span>
                                                                 {formatTime(
                                                                     log.createdAt,
@@ -1247,7 +1267,10 @@ export function AdminPage() {
                                                     auditPage - 1,
                                                 )}
                                         >
-                                            <ChevronLeft size={16} />
+                                            <ChevronLeft
+                                                size="1em"
+                                                className="icon-md"
+                                            />
                                             <span>上一页</span>
                                         </Button>
                                         <Button
@@ -1262,7 +1285,10 @@ export function AdminPage() {
                                                 )}
                                         >
                                             <span>下一页</span>
-                                            <ChevronRight size={16} />
+                                            <ChevronRight
+                                                size="1em"
+                                                className="icon-md"
+                                            />
                                         </Button>
                                     </ActionGroup>
                                 </div>
@@ -1292,7 +1318,10 @@ export function AdminPage() {
                 >
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <UserPlus size={20} className="text-accent" />
+                            <UserPlus
+                                size="1em"
+                                className="icon-lg text-accent"
+                            />
                             <span>创建新用户</span>
                         </DialogTitle>
                         <DialogDescription>
@@ -1386,8 +1415,8 @@ export function AdminPage() {
                             <StatusBanner tone="error">
                                 <div className="flex items-center gap-2">
                                     <AlertCircle
-                                        size={16}
-                                        className="shrink-0"
+                                        size="1em"
+                                        className="icon-md shrink-0"
                                     />
                                     <span>{createError}</span>
                                 </div>
@@ -1411,7 +1440,7 @@ export function AdminPage() {
                                     !newDisplayName ||
                                     !newPassword}
                             >
-                                <UserPlus size={16} />
+                                <UserPlus size="1em" className="icon-md" />
                                 <span>
                                     {createBusy ? "正在创建…" : "确认创建"}
                                 </span>
@@ -1434,7 +1463,10 @@ export function AdminPage() {
                 >
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <KeyRound size={20} className="text-accent" />
+                            <KeyRound
+                                size="1em"
+                                className="icon-lg text-accent"
+                            />
                             <span>
                                 重置密码: @{resetModalUser?.username}
                             </span>
@@ -1475,8 +1507,8 @@ export function AdminPage() {
                             <StatusBanner tone="error">
                                 <div className="flex items-center gap-2">
                                     <AlertCircle
-                                        size={16}
-                                        className="shrink-0"
+                                        size="1em"
+                                        className="icon-md shrink-0"
                                     />
                                     <span>{resetError}</span>
                                 </div>
@@ -1497,7 +1529,7 @@ export function AdminPage() {
                                 type="submit"
                                 disabled={resetBusy || !resetNewPassword}
                             >
-                                <KeyRound size={16} />
+                                <KeyRound size="1em" className="icon-md" />
                                 <span>
                                     {resetBusy ? "正在重置…" : "确认重置"}
                                 </span>
@@ -1520,7 +1552,7 @@ export function AdminPage() {
                 >
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-destructive">
-                            <Trash2 size={20} />
+                            <Trash2 size="1em" className="icon-lg" />
                             <span>确认删除用户</span>
                         </DialogTitle>
                         <DialogDescription>
@@ -1537,8 +1569,8 @@ export function AdminPage() {
                     >
                         <div className="admin-modal-delete-warning">
                             <AlertCircle
-                                size={18}
-                                className="text-destructive shrink-0 mt-0.5"
+                                size="1em"
+                                className="icon-md text-destructive shrink-0 mt-0.5"
                             />
                             <div>
                                 删除用户后，该用户的会话将被立即强制终止，其创建的便签、应用及偏好将不可再被访问。此操作不可撤销。
@@ -1571,8 +1603,8 @@ export function AdminPage() {
                             <StatusBanner tone="error">
                                 <div className="flex items-center gap-2">
                                     <AlertCircle
-                                        size={16}
-                                        className="shrink-0"
+                                        size="1em"
+                                        className="icon-md shrink-0"
                                     />
                                     <span>{deleteError}</span>
                                 </div>
@@ -1597,7 +1629,7 @@ export function AdminPage() {
                                             deleteModalUser.username &&
                                         deleteConfirmText !== "CONFIRM")}
                             >
-                                <Trash2 size={16} />
+                                <Trash2 size="1em" className="icon-md" />
                                 <span>
                                     {deleteBusy ? "正在删除…" : "确认删除用户"}
                                 </span>

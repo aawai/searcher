@@ -109,7 +109,7 @@ export function ConversationHeader({
                     onClick={onOpenDrawer}
                     aria-label="打开历史对话"
                 >
-                    <Menu size={16} />
+                    <Menu size="1em" className="icon-md" />
                 </Button>
 
                 <div className="ask-header__title-row">
@@ -124,8 +124,8 @@ export function ConversationHeader({
                             <span>{title}</span>
                             {conversation && (
                                 <Pencil
-                                    size={12}
-                                    className="ask-header__title-edit-icon"
+                                    size="1em"
+                                    className="icon-sm ask-header__title-edit-icon"
                                 />
                             )}
                         </Button>
@@ -136,7 +136,7 @@ export function ConversationHeader({
                             className="ask-header__temp-badge"
                             title="临时对话：切换或离开后不会保存"
                         >
-                            <ShieldAlert size={12} />
+                            <ShieldAlert size="1em" className="icon-sm" />
                             <span>临时对话</span>
                         </span>
                     )}
@@ -155,7 +155,7 @@ export function ConversationHeader({
                         aria-label={`会话内搜索 (${searchHint})`}
                         title={`会话内搜索 (${searchHint})`}
                     >
-                        <Search size={16} />
+                        <Search size="1em" className="icon-md" />
                     </Button>
                 )}
 
@@ -173,14 +173,17 @@ export function ConversationHeader({
                             />
                         }
                     >
-                        <MoreHorizontal size={16} />
+                        <MoreHorizontal size="1em" className="icon-md" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent sideOffset={6} aria-label="对话菜单">
                         {conversation && (
                             <DropdownMenuItem
                                 onClick={() => setRenameOpen(true)}
                             >
-                                <Pencil size={14} className="mr-2" />
+                                <Pencil
+                                    size="1em"
+                                    className="icon-sm mr-2"
+                                />
                                 <span>重命名</span>
                             </DropdownMenuItem>
                         )}
@@ -188,13 +191,16 @@ export function ConversationHeader({
                         <DropdownMenuItem
                             onClick={() => setInstructionOpen(true)}
                         >
-                            <Sparkles size={14} className="mr-2" />
+                            <Sparkles size="1em" className="icon-sm mr-2" />
                             <span>系统指令...</span>
                         </DropdownMenuItem>
 
                         {messages.length > 0 && (
                             <DropdownMenuItem onClick={onOpenSearch}>
-                                <Search size={14} className="mr-2" />
+                                <Search
+                                    size="1em"
+                                    className="icon-sm mr-2"
+                                />
                                 <span>会话搜索 ({searchHint})</span>
                             </DropdownMenuItem>
                         )}
@@ -202,7 +208,10 @@ export function ConversationHeader({
                         <DropdownMenuItem
                             onClick={() => void onToggleHistory(isTemporary)}
                         >
-                            <ShieldAlert size={14} className="mr-2" />
+                            <ShieldAlert
+                                size="1em"
+                                className="icon-sm mr-2"
+                            />
                             <span>
                                 {isTemporary ? "保存此对话" : "转为临时对话"}
                             </span>
@@ -213,14 +222,20 @@ export function ConversationHeader({
                                 <DropdownMenuItem
                                     onClick={() => handleExport("markdown")}
                                 >
-                                    <FileText size={14} className="mr-2" />
+                                    <FileText
+                                        size="1em"
+                                        className="icon-sm mr-2"
+                                    />
                                     <span>导出为 Markdown</span>
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem
                                     onClick={() => handleExport("json")}
                                 >
-                                    <FileCode size={14} className="mr-2" />
+                                    <FileCode
+                                        size="1em"
+                                        className="icon-sm mr-2"
+                                    />
                                     <span>导出为 JSON</span>
                                 </DropdownMenuItem>
                             </>
@@ -231,7 +246,10 @@ export function ConversationHeader({
                                 onClick={() => void onDelete()}
                                 className="text-destructive focus:text-destructive"
                             >
-                                <Trash2 size={14} className="mr-2" />
+                                <Trash2
+                                    size="1em"
+                                    className="icon-sm mr-2"
+                                />
                                 <span>删除对话</span>
                             </DropdownMenuItem>
                         )}

@@ -267,7 +267,7 @@ function FolderView({
                             className="launcher-folder-drop-badge"
                             aria-hidden="true"
                         >
-                            <FolderInput size={13} />
+                            <FolderInput size="1em" className="icon-sm" />
                             <span>移入文件夹</span>
                         </div>
                     )}
@@ -285,7 +285,11 @@ function FolderView({
                         }`}
                     >
                         {preview.length === 0 && (
-                            <Folder size={large ? 38 : 22} aria-hidden="true" />
+                            <Folder
+                                size="1em"
+                                className="launcher-folder-empty-icon"
+                                aria-hidden="true"
+                            />
                         )}
                         {preview.map((app) => {
                             const icon = (
@@ -344,7 +348,7 @@ function FolderView({
                     </span>
                     {managing && (
                         <span className="launcher-drag-cue" aria-hidden="true">
-                            <GripVertical size={14} />
+                            <GripVertical size="1em" className="icon-sm" />
                         </span>
                     )}
                 </div>
@@ -872,7 +876,7 @@ export function WebAppLauncher({
                                 className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
                                 aria-label="返回应用列表"
                             >
-                                <ArrowLeft size={14} />
+                                <ArrowLeft size="1em" className="icon-sm" />
                                 <span>返回</span>
                             </Button>
                             <span aria-hidden="true">/</span>

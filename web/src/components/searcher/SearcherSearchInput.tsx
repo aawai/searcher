@@ -540,8 +540,8 @@ export function SearcherSearchInput(
                         aria-label={mode === "ai" ? "发送问题" : "搜索"}
                     >
                         {mode === "ai"
-                            ? <ArrowUpRight size={22} />
-                            : <Search size={22} />}
+                            ? <ArrowUpRight size="1em" className="icon-lg" />
+                            : <Search size="1em" className="icon-lg" />}
                     </Button>
                 </div>
             </form>
@@ -593,32 +593,32 @@ export function SearcherSearchInput(
                                                 ? (
                                                     <EngineIcon
                                                         id={item.engine}
-                                                        size={16}
+                                                        className="icon-md"
                                                     />
                                                 )
                                                 : (
                                                     <Sparkles
-                                                        size={16}
-                                                        className="text-accent"
+                                                        size="1em"
+                                                        className="icon-md text-accent"
                                                     />
                                                 )
                                         )}
                                         {item.source === "history" && (
                                             <History
-                                                size={16}
-                                                className="text-muted"
+                                                size="1em"
+                                                className="icon-md text-muted"
                                             />
                                         )}
                                         {item.source === "webapp" && (
                                             <Globe
-                                                size={16}
-                                                className="text-accent"
+                                                size="1em"
+                                                className="icon-md text-accent"
                                             />
                                         )}
                                         {item.source === "engine" && (
                                             <Search
-                                                size={16}
-                                                className="text-muted"
+                                                size="1em"
+                                                className="icon-md text-muted"
                                             />
                                         )}
                                         <span className="suggestion-text">

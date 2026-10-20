@@ -22,8 +22,8 @@ export function WorkspaceSearch({
     return (
         <div ref={search} className="workspace-search-wrap">
             <Search
-                size={16}
-                className="workspace-search-icon"
+                size="1em"
+                className="icon-md workspace-search-icon"
                 aria-hidden="true"
             />
             <Input
@@ -49,7 +49,7 @@ export function WorkspaceSearch({
                     }}
                     aria-label="清除搜索"
                 >
-                    <X size={14} />
+                    <X size="1em" className="icon-sm" />
                 </Button>
             )}
         </div>

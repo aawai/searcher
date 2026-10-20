@@ -264,7 +264,7 @@ export function UndoToast(
                     aria-label="关闭撤销提示"
                     onClick={onClose}
                 >
-                    <X size={16} />
+                    <X size="1em" className="icon-md" />
                 </Button>
             )}
         </div>

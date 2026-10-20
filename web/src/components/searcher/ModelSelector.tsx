@@ -33,7 +33,7 @@ export function ModelSelector(
                 <span className="truncate max-w-[140px]">
                     {current?.label ?? "选择模型"}
                 </span>
-                <ChevronDown size={13} className="shrink-0" />
+                <ChevronDown size="1em" className="icon-sm shrink-0" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 sideOffset={9}

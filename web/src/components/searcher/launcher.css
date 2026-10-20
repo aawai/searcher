@@ -11,6 +11,11 @@
     --font-launcher-sparse: 22px;
     --font-launcher-medium: 20px;
     --font-launcher-folder-glyph: 21px;
+    --launcher-webapp-glyph-size: 56px;
+    --launcher-webapp-glyph-size-compact: 48px;
+    --launcher-webapp-glyph-size-large: 64px;
+    --launcher-folder-empty-icon-size: 22px;
+    --launcher-folder-empty-icon-size-large: 38px;
     --font-launcher-micro: 9px;
     --font-launcher-badge: 10px;
     --font-app-ai-counter: 11px;
@@ -49,8 +54,8 @@
 .webapp-glyph {
     display: grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
+    width: var(--launcher-webapp-glyph-size);
+    height: var(--launcher-webapp-glyph-size);
     background: var(--surface);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-launcher-glyph);
@@ -67,12 +72,12 @@
     padding: var(--space-launcher-glyph-padding);
 }
 .webapp-icon--compact .webapp-glyph {
-    width: 48px;
-    height: 48px;
+    width: var(--launcher-webapp-glyph-size-compact);
+    height: var(--launcher-webapp-glyph-size-compact);
 }
 .webapp-icon--large .webapp-glyph {
-    width: 64px;
-    height: 64px;
+    width: var(--launcher-webapp-glyph-size-large);
+    height: var(--launcher-webapp-glyph-size-large);
 }
 .webapp-name {
     font-size: var(--font-caption-size);
@@ -459,6 +464,14 @@
 }
 .launcher-folder-preview--empty {
     color: var(--muted);
+}
+.launcher-folder-empty-icon {
+    width: var(--launcher-folder-empty-icon-size);
+    height: var(--launcher-folder-empty-icon-size);
+}
+.launcher-folder-item--large .launcher-folder-empty-icon {
+    width: var(--launcher-folder-empty-icon-size-large);
+    height: var(--launcher-folder-empty-icon-size-large);
 }
 .launcher-folder-mini {
     position: relative;

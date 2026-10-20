@@ -233,8 +233,10 @@ export function TrashPage() {
                         disabled={loading}
                     >
                         <RefreshCw
-                            size={14}
-                            className={loading ? "animate-spin" : ""}
+                            size="1em"
+                            className={`icon-sm ${
+                                loading ? "animate-spin" : ""
+                            }`}
                         />
                         <span>{loading ? "刷新中…" : "刷新"}</span>
                     </Button>
@@ -336,7 +338,8 @@ export function TrashPage() {
                                                                 title="恢复"
                                                             >
                                                                 <RotateCcw
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     恢复
@@ -362,7 +365,8 @@ export function TrashPage() {
                                                                 title="彻底删除"
                                                             >
                                                                 <Trash2
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     彻底删除
@@ -407,7 +411,10 @@ export function TrashPage() {
                                                     disabled={actionId ===
                                                             item.id || deleting}
                                                 >
-                                                    <RotateCcw size={14} />
+                                                    <RotateCcw
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                    />
                                                     <span>恢复</span>
                                                 </Button>
                                                 <Button
@@ -423,7 +430,10 @@ export function TrashPage() {
                                                     disabled={actionId ===
                                                             item.id || deleting}
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                    />
                                                     <span>彻底删除</span>
                                                 </Button>
                                             </div>
@@ -510,7 +520,8 @@ export function TrashPage() {
                                                                 title="恢复"
                                                             >
                                                                 <RotateCcw
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     恢复
@@ -539,7 +550,8 @@ export function TrashPage() {
                                                                 title="彻底删除"
                                                             >
                                                                 <Trash2
-                                                                    size={14}
+                                                                    size="1em"
+                                                                    className="icon-sm"
                                                                 />
                                                                 <span>
                                                                     彻底删除
@@ -585,7 +597,10 @@ export function TrashPage() {
                                                     disabled={actionId ===
                                                             note.id || deleting}
                                                 >
-                                                    <RotateCcw size={14} />
+                                                    <RotateCcw
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                    />
                                                     <span>恢复</span>
                                                 </Button>
                                                 <Button
@@ -603,7 +618,10 @@ export function TrashPage() {
                                                     disabled={actionId ===
                                                             note.id || deleting}
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                    />
                                                     <span>彻底删除</span>
                                                 </Button>
                                             </div>

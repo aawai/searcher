@@ -46,7 +46,10 @@ export function SystemInstructionDialog({
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base">
-                        <Sparkles size={18} className="text-accent" />
+                        <Sparkles
+                            size="1em"
+                            className="icon-md text-accent"
+                        />
                         <span>会话系统指令 (System Instruction)</span>
                     </DialogTitle>
                     <DialogDescription>

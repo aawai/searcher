@@ -129,10 +129,15 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                             onClick={() => onOpen(item.kind)}
                         >
                             {item.kind === "apps"
-                                ? <AppWindow size={20} />
+                                ? <AppWindow size="1em" className="icon-lg" />
                                 : item.kind === "notes"
-                                ? <StickyNote size={18} />
-                                : <NotebookPen size={18} />}
+                                ? <StickyNote size="1em" className="icon-lg" />
+                                : (
+                                    <NotebookPen
+                                        size="1em"
+                                        className="icon-lg"
+                                    />
+                                )}
                             <span>{item.label}</span>
                             {isOpen && (
                                 <span
@@ -153,7 +158,7 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                         aria-pressed={overviewOpen}
                         onClick={onOverview}
                     >
-                        <LayoutGrid size={20} />
+                        <LayoutGrid size="1em" className="icon-lg" />
                         <span>总览</span>
                     </Button>
                 )}
@@ -182,8 +187,18 @@ export const DesktopDock = forwardRef<HTMLElement, DesktopDockProps>(
                                 onClick={() => onSelectWindow?.(note.id)}
                             >
                                 {note.kind === "document"
-                                    ? <NotebookPen size={18} />
-                                    : <StickyNote size={18} />}
+                                    ? (
+                                        <NotebookPen
+                                            size="1em"
+                                            className="icon-lg"
+                                        />
+                                    )
+                                    : (
+                                        <StickyNote
+                                            size="1em"
+                                            className="icon-lg"
+                                        />
+                                    )}
                                 <span className="desktop-dock-note-title">
                                     {note.title}
                                 </span>

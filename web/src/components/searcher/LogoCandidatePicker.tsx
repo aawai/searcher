@@ -52,7 +52,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
         return (
             <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--loading">
                 <div className="app-dialog-icon-subpanel__loading-indicator">
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size="1em" className="icon-md animate-spin" />
                     <span>正在检查可用 AI 模型…</span>
                 </div>
             </div>
@@ -63,7 +63,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
         return (
             <div className="app-ai-unavailable-card">
                 <div className="app-ai-unavailable-icon">
-                    <AlertCircle size={20} />
+                    <AlertCircle size="1em" className="icon-lg" />
                 </div>
                 <div className="app-ai-unavailable-body">
                     <strong className="app-ai-unavailable-title">
@@ -182,13 +182,16 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     {busy
                         ? (
                             <>
-                                <Loader2 size={13} className="animate-spin" />
+                                <Loader2
+                                    size="1em"
+                                    className="icon-sm animate-spin"
+                                />
                                 <span>处理中…</span>
                             </>
                         )
                         : (
                             <>
-                                <Sparkles size={13} />
+                                <Sparkles size="1em" className="icon-sm" />
                                 <span>生成 3 个候选</span>
                             </>
                         )}
@@ -241,7 +244,12 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     </div>
                                     <div className="app-ai-candidate-footer">
                                         <span className="app-ai-candidate-radio-dot">
-                                            {isSelected && <Check size={10} />}
+                                            {isSelected && (
+                                                <Check
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                />
+                                            )}
                                         </span>
                                         <span>图标 {index + 1}</span>
                                     </div>

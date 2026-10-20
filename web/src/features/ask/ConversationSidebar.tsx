@@ -87,12 +87,15 @@ export function ConversationSidebar({
                         onDrawerOpenChange(false);
                     }}
                 >
-                    <Plus size={16} />
+                    <Plus size="1em" className="icon-md" />
                     <span>新建对话</span>
                 </Button>
 
                 <div className="ask-sidebar__search-wrap mt-3">
-                    <Search size={14} className="ask-sidebar__search-icon" />
+                    <Search
+                        size="1em"
+                        className="icon-sm ask-sidebar__search-icon"
+                    />
                     <Input
                         className="ask-sidebar__search-input"
                         value={filter}
@@ -109,7 +112,7 @@ export function ConversationSidebar({
                             className="ask-sidebar__search-clear"
                             aria-label="清空搜索"
                         >
-                            <X size={12} />
+                            <X size="1em" className="icon-sm" />
                         </Button>
                     )}
                 </div>
@@ -176,7 +179,8 @@ export function ConversationSidebar({
                                                         }
                                                     >
                                                         <MoreHorizontal
-                                                            size={14}
+                                                            size="1em"
+                                                            className="icon-sm"
                                                         />
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent
@@ -189,8 +193,8 @@ export function ConversationSidebar({
                                                                 )}
                                                         >
                                                             <Pencil
-                                                                size={14}
-                                                                className="mr-2"
+                                                                size="1em"
+                                                                className="icon-sm mr-2"
                                                             />
                                                             <span>重命名</span>
                                                         </DropdownMenuItem>
@@ -203,8 +207,8 @@ export function ConversationSidebar({
                                                             className="text-destructive focus:text-destructive"
                                                         >
                                                             <Trash2
-                                                                size={14}
-                                                                className="mr-2"
+                                                                size="1em"
+                                                                className="icon-sm mr-2"
                                                             />
                                                             <span>删除</span>
                                                         </DropdownMenuItem>
@@ -254,7 +258,7 @@ export function ConversationSidebar({
                             className="ask-history-sheet__close"
                             aria-label="关闭"
                         >
-                            <X size={18} />
+                            <X size="1em" className="icon-lg" />
                         </SheetClose>
                     </SheetHeader>
                     <div className="ask-history-sheet__inner">
