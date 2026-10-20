@@ -1,5 +1,9 @@
 # Wiki Update Log
 
+## 2026-10-19
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-19-issues-196-199-pr-219-main","title":"Issues 196/199 经 PR 219 合并 main"}
+
 ## 2026-10-18
 
 - **observe**: {"relevance":"high","slug":"obs-2026-10-18-zen-remark","title":"Zen 便签预览避免 remark 根入口拉入编辑器包"}

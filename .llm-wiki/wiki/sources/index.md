@@ -108,4 +108,5 @@
 - [Observation: Issue 177 Widgets 首页反馈经 PR 184 合并关闭](obs-2026-10-16-issue-177-widgets-pr-184.md)
 - [Observation: Issue 179 Zen chrome inset 经 PR 186 合并关闭](obs-2026-10-17-issue-179-zen-chrome-inset-pr-186.md)
 - [Observation: Zen 便签预览避免 remark 根入口拉入编辑器包](obs-2026-10-18-zen-remark.md)
+- [Observation: Issues 196/199 经 PR 219 合并 main](obs-2026-10-19-issues-196-199-pr-219-main.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)
