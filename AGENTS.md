@@ -10,7 +10,7 @@
 * **Reuse before adding.** 优先复用仓库已有实现和依赖；新增能力时，优先采用标准库或成熟社区方案，避免重复造轮子。仅在现有方案不满足项目约束时，才新增自定义 abstraction 或 dependency。
 * **Design completely, deliver incrementally.** 先确定完整的正确设计，再将大改动拆成可独立验证和回滚的 micro-increments。Increment 是交付边界，不是削减必要 scope 的理由。
 * **Escalate only real conflicts.** 若 Specification、Invariants、Architecture、type model 或 contracts 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通、可逆的工程决策自行判断。
-* UI Contract：[DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)、[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)、[UI_REVIEW_CHECKLIST.md](UI_REVIEW_CHECKLIST.md)。UI 变更先消费已有 Page Archetype、Token、semantic component，再组合 shadcn primitives。
+* UI Contract：[DESIGN_PRINCIPLES.md](docs/design/DESIGN_PRINCIPLES.md)、[DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md)、[UI_REVIEW_CHECKLIST.md](docs/design/UI_REVIEW_CHECKLIST.md)。UI 变更先消费已有 Page Archetype、Token、semantic component，再组合 shadcn primitives。
 * 现有实现不是设计正确性的证据；视觉例外必须定义新的系统级语义与验证边界，不以“已经这样实现”新增 raw visual value。
 * UI PR 执行 `deno task check:ui` 并填写 checklist；390/768/1440、light/dark 实页验证不可用 build/test 替代。
 
@@ -83,6 +83,7 @@ shadcn/ui 不直接负责的能力可以使用独立库：
 - `src/db/{schema,database,migrate}.ts`、`drizzle/`：表结构、串行数据库访问、迁移入口与提交的 SQL 迁移。
 - `src/shared/{contracts,engines}.ts`：前后端共享 DTO、响应契约与搜索引擎常量；`src/commands/admin.ts`：管理员 CLI。
 - `web/src/App.tsx`、`HomePage.tsx`：前端路由与工作台组装；`features/`：业务 UI；`contexts/`：认证与主题；`lib/api.ts`：请求封装；`styles/global.css`：全局样式。
+- `README.md`：入口概览与部署操作；`docs/`：按 feature 记录用户可观察契约（workspace、apps、notes、documents、ai、appearance），以及 frontend、testing、deployment 细节；`docs/design/` 为 UI Contract，`docs/editor/` 为共享 Markdown 编辑器契约，`docs/plans/` 为历史实施计划。行为变化时更新对应文档，不在 README 重复。
 - `deno.jsonc`、`deno.lock`：依赖与 task 的唯一事实来源；`web/vite.config.ts`：构建与开发代理；`.env.example`：环境变量示例。
 
 ## 开发命令

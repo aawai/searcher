@@ -1059,7 +1059,7 @@
 ## 自动化门禁
 
 - [ ] 组合覆盖与重跑策略遵循
-      [仓库指南](AGENTS.md#验证范围与重复执行)，不替代既有验证阶梯及测试、typecheck、lint、format
+      [仓库指南](../../AGENTS.md#验证范围与重复执行)，不替代既有验证阶梯及测试、typecheck、lint、format
       和 UI 门禁；full suite 按风险和仓库要求执行。
 - [ ] check:ui 的 A–M ownership rules 全部通过，无 baseline allowance 或 prefix
       通配放宽。
