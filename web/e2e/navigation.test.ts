@@ -520,7 +520,8 @@ Deno.test("production navigation contracts", async (t) => {
             const guestContext = await browser.newContext();
             const guest = await guestContext.newPage();
             await visit("/settings/data", guest);
-            await guest.getByRole("heading", { name: "同步" }).waitFor();
+            await guest.getByRole("heading", { name: "同步", exact: true })
+                .waitFor();
             assertEquals(
                 await guest.getByRole("link", { name: "打开 Design Lab" })
                     .count(),

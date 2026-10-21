@@ -4,6 +4,29 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## PR #225 / Issue #214 设置分层实页验收
+
+- [x] 验收版本 `309b46b01de20f31a4f740024c8972de86577a67`，
+      本地生产构建与隔离内存数据库；Chromium 实页验证，不使用线上账号或数据。
+- [x] 外观页 390×844、768×1024、1440×900 × light/dark 六组；
+      首屏、高级项折叠、高级项展开共18张截图逐张审阅， 折叠与展开时横向 overflow
+      均0，控件和文案无横向裁切。 截图
+      `/tmp/pr225-evidence/appearance-{390,768,1440}-{light,dark}.png` 与
+      `/tmp/pr225-evidence/wallpaper-{390,768,1440}-{light,dark}-{collapsed,expanded}.png`；
+      几何记录 `/tmp/pr225-evidence/matrix.json`。
+- [x] 390px 无需滚动即可看到主题切换（Y515–567）和首行强调色
+      （Y654–698）；强调色列表其余部分允许正常纵向滚动。
+- [x] 高级项默认折叠，展开后柔化、色调可达；Enter 展开、Space 收起，
+      展开后刷新仍保持。操作折叠时未观察到 API 写请求。 管理员从设置入口可进入
+      `/design-lab`，浏览器无 pageerror。
+- [x] 完整 wallpaper E2E 通过，覆盖上传、构图、历史、渐变、设备记忆和
+      壁纸呈现参数。导航首轮新增步骤因“同步”标题同时匹配 h2/h3 失败； 改为
+      `exact: true` 后完整 navigation 文件1 test / 12 steps通过，
+      包含游客/普通用户隐藏与管理员显示入口。以上为分批通过证据。
+- [x] `deno task build`、`deno task check:ui` 通过 （ownership 229 files、visual
+      155 files，均0 violations）； 修改后的 navigation 文件类型检查、fmt
+      check、lint通过。 本次仅修正测试定位并记录验收，不修改产品代码。
+
 ## Issue #210 图标尺寸收敛
 
 - [x] 基于 #203/#216 合并后的 main，在 `.worktrees/issue-210` 隔离实施。
