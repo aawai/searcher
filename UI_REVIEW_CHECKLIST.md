@@ -4,6 +4,35 @@
 [System](DESIGN_SYSTEM.md)。适用项填写证据，不适用写原因；build/test
 不代替实页。
 
+## PR #226 / Issue #211 场景 reduced-motion 实页验收
+
+- [x] 验收版本 `6d6b3f8`，本地生产构建、隔离内存数据库， Chromium
+      150.0.7871.24；不使用线上账号或数据。
+- [x] 游客首页 Zen / Widgets × 390×844、768×1024、1440×900 × light/dark，共12张
+      reduced-motion 实页截图逐张审阅。 document 横向 overflow 均0，场景 SVG
+      上下边界均在 Host 内， 浅深色场景色板正常，搜索与顶部导航未被场景遮挡。
+      截图 `/tmp/pr226-evidence/{zen,widgets}-{390,768,1440}-{light,dark}.png`；
+      几何与 CSS 采样 `/tmp/pr226-evidence/{zen,widgets}.json`。
+- [x] 12组页面在场景异步样式加载后临时移除 `data-motion`， 所有场景子元素的
+      computed `animationName` 仍为 `none`； Zen
+      六组另跨至少150ms动画帧确认过山车 transform 不变。 Host 均为
+      `aria-hidden="true"`、`pointer-events: none`， 搜索输入框中心 hit-test
+      均命中自身。
+- [x] 1440px 深色 Widgets 恢复 `no-preference` 后， 旗帜 `sp-flutter` /
+      `running`，过山车 transform 恢复变化； 搜索框可实际输入，浏览器无捕获到的
+      pageerror。 恢复记录 `/tmp/pr226-evidence/recovery.json`。
+- [x] `deno run -A scripts/e2e/run.ts desktop-scenes` 完整通过： 生产
+      build、测试类型检查及2条 E2E。覆盖登录态布局与 Dock
+      指针命中、暂停/恢复、CSS 兜底及偏好隔离/同步重试。 报告
+      `artifacts/e2e/desktop-scenes-1792548966800-b085ebb4-7e4f-49f5-9771-253e02a4f302/`。
+- [x] `deno task check:ui` 通过：ownership 229 files、 visual 155 files，均0
+      violations；PR 修改的 CSS、E2E、CHANGELOG fmt check 及 E2E lint
+      通过。本次仅补验收记录，不修改产品代码。
+- [ ] 禁用 JS / 水合前首帧静态未直接实测：本应用为 SPA， 禁用 JS
+      不会生成场景宿主。本次证据是 reduced-motion 下刷新实页，
+      以及宿主已挂载但缺失 `data-motion` 的 CSS 兜底检查， 不将其描述为禁用 JS
+      或水合前逐帧验证。
+
 ## PR #225 / Issue #214 设置分层实页验收
 
 - [x] 验收版本 `309b46b01de20f31a4f740024c8972de86577a67`，
