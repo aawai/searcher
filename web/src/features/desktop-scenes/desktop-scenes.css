@@ -38,3 +38,18 @@
 .scene-host[data-scene][data-motion="reduced"] * {
     animation: none;
 }
+
+/*
+ * CSS 兜底：系统 reduced-motion 时，不等 JS 写入 `data-motion` 即静态化，
+ * 覆盖首帧与宿主属性尚未同步的窗口。`data-motion` 仍是宿主的运行时信号
+ * （配合 `running` 停掉 JS 驱动的过山车）。
+ *
+ * 优先级与上方宿主规则同级（0,3,0），高于场景动画选择器（如
+ * `.scene-park .sp-flag`，0,2,0），因此异步加载的场景 CSS 无论先后都无法
+ * 覆盖它；`:not([data-motion="full"])` 只让位于宿主明确声明的完整动效。
+ */
+@media (prefers-reduced-motion: reduce) {
+    .scene-host[data-scene]:not([data-motion="full"]) * {
+        animation: none;
+    }
+}
