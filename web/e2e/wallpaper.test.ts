@@ -306,6 +306,28 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
     await signIn();
     await page.goto(origin + "/settings/appearance");
     await page.getByTestId("wallpaper-input").waitFor();
+    await t.step(
+        "advanced wallpaper options start collapsed and stay expanded per device after reload",
+        async () => {
+            const toggle = page.getByTestId("wallpaper-advanced-toggle");
+            assertEquals(await toggle.getAttribute("aria-expanded"), "false");
+            assertEquals(
+                await page.getByTestId("wallpaper-advanced").isHidden(),
+                true,
+            );
+            await page.getByTestId("wallpaper-readability-slider").waitFor();
+            await toggle.click();
+            await page.getByTestId("wallpaper-softness-slider").waitFor();
+            await page.getByTestId("wallpaper-tone-group").waitFor();
+            await page.reload();
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[data-testid="wallpaper-advanced-toggle"]',
+                )?.getAttribute("aria-expanded") === "true"
+            );
+            await page.getByTestId("wallpaper-softness-slider").waitFor();
+        },
+    );
     let left = "";
     let right = "";
     await t.step(

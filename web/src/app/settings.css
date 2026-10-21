@@ -288,6 +288,16 @@
         min-height: var(--control-touch-target);
     }
 }
+/* Wallpaper advanced options disclosure (#214) */
+.wallpaper-advanced-toggle:not([data-expanded]) {
+    border-bottom: 0;
+}
+.wallpaper-advanced-toggle[data-expanded] .wallpaper-advanced-toggle__icon {
+    transform: rotate(180deg);
+}
+.wallpaper-advanced > .wallpaper-settings-block {
+    border-bottom: 1px solid var(--border-subtle);
+}
 .wallpaper-settings-block > .wallpaper-history {
     margin-top: 0;
 }

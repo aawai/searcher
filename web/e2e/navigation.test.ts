@@ -515,6 +515,34 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
+        "settings data tab hides the Design Lab entry from guests and regular users",
+        async () => {
+            const guestContext = await browser.newContext();
+            const guest = await guestContext.newPage();
+            await visit("/settings/data", guest);
+            await guest.getByRole("heading", { name: "同步", exact: true })
+                .waitFor();
+            assertEquals(
+                await guest.getByRole("link", { name: "打开 Design Lab" })
+                    .count(),
+                0,
+            );
+            assertEquals(
+                await guest.getByRole("heading", { name: "数据管理" }).count(),
+                0,
+            );
+            await guestContext.close();
+
+            await visit("/settings/data");
+            await page.getByRole("link", { name: "打开回收站" }).waitFor();
+            assertEquals(
+                await page.getByRole("link", { name: "打开 Design Lab" })
+                    .count(),
+                0,
+            );
+        },
+    );
+    await t.step(
         "admin exact children, tab Back and AI Provider workspace entry",
         async () => {
             await store.run((db) =>
@@ -579,6 +607,14 @@ Deno.test("production navigation contracts", async (t) => {
             await page.waitForURL(origin + "/settings/ai");
             await page.goBack();
             await page.waitForURL(origin + "/admin");
+        },
+    );
+    await t.step(
+        "settings data tab shows the Design Lab entry to admins",
+        async () => {
+            await visit("/settings/data");
+            await page.getByRole("link", { name: "打开 Design Lab" }).click();
+            await page.waitForURL(origin + "/design-lab");
         },
     );
     await t.step(
