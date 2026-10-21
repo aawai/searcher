@@ -1,11 +1,13 @@
 import { assertEquals } from "@std/assert";
+import { createApp } from "../../app.ts";
+import { eq } from "drizzle-orm";
 import { STATUS_CODE } from "@std/http";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 import type { Hono } from "hono";
 import type { AppEnv } from "../../serve/env.ts";
-import { createApp } from "../../app.ts";
+import { users } from "../../db/schema.ts";
 import type { Envelope } from "@shared/contracts.ts";
 import type {
     NoteDto,
@@ -13,6 +15,7 @@ import type {
     NoteVersionDto,
     SearchNotesResultDto,
 } from "./service.ts";
+import { noteEvents } from "./service.ts";
 
 const ORIGIN = "http://localhost:8000";
 
@@ -153,6 +156,74 @@ Deno.test({
             assertEquals(payload.noteId, created.id);
             assertEquals(payload.version, 2);
         } finally {
+            store.close();
+        }
+    },
+});
+
+Deno.test({
+    name: "notes realtime: TCP disconnect removes SSE subscriber",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        const server = Deno.serve(
+            { port: 0, onListen: () => {} },
+            app.fetch,
+        );
+        let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+        try {
+            const token = await registerUser(app, "user_notes_disconnect");
+            const userRows = await store.run(async (db) =>
+                await db.select({ id: users.id }).from(users).where(
+                    eq(users.username, "user_notes_disconnect"),
+                ).limit(1).all()
+            );
+            const userId = userRows[0]!.id;
+            const controller = new AbortController();
+            const response = await fetch(
+                `http://localhost:${server.addr.port}/api/notes/events`,
+                {
+                    headers: {
+                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                    },
+                    signal: controller.signal,
+                },
+            );
+            assertEquals(response.status, STATUS_CODE.OK);
+            reader = response.body!.getReader();
+
+            // This real-TCP integration needs a wall-clock bound; clear it as
+            // soon as the stream produces its first chunk.
+            const timeout = Promise.withResolvers<never>();
+            const timeoutId = setTimeout(
+                () =>
+                    timeout.reject(
+                        new Error("Timed out waiting for SSE ready event"),
+                    ),
+                3000,
+            );
+            const firstChunk = await Promise.race([
+                reader.read(),
+                timeout.promise,
+            ]).finally(() => clearTimeout(timeoutId));
+            const firstText = new TextDecoder().decode(firstChunk.value);
+            assertEquals(firstText.includes("event: ready\n"), true);
+            assertEquals(noteEvents.listeners.get(userId)?.size, 1);
+
+            controller.abort();
+            // Polling the observable listener registry is necessary because
+            // fetch abort has no separate server-side cancellation promise.
+            const deadline = Date.now() + 3000;
+            while (noteEvents.listeners.get(userId)?.size !== 0) {
+                if (Date.now() >= deadline) {
+                    throw new Error(
+                        `SSE subscriber for ${userId} remained after TCP abort`,
+                    );
+                }
+                await new Promise((resolve) => setTimeout(resolve, 10));
+            }
+        } finally {
+            await reader?.cancel().catch(() => {});
+            await server.shutdown();
             store.close();
         }
     },

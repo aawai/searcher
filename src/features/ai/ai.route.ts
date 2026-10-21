@@ -754,9 +754,6 @@ export function registerAiRoutes(
             }
 
             const abortController = new AbortController();
-            c.req.raw.signal.addEventListener("abort", () => {
-                abortController.abort();
-            });
 
             const stream = service.streamChat(
                 user.id,
@@ -769,12 +766,16 @@ export function registerAiRoutes(
                 async start(controller) {
                     try {
                         for await (const chunk of stream) {
+                            // Drain the service so interrupted output is persisted,
+                            // but never write to a cancelled response stream.
+                            if (abortController.signal.aborted) continue;
                             const eventStr = `event: ${chunk.event}\ndata: ${
                                 JSON.stringify(chunk.data)
                             }\n\n`;
                             controller.enqueue(textEncoder.encode(eventStr));
                         }
                     } catch (err: unknown) {
+                        if (abortController.signal.aborted) return;
                         const errMsg = err instanceof Error
                             ? err.message
                             : String(err);
@@ -783,7 +784,7 @@ export function registerAiRoutes(
                         }\n\n`;
                         controller.enqueue(textEncoder.encode(errPayload));
                     } finally {
-                        controller.close();
+                        if (!abortController.signal.aborted) controller.close();
                     }
                 },
                 cancel() {

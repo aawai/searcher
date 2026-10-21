@@ -494,7 +494,7 @@ Deno.test("AI Route: HTTP POST /api/ai/chat/stream emits meta, token, and error 
     assertEquals(assistantMsg?.content, "Partial stream token ");
 });
 
-Deno.test("AI Route: HTTP POST /api/ai/chat/stream propagates request abort to provider and persists partial content", async () => {
+Deno.test("AI Route: real HTTP client disconnect stops /api/ai/chat/stream provider generation", async () => {
     const normalUser: UserDto = {
         id: "user-1",
         username: "testuser",
@@ -502,76 +502,110 @@ Deno.test("AI Route: HTTP POST /api/ai/chat/stream propagates request abort to p
         role: "user",
     };
 
-    let providerSignal: AbortSignal | null | undefined;
+    // Real socket I/O needs a wall-clock bound; fake timers cannot drive the TCP response.
+    const withTimeout = async <T>(
+        promise: Promise<T>,
+        description: string,
+    ): Promise<T> => {
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        try {
+            return await Promise.race([
+                promise,
+                new Promise<never>((_, reject) => {
+                    timeout = setTimeout(
+                        () =>
+                            reject(
+                                new Error(
+                                    `Timed out waiting for ${description}`,
+                                ),
+                            ),
+                        5_000,
+                    );
+                }),
+            ]);
+        } finally {
+            clearTimeout(timeout);
+        }
+    };
+
+    let providerSignal: AbortSignal | undefined;
     let providerAborted = false;
+    let providerStreamStopped = false;
+    let providerStreamController:
+        | ReadableStreamDefaultController<Uint8Array>
+        | undefined;
+    let releaseProviderPull: (() => void) | undefined;
+    let resolveProviderAbort: (() => void) | undefined;
+    let resolveProviderStreamStopped: (() => void) | undefined;
+    const providerAbortObserved = new Promise<void>((resolve) => {
+        resolveProviderAbort = resolve;
+    });
+    const providerStreamStoppedObserved = new Promise<void>((resolve) => {
+        resolveProviderStreamStopped = resolve;
+    });
+    const markProviderStreamStopped = () => {
+        if (providerStreamStopped) return;
+        providerStreamStopped = true;
+        resolveProviderStreamStopped?.();
+        releaseProviderPull?.();
+        try {
+            providerStreamController?.close();
+        } catch {
+            // The consumer may already have cancelled the provider body.
+        }
+    };
 
     const mockFetch: typeof fetch = (input, init) => {
         const urlStr = String(input);
         if (urlStr.endsWith("/models")) {
             return Promise.resolve(
-                new Response(
-                    JSON.stringify({
-                        data: [{ id: "abort-model" }],
-                    }),
-                    {
-                        status: 200,
-                        headers: { "Content-Type": "application/json" },
-                    },
-                ),
+                Response.json({ data: [{ id: "tcp-disconnect-model" }] }),
             );
         }
         if (urlStr.endsWith("/chat/completions")) {
-            providerSignal = init?.signal;
+            providerSignal = init?.signal ?? undefined;
             if (providerSignal?.aborted) {
                 providerAborted = true;
+                resolveProviderAbort?.();
             } else {
-                providerSignal?.addEventListener("abort", () => {
-                    providerAborted = true;
-                });
+                providerSignal?.addEventListener(
+                    "abort",
+                    () => {
+                        providerAborted = true;
+                        resolveProviderAbort?.();
+                        markProviderStreamStopped();
+                    },
+                    { once: true },
+                );
             }
 
-            const stream = new ReadableStream({
-                async start(controller) {
+            const stream = new ReadableStream<Uint8Array>({
+                start(controller) {
+                    providerStreamController = controller;
                     controller.enqueue(
                         new TextEncoder().encode(
                             `data: ${
                                 JSON.stringify({
                                     choices: [{
                                         delta: {
-                                            content:
-                                                "Partial token before abort ",
+                                            content: "first TCP delta",
                                         },
                                     }],
                                 })
                             }\n\n`,
                         ),
                     );
-
-                    if (init?.signal) {
-                        if (init.signal.aborted) {
-                            controller.error(
-                                new DOMException(
-                                    "The operation was aborted.",
-                                    "AbortError",
-                                ),
-                            );
-                            return;
-                        }
-                        await new Promise<void>((resolve) => {
-                            init.signal?.addEventListener("abort", () => {
-                                controller.error(
-                                    new DOMException(
-                                        "The operation was aborted.",
-                                        "AbortError",
-                                    ),
-                                );
-                                resolve();
-                            });
-                        });
-                    }
+                },
+                pull() {
+                    if (providerStreamStopped) return;
+                    return new Promise<void>((resolve) => {
+                        releaseProviderPull = resolve;
+                    });
+                },
+                cancel() {
+                    markProviderStreamStopped();
                 },
             });
-
             return Promise.resolve(
                 new Response(stream, {
                     status: 200,
@@ -582,74 +616,136 @@ Deno.test("AI Route: HTTP POST /api/ai/chat/stream propagates request abort to p
         return Promise.resolve(new Response("Not Found", { status: 404 }));
     };
 
-    const { app, service } = setupTestApp(normalUser, mockFetch);
-
+    const { app, service, store } = setupTestApp(normalUser, mockFetch);
     const provider = await service.createProvider("user-1", {
-        name: "Abort Provider",
+        name: "TCP Disconnect Provider",
         baseUrl: "https://api.ai.com/v1",
-        apiKey: "sk-abort-secret-99999",
+        apiKey: "sk-tcp-disconnect-secret",
         scope: "user",
     }, false);
 
+    const server = Deno.serve(
+        {
+            hostname: "127.0.0.1",
+            port: 0,
+            onListen: () => {},
+        },
+        (request) => app.fetch(request),
+    );
     const clientAbort = new AbortController();
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+    let receivedToken = false;
 
-    const chatRes = await app.request("/api/ai/chat/stream", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            providerId: provider.id,
-            modelId: "abort-model",
-            message: "Test abort handling",
-        }),
-        signal: clientAbort.signal,
-    });
-
-    assertEquals(chatRes.status, 200);
-
-    const reader = chatRes.body!.getReader();
-    const decoder = new TextDecoder();
-    let text = "";
-    while (true) {
-        try {
-            const { done, value } = await reader.read();
-            if (done) break;
-            text += decoder.decode(value, { stream: true });
-            if (text.includes("Partial token before abort")) {
-                clientAbort.abort();
-            }
-        } catch {
-            break;
+    try {
+        const response = await withTimeout(
+            fetch(
+                `http://127.0.0.1:${server.addr.port}/api/ai/chat/stream`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        providerId: provider.id,
+                        modelId: "tcp-disconnect-model",
+                        message: "Disconnect after the first token",
+                    }),
+                    signal: clientAbort.signal,
+                },
+            ),
+            "AI chat HTTP response",
+        );
+        assertEquals(response.status, 200);
+        if (!response.body) {
+            throw new Error(
+                "AI chat response did not contain a streaming body",
+            );
         }
+        reader = response.body.getReader();
+
+        const decoder = new TextDecoder();
+        let receivedText = "";
+        while (!receivedToken) {
+            const { done, value } = await withTimeout(
+                reader.read(),
+                "first AI token over the TCP response",
+            );
+            if (done) {
+                throw new Error(
+                    "AI chat response ended before the first token arrived",
+                );
+            }
+            receivedText += decoder.decode(value, { stream: true });
+            receivedToken = receivedText.includes(
+                'event: token\ndata: "first TCP delta"',
+            );
+        }
+
+        clientAbort.abort();
+
+        await withTimeout(
+            providerAbortObserved,
+            "provider fetch AbortSignal after client disconnect",
+        );
+        await withTimeout(
+            providerStreamStoppedObserved,
+            "provider stream termination after client disconnect",
+        );
+        assertEquals(receivedToken, true);
+        assertEquals(providerSignal?.aborted, true);
+        assertEquals(providerAborted, true);
+        assertEquals(providerStreamStopped, true);
+        const meta = parseSseEvents(receivedText).find((event) =>
+            event.event === "meta"
+        )?.data as { conversationId: string; messageId: string };
+        await withTimeout(
+            (async () => {
+                // Persistence follows real socket cancellation, not a controllable clock.
+                const deadline = Date.now() + 3000;
+                while (true) {
+                    const response = await app.request(
+                        `/api/ai/conversations/${meta.conversationId}`,
+                    );
+                    const body: {
+                        data: {
+                            messages: Array<
+                                { id: string; status: string; content: string }
+                            >;
+                        };
+                    } = await response.json();
+                    const message = body.data.messages.find((message) =>
+                        message.id === meta.messageId
+                    );
+                    if (message?.status === "interrupted") {
+                        assertEquals(message.content, "first TCP delta");
+                        return;
+                    }
+                    if (Date.now() >= deadline) {
+                        throw new Error(
+                            "Interrupted assistant content was not persisted",
+                        );
+                    }
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                }
+            })(),
+            "interrupted assistant content to be persisted",
+        );
+    } finally {
+        clientAbort.abort();
+        releaseProviderPull?.();
+        try {
+            providerStreamController?.close();
+        } catch {
+            // The response reader or abort handler may already have closed it.
+        }
+        if (reader) {
+            try {
+                await reader.cancel();
+            } catch {
+                // Aborting the fetch may already have errored the response body.
+            }
+        }
+        await server.shutdown();
+        await store.close();
     }
-
-    // 验证 provider 层的 fetch 确实收到了 AbortSignal 且被触发
-    assertEquals(providerAborted, true);
-    assertEquals(providerSignal?.aborted, true);
-
-    const events = parseSseEvents(text);
-    const metaEvent = events.find((e) => e.event === "meta");
-    const meta = metaEvent?.data as {
-        conversationId: string;
-        messageId: string;
-    };
-    assertEquals(typeof meta?.conversationId, "string");
-    assertEquals(typeof meta?.messageId, "string");
-
-    // 验证局部内容已持久化为 interrupted 状态
-    const convRes = await app.request(
-        `/api/ai/conversations/${meta.conversationId}`,
-    );
-    assertEquals(convRes.status, 200);
-    const convBody = await convRes.json();
-    assertEquals(convBody.status, true);
-    const assistantMsg = convBody.data.messages.find(
-        (m: { id: string }) => m.id === meta.messageId,
-    );
-    assertEquals(assistantMsg?.status, "interrupted");
-    assertEquals(assistantMsg?.content, "Partial token before abort ");
-
-    // 确保没有泄漏 key
-    assertEquals(text.includes("sk-abort-secret-99999"), false);
 });
 
 Deno.test("AI Route: HTTP POST /api/ai/conversations/:id/restore restores deleted conversation", async () => {

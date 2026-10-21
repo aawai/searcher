@@ -236,6 +236,12 @@ Provider 使用 OpenAI-compatible Chat Completions API，支持自定义 Base UR
 - **模型发现超时**：标准 `/v1/models` 端点请求硬超时限制为 15 秒（`DEFAULT_MODELS_TIMEOUT_MS = 15000`）；扩展探针（如 CLIProxyAPIHome `/user/models`）硬超时限制为 5 秒（`DEFAULT_EXTENDED_TIMEOUT_MS = 5000`）。所有发现请求均严格禁止跟随 HTTP 重定向（`redirect: "error"`），防止 API Key 随重定向泄露。
 - **流式生成无人工超时**：流式聊天请求连接超时设为运行时 timer 安全上限（约 24.8 天），不设人工截止时间，允许大模型长时间深度思考与生成长篇内容，仅受自然生成结束或用户主动 Abort 控制。
 - **中断与错误状态保全**：用户点击停止（Abort）会主动取消上游请求，已流式输出的内容予以保留并标记为 `interrupted`。上游 HTTP 错误、SSE error 消息或损坏的 SSE JSON 会被转换为 Searcher 错误事件，已输出内容标记为 `failed`，绝不误标为完成。
+
+便签 SSE 与 AI 聊天流的服务端断开清理由响应 `ReadableStream.cancel()` 驱动：
+便签注销当前用户的事件监听，AI 中止上游 Provider 请求并保留已输出的内容。
+正常完成与异常结束在流的返回路径关闭响应；不依赖 Deno 成功响应后也触发
+`request.signal` abort 的 legacy 行为，也不需要启用 unstable 配置。
+
 `AiServiceDeps.fetchFn` 支持注入 custom fetch，便于独立验证 Provider contract。
 ## 部署与管理
 
