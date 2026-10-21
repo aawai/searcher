@@ -103,15 +103,6 @@ export function registerNotesRoutes(
                         updatedAt: evt.updatedAt,
                     });
                 });
-                c.req.raw.signal.addEventListener("abort", () => {
-                    off?.();
-                    off = null;
-                    try {
-                        controller.close();
-                    } catch {
-                        // 已关闭：忽略
-                    }
-                }, { once: true });
             },
             cancel() {
                 off?.();
