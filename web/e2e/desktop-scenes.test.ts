@@ -352,6 +352,21 @@ Deno.test("desktop scenes load on selection and respect host lifecycle", async (
     await page.waitForTimeout(120);
     assertEquals(await readCarTransforms(page), reducedCars);
 
+    // CSS fallback: the media query alone must keep the scene static even
+    // before JS has written `data-motion` (e.g. first frame), and it must
+    // outrank the asynchronously loaded scene stylesheet.
+    const fallbackAnimations = await host.evaluate((element) => {
+        const motion = element.getAttribute("data-motion");
+        element.removeAttribute("data-motion");
+        const names = Array.from(
+            element.querySelectorAll<Element>(".scene-park *"),
+            (child) => getComputedStyle(child).animationName,
+        ).filter((name) => name !== "none");
+        if (motion !== null) element.setAttribute("data-motion", motion);
+        return names;
+    });
+    assertEquals(fallbackAnimations, []);
+
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.waitForFunction(() => {
         const host = document.querySelector<HTMLElement>(
