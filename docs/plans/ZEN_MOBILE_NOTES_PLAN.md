@@ -2,7 +2,7 @@
 
 状态：已实现并完成验收，关联
 [Issue #191](https://github.com/aawai/searcher/issues/191)。实际验证记录见
-[UI Review Checklist](UI_REVIEW_CHECKLIST.md#issue-191-移动-zen-无容器便签)。
+[UI Review Checklist](../design/UI_REVIEW_CHECKLIST.md#issue-191-移动-zen-无容器便签)。
 
 ## 目标与设计依据
 

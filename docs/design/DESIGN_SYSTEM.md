@@ -252,7 +252,7 @@ Dock 与运行项使用 lg，总览缩略图与窗口图标使用 md；紧凑入
 - NoteEditor 持有 canonical Markdown、1500ms autosave、IndexedDB 草稿及 mutation
   queue；NoteLivePreviewEditor 仅持有共享 runtime 的实例生命周期、选区与
   composition bridge，不拥有云端业务。详见
-  [MARKDOWN_EDITOR.md](MARKDOWN_EDITOR.md)。
+  [MARKDOWN_EDITOR.md](../editor/MARKDOWN_EDITOR.md)。
 - Live 与同一 NoteEditor surface 的只读 NoteMarkdown 共用 markdown.css
   的标题、列表、table、code、quote、inline typography 和安全策略；不加载
   framework theme。Live task checkbox 可编辑，卡片/冲突/历史只读。Notes chrome
@@ -1229,7 +1229,7 @@ root 的居中 margin + layout max-width 再建一套页面 geometry。
   on/off 都检查。
 
 验证组合与重复执行遵循
-[仓库指南](AGENTS.md#验证范围与重复执行)：上述固定实页要求和明确列举的验收场景不得裁剪；仅列出的验证维度默认采用代表场景、边界值及必要的成对组合，不默认展开完整笛卡尔积。明确要求全组合或存在已知维度交互风险时扩大覆盖。
+[仓库指南](../../AGENTS.md#验证范围与重复执行)：上述固定实页要求和明确列举的验收场景不得裁剪；仅列出的验证维度默认采用代表场景、边界值及必要的成对组合，不默认展开完整笛卡尔积。明确要求全组合或存在已知维度交互风险时扩大覆盖。
 
 批量视觉验收先校准媒体偏好、状态提交和动画/transition
 完成条件；失败先区分产品、脚本和环境问题。优先复查失败子集，但脚本缺陷导致原结果不可信时必须重新验证受影响范围，必要时整组重跑。这些规则不替代测试、typecheck、lint、format、build
@@ -1270,9 +1270,8 @@ image、blur、grayscale、mask、position，并附原因，不接受前缀通�
 本 Contract 以 Issue #33 的 Search-first、一致性与反 drift
 为目标，不引入差异化视觉、hero、装饰性动效或新的产品能力。
 
-`UI_UX_AUDIT_FIX_PLAN.md`、`WORKSPACE_LAYOUT_REDESIGN_PLAN.md` 与
-`Searcher-v1-Final-React-shadcn-Spec-Pack/` 保留为既有设计资料；当前 UI 规则以本
-Contract 为准，业务
+`UI_UX_AUDIT_FIX_PLAN.md` 与 `WORKSPACE_LAYOUT_REDESIGN_PLAN.md`
+保留为既有设计资料；当前 UI 规则以本 Contract 为准，业务
 API、安全与持久化约束仍以实现和契约为准。反馈与合理的本次范围冲突时，保留任务要求并说明未迁移边界，不借反馈扩展业务范围。
 
 Admin、Settings、Ask、Design Lab、Account、Home 与 Launcher 的静态 presentation

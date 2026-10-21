@@ -111,10 +111,9 @@
             "web/dist/",
             "node_modules/",
             ".llm-wiki/",
-            "Searcher-v1-Final-React-shadcn-Spec-Pack/",
             ".omp/",
             "README.md",
-            "WORKSPACE_LAYOUT_REDESIGN_PLAN.md"
+            "docs/plans/WORKSPACE_LAYOUT_REDESIGN_PLAN.md"
         ]
     }
 }
