@@ -55,10 +55,7 @@ function AlertDialogOverlay({
     return (
         <AlertDialogPrimitive.Backdrop
             data-slot="alert-dialog-overlay"
-            className={cn(
-                "fixed inset-0 z-[var(--elevation-modal-backdrop)] bg-[var(--surface-scrim)] transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );
@@ -74,10 +71,7 @@ function AlertDialogContent({
             <AlertDialogOverlay />
             <AlertDialogPrimitive.Popup
                 data-slot="alert-dialog-content"
-                className={cn(
-                    "fixed left-[50%] top-[50%] z-[var(--elevation-modal)] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-[var(--border)] bg-[var(--surface-l3)] p-6 shadow-[var(--shadow-l3)] duration-200 rounded-[var(--radius)] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
-                    className,
-                )}
+                className={className}
                 {...props}
             >
                 {children}
@@ -92,10 +86,7 @@ function AlertDialogHeader(
     return (
         <div
             data-slot="alert-dialog-header"
-            className={cn(
-                "flex flex-col gap-2 text-center sm:text-left",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );
@@ -107,10 +98,7 @@ function AlertDialogFooter(
     return (
         <div
             data-slot="alert-dialog-footer"
-            className={cn(
-                "flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-2",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );
@@ -123,10 +111,7 @@ function AlertDialogTitle({
     return (
         <AlertDialogPrimitive.Title
             data-slot="alert-dialog-title"
-            className={cn(
-                "text-[length:var(--font-component-title-size)] font-bold text-[var(--foreground)]",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );
@@ -139,7 +124,7 @@ function AlertDialogDescription({
     return (
         <AlertDialogPrimitive.Description
             data-slot="alert-dialog-description"
-            className={cn("text-sm text-[var(--muted)]", className)}
+            className={className}
             {...props}
         />
     );

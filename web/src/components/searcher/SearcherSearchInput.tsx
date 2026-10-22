@@ -80,7 +80,6 @@ export function SearcherSearchInput(
         reachability = EMPTY_REACHABILITY,
         onCheck,
         isChecking = false,
-        isGuest = false,
         modelLabel = "未配置模型",
         models = EMPTY_MODELS,
         selectedModel = null,
@@ -101,7 +100,6 @@ export function SearcherSearchInput(
         reachability?: Reachability;
         onCheck?: () => void;
         isChecking?: boolean;
-        isGuest?: boolean;
         modelLabel?: string;
         models?: ModelOption[];
         selectedModel?: string | null;
@@ -476,7 +474,6 @@ export function SearcherSearchInput(
                         reachability={reachability}
                         onCheck={onCheck}
                         isChecking={isChecking}
-                        isGuest={isGuest}
                     />
                     {mode === "ai" && (onModelChange
                         ? (
@@ -525,16 +522,15 @@ export function SearcherSearchInput(
                         disabled={disabled}
                     />
                     {!query && (
-                        <span
-                            className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs text-[var(--muted)] border border-[var(--border)] rounded-[var(--control-radius)] bg-[var(--surface-soft)] pointer-events-none select-none mr-1 font-mono"
-                            aria-hidden="true"
-                        >
+                        <span className="search-hint" aria-hidden="true">
                             {formatShortcut(SHORTCUTS.focusSearch.binding)}
                         </span>
                     )}
                     <Button
                         className="search-submit"
-                        variant="default"
+                        variant={query.trim() && !disabled
+                            ? "default"
+                            : "ghost"}
                         type="submit"
                         disabled={disabled || !query.trim()}
                         aria-label={mode === "ai" ? "发送问题" : "搜索"}
@@ -599,26 +595,26 @@ export function SearcherSearchInput(
                                                 : (
                                                     <Sparkles
                                                         size="1em"
-                                                        className="icon-md text-accent"
+                                                        className="icon-md suggestion-icon"
                                                     />
                                                 )
                                         )}
                                         {item.source === "history" && (
                                             <History
                                                 size="1em"
-                                                className="icon-md text-muted"
+                                                className="icon-md suggestion-icon"
                                             />
                                         )}
                                         {item.source === "webapp" && (
                                             <Globe
                                                 size="1em"
-                                                className="icon-md text-accent"
+                                                className="icon-md suggestion-icon"
                                             />
                                         )}
                                         {item.source === "engine" && (
                                             <Search
                                                 size="1em"
-                                                className="icon-md text-muted"
+                                                className="icon-md suggestion-icon"
                                             />
                                         )}
                                         <span className="suggestion-text">

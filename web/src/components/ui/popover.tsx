@@ -1,6 +1,5 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
-import { cn } from "../../lib/utils.ts";
 
 function Popover({
     open,
@@ -38,7 +37,7 @@ function PopoverPositioner(
     return (
         <PopoverPrimitive.Positioner
             data-slot="popover-positioner"
-            className={cn("z-[var(--elevation-popover)]", className)}
+            className={className}
             {...props}
         />
     );
@@ -51,10 +50,7 @@ function PopoverPopup({
     return (
         <PopoverPrimitive.Popup
             data-slot="popover-content"
-            className={cn(
-                "w-72 rounded-[var(--radius)] border border-border bg-surface-solid p-3 text-foreground shadow-[var(--shadow-l2)] outline-none",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );

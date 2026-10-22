@@ -1,46 +1,76 @@
-.auth-surface {
+/* Auth: one narrow column. The page title is the only heading; fields share one rhythm. */
+
+.auth-form {
     width: 100%;
     max-width: var(--layout-auth-max);
+    min-width: 0;
     margin-inline: auto;
-    padding: var(--space-card-padding);
-    background: var(--surface-solid);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-l1);
-}
-.auth-surface form {
-    display: flex;
-    flex-direction: column;
-}
-.auth-surface .field {
-    margin: 0 0 var(--space-row-gap);
 }
 
-.auth-surface .auth-field-hint {
-    margin: var(--space-control-gap) 0 0;
-    font-size: var(--font-caption-size);
+.auth-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
 }
-.auth-surface .auth-field-hint--error {
+
+.auth-registration {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.auth-retry {
+    justify-self: start;
+}
+
+.auth-fields {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.auth-field {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.auth-field-label {
+    font-size: var(--font-body-size);
+    font-weight: var(--font-label-weight);
+    line-height: var(--font-body-line-height);
+}
+
+.auth-field-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.auth-field-hint--error {
     color: var(--danger);
 }
-.auth-registration-status {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-control-gap);
-    margin-block-end: var(--space-row-gap);
-}
-.auth-registration-status p {
-    margin: 0;
-    font-size: var(--font-caption-size);
-}
-.auth-surface button[type="submit"] {
+
+.auth-submit {
     width: 100%;
-    margin-top: var(--space-control-gap);
 }
-.auth-surface .auth-footer {
-    margin: var(--space-section-gap) 0 0;
-    text-align: center;
-    font-size: var(--font-caption-size);
+
+.auth-footer {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.auth-footer a {
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+    .auth-form {
+        padding-block-start: clamp(var(--space-5), 10dvh, var(--space-10));
+    }
 }

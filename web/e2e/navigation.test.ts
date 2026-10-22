@@ -79,16 +79,10 @@ Deno.test("production navigation contracts", async (t) => {
                                 colorScheme,
                             );
                             const geometry = await target.locator(
-                                ".auth-surface",
+                                ".auth-form",
                             ).last().evaluate((surface) => {
                                 const rect = surface.getBoundingClientRect();
                                 const style = getComputedStyle(surface);
-                                const padding = [
-                                    style.paddingTop,
-                                    style.paddingRight,
-                                    style.paddingBottom,
-                                    style.paddingLeft,
-                                ].map(parseFloat);
                                 const max = parseFloat(
                                     style.getPropertyValue("--layout-auth-max"),
                                 );
@@ -102,7 +96,7 @@ Deno.test("production navigation contracts", async (t) => {
                                 });
                                 const axes = [
                                     ...surface.querySelectorAll(
-                                        "h1, .page-description, label, form, .auth-footer",
+                                        "h1, label, form, .auth-footer",
                                     ),
                                 ].map((element) =>
                                     element.getBoundingClientRect().left
@@ -111,7 +105,6 @@ Deno.test("production navigation contracts", async (t) => {
                                     width: rect.width,
                                     left: rect.left,
                                     right: rect.right,
-                                    padding,
                                     max,
                                     controls,
                                     axes,
@@ -127,10 +120,6 @@ Deno.test("production navigation contracts", async (t) => {
                                 scenario + " narrow surface",
                             );
                             assert(
-                                geometry.padding.every((value) => value > 0),
-                                scenario + " card padding",
-                            );
-                            assert(
                                 !geometry.overflow,
                                 scenario + " horizontal overflow",
                             );
@@ -140,12 +129,8 @@ Deno.test("production navigation contracts", async (t) => {
                             );
                             for (const control of geometry.controls) {
                                 assert(
-                                    control.left >=
-                                            geometry.left +
-                                                geometry.padding[3] &&
-                                        control.right <=
-                                            geometry.right -
-                                                geometry.padding[1],
+                                    control.left >= geometry.left &&
+                                        control.right <= geometry.right,
                                     scenario + " control containment",
                                 );
                             }
@@ -183,16 +168,11 @@ Deno.test("production navigation contracts", async (t) => {
                 assertEquals(
                     await page.getByRole("heading", { level: 1 })
                         .allTextContents(),
-                    ["设置"],
-                );
-                assertEquals(
-                    await page.getByRole("heading", { level: 2 })
-                        .allTextContents(),
                     [heading],
                 );
                 assertEquals(
                     await page.getByRole("navigation", { name: "设置分类" })
-                        .getByRole("button", { name: heading, exact: true })
+                        .getByRole("link", { name: heading, exact: true })
                         .getAttribute("aria-current"),
                     "page",
                 );
@@ -207,62 +187,43 @@ Deno.test("production navigation contracts", async (t) => {
                 .click();
             for (const label of ["外观", "AI 问答", "数据与同步", "快捷键"]) {
                 await page.getByRole("navigation", { name: "设置分类" })
-                    .getByRole("button", { name: label, exact: true })
+                    .getByRole("link", { name: label, exact: true })
                     .click();
             }
             await page.waitForURL(origin + "/settings/shortcuts");
             await page.goBack();
             await page.waitForURL(origin + "/");
             await visit("/settings/search");
-            await page.waitForURL(origin + "/settings");
+            await page.getByRole("heading", {
+                level: 1,
+                name: "搜索",
+                exact: true,
+            }).waitFor({ state: "visible" });
+            assertEquals(page.url(), origin + "/settings/search");
         },
     );
     await t.step(
         "anonymous device appearance survives reload without an account",
         async () => {
             await visit("/settings/appearance");
-            await page.getByRole("tab", { name: "浅色", exact: true }).click();
-            await page.getByRole("radio", { name: /空间轻桌面/ }).click();
-            await page.waitForFunction(() => {
-                const radio = document.querySelector(
-                    'button[role="radio"][aria-checked="true"]',
-                );
-                return radio?.textContent?.includes("空间轻桌面") &&
-                    document.documentElement.dataset.theme === "light";
-            });
+            await page.getByRole("radio", { name: "浅色", exact: true })
+                .click();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.theme === "light"
+            );
 
             await page.getByRole("link", { name: "Searcher 首页" }).click();
             await page.waitForURL(origin + "/");
-            await page.locator("main.home-widgets").waitFor({
+            await page.locator("main.home").waitFor({
                 state: "visible",
             });
-            await page.getByRole("heading", { name: "Searcher." }).waitFor({
-                state: "visible",
-            });
-            assertEquals(
-                await page.evaluate(() =>
-                    getComputedStyle(document.querySelector("main")!)
-                        .getPropertyValue("--radius").trim()
-                ),
-                "22px",
-            );
 
             await page.reload();
-            await page.locator("main.home-widgets").waitFor({
+            await page.locator("main.home").waitFor({
                 state: "visible",
             });
             await page.waitForFunction(() =>
                 document.documentElement.dataset.theme === "light"
-            );
-            await page.getByRole("heading", { name: "Searcher." }).waitFor({
-                state: "visible",
-            });
-            assertEquals(
-                await page.evaluate(() =>
-                    getComputedStyle(document.querySelector("main")!)
-                        .getPropertyValue("--radius").trim()
-                ),
-                "22px",
             );
         },
     );
@@ -318,77 +279,17 @@ Deno.test("production navigation contracts", async (t) => {
         async () => {
             await visit("/settings/appearance");
             await page.locator(".user-avatar-badge").waitFor();
-            await page.waitForFunction(() => {
-                const radio = document.querySelector(
-                    'button[role="radio"][aria-checked="true"]',
-                );
-                return radio?.textContent?.includes("极简呼吸");
-            });
 
             await Promise.all([
                 page.waitForResponse((r) =>
                     r.url().endsWith("/api/preferences") &&
                     r.request().method() === "PATCH" && r.ok()
                 ),
-                page.getByRole("tab", { name: "深色", exact: true }).click(),
+                page.getByRole("radio", { name: "深色", exact: true }).click(),
             ]);
-            await Promise.all([
-                page.waitForResponse((r) =>
-                    r.url().endsWith("/api/preferences") &&
-                    r.request().method() === "PATCH" && r.ok()
-                ),
-                page.getByRole("radio", { name: /空间轻桌面/ }).click(),
-            ]);
-            await page.getByRole("switch", {
-                name: "显示 Searcher 标题",
-                exact: true,
-            })
-                .uncheck();
-            await page.waitForFunction(async () => {
-                const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                    const open = indexedDB.open("searcher-client");
-                    open.onsuccess = () => resolve(open.result);
-                    open.onerror = () => reject(open.error);
-                });
-                try {
-                    return await new Promise<boolean>((resolve, reject) => {
-                        const request = db.transaction("state", "readonly")
-                            .objectStore("state").getAll();
-                        request.onsuccess = () => {
-                            const values: unknown[] = request.result;
-                            resolve(
-                                values.some((value) =>
-                                    typeof value === "object" &&
-                                    value !== null &&
-                                    "showTitle" in value &&
-                                    value.showTitle === false
-                                ),
-                            );
-                        };
-                        request.onerror = () => reject(request.error);
-                    });
-                } finally {
-                    db.close();
-                }
-            });
             await page.reload();
             await page.waitForFunction(() =>
                 document.documentElement.dataset.theme === "dark"
-            );
-            await page.waitForFunction(() => {
-                const radio = document.querySelector(
-                    'button[role="radio"][aria-checked="true"]',
-                );
-                return radio?.textContent?.includes("空间轻桌面");
-            });
-
-            assertEquals(
-                await page.getByRole("switch", {
-                    name: "显示 Searcher 标题",
-                    exact: true,
-                })
-                    .isChecked(),
-                false,
             );
 
             const otherDevice = await browser.newContext({
@@ -402,16 +303,9 @@ Deno.test("production navigation contracts", async (t) => {
                 await remote.waitForFunction(() =>
                     document.documentElement.dataset.theme === "dark"
                 );
-                await remote.locator("main.home-widgets").waitFor({
+                await remote.locator("main.home").waitFor({
                     state: "visible",
                 });
-                assertEquals(
-                    await remote.evaluate(() =>
-                        getComputedStyle(document.querySelector("main")!)
-                            .getPropertyValue("--radius").trim()
-                    ),
-                    "22px",
-                );
             } finally {
                 await otherDevice.close();
             }
@@ -424,12 +318,6 @@ Deno.test("production navigation contracts", async (t) => {
             await page.waitForFunction(() =>
                 document.documentElement.dataset.theme === "light"
             );
-            await page.waitForFunction(() => {
-                const radio = document.querySelector(
-                    'button[role="radio"][aria-checked="true"]',
-                );
-                return radio?.textContent?.includes("空间轻桌面");
-            });
 
             await visit("/register");
             await page.locator("#auth-username").fill(username + "_other");
@@ -437,21 +325,6 @@ Deno.test("production navigation contracts", async (t) => {
             await page.locator("#auth-password").fill(password);
             await page.locator("form button[type=submit]").click();
             await page.waitForURL(origin + "/");
-            await Promise.all([
-                page.waitForResponse((r) =>
-                    r.url().endsWith("/api/preferences") &&
-                    r.request().method() === "GET" && r.ok()
-                ),
-                visit("/settings/appearance"),
-            ]);
-            assertEquals(
-                await page.getByRole("switch", {
-                    name: "显示 Searcher 标题",
-                    exact: true,
-                })
-                    .isChecked(),
-                true,
-            );
             await page.getByRole("button", { name: /^用户菜单/ }).click();
             await page.getByRole("menuitem", { name: "退出登录", exact: true })
                 .click();
@@ -460,25 +333,22 @@ Deno.test("production navigation contracts", async (t) => {
             await visit("/login");
             await signIn();
             await page.waitForURL(origin + "/");
-            await page.locator("main.home-widgets").waitFor({
+            await page.locator("main.home").waitFor({
                 state: "visible",
             });
 
             await context.clearCookies();
             await page.getByRole("link", { name: "设置", exact: true }).click();
             await page.getByRole("navigation", { name: "设置分类" })
-                .getByRole("button", { name: "AI 问答", exact: true }).click();
+                .getByRole("link", { name: "AI 问答", exact: true }).click();
             await page.getByRole("link", { name: "登录", exact: true })
-                .waitFor();
+                .first().waitFor();
             await page.waitForFunction(() =>
                 document.documentElement.dataset.theme === "light"
             );
 
             await visit("/");
-            await page.locator("main.home-widgets").waitFor({
-                state: "visible",
-            });
-            await page.getByRole("heading", { name: "Searcher." }).waitFor({
+            await page.locator("main.home").waitFor({
                 state: "visible",
             });
         },
@@ -523,7 +393,7 @@ Deno.test("production navigation contracts", async (t) => {
             await guest.getByRole("heading", { name: "同步", exact: true })
                 .waitFor();
             assertEquals(
-                await guest.getByRole("link", { name: "打开 Design Lab" })
+                await guest.getByRole("link", { name: "打开设计实验室" })
                     .count(),
                 0,
             );
@@ -536,7 +406,7 @@ Deno.test("production navigation contracts", async (t) => {
             await visit("/settings/data");
             await page.getByRole("link", { name: "打开回收站" }).waitFor();
             assertEquals(
-                await page.getByRole("link", { name: "打开 Design Lab" })
+                await page.getByRole("link", { name: "打开设计实验室" })
                     .count(),
                 0,
             );
@@ -575,8 +445,14 @@ Deno.test("production navigation contracts", async (t) => {
                 ]
             ) {
                 await visit(path);
-                await page.getByRole("navigation", { name: "页面层级" })
-                    .getByText(label, { exact: true }).waitFor();
+                const activeLink = page.getByRole("navigation", {
+                    name: "管理后台主导航",
+                }).getByRole("link", { name: label, exact: true });
+                await activeLink.waitFor();
+                assertEquals(
+                    await activeLink.getAttribute("aria-current"),
+                    "page",
+                );
                 assertEquals((await page.reload())?.status(), 200);
             }
             await visit("/");
@@ -613,7 +489,7 @@ Deno.test("production navigation contracts", async (t) => {
         "settings data tab shows the Design Lab entry to admins",
         async () => {
             await visit("/settings/data");
-            await page.getByRole("link", { name: "打开 Design Lab" }).click();
+            await page.getByRole("link", { name: "打开设计实验室" }).click();
             await page.waitForURL(origin + "/design-lab");
         },
     );
@@ -649,33 +525,36 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
-        "mobile breadcrumbs remain visible within viewport",
+        "mobile settings back link and admin navigation remain within viewport",
         async () => {
             await page.setViewportSize({ width: 320, height: 800 });
-            for (
-                const path of [
-                    "/settings/data",
-                    "/admin/backup",
-                    "/account",
-                    "/trash",
-                ]
-            ) {
-                await visit(path);
-                const nav = page.getByRole("navigation", {
-                    name: "页面层级",
-                });
-                await nav.waitFor({ state: "visible" });
-                const bounds = await nav.boundingBox();
-                assertEquals(
-                    !!bounds && bounds.x >= 0 &&
-                        bounds.x + bounds.width <= 320,
-                    true,
-                    path,
-                );
-                await nav.getByRole("link", { name: "首页", exact: true })
-                    .click();
-                await page.waitForURL(origin + "/");
-            }
+            await visit("/settings/data");
+            const back = page.locator(".settings-back");
+            await back.waitFor({ state: "visible" });
+            const backBounds = await back.boundingBox();
+            assertEquals(
+                !!backBounds && backBounds.x >= 0 &&
+                    backBounds.x + backBounds.width <= 320,
+                true,
+                "Settings back link",
+            );
+            await back.click();
+            await page.waitForURL(origin + "/settings");
+            await page.getByRole("navigation", { name: "设置分类" }).waitFor();
+
+            await visit("/admin/backup");
+            const nav = page.getByRole("navigation", {
+                name: "管理后台主导航",
+            });
+            await nav.waitFor({ state: "visible" });
+            const bounds = await nav.boundingBox();
+            assertEquals(
+                !!bounds && bounds.x >= 0 && bounds.x + bounds.width <= 320,
+                true,
+                "/admin/backup",
+            );
+            await nav.getByRole("link", { name: "概览", exact: true }).click();
+            await page.waitForURL(origin + "/admin");
         },
     );
 });

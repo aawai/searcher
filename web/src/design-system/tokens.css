@@ -1,34 +1,79 @@
 @import "tailwindcss";
+/* Searcher Visual Language tokens. Contract: docs/design/VISUAL_LANGUAGE.md */
 :root {
     color-scheme: light;
-    --background: #F5F6F8;
-    --foreground: #20242B;
+
+    /* Color roles: neutral, no hue cast. */
+    --background: #F4F4F5;
+    --foreground: #1D1D1F;
     --surface: #FFFFFF;
-    --surface-soft: #F0F2F5;
     --surface-solid: #FFFFFF;
-    /* Nonmodal windows: solid content and one shared elevation. */
-    --window-surface: var(--surface-solid);
-    --window-border: var(--border);
-    --shadow-window: var(--shadow-l3);
-    --radius-window: var(--radius);
-    --space-window-gap: 16px;
-    --window-resize-hit: 12px;
-    --window-chrome-height: 44px;
-    /* Window semantic tokens (Issue #89 / Workspace refactor) */
-    --surface-window: var(--surface-solid);
-    --surface-window-active: var(--surface-solid);
-    --border-window: var(--border);
-    --border-window-active: var(--accent);
-    --shadow-window-active: var(--shadow-l3);
-    /* Global bands, ordered only against peers in the root/app-shell stack. */
+    --surface-soft: #EBEBEE;
+    --muted: #66666B;
+    --border: rgb(0 0 0 / 0.09);
+    --border-subtle: rgb(0 0 0 / 0.05);
+    /* Standalone form control boundary: >=3:1 against surface and background. */
+    --border-control: #86868B;
+    --danger: #ae3e47;
+    --success: #247c5b;
+    --warning: #946200;
+    --warning-soft: color-mix(in srgb, var(--warning) 12%, var(--surface));
+    --warning-border: color-mix(in srgb, var(--warning) 40%, var(--border));
+    --ring: var(--accent);
+    --accent-soft-mix: 9%;
+    --accent-subtle-mix: 15%;
+    --accent-border-mix: 32%;
+    --accent-mono-soft-mix: 7%;
+    --accent-mono-subtle-mix: 12%;
+    --accent-mono-border-mix: 28%;
+    --accent-soft: color-mix(in srgb, var(--accent) var(--accent-soft-mix), var(--surface));
+    --accent-subtle: color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface-soft));
+    --accent-border: color-mix(in srgb, var(--accent) var(--accent-border-mix), var(--border));
+
+    /* Layers: canvas, content, floating, overlay. Content has no shadow. */
+    --surface-l0: var(--background);
+    --surface-l2: var(--surface-solid);
+    --surface-l3: var(--surface-solid);
+    --surface-workspace: var(--surface-solid);
+    --surface-scrim: rgb(0 0 0 / 0.32);
+    --shadow-l2: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.16);
+    --shadow-l3: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 24px 56px -12px rgb(0 0 0 / 0.28);
+    --shadow-workspace: var(--shadow-l3);
+    --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.20);
+    --shadow-choice-selected: inset 0 0 0 1px var(--accent);
+    --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
+
+    /* Material: translucent surfaces that sit on the wallpaper only. */
+    --material-regular: color-mix(in srgb, var(--surface-solid) 72%, transparent);
+    --material-thick: color-mix(in srgb, var(--surface-solid) 86%, transparent);
+    --material-solid: var(--surface-solid);
+    --material-filter: blur(24px) saturate(1.6);
+
+    /* Notes keep a physical paper metaphor; one card shadow pair. */
+    --shadow-note-card: 0 0 0 0.5px rgb(0 0 0 / 0.05), 0 1px 2px rgb(0 0 0 / 0.05), 0 6px 16px -6px rgb(0 0 0 / 0.12);
+    --shadow-note-card-hover: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 2px 4px rgb(0 0 0 / 0.06), 0 12px 28px -8px rgb(0 0 0 / 0.18);
+    --shadow-note-drag: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 18px 40px -8px rgb(0 0 0 / 0.32);
+    --shadow-note-color-swatch: inset 0 0 0 1px var(--border);
+
+    /* Documents paper and achromatic print. */
+    --surface-document-paper: var(--surface-solid);
+    --space-document-page-gap: var(--space-section-gap);
+    --shadow-document-paper: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.08);
+    --surface-document-print: #ffffff;
+    --foreground-document-print: #111111;
+    --border-document-print: #cccccc;
+    --surface-document-print-soft: #f5f5f5;
+
+    /* Wallpaper canvas. */
+    --wallpaper-overlay-contrast: #ffffff;
+    --wallpaper-focal-marker-size: 24px;
+    --wallpaper-focal-marker-dot-size: 4px;
+    --wallpaper-preview-mobile-height: 380px;
+
+    /* Stacking order only; never implies a stronger shadow. */
     --elevation-wallpaper: -1;
     --elevation-canvas: 10;
-    --elevation-window: 20;
     --elevation-dock: 30;
-    /* Immersive desktop chrome stays above Dock and below Workspace. */
-    --elevation-document-immersive: 31;
-    --elevation-immersive-dock: 32;
-    --elevation-immersive-trigger: 33;
     --elevation-workspace: 40;
     --elevation-sheet-backdrop: 49;
     --elevation-sheet: 50;
@@ -42,186 +87,6 @@
     --elevation-suggestions: 90;
     --elevation-toast: 100;
     --elevation-dev-inspector: var(--elevation-suggestions);
-    --immersive-dock-trigger-height: 12px;
-    --desktop-window-gap: 16px;
-    /* Material levels: canvas, content, primary search, temporary overlay. */
-    --surface-l0: var(--background);
-    --wallpaper-neutral-light: #ffffff;
-    --wallpaper-base-neutral: var(--background);
-    --wallpaper-neutral-dark: #222222;
-    --wallpaper-overlay-contrast: #ffffff;
-    --wallpaper-focal-marker-size: 24px;
-    --wallpaper-focal-marker-dot-size: 4px;
-    --wallpaper-preview-mobile-height: 380px;
-    --surface-l1: color-mix(in srgb, var(--surface-solid) 86%, transparent);
-    --surface-l2: var(--surface-solid);
-    --surface-l3: var(--surface-solid);
-    --surface-navigation: color-mix(in srgb, var(--surface-solid) 94%, transparent);
-    --surface-scrim: rgba(0, 0, 0, 0.45);
-    --shadow-l1: 0 4px 16px -8px rgba(0, 0, 0, 0.10);
-    --shadow-l2: 0 10px 28px -10px rgba(0, 0, 0, 0.18);
-    --shadow-l3: 0 24px 64px -16px rgba(0, 0, 0, 0.24);
-    --shadow-navigation: 0 2px 8px -4px rgba(0, 0, 0, 0.08);
-    /* Document paper presentation; physical metrics remain runtime geometry. */
-    --surface-document-paper: var(--surface-solid);
-    --space-document-page-gap: var(--space-section-gap);
-    --shadow-document-paper: var(--shadow-l1);
-    /* Physical printing is achromatic and independent of the screen theme. */
-    --surface-document-print: #ffffff;
-    --foreground-document-print: #111111;
-    --border-document-print: #cccccc;
-    --surface-document-print-soft: #f5f5f5;
-    --material-blur-content: 12px;
-    --material-blur-search: 16px;
-    --material-blur-navigation: 8px;
-    --muted: #606975;
-    --border: #D9DEE6;
-    /* 表单控件边界：对 surface 与 background 均 ≥3:1（WCAG 1.4.11）；装饰性分隔仍用 --border。 */
-    --border-control: #7C8796;
-    --border-subtle: rgba(0, 0, 0, 0.08);
-    --accent-soft-mix: 9%;
-    --accent-subtle-mix: 15%;
-    --accent-border-mix: 32%;
-    --accent-mono-soft-mix: 7%;
-    --accent-mono-subtle-mix: 12%;
-    --accent-mono-border-mix: 28%;
-    --accent-soft: color-mix(in srgb, var(--accent) var(--accent-soft-mix), var(--surface));
-    --accent-subtle: color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface-soft));
-    --accent-border: color-mix(in srgb, var(--accent) var(--accent-border-mix), var(--border));
-    --card-border: rgba(0, 0, 0, 0.08);
-    --danger: #ae3e47;
-    --success: #247c5b;
-    --warning: #946200;
-    --warning-soft: color-mix(in srgb, var(--warning) 12%, var(--surface-l1));
-    --warning-border: color-mix(in srgb, var(--warning) 40%, var(--border));
-    --ring: var(--accent);
-    --radius: 12px;
-    --search-radius: 16px;
-    --control-radius: 6px;
-    --search-inner-radius: max(var(--control-radius), calc(var(--search-radius) - 8px));
-    --multiline-radius: 8px;
-    --input-radius: 8px;
-    --search-opacity: 1;
-    /* Shared geometry; feature-specific grid/icon metrics stay with the feature. */
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 20px;
-    --space-6: 24px;
-    --space-7: 32px;
-    --space-8: 36px;
-    --space-page-inline: var(--space-7);
-    --space-section: var(--space-6);
-    --space-card: var(--space-6);
-    --space-card-gap: var(--space-3);
-    --space-control-gap: var(--space-2);
-    --space-page-block: var(--space-7);
-    --space-section-gap: var(--space-6);
-    --space-card-padding: var(--space-6);
-    --space-row-gap: var(--space-4);
-    --space-row-block: var(--space-3);
-    --space-inline-gap: var(--space-2);
-    --space-home-hero-inset: var(--home-hero-inset);
-    --space-page-footer: 64px;
-    --space-search-inset-block: 6px;
-    --space-search-inset-inline: var(--space-2);
-    --space-model-pill-block: 5px;
-    --space-model-pill-inline: 9px;
-    --space-note-card-block: 14px;
-    --space-note-card-inline: var(--space-4);
-    --space-note-heading-divider: 5px;
-    --space-note-footer-divider: 6px;
-    --layout-note-actions-reserve: 56px;
-    --space-markdown-heading-before: var(--space-2);
-    --space-markdown-heading-after: var(--space-1);
-    --space-markdown-list-indent: var(--space-5);
-    --notes-board-step: 54px;
-    --notes-board-tilt: 1.2deg;
-    --space-visually-hidden-offset: -1px;
-    --font-brand-size: 19px;
-    --font-search-input-size: 16px;
-    --font-markdown-title-size: 1.35em;
-    --font-markdown-section-size: 1.2em;
-    --font-markdown-subsection-size: 1.1em;
-    --font-note-markdown-title-size: 1.25em;
-    --font-note-markdown-section-size: 1.15em;
-    --font-note-markdown-subsection-size: 1.05em;
-    --font-inline-code-size: .9em;
-    --radius-note-card: 6px;
-    --radius-sheet: 22px;
-    --radius-inline-code: 4px;
-    --radius-input: var(--input-radius);
-    --radius-multiline: var(--multiline-radius);
-    --radius-search-inner: var(--search-inner-radius);
-    --shadow-control-thumb: var(--shadow-l1);
-    --shadow-choice-selected: inset 0 0 0 1px var(--accent);
-    --shadow-note-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 0 rgba(0, 0, 0, 0.03), 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 4px 14px -2px rgba(15, 23, 42, 0.07);
-    --shadow-note-card-hover: inset 0 1px 0 0 rgba(255, 255, 255, 0.9), 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 10px 22px -3px rgba(15, 23, 42, 0.11);
-    --shadow-note-card-compact: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 4px 14px -2px rgba(15, 23, 42, 0.07);
-    --shadow-note-wallpaper: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(0, 0, 0, 0.07), 0 2px 4px rgba(15, 23, 42, 0.12), 0 8px 24px -4px rgba(15, 23, 42, 0.2);
-    --shadow-note-wallpaper-hover: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 3px 6px rgba(15, 23, 42, 0.14), 0 12px 28px -4px rgba(15, 23, 42, 0.24);
-    --shadow-note-color-swatch: inset 0 0 0 1px var(--border), 0 0.5px 1px rgba(0, 0, 0, 0.06);
-    --shadow-note-drag: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 18px 40px -6px rgba(0, 0, 0, 0.35);
-
-    --font-body-size: 14px;
-    --font-body-line-height: 1.57;
-    --font-caption-size: 13px;
-    --font-caption-line-height: 20px;
-    --font-section-title-size: 20px;
-    --font-section-title-line-height: 28px;
-    --font-page-title-size: 28px;
-    --font-page-title-line-height: 36px;
-    --font-component-title-size: 16px;
-    --font-component-title-line-height: 24px;
-    --font-metadata-size: 12px;
-    --font-metadata-line-height: 18px;
-    --font-code-size: 13px;
-    --font-code-line-height: 20px;
-    --font-title-weight: 600;
-    --font-body-weight: 400;
-    --font-label-weight: 500;
-    --font-sans: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB",
-        "Microsoft YaHei", "Noto Sans SC", sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Noto Sans Mono CJK SC", "PingFang SC",
-        "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", monospace;
-    --surface-l2-border: var(--accent-border);
-    --surface-l3-border: var(--border);
-    --surface-navigation-border: var(--border-subtle);
-    --row-min-height: 64px;
-    --layout-workbench-max: 1280px;
-    --page-shell-workbench-max: var(--layout-workbench-max);
-    --layout-ask-workbench-max: clamp(1280px, 82vw, 1760px);
-    --layout-ask-message-max: clamp(900px, 55vw, 1040px);
-    --layout-ask-composer-max: clamp(760px, 50vw, 920px);
-    --layout-management-max: 1100px;
-
-    --layout-page-max: 1040px;
-    --layout-settings-max: 960px;
-    --layout-settings-sidebar: 200px;
-    --layout-settings-panel-max: 720px;
-    --layout-auth-max: 420px;
-    --layout-form-max: 560px;
-    --layout-search-max: 720px;
-    --layout-home-feedback-max: clamp(680px, 52vw, 1080px);
-    --font-home-title-size: clamp(28px, 3.2vw, 42px);
-    --home-hero-inset: clamp(80px, 18dvh, 180px);
-    --layout-bento-max: 960px;
-    --layout-bento-columns: 5fr 3fr;
-    --layout-home-content-max: 720px;
-    --layout-sheet-max: 960px;
-    --sheet-width: min(65vw, var(--layout-sheet-max));
-
-    --control-height: 40px;
-    --control-compact-height: 36px;
-    --control-input-height: 40px;
-    --control-touch-target: 44px;
-    --launcher-touch-cell-size: 88px;
-    --icon-sm: 14px;
-    --icon-md: 16px;
-    --icon-lg: 20px;
-
     /* Local child layers are meaningful only inside their owning stack. */
     --elevation-local-0: 0;
     --elevation-local-1: 1;
@@ -234,51 +99,179 @@
     --elevation-local-10: 10;
     --elevation-local-20: 20;
     --elevation-local-25: 25;
+
+    /* Typography: four steps plus search and code roles. */
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI Variable Text", "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei",
+        "Noto Sans SC", "Noto Sans CJK SC", system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Noto Sans Mono CJK SC", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", monospace;
+    --font-metadata-size: 12px;
+    --font-metadata-line-height: 16px;
+    --font-body-size: 14px;
+    --font-body-line-height: 22px;
+    --font-title-size: 17px;
+    --font-title-line-height: 24px;
+    --font-page-title-size: 24px;
+    --font-page-title-line-height: 32px;
+    --font-search-input-size: 17px;
+    /* iOS zooms focused fields below 16px on touch devices. */
+    --font-input-touch-size: 16px;
+    --font-code-size: 13px;
+    --font-code-line-height: 20px;
+    --font-brand-size: 19px;
+    --font-body-weight: 400;
+    --font-label-weight: 500;
+    --font-title-weight: 600;
+    --font-inline-code-size: .9em;
+    --font-markdown-title-size: 1.35em;
+    --font-markdown-section-size: 1.2em;
+    --font-markdown-subsection-size: 1.1em;
+    --font-note-markdown-title-size: 1.25em;
+    --font-note-markdown-section-size: 1.15em;
+    --font-note-markdown-subsection-size: 1.05em;
+
+    /* Spacing: 4px grid. */
+    /* Grid-gap hairline dividers between cells sharing one surface. */
+    --space-hairline: 1px;
+    --space-half: 2px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 36px;
+    --space-9: 48px;
+    --space-10: 64px;
+    --space-page-inline: var(--space-7);
+    --space-page-block: var(--space-7);
+    --space-section: var(--space-6);
+    --space-section-gap: var(--space-7);
+    --space-card: var(--space-4);
+    --space-card-gap: var(--space-3);
+    --space-card-padding: var(--space-4);
+    --space-row-gap: var(--space-3);
+    --space-row-block: var(--space-3);
+    --space-control-gap: var(--space-2);
+    --space-inline-gap: var(--space-2);
+    --space-home-hero-inset: var(--home-hero-inset);
+    --space-search-inset-block: 6px;
+    --space-search-inset-inline: var(--space-2);
+    --space-model-pill-block: 5px;
+    --space-model-pill-inline: 9px;
+    --space-note-card-block: var(--space-3);
+    --space-note-card-inline: var(--space-4);
+    --space-note-heading-divider: var(--space-1);
+    --space-note-footer-divider: var(--space-2);
+    --space-markdown-heading-before: var(--space-2);
+    --space-markdown-heading-after: var(--space-1);
+    --space-markdown-list-indent: var(--space-5);
+    --space-visually-hidden-offset: -1px;
+    --layout-note-actions-reserve: 56px;
+
+    /* Radius: concentric by layer. */
+    --control-radius: 8px;
+    --input-radius: 8px;
+    --multiline-radius: 10px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 999px;
+    --search-radius: var(--radius-lg);
+    --search-inner-radius: max(var(--control-radius), calc(var(--search-radius) - 8px));
+    --radius-input: var(--input-radius);
+    --radius-multiline: var(--multiline-radius);
+    --radius-search-inner: var(--search-inner-radius);
+    --radius-sheet: var(--radius-lg);
+    --radius-note-card: 10px;
+    --radius-sm: 4px;
+    --radius-inline-code: var(--radius-sm);
+
+    /* Sizes. */
+    --control-height: 36px;
+    --control-input-height: 36px;
+    --control-compact-height: 28px;
+    --control-touch-target: 44px;
+    --row-min-height: 44px;
+    --launcher-touch-cell-size: 88px;
+    --icon-sm: 14px;
+    --icon-md: 16px;
+    --icon-lg: 20px;
+
+    /* Motion: answers user actions only. */
+    --motion-fast: 120ms;
+    --motion-base: 200ms;
+    --motion-panel: 280ms;
+    --ease-standard: cubic-bezier(.2, 0, 0, 1);
+    --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+
+    /* Layout. */
+    --layout-page-max: 1040px;
+    --layout-workbench-max: 1280px;
+    --page-shell-workbench-max: var(--layout-workbench-max);
+    --layout-ask-workbench-max: clamp(1280px, 82vw, 1760px);
+    --layout-ask-message-max: clamp(900px, 55vw, 1040px);
+    --layout-ask-composer-max: clamp(760px, 50vw, 920px);
+    --layout-management-max: 1100px;
+    --layout-settings-max: 960px;
+    --layout-settings-sidebar: 220px;
+    --layout-settings-panel-max: 680px;
+    --layout-auth-max: 380px;
+    --layout-form-max: 560px;
+    --layout-search-max: 640px;
+    --layout-home-content-max: 640px;
+    --home-hero-inset: clamp(80px, 22dvh, 220px);
+    --layout-sheet-max: 960px;
+    --sheet-width: min(65vw, var(--layout-sheet-max));
     --workspace-width: 400px;
     --workspace-editor-expanded-width: 900px;
     --editor-readable-width: 720px;
     --document-outline-width: 260px;
     --document-outline-compact-height: 240px;
     --editor-min-content-height: 240px;
-    --workspace-inset: var(--space-4);
+    --workspace-inset: var(--space-3);
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
     --workspace-mobile-height: 820px;
     --workspace-library-navigation-width: 200px;
-    --surface-workspace: var(--surface-solid);
-    --shadow-workspace: var(--shadow-l2);
 }
+
 [data-theme="dark"] {
     color-scheme: dark;
-    --background: #14171C;
-    --foreground: #EBEEF2;
-    --surface: #1D2128;
-    --surface-soft: #262C35;
-    --surface-solid: #1D2128;
-    --surface-l3: #222730;
-    --shadow-l1: 0 4px 16px -8px rgba(0, 0, 0, 0.28);
-    --shadow-l2: 0 10px 28px -10px rgba(0, 0, 0, 0.55);
-    --shadow-l3: 0 24px 64px -16px rgba(0, 0, 0, 0.70);
-    --shadow-navigation: 0 2px 8px -4px rgba(0, 0, 0, 0.20);
-    --shadow-note-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 0 rgba(0, 0, 0, 0.35), 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 6px 18px -3px rgba(0, 0, 0, 0.45);
-    --shadow-note-card-hover: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 2px 5px 0 rgba(0, 0, 0, 0.45), 0 12px 26px -4px rgba(0, 0, 0, 0.6);
-    --shadow-note-card-compact: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 6px 18px -3px rgba(0, 0, 0, 0.45);
-    --shadow-note-wallpaper: inset 0 1px 0 rgba(255, 255, 255, 0.13), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 2px 5px rgba(0, 0, 0, 0.5), 0 8px 24px -4px rgba(0, 0, 0, 0.6);
-    --shadow-note-wallpaper-hover: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 3px 7px rgba(0, 0, 0, 0.55), 0 12px 28px -4px rgba(0, 0, 0, 0.65);
-    --shadow-note-drag: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 18px 40px -6px rgba(0, 0, 0, 0.65);
-    --muted: #A6AFBC;
-    --border: #3C4654;
-    --border-control: #7A8696;
-    --border-subtle: rgba(255, 255, 255, 0.08);
+    --background: #111113;
+    --foreground: #F5F5F7;
+    --surface: #1C1C1F;
+    --surface-solid: #1C1C1F;
+    --surface-soft: #2A2A2E;
+    --surface-l3: #242428;
+    --muted: #A1A1A6;
+    --border: rgb(255 255 255 / 0.10);
+    --border-subtle: rgb(255 255 255 / 0.06);
+    --border-control: #747479;
+    --danger: #f2929c;
+    --success: #87d9b2;
+    --warning: #f6cc75;
     --accent-soft-mix: 12%;
     --accent-subtle-mix: 18%;
     --accent-mono-soft-mix: 10%;
     --accent-mono-subtle-mix: 16%;
     --accent-mono-border-mix: 30%;
-    --card-border: rgba(255, 255, 255, 0.09);
-    --danger: #f2929c;
-    --success: #87d9b2;
-    --warning: #f6cc75;
+    --surface-scrim: rgb(0 0 0 / 0.5);
+    --shadow-l2: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 24px -6px rgb(0 0 0 / 0.5);
+    --shadow-l3: 0 0 0 0.5px rgb(255 255 255 / 0.10), 0 24px 56px -12px rgb(0 0 0 / 0.65);
+    --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.2), 0 1px 3px rgb(0 0 0 / 0.4);
+    --shadow-note-card: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px -6px rgb(0 0 0 / 0.45);
+    --shadow-note-card-hover: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 28px -8px rgb(0 0 0 / 0.55);
+    --shadow-note-drag: 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 18px 40px -8px rgb(0 0 0 / 0.65);
+    --shadow-document-paper: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.4);
+    /* Dark materials lift from the soft surface so they read against the canvas. */
+    --material-regular: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+    --material-thick: color-mix(in srgb, var(--surface-soft) 88%, transparent);
+    --material-solid: var(--surface-soft);
 }
+
 /* Each palette owns both themes; color-scheme selects the light-dark pair. */
 :root,
 [data-accent="blue"] {
@@ -334,37 +327,53 @@
     --accent-hover: light-dark(#18181b, #f4f4f5);
     --accent-active: light-dark(#09090b, #ffffff);
     --accent-foreground: light-dark(#ffffff, #18181b);
-    /* Achromatic surfaces retain their deliberately quieter existing mixes. */
+    /* Achromatic surfaces retain their deliberately quieter mixes. */
     --accent-soft-mix: var(--accent-mono-soft-mix);
     --accent-subtle-mix: var(--accent-mono-subtle-mix);
     --accent-border-mix: var(--accent-mono-border-mix);
 }
-[data-shape="pill"] {
-    --search-radius: 999px;
+
+/* User preference default; AppState overrides it on :root (0.1–1). */
+:root {
+    --search-opacity: 1;
 }
 
-:root:lang(zh) {
-    --font-metadata-size: 13px;
+/* User preference: pill-shaped search box and its inner controls. */
+[data-shape="pill"] {
+    --search-radius: var(--radius-pill);
+}
+
+/* Without backdrop-filter, or when transparency is reduced, materials are solid. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
+    blur(1px))) {
+    :root,
+    [data-theme="dark"] {
+        --material-regular: var(--material-solid);
+        --material-thick: var(--material-solid);
+    }
+}
+@media (prefers-reduced-transparency: reduce) {
+    :root,
+    [data-theme="dark"] {
+        --material-regular: var(--material-solid);
+        --material-thick: var(--material-solid);
+        --material-filter: none;
+    }
 }
 
 @media (max-width: 767px) {
     :root {
         --space-page-inline: var(--space-4);
-    }
-}
-@media (max-width: 700px) {
-    :root {
-        --home-hero-inset: clamp(72px, 16dvh, 130px);
+        --space-page-block: var(--space-5);
+        --home-hero-inset: clamp(64px, 16dvh, 140px);
         --space-search-inset-block: var(--space-1);
         --space-search-inset-inline: 6px;
-        --font-search-input-size: 15px;
+        /* iOS zooms focused inputs below 16px. */
+        --font-search-input-size: 16px;
+        --sheet-width: 100vw;
     }
 }
-@media (max-width: 640px) {
-    :root {
-        --space-card: var(--space-4);
-    }
-}
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);

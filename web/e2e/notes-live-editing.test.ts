@@ -28,7 +28,7 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
     });
     await page.reload();
     await page.locator(
-        '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+        '.zen-edge-btn[data-workspace="notes"]',
     ).first().click();
     await page.locator(".notes-workspace-list .note-title").filter({
         hasText: "Live business",
@@ -199,7 +199,9 @@ Deno.test("Notes Live Preview: user changes, IME, shortcuts, cloud replacement a
     await t.step(
         "restore updates Live and Source without a second PATCH",
         async () => {
-            await page.getByRole("button", { name: "版本历史", exact: true })
+            await page.getByRole("button", { name: "便签选项", exact: true })
+                .click();
+            await page.getByRole("menuitem", { name: "版本历史", exact: true })
                 .click();
             const versionNumber = await page.evaluate(async (id) => {
                 const versions =

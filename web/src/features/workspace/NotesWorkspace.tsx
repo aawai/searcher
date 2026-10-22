@@ -1,5 +1,4 @@
 import {
-    type CSSProperties,
     lazy,
     type ReactNode,
     Suspense,
@@ -9,19 +8,14 @@ import {
     useRef,
     useState,
 } from "react";
-import { createPortal } from "react-dom";
 import type { NoteSummaryAnalysis } from "./note-summary.ts";
 import { GripVertical } from "lucide-react";
 import {
     closestCenter,
-    type CollisionDetection,
     DndContext,
     type DragEndEvent,
-    DragOverlay,
-    getClientRect,
     KeyboardSensor,
     PointerSensor,
-    pointerWithin,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
@@ -39,7 +33,6 @@ import {
     NoteCard,
     type NoteItem,
 } from "../../components/searcher/NoteCard.tsx";
-import { useMasonryLayout } from "../../components/searcher/masonry.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
 import { WorkspaceSection } from "./WorkspaceSection.tsx";
@@ -118,18 +111,18 @@ function WorkspaceNoteContent({
                 )}
                 summary={preview && (
                     <div className="note-list-detail">
-                        <p className="note-list-summary">
-                            {preview.sourceOnly && (
-                                <span>匹配Markdown源码：</span>
-                            )}
-                            {analysis?.highlight(preview.text, query).map((
-                                part,
-                                index,
-                            ) => part.match
-                                ? <mark key={index}>{part.text}</mark>
-                                : part.text
-                            )}
-                        </p>
+                        {note.body.trim() && (
+                            <p className="note-list-summary">
+                                {preview.sourceOnly && <span>源码匹配：</span>}
+                                {analysis?.highlight(preview.text, query).map((
+                                    part,
+                                    index,
+                                ) => part.match
+                                    ? <mark key={index}>{part.text}</mark>
+                                    : part.text
+                                )}
+                            </p>
+                        )}
                         {note.updatedAt !== undefined && (
                             <time
                                 dateTime={new Date(note.updatedAt)
@@ -179,16 +172,7 @@ function WorkspaceNoteContent({
     );
 }
 
-type MasonryNoteGeometry = {
-    style: CSSProperties;
-    registerCard: (id: string, el: HTMLElement | null) => void;
-};
-
-function WorkspaceNote(
-    { geometry, ...props }: WorkspaceNoteProps & {
-        geometry?: MasonryNoteGeometry;
-    },
-) {
+function WorkspaceNote(props: WorkspaceNoteProps) {
     const {
         attributes,
         listeners,
@@ -201,19 +185,14 @@ function WorkspaceNote(
         disabled: !props.sortable || props.disabled,
     });
     const interactive = props.sortable && !props.disabled;
-    const ref = useCallback((el: HTMLDivElement | null) => {
-        setNodeRef(el);
-        geometry?.registerCard(props.note.id, el);
-    }, [setNodeRef, geometry?.registerCard, props.note.id]);
     return (
         <div
-            ref={ref}
-            className={geometry ? "notes-workspace-masonry-item" : undefined}
+            ref={setNodeRef}
             data-note-id={props.note.id}
             data-dragging={isDragging || undefined}
-            style={geometry?.style ?? (props.sortable
+            style={props.sortable
                 ? { transform: CSS.Transform.toString(transform), transition }
-                : undefined)}
+                : undefined}
         >
             <WorkspaceNoteContent
                 {...props}
@@ -244,114 +223,18 @@ function WorkspaceNote(
     );
 }
 
-type NotesListLayout = "single-column" | "masonry";
-const masonryCollision: CollisionDetection = (args) => {
-    const hits = pointerWithin(args);
-    return hits.length ? hits : closestCenter(args);
-};
-const masonrySortingStrategy = () => null;
-// Masonry translations are layout coordinates, not drag offsets to discard.
-const masonryMeasuring = {
-    draggable: { measure: getClientRect },
-    droppable: { measure: getClientRect },
-};
-
-function WorkspaceMasonryNotesList({
-    notes,
-    renderNote,
-    activeId,
-    renderOverlay,
-}: {
-    notes: NoteItem[];
-    renderNote: (note: NoteItem, geometry?: MasonryNoteGeometry) => ReactNode;
-    activeId?: string | null;
-    renderOverlay?: (note: NoteItem) => ReactNode;
-}) {
-    const [gap, setGap] = useState<number>();
-    const { containerRef, registerCard, layout, heights } = useMasonryLayout({
-        items: notes,
-        gap,
-    });
-    const measureContainer = useCallback((el: HTMLDivElement | null) => {
-        containerRef(el);
-        if (el) {
-            setGap(Number.parseFloat(
-                getComputedStyle(el).getPropertyValue("--space-row-gap"),
-            ));
-        }
-    }, [containerRef]);
-    const active = notes.find((note) => note.id === activeId);
-    return (
-        <>
-            <div
-                ref={measureContainer}
-                className="notes-workspace-list notes-workspace-masonry"
-                data-layout="masonry"
-                data-columns={layout.columns}
-                style={{ height: layout.containerHeight }}
-            >
-                {notes.map((note) => {
-                    const placement = layout.placements.get(note.id);
-                    return renderNote(note, {
-                        registerCard,
-                        style: {
-                            width: placement?.width ?? "100%",
-                            transform: placement
-                                ? `translate3d(${placement.x}px, ${placement.y}px, 0)`
-                                : undefined,
-                            visibility: placement && heights.has(note.id)
-                                ? undefined
-                                : "hidden",
-                        },
-                    });
-                })}
-            </div>
-            {renderOverlay && createPortal(
-                <DragOverlay>
-                    {active && (
-                        <div
-                            className="notes-workspace notes-workspace-masonry-overlay"
-                            aria-hidden="true"
-                            inert
-                            style={{ width: layout.columnWidth }}
-                        >
-                            {renderOverlay(active)}
-                        </div>
-                    )}
-                </DragOverlay>,
-                document.body,
-            )}
-        </>
-    );
-}
-
 function WorkspaceNotesList({
     notes,
-    listLayout,
     renderNote,
-    activeId,
-    renderOverlay,
 }: {
     notes: NoteItem[];
-    listLayout: NotesListLayout;
-    renderNote: (note: NoteItem, geometry?: MasonryNoteGeometry) => ReactNode;
-    activeId?: string | null;
-    renderOverlay?: (note: NoteItem) => ReactNode;
+    renderNote: (note: NoteItem) => ReactNode;
 }) {
-    return listLayout === "masonry"
-        ? (
-            <WorkspaceMasonryNotesList
-                notes={notes}
-                renderNote={renderNote}
-                activeId={activeId}
-                renderOverlay={renderOverlay}
-            />
-        )
-        : (
-            <div className="notes-workspace-list" data-layout="single-column">
-                {notes.map((note) => renderNote(note))}
-            </div>
-        );
+    return (
+        <div className="notes-workspace-list" data-layout="single-column">
+            {notes.map((note) => renderNote(note))}
+        </div>
+    );
 }
 export function NotesWorkspace(
     {
@@ -366,7 +249,6 @@ export function NotesWorkspace(
         loading,
         error,
         onRetry,
-        listLayout,
     }: {
         state: NotesRoute;
         notes: NoteItem[];
@@ -379,16 +261,12 @@ export function NotesWorkspace(
         loading: boolean;
         error: string;
         onRetry: () => void;
-        listLayout: NotesListLayout;
     },
 ) {
     const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
         new Set()
     );
 
-    const [activeMasonryNoteId, setActiveMasonryNoteId] = useState<
-        string | null
-    >(null);
     const [analysis, setAnalysis] = useState<NoteSummaryAnalysis | null>(null);
     const summaryCache = useRef(
         new Map<string, { body: string; readable: string }>(),
@@ -527,7 +405,6 @@ export function NotesWorkspace(
     }
 
     function reorder(event: DragEndEvent) {
-        setActiveMasonryNoteId(null);
         if (!event.over || event.active.id === event.over.id || isSearching) {
             return;
         }
@@ -538,25 +415,7 @@ export function NotesWorkspace(
             note.id === event.over?.id
         );
         if (from < 0 || overIndex < 0) return;
-        let to = overIndex;
-        // Keyboard coordinates identify the destination slot, not a pointer insertion edge.
-        if (
-            listLayout === "masonry" && event.activatorEvent.type !== "keydown"
-        ) {
-            const translated = event.active.rect.current.translated;
-            if (!translated) return;
-            const after = translated.top + translated.height / 2 >
-                event.over.rect.top + event.over.rect.height / 2;
-            to = Math.max(
-                0,
-                Math.min(
-                    otherNotes.length - 1,
-                    overIndex + Number(after) - Number(from < overIndex),
-                ),
-            );
-        }
-        if (from === to) return;
-        const reorderedOther = arrayMove(otherNotes, from, to);
+        const reorderedOther = arrayMove(otherNotes, from, overIndex);
         void onReorder([...fixedNotes, ...reorderedOther]);
     }
 
@@ -572,17 +431,12 @@ export function NotesWorkspace(
             onDelete: () => handleDelete(note.id),
         };
     }
-    function renderNote(
-        note: NoteItem,
-        geometry?: MasonryNoteGeometry,
-        sortable = false,
-    ) {
+    function renderNote(note: NoteItem, sortable = false) {
         return (
             <WorkspaceNote
                 key={note.id}
                 {...noteProps(note)}
                 sortable={sortable}
-                geometry={geometry}
             />
         );
     }
@@ -600,7 +454,7 @@ export function NotesWorkspace(
             )}
             {error && (
                 <StatusBanner tone="error" density="compact">
-                    <div className="flex items-center justify-between gap-3 w-full">
+                    <div className="notes-workspace-error">
                         <span>{error}</span>
                         <Button variant="outline" size="sm" onClick={onRetry}>
                             重试
@@ -613,12 +467,11 @@ export function NotesWorkspace(
                     <>
                         {fixedNotes.length > 0 && (
                             <WorkspaceSection
-                                title="置顶与首页固定"
+                                title="已固定"
                                 count={fixedNotes.length}
                             >
                                 <WorkspaceNotesList
                                     notes={fixedNotes}
-                                    listLayout={listLayout}
                                     renderNote={renderNote}
                                 />
                             </WorkspaceSection>
@@ -636,7 +489,6 @@ export function NotesWorkspace(
                                     headingLevel={3}
                                     density="compact"
                                     title="还没有便签"
-                                    description="点击底部“新建便签”开始记录。"
                                 />
                             )}
                             {!loading && !error && notes.length > 0 &&
@@ -649,47 +501,20 @@ export function NotesWorkspace(
                             )}
                             {otherNotes.length > 0 && (
                                 <DndContext
-                                    measuring={listLayout === "masonry"
-                                        ? masonryMeasuring
-                                        : undefined}
                                     sensors={sensors}
-                                    collisionDetection={listLayout === "masonry"
-                                        ? masonryCollision
-                                        : closestCenter}
-                                    onDragStart={(event) => {
-                                        if (listLayout === "masonry") {
-                                            setActiveMasonryNoteId(
-                                                String(event.active.id),
-                                            );
-                                        }
-                                    }}
-                                    onDragCancel={() =>
-                                        setActiveMasonryNoteId(null)}
+                                    collisionDetection={closestCenter}
                                     onDragEnd={reorder}
                                 >
                                     <SortableContext
                                         items={otherNotes.map((note) =>
                                             note.id
                                         )}
-                                        strategy={listLayout === "masonry"
-                                            ? masonrySortingStrategy
-                                            : verticalListSortingStrategy}
+                                        strategy={verticalListSortingStrategy}
                                     >
                                         <WorkspaceNotesList
                                             notes={otherNotes}
-                                            listLayout={listLayout}
-                                            renderNote={(note, geometry) =>
-                                                renderNote(
-                                                    note,
-                                                    geometry,
-                                                    true,
-                                                )}
-                                            activeId={activeMasonryNoteId}
-                                            renderOverlay={(note) => (
-                                                <WorkspaceNoteContent
-                                                    {...noteProps(note)}
-                                                />
-                                            )}
+                                            renderNote={(note) =>
+                                                renderNote(note, true)}
                                         />
                                     </SortableContext>
                                 </DndContext>
@@ -707,7 +532,6 @@ export function NotesWorkspace(
                                 headingLevel={3}
                                 density="compact"
                                 title="没有匹配的便签"
-                                description="清空搜索可查看全部。"
                                 action={
                                     <Button
                                         variant="outline"
@@ -722,7 +546,6 @@ export function NotesWorkspace(
                         {searchNotes.length > 0 && (
                             <WorkspaceNotesList
                                 notes={searchNotes}
-                                listLayout={listLayout}
                                 renderNote={renderNote}
                             />
                         )}

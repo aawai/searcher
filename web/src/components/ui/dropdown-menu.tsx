@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
@@ -53,7 +54,7 @@ function DropdownMenuPopup({
     return (
         <MenuPrimitive.Popup
             data-slot="dropdown-menu-content"
-            className={cn("engine-menu", className)}
+            className={cn("menu-popup", className)}
             {...props}
         />
     );
@@ -61,12 +62,26 @@ function DropdownMenuPopup({
 
 function DropdownMenuItem({
     className,
+    variant = "default",
     ...props
-}: MenuPrimitive.Item.Props) {
+}: MenuPrimitive.Item.Props & { variant?: "default" | "destructive" }) {
     return (
         <MenuPrimitive.Item
             data-slot="dropdown-menu-item"
-            className={cn("engine-option", className)}
+            data-variant={variant}
+            className={cn("menu-item", className)}
+            {...props}
+        />
+    );
+}
+
+function DropdownMenuSeparator(
+    { className, ...props }: MenuPrimitive.Separator.Props,
+) {
+    return (
+        <MenuPrimitive.Separator
+            data-slot="dropdown-menu-separator"
+            className={cn("menu-separator", className)}
             {...props}
         />
     );
@@ -98,13 +113,16 @@ function DropdownMenuRadioItem(
 ) {
     return (
         <MenuPrimitive.RadioItem
-            className={cn("engine-option", className)}
+            className={cn("menu-item", className)}
             {...props}
         >
-            <MenuPrimitive.RadioItemIndicator aria-hidden="true">
-                ✓
-            </MenuPrimitive.RadioItemIndicator>
             {children}
+            <MenuPrimitive.RadioItemIndicator
+                className="menu-item-indicator"
+                aria-hidden="true"
+            >
+                <Check size="1em" className="icon-md" />
+            </MenuPrimitive.RadioItemIndicator>
         </MenuPrimitive.RadioItem>
     );
 }
@@ -118,5 +136,6 @@ export {
     DropdownMenuPositioner,
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 };

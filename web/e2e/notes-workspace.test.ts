@@ -68,30 +68,19 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
     function getNotesWorkspace(p: Page = page) {
         return p.locator(
-            ".desktop-window[data-window-id='notes'], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel",
+            ".workspace-panel--mobile, aside.workspace-panel, .workspace-panel",
         );
     }
 
     async function openNotesRoot(p: Page = page) {
         const trigger = p.locator(
-            '.desktop-dock button[data-workspace="notes"], .desktop-dock button[aria-label="便签工作区"], .workspace-mobile-navigation button[data-workspace="notes"], .workspace-mobile-navigation button[aria-label="便签工作区"], .zen-edge-btn[data-workspace="notes"], .zen-edge-trigger button[data-workspace="notes"], button[aria-label="便签工作区"]',
+            '.zen-edge-btn[data-workspace="notes"], button[aria-label="便签工作区"]',
         ).first();
         await trigger.waitFor({ state: "visible" });
         await trigger.click();
     }
 
     async function ensureNotesRoot(p: Page = page) {
-        // Close any open note entity windows
-        const noteWindowCloseBtns = p.locator(
-            '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-        );
-        const count = await noteWindowCloseBtns.count();
-        for (let i = 0; i < count; i++) {
-            const btn = noteWindowCloseBtns.first();
-            if (await btn.isVisible()) {
-                await btn.click();
-            }
-        }
         const currentPanel = getNotesWorkspace(p);
         if (!(await currentPanel.isVisible())) {
             await openNotesRoot(p);
@@ -181,12 +170,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     await page.waitForURL(origin + "/");
     await page.locator("main").waitFor({ state: "visible" });
 
-    // Set widgets style as baseline
-    await visit("/settings/appearance");
-    await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.locator('.layout-mode-card[aria-checked="true"]', {
-        hasText: "空间轻桌面",
-    }).waitFor();
     await page.evaluate(async () => {
         const response = await fetch("/api/preferences", {
             method: "PATCH",
@@ -202,33 +185,18 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
     await t.step(
         "Notes #44: Empty state (no notes) and search no result empty state",
         async () => {
-            // Open Notes workspace from Dock
+            // Open Notes workspace from Zen edge trigger
             await openNotesRoot(page);
 
             const panel = getNotesWorkspace(page);
             await panel.waitFor({ state: "visible" });
             assertEquals(
-                await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
-                ).textContent(),
+                await panel.locator(".workspace-title").textContent(),
                 "便签",
             );
             assertEquals(
-                await panel.getAttribute("data-window-id"),
-                "notes",
-            );
-            assertEquals(
-                await panel.getAttribute("data-window-active"),
-                "true",
-            );
-            assertEquals(
                 await panel.getAttribute("data-presentation"),
-                "window",
-            );
-            assertEquals(
-                await page.locator(".desktop-window .workspace-switcher")
-                    .count(),
-                0,
+                "panel",
             );
 
             // 1. Initial 0-notes empty state
@@ -241,10 +209,8 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await allHeading.waitFor({ state: "visible" });
             assertEquals(await allHeading.textContent(), "全部便签");
             assertEquals(
-                await panel.locator(
-                    ".workspace-footer button.workspace-primary",
-                )
-                    .textContent(),
+                await panel.locator(".workspace-header .workspace-primary")
+                    .getAttribute("aria-label"),
                 "新建便签",
             );
 
@@ -387,14 +353,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             );
 
             const fixedHeading = panel.getByRole("heading", {
-                name: "置顶与首页固定",
+                name: "已固定",
                 level: 3,
             });
             await fixedHeading.waitFor({ state: "visible" });
-            assertEquals(await fixedHeading.textContent(), "置顶与首页固定");
+            assertEquals(await fixedHeading.textContent(), "已固定");
 
             const fixedSection = panel.getByRole("region", {
-                name: "置顶与首页固定",
+                name: "已固定",
             });
             assertEquals(await fixedSection.locator(".note-card").count(), 3);
             const fixedText = await fixedSection.textContent() ?? "";
@@ -435,9 +401,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 const headings = Array.from(
                     document.querySelectorAll(".workspace-section-title"),
                 );
-                return !headings.some((h) =>
-                    h.textContent?.includes("置顶与首页固定")
-                );
+                return !headings.some((h) => h.textContent?.includes("已固定"));
             });
             const searchHeading = panel.getByRole("heading", {
                 name: "搜索结果",
@@ -446,7 +410,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await searchHeading.waitFor({ state: "visible" });
             assertEquals(await searchHeading.textContent(), "搜索结果");
             assertEquals(
-                await panel.getByRole("region", { name: "置顶与首页固定" })
+                await panel.getByRole("region", { name: "已固定" })
                     .count(),
                 0,
             );
@@ -466,7 +430,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     .length === 5
             );
             assertEquals(
-                await panel.getByRole("region", { name: "置顶与首页固定" })
+                await panel.getByRole("region", { name: "已固定" })
                     .count(),
                 0,
             );
@@ -492,11 +456,12 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await firstCard.waitFor({ state: "visible" });
 
             // 1. Click drag grip -> must NOT navigate to editor
+            await firstCard.hover();
             const dragGrip = firstCard.locator(".note-drag");
             await dragGrip.click();
             assertEquals(
                 await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
+                    ".workspace-title",
                 ).textContent(),
                 "便签",
             );
@@ -516,7 +481,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await expandBtn.click();
             assertEquals(
                 await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
+                    ".workspace-title",
                 ).textContent(),
                 "便签",
             );
@@ -536,7 +501,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await collapseBtn.click();
             assertEquals(
                 await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
+                    ".workspace-title",
                 ).textContent(),
                 "便签",
             );
@@ -564,7 +529,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             await pinItem.click();
             assertEquals(
                 await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
+                    ".workspace-title",
                 ).textContent(),
                 "便签",
             );
@@ -575,51 +540,38 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 0,
             );
 
-            // 5. Click card body (title) -> on desktop >=1024, opens entity window while Notes browser stays at "便签"
+            // 5. Click card body (title) -> opens note editor in the notes panel
             await firstCard.locator(".note-title").click();
             const titleInput = page.locator(
                 'input[aria-label="便签标题"], [id^="note-title-input"]',
             );
             await titleInput.waitFor({ state: "visible" });
-            assertEquals(
-                await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
-                ).textContent(),
-                "便签",
-            );
-            const noteEntityWin = page.locator(
-                '.desktop-window[data-window-kind="note"]',
-            );
-            assertEquals(await noteEntityWin.count(), 1);
 
-            // Close note window -> entity window closes, Notes browser remains intact
-            const closeBtn = noteEntityWin.locator(
-                'button[aria-label="关闭便签"]',
+            // Back to list -> Notes browser remains intact
+            const backBtn = panel.locator(
+                'button[aria-label="返回便签列表"], button[aria-label="返回上一级"]',
             );
-            await closeBtn.click();
-            await noteEntityWin.waitFor({ state: "detached" });
+            await backBtn.click();
+            await panel.locator(".notes-workspace-list").first().waitFor({
+                state: "visible",
+            });
             assertEquals(
-                await panel.locator(
-                    ".desktop-window-chrome-title, .workspace-title",
-                ).textContent(),
+                await panel.locator(".workspace-title").textContent(),
                 "便签",
             );
         },
     );
 
     await t.step(
-        "Notes #44/#109: Inline expand/collapse, card column-width geometry (<=2px), and API write purity",
+        "Notes #44/#109: Inline expand/collapse and API write purity",
         async () => {
             await ensureNotesRoot(page);
             const panel = getNotesWorkspace(page);
             const listEl = panel.locator(".notes-workspace-list").first();
-            const listWidth = await listEl.evaluate((el) =>
-                el.getBoundingClientRect().width
+            assertEquals(
+                await listEl.getAttribute("data-layout"),
+                "single-column",
             );
-            assertEquals(await listEl.getAttribute("data-layout"), "masonry");
-            const columns = Number(await listEl.getAttribute("data-columns"));
-            assertEquals(columns >= 1 && columns <= 3, true);
-            const columnWidth = (listWidth - 16 * (columns - 1)) / columns;
 
             const card = panel.locator(".notes-workspace-list .note-card")
                 .first();
@@ -631,15 +583,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     el.classList.contains("note-card--compact")
                 ),
                 true,
-            );
-            const compactCardWidth = await card.evaluate((el) =>
-                el.getBoundingClientRect().width
-            );
-            const compactDiff = Math.abs(compactCardWidth - columnWidth);
-            assertEquals(
-                compactDiff <= 2,
-                true,
-                `Compact card width ${compactCardWidth} vs column width ${columnWidth} diff ${compactDiff} > 2px`,
             );
 
             // Get note ID
@@ -684,15 +627,27 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 return c && !c.classList.contains("note-card--compact");
             });
 
-            // Expanded card width check
-            const expandedCardWidth = await card.evaluate((el) =>
-                el.getBoundingClientRect().width
+            // Single column: the expanded card keeps the list's content width.
+            const [expandedCardWidth, listContentWidth] = await card.evaluate(
+                (el) => {
+                    const list = el.closest<HTMLElement>(
+                        ".notes-workspace-list",
+                    )!;
+                    const style = getComputedStyle(list);
+                    return [
+                        el.getBoundingClientRect().width,
+                        list.clientWidth - parseFloat(style.paddingLeft) -
+                        parseFloat(style.paddingRight),
+                    ];
+                },
             );
-            const expandedDiff = Math.abs(expandedCardWidth - columnWidth);
+            const expandedDiff = Math.abs(
+                expandedCardWidth - listContentWidth,
+            );
             assertEquals(
                 expandedDiff <= 2,
                 true,
-                `Expanded card width ${expandedCardWidth} vs column width ${columnWidth} diff ${expandedDiff} > 2px`,
+                `Expanded card width ${expandedCardWidth} vs list width ${listContentWidth} diff ${expandedDiff} > 2px`,
             );
 
             // Preview is rendered inside card in root
@@ -916,7 +871,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             try {
                 await mobile.goto(origin + "/");
                 await mobile.locator(
-                    ".workspace-mobile-navigation, .desktop-dock, .zen-edge-trigger",
+                    ".zen-edge-trigger",
                 ).waitFor();
                 fixtureId = await mobile.evaluate(async () => {
                     const response = await fetch("/api/notes", {
@@ -1173,13 +1128,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             );
             if (await returnBack.isVisible()) {
                 await returnBack.click();
-            } else {
-                const closeNoteBtn = page.locator(
-                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-                ).first();
-                if (await closeNoteBtn.isVisible()) {
-                    await closeNoteBtn.click();
-                }
             }
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
@@ -1239,14 +1187,17 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 name: "发现版本冲突",
             });
             await conflictDialog.waitFor({ state: "visible" });
-            await conflictDialog.getByRole("tab", { name: /云端最新版本/ })
+            await conflictDialog.getByRole("tab", {
+                name: "云端版本",
+                exact: true,
+            })
                 .click();
             assertStringIncludes(
                 await conflictDialog.textContent() ?? "",
                 serverUpdatedBody,
             );
             await conflictDialog.getByRole("tab", {
-                name: "本地修改 (未保存)",
+                name: "本地修改",
                 exact: true,
             }).click();
             assertStringIncludes(
@@ -1277,7 +1228,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     "已保存",
                 )
             );
-            await page.getByRole("button", { name: "版本历史", exact: true })
+            await page.getByRole("button", { name: "便签选项", exact: true })
+                .click();
+            await page.getByRole("menuitem", { name: "版本历史", exact: true })
                 .click();
             await page.locator(".note-history").waitFor({ state: "visible" });
             await page.getByRole("button", { name: "返回编辑", exact: true })
@@ -1353,13 +1306,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             );
             if (await returnBack2.isVisible()) {
                 await returnBack2.click();
-            } else {
-                const closeNoteBtn = page.locator(
-                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-                ).first();
-                if (await closeNoteBtn.isVisible()) {
-                    await closeNoteBtn.click();
-                }
             }
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
@@ -1392,9 +1338,17 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             });
 
             try {
-                // Click "版本历史" button
-                const versionsBtn = page.locator('button:has-text("版本历史")');
-                await versionsBtn.click();
+                // Open 便签选项 menu and choose 版本历史
+                await page.getByRole("button", {
+                    name: "便签选项",
+                    exact: true,
+                })
+                    .click();
+                await page.getByRole("menuitem", {
+                    name: "版本历史",
+                    exact: true,
+                })
+                    .click();
 
                 // Error alert is displayed
                 const errorAlert = page.locator('.note-history [role="alert"]');
@@ -1453,13 +1407,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
             );
             if (await returnBack3.isVisible()) {
                 await returnBack3.click();
-            } else {
-                const closeNoteBtn = page.locator(
-                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-                ).first();
-                if (await closeNoteBtn.isVisible()) {
-                    await closeNoteBtn.click();
-                }
             }
             await page.locator(".notes-workspace-list").first().waitFor({
                 state: "visible",
@@ -1498,7 +1445,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 // Reload page to trigger stale cache fallback
                 await page.reload();
 
-                // Open Notes workspace from Dock
+                // Open Notes workspace from Zen edge trigger
                 await openNotesRoot(page);
                 await panel.waitFor({ state: "visible" });
 
@@ -1610,20 +1557,13 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                         await currentPanel.waitFor({ state: "visible" });
                     }
 
-                    // 1. Verify header and footer are visible and fixed (not pushed out of viewport)
-                    const header = currentPanel.locator(
-                        ".desktop-window-chrome, .workspace-header",
-                    );
-                    const footer = currentPanel.locator(".workspace-footer");
+                    // 1. Verify header is visible and fixed (not pushed out of viewport)
+                    const header = currentPanel.locator(".workspace-header");
                     await header.waitFor({ state: "visible" });
-                    await footer.waitFor({ state: "visible" });
 
                     const headerBox = await header.boundingBox();
-                    const footerBox = await footer.boundingBox();
                     assertEquals(headerBox !== null, true);
-                    assertEquals(footerBox !== null, true);
                     assertEquals((headerBox?.y ?? -1) >= 0, true);
-                    assertEquals((footerBox?.y ?? -1) < vp.height, true);
 
                     // 2. Verify notes body has vertical scroll and NO horizontal overflow
                     const overflowCheck = await currentPanel.evaluate((el) => {
@@ -1680,7 +1620,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                     // On mobile sheet (< 768px), dismiss sheet before switching viewport
                     if (vp.width < 768) {
                         const closeBtn = currentPanel.locator(
-                            '.desktop-window-chrome button[aria-label="收起工作区"], .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
+                            'button[aria-label="收起工作区"]',
                         );
                         if (await closeBtn.isVisible()) {
                             await closeBtn.click();
@@ -1713,12 +1653,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 });
             });
 
-            // Switch to Zen layout
-            await visit("/settings/appearance");
-            await page.getByText("极简呼吸", { exact: true }).click();
-            await page.locator('.layout-mode-card[aria-checked="true"]', {
-                hasText: "极简呼吸",
-            }).waitFor();
             await visit("/");
 
             // Record initial FloatingNotes position
@@ -1788,131 +1722,6 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 ) < 1,
                 true,
             );
-
-            // Restore widgets layout
-            await visit("/settings/appearance");
-            await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.locator('.layout-mode-card[aria-checked="true"]', {
-                hasText: "空间轻桌面",
-            }).waitFor();
-            await visit("/");
-        },
-    );
-
-    await t.step(
-        "Notes #44: ControlledNotes deterministic spatial layout and narrow fallback",
-        async () => {
-            // Ensure widgets layout and desktop viewport
-            await page.setViewportSize({ width: 1440, height: 900 });
-
-            // Seed exactly 3 home-fixed notes
-            await page.evaluate(async () => {
-                const list = await fetch("/api/notes").then((r) => r.json());
-                for (let i = 0; i < list.data.length; i++) {
-                    const item = list.data[i];
-                    await fetch(`/api/notes/${encodeURIComponent(item.id)}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            isHomeFixed: i < 3,
-                            version: item.version,
-                        }),
-                    });
-                }
-            });
-
-            await page.reload();
-            await page.locator("main").waitFor({ state: "visible" });
-
-            const homeBoard = page.locator(".controlled-notes-board");
-            await homeBoard.waitFor({ state: "visible" });
-
-            // 1. Desktop deterministic spatial layout check (1440px)
-            const desktopSlots = homeBoard.locator(".controlled-note-slot");
-            assertEquals(await desktopSlots.count(), 3);
-
-            const slotLayouts = await page.evaluate(() => {
-                const s0 = document.querySelector(
-                    '.controlled-note-slot[data-slot-index="0"]',
-                );
-                const s1 = document.querySelector(
-                    '.controlled-note-slot[data-slot-index="1"]',
-                );
-                const s2 = document.querySelector(
-                    '.controlled-note-slot[data-slot-index="2"]',
-                );
-                if (!s0 || !s1 || !s2) return null;
-                const cs0 = globalThis.getComputedStyle(s0);
-                const cs1 = globalThis.getComputedStyle(s1);
-                const cs2 = globalThis.getComputedStyle(s2);
-                return {
-                    z0: cs0.zIndex,
-                    z1: cs1.zIndex,
-                    z2: cs2.zIndex,
-                    t0: cs0.transform,
-                    t1: cs1.transform,
-                    t2: cs2.transform,
-                    display:
-                        globalThis.getComputedStyle(s0.parentElement!).display,
-                };
-            });
-
-            assertEquals(slotLayouts !== null, true);
-            assertEquals(slotLayouts?.display, "grid");
-            assertEquals(slotLayouts?.z0, "1");
-            assertEquals(slotLayouts?.z1, "2");
-            assertEquals(slotLayouts?.z2, "3");
-            // Slot 0 and Slot 1 have distinct deterministic tilts (transform matrix is not none)
-            assertEquals(slotLayouts?.t0 !== "none", true);
-            assertEquals(slotLayouts?.t1 !== "none", true);
-            assertEquals(slotLayouts?.t0 !== slotLayouts?.t1, true);
-
-            // Screenshot desktop ControlledNotes
-            await page.screenshot({
-                path: `${screenshotDir}/controlled-notes-desktop.png`,
-            });
-
-            // 2. Mobile narrow fallback check (390px <= 767px)
-            await page.setViewportSize({ width: 390, height: 844 });
-            // Wait for transition to complete
-            await page.waitForFunction(() => {
-                const board = document.querySelector(".controlled-notes-board");
-                const s0 = document.querySelector(
-                    '.controlled-note-slot[data-slot-index="0"]',
-                );
-                if (!board || !s0) return false;
-                const csBoard = globalThis.getComputedStyle(board);
-                const cs0 = globalThis.getComputedStyle(s0);
-                return csBoard.display === "flex" &&
-                    csBoard.flexDirection === "column" &&
-                    cs0.alignSelf === "stretch" &&
-                    cs0.transform === "none";
-            });
-
-            const mobileLayout = await page.evaluate(() => {
-                const board = document.querySelector(".controlled-notes-board");
-                const s0 = document.querySelector(
-                    '.controlled-note-slot[data-slot-index="0"]',
-                );
-                if (!board || !s0) return null;
-                const csBoard = globalThis.getComputedStyle(board);
-                const cs0 = globalThis.getComputedStyle(s0);
-                return {
-                    display: csBoard.display,
-                    flexDirection: csBoard.flexDirection,
-                    transform: cs0.transform,
-                    alignSelf: cs0.alignSelf,
-                };
-            });
-
-            assertEquals(mobileLayout !== null, true);
-            assertEquals(mobileLayout?.display, "flex");
-            assertEquals(mobileLayout?.flexDirection, "column");
-            assertEquals(mobileLayout?.alignSelf, "stretch");
-            assertEquals(mobileLayout?.transform, "none");
-
-            // Restore desktop viewport
-            await page.setViewportSize({ width: 1440, height: 900 });
         },
     );
 });

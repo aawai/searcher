@@ -42,7 +42,8 @@ runtime；
   baseline。
 - 新代码 typecheck、lint、format 通过。UI Guard 0 violations，baseline 未放宽。
 - 390×844、768×1024、1440×900 × light/dark 六组合实页截图；无页面横向 overflow。
-  WCAG 2A/2AA axe 0 violations。详见 `UI_REVIEW_CHECKLIST.md`。
+  WCAG 2A/2AA axe 0 violations。实页验收依据
+  [UI 验收清单](../design/UI_CHECKLIST.md)。
 - 独立实页 smoke 用 Chromium CDP composition 输入“中文输入验证”，canonical
   Markdown 保留完整中文；不是 OS 输入法候选窗人工验收。
 

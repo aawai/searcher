@@ -1,9 +1,7 @@
 # 前端开发
 
-UI 规则以
-[Design Principles](design/DESIGN_PRINCIPLES.md)、[Design System](design/DESIGN_SYSTEM.md)
-与 [UI Review Checklist](design/UI_REVIEW_CHECKLIST.md)
-为准；本文只记录代码位置与维护约定。
+UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页验收按
+[UI 验收清单](design/UI_CHECKLIST.md)；本文只记录代码位置、组件归属、交互与可访问性约定。
 
 ## 组件
 
@@ -16,6 +14,19 @@ UI 规则以
 - `/design-lab/markdown-editor` 是 M0A
   编辑技术验证入口，仅本地演示，不保存或替换便签。验证结论、bundle 口径和 #110
   输入约束见 [M0A 报告](editor/MARKDOWN_EDITOR_M0A.md)。
+- 页面语义由 `components/searcher/` 拥有：`PageShell` / `PageHeader`
+  管理页面骨架与唯一标题；`semantic.tsx` 提供 `Section`、`SettingsCard` /
+  `SettingsRow`、`ActionGroup`、`EmptyState`、`StatusBanner`、`LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`
+  等共享语义组件。Feature 不另建同名反馈或分组容器。
+- 标题层级：每个页面只有一个 `h1`。设置页 `h1` 为“设置”，Tab 为 `h2`，分组为
+  `h3`；Tab 内的 `LoadingState` / `EmptyState` 使用 `headingLevel={3}`。Ask
+  登录态的会话标题是唯一 H1。
+- 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
+  `AppWindow`、便签 `StickyNote`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
+  `Folder`。
+- 用户可见文案（应用 / 网站 / 网址、便签 /
+  笔记、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
+  保持 canonical 英文命名。
 
 ## 样式
 
@@ -23,18 +34,17 @@ UI 规则以
   `--space-*`、`--font-*`、`--layout-*`、`--control-*` 和
   `--elevation-*`。通用页面、表单、卡片和控件优先消费这些
   Token，不重复写入相同固定尺寸。
-- `web/src/styles/global.css` 保留页面骨架、通用控件与跨业务公共规则；Zen /
-  Widgets 专属布局在
+- `web/src/styles/global.css` 保留页面骨架、通用控件与跨业务公共规则；首页 Zen
+  布局在
   `web/src/features/home-layouts/home-layouts.css`，应用图标和文件夹网格在
   `web/src/components/searcher/launcher.css`。`web/src/main.tsx`
   按首页布局、全局样式、Launcher
   的顺序加载，保持公共交互状态和网格覆盖的级联关系。
 - 页面横向留白在 767px 以下为 16px，通用卡片内边距在 640px 以下为
   16px；触屏常规控件使用 44px 点击目标。不要把不同用途的尺寸合并成同一个 Token。
-- 稳定布局使用语义 class 或 Tailwind 标准 utility；壁纸、拖拽变换和瀑布流位置等
-  runtime 值保留 inline style。图标尺寸和 Launcher
-  方格等组件内部几何由组件维护。
-- 样式调整后构建前端，实页检查两种布局、设置、登录和应用面板的浅深色与壁纸组合。
+- 稳定布局使用语义 class 或 Tailwind 标准 utility；壁纸、拖拽变换等 runtime
+  值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
+- 样式调整后构建前端，实页检查首页、设置、登录和应用面板的浅深色与壁纸组合。
 
 ## UI 门禁
 
@@ -53,10 +63,30 @@ deno task check:ui --update
 - `--update` 不接受新增或数量增加的违规；CI 运行检查和门禁回归测试。
 - baseline 通过不表示历史样式债务、focus
   语义或所有业务流程已清零。390/768/1440、light/dark 与真实页面交互证据按
-  checklist 人工验收。
-- 既有 UI
-  计划（[docs/plans/](plans/README.md)）是历史设计资料；当前规则、存量迁移边界及
-  advisor 裁决见 Design System。
+  [UI 验收清单](design/UI_CHECKLIST.md) 人工验收。
+- 门禁的 ownership 规则（feature selector 不进入 `global.css`、legacy `.page`
+  几何、未定义 Token、native confirm、已废止 class、CSS 前缀归属）不能通过
+  baseline、`--update` 或 initialize 豁免。
+- 既有 UI 计划（[docs/plans/](plans/README.md)）是历史设计资料；当前规则以
+  [Visual Language](design/VISUAL_LANGUAGE.md) 为准。
+
+## 可访问性契约
+
+对比度、焦点环与触控目标的数值底线见
+[Visual Language](design/VISUAL_LANGUAGE.md#可访问性底线)。以下为代码必须保持的行为：
+
+- Escape 由 `components/ui/escape-layer-stack.tsx`
+  统一裁决，每次只消费最上层的菜单、弹窗或工作区；输入法合成中不分发；注销层不得穿透到
+  window。关闭后焦点回到触发控件。
+- 删除、覆盖、放弃未保存修改等不可逆操作使用 AlertDialog。取消与 Escape
+  不执行动作；pending 时禁用确认与取消。
+- 禁止 `confirm()`、`window.confirm()` 等原生确认（`check:ui` 的
+  native-destructive-confirm 规则）。
+- 选中状态不只靠颜色：配合勾号、`aria-current` 或 `aria-pressed`。
+- 同步失败使用持久、礼貌的状态容器，图标与文字链接并存；连接错误与偏好同步错误分开建模，不互相覆盖。
+- 主题切换按钮的可访问名称与 `title` 使用中文，说明当前与下一个主题。
+- `prefers-reduced-motion`
+  下缩短过渡并停止非必要动画；系统偏好不改写用户已保存的设置。
 
 ## 路由
 

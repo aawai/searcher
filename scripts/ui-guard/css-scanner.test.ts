@@ -68,18 +68,18 @@ Deno.test("css-scanner - detects raw border-radius", () => {
 
 Deno.test("css-scanner - detects raw spacing literals in presentation CSS", () => {
     const css = `
-        .bento {
+        .panel {
             padding: 16px 20px;
             margin: 0 auto 28px;
             gap: 15px;
         }
-        .token-bento {
+        .token-panel {
             padding: var(--space-4);
             margin: 0 auto;
             gap: var(--space-3);
         }
     `;
-    const violations = scanCssCode("web/src/features/bento.css", css);
+    const violations = scanCssCode("web/src/features/panel.css", css);
     const spacingViolations = violations.filter((v: { rule: string }) =>
         v.rule === "raw-spacing-literal"
     );

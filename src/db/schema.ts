@@ -55,13 +55,6 @@ export const preferences = sqliteTable("preferences", {
     }).notNull().default("bing"),
     theme: text("theme", { enum: ["system", "light", "dark"] })
         .notNull().default("system"),
-    visualStyle: text("visual_style", {
-        enum: ["linear-dark", "spatial-glass"],
-    })
-        .notNull().default("linear-dark"),
-    style: text("style", {
-        enum: ["zen", "widgets"],
-    }).default("zen"),
     accent: text("accent", {
         enum: [
             "blue",
@@ -80,17 +73,7 @@ export const preferences = sqliteTable("preferences", {
     }).default("rounded"),
     searchOpacity: real("search_opacity").notNull().default(1),
     backgroundImage: text("background_image"),
-    backgroundOpacity: real("background_opacity").notNull().default(0.36),
-    wallpaperBlur: real("wallpaper_blur").notNull().default(0),
-    wallpaperGrayscale: real("wallpaper_grayscale").notNull().default(0),
     wallpaperMask: real("wallpaper_mask").notNull().default(0.36),
-    wallpaperGlowStrength: real("wallpaper_glow_strength")
-        .notNull().default(0.14),
-    ambientMotionMode: text("ambient_motion_mode", {
-        enum: ["off", "breathe", "breathe_ripple"],
-    }).notNull().default("breathe_ripple"),
-    ambientMotionStrength: real("ambient_motion_strength")
-        .notNull().default(0.35),
     searchTarget: text("search_target", { enum: ["same", "new"] })
         .notNull().default("same"),
     searchHistoryEnabled: integer("search_history_enabled", { mode: "boolean" })
@@ -106,14 +89,6 @@ export const preferences = sqliteTable("preferences", {
     aiGenerationDefaults: text("ai_generation_defaults"),
     wallpaperCompositions: text("wallpaper_compositions"),
     wallpaperPresentations: text("wallpaper_presentations"),
-    canvasMotion: text("canvas_motion", {
-        enum: ["off", "ambient"],
-    }).notNull().default("off"),
-    canvasMotionLevel: text("canvas_motion_level", {
-        enum: ["subtle", "soft", "standard", "pronounced"],
-    }).notNull().default("soft"),
-    // 不加 CHECK：未来场景 ID 写入后，旧版本读取时在 toDto 中降级为 none。
-    desktopScene: text("desktop_scene").notNull().default("none"),
 }, (t) => [
     check(
         "preferences_engine_check",
@@ -122,14 +97,6 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_theme_check",
         sql`${t.theme} in ('system','light','dark')`,
-    ),
-    check(
-        "preferences_visual_style_check",
-        sql`${t.visualStyle} in ('linear-dark','spatial-glass')`,
-    ),
-    check(
-        "preferences_style_check",
-        sql`${t.style} in ('command','zen','widgets','quiet','minimal','glass','soft','classic')`,
     ),
     check(
         "preferences_accent_check",
@@ -144,10 +111,6 @@ export const preferences = sqliteTable("preferences", {
         sql`${t.searchOpacity} >= 0.1 and ${t.searchOpacity} <= 1`,
     ),
     check(
-        "preferences_opacity_check",
-        sql`${t.backgroundOpacity} >= 0 and ${t.backgroundOpacity} <= 0.8`,
-    ),
-    check(
         "preferences_search_target_check",
         sql`${t.searchTarget} in ('same','new')`,
     ),
@@ -158,18 +121,6 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_webapp_icon_size_check",
         sql`${t.webAppIconSize} in ('compact','default','large')`,
-    ),
-    check(
-        "preferences_wallpaper_glow_strength_check",
-        sql`${t.wallpaperGlowStrength} >= 0 and ${t.wallpaperGlowStrength} <= 0.3`,
-    ),
-    check(
-        "preferences_ambient_motion_mode_check",
-        sql`${t.ambientMotionMode} in ('off','breathe','breathe_ripple')`,
-    ),
-    check(
-        "preferences_ambient_motion_strength_check",
-        sql`${t.ambientMotionStrength} >= 0 and ${t.ambientMotionStrength} <= 1`,
     ),
 ]);
 

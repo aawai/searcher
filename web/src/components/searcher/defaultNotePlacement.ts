@@ -114,7 +114,7 @@ function findPosition(
     return null;
 }
 
-/** Places default notes using viewport-space, rotation-inclusive measured bounds. */
+/** Places default notes using viewport-space measured bounds. */
 export function placeDefaultNotes(
     availableRect: PlacementRect,
     exclusionRect: PlacementRect,

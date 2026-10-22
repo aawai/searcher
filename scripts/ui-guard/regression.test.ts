@@ -259,7 +259,7 @@ Deno.test("regression - consumer-visible denials for unrelated dynamic styling",
             }`,
         );
 
-        // 2. width: \`\${arbitrary}px\` outside masonry owner is denied
+        // 2. width: \`\${arbitrary}px\` in an unowned component is denied
         await Deno.writeTextFile(
             `${targetDir}/components/HeaderBar.tsx`,
             `export function HeaderBar({ width }: { width: number }) {
@@ -291,7 +291,7 @@ Deno.test("regression - consumer-visible denials for unrelated dynamic styling",
     }
 });
 
-Deno.test("regression - runtime exception safety: wallpaper, drag, masonry, domain values accepted without allowances", async () => {
+Deno.test("regression - runtime exception safety: wallpaper, drag, domain values accepted without allowances", async () => {
     const tempDir = await Deno.makeTempDir({ prefix: "ui-reg-runtime-" });
     const baselinePath = `${tempDir}/baseline.json`;
     const targetDir = `${tempDir}/web/src`;
@@ -307,32 +307,26 @@ Deno.test("regression - runtime exception safety: wallpaper, drag, masonry, doma
         });
         await Deno.writeTextFile(
             `${targetDir}/components/wallpaper/WallpaperSurface.tsx`,
-            `export function WallpaperSurface({ wallpaper, filter }: { wallpaper: string; filter: string }) {
+            `export function WallpaperSurface({ wallpaper, mask }: { wallpaper: string; mask: number }) {
                 return (
                     <div style={{
                         "--wallpaper-image": wallpaper,
-                        "--wallpaper-filter": filter,
-                        "--search-opacity": 0.95,
+                        "--wallpaper-mask": mask,
                     } as React.CSSProperties} />
                 );
             }`,
         );
 
-        // 2. Drag transform and masonry geometry in SearchHome.tsx
+        // 2. Drag transform in SearchHome.tsx
         await Deno.writeTextFile(
             `${targetDir}/app/SearchHome.tsx`,
-            `export function SearchHome({ transform, isDragging, columnLayout }: {
+            `export function SearchHome({ transform, isDragging }: {
                 transform: unknown;
                 isDragging: boolean;
-                columnLayout: { left: number; top: number; width: number };
             }) {
                 return (
                     <div
                         style={{
-                            position: "absolute",
-                            left: columnLayout.left + "px",
-                            top: columnLayout.top + "px",
-                            width: columnLayout.width + "px",
                             transform: CSS.Transform.toString(transform),
                             zIndex: isDragging ? 50 : undefined,
                             opacity: isDragging ? 0.5 : 1,

@@ -29,10 +29,3 @@ jobs:
               run: npx --yes playwright@1.56.1 install --with-deps chromium
             - name: Production wallpaper user journeys
               run: deno task test:wallpaper
-            - name: Upload wallpaper motion evidence
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: wallpaper-motion-evidence-${{ github.run_id }}
-                  path: artifacts/wallpaper-motion/
-                  retention-days: 14

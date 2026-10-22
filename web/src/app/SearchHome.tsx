@@ -14,7 +14,6 @@ import {
     useRef,
     useState,
 } from "react";
-import type { DocumentDto } from "@shared/documents.ts";
 import { routes } from "./routes.ts";
 import {
     buildSearchUrl,
@@ -24,7 +23,6 @@ import {
 import { X } from "lucide-react";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
-import { WidgetsLayout } from "../features/home-layouts/WidgetsLayout.tsx";
 import { mergeNoteOrder } from "../features/home-layouts/noteOrder.ts";
 import {
     getNoteDisplayTitle,
@@ -49,7 +47,6 @@ import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
-import { WorkspaceNavigation } from "../features/workspace/WorkspaceNavigation.tsx";
 import { AppsWorkspace } from "../features/workspace/AppsWorkspace.tsx";
 import { useAppsLayoutPersistence } from "../features/workspace/useAppsLayoutPersistence.ts";
 import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
@@ -69,14 +66,7 @@ import {
     initialWorkspaceHost,
     workspaceHostReducer,
 } from "../features/workspace/workspace-host.ts";
-import { isConstrainedViewport } from "../features/desktop/constrained-geometry.ts";
-import { useDesktopLayout } from "../features/desktop/useDesktopLayout.ts";
-import { useDesktopGeometry } from "../features/desktop/DesktopCanvas.tsx";
-import { getTopmostVisibleWindowId } from "../features/desktop/desktop-state.ts";
-import {
-    DesktopWorkspaces,
-    isWorkspaceKind,
-} from "../features/desktop/DesktopWorkspaces.tsx";
+import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
 
 import {
     type AppSessionNavigation,
@@ -163,7 +153,6 @@ export function SearchHome() {
         string | null
     >(null);
     const openDocumentRef = useRef<(id: string) => void>(() => {});
-    const layoutStyle = appearance.style;
     const updatingNotesRef = useRef<Set<string>>(new Set());
     const noteLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
     const noteLayoutQueuesRef = useRef<Map<string, Promise<void>>>(new Map());
@@ -200,16 +189,7 @@ export function SearchHome() {
         workspaceHostReducer,
         initialWorkspaceHost,
     );
-    const pendingRestrictedWorkspace = useRef<WorkspaceKind | null>(null);
-    const [dockElement, setDockElement] = useState<HTMLElement | null>(null);
-    const geometry = useDesktopGeometry(dockElement);
-    const [desktop, dispatchDesktop, desktopRestored] = useDesktopLayout({
-        userId: user?.id,
-        layoutStyle,
-        rect: geometry,
-        notes: currentNotes,
-        notesLoaded: !currentNotesLoading,
-    });
+    const home = useHomeViewport();
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
     );
@@ -219,27 +199,9 @@ export function SearchHome() {
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);
     }, []);
-    const [documentPreviews, setDocumentPreviews] = useState<
-        Record<string, { title: string; summary: string }>
-    >({});
-    useEffect(() => setDocumentPreviews({}), [user?.id]);
-    const [documentLibraryRevision, setDocumentLibraryRevision] = useState(0);
-    const onDocumentsChanged = useCallback(() => {
-        setDocumentLibraryRevision((revision) => revision + 1);
-    }, []);
-    const onDocumentChanged = useCallback((document: DocumentDto) => {
-        setDocumentPreviews((current) => ({
-            ...current,
-            [document.id]: {
-                title: document.displayTitle,
-                summary: document.body.slice(0, 160),
-            },
-        }));
-    }, []);
     const [appsArranging, setAppsArranging] = useState(false);
     const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
-    const initialSyncDoneRef = useRef(false);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(
         null,
     );
@@ -314,23 +276,12 @@ export function SearchHome() {
         }
         if (action.type === "close") {
             dispatchHost({ type: "close", kind });
-            if (mobile || appearance.style === "zen") {
-                dispatchHost({ type: "activate", kind: null });
-            }
-            if (appearance.style === "widgets") {
-                dispatchDesktop(
-                    isConstrainedViewport(globalThis.innerWidth)
-                        ? { type: "MINIMIZE", id: kind }
-                        : { type: "CLOSE", id: kind },
-                );
-            }
+            dispatchHost({ type: "activate", kind: null });
             return;
         }
-        if (mobile || appearance.style === "zen") {
-            for (const other of ["apps", "notes", "documents"] as const) {
-                if (other !== kind && host.open[other]) {
-                    dispatchHost({ type: "close", kind: other });
-                }
+        for (const other of ["apps", "notes", "documents"] as const) {
+            if (other !== kind && host.open[other]) {
+                dispatchHost({ type: "close", kind: other });
             }
         }
         if (kind === "apps") {
@@ -352,31 +303,18 @@ export function SearchHome() {
                 action: action as DomainWorkspaceAction<DocumentsRoute>,
             });
         }
-        if (appearance.style === "widgets" && geometry.usable) {
-            if (action.type !== "query") {
-                dispatchDesktop({
-                    type: "OPEN",
-                    id: kind,
-                    kind,
-                    rect: geometry,
-                });
-            }
-        }
     }
     function requestWorkspace(
         kind: WorkspaceKind,
         action: WorkspaceAction,
     ) {
         if (pendingActionRef.current) return;
-        const leavingApps = kind === "apps" || mobile ||
-            appearance.style === "zen";
-        if (leavingApps && appSession.current?.isSubmitting) return;
+        if (appSession.current?.isSubmitting) return;
         if (
-            (leavingApps && appSession.current?.isDirty &&
+            (appSession.current?.isDirty &&
                 (appRoute.view === "apps/create" ||
                     appRoute.view === "apps/edit")) ||
-            (dirtyForm.current &&
-                (kind === "documents" || appearance.style === "zen"))
+            dirtyForm.current
         ) {
             updatePendingAction({ kind, action });
             return;
@@ -391,10 +329,7 @@ export function SearchHome() {
             action.intent.proceed();
             return;
         }
-        if (
-            action.kind === "documents" || mobile ||
-            appearance.style === "zen"
-        ) dirtyForm.current = false;
+        dirtyForm.current = false;
         applyWorkspace(action.kind, action.action);
     }
     function navigateWorkspace(route: WorkspaceRoute) {
@@ -405,18 +340,7 @@ export function SearchHome() {
         } else requestWorkspace("documents", { type: "navigate", route });
     }
     function openDocument(id: string) {
-        if (
-            appearance.style === "widgets" && globalThis.innerWidth >= 1024 &&
-            geometry.usable
-        ) {
-            dispatchDesktop({
-                type: "OPEN",
-                id: `document:${id}`,
-                kind: "document",
-                entityId: id,
-                rect: geometry,
-            });
-        } else navigateWorkspace({ view: "documents/edit", id });
+        navigateWorkspace({ view: "documents/edit", id });
     }
     openDocumentRef.current = openDocument;
     useEffect(() => {
@@ -437,12 +361,6 @@ export function SearchHome() {
             !user || workspaceResetUserId !== user.id ||
             !ownsCurrentUserData
         ) return;
-
-        if (
-            appearance.style === "widgets" && geometry.usable &&
-            globalThis.innerWidth >= 1024 && !desktopRestored
-        ) return;
-
         consumedDocumentNavigationRef.current = location.key;
         navigate(
             `${location.pathname}${location.search}${location.hash}`,
@@ -456,21 +374,10 @@ export function SearchHome() {
         location.search,
         location.state,
         navigate,
-        appearance.style,
-        desktopRestored,
-        geometry,
         ownsCurrentUserData,
         user?.id,
         workspaceResetUserId,
     ]);
-    function onDocumentDeleted(id: string) {
-        dispatchDesktop({ type: "CLOSE", id: `document:${id}` });
-        setDocumentPreviews((current) => {
-            const next = { ...current };
-            delete next[id];
-            return next;
-        });
-    }
     function backWorkspace(kind = host.activeKind) {
         if (kind) requestWorkspace(kind, { type: "back" });
     }
@@ -506,96 +413,10 @@ export function SearchHome() {
         else closeWorkspace("apps");
     }
     function openWorkspace(kind: WorkspaceKind) {
-        if (appearance.style === "zen") {
-            dispatchHost({ type: "open", kind });
-            return;
-        }
-        // Dock focus does not reset nested navigation or discard an existing form.
-        const isOpen = desktop.windows.some((w) =>
-            w.kind === kind || w.id === kind
-        );
-        if (!isOpen) {
-            dispatchHost({ type: "open", kind });
-            if (appearance.style === "widgets" && geometry.usable) {
-                dispatchDesktop({
-                    type: "OPEN",
-                    id: kind,
-                    kind,
-                    rect: geometry,
-                });
-            }
-        } else {
-            dispatchHost({ type: "activate", kind });
-            if (appearance.style === "widgets" && geometry.usable) {
-                dispatchDesktop({
-                    type: "OPEN",
-                    id: kind,
-                    kind,
-                    rect: geometry,
-                });
-            }
-            if (!mobile) {
-                requestAnimationFrame(() => {
-                    const nested =
-                        host.models[kind].route.view !== `${kind}/root`;
-                    document.querySelector<HTMLButtonElement>(
-                        `[data-window-id="${kind}"] button[aria-label="${
-                            nested ? "返回上一级" : "收起工作区"
-                        }"]`,
-                    )?.focus({ preventScroll: true });
-                });
-            }
-        }
+        dispatchHost({ type: "open", kind });
     }
     useEffect(() => {
-        if (pendingRestrictedWorkspace.current) return;
-        if (appearance.style === "widgets" && !mobile) {
-            dispatchHost({
-                type: "activate",
-                kind: desktop.activeId && isWorkspaceKind(desktop.activeId)
-                    ? desktop.activeId
-                    : null,
-            });
-        }
-    }, [desktop.activeId, appearance.style, mobile]);
-    useEffect(() => {
-        if (pendingRestrictedWorkspace.current) return;
-        if (initialSyncDoneRef.current) return;
-        if (desktop.windows.length === 0) return;
-        initialSyncDoneRef.current = true;
-        for (const win of desktop.windows) {
-            if (isWorkspaceKind(win.kind)) {
-                dispatchHost({ type: "activate", kind: win.kind });
-            }
-        }
-    }, [desktop.windows]);
-    useEffect(() => {
-        if (
-            !mobile && typeof globalThis.window !== "undefined" &&
-            !isConstrainedViewport(globalThis.innerWidth)
-        ) {
-            if (host.models.notes.route.view === "notes/edit") {
-                const editingId = host.models.notes.route.id;
-                if (
-                    desktop.windows.some((w) =>
-                        w.id === `note:${editingId}` || w.entityId === editingId
-                    )
-                ) {
-                    dispatchHost({
-                        type: "domain",
-                        kind: "notes",
-                        action: {
-                            type: "navigate",
-                            route: { view: "notes/root" },
-                        },
-                    });
-                }
-            }
-        }
-    }, [desktop.windows, host.models.notes.route, mobile]);
-    useEffect(() => {
         dirtyForm.current = false;
-        initialSyncDoneRef.current = false;
         dispatchHost({ type: "reset" });
         cancelPendingAction();
         setAppsArranging(false);
@@ -916,7 +737,7 @@ export function SearchHome() {
         }
     }
 
-    // Desktop and mobile use the same pinned order.
+    // Home pinned apps follow the pinned order, capped by the home limit.
     const pinned = useMemo(
         () =>
             currentApps
@@ -957,9 +778,6 @@ export function SearchHome() {
         () => currentNotes.filter((note) => note.isHomeFixed),
         [currentNotes],
     );
-    function openAddModal() {
-        navigateWorkspace({ view: "apps/create" });
-    }
     function openEditModal(app: ExtendedWebApp) {
         navigateWorkspace({ view: "apps/edit", id: app.id });
     }
@@ -1132,29 +950,10 @@ export function SearchHome() {
     }
     // Note actions
     function openNote(noteId: string) {
-        const constrained = typeof globalThis.window !== "undefined" &&
-            isConstrainedViewport(globalThis.innerWidth);
-        if (
-            appearance.style === "zen" || mobile || constrained ||
-            !geometry.usable
-        ) {
-            navigateWorkspace({ view: "notes/edit", id: noteId });
-            if (appearance.style === "widgets" && !mobile) {
-                openWorkspace("notes");
-            }
-            return;
-        }
-
-        dispatchDesktop({
-            type: "OPEN",
-            id: `note:${noteId}`,
-            kind: "note",
-            entityId: noteId,
-            rect: geometry,
-        });
+        navigateWorkspace({ view: "notes/edit", id: noteId });
     }
 
-    async function createAndOpenNote() {
+    async function createNote() {
         setError("");
         try {
             const note = await api<NoteItem>(
@@ -1167,8 +966,6 @@ export function SearchHome() {
             setError(errorMessage(e));
         }
     }
-
-    const createNote = createAndOpenNote;
 
     function editNote(note: NoteItem) {
         openNote(note.id);
@@ -1285,7 +1082,6 @@ export function SearchHome() {
                 currentUserIdRef.current !== ownerId
             ) return;
             setNotes((items) => items.filter((item) => item.id !== note.id));
-            dispatchDesktop({ type: "CLOSE", id: `note:${note.id}` });
             if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
                 undoPausedRef.current = false;
                 setUndoPaused(false);
@@ -1337,54 +1133,8 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
-    const constrainedDesktop = layoutStyle === "widgets" && !mobile &&
-        (!geometry.usable ||
-            pendingRestrictedWorkspace.current === host.activeKind);
-    const missingActiveWindow = Boolean(
-        host.activeKind &&
-            !desktop.windows.some((window) => window.id === host.activeKind),
-    );
-    const restrictedWorkspace = constrainedDesktop &&
-        (missingActiveWindow ||
-            pendingRestrictedWorkspace.current === host.activeKind);
-    const workspaceWindows = useMemo(
-        () => desktop.windows.filter((window) => isWorkspaceKind(window.kind)),
-        [desktop.windows],
-    );
-    const constrainedViewport = isConstrainedViewport(globalThis.innerWidth);
-    const activeWindowId = constrainedViewport
-        ? desktop.activeId ?? getTopmostVisibleWindowId(workspaceWindows)
-        : null;
-    let effectiveActiveWindowId = activeWindowId;
-    if (constrainedViewport && activeWindowId?.startsWith("document:")) {
-        effectiveActiveWindowId = "documents";
-    } else if (
-        constrainedViewport && activeWindowId?.startsWith("note:")
-    ) {
-        effectiveActiveWindowId = "notes";
-    }
-    const activeWorkspaceWindow = constrainedViewport
-        ? workspaceWindows.find((window) =>
-            window.id === effectiveActiveWindowId
-        ) ?? workspaceWindows[0]
-        : undefined;
-    function isWorkspaceVisible(kind: WorkspaceKind): boolean {
-        if (layoutStyle !== "widgets") return false;
-        if (mobile) return host.activeKind === kind;
-        if (restrictedWorkspace && host.activeKind === kind) return true;
-        if (constrainedViewport) {
-            return activeWorkspaceWindow?.kind === kind &&
-                activeWorkspaceWindow.mode !== "minimized";
-        }
-        return workspaceWindows.some((window) =>
-            window.kind === kind && window.mode !== "minimized"
-        );
-    }
-    const announceAppsFeedback = !isWorkspaceVisible("apps");
-    const announceNotesFeedback = !isWorkspaceVisible("notes");
     const layoutProps: HomeLayoutProps = {
         user,
-        appearance,
         engine,
         setEngine,
         mode,
@@ -1399,91 +1149,28 @@ export function SearchHome() {
         appsStatus: currentAppsStatus,
         appsError: currentAppsError,
         onReloadApps: () => setReloadApps((count) => count + 1),
-        notes: currentNotes,
         fixedNotes,
         notesLoading: currentNotesLoading,
-        notesError: currentNotesError,
-        announceAppsFeedback,
-        announceNotesFeedback,
-        reorderNotes,
         isManagingApps,
         setIsManagingApps,
         openApp,
-        openAddModal,
         openEditModal,
         reorderPinned,
         togglePinApp,
         softDeleteApp,
         moveAppGroup,
-        createNote,
         editNote,
         deleteNote,
         updateNote,
         updateNoteLayout,
-        openNote,
-        createAndOpenNote,
         openWorkspace,
-        error,
+        workspaceOpen: Boolean(host.activeKind),
+        webAppIconSize: appearance.webAppIconSize,
+        showAppLabels: appearance.showAppLabels,
         setError,
     };
     const currentWorkspace = host.activeKind ?? "apps";
     const currentRoute = host.models[currentWorkspace].route;
-    useEffect(() => {
-        if (restrictedWorkspace && !geometry.usable) {
-            pendingRestrictedWorkspace.current = host.activeKind;
-            return;
-        }
-        const kind = pendingRestrictedWorkspace.current;
-        if (!host.activeKind || layoutStyle !== "widgets") {
-            pendingRestrictedWorkspace.current = null;
-            return;
-        }
-        if (!kind || !geometry.usable || !desktopRestored) return;
-        pendingRestrictedWorkspace.current = null;
-        const focused = document.activeElement;
-        let focusSelector = "";
-        if (
-            focused instanceof HTMLElement &&
-            focused.closest(".workspace-panel")
-        ) {
-            const label = focused.getAttribute("aria-label");
-            if (label) {
-                focusSelector = `[aria-label="${CSS.escape(label)}"]`;
-            } else if (focused.id) {
-                focusSelector = `#${CSS.escape(focused.id)}`;
-            }
-        }
-        const selection = focused instanceof HTMLInputElement ||
-                focused instanceof HTMLTextAreaElement
-            ? [focused.selectionStart, focused.selectionEnd] as const
-            : null;
-        dispatchDesktop({ type: "OPEN", id: kind, kind, rect: geometry });
-        if (focusSelector) {
-            // Let the destination chrome initialize before restoring domain focus.
-            requestAnimationFrame(() =>
-                requestAnimationFrame(() => {
-                    const target = document.getElementById(
-                        `desktop-window-${kind}`,
-                    )
-                        ?.querySelector<HTMLElement>(focusSelector);
-                    target?.focus({ preventScroll: true });
-                    if (
-                        selection && selection[0] !== null &&
-                        selection[1] !== null &&
-                        (target instanceof HTMLInputElement ||
-                            target instanceof HTMLTextAreaElement)
-                    ) target.setSelectionRange(selection[0], selection[1]);
-                })
-            );
-        }
-    }, [
-        restrictedWorkspace,
-        host.activeKind,
-        layoutStyle,
-        desktopRestored,
-        geometry,
-        dispatchDesktop,
-    ]);
     const isApps = currentWorkspace === "apps";
     const title = currentRoute.view === "apps/create"
         ? "添加应用"
@@ -1504,10 +1191,7 @@ export function SearchHome() {
             });
         } else void createNote();
     }
-    function renderWorkspaceContent(
-        kind: WorkspaceKind,
-        noteListLayout: "single-column" | "masonry",
-    ) {
+    function renderWorkspaceContent(kind: WorkspaceKind) {
         if (!user) return null;
         if (kind === "apps") {
             if (!ownsCurrentUserData) return null;
@@ -1556,9 +1240,6 @@ export function SearchHome() {
                         dirtyForm.current = dirty;
                     }}
                     onOpenDocument={openDocument}
-                    onDocumentChanged={onDocumentChanged}
-                    onDocumentDeleted={onDocumentDeleted}
-                    revision={documentLibraryRevision}
                     scope={model.scope}
                     onScopeChange={(scope) =>
                         dispatchHost({
@@ -1579,7 +1260,6 @@ export function SearchHome() {
         const model = host.models.notes;
         return (
             <NotesWorkspace
-                listLayout={noteListLayout}
                 state={model.route}
                 notes={currentNotes}
                 userId={user.id}
@@ -1690,20 +1370,8 @@ export function SearchHome() {
             onPauseChange={pauseUndoQueue}
         />
     );
-    const appWindow = desktop.windows.find((window) => window.id === "apps");
     useAppsEscape({
-        enabled: Boolean(
-            user &&
-                (appearance.style === "widgets" && !mobile &&
-                        !restrictedWorkspace
-                    ? appWindow && appWindow.mode !== "minimized" &&
-                        (desktop.activeId ??
-                                getTopmostVisibleWindowId(desktop.windows)) ===
-                            "apps"
-                    : host.activeKind === "apps"),
-        ),
-        isForeground: () =>
-            !document.documentElement.hasAttribute("data-document-immersive"),
+        enabled: Boolean(user && host.activeKind === "apps"),
         hasDialog: () =>
             Boolean(pendingAction || appSession.current?.hasDialog),
         onDialogEscape: () => {
@@ -1720,7 +1388,7 @@ export function SearchHome() {
         >
             <PageShell
                 archetype="search"
-                className={"home home-" + layoutStyle}
+                className="home"
             >
                 {error && !mobileFeedback && (
                     <StatusBanner tone="error" presentation="floating">
@@ -1738,112 +1406,47 @@ export function SearchHome() {
                         </Button>
                     </StatusBanner>
                 )}
-                {layoutStyle === "widgets"
-                    ? <WidgetsLayout {...layoutProps} />
-                    : (
-                        <ZenLayout
-                            {...layoutProps}
-                            availableRect={geometry.safeRect}
-                            viewportWidth={geometry.viewportRect.width}
-                        />
-                    )}
+                <ZenLayout
+                    {...layoutProps}
+                    availableRect={home.availableRect}
+                    viewportWidth={home.viewportWidth}
+                />
                 {user && (
-                    <>
-                        {layoutStyle === "widgets" && !mobile && (
-                            <DesktopWorkspaces
-                                state={desktop}
-                                rect={geometry}
-                                dispatch={dispatchDesktop}
-                                models={host.models}
-                                renderContent={(kind) =>
-                                    restrictedWorkspace &&
-                                        host.activeKind === kind
-                                        ? null
-                                        : renderWorkspaceContent(
-                                            kind,
-                                            "masonry",
-                                        )}
-                                onOpen={openWorkspace}
-                                onClose={closeWorkspace}
-                                onBack={backWorkspace}
-                                onFinishArrange={() => setAppsArranging(false)}
-                                onCreate={createWorkspaceItem}
-                                onDockElement={setDockElement}
-                                appsArranging={appsArranging}
-                                notes={currentNotes}
-                                onSaveNote={(saved) => {
-                                    setNotes((items) =>
-                                        items.some((item) =>
-                                                item.id === saved.id
-                                            )
-                                            ? items.map((item) =>
-                                                item.id === saved.id
-                                                    ? saved
-                                                    : item
-                                            )
-                                            : [saved, ...items]
-                                    );
-                                }}
-                                userId={user.id}
-                                documents={documentPreviews}
-                                onOpenDocument={openDocument}
-                                onDocumentChanged={onDocumentChanged}
-                                onDocumentsChanged={onDocumentsChanged}
-                            />
-                        )}
-                        {layoutStyle === "widgets" && mobile && (
-                            <WorkspaceNavigation
-                                variant="mobile"
-                                onSelect={openWorkspace}
-                            />
-                        )}
-                        <WorkspaceShell
-                            open={Boolean(host.activeKind)}
-                            chromeBottom={geometry.chromeBottom}
-                            viewportInsets={restrictedWorkspace
-                                ? {
-                                    top: geometry.chromeBottom,
-                                    bottom: geometry.viewportRect.height -
-                                        geometry.dockTop,
-                                }
-                                : undefined}
-                            state={currentRoute}
-                            title={title}
-                            style={layoutStyle}
-                            appsArranging={appsArranging}
-                            navigate={navigateWorkspace}
-                            onBack={() => backWorkspace()}
-                            onClose={() => closeWorkspace()}
-                            onEscape={() => escapeWorkspace()}
-                            onFinishArrange={() => setAppsArranging(false)}
-                            feedback={
-                                <>
-                                    {error && (
-                                        <StatusBanner
-                                            tone="error"
-                                            density="compact"
-                                        >
-                                            {error}
-                                        </StatusBanner>
-                                    )}
-                                </>
-                            }
-                            onFeedbackHost={setFeedbackHost}
-                            onCreate={host.activeKind &&
-                                    host.activeKind !== "documents"
-                                ? () =>
-                                    createWorkspaceItem(
-                                        host.activeKind as "apps" | "notes",
-                                    )
-                                : undefined}
-                        >
-                            {host.activeKind &&
-                                renderWorkspaceContent(
-                                    host.activeKind,
-                                    "single-column",
+                    <WorkspaceShell
+                        open={Boolean(host.activeKind)}
+                        chromeBottom={home.chromeBottom}
+                        state={currentRoute}
+                        title={title}
+                        appsArranging={appsArranging}
+                        onSwitch={openWorkspace}
+                        onBack={() => backWorkspace()}
+                        onClose={() => closeWorkspace()}
+                        onEscape={() => escapeWorkspace()}
+                        onFinishArrange={() => setAppsArranging(false)}
+                        feedback={
+                            <>
+                                {error && (
+                                    <StatusBanner
+                                        tone="error"
+                                        density="compact"
+                                    >
+                                        {error}
+                                    </StatusBanner>
                                 )}
-                        </WorkspaceShell>
-                    </>
+                            </>
+                        }
+                        onFeedbackHost={setFeedbackHost}
+                        onCreate={host.activeKind &&
+                                host.activeKind !== "documents"
+                            ? () =>
+                                createWorkspaceItem(
+                                    host.activeKind as "apps" | "notes",
+                                )
+                            : undefined}
+                    >
+                        {host.activeKind &&
+                            renderWorkspaceContent(host.activeKind)}
+                    </WorkspaceShell>
                 )}
                 {undoFeedback}
                 <AlertDialog

@@ -12,7 +12,6 @@ import {
     Copy,
     FileText,
     Pencil,
-    X,
 } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiMessageDto } from "./types.ts";
@@ -36,10 +35,12 @@ export function SearcherUserMessage() {
             className="ask-user-msg-container"
             aria-label="用户提问"
         >
-            <div className="ask-user-msg-bubble">
+            <div
+                className={`ask-user-msg-bubble ${editing ? "is-editing" : ""}`}
+            >
                 {/* Render attachments preview if present */}
                 {attachmentParts.length > 0 && (
-                    <div className="ask-user-attachments mb-2">
+                    <div className="ask-user-attachments">
                         {attachmentParts.map((part) => {
                             if (part.type !== "attachment") return null;
                             const isImg = part.mimeType.startsWith("image/");
@@ -59,7 +60,7 @@ export function SearcherUserMessage() {
                                         : (
                                             <FileText
                                                 size="1em"
-                                                className="icon-sm text-muted"
+                                                className="icon-sm"
                                             />
                                         )}
                                     <span
@@ -79,17 +80,14 @@ export function SearcherUserMessage() {
                         <ComposerPrimitive.Root className="ask-user-edit-wrap">
                             <ComposerPrimitive.Input
                                 aria-label="编辑提问内容"
-                                className="ask-user-edit-textarea"
+                                className="cn-textarea ask-user-edit-textarea"
                                 rows={3}
                                 autoFocus
                             />
                             <div className="ask-user-edit-actions">
                                 <ComposerPrimitive.Cancel asChild>
                                     <Button variant="outline" size="sm">
-                                        <X
-                                            size="1em"
-                                            className="icon-sm mr-1"
-                                        />取消
+                                        取消
                                     </Button>
                                 </ComposerPrimitive.Cancel>
                                 <ComposerPrimitive.Send asChild>
@@ -99,7 +97,7 @@ export function SearcherUserMessage() {
                         </ComposerPrimitive.Root>
                     )
                     : (
-                        <div className="ask-user-text whitespace-pre-wrap select-text">
+                        <div className="ask-user-text">
                             <MessagePrimitive.Content />
                         </div>
                     )}
@@ -110,12 +108,13 @@ export function SearcherUserMessage() {
                 <BranchPickerPrimitive.Root
                     className="ask-branch-pager"
                     aria-label="提问分支切换"
+                    hideWhenSingleBranch
                 >
                     <BranchPickerPrimitive.Previous asChild>
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="ask-branch-pager__btn h-6 w-6"
+                            className="ask-branch-pager__btn"
                             aria-label="上一个提问版本"
                         >
                             <ChevronLeft size="1em" className="icon-sm" />
@@ -129,7 +128,7 @@ export function SearcherUserMessage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="ask-branch-pager__btn h-6 w-6"
+                            className="ask-branch-pager__btn"
                             aria-label="下一个提问版本"
                         >
                             <ChevronRight size="1em" className="icon-sm" />
@@ -142,7 +141,7 @@ export function SearcherUserMessage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="ask-action-icon-btn h-7 w-7"
+                            className="ask-action-icon-btn"
                             aria-label={copied ? "已复制" : "复制"}
                             title={copied ? "已复制" : "复制"}
                         >
@@ -150,7 +149,7 @@ export function SearcherUserMessage() {
                                 ? (
                                     <Check
                                         size="1em"
-                                        className="icon-sm text-accent"
+                                        className="icon-sm"
                                     />
                                 )
                                 : <Copy size="1em" className="icon-sm" />}
@@ -162,7 +161,7 @@ export function SearcherUserMessage() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="ask-action-icon-btn h-7 w-7"
+                                className="ask-action-icon-btn"
                                 aria-label="编辑提问"
                                 title="编辑提问并从此处分支"
                             >

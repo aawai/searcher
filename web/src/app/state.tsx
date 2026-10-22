@@ -1,24 +1,12 @@
 import {
     type AccentId,
     normalizeAccent,
-    normalizeStylePreset,
     type PreferencesDto,
-    type StylePreset,
     type UserDto,
 } from "@shared/contracts.ts";
-import {
-    DEFAULT_DESKTOP_SCENE,
-    type DesktopSceneId,
-    normalizeDesktopScene,
-} from "@shared/desktop-scenes.ts";
 import type { EngineId } from "@shared/engines.ts";
 import {
-    type CanvasMotion,
-    DEFAULT_CANVAS_MOTION,
-    DEFAULT_CANVAS_MOTION_LEVEL,
-    migrateLegacyWallpaperPresentation,
     normalizeWallpaperPresentations,
-    type WallpaperMotionLevel,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import {
@@ -49,18 +37,13 @@ import {
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
-    style: StylePreset;
     accent: AccentId;
     shape: "rounded" | "pill";
     searchOpacity: number;
-    showTitle?: boolean;
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
-    canvasMotion: CanvasMotion;
-    canvasMotionLevel: WallpaperMotionLevel;
-    desktopScene: DesktopSceneId;
     webAppHomeLimit: 8 | 12 | 16 | "all";
     webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
@@ -68,18 +51,13 @@ export type Appearance = {
 
 const initial: Appearance = {
     theme: "system",
-    style: "zen",
     accent: "blue",
     shape: "rounded",
     searchOpacity: 1,
-    showTitle: true,
     engine: "bing",
     target: "current",
     wallpaper: "",
     wallpaperPresentations: {},
-    canvasMotion: DEFAULT_CANVAS_MOTION,
-    canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
-    desktopScene: DEFAULT_DESKTOP_SCENE,
     webAppHomeLimit: 12,
     webAppIconSize: "default",
     showAppLabels: true,
@@ -91,7 +69,6 @@ export function normalizeAppearance(raw: unknown): Appearance {
         ? raw as Record<string, unknown>
         : {};
     const result = { ...initial };
-    result.style = normalizeStylePreset(saved.style);
     result.accent = normalizeAccent(saved.accent);
     if (
         saved.theme === "system" || saved.theme === "light" ||
@@ -100,6 +77,11 @@ export function normalizeAppearance(raw: unknown): Appearance {
     if (saved.shape === "rounded" || saved.shape === "pill") {
         result.shape = saved.shape;
     }
+    const searchOpacity = saved.searchOpacity;
+    if (
+        typeof searchOpacity === "number" && Number.isFinite(searchOpacity) &&
+        searchOpacity >= 0.1 && searchOpacity <= 1
+    ) result.searchOpacity = searchOpacity;
     if (
         saved.engine === "bing" || saved.engine === "google" ||
         saved.engine === "baidu" || saved.engine === "duckduckgo"
@@ -136,38 +118,6 @@ export function normalizeAppearance(raw: unknown): Appearance {
                 | undefined,
         },
     );
-    if (saved.canvasMotion === "off" || saved.canvasMotion === "ambient") {
-        result.canvasMotion = saved.canvasMotion;
-    } else if (
-        saved.ambientMotionMode !== undefined ||
-        saved.ambientMotionStrength !== undefined ||
-        saved.wallpaperGlowStrength !== undefined
-    ) {
-        const migrated = migrateLegacyWallpaperPresentation(saved);
-        result.canvasMotion = migrated.motion === "ambient" ? "ambient" : "off";
-    }
-    if (
-        saved.canvasMotionLevel === "subtle" ||
-        saved.canvasMotionLevel === "soft" ||
-        saved.canvasMotionLevel === "standard" ||
-        saved.canvasMotionLevel === "pronounced"
-    ) {
-        result.canvasMotionLevel = saved.canvasMotionLevel;
-    } else if (
-        saved.ambientMotionMode !== undefined ||
-        saved.ambientMotionStrength !== undefined ||
-        saved.wallpaperGlowStrength !== undefined
-    ) {
-        const migrated = migrateLegacyWallpaperPresentation(saved);
-        result.canvasMotionLevel = migrated.motionLevel;
-    }
-    result.desktopScene = normalizeDesktopScene(saved.desktopScene);
-    if (typeof saved.showTitle === "boolean") {
-        result.showTitle = saved.showTitle;
-    }
-    if (typeof saved.showAppLabels === "boolean") {
-        result.showAppLabels = saved.showAppLabels;
-    }
     if (
         saved.webAppHomeLimit === 8 || saved.webAppHomeLimit === 12 ||
         saved.webAppHomeLimit === 16 || saved.webAppHomeLimit === "all"
@@ -176,12 +126,8 @@ export function normalizeAppearance(raw: unknown): Appearance {
         saved.webAppIconSize === "compact" ||
         saved.webAppIconSize === "default" || saved.webAppIconSize === "large"
     ) result.webAppIconSize = saved.webAppIconSize;
-    const searchOpacity = saved.searchOpacity;
-    if (
-        typeof searchOpacity === "number" && Number.isFinite(searchOpacity) &&
-        searchOpacity >= 0.1 && searchOpacity <= 1
-    ) {
-        result.searchOpacity = searchOpacity;
+    if (typeof saved.showAppLabels === "boolean") {
+        result.showAppLabels = saved.showAppLabels;
     }
     return result;
 }
@@ -373,7 +319,6 @@ export function AppState({ children }: { children: ReactNode }) {
                     ...prev,
                     engine: prefs.defaultEngine,
                     theme: prefs.theme,
-                    style: normalizeStylePreset(prefs.style),
                     accent: normalizeAccent(prefs.accent),
                     shape: prefs.searchShape,
                     searchOpacity: prefs.searchOpacity ?? 1,
@@ -382,9 +327,6 @@ export function AppState({ children }: { children: ReactNode }) {
                         : "current",
                     wallpaper: prefs.backgroundImage ?? "",
                     wallpaperPresentations: prefs.wallpaperPresentations,
-                    canvasMotion: prefs.canvasMotion,
-                    canvasMotionLevel: prefs.canvasMotionLevel,
-                    desktopScene: prefs.desktopScene,
                     webAppHomeLimit: prefs.webAppHomeLimit,
                     webAppIconSize: prefs.webAppIconSize,
                     showAppLabels: prefs.showAppLabels,
@@ -448,17 +390,14 @@ export function AppState({ children }: { children: ReactNode }) {
     }, [appearance.theme]);
 
     useEffect(() => {
-        document.documentElement.dataset.accent = appearance.accent;
-        document.documentElement.dataset.shape = appearance.shape;
-        document.documentElement.style.setProperty(
+        const root = document.documentElement;
+        root.dataset.accent = appearance.accent;
+        root.dataset.shape = appearance.shape;
+        root.style.setProperty(
             "--search-opacity",
-            String(appearance.searchOpacity ?? 1),
+            String(appearance.searchOpacity),
         );
-    }, [
-        appearance.accent,
-        appearance.shape,
-        appearance.searchOpacity,
-    ]);
+    }, [appearance.accent, appearance.shape, appearance.searchOpacity]);
 
     const setAppearance = (
         next: Partial<Appearance>,
@@ -469,7 +408,6 @@ export function AppState({ children }: { children: ReactNode }) {
         if (user) {
             const updates: Record<string, unknown> = {};
             if (next.theme !== undefined) updates.theme = next.theme;
-            if (next.style !== undefined) updates.style = next.style;
             if (next.accent !== undefined) updates.accent = next.accent;
             if (next.shape !== undefined) updates.searchShape = next.shape;
             if (next.searchOpacity !== undefined) {
@@ -486,15 +424,6 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (next.wallpaperPresentations !== undefined) {
                 updates.wallpaperPresentations = next.wallpaperPresentations;
-            }
-            if (next.canvasMotion !== undefined) {
-                updates.canvasMotion = next.canvasMotion;
-            }
-            if (next.canvasMotionLevel !== undefined) {
-                updates.canvasMotionLevel = next.canvasMotionLevel;
-            }
-            if (next.desktopScene !== undefined) {
-                updates.desktopScene = next.desktopScene;
             }
             if (next.webAppHomeLimit !== undefined) {
                 updates.webAppHomeLimit = next.webAppHomeLimit;

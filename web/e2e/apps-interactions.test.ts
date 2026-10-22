@@ -7,7 +7,7 @@ async function footerVisible(page: Page) {
     const geometry = await page.locator(".app-dialog-footer").evaluate(
         (footer) => {
             const r = footer.getBoundingClientRect();
-            const panel = footer.closest(".workspace-panel, .desktop-window")!
+            const panel = footer.closest(".workspace-panel")!
                 .getBoundingClientRect();
             const body = footer.closest(".workspace-body")!;
             return {
@@ -400,7 +400,7 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                     );
                     await page.setViewportSize({ width: 390, height: 844 });
                     const mobileName = page.locator(
-                        '.workspace-panel[data-presentation="sheet"] #app-name-input',
+                        ".workspace-panel--mobile #app-name-input",
                     );
                     await mobileName.waitFor({ state: "visible" });
                     assertEquals(
@@ -409,6 +409,13 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                     );
                     await mobileName.press("Escape");
                     await page.getByRole("alertdialog").waitFor();
+                    // The dialog can mount before Base UI hands it focus; wait so Escape targets it.
+                    await page.waitForFunction(() =>
+                        document.querySelector('[role="alertdialog"]')
+                            ?.contains(
+                                document.activeElement,
+                            ) === true
+                    );
                     await page.keyboard.press("Escape");
                     await page.getByRole("alertdialog").waitFor({
                         state: "detached",
@@ -487,6 +494,9 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                 const toast = page.locator(".undo-toast");
                 await toast.waitFor();
                 const liveRegion = await toast.elementHandle();
+                // The menu action can leave the pointer over the new toast.
+                // Consume the first three seconds without pausing its deadline.
+                await page.mouse.move(1, 1);
                 await page.clock.fastForward(3000);
                 await page.getByRole("button", {
                     name: "收起工作区",
@@ -515,6 +525,8 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                     ),
                     true,
                 );
+                // Rest the pointer off the toast: hovering pauses the undo deadline.
+                await page.mouse.move(1, 1);
                 await page.clock.runFor(6_700);
                 await toast.waitFor({ state: "detached" });
                 await liveRegion?.dispose();

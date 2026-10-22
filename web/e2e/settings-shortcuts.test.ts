@@ -52,18 +52,17 @@ Deno.test("production settings shortcuts contracts", async (t) => {
         async () => {
             // Direct access as guest
             await visit("/settings/shortcuts");
-            await page.getByRole("heading", { name: "快捷键", exact: true })
-                .first().waitFor({ state: "visible" });
+            await page.getByRole("heading", {
+                level: 1,
+                name: "快捷键",
+                exact: true,
+            }).waitFor({ state: "visible" });
             assertEquals(
                 await page.getByRole("heading", { level: 1 }).allTextContents(),
-                ["设置"],
-            );
-            assertEquals(
-                await page.getByRole("heading", { level: 2 }).allTextContents(),
                 ["快捷键"],
             );
             assertEquals(
-                await page.getByRole("heading", { level: 3 }).allTextContents(),
+                await page.getByRole("heading", { level: 2 }).allTextContents(),
                 [
                     "全局",
                     "搜索",
@@ -72,21 +71,26 @@ Deno.test("production settings shortcuts contracts", async (t) => {
                     "快捷命令",
                 ],
             );
+            assertEquals(
+                await page.getByRole("heading", { level: 3 }).count(),
+                0,
+            );
 
-            // Active tab navigation button state
-            const navButton = page.getByRole("navigation", { name: "设置分类" })
-                .getByRole("button", { name: "快捷键", exact: true });
-            assertEquals(await navButton.getAttribute("aria-current"), "page");
-            const navButtonClass = await navButton.getAttribute("class");
-            assert(navButtonClass?.includes("active"));
+            // Active tab navigation link state
+            const navLink = page.getByRole("navigation", { name: "设置分类" })
+                .getByRole("link", { name: "快捷键", exact: true });
+            assertEquals(await navLink.getAttribute("aria-current"), "page");
 
             // Refresh persistence
             const reloadResponse = await page.reload();
             assertEquals(reloadResponse?.status(), 200);
-            await page.getByRole("heading", { name: "快捷键", exact: true })
-                .first().waitFor({ state: "visible" });
+            await page.getByRole("heading", {
+                level: 1,
+                name: "快捷键",
+                exact: true,
+            }).waitFor({ state: "visible" });
             assertEquals(
-                await page.getByRole("heading", { level: 2 }).allTextContents(),
+                await page.getByRole("heading", { level: 1 }).allTextContents(),
                 ["快捷键"],
             );
         },

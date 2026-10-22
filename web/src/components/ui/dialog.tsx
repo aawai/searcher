@@ -72,7 +72,7 @@ function DialogDescription({
     return (
         <DialogPrimitive.Description
             data-slot="dialog-description"
-            className={cn("text-sm text-[var(--muted)]", className)}
+            className={className}
             {...props}
         />
     );
@@ -95,10 +95,7 @@ function DialogHeader({
     return (
         <div
             data-slot="dialog-header"
-            className={cn(
-                "flex flex-col space-y-1.5 text-center sm:text-left mb-4",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );
@@ -111,10 +108,7 @@ function DialogFooter({
     return (
         <div
             data-slot="dialog-footer"
-            className={cn(
-                "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 gap-2",
-                className,
-            )}
+            className={className}
             {...props}
         />
     );

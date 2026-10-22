@@ -1,593 +1,117 @@
-.home {
-    width: 100%;
-    min-height: calc(100vh - 64px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.hero {
-    width: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    /* An explicit first row keeps search anchored without a placeholder title. */
-    grid-template-rows: calc(var(--font-home-title-size) * 1.1 +
-        var(--space-section)) auto;
-    justify-items: center;
-    padding: var(--space-home-hero-inset) var(--space-4) 0;
-}
-.hero > .search-form-wrap {
-    grid-row: 2;
-}
-.hero > .hero-caption {
-    grid-row: 3;
-}
-.hero-title {
-    grid-row: 1;
-    align-self: start;
-    font-size: var(--font-home-title-size);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin: 0;
-    font-weight: 700;
-}
-.hero-title span {
-    color: var(--accent);
-}
-.hero-caption {
-    margin: var(--space-row-gap) 0 0;
-    color: var(--muted);
-    font-size: var(--font-caption-size);
-}
-.home-zen {
-    --radius: 16px;
-    --shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.1);
-}
-[data-theme="dark"] .home-zen {
-    --shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
-}
-.home-widgets {
-    --radius: 22px;
-    --surface: color-mix(in srgb, var(--background) 65%, transparent);
-    --surface-soft: color-mix(in srgb, var(--background) 78%, transparent);
-    --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.35);
-}
-[data-theme="dark"] .home-widgets {
-    --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.7);
-}
+/* Home: search, the Dock and inline notes are the only materials; apps and
+   labels sit directly on the wallpaper. */
+
 :root {
-    /* Home layouts semantic tokens (Issue #52) */
-    --space-zen-trigger-gap: 6px;
-    --space-zen-trigger-padding: 6px var(--space-2);
-    --space-zen-trigger-padding-mobile: var(--space-1) 6px;
-    --space-zen-btn-gap: 5px;
-    --space-zen-btn-padding: 6px var(--space-3);
-    --space-managing-bar-px: 14px;
-    --space-managing-bar-padding: var(--space-2) var(--space-managing-bar-px);
-    --space-managing-bar-padding-mobile: 10px var(--space-3);
-    --space-managing-bar-mb-mobile: 14px;
-    --space-managing-text-gap: 7px;
-    --space-managing-btn-px: 10px;
-    --space-bento-margin-top: 28px;
-    --space-bento-margin-bottom: 80px;
-    --space-bento-margin-top-mobile: var(--space-5);
-    --space-bento-margin-bottom-mobile: 72px;
-    --space-bento-count-padding: 2px 6px;
-    --space-bento-actions-gap: 6px;
-    --space-bento-action-padding: 9px;
-    --space-bento-empty-py: 22px;
-    --font-bento-count: 11px;
-    --space-layout-mode-margin-top: 14px;
-    --space-layout-card-padding: 14px;
-    --radius-preview: 8px;
-    --radius-preview-pill: 10px;
-    --radius-preview-subtle: 4px;
-    --radius-preview-line: 1px;
-    --space-preview-padding: 10px;
-    --space-preview-gap: 6px;
-    --space-preview-zen-search-mt: 12px;
-    --space-preview-zen-search-px: 6px;
-    --space-preview-zen-gap: 6px;
-    --space-preview-widgets-gap: 5px;
-    --space-preview-card-p: 3px;
-    --space-pinned-area-mb: 48px;
-    --space-pinned-area-mb-mobile: 40px;
-    /* Zen inline preview geometry: not a new card/material. */
+    /* Inline-note preview geometry. The swipe distance is read by ZenInlineNotes. */
     --zen-note-preview-lines: 4;
     --zen-note-title-lines: 2;
     --zen-note-swipe-distance: 32;
-    --zen-note-position-size: 4px;
-    --zen-note-navigation-clearance: calc(var(--control-touch-target) + var(--space-7));
+    /* Space kept under the page so the fixed Dock never covers content. */
+    --zen-dock-clearance: calc(var(--control-touch-target) + var(--space-7));
 }
 
-/* ==========================================================================
-   Home Workspace Layout Styles: Zen, Widgets
-   ========================================================================== */
-
-/* Shared navigation remains lighter than content and primary search. */
-.zen-edge-trigger {
-    background: var(--surface-navigation);
-    backdrop-filter: blur(var(--material-blur-navigation));
-    -webkit-backdrop-filter: blur(var(--material-blur-navigation));
-    border: 1px solid var(--border-subtle);
-    border-radius: 999px;
-    box-shadow: var(--shadow-navigation);
-    z-index: var(--elevation-dock);
+.home {
+    width: 100%;
+    min-height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-block-end: calc(
+        var(--zen-dock-clearance) + env(safe-area-inset-bottom, 0px)
+    );
 }
 
+.hero {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-home-hero-inset) var(--space-4) 0;
+}
+
+.pinned-area {
+    width: calc(100% - 2 * var(--space-4));
+    max-width: var(--layout-home-content-max);
+    margin: var(--space-5) auto var(--space-9);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+@media (max-width: 700px) {
+    .pinned-area {
+        margin: var(--space-6) auto var(--space-8);
+    }
+}
+
+/* Arranging apps: one floating capsule above the grid; Done is the only primary. */
+.home-managing-bar {
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block-end: var(--space-4);
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+    background: var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-l2);
+}
+
+.home-managing-text {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+}
+
+/* Dock: bottom-centre capsule that opens the apps, notes and documents workspaces. */
 .zen-edge-trigger {
     position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
-    right: max(20px, env(safe-area-inset-right, 20px));
-    display: inline-flex;
+    left: 50%;
+    bottom: max(var(--space-4), env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: var(--elevation-dock);
+    display: flex;
     align-items: center;
-    gap: var(--space-zen-trigger-gap);
-    padding: var(--space-zen-trigger-padding);
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-l2);
 }
 
 .zen-edge-btn {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-zen-btn-gap);
-    padding: var(--space-zen-btn-padding);
-    min-height: var(--control-compact-height);
-    line-height: var(--font-caption-line-height);
-    font-size: var(--font-caption-size);
-    font-weight: var(--font-label-weight);
-    color: var(--foreground);
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    padding: 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius-pill);
     background: transparent;
-    border: none;
-    border-radius: 999px;
-    transition: color 0.15s ease, background 0.15s ease;
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    font-weight: var(--font-label-weight);
+    white-space: nowrap;
+    transition: background var(--motion-fast) var(--ease-standard);
 }
 
 .zen-edge-btn:hover {
-    background: var(--surface);
+    background: var(--surface-soft);
 }
 
-@media (pointer: coarse), (hover: none), (any-pointer: coarse) {
+@media (pointer: coarse), (hover: none) {
     .zen-edge-btn {
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);
     }
 }
 
-/* Managing mode indicator in home layouts */
-.home-managing-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    width: 100%;
-    max-width: 640px;
-    margin: 0 auto var(--space-4);
-    padding: var(--space-managing-bar-padding);
-    background: var(--surface-l1);
-    backdrop-filter: blur(var(--material-blur-content));
-    -webkit-backdrop-filter: blur(var(--material-blur-content));
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-l1);
-}
-
-.home-managing-text {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-managing-text-gap);
-    font-size: var(--font-caption-size);
-    font-weight: 500;
-    color: var(--foreground);
-}
-
-.home-managing-text svg {
-    color: var(--accent);
-    flex-shrink: 0;
-}
-
-.home-managing-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-shrink: 0;
-}
-
-.home-managing-btn {
-    height: 28px;
-    padding: 0 var(--space-managing-btn-px);
-    font-size: var(--font-metadata-size);
-    border-radius: var(--control-radius);
-}
-/* --------------------------------------------------------------------------
-   3. Widgets Layout (Spatial Glass Desktop / iPadOS Bento Style)
-   -------------------------------------------------------------------------- */
-
-.home--widgets .search-form-wrap,
-.home--widgets .search-form,
-.home--widgets .search-frame {
-    max-width: var(--layout-bento-max);
-}
-
-.widgets-bento-wrapper {
-    container: bento-wrapper / inline-size;
-    width: 100%;
-    max-width: var(--layout-bento-max, 960px);
-    margin: var(--space-bento-margin-top) auto var(--space-bento-margin-bottom);
-    padding: 0 var(--space-4);
-}
-
-.widgets-bento-container {
-    width: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-5);
-    align-items: start;
-}
-/* Default card ordering: Apps first, Notes second */
-.widgets-bento-container .widgets-bento-card--apps {
-    order: 1;
-}
-
-.widgets-bento-container .widgets-bento-card--notes {
-    order: 2;
-}
-
-/* Notes-only mode: Notes card takes precedence on top, empty Apps card moves down */
-.widgets-bento-container[data-bento-mode="notes-only"] .widgets-bento-card--notes {
-    order: 1;
-}
-
-.widgets-bento-container[data-bento-mode="notes-only"] .widgets-bento-card--apps {
-    order: 2;
-}
-
-/* Apps-only mode: Apps card takes precedence on top, empty Notes card moves down */
-.widgets-bento-container[data-bento-mode="apps-only"] .widgets-bento-card--apps {
-    order: 1;
-}
-
-.widgets-bento-container[data-bento-mode="apps-only"] .widgets-bento-card--notes {
-    order: 2;
-}
-
-/* Asymmetrical 5:3 wide container query: Apps gets 5fr, Notes gets 3fr */
-@container bento-wrapper (min-width: 680px) {
-    .widgets-bento-container {
-        grid-template-columns: var(--layout-bento-columns);
-    }
-
-    /* Empty expansion: populated card spans full width, empty card moves down spanning full width */
-    .widgets-bento-container[data-bento-mode="apps-only"] .widgets-bento-card--apps,
-    .widgets-bento-container[data-bento-mode="apps-only"] .widgets-bento-card--notes {
-        grid-column: 1 / -1;
-    }
-
-    .widgets-bento-container[data-bento-mode="notes-only"] .widgets-bento-card--notes,
-    .widgets-bento-container[data-bento-mode="notes-only"] .widgets-bento-card--apps {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (min-width: 960px) {
-    .widgets-bento-container {
-        grid-template-columns: var(--layout-bento-columns);
-    }
-
-    /* Empty expansion: populated card spans full width, empty card moves down spanning full width */
-    .widgets-bento-container[data-bento-mode="apps-only"] .widgets-bento-card--apps,
-    .widgets-bento-container[data-bento-mode="apps-only"] .widgets-bento-card--notes {
-        grid-column: 1 / -1;
-    }
-
-    .widgets-bento-container[data-bento-mode="notes-only"] .widgets-bento-card--notes,
-    .widgets-bento-container[data-bento-mode="notes-only"] .widgets-bento-card--apps {
-        grid-column: 1 / -1;
-    }
-}
-
-/* Narrow single-column fallback */
-@container bento-wrapper (max-width: 679px) {
-    .widgets-bento-container {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
-
-.widgets-bento-card {
-    container: bento-card / inline-size;
-    min-width: 0;
-    --space-bento-padding: var(--space-5);
-    --radius-bento-inner: max(var(--control-radius), calc(var(--radius) - var(--space-bento-padding)));
-    background: var(--surface-l1);
-    backdrop-filter: blur(var(--material-blur-content));
-    -webkit-backdrop-filter: blur(var(--material-blur-content));
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    padding: var(--space-bento-padding);
-    box-shadow: var(--shadow-l1);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.widgets-bento-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-}
-
-.widgets-bento-header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-shrink: 0;
-}
-
-.widgets-bento-title {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--font-body-size);
-    font-weight: 600;
-    color: var(--foreground);
-    user-select: none;
-}
-
-.widgets-bento-count {
-    display: inline-flex;
-    align-items: center;
-    font-size: var(--font-bento-count);
-    font-weight: 600;
-    line-height: 1;
-    padding: var(--space-bento-count-padding);
-    border-radius: 999px;
-    background: var(--surface-soft);
-    color: var(--muted);
-    border: 1px solid var(--border-subtle);
-}
-
-.widgets-bento-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-bento-actions-gap);
-    flex-shrink: 0;
-    margin-left: auto;
-}
-
-.widgets-bento-action {
-    height: 30px;
-    padding-inline: var(--space-bento-action-padding);
-    font-size: var(--font-metadata-size);
-}
-
-.widgets-bento-card {
-    --launcher-justify: start;
-}
-.widgets-bento-card[data-few-apps="true"] {
-    --launcher-justify: center;
-}
-
-/* Compact intrinsic-height empty card when other side is expanded */
-.widgets-bento-card[data-compact="true"],
-.widgets-bento-card--compact {
-    --space-bento-padding: var(--space-3) var(--space-4);
-    gap: var(--space-2);
-}
-
-.widgets-bento-card[data-compact="true"] .widgets-bento-empty,
-.widgets-bento-card--compact .widgets-bento-empty {
-    padding: var(--space-2) var(--space-3);
-    min-height: auto;
-}
-
-/* Empty state inside bento card */
-.widgets-bento-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-bento-empty-py) var(--space-4);
-    text-align: center;
-    gap: var(--space-3);
-    background: color-mix(in srgb, var(--surface-solid) 35%, transparent);
-    border: 1px dashed var(--border-subtle);
-    border-radius: var(--radius-bento-inner);
-}
-
-/* --------------------------------------------------------------------------
-   Controlled Notes Board in Bento Card
-   -------------------------------------------------------------------------- */
-.controlled-notes-board {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    isolation: isolate;
-    padding-block: var(--space-2);
-}
-.controlled-note-slot {
-    grid-area: 1 / 1;
-    align-self: start;
-    margin-block-start: calc(var(--note-slot) * var(--notes-board-step));
-    margin-inline-start: var(--space-note-inset);
-    margin-inline-end: var(--space-2);
-    transform: rotate(var(--note-tilt));
-    transition: transform .18s ease;
-    min-width: 0;
-}
-.controlled-note-slot[data-slot-index="0"] {
-    --note-slot: 0;
-    --space-note-inset: var(--space-1);
-    --note-tilt: calc(-1 * var(--notes-board-tilt));
-    z-index: var(--elevation-local-1);
-}
-.controlled-note-slot[data-slot-index="1"] {
-    --note-slot: 1;
-    --space-note-inset: var(--space-4);
-    --note-tilt: var(--notes-board-tilt);
-    z-index: var(--elevation-local-2);
-}
-.controlled-note-slot[data-slot-index="2"] {
-    --note-slot: 2;
-    --space-note-inset: var(--space-2);
-    --note-tilt: calc(-1 * var(--notes-board-tilt));
-    z-index: var(--elevation-local-3);
-}
-.controlled-note-slot[data-slot-index="3"] {
-    --note-slot: 3;
-    --space-note-inset: var(--space-5);
-    --note-tilt: var(--notes-board-tilt);
-    z-index: var(--elevation-local-4);
-}
-.controlled-note-slot[data-slot-index="4"] {
-    --note-slot: 4;
-    --space-note-inset: var(--space-3);
-    --note-tilt: calc(-1 * var(--notes-board-tilt));
-    z-index: var(--elevation-local-5);
-}
-.controlled-note-slot:hover,
-.controlled-note-slot:focus-within,
-.controlled-note-slot[data-dragging] {
-    z-index: var(--elevation-local-6);
-    transform: none;
-}
-.controlled-note-slot .note-card {
-    width: 100%;
-    box-sizing: border-box;
-}
-.controlled-note-handle {
-    touch-action: none;
-}
-@media (prefers-reduced-motion: reduce) {
-    .controlled-note-slot {
-        transform: none;
-        transition: none;
-    }
-}
-@container bento-card (max-width: 280px) {
-    .controlled-notes-board {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-3);
-    }
-    .controlled-note-slot {
-        margin: 0;
-        transform: none;
-        align-self: stretch;
-    }
-}
-@media (max-width: 767px) {
-    .controlled-notes-board {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-3);
-    }
-    .controlled-note-slot {
-        margin: 0;
-        transform: none;
-        align-self: stretch;
-    }
-}
-@media (max-width: 640px) {
-    .zen-edge-trigger {
-        bottom: max(16px, env(safe-area-inset-bottom, 16px));
-        right: max(16px, env(safe-area-inset-right, 16px));
-        padding: var(--space-zen-trigger-padding-mobile);
-    }
-    .widgets-bento-wrapper {
-        margin: var(--space-bento-margin-top-mobile) auto
-            var(--space-bento-margin-bottom-mobile);
-        padding: 0 var(--space-3);
-    }
-    .widgets-bento-container {
-        gap: var(--space-4);
-    }
-    .widgets-bento-card {
-        --space-bento-padding: var(--space-4);
-        gap: var(--space-3);
-    }
-    .home-managing-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--space-2);
-        padding: var(--space-managing-bar-padding-mobile);
-        margin: 0 var(--space-3) var(--space-managing-bar-mb-mobile);
-    }
-    .home-managing-actions {
-        justify-content: flex-end;
-    }
-}
-
-/* --------------------------------------------------------------------------
-   4. Visual Layout Mode Selector in Settings
-   -------------------------------------------------------------------------- */
-.layout-mode-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-4);
-    width: 100%;
-    margin-top: var(--space-layout-mode-margin-top);
-}
-
-.layout-mode-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: var(--space-layout-card-padding);
-    background: var(--surface-soft);
-    border: 2px solid transparent;
-    border-radius: var(--radius);
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.layout-mode-card:hover {
-    background: var(--surface);
-    border-color: var(--accent-border);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-l2);
-}
-
-.layout-mode-card[data-active="true"] {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    box-shadow: none;
-}
-
-.layout-mode-preview {
-    height: 96px;
-    background: var(--background);
-    border-radius: var(--radius-preview);
-    border: 1px solid var(--border-subtle);
-    padding: var(--space-preview-padding);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-preview-gap);
-    margin-bottom: var(--space-3);
-    overflow: hidden;
-    position: relative;
-}
-
-.layout-mode-name {
-    font-size: var(--font-body-size);
-    font-weight: 600;
-    color: var(--foreground);
-    margin-bottom: var(--space-1);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.layout-mode-desc {
-    font-size: var(--font-metadata-size);
-    line-height: 1.45;
-    color: var(--muted);
-}
-
-/* --------------------------------------------------------------------------
-   5. Notes Flow Grid in Centered Layouts
-   -------------------------------------------------------------------------- */
+/* Flow grid for pinned notes laid out in normal flow; used by FloatingNotes. */
 .notes-flow-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -608,148 +132,34 @@
     box-sizing: border-box;
 }
 
-.widgets-bento-card .notes-flow-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-    margin: 0;
-    max-width: 100%;
-}
-
-.pinned-area {
-    width: calc(100% - 2 * var(--space-4));
-    max-width: var(--layout-home-content-max);
-    margin: var(--space-5) auto var(--space-pinned-area-mb);
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-@media (max-width: 700px) {
-    .pinned-area {
-        margin: var(--space-section) auto var(--space-pinned-area-mb-mobile);
-    }
-}
-
-/* --------------------------------------------------------------------------
-   Preview static geometry classes for LayoutModeSelector
-   -------------------------------------------------------------------------- */
-.layout-preview-zen-search {
-    width: 85%;
-    height: 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-preview-pill);
-    margin-top: var(--space-preview-zen-search-mt);
-    display: flex;
-    align-items: center;
-    padding: 0 var(--space-preview-zen-search-px);
-}
-
-.layout-preview-zen-dot {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--muted);
-}
-
-.layout-preview-zen-icons {
-    display: flex;
-    gap: var(--space-preview-zen-gap);
-    margin-top: var(--space-2);
-}
-
-.layout-preview-zen-icon {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--surface-soft);
-}
-
-.layout-preview-zen-pill {
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 24px;
-    height: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-preview-subtle);
-}
-
-.layout-preview-widgets-search {
-    width: 80%;
-    height: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--control-radius);
-}
-
-.layout-preview-widgets-bento {
-    display: flex;
-    gap: var(--space-preview-widgets-gap);
-    width: 90%;
-    margin-top: var(--space-1);
-}
-
-.layout-preview-widgets-card {
-    flex: 1;
-    height: 30px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--control-radius);
-    padding: var(--space-preview-card-p);
-}
-
-.layout-preview-widgets-line {
-    width: 14px;
-    height: 3px;
-    border-radius: var(--radius-preview-line);
-}
-
-.layout-preview-widgets-line--accent {
-    background: var(--accent);
-}
-
-.layout-preview-widgets-line--muted {
-    background: var(--muted);
-}
-
-.layout-preview-widgets-dock {
-    position: absolute;
-    bottom: 4px;
-    width: 36px;
-    height: 7px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--control-radius);
-}
-
-.layout-mode-check {
-    color: var(--accent);
-    display: inline-flex;
-    align-items: center;
-}
-
-/* Mobile Zen secondary content shares the search/launcher axis, not its surface. */
+/* Mobile fixed notes share the search/launcher axis: one material card, one note at a time. */
 .zen-inline-notes {
     width: calc(100% - 2 * var(--space-4));
     max-width: var(--layout-home-content-max);
     margin: var(--space-section) auto;
     color: var(--foreground);
 }
-.zen-inline-note {
-    width: calc(100% - 2 * var(--space-4));
-    margin-inline: auto;
+
+/* The extra ancestor class outranks .button.button--content, which loads later. */
+.zen-inline-notes [data-slot="button"].zen-inline-note {
+    width: 100%;
     block-size: calc(
-        var(--zen-note-title-lines) * var(--font-component-title-line-height) +
+        2 * var(--space-4) +
+        var(--zen-note-title-lines) * var(--font-title-line-height) +
         var(--space-inline-gap) +
-        var(--zen-note-preview-lines) * var(--font-body-size) *
-        var(--font-body-line-height)
+        var(--zen-note-preview-lines) * var(--font-body-line-height)
     );
+    padding: var(--space-4);
+    border-radius: var(--radius);
+    background: var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-l2);
     text-align: center;
     touch-action: pan-y pinch-zoom;
     user-select: none;
 }
+
 .zen-inline-note-content {
     display: flex;
     flex-direction: column;
@@ -757,6 +167,7 @@
     block-size: 100%;
     gap: var(--space-inline-gap);
 }
+
 .zen-inline-note-title,
 .zen-inline-note-body {
     display: -webkit-box;
@@ -764,23 +175,28 @@
     overflow: hidden;
     overflow-wrap: anywhere;
 }
+
 .zen-inline-note-title {
     -webkit-line-clamp: var(--zen-note-title-lines);
-    max-block-size: calc(var(--zen-note-title-lines) *
-        var(--font-component-title-line-height));
-    font-size: var(--font-component-title-size);
-    line-height: var(--font-component-title-line-height);
+    max-block-size: calc(
+        var(--zen-note-title-lines) * var(--font-title-line-height)
+    );
+    font-size: var(--font-title-size);
+    line-height: var(--font-title-line-height);
     font-weight: var(--font-title-weight);
 }
+
 .zen-inline-note-body {
     -webkit-line-clamp: var(--zen-note-preview-lines);
-    max-block-size: calc(var(--zen-note-preview-lines) * var(--font-body-size) *
-        var(--font-body-line-height));
+    max-block-size: calc(
+        var(--zen-note-preview-lines) * var(--font-body-line-height)
+    );
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     font-weight: var(--font-body-weight);
     white-space: pre-wrap;
 }
+
 .zen-inline-notes-position {
     display: flex;
     align-items: center;
@@ -788,33 +204,21 @@
     gap: var(--space-inline-gap);
     margin-block-start: var(--space-row-gap);
 }
+
 .zen-inline-notes-position > span {
-    inline-size: var(--zen-note-position-size);
-    block-size: var(--zen-note-position-size);
-    border-radius: var(--control-radius);
-    background: var(--border);
+    inline-size: var(--space-1);
+    block-size: var(--space-1);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--foreground) 30%, transparent);
 }
+
 .zen-inline-notes-position > [data-active="true"] {
     inline-size: var(--space-3);
-    background: var(--muted);
+    background: var(--foreground);
 }
+
 @media (max-width: 767px) {
-    .home-zen {
-        padding-block-end: calc(var(--zen-note-navigation-clearance) +
-            env(safe-area-inset-bottom, 0px));
-    }
-    .home-zen .pinned-area:has(+ .zen-inline-notes) {
+    .home .pinned-area:has(+ .zen-inline-notes) {
         margin-block-end: 0;
-    }
-    .home-zen .zen-edge-trigger {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-        width: max-content;
-        max-width: calc(100% - 2 * var(--space-4));
-    }
-    .home-zen .zen-edge-btn {
-        white-space: nowrap;
-        flex-shrink: 0;
     }
 }

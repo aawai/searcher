@@ -193,8 +193,6 @@ export function checkBundle(rootDir = Deno.cwd()): {
         "src/app/AccountPage",
         "src/app/TrashPage",
         "src/app/NotFoundPage",
-        "src/dev/WallpaperMotionInspector",
-        "WallpaperMotionInspector",
         "assistant-vendor",
         "markdown-vendor",
         "markdown-renderer-vendor",
@@ -250,7 +248,6 @@ export function checkBundle(rootDir = Deno.cwd()): {
         "@assistant-ui/react",
         "assistant-stream",
         "assistant-cloud",
-        "wallpaper-motion-inspector",
     ];
     for (const token of forbiddenTokens) {
         if (entryCode.includes(token)) {

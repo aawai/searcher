@@ -1,8 +1,8 @@
 # 移动端极简空间：无容器便签展示实施计划
 
 状态：已实现并完成验收，关联
-[Issue #191](https://github.com/aawai/searcher/issues/191)。实际验证记录见
-[UI Review Checklist](../design/UI_REVIEW_CHECKLIST.md#issue-191-移动-zen-无容器便签)。
+[Issue #191](https://github.com/aawai/searcher/issues/191)。实际验证记录见 Issue
+与对应 PR 描述。
 
 ## 目标与设计依据
 
@@ -13,10 +13,11 @@
 
 现有依据：
 
-- `DESIGN_PRINCIPLES.md`：Search-first、Content before chrome、Semantic
-  spacing、Shared geometry、Restrained motion。
-- `DESIGN_SYSTEM.md`：Notes、Token taxonomy、Surface / elevation、Workspace
-  semantic surface。
+- 原设计原则文档（现并入
+  [Visual Language](../design/VISUAL_LANGUAGE.md)）：Search-first、Content
+  before chrome、Semantic spacing、Shared geometry、Restrained motion。
+- 原设计系统文档（现并入 Visual Language）：Notes、Token taxonomy、Surface /
+  elevation、Workspace semantic surface。
 - `web/src/features/home-layouts/ZenLayout.tsx`：当前首页固定便签复用
   `FloatingNotes`，打开便签调用 `editNote`。
 - `web/src/app/SearchHome.tsx`：`fixedNotes` 已由
@@ -109,14 +110,14 @@ surface/elevation，也不是新 Card 变体。由 home-layouts
 - 默认背景、系统支持的纯色/渐变与代表性图片壁纸必须实页检查。若系统支持组合下无容器文字无法满足可读性，应在共享
   wallpaper/content Token owner
   解决并重新审阅，不悄悄加回便签卡片、局部黑幕或文字描边。
-- 沿用 `DESIGN_PRINCIPLES.md`
+- 沿用原设计原则文档（现并入 Visual Language）
   对任意自定义高对比图片和最弱干预配置的明确可读性例外；不承诺任意壁纸绝对安全，也不自动改用户壁纸设置。
 
 ## 实施顺序与交付边界
 
 ### M1：契约与最小真实构图
 
-- [x] 在 `DESIGN_SYSTEM.md` 登记 inline preview
+- [x] 在原设计系统文档（现并入 Visual Language）登记 inline preview
       语义、owner、内容对齐及壁纸边界；记录移动 Zen 的作用范围。
 - [x] 在 `ZenLayout` 的现有移动 presentation seam 引入预览，桌面仍使用
       `FloatingNotes`；两者不同时挂载，不复制 Notes mutation 或编辑会话。
@@ -136,8 +137,8 @@ surface/elevation，也不是新 Card 变体。由 home-layouts
 - [x] 确认缩放/响应式切换不写入桌面坐标、不丢编辑草稿、不重复挂载编辑器。
 - [x] 移除仅被旧移动卡片路径使用的代码与样式；保留桌面 `FloatingNotes`
       所需逻辑，不扩大清理范围。
-- [x] 更新 README 对应用户行为说明、`CHANGELOG.md` 的 Unreleased 和
-      `UI_REVIEW_CHECKLIST.md`，按实际验证证据更新交付状态。
+- [x] 更新 README 对应用户行为说明、`CHANGELOG.md` 的 Unreleased 和 UI
+      验收清单，按实际验证证据更新交付状态。
 
 ## 验收标准与验证阶梯
 

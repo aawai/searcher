@@ -179,7 +179,7 @@ export default function MarkdownEditorSpike() {
     return (
         <PageShell archetype="utility" className="markdown-spike">
             <PageHeader
-                items={[{ label: "Design Lab", to: "/design-lab" }, {
+                items={[{ label: "设计实验室", to: "/design-lab" }, {
                     label: "M0A",
                 }]}
                 title="Shared Editor Feasibility Spike"

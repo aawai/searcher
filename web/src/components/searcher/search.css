@@ -4,59 +4,76 @@
     max-width: var(--layout-search-max);
     position: relative;
 }
+
+/* Search is a material over the wallpaper: translucent fill, one shadow, no stroke. */
 .search-frame {
     display: flex;
     align-items: center;
     width: 100%;
     height: 56px;
-    min-height: 56px;
-    gap: var(--space-control-gap);
+    gap: var(--space-1);
     padding: var(--space-search-inset-block) var(--space-search-inset-inline);
-    background: color-mix(in srgb, var(--surface-l2) calc(var(--search-opacity,
-        1)
-        * 100%), transparent);
-    border: 1px solid var(--border);
+    /* --search-opacity is the user's "搜索框透明度": 100% is opaque, lower values reveal the blurred wallpaper. */
+    background: color-mix(in srgb, var(--material-solid)
+        calc(var(--search-opacity) * 100%), transparent);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
     border-radius: var(--search-radius);
     box-shadow: var(--shadow-l2);
-    -webkit-backdrop-filter: blur(var(--material-blur-search));
-    backdrop-filter: blur(var(--material-blur-search));
-    transition: border-color .16s, box-shadow .16s, background .16s;
+    transition: background-color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
 }
-.search-frame:focus-within {
-    border-color: var(--ring);
+
+.search-frame:has(input:focus-visible) {
+    background: color-mix(in srgb, var(--material-solid)
+        calc(max(var(--search-opacity), 0.88) * 100%), transparent);
     box-shadow: 0 0 0 2px var(--ring), var(--shadow-l2);
-    background: color-mix(in srgb, var(--surface-l2)
-        calc(max(var(--search-opacity,
-        1), 0.88) * 100%), transparent);
 }
+
+/* The OS accessibility preference wins over the user's search opacity. */
+@media (prefers-reduced-transparency: reduce) {
+    .search-frame,
+    .search-frame:has(input:focus-visible) {
+        background: var(--material-solid);
+    }
+}
+
 .search-engine {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-inline-gap);
-    height: 40px;
-    min-height: 40px;
-    background: var(--surface-soft);
-    color: var(--foreground);
-    border: 1px solid var(--border);
+    gap: var(--space-1);
+    height: var(--control-height);
+    padding: 0 var(--space-2);
+    border: 0;
     border-radius: var(--radius-search-inner);
-    padding: 0 var(--space-control-gap);
-    font-weight: 500;
-    font-size: var(--font-caption-size);
-    white-space: nowrap;
+    background: transparent;
+    color: var(--muted);
     flex-shrink: 0;
     cursor: pointer;
+    transition: background var(--motion-fast) var(--ease-standard);
 }
+
+.search-engine:hover {
+    background: var(--surface-soft);
+}
+
+.search-engine .engine-ai-icon {
+    color: var(--accent);
+}
+
 .engine-mark {
-    --engine-mark-size: 23px;
-    width: var(--engine-mark-size);
-    height: var(--engine-mark-size);
+    width: var(--icon-md);
+    height: var(--icon-md);
     display: grid;
     place-items: center;
     background: var(--accent-subtle);
     color: var(--accent);
     border-radius: var(--control-radius);
+    font-size: var(--font-metadata-size);
+    font-weight: var(--font-label-weight);
 }
+
 .search-frame input {
     flex: 1;
     min-width: 0;
@@ -65,18 +82,31 @@
     outline: none;
     background: transparent;
     color: var(--foreground);
-    padding: 0 var(--space-control-gap);
+    padding: 0 var(--space-2);
     font-size: var(--font-search-input-size);
-    line-height: 24px;
+    line-height: var(--font-title-line-height);
 }
+
 .search-frame input::placeholder {
     color: var(--muted);
 }
+
+/* Shortcut hint: plain muted text, hidden where there is no keyboard. */
+.search-hint {
+    flex-shrink: 0;
+    padding: 0 var(--space-2);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    pointer-events: none;
+    user-select: none;
+}
+
 .search-submit {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
+    width: var(--control-height);
+    min-width: var(--control-height);
+    height: var(--control-height);
+    min-height: var(--control-height);
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -84,225 +114,186 @@
     border-radius: var(--radius-search-inner);
     flex-shrink: 0;
 }
+
 .model-pill {
-    color: var(--muted);
-    background: var(--surface-soft);
-    border: 1px solid var(--border);
-    padding: var(--space-model-pill-block) var(--space-model-pill-inline);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    max-width: 160px;
+    min-height: var(--control-compact-height);
+    padding: 0 var(--space-2);
+    border: 0;
     border-radius: var(--radius-search-inner);
-    transition: border-radius .16s;
+    background: var(--surface-soft);
+    color: var(--muted);
     font-size: var(--font-metadata-size);
-    max-width: 135px;
+    line-height: var(--font-metadata-line-height);
+    white-space: nowrap;
+}
+
+.model-trigger {
+    cursor: pointer;
+}
+
+.model-trigger:hover {
+    color: var(--foreground);
+}
+
+.model-pill-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.model-menu {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.model-option-label {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.model-option-provider {
+    flex-shrink: 0;
+    font-size: var(--font-metadata-size);
+    opacity: .7;
+}
+
+/* Suggestions are a floating layer: solid surface, one shadow. */
 .search-suggestions {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + var(--space-2));
     left: 0;
     right: 0;
     width: 100%;
-    background: var(--surface-solid);
-    border: 1px solid var(--border);
+    max-height: 360px;
+    overflow-y: auto;
+    padding: var(--space-1);
+    background: var(--surface-l3);
     border-radius: var(--radius);
     box-shadow: var(--shadow-l2);
     z-index: var(--elevation-suggestions);
-    padding: var(--space-1);
-    max-height: 360px;
-    overflow-y: auto;
 }
+
 .suggestion-item {
     width: 100%;
-    min-height: 40px;
+    min-height: var(--control-height);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-row-gap);
-    padding: var(--space-control-gap) var(--space-3);
-    border: 1px solid transparent;
+    gap: var(--space-3);
+    padding: 0 var(--space-3);
     border-radius: var(--control-radius);
-    background: transparent;
     color: var(--foreground);
     text-align: left;
     font-size: var(--font-body-size);
     cursor: pointer;
-    transition: background .12s, border-color .12s;
 }
-.suggestion-item:hover {
-    background: var(--surface-soft);
-    border-color: var(--border);
-    transition: none;
-}
+
+/* Same highlight as menu items; hover moves the selection. */
 .suggestion-item.active,
 .suggestion-item[aria-selected="true"] {
-    background: var(--accent-soft);
-    border-color: var(--accent-border);
-    transition: none;
+    background: var(--accent);
+    color: var(--accent-foreground);
 }
-[data-theme="dark"] .suggestion-item.active,
-[data-theme="dark"] .suggestion-item[aria-selected="true"] {
-    background: color-mix(in srgb, var(--accent) 35%, var(--surface-soft));
-}
+
 .suggestion-item-main {
     display: flex;
     align-items: center;
-    gap: var(--space-row-gap);
+    gap: var(--space-2);
     min-width: 0;
     flex: 1;
 }
+
+.suggestion-icon {
+    flex-shrink: 0;
+    color: var(--muted);
+}
+
+.suggestion-item.active .suggestion-icon,
+.suggestion-item[aria-selected="true"] .suggestion-icon {
+    color: inherit;
+}
+
 .suggestion-text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .suggestion-completion {
-    font-weight: 600;
+    font-weight: var(--font-title-weight);
 }
+
 .suggestion-badge {
-    font-size: var(--font-metadata-size);
-    padding: calc(var(--space-1) / 2) var(--space-1);
-    border-radius: var(--control-radius);
-    background: var(--surface-soft);
-    color: var(--muted);
     flex-shrink: 0;
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-.suggestion-item.active .suggestion-badge {
-    background: var(--surface-solid);
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
-}
-.engine-menu {
-    min-width: 248px;
-    padding: var(--space-control-gap);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    box-shadow: var(--shadow-l2);
-    color: var(--foreground);
-    z-index: var(--elevation-menu);
-}
-.engine-option {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-row-gap);
-    border-radius: var(--control-radius);
-    cursor: pointer;
-    outline: 0;
-}
-.engine-option[data-highlighted],
-.engine-option:hover {
-    background: var(--surface-soft);
-}
-.engine-check {
-    border-top: 1px solid var(--border);
-    color: var(--muted);
-    font-size: var(--font-caption-size);
-    border-radius: 0;
-}
-.status-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--danger);
-}
-.status-dot.online {
-    background: var(--success);
-}
-.status-dot.unknown {
-    background: var(--muted);
-}
-.model-trigger {
-    border: 1px solid var(--border);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-inline-gap);
-    cursor: pointer;
-}
-@media (max-width: 700px) {
-    .search-frame {
-        height: 52px;
-        min-height: 52px;
-        gap: var(--space-control-gap);
-        padding: var(--space-search-inset-block)
-            var(--space-search-inset-inline);
-    }
-    .search-engine {
-        min-height: 40px;
-        height: 40px;
-        min-width: 48px;
-        padding: 0 var(--space-control-gap);
-        gap: var(--space-inline-gap);
-    }
-    .engine-label {
-        display: none;
-    }
-    .search-frame input {
-        font-size: var(--font-search-input-size);
-        padding: 0 var(--space-control-gap);
-        height: 100%;
-    }
-    .search-submit {
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
-        min-height: 40px;
-        padding: 0;
-    }
-    .search-submit span {
-        display: none;
-    }
-    .model-pill {
-        max-width: 66px;
-    }
-}
-
-/* EngineSelector presentation */
-.engine-icon {
-    flex-shrink: 0;
-}
-.engine-option-label {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-control-gap);
-    flex: 1;
-}
-.engine-guest-label {
-    flex-shrink: 0;
-    color: var(--muted);
     font-size: var(--font-metadata-size);
-    white-space: nowrap;
-}
-.engine-check-label {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-control-gap);
-    width: 100%;
+    opacity: .7;
 }
 
 .search-suggestions-status {
     margin: 0;
-    padding: var(--space-control-gap) var(--space-3);
+    padding: var(--space-2) var(--space-3);
     color: var(--muted);
-    font-size: var(--font-caption-size);
+    font-size: var(--font-metadata-size);
+}
+
+/* Engine reachability: a dot in the menu row; time and latency live in its tooltip. */
+.status-dot {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: 50%;
+    background: var(--danger);
+}
+
+.status-dot.online {
+    background: var(--success);
+}
+
+@media (max-width: 700px) {
+    .search-frame {
+        height: 52px;
+    }
+
+    .model-pill {
+        max-width: 96px;
+    }
+}
+
+@media (max-width: 639px) {
+    .search-hint {
+        display: none;
+    }
 }
 
 @media (pointer: coarse) {
     .search-frame {
         padding-block: 0;
     }
+
+    .search-hint {
+        display: none;
+    }
+
     .search-engine,
-    .search-submit,
-    .suggestion-item {
+    .search-submit {
         min-height: var(--control-touch-target);
         min-width: var(--control-touch-target);
+    }
+
+    .model-trigger,
+    .suggestion-item {
+        min-height: var(--control-touch-target);
     }
 }

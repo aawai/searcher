@@ -1,4 +1,4 @@
-import { ArrowUpRight, GripVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { useState } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
@@ -17,21 +17,19 @@ export interface WebAppItem {
 export function WebAppIcon({
     app,
     onOpen,
-    size = "default",
-    showLabel = true,
     dragAttributes,
     dragListeners,
     movable = false,
     isDragging,
+    showLabel = true,
 }: {
     app: WebAppItem;
     onOpen: (app: WebAppItem) => void;
-    size?: "compact" | "default" | "large";
-    showLabel?: boolean;
     dragAttributes?: object;
     dragListeners?: object;
     movable?: boolean;
     isDragging?: boolean;
+    showLabel?: boolean;
 }) {
     const [imageError, setImageError] = useState(false);
 
@@ -59,7 +57,7 @@ export function WebAppIcon({
                 render={
                     <button
                         type="button"
-                        className={`webapp-icon webapp-icon--${size}${
+                        className={`webapp-icon${
                             isDragging ? " is-dragging" : ""
                         }`}
                         data-app-id={app.id}
@@ -93,11 +91,6 @@ export function WebAppIcon({
                         {showLabel && (
                             <span className="webapp-name">{app.name}</span>
                         )}
-                        <ArrowUpRight
-                            className="webapp-arrow icon-sm"
-                            size="1em"
-                            aria-hidden="true"
-                        />
                     </button>
                 }
             />

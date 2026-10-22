@@ -1,12 +1,6 @@
-import {
-    ArrowUpDown,
-    Check,
-    Folder,
-    NotebookPen,
-    StickyNote,
-} from "lucide-react";
+import { AppWindow, NotebookPen, StickyNote } from "lucide-react";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
-import type { SafeRect } from "../desktop/desktop-geometry.ts";
+import type { SafeRect } from "./home-viewport.ts";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
@@ -33,7 +27,6 @@ export function ZenLayout(
 ) {
     const {
         user,
-        appearance,
         engine,
         setEngine,
         mode,
@@ -48,12 +41,10 @@ export function ZenLayout(
         appsStatus,
         appsError,
         onReloadApps,
-        notes,
         fixedNotes,
         isManagingApps,
         setIsManagingApps,
         openApp,
-        openAddModal,
         openEditModal,
         reorderPinned,
         togglePinApp,
@@ -64,6 +55,9 @@ export function ZenLayout(
         updateNote,
         updateNoteLayout,
         openWorkspace,
+        workspaceOpen,
+        webAppIconSize,
+        showAppLabels,
     } = props;
     const heroRef = useRef<HTMLElement>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
@@ -103,6 +97,12 @@ export function ZenLayout(
         };
     }, [props.availableRect, mode, mobile]);
 
+    const resetPinnedLayout = () =>
+        void reorderPinned(
+            [...pinned].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                .map((app) => app.id),
+        );
+
     return (
         <>
             <section className="hero" aria-label="搜索" ref={heroRef}>
@@ -124,18 +124,7 @@ export function ZenLayout(
                     isChecking={isCheckingConnections}
                     webApps={apps}
                     onOpenApp={openApp}
-                    isGuest={!user}
                 />
-                {mode === "ai" && (
-                    <p className="hero-caption">
-                        问你所想，回答将在独立对话中展开
-                    </p>
-                )}
-                {!user && (
-                    <p className="hero-caption">
-                        登录后同步应用与便签
-                    </p>
-                )}
             </section>
 
             {user && (
@@ -164,7 +153,7 @@ export function ZenLayout(
                     )}
                     {appsStatus === "offline" && (
                         <p role="status" className="launcher-notice">
-                            当前离线，显示此账户上次保存的应用列表；更改需联网。
+                            离线中，显示上次保存的应用
                         </p>
                     )}
                     {(appsStatus === "ready" || appsStatus === "offline") &&
@@ -177,66 +166,36 @@ export function ZenLayout(
                                     aria-live="polite"
                                 >
                                     <span className="home-managing-text">
-                                        <ArrowUpDown
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
-                                        <span>
-                                            正在整理常用应用（拖拽调整顺序）
-                                        </span>
+                                        整理中
                                     </span>
-                                    <div className="home-managing-actions">
-                                        {pinned.length > 1 && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="home-managing-btn"
-                                                onClick={() =>
-                                                    void reorderPinned(
-                                                        [...pinned].sort((
-                                                            a,
-                                                            b,
-                                                        ) => (a.sortOrder ??
-                                                            0) -
-                                                            (b.sortOrder ?? 0)
-                                                        ).map((app) => app.id),
-                                                    )}
-                                            >
-                                                重置
-                                            </Button>
-                                        )}
+                                    {pinned.length > 1 && (
                                         <Button
                                             size="sm"
-                                            variant="default"
-                                            className="home-managing-btn home-managing-btn--primary"
-                                            onClick={() =>
-                                                setIsManagingApps(false)}
+                                            variant="outline"
+                                            onClick={resetPinnedLayout}
                                         >
-                                            <Check
-                                                size="1em"
-                                                className="icon-sm"
-                                            />
-                                            <span>完成</span>
+                                            重置
                                         </Button>
-                                    </div>
+                                    )}
+                                    <Button
+                                        size="sm"
+                                        variant="default"
+                                        onClick={() => setIsManagingApps(false)}
+                                    >
+                                        完成
+                                    </Button>
                                 </div>
                             )}
                             <WebAppLauncher
                                 apps={pinned}
                                 groups={groups}
                                 showFolders={false}
-                                size={appearance.webAppIconSize}
-                                showAppLabels={appearance.showAppLabels}
+                                iconSize={webAppIconSize}
+                                showAppLabels={showAppLabels}
                                 managing={isManagingApps}
                                 onToggleManaging={() =>
                                     setIsManagingApps((value) => !value)}
-                                onResetLayout={() =>
-                                    void reorderPinned(
-                                        [...pinned].sort((a, b) =>
-                                            (a.sortOrder ?? 0) -
-                                            (b.sortOrder ?? 0)
-                                        ).map((app) => app.id),
-                                    )}
+                                onResetLayout={resetPinnedLayout}
                                 onOpen={openApp}
                                 onEdit={openEditModal}
                                 onMove={(app, groupId) =>
@@ -244,7 +203,6 @@ export function ZenLayout(
                                 onPin={(app) => void togglePinApp(app)}
                                 onDelete={(app) => void softDeleteApp(app)}
                                 onReorder={(ids) => void reorderPinned(ids)}
-                                onAdd={openAddModal}
                             />
                         </>
                     )}
@@ -268,7 +226,8 @@ export function ZenLayout(
                                     })}
                                 onChangeColor={(n, color) =>
                                     void updateNote(n, { color })}
-                                onDelete={(n) => void deleteNote(n)}
+                                onDelete={(n) =>
+                                    void deleteNote(n)}
                             />
                         </Suspense>
                     )}
@@ -285,36 +244,37 @@ export function ZenLayout(
                 />
             )}
 
-            {user && (
+            {user && !workspaceOpen && (
                 <nav className="zen-edge-trigger" aria-label="工作区">
                     <button
                         type="button"
                         className="zen-edge-btn"
                         data-workspace="apps"
-                        onClick={() => openWorkspace("apps")}
+                        onClick={() =>
+                            openWorkspace("apps")}
                     >
-                        <Folder size="1em" className="icon-sm" />
-                        <span>应用 · {apps.length}</span>
+                        <AppWindow size="1em" className="icon-md" />
+                        <span>应用</span>
                     </button>
                     <button
                         type="button"
                         className="zen-edge-btn"
                         data-workspace="notes"
-                        onClick={() => openWorkspace("notes")}
+                        onClick={() =>
+                            openWorkspace("notes")}
                     >
-                        <StickyNote size="1em" className="icon-sm" />
-                        <span>便签 · {notes.length}</span>
+                        <StickyNote size="1em" className="icon-md" />
+                        <span>便签</span>
                     </button>
-                    <Button
+                    <button
                         type="button"
-                        variant="ghost"
                         className="zen-edge-btn"
                         data-workspace="documents"
                         onClick={() => openWorkspace("documents")}
                     >
-                        <NotebookPen size="1em" className="icon-sm" />
+                        <NotebookPen size="1em" className="icon-md" />
                         <span>笔记</span>
-                    </Button>
+                    </button>
                 </nav>
             )}
         </>

@@ -4,8 +4,8 @@ import {
     isDesignSystemAllowed,
     isDomainValueException,
     isDragTransformException,
-    isMasonryGeometryException,
     isPrimitiveOwningGeometry,
+    isRuntimeLayoutGeometryException,
     isWallpaperFilterException,
 } from "./exceptions.ts";
 
@@ -408,7 +408,7 @@ export function scanTsxCode(file: string, code: string): UiViolation[] {
                                         propName,
                                         propValue,
                                     ) ||
-                                    isMasonryGeometryException(
+                                    isRuntimeLayoutGeometryException(
                                         file,
                                         propName,
                                         propValue,

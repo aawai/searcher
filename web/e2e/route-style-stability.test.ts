@@ -45,7 +45,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
     // Step 1: 1440x900 Settings & Ask Hard Gates + SPA Route Stability
     // =========================================================================
     await t.step(
-        "1440x900: Settings Appearance, Motion level, and Ask geometry hard gates",
+        "1440x900: Settings Appearance and Ask geometry hard gates",
         async () => {
             const context = await browser.newContext({
                 viewport: { width: 1440, height: 900 },
@@ -58,7 +58,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 state: "visible",
             });
 
-            // 1. Accent swatch 1440x900 hard gates
+            // 1. Accent swatch 1440x900 hard gates: one row of unlabeled dots
             const swatchGroup = page.locator(
                 '[data-slot="radio-group"][data-variant="swatch"]',
             );
@@ -69,7 +69,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             const swatchDisplay = await swatchGroup.evaluate((el) =>
                 globalThis.getComputedStyle(el).display
             );
-            assertEquals(swatchDisplay, "grid");
+            assertEquals(swatchDisplay, "flex");
 
             const swatchItems = swatchGroup.locator(
                 '[data-slot="radio-group-item"]',
@@ -86,36 +86,24 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 itemBoxes.push(box);
                 itemHeights.push(box.height);
 
-                // Label single-line nowrap check
-                const labelText = await item.innerText();
-                const labelSpan = item.locator("span").nth(1);
-                const isNowrap = await labelSpan.evaluate((el) =>
-                    globalThis.getComputedStyle(el).whiteSpace
+                // Names live in aria-label and tooltip only.
+                assert(
+                    await item.getAttribute("aria-label"),
+                    `Swatch ${i} must keep an accessible name`,
                 );
                 assertEquals(
-                    isNowrap,
-                    "nowrap",
-                    `Label for ${labelText} must have white-space: nowrap`,
-                );
-
-                const scrollW = await labelSpan.evaluate((el) =>
-                    el.scrollWidth
-                );
-                const clientW = await labelSpan.evaluate((el) =>
-                    el.clientWidth
-                );
-                assert(
-                    scrollW <= clientW + 1,
-                    `Label for ${labelText} must not wrap or overflow (scrollWidth: ${scrollW}, clientWidth: ${clientW})`,
+                    await item.innerText(),
+                    "",
+                    `Swatch ${i} must not render its name as visible text`,
                 );
             }
 
-            // Visual column count = 2
-            const uniqueXCols = new Set(itemBoxes.map((b) => Math.round(b.x)));
+            // Visual row count = 1
+            const uniqueYRows = new Set(itemBoxes.map((b) => Math.round(b.y)));
             assertEquals(
-                uniqueXCols.size,
-                2,
-                `1440 desktop accent swatches must render in 2 columns (got ${uniqueXCols.size})`,
+                uniqueYRows.size,
+                1,
+                `1440 desktop accent swatches must render in one row (got ${uniqueYRows.size})`,
             );
 
             // Item height difference <= 1 CSS px
@@ -134,74 +122,6 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 path: `${artifactDir}/settings-theme-1440.png`,
             });
 
-            // 2. Motion level hard gates
-            const motionGroup = page.locator(
-                '[data-testid="wallpaper-motion-group"]',
-            );
-            await motionGroup.getByRole("radio", { name: "环境光" }).click();
-
-            const motionLevelGroup = page.locator(
-                '[data-testid="wallpaper-motion-level-group"]',
-            );
-            await motionLevelGroup.waitFor({ state: "visible" });
-
-            const motionVariant = await motionLevelGroup.getAttribute(
-                "data-variant",
-            );
-            assertEquals(motionVariant, "segmented");
-
-            const levelItems = motionLevelGroup.locator(
-                '[data-slot="radio-group-item"]',
-            );
-            const levelCount = await levelItems.count();
-            assertEquals(levelCount, 4, "Should have 4 motion level options");
-
-            const levelBoxes = [];
-            const levelWidths = [];
-            for (let i = 0; i < levelCount; i++) {
-                const item = levelItems.nth(i);
-                const box = await item.boundingBox();
-                assert(box);
-                levelBoxes.push(box);
-                levelWidths.push(box.width);
-
-                // Radio circle must not be displayed
-                const circleDisplay = await item.locator(".radio-circle")
-                    .evaluate(
-                        (el) => globalThis.getComputedStyle(el).display,
-                    );
-                assertEquals(circleDisplay, "none");
-            }
-
-            const levelWidthDiff = Math.max(...levelWidths) -
-                Math.min(...levelWidths);
-            assert(
-                levelWidthDiff <= 1,
-                `Motion level segments must be equal width (diff: ${levelWidthDiff}px)`,
-            );
-
-            // Only 1 item selected
-            const checkedCount = await motionLevelGroup.locator(
-                '[data-slot="radio-group-item"][data-checked]',
-            ).count();
-            assertEquals(checkedCount, 1);
-
-            // Keyboard navigation
-            await levelItems.first().focus();
-            await page.keyboard.press("ArrowRight");
-            const newChecked = await motionLevelGroup.locator(
-                '[data-slot="radio-group-item"][data-checked]',
-            ).first().innerText();
-            assert(newChecked.length > 0);
-
-            // Capture settings motion screenshot
-            const motionRow = page.locator(".settings-row").filter({
-                has: motionLevelGroup,
-            });
-            await motionRow.screenshot({
-                path: `${artifactDir}/settings-motion-1440.png`,
-            });
-
             // Record fresh settings computed styles for stability comparison
             const freshSwatchStyles = await swatchGroup.evaluate((el) => {
                 const cs = globalThis.getComputedStyle(el);
@@ -215,7 +135,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             });
 
             const freshSelectWidth = await page.locator(
-                ".settings-choice-select",
+                '[data-slot="radio-group"][data-variant="segmented"]',
             ).first().evaluate(
                 (el) => globalThis.getComputedStyle(el).width,
             );
@@ -322,14 +242,14 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             );
 
             const navigatedSelectWidth = await page.locator(
-                ".settings-choice-select",
+                '[data-slot="radio-group"][data-variant="segmented"]',
             ).first().evaluate(
                 (el) => globalThis.getComputedStyle(el).width,
             );
             assertEquals(
                 navigatedSelectWidth,
                 freshSelectWidth,
-                "NativeSelect width must be identical regardless of route load history",
+                "Theme control width must be identical regardless of route load history",
             );
 
             // Save metrics to record
@@ -340,10 +260,8 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 assistantMsgWidth: asstMsgBox.width,
                 userMsgWidth: userMsgBox.width,
                 composerWidth: composerBox.width,
-                swatchColumns: uniqueXCols.size,
+                swatchRows: uniqueYRows.size,
                 swatchHeightDiff: heightDiff,
-                motionLevelSegments: levelCount,
-                motionLevelWidthDiff: levelWidthDiff,
             };
 
             await context.close();
@@ -503,6 +421,8 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
         async () => {
             const context = await browser.newContext({
                 viewport: { width: 390, height: 844 },
+                isMobile: true,
+                hasTouch: true,
             });
             const page = await context.newPage();
 
@@ -511,6 +431,12 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             await page.locator(".settings-content").waitFor({
                 state: "visible",
             });
+            assert(
+                await page.evaluate(() =>
+                    matchMedia("(pointer: coarse)").matches
+                ),
+                "Mobile emulation must report a coarse primary pointer",
+            );
 
             const hasSettingsHScroll = await page.evaluate(
                 () =>

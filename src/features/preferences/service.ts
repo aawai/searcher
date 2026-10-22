@@ -3,31 +3,20 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
 import {
     type AiGenerationDefaultsDto,
-    type LegacyStylePreset,
-    normalizeStylePreset,
     normalizeWallpaperCompositions,
     type PreferencesDto,
-    type StylePreset,
     type UserGenerationConfig,
     type WallpaperComposition,
 } from "@shared/contracts.ts";
 import {
-    type CanvasMotion,
-    DEFAULT_CANVAS_MOTION,
-    DEFAULT_CANVAS_MOTION_LEVEL,
     DEFAULT_WALLPAPER_PRESENTATION,
     normalizeWallpaperPresentation,
     normalizeWallpaperPresentations,
     touchWallpaperPresentation,
-    type WallpaperMotionLevel,
     type WallpaperPresentation,
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
-import {
-    DEFAULT_DESKTOP_SCENE,
-    normalizeDesktopScene,
-} from "@shared/desktop-scenes.ts";
 
 export type UpdateAiGenerationDefaultsInput = {
     default?:
@@ -56,14 +45,10 @@ import type { SystemSettingsStore } from "../system/settings-store.ts";
 const defaults: PreferencesDto = {
     defaultEngine: "bing",
     theme: "system",
-    style: "zen",
     accent: "blue",
     searchShape: "rounded",
     searchOpacity: 1,
     backgroundImage: null,
-    canvasMotion: DEFAULT_CANVAS_MOTION,
-    canvasMotionLevel: DEFAULT_CANVAS_MOTION_LEVEL,
-    desktopScene: DEFAULT_DESKTOP_SCENE,
     searchTarget: "same",
     searchHistoryEnabled: false,
     webAppHomeLimit: 12,
@@ -166,12 +151,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     const presentations = normalizeWallpaperPresentations(rawPresentations, {
         currentSource: row.backgroundImage,
         legacy: {
-            wallpaperBlur: row.wallpaperBlur,
-            wallpaperGrayscale: row.wallpaperGrayscale,
             wallpaperMask: row.wallpaperMask,
-            wallpaperGlowStrength: row.wallpaperGlowStrength,
-            ambientMotionMode: row.ambientMotionMode,
-            ambientMotionStrength: row.ambientMotionStrength,
         },
         legacyCompositions: compositions,
     });
@@ -201,17 +181,11 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     return {
         defaultEngine: row.defaultEngine,
         theme: row.theme,
-        style: normalizeStylePreset(row.style),
         accent: row.accent ?? "blue",
         searchShape: row.searchShape ?? "rounded",
         searchOpacity: row.searchOpacity ?? 1,
         backgroundImage: row.backgroundImage,
         wallpaperPresentations: presentations,
-        canvasMotion: (row.canvasMotion as CanvasMotion) ??
-            DEFAULT_CANVAS_MOTION,
-        canvasMotionLevel: (row.canvasMotionLevel as WallpaperMotionLevel) ??
-            DEFAULT_CANVAS_MOTION_LEVEL,
-        desktopScene: normalizeDesktopScene(row.desktopScene),
         searchTarget: row.searchTarget,
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
         webAppHomeLimit: row.webAppHomeLimit === "all"
@@ -257,16 +231,12 @@ export class PreferencesService {
             & Partial<
                 Omit<
                     PreferencesDto,
-                    | "style"
                     | "aiGenerationDefaults"
                     | "wallpaperCompositions"
                     | "wallpaperPresentations"
-                    | "canvasMotion"
-                    | "canvasMotionLevel"
                 >
             >
             & {
-                style?: StylePreset | LegacyStylePreset;
                 aiGenerationDefaults?: UpdateAiGenerationDefaultsInput;
                 wallpaperCompositions?:
                     | Record<string, WallpaperComposition>
@@ -274,19 +244,14 @@ export class PreferencesService {
                 wallpaperPresentations?:
                     | Record<string, Partial<WallpaperPresentation>>
                     | null;
-                canvasMotion?: CanvasMotion;
-                canvasMotionLevel?: WallpaperMotionLevel;
             },
     ): Promise<PreferencesDto> {
         const canonicalDefaults = await this.getDefaults();
         const {
             webAppHomeLimit,
-            style,
             aiGenerationDefaults,
             wallpaperCompositions,
             wallpaperPresentations,
-            canvasMotion,
-            canvasMotionLevel,
             ...rest
         } = updates;
         return await this.store.run(async (db) => {
@@ -364,16 +329,7 @@ export class PreferencesService {
                         currentSource: existingRow?.backgroundImage,
                         legacy: existingRow
                             ? {
-                                wallpaperBlur: existingRow.wallpaperBlur,
-                                wallpaperGrayscale:
-                                    existingRow.wallpaperGrayscale,
                                 wallpaperMask: existingRow.wallpaperMask,
-                                wallpaperGlowStrength:
-                                    existingRow.wallpaperGlowStrength,
-                                ambientMotionMode:
-                                    existingRow.ambientMotionMode,
-                                ambientMotionStrength:
-                                    existingRow.ambientMotionStrength,
                             }
                             : undefined,
                         legacyCompositions: currentComps,
@@ -480,15 +436,6 @@ export class PreferencesService {
                 patchValues.wallpaperPresentations =
                     serializedWallpaperPresentations;
             }
-            if (canvasMotion !== undefined) {
-                patchValues.canvasMotion = canvasMotion;
-            }
-            if (canvasMotionLevel !== undefined) {
-                patchValues.canvasMotionLevel = canvasMotionLevel;
-            }
-            if (style !== undefined) {
-                patchValues.style = normalizeStylePreset(style);
-            }
             if (webAppHomeLimit !== undefined) {
                 patchValues.webAppHomeLimit = String(webAppHomeLimit);
             }
@@ -503,17 +450,11 @@ export class PreferencesService {
                 userId,
                 defaultEngine: canonicalDefaults.defaultEngine,
                 theme: canonicalDefaults.theme,
-                style: canonicalDefaults.style,
                 accent: canonicalDefaults.accent,
                 searchShape: canonicalDefaults.searchShape,
                 searchOpacity: canonicalDefaults.searchOpacity,
                 backgroundImage: canonicalDefaults.backgroundImage,
-                wallpaperBlur: 0,
-                wallpaperGrayscale: 0,
                 wallpaperMask: 0.24,
-                wallpaperGlowStrength: 0,
-                ambientMotionMode: "off" as const,
-                ambientMotionStrength: 0,
                 searchTarget: canonicalDefaults.searchTarget,
                 searchHistoryEnabled: canonicalDefaults.searchHistoryEnabled ??
                     false,
@@ -528,10 +469,6 @@ export class PreferencesService {
                     canonicalDefaults.aiGenerationDefaults ?? { models: {} },
                 ),
                 wallpaperCompositions: JSON.stringify({}),
-                canvasMotion: canonicalDefaults.canvasMotion ?? "off",
-                canvasMotionLevel: canonicalDefaults.canvasMotionLevel ??
-                    "soft",
-                desktopScene: canonicalDefaults.desktopScene,
                 wallpaperPresentations: JSON.stringify(
                     canonicalDefaults.wallpaperPresentations ?? {},
                 ),

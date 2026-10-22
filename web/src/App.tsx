@@ -11,6 +11,7 @@ import {
 import {
     AlertTriangle,
     LogIn,
+    LogOut,
     Monitor,
     Moon,
     Settings,
@@ -21,7 +22,6 @@ import {
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
-import { DesktopSceneHost } from "./features/desktop-scenes/DesktopSceneHost.tsx";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
@@ -39,6 +39,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.tsx";
 import {
@@ -80,43 +81,6 @@ const NotFoundPage = lazy(() =>
     import("./app/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage }))
 );
 
-const LazyWallpaperMotionInspector = lazy(() =>
-    import("./dev/WallpaperMotionInspector.tsx").then((m) => ({
-        default: m.WallpaperMotionInspector,
-    }))
-);
-
-function isMotionInspectorRequested(): boolean {
-    if (typeof globalThis.location === "undefined") return false;
-    try {
-        const search = globalThis.location.search;
-        const params = new URLSearchParams(search);
-        if (params.has("motion_inspector")) return true;
-        return (
-            globalThis.localStorage?.getItem("searcher:motion_inspector") ===
-                "true"
-        );
-    } catch {
-        return false;
-    }
-}
-
-function DiagnosticWallpaperMotionInspector() {
-    const location = useLocation();
-    const [enabled, setEnabled] = useState(isMotionInspectorRequested);
-
-    useEffect(() => {
-        setEnabled(isMotionInspectorRequested());
-    }, [location.search]);
-
-    if (!enabled) return null;
-
-    return (
-        <Suspense fallback={null}>
-            <LazyWallpaperMotionInspector />
-        </Suspense>
-    );
-}
 function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -170,11 +134,7 @@ function Layout() {
             appearance.wallpaper,
             appearance.wallpaperPresentations,
         )
-        : {
-            ...DEFAULT_WALLPAPER_PRESENTATION,
-            motion: appearance.canvasMotion,
-            motionLevel: appearance.canvasMotionLevel,
-        };
+        : DEFAULT_WALLPAPER_PRESENTATION;
     const themeNames = {
         system: "跟随系统",
         light: "浅色",
@@ -192,12 +152,10 @@ function Layout() {
     return (
         <div
             className="app-shell"
+            data-home={isHomePage ? "true" : undefined}
             data-wallpaper-image={isHomePage && imageSource
                 ? "true"
                 : undefined}
-            style={{
-                "--search-opacity": appearance.searchOpacity ?? 1,
-            } as React.CSSProperties}
         >
             {isHomePage && (
                 <WallpaperSurface
@@ -206,17 +164,9 @@ function Layout() {
                     testId="home-wallpaper-surface"
                 />
             )}
-            {isHomePage && appearance.desktopScene !== "none" && (
-                <DesktopSceneHost scene={appearance.desktopScene} />
-            )}
             <header className="topbar">
                 <Link
-                    className={`wordmark-small ${
-                        isHomePage && appearance.style === "widgets" &&
-                            appearance.showTitle !== false
-                            ? "opacity-0 pointer-events-none select-none transition-opacity"
-                            : "opacity-100 transition-opacity"
-                    }`}
+                    className="wordmark-small"
                     to={routes.home}
                     aria-label="Searcher 首页"
                 >
@@ -225,18 +175,13 @@ function Layout() {
                 <nav className="top-actions" aria-label="账户与设置">
                     <Link
                         to={routes.ask}
-                        className={`topbar-link${
-                            isAskPage ? " topbar-link--active" : ""
-                        }${user ? "" : " topbar-link--guest-ai"}`}
-                        aria-label={user ? "AI 问答" : "AI 问答，登录后可用"}
-                        title={user ? "AI 问答" : "AI 问答，登录后可用"}
+                        className={isAskPage
+                            ? "topbar-link topbar-link--active"
+                            : "topbar-link"}
+                        aria-label="AI 问答"
+                        title="AI 问答"
                     >
                         <Sparkles size="1em" className="icon-lg" />
-                        {!user && (
-                            <span className="topbar-guest-ai-label">
-                                登录后可用
-                            </span>
-                        )}
                     </Link>
                     <button
                         type="button"
@@ -265,8 +210,7 @@ function Layout() {
                             <Link
                                 to={routes.settings("data")}
                                 className="sync-failed-badge"
-                                aria-label="偏好设置同步失败，点击查看"
-                                title="部分设置未能同步到云端，点击前往设置检查"
+                                aria-label="偏好设置同步失败"
                             >
                                 <AlertTriangle
                                     size="1em"
@@ -291,20 +235,17 @@ function Layout() {
                                     </span>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent sideOffset={8}>
-                                    <div className="px-3 pt-2 pb-1.5 border-b border-[var(--border)] mb-1">
-                                        <div className="font-semibold text-sm">
-                                            {user.displayName}
-                                        </div>
-                                        <div className="muted text-xs">
-                                            @{user.username}
-                                        </div>
+                                    <div className="user-menu-identity">
+                                        <span>{user.displayName}</span>
+                                        <span>@{user.username}</span>
                                     </div>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onClick={() => navigate(routes.account)}
                                     >
                                         <UserRound
                                             size="1em"
-                                            className="icon-md mr-2"
+                                            className="icon-md"
                                         />
                                         <span>账户与安全</span>
                                     </DropdownMenuItem>
@@ -314,7 +255,7 @@ function Layout() {
                                     >
                                         <Settings
                                             size="1em"
-                                            className="icon-md mr-2"
+                                            className="icon-md"
                                         />
                                         <span>偏好设置</span>
                                     </DropdownMenuItem>
@@ -325,20 +266,21 @@ function Layout() {
                                         >
                                             <Shield
                                                 size="1em"
-                                                className="icon-md mr-2"
+                                                className="icon-md"
                                             />
                                             <span>管理后台</span>
                                         </DropdownMenuItem>
                                     )}
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        className="note-dropdown-item--delete"
+                                        variant="destructive"
                                         aria-label="退出登录"
                                         disabled={logoutBusy}
                                         onClick={() => void requestLogout()}
                                     >
-                                        <LogIn
+                                        <LogOut
                                             size="1em"
-                                            className="icon-md mr-2 rotate-180"
+                                            className="icon-md"
                                         />
                                         <span>退出登录</span>
                                     </DropdownMenuItem>
@@ -366,8 +308,8 @@ function Layout() {
                 >
                     <span>
                         {connectionError
-                            ? "网络或服务暂不可用，请检查连接后重试"
-                            : "偏好设置同步失败，部分设置尚未同步到云端"}
+                            ? "网络或服务暂不可用"
+                            : "偏好设置同步失败"}
                     </span>
                     <Button
                         type="button"
@@ -389,7 +331,7 @@ function Layout() {
                 <DialogContent aria-label="退出登录确认">
                     <DialogTitle>有未同步的便签草稿</DialogTitle>
                     <DialogDescription>
-                        检测到此设备有尚未同步到服务端的便签草稿。现在退出登录，草稿仍保留在此浏览器中，重新登录后可继续同步；若直接退出，未同步内容不会自动消失，但请确认已知晓。
+                        退出后草稿仍保留在此浏览器，重新登录可继续同步。
                     </DialogDescription>
                     <DialogFooter>
                         <Button
@@ -465,7 +407,6 @@ function Layout() {
                         </Suspense>
                     </RouteErrorBoundary>
                 )}
-            <DiagnosticWallpaperMotionInspector />
         </div>
     );
 }

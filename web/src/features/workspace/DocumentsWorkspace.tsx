@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import type {
-    DocumentDto,
     DocumentNotebookDto,
     DocumentPageDto,
     DocumentSummaryDto,
@@ -15,7 +14,6 @@ import {
     StatusBanner,
 } from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { Badge } from "../../components/ui/badge.tsx";
 import { DocumentNotebookNavigation } from "./DocumentNotebookNavigation.tsx";
 import {
     CreateLibraryDocument,
@@ -32,9 +30,6 @@ export interface DocumentsWorkspaceProps {
     onScopeChange: (scope: DocumentsScope) => void;
     onOpenDocument: (id: string) => void;
     onDirtyChange?: (dirty: boolean) => void;
-    onDocumentChanged?: (document: DocumentDto) => void;
-    onDocumentDeleted?: (id: string) => void;
-    revision?: number;
 }
 
 function DocumentSummaryRow(
@@ -44,16 +39,12 @@ function DocumentSummaryRow(
         scope,
         onChanged,
         onOpenDocument,
-        onDocumentChanged,
-        onDocumentDeleted,
     }: {
         item: DocumentSummaryDto;
         notebooks: DocumentNotebookDto[];
         scope: DocumentsScope;
         onChanged: () => void;
         onOpenDocument: (id: string) => void;
-        onDocumentChanged?: (document: DocumentDto) => void;
-        onDocumentDeleted?: (id: string) => void;
     },
 ) {
     const displayTitle = item.displayTitle;
@@ -72,31 +63,30 @@ function DocumentSummaryRow(
                 <h4 className="documents-summary-title">
                     <Button
                         variant="ghost"
+                        className="documents-summary-open"
                         onClick={() =>
                             onOpenDocument(item.id)}
                         aria-label={`打开笔记：${displayTitle}`}
                     >
-                        {displayTitle}
+                        <span className="documents-summary-title-text">
+                            {displayTitle}
+                        </span>
                     </Button>
                 </h4>
-                <div className="documents-summary-badges">
-                    {item.isFavorite && <Badge variant="secondary">收藏</Badge>}
-                    {item.notebookName && scope.type !== "notebook" && (
-                        <Badge variant="outline">{item.notebookName}</Badge>
-                    )}
-                </div>
                 <DocumentLibraryActions
                     item={item}
                     notebooks={notebooks}
                     onChanged={onChanged}
-                    onDocumentChanged={onDocumentChanged}
-                    onDocumentDeleted={onDocumentDeleted}
                 />
             </div>
             {item.snippet
                 ? <p className="documents-summary-snippet">{item.snippet}</p>
                 : null}
             <div className="documents-summary-footer">
+                {item.isFavorite && <span>收藏</span>}
+                {item.notebookName && scope.type !== "notebook" && (
+                    <span>{item.notebookName}</span>
+                )}
                 {formattedDate
                     ? (
                         <time
@@ -128,7 +118,6 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     userId={props.userId}
                     onOpenDocument={props.onOpenDocument}
                     onDirtyChange={props.onDirtyChange}
-                    onDocumentChanged={props.onDocumentChanged}
                 />
             </Suspense>
         );
@@ -143,9 +132,6 @@ function DocumentsLibrary({
     scope,
     onScopeChange,
     onOpenDocument,
-    onDocumentChanged,
-    onDocumentDeleted,
-    revision,
 }: DocumentsWorkspaceProps) {
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
@@ -249,7 +235,7 @@ function DocumentsLibrary({
             cancelled = true;
             controller.abort();
         };
-    }, [userId, trimmedQuery, scopeKey, retryCount, revision]);
+    }, [userId, trimmedQuery, scopeKey, retryCount]);
 
     const handleLoadMore = async () => {
         const controller = activeRequestRef.current;
@@ -294,10 +280,12 @@ function DocumentsLibrary({
         >
             {notebookError && (
                 <StatusBanner tone="error" density="compact">
-                    <span>{notebookError}</span>
-                    <Button variant="outline" size="sm" onClick={refresh}>
-                        重试
-                    </Button>
+                    <div className="documents-status-row">
+                        <span>{notebookError}</span>
+                        <Button variant="outline" size="sm" onClick={refresh}>
+                            重试
+                        </Button>
+                    </div>
                 </StatusBanner>
             )}
             <div className="documents-library-layout">
@@ -321,7 +309,7 @@ function DocumentsLibrary({
                     )}
                     {error && (
                         <StatusBanner tone="error" density="compact">
-                            <div className="flex items-center justify-between gap-3 w-full">
+                            <div className="documents-status-row">
                                 <span>{error}</span>
                                 <Button
                                     variant="outline"
@@ -361,7 +349,6 @@ function DocumentsLibrary({
                                         headingLevel={3}
                                         density="compact"
                                         title="没有匹配的笔记"
-                                        description="清空搜索可查看全部。"
                                         action={
                                             <Button
                                                 variant="outline"
@@ -378,14 +365,13 @@ function DocumentsLibrary({
                                     <EmptyState
                                         headingLevel={3}
                                         density="compact"
-                                        title="暂无笔记"
-                                        description={scope.type === "recent"
-                                            ? "暂无最近查看或编辑的笔记。"
+                                        title={scope.type === "recent"
+                                            ? "暂无最近笔记"
                                             : scope.type === "favorite"
-                                            ? "暂无收藏笔记。"
+                                            ? "暂无收藏笔记"
                                             : scope.type === "notebook"
-                                            ? "该笔记本下暂无笔记。"
-                                            : "还没有创建任何笔记。"}
+                                            ? "笔记本为空"
+                                            : "还没有笔记"}
                                     />
                                 )
                         )}
@@ -401,15 +387,13 @@ function DocumentsLibrary({
                                             : scope}
                                         onChanged={refresh}
                                         onOpenDocument={onOpenDocument}
-                                        onDocumentChanged={onDocumentChanged}
-                                        onDocumentDeleted={onDocumentDeleted}
                                     />
                                 ))}
                             </div>
                         )}
                         {loadMoreError && (
                             <StatusBanner tone="error" density="compact">
-                                <div className="flex items-center justify-between gap-3 w-full">
+                                <div className="documents-status-row">
                                     <span>{loadMoreError}</span>
                                     <Button
                                         variant="outline"

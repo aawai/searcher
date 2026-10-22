@@ -1,6 +1,5 @@
 /**
  * Shared in-memory IndexedDB mock helper for tests.
- * Reusable across local.test, desktop-persistence.test, and useDesktopLayout.test.
  */
 export function setupMockIndexedDB() {
     let nextPutAbort: unknown;

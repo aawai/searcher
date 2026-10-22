@@ -1,20 +1,11 @@
 import { useState } from "react";
-import {
-    FileCode,
-    FileText,
-    Menu,
-    MoreHorizontal,
-    Pencil,
-    Search,
-    ShieldAlert,
-    Sparkles,
-    Trash2,
-} from "lucide-react";
+import { Menu, MoreHorizontal, Pencil, Search } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import type { AiConversationDto, AiMessageDto } from "./types.ts";
@@ -103,7 +94,7 @@ export function ConversationHeader({
         <header className="ask-header" aria-label="对话标题与操作">
             <div className="ask-header__left">
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     className="ask-header__drawer-toggle"
                     onClick={onOpenDrawer}
@@ -117,11 +108,13 @@ export function ConversationHeader({
                         <Button
                             type="button"
                             variant="ghost"
-                            className="ask-header__title h-auto p-0 font-semibold"
+                            className="ask-header__title"
                             onClick={() => conversation && setRenameOpen(true)}
-                            title={conversation ? "点击重命名对话" : "新对话"}
+                            title={conversation ? "重命名对话" : "新对话"}
                         >
-                            <span>{title}</span>
+                            <span className="ask-header__title-text">
+                                {title}
+                            </span>
                             {conversation && (
                                 <Pencil
                                     size="1em"
@@ -136,8 +129,7 @@ export function ConversationHeader({
                             className="ask-header__temp-badge"
                             title="临时对话：切换或离开后不会保存"
                         >
-                            <ShieldAlert size="1em" className="icon-sm" />
-                            <span>临时对话</span>
+                            临时对话
                         </span>
                     )}
                 </div>
@@ -180,78 +172,57 @@ export function ConversationHeader({
                             <DropdownMenuItem
                                 onClick={() => setRenameOpen(true)}
                             >
-                                <Pencil
-                                    size="1em"
-                                    className="icon-sm mr-2"
-                                />
-                                <span>重命名</span>
+                                重命名
                             </DropdownMenuItem>
                         )}
 
                         <DropdownMenuItem
                             onClick={() => setInstructionOpen(true)}
                         >
-                            <Sparkles size="1em" className="icon-sm mr-2" />
-                            <span>系统指令...</span>
+                            系统指令...
                         </DropdownMenuItem>
 
                         {messages.length > 0 && (
                             <DropdownMenuItem onClick={onOpenSearch}>
-                                <Search
-                                    size="1em"
-                                    className="icon-sm mr-2"
-                                />
-                                <span>会话搜索 ({searchHint})</span>
+                                <span>会话内搜索</span>
+                                <span className="ask-menu-shortcut">
+                                    {searchHint}
+                                </span>
                             </DropdownMenuItem>
                         )}
 
                         <DropdownMenuItem
                             onClick={() => void onToggleHistory(isTemporary)}
                         >
-                            <ShieldAlert
-                                size="1em"
-                                className="icon-sm mr-2"
-                            />
-                            <span>
-                                {isTemporary ? "保存此对话" : "转为临时对话"}
-                            </span>
+                            {isTemporary ? "保存此对话" : "转为临时对话"}
                         </DropdownMenuItem>
 
                         {messages.length > 0 && (
                             <>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     onClick={() => handleExport("markdown")}
                                 >
-                                    <FileText
-                                        size="1em"
-                                        className="icon-sm mr-2"
-                                    />
-                                    <span>导出为 Markdown</span>
+                                    导出为 Markdown
                                 </DropdownMenuItem>
-
                                 <DropdownMenuItem
                                     onClick={() => handleExport("json")}
                                 >
-                                    <FileCode
-                                        size="1em"
-                                        className="icon-sm mr-2"
-                                    />
-                                    <span>导出为 JSON</span>
+                                    导出为 JSON
                                 </DropdownMenuItem>
                             </>
                         )}
 
                         {conversation && (
-                            <DropdownMenuItem
-                                onClick={() => void onDelete()}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                <Trash2
-                                    size="1em"
-                                    className="icon-sm mr-2"
-                                />
-                                <span>删除对话</span>
-                            </DropdownMenuItem>
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => void onDelete()}
+                                >
+                                    删除对话
+                                </DropdownMenuItem>
+                            </>
                         )}
                     </DropdownMenuContent>
                 </DropdownMenu>

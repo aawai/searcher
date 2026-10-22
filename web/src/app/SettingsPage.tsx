@@ -5,37 +5,24 @@ import {
     type WallpaperComposition,
 } from "@shared/wallpaper.ts";
 import {
-    CANVAS_MOTION_STAGES,
-    type CanvasMotion,
-    DEFAULT_CANVAS_MOTION,
-    DEFAULT_CANVAS_MOTION_LEVEL,
     DEFAULT_WALLPAPER_PRESENTATION,
     purgeWallpaperPresentation,
     touchWallpaperPresentation,
-    WALLPAPER_MOTION_LEVEL_STAGES,
-    WALLPAPER_MOTION_STAGES,
     WALLPAPER_READABILITY_STAGES,
-    WALLPAPER_SOFTNESS_STAGES,
-    WALLPAPER_TONE_STAGES,
-    type WallpaperMotion,
-    type WallpaperMotionLevel,
     type WallpaperPresentation,
     wallpaperPresentation,
     type WallpaperReadability,
-    type WallpaperSoftness,
-    type WallpaperTone,
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
 import {
     Check,
-    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
     Keyboard,
     MoreVertical,
     Palette,
     RefreshCw,
-    RotateCcw,
     Search,
-    SlidersHorizontal,
     Sparkles,
     Upload,
 } from "lucide-react";
@@ -47,11 +34,12 @@ import {
     useRef,
     useState,
 } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import {
-    SettingsCard,
+    ActionGroup,
+    SettingsGroup,
     SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
@@ -65,6 +53,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
+import { Badge } from "../components/ui/badge.tsx";
 import { Button } from "../components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -80,47 +69,18 @@ import {
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import { Slider } from "../components/ui/slider.tsx";
 import { Switch } from "../components/ui/switch.tsx";
-import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
-import {
-    useWallpaperEnvironment,
-    WallpaperSurface,
-} from "../components/wallpaper/WallpaperSurface.tsx";
+import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
-import { LayoutModeSelector } from "../features/home-layouts/LayoutModeSelector.tsx";
-import { SCENE_REGISTRY } from "../features/desktop-scenes/scene-registry.ts";
-import { SCENE_PREVIEWS } from "../features/desktop-scenes/scene-previews.tsx";
-import {
-    DESKTOP_SCENE_IDS,
-    type DesktopSceneId,
-    normalizeDesktopScene,
-} from "@shared/desktop-scenes.ts";
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
 import { routes, type SettingsTab, settingsTab } from "./routes.ts";
 import "./settings.css";
-import { SettingsActionCard, SettingsSection } from "./SettingsPrimitives.tsx";
 import { type Appearance, useAppState } from "./state.tsx";
-import { useWallpaperAdvancedExpanded } from "./useWallpaperAdvancedExpanded.ts";
 
 type Tab = SettingsTab;
-
-const NO_SCENE_OPTION = {
-    id: "none",
-    label: "关闭",
-    description: "不显示桌面场景，保持纯壁纸背景。",
-} as const;
-
-/** 选项顺序遵循共享 ID 列表；新场景注册后自动出现，未注册的不可选。 */
-const DESKTOP_SCENE_OPTIONS: ReadonlyArray<{
-    id: DesktopSceneId;
-    label: string;
-    description: string;
-}> = DESKTOP_SCENE_IDS.map((id) =>
-    id === "none" ? NO_SCENE_OPTION : SCENE_REGISTRY[id]
-);
 
 const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     search: { label: "搜索", icon: Search },
@@ -130,23 +90,11 @@ const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
     shortcuts: { label: "快捷键", icon: Keyboard },
 };
 
-function getAccentLight(id: string): string {
-    return ACCENTS.find((a) => a.id === id)?.light ?? "var(--accent)";
-}
-
 function Choices<T extends string>(
-    {
-        title,
-        description,
-        value,
-        values,
-        control,
-        select,
-    }: {
+    { title, value, values, control, select }: {
         title: string;
-        description?: string;
-        value: T;
-        values: readonly [T, string][];
+        value: string;
+        values: readonly (readonly [T, string])[];
         control: "select" | "segmented" | "swatches";
         select: (v: T) => void;
     },
@@ -170,13 +118,18 @@ function Choices<T extends string>(
         );
     } else if (control === "segmented") {
         input = (
-            <Tabs value={value} onValueChange={(next) => select(next as T)}>
-                <TabsList>
-                    {values.map(([id, label]) => (
-                        <TabsTrigger key={id} value={id}>{label}</TabsTrigger>
-                    ))}
-                </TabsList>
-            </Tabs>
+            <RadioGroup
+                variant="segmented"
+                value={value}
+                onValueChange={(next) => select(next as T)}
+                aria-label={title}
+            >
+                {values.map(([id, label]) => (
+                    <RadioGroupItem key={id} value={id}>
+                        {label}
+                    </RadioGroupItem>
+                ))}
+            </RadioGroup>
         );
     } else {
         input = (
@@ -191,37 +144,19 @@ function Choices<T extends string>(
                         key={id}
                         value={id}
                         aria-label={label}
+                        title={label}
                     >
                         <span
                             className="settings-swatch-color"
-                            style={{ background: getAccentLight(id) }}
+                            data-accent={id}
                             aria-hidden="true"
                         />
-                        <span>{label}</span>
-                        {value === id && (
-                            <span
-                                className="settings-swatch-selected"
-                                aria-hidden="true"
-                            >
-                                ✓
-                            </span>
-                        )}
                     </RadioGroupItem>
                 ))}
             </RadioGroup>
         );
     }
-    return (
-        <SettingsRow
-            title={title}
-            description={description}
-            className={control === "swatches"
-                ? "settings-row--stack-mobile"
-                : undefined}
-        >
-            {input}
-        </SettingsRow>
-    );
+    return <SettingsRow title={title}>{input}</SettingsRow>;
 }
 
 export interface WallpaperHistoryRecord {
@@ -235,21 +170,16 @@ export function SettingsPage() {
     const { appearance, setAppearance, user, settleAppearanceSync } =
         useAppState();
     const isAdmin = user?.role === "admin";
-    const [wallpaperAdvancedExpanded, setWallpaperAdvancedExpanded] =
-        useWallpaperAdvancedExpanded();
-    const { reducedMotion } = useWallpaperEnvironment();
-    const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [wallpaperHistory, setWallpaperHistory] = useState<
         WallpaperHistoryRecord[]
     >([]);
     const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
     const currentWallpaperSource = parseWallpaperSource(appearance.wallpaper);
+    const currentSourceHidden = currentWallpaperSource?.type === "uploaded" ||
+        appearance.wallpaper.startsWith("data:");
     const [wallpaperDraft, setWallpaperDraft] = useState<string>(
-        currentWallpaperSource?.type === "uploaded" ||
-            appearance.wallpaper.startsWith("data:")
-            ? ""
-            : appearance.wallpaper,
+        currentSourceHidden ? "" : appearance.wallpaper,
     );
     const [draftError, setDraftError] = useState<string | null>(null);
     const [isApplyingDraft, setIsApplyingDraft] = useState(false);
@@ -300,17 +230,11 @@ export function SettingsPage() {
                 appearance.wallpaperPresentations,
             );
         }
-        return {
-            ...DEFAULT_WALLPAPER_PRESENTATION,
-            motion: appearance.canvasMotion,
-            motionLevel: appearance.canvasMotionLevel,
-        };
+        return DEFAULT_WALLPAPER_PRESENTATION;
     }, [
         hasWallpaper,
         appearance.wallpaper,
         appearance.wallpaperPresentations,
-        appearance.canvasMotion,
-        appearance.canvasMotionLevel,
     ]);
 
     const updatePresentation = useCallback(
@@ -348,72 +272,24 @@ export function SettingsPage() {
     const [draftPresentation, setDraftPresentation] = useState<
         WallpaperPresentation | null
     >(null);
-    const [draftCanvasMotion, setDraftCanvasMotion] = useState<
-        CanvasMotion | null
-    >(null);
-    const [draftCanvasMotionLevel, setDraftCanvasMotionLevel] = useState<
-        WallpaperMotionLevel | null
-    >(null);
-
-    const effectiveCanvasMotion = draftCanvasMotion ?? appearance.canvasMotion;
-    const effectiveCanvasMotionLevel = draftCanvasMotionLevel ??
-        appearance.canvasMotionLevel;
 
     const effectivePresentation = useMemo<WallpaperPresentation>(() => {
         if (hasWallpaper) {
             return draftPresentation ?? currentPresentation;
         }
-        return {
-            ...currentPresentation,
-            motion: effectiveCanvasMotion,
-            motionLevel: effectiveCanvasMotionLevel,
-        };
+        return currentPresentation;
     }, [
         hasWallpaper,
         draftPresentation,
         currentPresentation,
-        effectiveCanvasMotion,
-        effectiveCanvasMotionLevel,
     ]);
 
     useEffect(() => {
         setDraftPresentation(null);
-        setDraftCanvasMotion(null);
-        setDraftCanvasMotionLevel(null);
     }, [
         appearance.wallpaper,
         appearance.wallpaperPresentations,
-        appearance.canvasMotion,
-        appearance.canvasMotionLevel,
     ]);
-
-    const readabilityStage = WALLPAPER_READABILITY_STAGES.find(
-        (s) => s.id === effectivePresentation.readability,
-    );
-    const readabilityText = readabilityStage
-        ? `${readabilityStage.label} · ${readabilityStage.detail}`
-        : "";
-
-    const softnessStage = WALLPAPER_SOFTNESS_STAGES.find(
-        (s) => s.id === effectivePresentation.softness,
-    );
-    const softnessText = softnessStage
-        ? `${softnessStage.label} · ${softnessStage.detail}`
-        : "";
-
-    const activeMotion = hasWallpaper
-        ? effectivePresentation.motion
-        : effectiveCanvasMotion;
-    const activeMotionLevel = hasWallpaper
-        ? effectivePresentation.motionLevel
-        : effectiveCanvasMotionLevel;
-
-    const motionLevelStage = WALLPAPER_MOTION_LEVEL_STAGES.find(
-        (s) => s.id === activeMotionLevel,
-    );
-    const motionLevelText = motionLevelStage?.label ?? "";
-
-    const isMotionActive = activeMotion !== "off";
 
     useEffect(() => {
         setWallpaperHistory([]);
@@ -737,24 +613,18 @@ export function SettingsPage() {
     }
     const location = useLocation();
     const tab = settingsTab(location.pathname);
-    const activeNavButtonRef = useRef<HTMLButtonElement | null>(null);
-
+    const [mobile, setMobile] = useState(() =>
+        globalThis.matchMedia("(max-width: 767px)").matches
+    );
     useEffect(() => {
-        if (activeNavButtonRef.current) {
-            activeNavButtonRef.current.scrollIntoView({
-                behavior: "auto",
-                block: "nearest",
-                inline: "nearest",
-            });
-        }
-    }, [tab]);
+        const media = globalThis.matchMedia("(max-width: 767px)");
+        const change = () => setMobile(media.matches);
+        media.addEventListener("change", change);
+        return () => media.removeEventListener("change", change);
+    }, []);
 
     function set<K extends keyof Appearance>(key: K, value: Appearance[K]) {
         void setAppearance({ [key]: value });
-    }
-
-    if (location.pathname === "/settings/search") {
-        return <Navigate to={routes.settings()} replace />;
     }
 
     if (!tab) {
@@ -766,115 +636,111 @@ export function SettingsPage() {
     return (
         <>
             <PageShell archetype="utility">
-                <PageHeader
-                    items={[
-                        { label: "首页", to: routes.home },
-                        { label: "设置", to: routes.settings() },
-                        { label: tabs[tab].label },
-                    ]}
-                    title="设置"
-                />
-
-                <div className="settings-layout">
+                <div
+                    className="settings-layout"
+                    data-view={location.pathname === routes.settings()
+                        ? "list"
+                        : "detail"}
+                >
                     <nav className="settings-nav" aria-label="设置分类">
-                        {(Object.keys(tabs) as Tab[]).map((id) => {
-                            const Icon = tabs[id].icon;
-                            return (
-                                <button
-                                    type="button"
-                                    key={id}
-                                    ref={tab === id ? activeNavButtonRef : null}
-                                    onClick={() =>
-                                        navigate(
-                                            routes.settings(id),
-                                            { replace: true },
-                                        )}
-                                    className={`flex items-center gap-2.5 ${
-                                        tab === id ? "active" : ""
-                                    }`}
-                                    aria-current={tab === id
-                                        ? "page"
-                                        : undefined}
-                                >
-                                    <Icon size="1em" className="icon-md" />
-                                    <span>{tabs[id].label}</span>
-                                </button>
-                            );
-                        })}
+                        <h1 className="settings-nav-title">设置</h1>
+                        <ul className="settings-nav-list">
+                            {(Object.keys(tabs) as Tab[]).map((id) => {
+                                const Icon = tabs[id].icon;
+                                return (
+                                    <li key={id}>
+                                        <Link
+                                            to={routes.settings(id)}
+                                            replace={!mobile}
+                                            className="settings-nav-item"
+                                            aria-current={tab === id
+                                                ? "page"
+                                                : undefined}
+                                        >
+                                            <Icon
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                            <span className="settings-nav-label">
+                                                {tabs[id].label}
+                                            </span>
+                                            <ChevronRight
+                                                size="1em"
+                                                className="settings-nav-chevron icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </nav>
                     <section className="settings-panel">
-                        <h2>{tabs[tab].label}</h2>
-                        {tab === "search" && (
-                            <div className="settings-content">
-                                <SettingsSection title="搜索引擎与打开方式">
-                                    <SettingsCard>
-                                        <Choices
-                                            title="默认搜索引擎"
-                                            description="选择在搜索框内直接回车时使用的搜索引擎"
-                                            control="select"
-                                            value={appearance.engine}
-                                            values={SEARCH_ENGINES.map((e) =>
-                                                [e.id, e.label] as const
+                        <Link to={routes.settings()} className="settings-back">
+                            <ChevronLeft
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
+                            <span>设置</span>
+                        </Link>
+                        <PageHeader title={tabs[tab].label} />
+                        <div className="settings-content">
+                            {tab === "search" && (
+                                <SettingsGroup>
+                                    <Choices
+                                        title="默认搜索引擎"
+                                        value={appearance.engine}
+                                        control="select"
+                                        values={SEARCH_ENGINES.map((e) =>
+                                            [e.id, e.label] as const
+                                        )}
+                                        select={(v) =>
+                                            set("engine", v as EngineId)}
+                                    />
+                                    <Choices
+                                        title="结果打开方式"
+                                        value={appearance.target}
+                                        control="segmented"
+                                        values={[
+                                            ["current", "当前标签页"],
+                                            ["new_tab", "新标签页"],
+                                        ] as const}
+                                        select={(v) => set("target", v)}
+                                    />
+                                    <Choices
+                                        title="首页应用数量"
+                                        value={String(
+                                            appearance.webAppHomeLimit,
+                                        )}
+                                        control="select"
+                                        values={[
+                                            ["8", "8 个"],
+                                            ["12", "12 个"],
+                                            ["16", "16 个"],
+                                            ["all", "全部"],
+                                        ] as const}
+                                        select={(v) =>
+                                            set(
+                                                "webAppHomeLimit",
+                                                v === "all"
+                                                    ? "all"
+                                                    : (Number(v) as
+                                                        | 8
+                                                        | 12
+                                                        | 16),
                                             )}
-                                            select={(v) =>
-                                                set("engine", v as EngineId)}
-                                        />
+                                    />
+                                </SettingsGroup>
+                            )}
+                            {tab === "appearance" && (
+                                <>
+                                    <SettingsGroup>
                                         <Choices
-                                            title="搜索结果打开方式"
-                                            description="在当前页面跳转或在新标签页中打开搜索结果"
-                                            control="segmented"
-                                            value={appearance.target}
-                                            values={[
-                                                ["current", "当前标签页打开"],
-                                                ["new_tab", "新标签页打开"],
-                                            ] as const}
-                                            select={(v) => set("target", v)}
-                                        />
-                                        <Choices
-                                            title="首页应用数量"
-                                            description="设置搜索主页展示的固定应用数量上限"
-                                            control="select"
-                                            value={String(
-                                                appearance.webAppHomeLimit,
-                                            )}
-                                            values={[
-                                                ["8", "8 个"],
-                                                ["12", "12 个"],
-                                                ["16", "16 个"],
-                                                ["all", "全部"],
-                                            ] as const}
-                                            select={(v) =>
-                                                set(
-                                                    "webAppHomeLimit",
-                                                    v === "all"
-                                                        ? "all"
-                                                        : (Number(v) as
-                                                            | 8
-                                                            | 12
-                                                            | 16),
-                                                )}
-                                        />
-                                    </SettingsCard>
-                                </SettingsSection>
-                                <SettingsSection title="应用管理">
-                                    <SettingsCard>
-                                        <SettingsRow
-                                            title="打开应用操作菜单"
-                                            description="在首页或应用工作区中右键或长按应用图标；键盘用户可按 Shift+F10 或菜单键。"
-                                        />
-                                    </SettingsCard>
-                                </SettingsSection>
-                            </div>
-                        )}
-                        {tab === "appearance" && (
-                            <div className="settings-content">
-                                <SettingsSection title="主题与配色">
-                                    <SettingsCard>
-                                        <Choices
-                                            title="主题模式"
-                                            description="切换浅色、深色模式或跟随系统"
-                                            control="segmented"
+                                            title="主题"
                                             value={appearance.theme}
+                                            control="segmented"
                                             values={[
                                                 ["system", "跟随系统"],
                                                 ["light", "浅色"],
@@ -884,200 +750,98 @@ export function SettingsPage() {
                                         />
                                         <Choices
                                             title="强调色"
-                                            description="设置按钮、焦点环与激活标签的主题强调色"
-                                            control="swatches"
                                             value={appearance.accent}
-                                            values={ACCENTS.map((a) => [
-                                                a.id,
-                                                a.label,
-                                            ])}
+                                            control="swatches"
+                                            values={ACCENTS.map((a) =>
+                                                [a.id, a.label] as const
+                                            )}
                                             select={(v) => set("accent", v)}
                                         />
-                                        <div className="settings-row settings-row--vertical">
-                                            <div className="settings-row-label">
-                                                <span className="settings-row-title">
-                                                    主页工作区风格
-                                                </span>
-                                                <p className="settings-row-desc">
-                                                    切换主页的信息架构、排版密度与交互模式
-                                                </p>
-                                            </div>
-                                            <LayoutModeSelector
-                                                value={appearance.style}
-                                                onChange={(newStyle) =>
-                                                    set("style", newStyle)}
-                                            />
-                                        </div>
-                                    </SettingsCard>
-                                </SettingsSection>
-
-                                <SettingsSection title="主页与快捷入口">
-                                    <SettingsCard>
+                                    </SettingsGroup>
+                                    <SettingsGroup title="首页">
                                         <Choices
                                             title="控件形状"
-                                            description="搜索框及主要操作按钮切换胶囊外观；表单输入框与卡片保持矩形圆角"
                                             control="segmented"
-                                            value={appearance.shape ??
-                                                "rounded"}
+                                            value={appearance.shape}
                                             values={[
-                                                ["rounded", "默认"],
+                                                ["rounded", "圆角"],
                                                 ["pill", "胶囊"],
                                             ] as const}
                                             select={(v) => set("shape", v)}
                                         />
-                                        <div className="settings-row settings-row--stack-mobile">
-                                            <div className="settings-row-label">
-                                                <div className="flex justify-between items-center sm:block">
-                                                    <span className="settings-row-title">
-                                                        搜索框透明度
-                                                    </span>
-                                                    <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                        {Math.round(
-                                                            (appearance
-                                                                .searchOpacity ??
-                                                                1) * 100,
-                                                        )}%
-                                                    </span>
-                                                </div>
-                                                <p className="settings-row-desc">
-                                                    调整搜索框背景的不透明度
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
+                                        <SettingsRow title="搜索框透明度">
+                                            <div className="settings-opacity">
+                                                <output>
                                                     {Math.round(
-                                                        (appearance
-                                                            .searchOpacity ??
-                                                            1) * 100,
+                                                        appearance
+                                                            .searchOpacity *
+                                                            100,
                                                     )}%
-                                                </div>
+                                                </output>
                                                 <Slider
                                                     min={0.1}
                                                     max={1}
                                                     step={0.05}
                                                     value={appearance
-                                                        .searchOpacity ?? 1}
-                                                    onValueChange={(v) =>
+                                                        .searchOpacity}
+                                                    onValueChange={(value) =>
                                                         set(
                                                             "searchOpacity",
-                                                            typeof v ===
+                                                            typeof value ===
                                                                     "number"
-                                                                ? v
-                                                                : v[0],
+                                                                ? value
+                                                                : value[0],
                                                         )}
                                                     aria-label="搜索框透明度"
-                                                    className="w-full"
+                                                    getAriaValueText={(
+                                                        _formatted,
+                                                        value,
+                                                    ) => `${
+                                                        Math.round(value * 100)
+                                                    }%`}
                                                 />
                                             </div>
-                                        </div>
-                                        <div className="settings-row settings-row--inline-mobile">
-                                            <div className="settings-row-label">
-                                                <span className="settings-row-title">
-                                                    显示 Searcher 标题
-                                                </span>
-                                                <p className="settings-row-desc">
-                                                    在 Widgets
-                                                    搜索框上方展示品牌大标题；Zen
-                                                    始终保持极简
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control">
-                                                <Switch
-                                                    checked={appearance
-                                                        .showTitle !== false}
-                                                    onCheckedChange={(
-                                                        checked,
-                                                    ) => set(
-                                                        "showTitle",
-                                                        checked,
-                                                    )}
-                                                    aria-label="显示 Searcher 标题"
-                                                />
-                                            </div>
-                                        </div>
+                                        </SettingsRow>
                                         <Choices
                                             title="应用图标大小"
-                                            description="调整工作区与首页应用图标的显示尺寸"
-                                            control="select"
+                                            control="segmented"
                                             value={appearance.webAppIconSize}
                                             values={[
-                                                ["compact", "紧凑"],
+                                                ["compact", "小"],
                                                 ["default", "标准"],
-                                                ["large", "大图标"],
+                                                ["large", "大"],
                                             ] as const}
                                             select={(v) =>
                                                 set("webAppIconSize", v)}
                                         />
-                                        <div className="settings-row settings-row--inline-mobile">
-                                            <div className="settings-row-label">
-                                                <span className="settings-row-title">
-                                                    显示应用名称
-                                                </span>
-                                                <p className="settings-row-desc">
-                                                    在桌面或快捷列表中展示应用文字标签
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control">
-                                                <Switch
-                                                    checked={appearance
-                                                        .showAppLabels}
-                                                    onCheckedChange={(
-                                                        checked,
-                                                    ) => set(
+                                        <SettingsRow title="显示应用名称">
+                                            <Switch
+                                                checked={appearance
+                                                    .showAppLabels}
+                                                onCheckedChange={(checked) =>
+                                                    set(
                                                         "showAppLabels",
                                                         checked,
                                                     )}
-                                                    aria-label="显示应用名称"
-                                                />
-                                            </div>
-                                        </div>
-                                    </SettingsCard>
-                                </SettingsSection>
-
-                                <SettingsSection
-                                    title="壁纸与背景效果"
-                                    actions={
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => {
-                                                void setAppearance({
-                                                    wallpaper: "",
-                                                    canvasMotion:
-                                                        DEFAULT_CANVAS_MOTION,
-                                                    canvasMotionLevel:
-                                                        DEFAULT_CANVAS_MOTION_LEVEL,
-                                                });
-                                            }}
-                                            title="恢复壁纸与效果默认值"
-                                        >
-                                            <RotateCcw
-                                                size="1em"
-                                                className="icon-sm"
+                                                aria-label="显示应用名称"
                                             />
-                                            <span>恢复默认</span>
-                                        </Button>
-                                    }
-                                >
-                                    <SettingsCard>
-                                        <div className="wallpaper-settings-block">
-                                            <div className="wallpaper-settings-block__intro">
-                                                <span className="settings-row-title">
-                                                    壁纸背景
+                                        </SettingsRow>
+                                    </SettingsGroup>
+                                    <SettingsGroup
+                                        title="壁纸"
+                                        footer={user
+                                            ? "单张壁纸不超过 5 MiB。"
+                                            : (
+                                                <span data-testid="wallpaper-guest-notice">
+                                                    设置仅保存在此设备；登录后新上传的壁纸会同步到云端。单张壁纸不超过
+                                                    5 MiB。
                                                 </span>
-                                                <p className="settings-row-desc">
-                                                    上传本地图片，或粘贴图片链接（https）、渐变背景
-                                                </p>
-                                                {!user && (
-                                                    <p
-                                                        className="wallpaper-guest-notice"
-                                                        data-testid="wallpaper-guest-notice"
-                                                    >
-                                                        设置保存在当前设备/浏览器；仅登录后新上传的壁纸可同步至云端（壁纸最大
-                                                        5 MiB）
-                                                    </p>
-                                                )}
-                                            </div>
+                                            )}
+                                    >
+                                        <SettingsRow
+                                            title="壁纸来源"
+                                            className="settings-row--vertical"
+                                        >
                                             <div className="wallpaper-source-editor">
                                                 <input
                                                     type="file"
@@ -1121,15 +885,9 @@ export function SettingsPage() {
                                                     aria-describedby={draftError
                                                         ? "wallpaper-source-error"
                                                         : undefined}
-                                                    placeholder={currentWallpaperSource
-                                                                    ?.type ===
-                                                                "uploaded" ||
-                                                            appearance.wallpaper
-                                                                .startsWith(
-                                                                    "data:",
-                                                                )
-                                                        ? "粘贴图片链接（https）或渐变背景以替换当前壁纸"
-                                                        : "粘贴图片链接（https）或渐变背景"}
+                                                    placeholder={currentSourceHidden
+                                                        ? "替换为图片链接或渐变背景"
+                                                        : "图片链接（https）或渐变背景"}
                                                     value={wallpaperDraft}
                                                     onChange={(e) => {
                                                         setWallpaperDraft(
@@ -1170,45 +928,28 @@ export function SettingsPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            {appearance.wallpaper && (
-                                                <section
-                                                    className="wallpaper-current"
-                                                    aria-label="当前壁纸"
+                                        </SettingsRow>
+                                        {hasWallpaper && (
+                                            <>
+                                                <SettingsRow
+                                                    title="当前壁纸"
+                                                    className="settings-row--vertical"
                                                 >
-                                                    <div
-                                                        className="wallpaper-stage wallpaper-current__preview"
-                                                        data-testid="wallpaper-stage"
-                                                    >
-                                                        <WallpaperSurface
-                                                            source={appearance
-                                                                .wallpaper}
-                                                            presentation={effectivePresentation}
-                                                            embedded
-                                                            testId="wallpaper-current-preview"
-                                                        />
-                                                        <WallpaperStageContextPreview />
-                                                    </div>
-                                                    <div className="wallpaper-current__details">
-                                                        <span className="settings-row-title">
-                                                            当前壁纸
-                                                        </span>
-                                                        <p className="settings-row-desc">
-                                                            {currentWallpaperSource
-                                                                            ?.type ===
-                                                                        "uploaded" ||
-                                                                    appearance
-                                                                        .wallpaper
-                                                                        .startsWith(
-                                                                            "data:",
-                                                                        )
-                                                                ? "已上传图片"
-                                                                : currentWallpaperSource
-                                                                        ?.type ===
-                                                                        "gradient"
-                                                                ? "渐变背景"
-                                                                : "图片链接"}
-                                                        </p>
-                                                        <div className="wallpaper-current__actions">
+                                                    <div className="wallpaper-current">
+                                                        <div
+                                                            className="wallpaper-stage"
+                                                            data-testid="wallpaper-stage"
+                                                        >
+                                                            <WallpaperSurface
+                                                                source={appearance
+                                                                    .wallpaper}
+                                                                presentation={effectivePresentation}
+                                                                embedded
+                                                                testId="wallpaper-current-preview"
+                                                            />
+                                                            <WallpaperStageContextPreview />
+                                                        </div>
+                                                        <ActionGroup>
                                                             <Button
                                                                 type="button"
                                                                 variant="outline"
@@ -1227,648 +968,268 @@ export function SettingsPage() {
                                                                 }}
                                                                 data-testid="wallpaper-current-adjust-focal-btn"
                                                             >
-                                                                <SlidersHorizontal
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    调整当前壁纸构图
-                                                                </span>
+                                                                调整构图
                                                             </Button>
                                                             <Button
                                                                 type="button"
                                                                 variant="ghost"
                                                                 onClick={() =>
                                                                     void handleClearCurrentWallpaper()}
-                                                                aria-label="停止使用当前壁纸"
+                                                                aria-label="移除当前壁纸"
                                                                 data-testid="wallpaper-clear-btn"
                                                             >
-                                                                <RotateCcw
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    停止使用
-                                                                </span>
+                                                                移除
                                                             </Button>
-                                                        </div>
+                                                        </ActionGroup>
                                                     </div>
-                                                </section>
-                                            )}
-                                        </div>
-                                        {/* 1. 可读性 (Readability) */}
-                                        <div className="settings-row settings-row--stack-mobile">
-                                            <div className="settings-row-label">
-                                                <div className="flex justify-between items-center sm:block">
-                                                    <span className="settings-row-title">
-                                                        可读性
-                                                    </span>
-                                                    {hasWallpaper && (
-                                                        <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                            {readabilityText}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="settings-row-desc">
-                                                    覆在壁纸上的背景遮罩浓度，保障内容阅读舒适
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                {hasWallpaper && (
-                                                    <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                        {readabilityText}
-                                                    </div>
-                                                )}
-                                                <SettingsPresetSlider
-                                                    stages={WALLPAPER_READABILITY_STAGES}
-                                                    value={effectivePresentation
-                                                        .readability}
-                                                    disabled={!hasWallpaper}
-                                                    onChange={(v) =>
-                                                        setDraftPresentation((
-                                                            prev,
-                                                        ) => ({
-                                                            ...(prev ??
-                                                                currentPresentation),
-                                                            readability:
-                                                                v as WallpaperReadability,
-                                                        }))}
-                                                    onCommit={(v) => {
-                                                        setDraftPresentation(
-                                                            null,
-                                                        );
-                                                        updatePresentation({
-                                                            readability:
-                                                                v as WallpaperReadability,
-                                                        });
-                                                    }}
-                                                    aria-label="可读性"
-                                                    testId="wallpaper-readability-slider"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* 4. 动态背景 (Motion) */}
-                                        <div className="settings-row settings-row--stack-mobile">
-                                            <div className="settings-row-label">
-                                                <span className="settings-row-title">
-                                                    动态背景
-                                                </span>
-                                                <p className="settings-row-desc">
-                                                    {activeMotion === "ambient"
-                                                        ? "柔和光影在壁纸上缓慢流动"
-                                                        : activeMotion ===
-                                                                "drift"
-                                                        ? "壁纸沿画面缓慢移动"
-                                                        : activeMotion ===
-                                                                "zoom"
-                                                        ? "壁纸以镜头感缓慢推进"
-                                                        : "选择背景动态模式，为桌面增添适度生命力"}
-                                                </p>
-                                                {reducedMotion &&
-                                                    isMotionActive && (
-                                                    <p
-                                                        className="settings-row-desc settings-row-desc--notice"
-                                                        data-testid="wallpaper-reduced-motion-notice"
-                                                    >
-                                                        系统已启用“减少动态效果”，动态预览已静止。
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="settings-row-control">
-                                                <RadioGroup
-                                                    value={activeMotion}
-                                                    onValueChange={(v) => {
-                                                        if (hasWallpaper) {
+                                                </SettingsRow>
+                                                <SettingsRow
+                                                    title="可读性"
+                                                    className="settings-row--vertical"
+                                                >
+                                                    <SettingsPresetSlider
+                                                        stages={WALLPAPER_READABILITY_STAGES}
+                                                        value={effectivePresentation
+                                                            .readability}
+                                                        aria-label="可读性"
+                                                        testId="wallpaper-readability-slider"
+                                                        onChange={(v) => {
                                                             setDraftPresentation(
                                                                 (prev) => ({
                                                                     ...(prev ??
                                                                         currentPresentation),
-                                                                    motion:
-                                                                        v as WallpaperMotion,
+                                                                    readability:
+                                                                        v as WallpaperReadability,
                                                                 }),
                                                             );
-                                                            updatePresentation({
-                                                                motion:
-                                                                    v as WallpaperMotion,
-                                                            });
-                                                        } else {
-                                                            setDraftCanvasMotion(
-                                                                v as CanvasMotion,
-                                                            );
-                                                            void setAppearance({
-                                                                canvasMotion:
-                                                                    v as CanvasMotion,
-                                                            });
-                                                        }
-                                                    }}
-                                                    aria-label="动态背景"
-                                                    data-testid="wallpaper-motion-group"
-                                                >
-                                                    {(hasWallpaper
-                                                        ? WALLPAPER_MOTION_STAGES
-                                                        : CANVAS_MOTION_STAGES)
-                                                        .map((stage) => (
-                                                            <RadioGroupItem
-                                                                key={stage.id}
-                                                                value={stage.id}
-                                                                aria-label={stage
-                                                                    .label}
-                                                            >
-                                                                {stage.label}
-                                                            </RadioGroupItem>
-                                                        ))}
-                                                </RadioGroup>
-                                            </div>
-                                        </div>
-
-                                        {/* 5. 动态程度 (Motion level) */}
-                                        {isMotionActive && (
-                                            <div className="settings-row settings-row--stack-mobile">
-                                                <div className="settings-row-label">
-                                                    <div className="flex justify-between items-center sm:block">
-                                                        <span className="settings-row-title">
-                                                            动态程度
-                                                        </span>
-                                                        <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                            {motionLevelText}
-                                                        </span>
-                                                    </div>
-                                                    <p className="settings-row-desc">
-                                                        调整背景运动的视觉幅度
-                                                    </p>
-                                                </div>
-                                                <div className="settings-row-control">
-                                                    <RadioGroup
-                                                        variant="segmented"
-                                                        value={activeMotionLevel}
-                                                        onValueChange={(v) => {
-                                                            const nextLevel =
-                                                                v as WallpaperMotionLevel;
-                                                            if (hasWallpaper) {
-                                                                setDraftPresentation(
-                                                                    null,
-                                                                );
-                                                                updatePresentation(
-                                                                    {
-                                                                        motionLevel:
-                                                                            nextLevel,
-                                                                    },
-                                                                );
-                                                            } else {
-                                                                setDraftCanvasMotionLevel(
-                                                                    null,
-                                                                );
-                                                                void setAppearance(
-                                                                    {
-                                                                        canvasMotionLevel:
-                                                                            nextLevel,
-                                                                    },
-                                                                );
-                                                            }
                                                         }}
-                                                        aria-label="动态程度"
-                                                        data-testid="wallpaper-motion-level-group"
-                                                    >
-                                                        {WALLPAPER_MOTION_LEVEL_STAGES
-                                                            .map((stage) => (
-                                                                <RadioGroupItem
-                                                                    key={stage
-                                                                        .id}
-                                                                    value={stage
-                                                                        .id}
-                                                                    aria-label={stage
-                                                                        .label}
-                                                                >
-                                                                    {stage
-                                                                        .label}
-                                                                </RadioGroupItem>
-                                                            ))}
-                                                    </RadioGroup>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div
-                                            className="settings-row settings-row--inline-mobile wallpaper-advanced-toggle"
-                                            data-expanded={wallpaperAdvancedExpanded
-                                                ? "true"
-                                                : undefined}
-                                        >
-                                            <div className="settings-row-label">
-                                                <span
-                                                    id="wallpaper-advanced-title"
-                                                    className="settings-row-title"
-                                                >
-                                                    高级选项
-                                                </span>
-                                                <p className="settings-row-desc">
-                                                    柔化、色调与最近上传的图片
-                                                </p>
-                                            </div>
-                                            <div className="settings-row-control">
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    aria-expanded={wallpaperAdvancedExpanded}
-                                                    aria-controls="wallpaper-advanced-options"
-                                                    aria-labelledby="wallpaper-advanced-title wallpaper-advanced-action"
-                                                    onClick={() =>
-                                                        setWallpaperAdvancedExpanded(
-                                                            !wallpaperAdvancedExpanded,
-                                                        )}
-                                                    data-testid="wallpaper-advanced-toggle"
-                                                >
-                                                    <ChevronDown
-                                                        size="1em"
-                                                        className="icon-sm wallpaper-advanced-toggle__icon"
-                                                    />
-                                                    <span id="wallpaper-advanced-action">
-                                                        {wallpaperAdvancedExpanded
-                                                            ? "收起"
-                                                            : "展开"}
-                                                    </span>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <div
-                                            id="wallpaper-advanced-options"
-                                            className="wallpaper-advanced"
-                                            hidden={!wallpaperAdvancedExpanded}
-                                            data-testid="wallpaper-advanced"
-                                        >
-                                            {wallpaperHistory.length > 0 && (
-                                                <div className="wallpaper-settings-block">
-                                                    <div
-                                                        className="wallpaper-history"
-                                                        data-testid="wallpaper-history"
-                                                        aria-label="最近上传的图片"
-                                                    >
-                                                        <span className="settings-row-desc">
-                                                            最近上传 · 保留 5 张
-                                                        </span>
-                                                        <div className="wallpaper-history__grid">
-                                                            {wallpaperHistory
-                                                                .map((
-                                                                    record,
-                                                                    index,
-                                                                ) => {
-                                                                    const isCurrent =
-                                                                        appearance
-                                                                            .wallpaper ===
-                                                                            record
-                                                                                .url;
-                                                                    return (
-                                                                        <div
-                                                                            key={record
-                                                                                .id}
-                                                                            className="wallpaper-card"
-                                                                            data-current={isCurrent
-                                                                                ? "true"
-                                                                                : undefined}
-                                                                            data-testid={`wallpaper-history-item-${record.id}`}
-                                                                        >
-                                                                            <button
-                                                                                type="button"
-                                                                                className="wallpaper-card__main"
-                                                                                onClick={() =>
-                                                                                    setCompositionTarget(
-                                                                                        record,
-                                                                                    )}
-                                                                                aria-label={`预览与调整构图：壁纸 ${
-                                                                                    index +
-                                                                                    1
-                                                                                }${
-                                                                                    isCurrent
-                                                                                        ? "（当前壁纸）"
-                                                                                        : ""
-                                                                                }`}
-                                                                                data-testid={`wallpaper-card-preview-btn-${record.id}`}
-                                                                            >
-                                                                                <img
-                                                                                    src={record
-                                                                                        .url}
-                                                                                    alt={`壁纸 ${
-                                                                                        index +
-                                                                                        1
-                                                                                    }`}
-                                                                                    className="wallpaper-card__thumbnail"
-                                                                                    loading="lazy"
-                                                                                />
-                                                                                {isCurrent &&
-                                                                                    (
-                                                                                        <div
-                                                                                            className="wallpaper-card__current-badge"
-                                                                                            data-testid="wallpaper-current-badge"
-                                                                                        >
-                                                                                            <Check
-                                                                                                size="1em"
-                                                                                                className="icon-sm shrink-0"
-                                                                                            />
-                                                                                            <span>
-                                                                                                当前壁纸
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    )}
-                                                                            </button>
-                                                                            <div className="wallpaper-card__actions">
-                                                                                <DropdownMenu>
-                                                                                    <DropdownMenuTrigger
-                                                                                        className="wallpaper-card__menu-trigger"
-                                                                                        aria-label={`壁纸操作菜单：壁纸 ${
-                                                                                            index +
-                                                                                            1
-                                                                                        }`}
-                                                                                        data-testid={`wallpaper-menu-trigger-${record.id}`}
-                                                                                    >
-                                                                                        <MoreVertical
-                                                                                            size="1em"
-                                                                                            className="icon-md"
-                                                                                        />
-                                                                                    </DropdownMenuTrigger>
-                                                                                    <DropdownMenuContent>
-                                                                                        {!isCurrent
-                                                                                            ? (
-                                                                                                <DropdownMenuItem
-                                                                                                    onClick={() =>
-                                                                                                        void handleSetCurrentFromHistory(
-                                                                                                            record,
-                                                                                                        )}
-                                                                                                    data-testid="wallpaper-menu-set-current"
-                                                                                                >
-                                                                                                    设为当前壁纸
-                                                                                                </DropdownMenuItem>
-                                                                                            )
-                                                                                            : (
-                                                                                                <DropdownMenuItem
-                                                                                                    disabled
-                                                                                                    className="opacity-50 pointer-events-none"
-                                                                                                    data-testid="wallpaper-menu-set-current"
-                                                                                                >
-                                                                                                    当前正在使用
-                                                                                                </DropdownMenuItem>
-                                                                                            )}
-                                                                                        <DropdownMenuItem
-                                                                                            onClick={() =>
-                                                                                                setCompositionTarget(
-                                                                                                    record,
-                                                                                                )}
-                                                                                            data-testid="wallpaper-menu-adjust-focal"
-                                                                                        >
-                                                                                            调整构图
-                                                                                        </DropdownMenuItem>
-                                                                                        <DropdownMenuItem
-                                                                                            className="text-[var(--danger)]"
-                                                                                            onClick={() =>
-                                                                                                setDeleteTarget(
-                                                                                                    record,
-                                                                                                )}
-                                                                                            data-testid="wallpaper-menu-delete"
-                                                                                        >
-                                                                                            删除
-                                                                                        </DropdownMenuItem>
-                                                                                    </DropdownMenuContent>
-                                                                                </DropdownMenu>
-                                                                            </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {/* 2. 柔化 (Softness) */}
-                                            <div className="settings-row settings-row--stack-mobile">
-                                                <div className="settings-row-label">
-                                                    <div className="flex justify-between items-center sm:block">
-                                                        <span className="settings-row-title">
-                                                            柔化
-                                                        </span>
-                                                        {hasWallpaper && (
-                                                            <span className="sm:hidden text-xs text-[var(--muted)] font-medium">
-                                                                {softnessText}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="settings-row-desc">
-                                                        背景高斯柔化程度，降低高频纹理干扰
-                                                    </p>
-                                                </div>
-                                                <div className="settings-row-control flex flex-col gap-1 w-full sm:w-60">
-                                                    {hasWallpaper && (
-                                                        <div className="hidden sm:flex justify-end text-xs text-[var(--muted)] font-medium mb-1">
-                                                            {softnessText}
-                                                        </div>
-                                                    )}
-                                                    <SettingsPresetSlider
-                                                        stages={WALLPAPER_SOFTNESS_STAGES}
-                                                        value={effectivePresentation
-                                                            .softness}
-                                                        disabled={!hasWallpaper}
-                                                        onChange={(v) =>
-                                                            setDraftPresentation(
-                                                                (
-                                                                    prev,
-                                                                ) => ({
-                                                                    ...(prev ??
-                                                                        currentPresentation),
-                                                                    softness:
-                                                                        v as WallpaperSoftness,
-                                                                }),
-                                                            )}
                                                         onCommit={(v) => {
                                                             setDraftPresentation(
                                                                 null,
                                                             );
                                                             updatePresentation({
-                                                                softness:
-                                                                    v as WallpaperSoftness,
+                                                                readability:
+                                                                    v as WallpaperReadability,
                                                             });
                                                         }}
-                                                        aria-label="柔化"
-                                                        testId="wallpaper-softness-slider"
                                                     />
-                                                </div>
-                                            </div>
-
-                                            {/* 3. 色调 (Tone) */}
-                                            <div className="settings-row settings-row--stack-mobile">
-                                                <div className="settings-row-label">
-                                                    <span className="settings-row-title">
-                                                        色调
-                                                    </span>
-                                                    <p className="settings-row-desc">
-                                                        调整壁纸色彩饱和与对比，融入界面主题
-                                                    </p>
-                                                </div>
-                                                <div className="settings-row-control">
-                                                    <RadioGroup
-                                                        value={effectivePresentation
-                                                            .tone}
-                                                        disabled={!hasWallpaper}
-                                                        onValueChange={(v) => {
-                                                            setDraftPresentation(
-                                                                null,
-                                                            );
-                                                            updatePresentation({
-                                                                tone:
-                                                                    v as WallpaperTone,
-                                                            });
-                                                        }}
-                                                        aria-label="壁纸色调"
-                                                        data-testid="wallpaper-tone-group"
-                                                    >
-                                                        {WALLPAPER_TONE_STAGES
-                                                            .map((
-                                                                stage,
-                                                            ) => (
-                                                                <RadioGroupItem
-                                                                    key={stage
+                                                </SettingsRow>
+                                            </>
+                                        )}
+                                    </SettingsGroup>
+                                    {wallpaperHistory.length > 0 && (
+                                        <SettingsGroup
+                                            title="最近上传"
+                                            footer="最多保留 5 张。"
+                                            padded
+                                        >
+                                            <div
+                                                className="wallpaper-history"
+                                                data-testid="wallpaper-history"
+                                                role="group"
+                                                aria-label="最近上传的图片"
+                                            >
+                                                <div className="wallpaper-history__grid">
+                                                    {wallpaperHistory.map(
+                                                        (record, index) => {
+                                                            const isCurrent =
+                                                                appearance
+                                                                    .wallpaper ===
+                                                                    record.url;
+                                                            return (
+                                                                <div
+                                                                    key={record
                                                                         .id}
-                                                                    value={stage
-                                                                        .id}
-                                                                    aria-label={stage
-                                                                        .label}
+                                                                    className="wallpaper-card"
+                                                                    data-current={isCurrent
+                                                                        ? "true"
+                                                                        : undefined}
+                                                                    data-testid={`wallpaper-history-item-${record.id}`}
                                                                 >
-                                                                    {stage
-                                                                        .label}
-                                                                </RadioGroupItem>
-                                                            ))}
-                                                    </RadioGroup>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="wallpaper-card__main"
+                                                                        onClick={() =>
+                                                                            setCompositionTarget(
+                                                                                record,
+                                                                            )}
+                                                                        aria-label={`预览与调整构图：壁纸 ${
+                                                                            index +
+                                                                            1
+                                                                        }${
+                                                                            isCurrent
+                                                                                ? "（当前壁纸）"
+                                                                                : ""
+                                                                        }`}
+                                                                        data-testid={`wallpaper-card-preview-btn-${record.id}`}
+                                                                    >
+                                                                        <img
+                                                                            className="wallpaper-card__thumbnail"
+                                                                            src={record
+                                                                                .url}
+                                                                            alt={`壁纸 ${
+                                                                                index +
+                                                                                1
+                                                                            }`}
+                                                                            loading="lazy"
+                                                                        />
+                                                                    </button>
+                                                                    {isCurrent &&
+                                                                        (
+                                                                            <div
+                                                                                className="wallpaper-card__current-badge"
+                                                                                data-testid="wallpaper-current-badge"
+                                                                            >
+                                                                                <Check
+                                                                                    size="1em"
+                                                                                    className="icon-sm shrink-0"
+                                                                                />
+                                                                                <span>
+                                                                                    当前壁纸
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    <div className="wallpaper-card__actions">
+                                                                        <DropdownMenu>
+                                                                            <DropdownMenuTrigger
+                                                                                className="wallpaper-card__menu-trigger"
+                                                                                aria-label={`壁纸操作菜单：壁纸 ${
+                                                                                    index +
+                                                                                    1
+                                                                                }`}
+                                                                                data-testid={`wallpaper-menu-trigger-${record.id}`}
+                                                                            >
+                                                                                <MoreVertical
+                                                                                    size="1em"
+                                                                                    className="icon-md"
+                                                                                />
+                                                                            </DropdownMenuTrigger>
+                                                                            <DropdownMenuContent>
+                                                                                {isCurrent
+                                                                                    ? (
+                                                                                        <DropdownMenuItem
+                                                                                            disabled
+                                                                                            data-testid="wallpaper-menu-set-current"
+                                                                                        >
+                                                                                            当前正在使用
+                                                                                        </DropdownMenuItem>
+                                                                                    )
+                                                                                    : (
+                                                                                        <DropdownMenuItem
+                                                                                            onClick={() =>
+                                                                                                void handleSetCurrentFromHistory(
+                                                                                                    record,
+                                                                                                )}
+                                                                                            data-testid="wallpaper-menu-set-current"
+                                                                                        >
+                                                                                            设为当前壁纸
+                                                                                        </DropdownMenuItem>
+                                                                                    )}
+                                                                                <DropdownMenuItem
+                                                                                    onClick={() =>
+                                                                                        setCompositionTarget(
+                                                                                            record,
+                                                                                        )}
+                                                                                    data-testid="wallpaper-menu-adjust-focal"
+                                                                                >
+                                                                                    调整构图
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuItem
+                                                                                    variant="destructive"
+                                                                                    onClick={() =>
+                                                                                        setDeleteTarget(
+                                                                                            record,
+                                                                                        )}
+                                                                                    data-testid="wallpaper-menu-delete"
+                                                                                >
+                                                                                    删除
+                                                                                </DropdownMenuItem>
+                                                                            </DropdownMenuContent>
+                                                                        </DropdownMenu>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             </div>
-                                        </div>
-                                    </SettingsCard>
-                                </SettingsSection>
-
-                                <SettingsSection
-                                    title="动态桌面场景"
-                                    description="叠加在壁纸之上的底部装饰，仅在首页显示，不影响搜索、应用与窗口布局。"
-                                >
-                                    <SettingsCard>
-                                        <RadioGroup
-                                            value={appearance.desktopScene}
-                                            onValueChange={(next) => {
-                                                void setAppearance({
-                                                    desktopScene:
-                                                        normalizeDesktopScene(
-                                                            next,
-                                                        ),
-                                                });
-                                            }}
-                                            aria-label="动态桌面场景"
-                                            className="settings-scene-options"
-                                            data-testid="desktop-scene-group"
-                                        >
-                                            {DESKTOP_SCENE_OPTIONS.map(
-                                                (option) => {
-                                                    const Preview =
-                                                        SCENE_PREVIEWS[
-                                                            option.id
-                                                        ];
-                                                    return (
-                                                        <RadioGroupItem
-                                                            key={option.id}
-                                                            value={option.id}
-                                                            aria-label={option
-                                                                .label}
-                                                            className="settings-scene-option"
-                                                            data-testid={`desktop-scene-${option.id}`}
-                                                        >
-                                                            <span className="settings-scene-preview">
-                                                                <Preview />
-                                                            </span>
-                                                            <span className="settings-scene-option__text">
-                                                                <span className="settings-row-title">
-                                                                    {option
-                                                                        .label}
-                                                                </span>
-                                                                <span className="settings-row-desc">
-                                                                    {option
-                                                                        .description}
-                                                                </span>
-                                                            </span>
-                                                        </RadioGroupItem>
-                                                    );
-                                                },
-                                            )}
-                                        </RadioGroup>
-                                    </SettingsCard>
-                                </SettingsSection>
-                            </div>
-                        )}
-                        {tab === "ai" && (
-                            <div className="settings-content">
-                                <SettingsSection
-                                    title="AI 问答工作区"
-                                    description="智能 AI 问答工作区与偏好设置"
-                                >
-                                    <SettingsActionCard
-                                        title="AI 问答工作区"
-                                        description="拥有专属的独立对话空间，只在显式选择后响应，不接管普通搜索。"
-                                    >
-                                        <Button
-                                            variant="outline"
-                                            render={<Link to={routes.ask} />}
-                                        >
-                                            打开 AI 问答
-                                        </Button>
-                                    </SettingsActionCard>
-                                </SettingsSection>
-                                <AiSettings />
-                            </div>
-                        )}
-                        {tab === "data" && (
-                            <div className="settings-content">
-                                <SettingsSection
-                                    title="同步"
-                                    description="登录后将偏好设置、应用与便签实时同步到您的账户"
-                                >
-                                    <SettingsActionCard
-                                        title={user
-                                            ? "云端账户"
-                                            : "本地访客模式"}
-                                        description={user
-                                            ? `已连接 ${user.displayName}，数据已双向同步。`
-                                            : "访客偏好仅在当前页面有效，登录后个人内容由服务端同步。"}
-                                    >
-                                        <span
-                                            className="settings-action-card__badge"
-                                            data-status={user
-                                                ? "synced"
-                                                : "guest"}
-                                        >
-                                            {user ? "已同步" : "未登录"}
-                                        </span>
-                                    </SettingsActionCard>
-                                </SettingsSection>
-                                {user && (
-                                    <SettingsSection
-                                        title="数据管理"
-                                        description={isAdmin
-                                            ? "管理已删除的项目或实验性特性"
-                                            : "管理已删除的项目"}
-                                    >
-                                        <SettingsActionCard
-                                            title="回收站"
-                                            description="查看已删除的应用和便签，或将其彻底删除"
-                                        >
+                                        </SettingsGroup>
+                                    )}
+                                </>
+                            )}
+                            {tab === "ai" && (
+                                <>
+                                    <SettingsGroup footer="AI 仅在你主动提问时响应，不影响普通搜索。">
+                                        <SettingsRow title="对话页面">
                                             <Button
-                                                variant="outline"
+                                                variant="ghost"
+                                                aria-label="打开 AI 问答"
                                                 render={
-                                                    <Link to={routes.trash} />
+                                                    <Link to={routes.ask} />
                                                 }
                                             >
-                                                打开回收站
+                                                打开
+                                                <ChevronRight
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                    aria-hidden="true"
+                                                />
                                             </Button>
-                                        </SettingsActionCard>
-                                        {isAdmin && (
-                                            <SettingsActionCard
-                                                title="Design Lab"
-                                                description="诊断与测试实验性的界面配置和组件预览"
-                                            >
+                                        </SettingsRow>
+                                    </SettingsGroup>
+                                    <AiSettings />
+                                </>
+                            )}
+                            {tab === "data" && (
+                                <>
+                                    <SettingsGroup
+                                        title="同步"
+                                        footer={user
+                                            ? "偏好设置、应用与便签会在你的账户中双向同步。"
+                                            : "登录后，偏好设置、应用与便签会同步到你的账户。"}
+                                    >
+                                        <SettingsRow title="账户">
+                                            {user
+                                                ? user.displayName
+                                                : "本地访客模式"}
+                                        </SettingsRow>
+                                        <SettingsRow title="状态">
+                                            <Badge variant="secondary">
+                                                {user ? "已同步" : "未登录"}
+                                            </Badge>
+                                        </SettingsRow>
+                                    </SettingsGroup>
+                                    {user && (
+                                        <SettingsGroup
+                                            title="数据管理"
+                                            footer="已删除的应用和便签保留在回收站，可恢复或彻底删除。"
+                                        >
+                                            <SettingsRow title="回收站">
                                                 <Button
-                                                    variant="outline"
+                                                    variant="ghost"
+                                                    aria-label="打开回收站"
+                                                    render={
+                                                        <Link
+                                                            to={routes.trash}
+                                                        />
+                                                    }
+                                                >
+                                                    打开
+                                                    <ChevronRight
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                        aria-hidden="true"
+                                                    />
+                                                </Button>
+                                            </SettingsRow>
+                                        </SettingsGroup>
+                                    )}
+                                    {isAdmin && (
+                                        <SettingsGroup>
+                                            <SettingsRow title="设计实验室">
+                                                <Button
+                                                    variant="ghost"
+                                                    aria-label="打开设计实验室"
                                                     render={
                                                         <Link
                                                             to={routes
@@ -1876,23 +1237,23 @@ export function SettingsPage() {
                                                         />
                                                     }
                                                 >
-                                                    打开 Design Lab
+                                                    打开
+                                                    <ChevronRight
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                        aria-hidden="true"
+                                                    />
                                                 </Button>
-                                            </SettingsActionCard>
-                                        )}
-                                    </SettingsSection>
-                                )}
-                            </div>
-                        )}
-                        {tab === "shortcuts" && (
-                            <div className="settings-content">
-                                <ShortcutsSettings />
-                            </div>
-                        )}
+                                            </SettingsRow>
+                                        </SettingsGroup>
+                                    )}
+                                </>
+                            )}
+                            {tab === "shortcuts" && <ShortcutsSettings />}
+                        </div>
                     </section>
                 </div>
             </PageShell>
-            {/* Composition & Preview Dialog */}
             <WallpaperCompositionDialog
                 open={compositionTarget !== null}
                 onOpenChange={(open) => {
@@ -1917,8 +1278,6 @@ export function SettingsPage() {
                 onSaveComposition={handleSaveComposition}
                 onSetAsCurrent={handleSetCurrentWithFocal}
             />
-
-            {/* Delete Confirmation Alert Dialog */}
             <AlertDialog
                 open={deleteTarget !== null}
                 onOpenChange={(open) => {
@@ -1936,7 +1295,7 @@ export function SettingsPage() {
                         <AlertDialogDescription>
                             {deleteTarget &&
                                     appearance.wallpaper === deleteTarget.url
-                                ? "该图片正在使用中。删除后将同时恢复默认背景，图片也会从最近上传中永久删除。"
+                                ? "该图片正在使用。删除后将恢复默认背景，图片也会从最近上传中永久删除。"
                                 : "该图片将从最近上传中永久删除。此操作无法撤销。"}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -1948,21 +1307,16 @@ export function SettingsPage() {
                             取消
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            disabled={isDeleting}
                             variant="destructive"
+                            disabled={isDeleting}
                             onClick={handleConfirmDelete}
                             data-testid="wallpaper-delete-confirm-btn"
                         >
-                            {deleteTarget &&
-                                    appearance.wallpaper === deleteTarget.url
-                                ? "删除并恢复默认背景"
-                                : "删除"}
+                            删除
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            {/* Toast feedback */}
             {toastMessage && (
                 <StatusBanner
                     tone="success"

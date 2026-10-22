@@ -18,7 +18,6 @@ import {
     Info,
     RotateCcw,
     Search,
-    Sparkles,
     Terminal,
     Wrench,
 } from "lucide-react";
@@ -68,7 +67,7 @@ function CodeBlock({
                     variant="ghost"
                     size="sm"
                     onClick={handleCopy}
-                    className="ask-codeblock__copy-btn h-6 text-xs gap-1"
+                    className="ask-codeblock__copy-btn"
                     aria-label={copied ? "已复制代码" : "复制代码"}
                 >
                     {copied
@@ -76,7 +75,7 @@ function CodeBlock({
                             <>
                                 <Check
                                     size="1em"
-                                    className="icon-sm text-accent"
+                                    className="icon-sm"
                                 />
                                 <span>已复制</span>
                             </>
@@ -90,7 +89,7 @@ function CodeBlock({
                 </Button>
             </div>
             {copyError && (
-                <p role="alert" className="text-destructive text-xs px-3 py-2">
+                <p role="alert" className="ask-codeblock__error">
                     无法写入剪贴板，请手动选择代码复制。
                 </p>
             )}
@@ -160,20 +159,11 @@ export function SearcherAssistantMessage() {
             className="ask-assistant-msg-container"
             aria-label="AI 回复"
         >
-            <header className="ask-assistant-header">
-                <div className="flex items-center gap-1.5">
-                    <Sparkles size="1em" className="icon-sm text-accent" />
-                    <span className="font-semibold text-xs tracking-wide">
-                        AI
-                    </span>
-                </div>
-            </header>
-
             {/* Sources / Citations list */}
             {allSources.length > 0 && (
-                <div className="ask-sources-section mb-3">
-                    <div className="text-xs font-medium text-muted flex items-center gap-1.5 mb-1.5">
-                        <Search size="1em" className="icon-sm text-accent" />
+                <div className="ask-sources-section">
+                    <div className="ask-sources-section__label">
+                        <Search size="1em" className="icon-sm" />
                         <span>搜索参考来源 ({allSources.length})</span>
                     </div>
                     <div className="ask-sources-grid">
@@ -220,7 +210,7 @@ export function SearcherAssistantMessage() {
                                     <button
                                         key={key}
                                         type="button"
-                                        className="ask-source-card ask-source-card--button"
+                                        className="ask-source-card"
                                         title={source.title}
                                         aria-label={`打开笔记：${source.title}`}
                                         onClick={() =>
@@ -255,33 +245,33 @@ export function SearcherAssistantMessage() {
 
             {/* Tool Calls & Results inspection block */}
             {hasTools && (
-                <div className="ask-tools-card mb-3">
+                <div className="ask-tools-card">
                     <Button
                         type="button"
                         variant="ghost"
                         onClick={() => setToolsExpanded(!toolsExpanded)}
-                        className="ask-tools-card__toggle w-full justify-between"
+                        className="ask-tools-card__toggle"
                         aria-expanded={toolsExpanded}
                     >
-                        <div className="flex items-center gap-2">
+                        <div className="ask-tools-card__summary">
                             <Wrench
                                 size="1em"
-                                className="icon-sm text-accent"
+                                className="icon-sm"
                             />
-                            <span className="text-xs font-medium">
+                            <span className="ask-tools-card__label">
                                 工具调用与检索 ({toolCallParts.length})
                             </span>
                         </div>
                         <ChevronDown
                             size="1em"
-                            className={`icon-sm transform transition-transform ${
-                                toolsExpanded ? "rotate-180" : ""
+                            className={`icon-sm ask-tools-card__chevron ${
+                                toolsExpanded ? "is-open" : ""
                             }`}
                         />
                     </Button>
 
                     {toolsExpanded && (
-                        <div className="ask-tools-card__content space-y-2 mt-2 pt-2 border-t border-border/40">
+                        <div className="ask-tools-card__content">
                             {toolCallParts.map((call, idx) => {
                                 if (call.type !== "tool-call") return null;
                                 const matchingResult = toolResultParts.find(
@@ -295,8 +285,8 @@ export function SearcherAssistantMessage() {
                                         key={call.callId || `call-${idx}`}
                                         className="ask-tool-item"
                                     >
-                                        <div className="flex items-center justify-between text-xs mb-1">
-                                            <span className="font-mono font-semibold text-accent flex items-center gap-1">
+                                        <div className="ask-tool-item__head">
+                                            <span className="ask-tool-item__name">
                                                 <Terminal
                                                     size="1em"
                                                     className="icon-sm"
@@ -311,10 +301,10 @@ export function SearcherAssistantMessage() {
                                                     : "搜索应用"}
                                             </span>
                                             <span
-                                                className={`text-xs ${
+                                                className={`ask-tool-item__status ${
                                                     matchingResult?.error
-                                                        ? "text-destructive"
-                                                        : "text-muted"
+                                                        ? "is-error"
+                                                        : ""
                                                 }`}
                                             >
                                                 {matchingResult?.error
@@ -324,19 +314,19 @@ export function SearcherAssistantMessage() {
                                                     : "调用中..."}
                                             </span>
                                         </div>
-                                        <div className="bg-surface-soft p-1.5 rounded text-xs font-mono overflow-x-auto text-muted">
+                                        <div className="ask-tool-item__payload">
                                             <div>
                                                 参数:{" "}
                                                 {JSON.stringify(call.args)}
                                             </div>
                                             {matchingResult?.error && (
-                                                <div className="text-destructive mt-1">
+                                                <div className="ask-tool-item__error">
                                                     错误: {matchingResult.error}
                                                 </div>
                                             )}
                                             {matchingResult?.result !==
                                                     undefined && (
-                                                <div className="text-foreground mt-1">
+                                                <div className="ask-tool-item__result">
                                                     结果: {typeof matchingResult
                                                             .result === "string"
                                                         ? matchingResult.result
@@ -390,7 +380,7 @@ export function SearcherAssistantMessage() {
 
             {(isInterrupted || isFailed) && (
                 <div
-                    className="ask-interrupted-banner mt-3"
+                    className="ask-interrupted-banner"
                     role="alert"
                 >
                     <div className="ask-interrupted-banner__content">
@@ -401,7 +391,7 @@ export function SearcherAssistantMessage() {
                             }`}
                         />
                         <div className="ask-interrupted-banner__message">
-                            <span className="font-medium">
+                            <span className="ask-interrupted-banner__title">
                                 {isFailed ? "生成失败" : "生成已中断"}
                             </span>
                             <p>
@@ -435,12 +425,13 @@ export function SearcherAssistantMessage() {
                 <BranchPickerPrimitive.Root
                     className="ask-branch-pager"
                     aria-label="回答版本切换"
+                    hideWhenSingleBranch
                 >
                     <BranchPickerPrimitive.Previous asChild>
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="ask-branch-pager__btn h-6 w-6"
+                            className="ask-branch-pager__btn"
                             aria-label="上一个回答版本"
                         >
                             <ChevronLeft size="1em" className="icon-sm" />
@@ -454,7 +445,7 @@ export function SearcherAssistantMessage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="ask-branch-pager__btn h-6 w-6"
+                            className="ask-branch-pager__btn"
                             aria-label="下一个回答版本"
                         >
                             <ChevronRight size="1em" className="icon-sm" />
@@ -467,7 +458,7 @@ export function SearcherAssistantMessage() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="ask-action-icon-btn h-7 w-7"
+                            className="ask-action-icon-btn"
                             aria-label={copied ? "已复制全文" : "复制全文"}
                             title={copied ? "已复制全文" : "复制全文"}
                         >
@@ -475,7 +466,7 @@ export function SearcherAssistantMessage() {
                                 ? (
                                     <Check
                                         size="1em"
-                                        className="icon-sm text-accent"
+                                        className="icon-sm"
                                     />
                                 )
                                 : <Copy size="1em" className="icon-sm" />}
@@ -487,7 +478,7 @@ export function SearcherAssistantMessage() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="ask-action-icon-btn h-7 w-7"
+                                className="ask-action-icon-btn"
                                 aria-label="重新生成"
                                 title="重新生成"
                             >
@@ -501,9 +492,9 @@ export function SearcherAssistantMessage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setDetailsOpen(true)}
-                            className="ask-action-icon-btn h-7 w-7"
+                            className="ask-action-icon-btn"
                             aria-label="消息详情"
-                            title="消息详情 (Token 与运行时)"
+                            title="消息详情"
                         >
                             <Info size="1em" className="icon-sm" />
                         </Button>

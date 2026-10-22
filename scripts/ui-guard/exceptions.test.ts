@@ -3,7 +3,6 @@ import {
     isDesignSystemAllowed,
     isDomainValueException,
     isDragTransformException,
-    isMasonryGeometryException,
     isPrimitiveOwningGeometry,
     isWallpaperFilterException,
 } from "./exceptions.ts";
@@ -13,10 +12,8 @@ Deno.test("wallpaper runtime variables are allowed only in WallpaperSurface", ()
     for (
         const variable of [
             "--wallpaper-image",
-            "--wallpaper-filter",
-            "--wallpaper-overscan-x",
-            "--wallpaper-ambient-mix-a",
-            "--wallpaper-ambient-mix-b",
+            "--wallpaper-mask",
+            "--wallpaper-position",
         ]
     ) {
         assertEquals(
@@ -142,102 +139,6 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
     );
     assertEquals(
         isDragTransformException("web/src/app/AdminPage.tsx", "zIndex", "100"),
-        false,
-    );
-});
-
-Deno.test("runtime exceptions - masonry layout geometry and denial of arbitrary geometry", () => {
-    // Real masonry layout geometry in SearchHome and WebAppLauncher
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "left",
-            "`${columnLayout.left}px`",
-        ),
-        true,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "top",
-            "`${columnLayout.top}px`",
-        ),
-        true,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "width",
-            "`${columnLayout.width}px`",
-        ),
-        true,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/components/searcher/WebAppLauncher.tsx",
-            "gridColumn",
-            "`${placement.col + 1} / span ${placement.colSpan}`",
-        ),
-        true,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "position",
-            "'absolute'",
-        ),
-        true,
-    );
-
-    // Consumer-visible denial: width: `${arbitrary}px` outside masonry owner is DENIED
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/AdminPage.tsx",
-            "width",
-            "`${arbitrary}px`",
-        ),
-        false,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/components/Header.tsx",
-            "width",
-            "`${computedWidth}px`",
-        ),
-        false,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/AdminPage.tsx",
-            "position",
-            "'absolute'",
-        ),
-        false,
-    );
-
-    // Raw static spacing/sizes are NOT masonry layout geometry even in layout files
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "padding",
-            "24px",
-        ),
-        false,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "margin",
-            "12px",
-        ),
-        false,
-    );
-    assertEquals(
-        isMasonryGeometryException(
-            "web/src/app/SearchHome.tsx",
-            "fontSize",
-            "16px",
-        ),
         false,
     );
 });
@@ -457,14 +358,6 @@ Deno.test("documented rules - design system token definitions", () => {
 });
 
 Deno.test("viewport and physical paper exceptions reject unrelated visual values", () => {
-    const canvas = "web/src/features/desktop/DesktopCanvas.tsx";
-    assertEquals(
-        isDomainValueException(canvas, "width", "rect.viewportRect.width"),
-        true,
-    );
-    assertEquals(isDomainValueException(canvas, "left", "0"), true);
-    assertEquals(isDomainValueException(canvas, "width", "640"), false);
-    assertEquals(isDomainValueException(canvas, "left", "24"), false);
     assertEquals(
         isDomainValueException(
             "web/src/app/SearchHome.tsx",

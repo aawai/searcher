@@ -313,11 +313,6 @@ export function AppsWorkspace({
                 onFolderChange={onFolderChange}
                 onNavigateToEdit={(appId, expandIcon) =>
                     navigate({ view: "apps/edit", id: appId, expandIcon })}
-                onNavigateToAdd={(groupId) =>
-                    navigate({
-                        view: "apps/create",
-                        groupId: groupId || undefined,
-                    })}
                 onOpen={onOpen}
                 onPin={onPin}
                 onMove={handleMoveApp}

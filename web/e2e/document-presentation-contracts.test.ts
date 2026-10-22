@@ -48,6 +48,59 @@ const FONT_PAYLOAD = Array.from({ length: 64 }, () => "iiiiiiii").join(" ");
 const VIEW_SWITCH_MARKER = "PRESERVEHISTORY158";
 const IN_FLIGHT_MARKER = "INFLIGHTSAVE158";
 
+const SAVE_STATUS_LOG_KEY = "__documentSaveStatusLog";
+
+// Records each data-status transition in page order, so a transient state
+// (dirty between an edit and its autosave) is never lost to poll timing.
+async function installSaveStatusRecorder(page: Page): Promise<void> {
+    await page.evaluate((logKey) => {
+        if (Reflect.has(window, logKey)) return;
+        const transitions: string[] = [];
+        const record = () => {
+            const status = document.querySelector(".document-save-status")
+                ?.getAttribute("data-status") ?? "";
+            if (transitions.at(-1) !== status) transitions.push(status);
+        };
+        Reflect.set(window, logKey, transitions);
+        record();
+        new MutationObserver(record).observe(document.body, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ["data-status"],
+        });
+    }, SAVE_STATUS_LOG_KEY);
+}
+
+async function countSaveStatusTransitions(
+    page: Page,
+    status: string,
+): Promise<number> {
+    return await page.evaluate((args) => {
+        const transitions = Reflect.get(window, args.logKey);
+        return Array.isArray(transitions)
+            ? transitions.filter((entry) => entry === args.status).length
+            : 0;
+    }, { logKey: SAVE_STATUS_LOG_KEY, status });
+}
+
+// Runs `action`, then waits until the recorder has seen `status` again.
+async function expectSaveStatusAfter(
+    page: Page,
+    status: string,
+    action: () => Promise<void>,
+): Promise<void> {
+    await installSaveStatusRecorder(page);
+    const before = await countSaveStatusTransitions(page, status);
+    await action();
+    await page.waitForFunction((args) => {
+        const transitions = Reflect.get(window, args.logKey);
+        return Array.isArray(transitions) &&
+            transitions.filter((entry) => entry === args.status).length >
+                args.before;
+    }, { logKey: SAVE_STATUS_LOG_KEY, status, before });
+}
+
 function assertNear(
     actual: number,
     expected: number,
@@ -380,10 +433,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         }, { path, method, body }) as T;
     }
 
-    await api("/api/preferences", "PATCH", {
-        style: "zen",
-        theme: "light",
-    });
+    await api("/api/preferences", "PATCH", { theme: "light" });
     const created = await api<DocumentDto>("/api/documents", "POST", {
         title: "Zen presentation contract #158",
         body: "Preparing a late image fixture.",
@@ -993,16 +1043,16 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         return activeEditor !== null && document.activeElement === activeEditor;
     });
     await page.keyboard.press("Control+End");
-    await page.keyboard.insertText("字");
+    await expectSaveStatusAfter(
+        page,
+        "dirty",
+        () => page.keyboard.insertText("字"),
+    );
     await page.waitForFunction((marker) => {
         const editorText =
             document.querySelector(".ProseMirror")?.textContent ??
                 "";
-        const saveStatus = document.querySelector(".document-save-status")
-            ?.getAttribute("data-status");
-        return editorText.includes(marker) &&
-            editorText.endsWith("字") &&
-            saveStatus === "dirty";
+        return editorText.includes(marker) && editorText.endsWith("字");
     }, IN_FLIGHT_MARKER);
     await page.keyboard.press("Control+s");
     const oneCharacter = await waitForDocument(
@@ -1013,10 +1063,11 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     await page.locator('.document-save-status[data-status="saved"]')
         .waitFor({ state: "attached" });
     assertEquals(oneCharacter.version, finalSaved.version + 1);
-    await page.keyboard.press("Control+z");
-    await page.locator('.document-save-status[data-status="dirty"]').waitFor({
-        state: "attached",
-    });
+    await expectSaveStatusAfter(
+        page,
+        "dirty",
+        () => page.keyboard.press("Control+z"),
+    );
     await page.keyboard.press("Control+s");
     const characterUndone = await waitForDocument(
         page,
@@ -1026,10 +1077,11 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     await page.locator('.document-save-status[data-status="saved"]')
         .waitFor({ state: "attached" });
     assertEquals(characterUndone.version, oneCharacter.version + 1);
-    await page.keyboard.press("Control+Shift+z");
-    await page.locator('.document-save-status[data-status="dirty"]').waitFor({
-        state: "attached",
-    });
+    await expectSaveStatusAfter(
+        page,
+        "dirty",
+        () => page.keyboard.press("Control+Shift+z"),
+    );
     await page.keyboard.press("Control+s");
     const characterRedone = await waitForDocument(
         page,

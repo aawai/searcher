@@ -1,9 +1,9 @@
 import { Search } from "lucide-react";
 
 /**
- * Static presentation simulation of Searcher search context for Wallpaper Stage.
+ * Static simulation of the home search bar over the wallpaper stage.
  * Strictly non-interactive, aria-hidden, pointer-events: none.
- * Purpose: Assess wallpaper readability against search typography and frame.
+ * Purpose: assess wallpaper readability against the search surface.
  */
 export function WallpaperStageContextPreview() {
     return (
@@ -11,21 +11,11 @@ export function WallpaperStageContextPreview() {
             className="wallpaper-stage-context-preview"
             aria-hidden="true"
         >
-            <div className="wallpaper-stage-context-preview__card">
-                <span className="wallpaper-stage-context-preview__brand">
-                    Searcher
+            <div className="wallpaper-stage-context-preview__search-bar">
+                <Search size="1em" className="icon-md" />
+                <span className="wallpaper-stage-context-preview__placeholder">
+                    搜索你想知道的…
                 </span>
-                <div className="wallpaper-stage-context-preview__search-bar">
-                    <div className="wallpaper-stage-context-preview__icon">
-                        <Search size="1em" className="icon-sm" />
-                    </div>
-                    <span className="wallpaper-stage-context-preview__placeholder">
-                        搜索你想知道的…
-                    </span>
-                    <span className="wallpaper-stage-context-preview__keycap">
-                        /
-                    </span>
-                </div>
             </div>
         </div>
     );

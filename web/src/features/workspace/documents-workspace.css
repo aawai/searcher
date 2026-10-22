@@ -8,47 +8,107 @@
     gap: var(--space-section-gap);
     min-width: 0;
 }
+
+/* Notebook navigation: scopes and notebooks share one row language. */
 .documents-notebook-navigation {
     display: flex;
     flex-direction: column;
-    gap: var(--space-control-gap);
+    gap: var(--space-2);
     min-width: 0;
 }
+.documents-notebook-scopes,
 .documents-notebook-list {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-control-gap);
+    gap: var(--space-2);
     min-width: 0;
 }
-.documents-notebook-row {
+.documents-notebook-header {
     display: flex;
     align-items: center;
-    gap: var(--space-1);
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    min-width: 0;
+}
+.documents-notebook-title {
+    padding-inline-start: var(--space-3);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-title-weight);
+    color: var(--muted);
+}
+[data-slot="button"].documents-notebook-scope-btn,
+[data-slot="button"].documents-notebook-row-btn {
+    min-width: 0;
+    justify-content: flex-start;
+    padding-inline: var(--space-3);
+}
+.documents-notebook-scope-btn > svg,
+.documents-notebook-row-btn > svg {
+    flex-shrink: 0;
+}
+.documents-notebook-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
     min-width: 0;
     max-width: 100%;
 }
-.documents-notebook-row > button:first-child {
+.documents-notebook-row > * {
+    grid-area: 1 / 1;
+}
+.documents-notebook-name {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.documents-notebook-row[data-notebook-depth="1"] {
-    padding-inline-start: var(--space-3);
+
+/* Chip layout: only the selected notebook shows its actions. */
+.documents-notebook-row > [data-slot="dropdown-menu-trigger"].documents-row-action {
+    display: none;
+    justify-self: end;
+    margin-inline-end: var(--space-1);
 }
+.documents-notebook-row > [data-slot="button"].documents-notebook-row-btn[data-active="true"] {
+    padding-inline-end: calc(var(--control-touch-target) + var(--space-1));
+}
+.documents-notebook-row:has(> [data-active="true"]) > [data-slot="dropdown-menu-trigger"].documents-row-action {
+    display: inline-flex;
+    opacity: 1;
+}
+
+/* Row actions stay out of sight until the row is hovered or focused. */
+[data-slot="dropdown-menu-trigger"].documents-row-action {
+    opacity: 0;
+}
+.documents-summary-row:is(:hover, :focus-within) [data-slot="dropdown-menu-trigger"].documents-row-action,
+.documents-notebook-row:is(:hover, :focus-within) [data-slot="dropdown-menu-trigger"].documents-row-action,
+[data-slot="dropdown-menu-trigger"].documents-row-action[aria-expanded="true"],
+[data-slot="dropdown-menu-trigger"].documents-row-action:focus-visible {
+    opacity: 1;
+}
+
+/* Library list: flat rows, no separators; hover and focus fill the row. */
 .documents-workspace-list {
     display: flex;
     flex-direction: column;
+    gap: var(--space-1);
     width: 100%;
     min-width: 0;
 }
 .documents-summary-row {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding-block: var(--space-3);
-    border-bottom: 1px solid var(--border-subtle);
+    gap: var(--space-1);
     min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--control-radius);
+    transition: background var(--motion-fast) var(--ease-standard);
+}
+.documents-summary-row:is(:hover, :focus-within) {
+    background: var(--surface-soft);
 }
 .documents-summary-header {
     display: flex;
@@ -57,50 +117,123 @@
     min-width: 0;
 }
 .documents-summary-title {
+    flex: 1;
+    min-width: 0;
     margin: 0;
     font-size: var(--font-body-size);
-    font-weight: var(--font-title-weight);
-    color: var(--foreground);
     line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+}
+[data-slot="button"].documents-summary-open {
+    max-width: 100%;
+    justify-content: flex-start;
+    padding-inline: 0;
+}
+.documents-summary-title-text {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    min-width: 0;
-    flex: 1;
-}
-.documents-summary-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-    min-width: 0;
-    max-width: 50%;
-}
-.documents-summary-badges > * {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
 }
 .documents-summary-snippet {
-    margin: 0;
-    font-size: var(--font-caption-size);
-    line-height: var(--font-caption-line-height);
-    color: var(--muted);
-    overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    margin: 0;
+    overflow: hidden;
     overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    color: var(--muted);
 }
 .documents-summary-footer {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-1);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
+}
+.documents-summary-footer > * + *::before {
+    content: "·";
+    margin-inline-end: var(--space-1);
 }
 .documents-workspace-more {
     display: flex;
     justify-content: center;
     padding-top: var(--space-2);
 }
+.documents-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    min-width: 0;
+}
+.documents-favorite-icon {
+    fill: currentColor;
+}
+.menu-item > .documents-favorite-icon {
+    color: var(--warning);
+}
+
+/* Library and notebook dialogs: one form rhythm. */
+.documents-dialog-form {
+    display: grid;
+    gap: var(--space-4);
+}
+.documents-dialog-form > [data-slot="dialog-header"],
+.documents-dialog-form > [data-slot="dialog-footer"] {
+    margin: 0;
+}
+.documents-dialog-fields {
+    display: grid;
+    gap: var(--space-4);
+}
+.documents-dialog-field {
+    display: grid;
+    gap: var(--space-2);
+}
+.documents-dialog-label {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+}
+.documents-dialog-counter {
+    justify-self: end;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+.documents-dialog-hint {
+    margin: 0;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    color: var(--muted);
+}
+
+/* Dense pointers get compact controls; touch keeps the 44px primitives. */
+@media (hover: hover) and (pointer: fine) {
+    [data-slot="button"].documents-summary-open,
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-notebook-create-trigger {
+        min-height: var(--control-compact-height);
+    }
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-notebook-create-trigger {
+        width: var(--control-compact-height);
+    }
+}
+@media (pointer: coarse), (hover: none) {
+    [data-slot="dropdown-menu-trigger"].documents-row-action {
+        opacity: 1;
+    }
+}
+
 /* Content-width boundary: the narrow Zen panel never becomes two columns. */
 @container documents-library (min-width: 640px) {
     .documents-library-layout {
@@ -108,15 +241,22 @@
         grid-template-columns: var(--workspace-library-navigation-width)
             minmax(0, 1fr);
     }
+    .documents-notebook-scopes,
     .documents-notebook-list {
         flex-direction: column;
         flex-wrap: nowrap;
+        gap: var(--space-1);
     }
     .documents-notebook-row {
         width: 100%;
     }
-    .documents-notebook-row > button:first-child {
-        flex: 1;
-        justify-content: flex-start;
+    .documents-notebook-row[data-notebook-depth="1"] {
+        padding-inline-start: var(--space-3);
+    }
+    .documents-notebook-row > [data-slot="dropdown-menu-trigger"].documents-row-action {
+        display: inline-flex;
+    }
+    .documents-notebook-row > [data-slot="button"].documents-notebook-row-btn {
+        padding-inline-end: calc(var(--control-touch-target) + var(--space-1));
     }
 }

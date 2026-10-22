@@ -8,8 +8,10 @@ import {
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { Badge } from "../../components/ui/badge.tsx";
-import { LoadingState } from "../../components/searcher/semantic.tsx";
+import {
+    LoadingState,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 
 export interface DocumentHistoryDialogProps {
     open: boolean;
@@ -104,27 +106,24 @@ export function DocumentHistoryDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            <DialogContent className="document-history-dialog">
                 <DialogHeader>
                     <DialogTitle>历史版本</DialogTitle>
                     <DialogDescription>
-                        浏览或恢复笔记的历史版本。恢复历史版本将创建新的当前版本，不会丢失任何历史记录。
+                        恢复会创建新的当前版本，历史记录不会丢失。
                     </DialogDescription>
                 </DialogHeader>
 
                 {error && (
-                    <div
-                        className="p-2 text-xs text-[var(--danger)] bg-[var(--surface-soft)] rounded border border-[var(--border-subtle)]"
-                        role="alert"
-                    >
+                    <StatusBanner tone="error" density="compact">
                         {error}
-                    </div>
+                    </StatusBanner>
                 )}
 
-                <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-4 py-2 overflow-hidden">
+                <div className="document-history-body">
                     {/* Version List */}
-                    <div className="w-full md:w-1/3 flex flex-col min-h-0 border-r border-[var(--border-subtle)] pr-2">
-                        <span className="text-xs text-[var(--muted)] font-semibold uppercase mb-2">
+                    <div className="document-history-list-pane">
+                        <span className="document-history-label">
                             版本记录
                         </span>
                         {loading
@@ -134,10 +133,10 @@ export function DocumentHistoryDialog({
                                 </LoadingState>
                             )
                             : (
-                                <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1">
+                                <div className="document-history-versions">
                                     {versions.length === 0
                                         ? (
-                                            <p className="text-xs text-[var(--muted)] py-4 text-center">
+                                            <p className="document-history-empty">
                                                 暂无历史版本
                                             </p>
                                         )
@@ -162,28 +161,27 @@ export function DocumentHistoryDialog({
                                                     <Button
                                                         key={ver.id}
                                                         type="button"
-                                                        variant="ghost"
+                                                        variant={isSelected
+                                                            ? "outline"
+                                                            : "ghost"}
                                                         aria-pressed={isSelected}
-                                                        className="h-auto text-left flex flex-col items-stretch gap-1"
+                                                        className="document-history-version"
                                                         onClick={() =>
                                                             setSelectedVersion(
                                                                 ver,
                                                             )}
                                                     >
-                                                        <div className="flex items-center justify-between">
+                                                        <span className="document-history-version-head">
                                                             <span>
                                                                 #{ver.version}
                                                             </span>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="text-xs px-1 py-0 h-4"
-                                                            >
+                                                            <span className="document-history-reason">
                                                                 {REASON_LABELS[
                                                                     ver.reason
                                                                 ] ?? ver.reason}
-                                                            </Badge>
-                                                        </div>
-                                                        <span className="text-xs text-[var(--muted)]">
+                                                            </span>
+                                                        </span>
+                                                        <span className="document-history-date">
                                                             {formattedDate}
                                                         </span>
                                                     </Button>
@@ -195,52 +193,49 @@ export function DocumentHistoryDialog({
                     </div>
 
                     {/* Version Preview */}
-                    <div className="flex-1 flex flex-col min-h-0 pl-1">
-                        {selectedVersion
-                            ? (
-                                <div className="flex-1 flex flex-col min-h-0">
-                                    <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-                                        <div>
-                                            <h4 className="font-semibold text-sm text-[var(--foreground)]">
-                                                {selectedVersion.title ||
-                                                    "（无标题）"}
-                                            </h4>
-                                            <span className="text-xs text-[var(--muted)]">
-                                                版本 #{selectedVersion.version}
-                                                {" "}
-                                                · {new Date(
-                                                    selectedVersion.createdAt,
-                                                ).toLocaleString("zh-CN")}
-                                            </span>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            disabled={restoring}
-                                            onClick={() =>
-                                                void handleRestore(
-                                                    selectedVersion,
-                                                )}
-                                        >
-                                            {restoring
-                                                ? "恢复中…"
-                                                : "恢复此版本"}
-                                        </Button>
+                    {selectedVersion
+                        ? (
+                            <div className="document-history-preview">
+                                <div className="document-history-preview-head">
+                                    <div className="document-history-preview-titles">
+                                        <h4 className="document-history-preview-title">
+                                            {selectedVersion.title ||
+                                                "（无标题）"}
+                                        </h4>
+                                        <span className="document-history-preview-meta">
+                                            版本 #{selectedVersion.version} ·
+                                            {" "}
+                                            {new Date(
+                                                selectedVersion.createdAt,
+                                            ).toLocaleString("zh-CN")}
+                                        </span>
                                     </div>
-                                    <div className="flex-1 overflow-y-auto mt-2 p-3 bg-[var(--surface-soft)] rounded border border-[var(--border-subtle)]">
-                                        <pre className="text-xs font-mono whitespace-pre-wrap text-[var(--foreground)]">
-                                            {selectedVersion.body ||
-                                                "（空笔记）"}
-                                        </pre>
-                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        size="sm"
+                                        disabled={restoring}
+                                        onClick={() =>
+                                            void handleRestore(
+                                                selectedVersion,
+                                            )}
+                                    >
+                                        {restoring ? "恢复中…" : "恢复此版本"}
+                                    </Button>
                                 </div>
-                            )
-                            : (
-                                <div className="flex-1 flex items-center justify-center text-xs text-[var(--muted)]">
-                                    请选择一个版本查看预览
+                                <div className="document-history-content">
+                                    <pre className="document-history-pre">
+                                        {selectedVersion.body ||
+                                            "（空笔记）"}
+                                    </pre>
                                 </div>
-                            )}
-                    </div>
+                            </div>
+                        )
+                        : (
+                            <div className="document-history-placeholder">
+                                选择版本以预览
+                            </div>
+                        )}
                 </div>
             </DialogContent>
         </Dialog>

@@ -8,10 +8,7 @@ import {
     checkRuleE_ForbiddenLegacyUiClass,
     checkRuleF_CssPrefixOwnership,
     checkRuleG_WorkspaceCoreIsolation,
-    checkRuleH_DesktopPersistenceBoundary,
-    checkRuleI_CanvasCoordinateOwner,
     checkRuleJ_HomeDocumentTokenPollution,
-    checkRuleK_WidgetsNoAdhocWindow,
     checkRuleL_ForbiddenLegacyPaths,
     checkRuleM_PrimitiveFeatureCascadeOrder,
     formatOwnershipReport,
@@ -177,7 +174,7 @@ Deno.test("Rule C: undefined-css-token - allows tokens defined in tokens.css, lo
     color: var(--accent);
     border-radius: var(--radius);
     background-image: var(--wallpaper-image);
-    filter: var(--wallpaper-filter);
+    background-position: var(--wallpaper-position);
 }
 `;
 
@@ -390,62 +387,6 @@ Deno.test("Rule F: css-prefix-ownership - denies feature prefixes defined in una
     assertEquals(violations[1].snippet, ".settings-panel");
     assertEquals(violations[2].snippet, ".trash-table");
     assertEquals(violations[3].snippet, ".ask-composer-container");
-});
-
-Deno.test("Rule F: Home code presentation may reference the Widgets ancestor only", () => {
-    const owner = "web/src/components/searcher/notes.css";
-    const scope =
-        ":is(.floating-notes--canvas, .controlled-notes-board) .note-preview.markdown pre";
-    for (
-        const state of [
-            "",
-            " code",
-            ":hover",
-            ":focus-visible",
-            "::-webkit-scrollbar",
-            "::-webkit-scrollbar-track",
-            "::-webkit-scrollbar-thumb",
-            ":hover::-webkit-scrollbar-thumb",
-            ":focus-visible::-webkit-scrollbar-thumb",
-            "::-webkit-scrollbar-thumb:active",
-        ]
-    ) {
-        assertEquals(
-            checkRuleF_CssPrefixOwnership(
-                owner,
-                `${scope}${state} { color: red; }`,
-            ),
-            [],
-        );
-        assertEquals(
-            checkRuleF_CssPrefixOwnership(
-                "web/src/components/searcher/markdown.css",
-                `${scope}${state} { color: red; }`,
-            ).map((violation) => violation.snippet),
-            [".controlled-notes-board"],
-        );
-    }
-    for (
-        const selector of [
-            ".controlled-notes-board",
-            ".controlled-notes-other",
-            ".controlled-notes-board .note-card",
-            scope.replace(" pre", " p"),
-            `${scope} .controlled-notes-board`,
-            `${scope}, .controlled-notes-board`,
-            `${scope}:not(.controlled-notes-board)`,
-        ]
-    ) {
-        assertEquals(
-            checkRuleF_CssPrefixOwnership(owner, `${selector} { color: red; }`)
-                .some(
-                    (violation) =>
-                        violation.snippet.startsWith(".controlled-notes-"),
-                ),
-            true,
-            selector,
-        );
-    }
 });
 
 Deno.test("Rule F: css-prefix-ownership - allows non-prefixed semantic classes in semantic.css", () => {
@@ -899,46 +840,6 @@ Deno.test("Issue 80 P6 Positive Fixture: authorized workspace CSS prefixes pass 
     );
 });
 
-Deno.test("Issue 109: masonry selectors stay in the notes workspace CSS owner", () => {
-    const css = `
-.notes-workspace-masonry { position: relative; }
-.notes-workspace-masonry-item { position: absolute; transition: transform 160ms; }
-.notes-workspace-masonry-overlay { pointer-events: none; }
-@media (prefers-reduced-motion: reduce) {
-    .notes-workspace-masonry-item { transition: none; }
-}
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/features/workspace/notes-workspace.css",
-            css,
-        ),
-        [],
-    );
-    for (
-        const file of [
-            "web/src/features/workspace/apps-workspace.css",
-            "web/src/features/home-layouts/home-layouts.css",
-            "web/src/styles/global.css",
-        ]
-    ) {
-        const violations = checkRuleF_CssPrefixOwnership(file, css);
-        assertEquals(violations.length, 4, file);
-        assertEquals(
-            violations.every((violation) =>
-                violation.rule === "css-prefix-ownership"
-            ),
-            true,
-            file,
-        );
-    }
-    assertEquals(
-        checkRuleA_GlobalFeaturePrefix("web/src/styles/global.css", css)
-            .length,
-        4,
-    );
-});
-
 Deno.test("Issue 80 P6 Positive Fixture: shared feedback in workspace views passes ownership rules", () => {
     const tsxCode = `
 export function CanonicalFeedbackSample() {
@@ -1111,10 +1012,10 @@ Deno.test("Issue 80 P6 Integration: scanOwnership detects workspace negative fix
     }
 });
 
-Deno.test("Rule G: workspace-core-isolation - denies desktop geometry module imports in Core", () => {
+Deno.test("Rule G: workspace-core-isolation - denies home viewport geometry module imports in Core", () => {
     const code = `
-import { clampFrame } from "../desktop/desktop-geometry.ts";
-export function testCore() { return clampFrame; }
+import { homeViewport } from "../home-layouts/home-viewport.ts";
+export function testCore() { return homeViewport; }
 `;
     const violations = checkRuleG_WorkspaceCoreIsolation(
         "web/src/features/workspace/workspace-state.ts",
@@ -1123,15 +1024,15 @@ export function testCore() { return clampFrame; }
     assertEquals(violations.length >= 1, true);
     assertEquals(violations[0].rule, "workspace-core-isolation");
     assertEquals(
-        violations[0].message.includes("desktop geometry module"),
+        violations[0].message.includes("geometry module"),
         true,
     );
 });
 
 Deno.test("Rule G: workspace-core-isolation - denies spatial geometry symbols in Core", () => {
     const code = `
-import type { SafeRect, Frame } from "./types.ts";
-export interface CoreProps { rect: SafeRect; frame: Frame; }
+import type { SafeRect, HomeViewport } from "./types.ts";
+export interface CoreProps { rect: SafeRect; viewport: HomeViewport; }
 `;
     const violations = checkRuleG_WorkspaceCoreIsolation(
         "web/src/features/workspace/WorkspaceShell.tsx",
@@ -1140,7 +1041,7 @@ export interface CoreProps { rect: SafeRect; frame: Frame; }
     assertEquals(violations.length, 2);
     assertEquals(violations[0].rule, "workspace-core-isolation");
     assertEquals(violations[0].snippet, "SafeRect");
-    assertEquals(violations[1].snippet, "Frame");
+    assertEquals(violations[1].snippet, "HomeViewport");
 });
 
 Deno.test("Rule G: workspace-core-isolation - denies 'closed' route view definition in Core", () => {
@@ -1181,133 +1082,11 @@ export interface DomainWorkspaceState<TRoute> {
     assertEquals(violations.length, 0);
 });
 
-Deno.test("Rule H: desktop-persistence-boundary - denies browser localStorage in desktop", () => {
-    const code = `
-export function saveLayout(data: unknown) {
-    localStorage.setItem("desktop_layout", JSON.stringify(data));
-}
-`;
-    const violations = checkRuleH_DesktopPersistenceBoundary(
-        "web/src/features/desktop/desktop-persistence.ts",
-        code,
-    );
-    assertEquals(
-        violations.some((v) =>
-            v.message.includes("localStorage is strictly forbidden")
-        ),
-        true,
-    );
-});
-
-Deno.test("Rule H: desktop-persistence-boundary - denies note_layouts reference in desktop", () => {
-    const code = `
-export const TABLE = "note_layouts";
-export async function fetchNoteLayouts() { return []; }
-`;
-    const violations = checkRuleH_DesktopPersistenceBoundary(
-        "web/src/features/desktop/useDesktopLayout.ts",
-        code,
-    );
-    assertEquals(
-        violations.some((v) => v.message.includes("note_layouts")),
-        true,
-    );
-});
-
-Deno.test("Rule H: desktop-persistence-boundary - denies raw indexedDB.open in desktop", () => {
-    const code = `
-export function initDb() {
-    return indexedDB.open("searcher-desktop", 1);
-}
-`;
-    const violations = checkRuleH_DesktopPersistenceBoundary(
-        "web/src/features/desktop/desktop-persistence.ts",
-        code,
-    );
-    assertEquals(
-        violations.some((v) => v.message.includes("raw indexedDB.open")),
-        true,
-    );
-});
-
-Deno.test("Rule H: desktop-persistence-boundary - allows desktop persistence reusing local.ts", () => {
-    const code = `
-import { getLocal, setLocal } from "../../lib/local.ts";
-export const STORAGE_KEY = (id: string) => \`searcher:desktop-layout:v1:\${id}\`;
-export async function saveDesktop(userId: string, data: unknown) {
-    await setLocal(STORAGE_KEY(userId), data);
-}
-export async function loadDesktop(userId: string) {
-    return await getLocal(STORAGE_KEY(userId));
-}
-`;
-    const violations = checkRuleH_DesktopPersistenceBoundary(
-        "web/src/features/desktop/desktop-persistence.ts",
-        code,
-    );
-    assertEquals(violations.length, 0);
-});
-
-Deno.test("Rule I: canvas-coordinate-owner - denies competing geometry hooks measuring DOM for SafeRect outside DesktopCanvas.tsx", () => {
-    const code = `
-import type { SafeRect } from "./desktop-geometry.ts";
-export function calculateScreenBounds(): SafeRect {
-    const top = document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 0;
-    return { x: 0, y: top, width: window.innerWidth, height: window.innerHeight - top };
-}
-`;
-    const violations = checkRuleI_CanvasCoordinateOwner(
-        "web/src/features/desktop/DesktopWindow.tsx",
-        code,
-    );
-    assertEquals(violations.length, 1);
-    assertEquals(violations[0].rule, "canvas-coordinate-owner");
-    assertEquals(
-        violations[0].message.includes(
-            "Competing safe-rect derivation function",
-        ),
-        true,
-    );
-});
-
-Deno.test("Rule I: canvas-coordinate-owner - allows legitimate pure geometry functions and constrained presets", () => {
-    const code = `
-import type { Frame, SafeRect } from "./desktop-geometry.ts";
-export function clampMyFrame(frame: Frame, safeRect: SafeRect): Frame {
-    return {
-        x: Math.max(safeRect.x, Math.min(frame.x, safeRect.x + safeRect.width - frame.width)),
-        y: Math.max(safeRect.y, Math.min(frame.y, safeRect.y + safeRect.height - frame.height)),
-        width: frame.width,
-        height: frame.height,
-    };
-}
-`;
-    const violations = checkRuleI_CanvasCoordinateOwner(
-        "web/src/features/desktop/constrained-geometry.ts",
-        code,
-    );
-    assertEquals(violations.length, 0);
-});
-
-Deno.test("Rule I: canvas-coordinate-owner - allows useDesktopSafeRect in DesktopCanvas.tsx", () => {
-    const code = `
-export function useDesktopSafeRect(bottomEl?: HTMLElement | null): SafeRect {
-    const bottom = bottomEl?.getBoundingClientRect().top ?? innerHeight;
-    return { x: 0, y: 0, width: innerWidth, height: bottom };
-}
-`;
-    const violations = checkRuleI_CanvasCoordinateOwner(
-        "web/src/features/desktop/DesktopCanvas.tsx",
-        code,
-    );
-    assertEquals(violations.length, 0);
-});
-
 Deno.test("Rule J: home-document-token - denies Home CSS overriding protected global tokens on :root and combined root selectors", () => {
     const invalidCss = `
 :root {
     --surface: #ffffff;
-    --radius-window: 12px;
+    --radius-lg: 12px;
 }
 :root[data-theme='dark'] {
     --background: #000000;
@@ -1326,7 +1105,7 @@ body.dark {
     assertEquals(violations.length, 5);
     assertEquals(violations[0].rule, "home-document-token");
     assertEquals(violations[0].snippet.includes("--surface"), true);
-    assertEquals(violations[1].snippet.includes("--radius-window"), true);
+    assertEquals(violations[1].snippet.includes("--radius-lg"), true);
     assertEquals(violations[2].snippet.includes("--background"), true);
     assertEquals(violations[3].snippet.includes("--border"), true);
     assertEquals(violations[4].snippet.includes("--accent"), true);
@@ -1340,7 +1119,7 @@ export function HomeDirty() {
 }
 `;
     const violations = checkRuleJ_HomeDocumentTokenPollution(
-        "web/src/features/home-layouts/WidgetsLayout.tsx",
+        "web/src/features/home-layouts/ZenLayout.tsx",
         invalidTsx,
     );
     assertEquals(violations.length, 1);
@@ -1349,19 +1128,19 @@ export function HomeDirty() {
 
 Deno.test("Rule J: home-document-token - allows scoped layout classes and feature semantic tokens", () => {
     const validCss = `
-.home-widgets {
+.zen-edge-btn {
     --radius: 22px;
     --surface: color-mix(in srgb, var(--background) 65%, transparent);
 }
-.home-widgets[data-theme='dark'] {
+.zen-edge-btn[data-theme='dark'] {
     --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.7);
 }
-[data-theme="dark"] .home-widgets {
+[data-theme="dark"] .zen-edge-btn {
     --shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.7);
 }
 :root {
-    --space-bento-padding: 10px;
-    --font-bento-count: 11px;
+    --space-zen-padding: 10px;
+    --font-zen-count: 11px;
 }
 `;
     const violations = checkRuleJ_HomeDocumentTokenPollution(
@@ -1371,150 +1150,37 @@ Deno.test("Rule J: home-document-token - allows scoped layout classes and featur
     assertEquals(violations.length, 0);
 });
 
-Deno.test("Rule K: widgets-no-adhoc-window - denies importing desktop window components with or without aliases in WidgetsLayout", () => {
-    const invalidTsx = `
-import { DesktopWindow as MyCustomCard, DesktopCanvas } from "../desktop/DesktopWindow.tsx";
-export function WidgetsLayout() {
-    return <div><MyCustomCard id="w1" /></div>;
-}
-`;
-    const violations = checkRuleK_WidgetsNoAdhocWindow(
-        "web/src/features/home-layouts/WidgetsLayout.tsx",
-        invalidTsx,
-    );
-    assertEquals(violations.length, 2);
-    assertEquals(violations[0].rule, "widgets-no-adhoc-window");
-    assertEquals(violations[0].message.includes("DesktopWindow"), true);
-    assertEquals(violations[0].message.includes("MyCustomCard"), true);
-    assertEquals(violations[1].message.includes("DesktopCanvas"), true);
-});
-
-Deno.test("Rule K: widgets-no-adhoc-window - denies ad-hoc window container classes in WidgetsLayout", () => {
-    const invalidTsx = `
-export function WidgetsLayout() {
-    return <div className="adhoc-window floating-window">Fake Window</div>;
-}
-`;
-    const violations = checkRuleK_WidgetsNoAdhocWindow(
-        "web/src/features/home-layouts/WidgetsLayout.tsx",
-        invalidTsx,
-    );
-    assertEquals(violations.length, 1);
-    assertEquals(violations[0].rule, "widgets-no-adhoc-window");
-});
-
-Deno.test("Rule K: widgets-no-adhoc-window - denies inline style simulating window frame with position: absolute and zIndex", () => {
-    const invalidTsx = `
-export function WidgetsLayout() {
-    return (
-        <div style={{ position: "absolute", zIndex: 100, top: 20, left: 20 }}>
-            Adhoc Floating Window
-        </div>
-    );
-}
-`;
-    const violations = checkRuleK_WidgetsNoAdhocWindow(
-        "web/src/features/home-layouts/WidgetsLayout.tsx",
-        invalidTsx,
-    );
-    assertEquals(violations.length, 1);
-    assertEquals(violations[0].rule, "widgets-no-adhoc-window");
-    assertEquals(
-        violations[0].message.includes(
-            "inline position: 'absolute' and zIndex",
-        ),
-        true,
-    );
-});
-
-Deno.test("Rule K: widgets-no-adhoc-window - allows normal layout positioning and canonical WidgetsLayout content", () => {
-    const validTsx = `
-export function WidgetsLayout() {
-    return (
-        <div className="widgets-layout">
-            <div className="widgets-bento-wrapper">
-                <div className="widgets-bento-card">Card</div>
-                <span style={{ position: "absolute", top: 4, right: 4 }}>Badge</span>
-            </div>
-        </div>
-    );
-}
-`;
-    const violations = checkRuleK_WidgetsNoAdhocWindow(
-        "web/src/features/home-layouts/WidgetsLayout.tsx",
-        validTsx,
-    );
-    assertEquals(violations.length, 0);
-});
-
-Deno.test("Rule L: forbidden-legacy-path - denies abolished demo and panel files", () => {
+Deno.test("Rule L: forbidden-legacy-path - denies abolished panel file", () => {
     assertEquals(
         checkRuleL_ForbiddenLegacyPaths(
-            "web/src/features/desktop/DesktopDemo.tsx",
+            "web/src/features/workspace/WidgetsPanel.tsx",
         ).length,
         1,
     );
     assertEquals(
         checkRuleL_ForbiddenLegacyPaths(
-            "web/src/features/desktop/WidgetsPanel.tsx",
-        ).length,
-        1,
-    );
-    assertEquals(
-        checkRuleL_ForbiddenLegacyPaths(
-            "web/src/features/desktop/DesktopWindow.tsx",
+            "web/src/features/workspace/WorkspaceSurface.tsx",
         ).length,
         0,
     );
 });
 
-Deno.test("Rule E extension: denies legacy desktop and workspace panel classes", () => {
+Deno.test("Rule E extension: denies legacy fixed workspace panel classes", () => {
     const invalidCss = `
 .workspace-panel-fixed { position: fixed; }
-.widgets-workspace-panel { width: 400px; }
-.desktop-demo-content { display: flex; }
 `;
     const violations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/desktop/desktop.css",
+        "web/src/features/workspace/workspace.css",
         invalidCss,
     );
-    assertEquals(violations.length, 3);
+    assertEquals(violations.length, 1);
     assertEquals(violations[0].snippet, ".workspace-panel-fixed");
-    assertEquals(violations[1].snippet, ".widgets-workspace-panel");
-    assertEquals(violations[2].snippet, ".desktop-demo-content");
-});
-
-Deno.test("Rule F extension: presenter single-owner classes enforced across stylesheets", () => {
-    const dirtyWorkspaceCss = `
-.workspace-surface { display: flex; }
-.desktop-window { position: absolute; }
-`;
-    const v1 = checkRuleF_CssPrefixOwnership(
-        "web/src/features/workspace/workspace.css",
-        dirtyWorkspaceCss,
-    );
-    assertEquals(v1.length, 1);
-    assertEquals(v1[0].snippet, ".desktop-window");
-
-    const dirtyDesktopCss = `
-.desktop-window { position: absolute; }
-.workspace-surface { display: flex; }
-`;
-    const v2 = checkRuleF_CssPrefixOwnership(
-        "web/src/features/desktop/desktop.css",
-        dirtyDesktopCss,
-    );
-    assertEquals(v2.length, 1);
-    assertEquals(v2[0].snippet, ".workspace-surface");
 });
 
 Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 violations and passes clean architecture", async () => {
     const dirtyDir = await Deno.makeTempDir({ prefix: "ownership-92-dirty-" });
     try {
         await Deno.mkdir(`${dirtyDir}/web/src/features/workspace`, {
-            recursive: true,
-        });
-        await Deno.mkdir(`${dirtyDir}/web/src/features/desktop`, {
             recursive: true,
         });
         await Deno.mkdir(`${dirtyDir}/web/src/features/home-layouts`, {
@@ -1529,40 +1195,22 @@ Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 vi
             `:root { --surface: #fff; }`,
         );
 
-        // 1. Workspace Core imports desktop geometry (Rule G) & closed route (Rule G)
+        // 1. Workspace Core imports home viewport geometry (Rule G) & closed route (Rule G)
         await Deno.writeTextFile(
             `${dirtyDir}/web/src/features/workspace/workspace-state.ts`,
-            `import { clampFrame } from "../desktop/desktop-geometry.ts";\nexport type Route = { view: "closed" };`,
+            `import { homeViewport } from "../home-layouts/home-viewport.ts";\nexport type Route = { view: "closed" };`,
         );
 
-        // 2. Desktop file uses localStorage and note_layouts (Rule H)
-        await Deno.writeTextFile(
-            `${dirtyDir}/web/src/features/desktop/desktop-persistence.ts`,
-            `export function persist() { localStorage.setItem("note_layouts", "x"); }`,
-        );
-
-        // 3. Desktop file defines competing safe rect measuring DOM (Rule I)
-        await Deno.writeTextFile(
-            `${dirtyDir}/web/src/features/desktop/DesktopWindow.tsx`,
-            `import type { SafeRect } from "./desktop-geometry.ts";\nexport function calcRect(): SafeRect { return { x: 0, y: innerHeight, width: innerWidth, height: 100 }; }`,
-        );
-
-        // 4. Home CSS overrides document visual token (Rule J)
+        // 2. Home CSS overrides document visual token (Rule J)
         await Deno.writeTextFile(
             `${dirtyDir}/web/src/features/home-layouts/home-layouts.css`,
             `:root { --surface: #000; }`,
         );
 
-        // 5. WidgetsLayout imports DesktopWindow (Rule K)
+        // 3. Forbidden legacy path (Rule L)
         await Deno.writeTextFile(
-            `${dirtyDir}/web/src/features/home-layouts/WidgetsLayout.tsx`,
-            `import { DesktopWindow } from "../desktop/DesktopWindow.tsx";\nexport function WidgetsLayout() { return null; }`,
-        );
-
-        // 6. Forbidden legacy path (Rule L)
-        await Deno.writeTextFile(
-            `${dirtyDir}/web/src/features/desktop/DesktopDemo.tsx`,
-            `export function DesktopDemo() { return null; }`,
+            `${dirtyDir}/web/src/features/workspace/WidgetsPanel.tsx`,
+            `export function WidgetsPanel() { return null; }`,
         );
 
         const result = await scanOwnership(dirtyDir, dirtyDir);
@@ -1571,19 +1219,7 @@ Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 vi
             result.byRule["workspace-core-isolation"].length >= 2,
             true,
         );
-        assertEquals(
-            result.byRule["desktop-persistence-boundary"].length >= 2,
-            true,
-        );
-        assertEquals(
-            result.byRule["canvas-coordinate-owner"].length >= 1,
-            true,
-        );
         assertEquals(result.byRule["home-document-token"].length >= 1, true);
-        assertEquals(
-            result.byRule["widgets-no-adhoc-window"].length >= 1,
-            true,
-        );
         assertEquals(result.byRule["forbidden-legacy-path"].length >= 1, true);
     } finally {
         await Deno.remove(dirtyDir, { recursive: true });
@@ -1594,24 +1230,16 @@ Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 vi
         await Deno.mkdir(`${cleanDir}/web/src/features/workspace`, {
             recursive: true,
         });
-        await Deno.mkdir(`${cleanDir}/web/src/features/desktop`, {
-            recursive: true,
-        });
         await Deno.mkdir(`${cleanDir}/web/src/features/home-layouts`, {
             recursive: true,
         });
         await Deno.mkdir(`${cleanDir}/web/src/design-system`, {
             recursive: true,
         });
-        await Deno.mkdir(`${cleanDir}/web/src/lib`, { recursive: true });
 
         await Deno.writeTextFile(
             `${cleanDir}/web/src/design-system/tokens.css`,
             `:root { --surface: #fff; }`,
-        );
-        await Deno.writeTextFile(
-            `${cleanDir}/web/src/lib/local.ts`,
-            `export async function getLocal() {} export async function setLocal() {}`,
         );
         await Deno.writeTextFile(
             `${cleanDir}/web/src/features/workspace/workspace-state.ts`,
@@ -1622,24 +1250,8 @@ Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 vi
             `.workspace-surface { display: flex; } .workspace-panel { position: fixed; }`,
         );
         await Deno.writeTextFile(
-            `${cleanDir}/web/src/features/desktop/DesktopCanvas.tsx`,
-            `export function useDesktopSafeRect() { return { x: 0, y: 0, width: 100, height: 100 }; }`,
-        );
-        await Deno.writeTextFile(
-            `${cleanDir}/web/src/features/desktop/desktop-persistence.ts`,
-            `import { getLocal, setLocal } from "../../lib/local.ts"; export async function save() { await setLocal("k", 1); }`,
-        );
-        await Deno.writeTextFile(
-            `${cleanDir}/web/src/features/desktop/desktop.css`,
-            `.desktop-window { position: absolute; } .desktop-dock { position: fixed; }`,
-        );
-        await Deno.writeTextFile(
-            `${cleanDir}/web/src/features/home-layouts/WidgetsLayout.tsx`,
-            `export function WidgetsLayout() { return <div className="widgets-layout">Widgets</div>; }`,
-        );
-        await Deno.writeTextFile(
             `${cleanDir}/web/src/features/home-layouts/home-layouts.css`,
-            `.home-widgets { --radius: 22px; } :root { --space-bento-gap: 8px; }`,
+            `.zen-edge-btn { --radius: 22px; } :root { --space-zen-gap: 8px; }`,
         );
 
         const cleanResult = await scanOwnership(cleanDir, cleanDir);

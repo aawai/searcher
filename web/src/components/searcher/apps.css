@@ -3,70 +3,7 @@
    ========================================================================== */
 
 :root {
-    --app-dialog-preview-icon-size: 38px;
-}
-
-/* Logo Picker (Legacy / Fallback Presentation) */
-.logo-picker {
-    border-top: 1px solid var(--border);
-    padding-top: var(--space-3);
-    display: grid;
-    gap: var(--space-row-gap);
-    min-width: 0;
-}
-
-.logo-picker p {
-    margin: 0;
-    font-size: var(--font-caption-size);
-}
-
-.logo-controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    gap: var(--space-control-gap);
-}
-
-.logo-controls label {
-    display: grid;
-    gap: var(--space-1);
-    flex: 1 1 130px;
-    font-size: var(--font-caption-size);
-    min-width: 0;
-}
-
-.logo-controls select {
-    width: 100%;
-    max-width: 100%;
-    min-height: 44px;
-}
-
-.logo-candidates {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-control-gap);
-}
-
-.logo-choice {
-    height: auto;
-    min-width: 0;
-    display: grid;
-    gap: var(--space-inline-gap);
-    padding: var(--space-control-gap);
-    text-align: center;
-}
-
-.logo-choice img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: contain;
-    border-radius: var(--control-radius);
-}
-
-@media (max-width: 480px) {
-    .logo-candidates {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    --app-dialog-preview-icon-size: var(--space-8);
 }
 
 /* App Form 内容：由 Workspace 承担标题与关闭导航 */
@@ -95,10 +32,9 @@
 }
 
 .app-dialog-section-title {
-    font-size: var(--font-caption-size);
-    font-weight: 600;
+    font-size: var(--font-metadata-size);
+    font-weight: 500;
     color: var(--muted);
-    letter-spacing: 0.02em;
     margin: 0;
 }
 
@@ -109,7 +45,7 @@
 }
 
 .app-dialog-field-label {
-    font-size: var(--font-caption-size);
+    font-size: var(--font-body-size);
     font-weight: 500;
     color: var(--foreground);
     display: flex;
@@ -131,12 +67,12 @@
 }
 
 .app-dialog-url-status.success {
-    color: var(--success, #10b981);
+    color: var(--success);
     font-weight: 500;
 }
 
 .app-dialog-url-status.error {
-    color: var(--danger, #ef4444);
+    color: var(--danger);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -147,7 +83,6 @@
 /* 打开设置卡片 (轻量收拢、不喧宾夺主) */
 .app-dialog-options-card {
     background: var(--surface-soft);
-    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: var(--space-3);
     display: flex;
@@ -163,7 +98,7 @@
 }
 
 .app-dialog-option-title {
-    font-size: var(--font-caption-size);
+    font-size: var(--font-body-size);
     font-weight: 500;
     color: var(--foreground);
 }
@@ -182,10 +117,6 @@
 
 /* 图标卡片 (清晰预览与来源收拢) */
 .app-dialog-icon-card {
-    background: var(--surface-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--space-3);
     display: flex;
     flex-direction: column;
     gap: var(--space-row-gap);
@@ -201,7 +132,6 @@
     width: var(--app-dialog-preview-icon-size);
     height: var(--app-dialog-preview-icon-size);
     border-radius: var(--radius);
-    border: 1px solid var(--border);
     background: var(--surface);
     display: grid;
     place-items: center;
@@ -216,9 +146,9 @@
 }
 
 .app-dialog-preview-fallback {
-    font-size: var(--font-component-title-size);
-    font-weight: 700;
-    color: var(--accent);
+    font-size: var(--font-title-size);
+    font-weight: var(--font-title-weight);
+    color: var(--foreground);
 }
 
 .app-dialog-preview-meta {
@@ -230,7 +160,7 @@
 }
 
 .app-dialog-preview-meta-title {
-    font-size: var(--font-caption-size);
+    font-size: var(--font-body-size);
     font-weight: 600;
     color: var(--foreground);
 }
@@ -239,10 +169,6 @@
     font-size: var(--font-metadata-size);
     font-weight: 500;
     color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-inline-code);
-    padding: calc(var(--space-1) / 2) var(--space-1);
 }
 
 .app-dialog-preview-meta-desc {
@@ -257,8 +183,6 @@
     font-size: var(--font-metadata-size);
     color: var(--muted);
     flex-shrink: 0;
-    height: 26px;
-    padding: 0 var(--space-control-gap);
 }
 
 .app-dialog-icon-subpanel-wrap {
@@ -287,27 +211,39 @@
     font-size: var(--font-metadata-size);
     color: var(--muted);
     margin: 0;
-    line-height: 1.4;
+    line-height: var(--font-metadata-line-height);
 }
 
 .app-upload-dropzone {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: var(--space-1);
     padding: var(--space-3);
-    border: 1.5px dashed var(--border);
+    border: none;
     border-radius: var(--control-radius);
-    background: var(--surface);
+    background: var(--surface-soft);
     cursor: pointer;
     text-align: center;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: background var(--motion-fast) var(--ease-standard);
 }
 
 .app-upload-dropzone:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+    background: color-mix(in srgb, var(--surface-soft) 92%, var(--foreground));
+}
+.app-upload-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+.app-upload-dropzone:focus-within {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
 }
 
 .app-upload-icon {
@@ -315,7 +251,7 @@
 }
 
 .app-upload-text {
-    font-size: var(--font-caption-size);
+    font-size: var(--font-body-size);
     font-weight: 500;
     color: var(--foreground);
 }
@@ -340,14 +276,10 @@
     display: flex;
     align-items: center;
     gap: var(--space-row-gap);
-    padding: var(--space-3);
-    border: 1px dashed var(--border);
-    border-radius: var(--control-radius);
-    background: var(--surface);
 }
 
 .app-ai-unavailable-icon {
-    color: #eab308;
+    color: var(--muted);
     flex-shrink: 0;
 }
 
@@ -358,15 +290,9 @@
 
 .app-ai-unavailable-title {
     display: block;
-    font-size: var(--font-caption-size);
+    font-size: var(--font-body-size);
     font-weight: 600;
     color: var(--foreground);
-}
-
-.app-ai-unavailable-desc {
-    font-size: var(--font-metadata-size);
-    color: var(--muted);
-    margin: calc(var(--space-1) / 2) 0 0;
 }
 
 .app-ai-controls {
@@ -415,20 +341,24 @@
     align-items: center;
     gap: var(--space-inline-gap);
     padding: var(--space-control-gap);
-    border: 1px solid var(--border);
-    border-radius: var(--control-radius);
-    background: var(--surface);
+    border: none;
+    border-radius: var(--radius);
+    background: var(--surface-soft);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background var(--motion-fast) var(--ease-standard);
 }
 
 .app-ai-candidate-card:hover {
-    border-color: var(--accent);
+    background: color-mix(in srgb, var(--surface-soft) 92%, var(--foreground));
 }
 
 .app-ai-candidate-card.is-selected {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.app-ai-candidate-card:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
 }
 
 .app-ai-candidate-img-box {
@@ -457,10 +387,10 @@
 }
 
 .app-ai-candidate-radio-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1.5px solid var(--border);
+    width: var(--icon-sm);
+    height: var(--icon-sm);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-control);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -518,7 +448,7 @@
     align-items: center;
     gap: var(--space-control-gap);
     color: var(--muted);
-    font-size: var(--font-caption-size);
+    font-size: var(--font-body-size);
 }
 
 .app-ai-unavailable-action {
@@ -537,5 +467,11 @@
     .app-ai-candidate-card {
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .app-upload-dropzone,
+    .app-ai-candidate-card {
+        transition: none;
     }
 }

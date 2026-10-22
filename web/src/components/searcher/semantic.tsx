@@ -93,6 +93,46 @@ export function SettingsRow(
         </div>
     );
 }
+/**
+ * Grouped list: optional heading above, rows inside one surface, optional
+ * footnote below. The canonical unit for settings, account and admin forms.
+ */
+export function SettingsGroup(
+    {
+        title,
+        footer,
+        actions,
+        headingLevel = 2,
+        padded = false,
+        className,
+        children,
+        ...props
+    }: Omit<ComponentProps<"section">, "title"> & {
+        title?: string;
+        footer?: ReactNode;
+        actions?: ReactNode;
+        headingLevel?: 2 | 3;
+        padded?: boolean;
+    },
+) {
+    const Heading = headingLevel === 3 ? "h3" : "h2";
+    return (
+        <section className={cn("settings-group", className)} {...props}>
+            {(title || actions) && (
+                <header className="settings-group-header">
+                    {title && (
+                        <Heading className="settings-group-title">
+                            {title}
+                        </Heading>
+                    )}
+                    {actions && <ActionGroup>{actions}</ActionGroup>}
+                </header>
+            )}
+            <SettingsCard padded={padded}>{children}</SettingsCard>
+            {footer && <p className="settings-group-footer">{footer}</p>}
+        </section>
+    );
+}
 export function ActionGroup({ className, ...props }: ComponentProps<"div">) {
     return <div className={cn("action-group", className)} {...props} />;
 }

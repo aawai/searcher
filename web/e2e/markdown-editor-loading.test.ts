@@ -257,7 +257,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 );
 
                 const newNoteBtn = page.locator(
-                    '.workspace-panel button:has-text("新建便签")',
+                    '.workspace-panel button[aria-label="新建便签"]',
                 ).first();
                 const runtimeRequest = page.waitForRequest((request) =>
                     request.url() === `${origin}/${sharedRuntimeChunk}`

@@ -15,7 +15,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../ui/alert-dialog.tsx";
-import { Button } from "../ui/button.tsx";
+import { Button, buttonVariants } from "../ui/button.tsx";
 import { routes } from "../../app/routes.ts";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect } from "../ui/native-select.tsx";
@@ -53,7 +53,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
             <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--loading">
                 <div className="app-dialog-icon-subpanel__loading-indicator">
                     <Loader2 size="1em" className="icon-md animate-spin" />
-                    <span>正在检查可用 AI 模型…</span>
+                    <span>正在加载模型…</span>
                 </div>
             </div>
         );
@@ -67,15 +67,14 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                 </div>
                 <div className="app-ai-unavailable-body">
                     <strong className="app-ai-unavailable-title">
-                        需先配置图片生成模型
+                        未配置图片模型
                     </strong>
-                    <p className="app-ai-unavailable-desc">
-                        当前未配置支持图像生成的 AI 模型，需在设置中添加并启用。
-                    </p>
                 </div>
                 <Link
                     to={routes.settings("ai")}
-                    className="button button--subtle button--sm app-ai-unavailable-action"
+                    className={`${
+                        buttonVariants({ variant: "outline", size: "sm" })
+                    } app-ai-unavailable-action`}
                     onClick={onClose}
                 >
                     前往设置
@@ -86,10 +85,6 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
 
     return (
         <div className="app-dialog-icon-subpanel">
-            <p className="app-dialog-helper-text">
-                根据应用名称、域名和可选用途生成 3
-                个原创应用图标候选（非官方品牌标志）。
-            </p>
             <div className="app-ai-controls">
                 <div className="app-ai-field">
                     <label htmlFor="ai-model-select">模型</label>
@@ -126,7 +121,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     </NativeSelect>
                 </div>
                 <div className="app-ai-field">
-                    <label htmlFor="ai-image-protocol">图片生成协议</label>
+                    <label htmlFor="ai-image-protocol">图片协议</label>
                     <NativeSelect
                         id="ai-image-protocol"
                         value={imageProtocol}
@@ -142,13 +137,13 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                         <option value="gemini">Gemini 原生</option>
                     </NativeSelect>
                     <p className="app-ai-dialog-helper-text">
-                        仅用于本次图片生成，不修改文本模型配置。请选择服务商支持的协议。
+                        仅用于本次生成，不修改模型配置。
                     </p>
                 </div>
                 <div className="app-ai-field app-ai-field--full">
                     <div className="app-ai-field-header">
                         <label htmlFor="ai-description-input">
-                            图标语义/用途（可选）
+                            用途（可选）
                         </label>
                         {description.length > 0 && (
                             <span className="app-ai-char-counter">
@@ -165,10 +160,6 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                         onChange={(event) => setDescription(event.target.value)}
                         disabled={busy}
                     />
-                    <p className="app-dialog-helper-text app-ai-field-helper">
-                        可补充图标视觉隐喻或功能倾向，将随请求发送至
-                        Provider（最多 300 字）。
-                    </p>
                 </div>
             </div>
             <div className="app-ai-action-row">
@@ -192,7 +183,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                         : (
                             <>
                                 <Sparkles size="1em" className="icon-sm" />
-                                <span>生成 3 个候选</span>
+                                <span>生成图标</span>
                             </>
                         )}
                 </Button>
@@ -214,7 +205,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
             {candidates.length > 0 && (
                 <div className="app-ai-candidates-wrapper">
                     <span className="app-ai-candidates-label">
-                        生成结果（点击选用作为图标）：
+                        生成结果
                     </span>
                     <div
                         className="app-ai-candidates-grid"
@@ -273,11 +264,10 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                         <>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>
-                                    确认生成 AI 图标
+                                    生成 AI 图标
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    即将向 AI
-                                    服务商发起生成请求，请确认以下配置与上下文信息。
+                                    应用名称、域名和用途将发送至以下服务商，可能产生费用。
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <div className="app-ai-confirm-body min-h-0 overflow-y-auto">
@@ -347,9 +337,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     </div>
                                 )}
                                 <div className="app-ai-confirm-hint">
-                                    本次请求将生成 3
-                                    个原创应用图标候选（非官方品牌标志）。Provider
-                                    可能产生费用。
+                                    将生成 3 个原创图标，非官方品牌标志。
                                 </div>
                             </div>
                             <AlertDialogFooter>

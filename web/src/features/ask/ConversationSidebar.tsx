@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { MoreHorizontal, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { MoreHorizontal, Plus, Search, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import {
@@ -81,7 +82,7 @@ export function ConversationSidebar({
         <div className="ask-sidebar__content">
             <div className="ask-sidebar__top">
                 <Button
-                    className="w-full justify-center gap-1.5 ask-sidebar__new-btn"
+                    className="ask-sidebar__new-btn"
                     onClick={() => {
                         onNewConversation();
                         onDrawerOpenChange(false);
@@ -91,7 +92,7 @@ export function ConversationSidebar({
                     <span>新建对话</span>
                 </Button>
 
-                <div className="ask-sidebar__search-wrap mt-3">
+                <div className="ask-sidebar__search-wrap">
                     <Search
                         size="1em"
                         className="icon-sm ask-sidebar__search-icon"
@@ -100,7 +101,7 @@ export function ConversationSidebar({
                         className="ask-sidebar__search-input"
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        placeholder="搜索历史对话..."
+                        placeholder="搜索"
                         aria-label="搜索历史对话"
                     />
                     {filter && (
@@ -132,7 +133,7 @@ export function ConversationSidebar({
                                 <h3 className="ask-sidebar__group-title">
                                     {group}
                                 </h3>
-                                <div className="space-y-0.5">
+                                <div className="ask-sidebar__group-items">
                                     {items.map((item) => {
                                         const isSelected = item.id === activeId;
                                         return (
@@ -146,8 +147,8 @@ export function ConversationSidebar({
                                             >
                                                 <Button
                                                     type="button"
-                                                    variant="ghost"
-                                                    className="ask-sidebar__item-title justify-start h-auto text-left font-normal"
+                                                    variant="content"
+                                                    className="ask-sidebar__item-title"
                                                     onClick={() => {
                                                         onSelectConversation(
                                                             item.id,
@@ -161,7 +162,7 @@ export function ConversationSidebar({
                                                         : undefined}
                                                     title={item.title}
                                                 >
-                                                    <span className="truncate w-full text-left">
+                                                    <span className="ask-sidebar__item-text">
                                                         {item.title}
                                                     </span>
                                                 </Button>
@@ -192,25 +193,18 @@ export function ConversationSidebar({
                                                                     item,
                                                                 )}
                                                         >
-                                                            <Pencil
-                                                                size="1em"
-                                                                className="icon-sm mr-2"
-                                                            />
-                                                            <span>重命名</span>
+                                                            重命名
                                                         </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
                                                         <DropdownMenuItem
+                                                            variant="destructive"
                                                             onClick={() =>
                                                                 void onDeleteConversation(
                                                                     item.id,
                                                                     item.title,
                                                                 )}
-                                                            className="text-destructive focus:text-destructive"
                                                         >
-                                                            <Trash2
-                                                                size="1em"
-                                                                className="icon-sm mr-2"
-                                                            />
-                                                            <span>删除</span>
+                                                            删除
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
@@ -252,13 +246,18 @@ export function ConversationSidebar({
 
             <Sheet open={drawerOpen} onOpenChange={onDrawerOpenChange}>
                 <SheetContent className="ask-history-sheet">
-                    <SheetHeader className="pb-2">
+                    <SheetHeader>
                         <SheetTitle>历史对话</SheetTitle>
                         <SheetClose
-                            className="ask-history-sheet__close"
-                            aria-label="关闭"
+                            render={
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="关闭"
+                                />
+                            }
                         >
-                            <X size="1em" className="icon-lg" />
+                            <X size="1em" className="icon-md" />
                         </SheetClose>
                     </SheetHeader>
                     <div className="ask-history-sheet__inner">

@@ -1,10 +1,6 @@
-import { Button } from "../ui/button.tsx";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
-    DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 const NOTE_COLORS = ["paper", "amber", "rose", "sage", "sky"] as const;
 const COLOR_NAMES: Record<string, string> = {
@@ -34,36 +30,5 @@ export function NoteColorItems(
                 </DropdownMenuRadioItem>
             ))}
         </DropdownMenuRadioGroup>
-    );
-}
-
-export function NoteColorMenu(
-    { color, onChange }: { color: string; onChange: (color: string) => void },
-) {
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger
-                render={
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="note-color-trigger"
-                    />
-                }
-                aria-label={`便签颜色：${COLOR_NAMES[color]}`}
-            >
-                <span
-                    aria-hidden="true"
-                    className={`note-quick-dot note-quick-dot--${color}`}
-                />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-                onKeyDown={(event) => {
-                    if (event.key === "Escape") event.stopPropagation();
-                }}
-            >
-                <NoteColorItems color={color} onChange={onChange} />
-            </DropdownMenuContent>
-        </DropdownMenu>
     );
 }

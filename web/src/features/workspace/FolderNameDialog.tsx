@@ -87,7 +87,7 @@ export function FolderNameDialog({
                             <Input
                                 id="folder-name-input"
                                 autoFocus
-                                placeholder="输入文件夹名称…"
+                                placeholder="文件夹名称"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 disabled={isSubmitting}
@@ -98,7 +98,7 @@ export function FolderNameDialog({
                         {error && (
                             <p
                                 role="alert"
-                                className="text-xs text-[var(--destructive)] m-0"
+                                className="error m-0"
                             >
                                 {error}
                             </p>
@@ -176,15 +176,15 @@ export function FolderDeleteDialog({
                 <AlertDialogHeader>
                     <AlertDialogTitle>删除文件夹</AlertDialogTitle>
                     <AlertDialogDescription>
-                        确定删除文件夹“{group
-                            ?.name}”吗？文件夹中的应用将保留在启动器根目录，不会被删除。
+                        删除“{group
+                            ?.name}”后，其中的应用将移至全部应用，不会删除。
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
                 {error && (
                     <p
                         role="alert"
-                        className="text-xs text-[var(--destructive)] px-6 m-0"
+                        className="error m-0"
                     >
                         {error}
                     </p>

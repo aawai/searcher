@@ -20,7 +20,7 @@ async function startZenAppsFixture(username: string) {
         );
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
-        await page.locator(".home-zen").waitFor({ state: "visible" });
+        await page.locator("main.home").waitFor({ state: "visible" });
         return {
             page,
             origin: app.origin,
@@ -69,7 +69,7 @@ async function goHome(page: Page, origin: string) {
     await page.getByRole("link", { name: "Searcher 首页", exact: true })
         .click();
     await page.waitForURL(origin + "/");
-    await page.locator(".home-zen").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
 }
 
 Deno.test("apps edit keeps fields and confirmation across hosts and window modes", async () => {
@@ -89,11 +89,6 @@ Deno.test("apps edit keeps fields and confirmation across hosts and window modes
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
         await page.evaluate(async () => {
-            await fetch("/api/preferences", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ style: "widgets" }),
-            });
             await fetch("/api/webapps", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -112,7 +107,12 @@ Deno.test("apps edit keeps fields and confirmation across hosts and window modes
             });
         });
         await page.reload();
-        await page.locator('.desktop-dock [data-workspace="apps"]').click();
+        const appsEdge = page.locator('.zen-edge-btn[data-workspace="apps"]');
+        await appsEdge.focus();
+        await appsEdge.press("Enter");
+        await page.locator(".apps-workspace-root").waitFor({
+            state: "visible",
+        });
         await page.locator('.launcher-app:has-text("编辑目标")').click({
             button: "right",
         });
@@ -177,19 +177,24 @@ Deno.test("apps edit keeps fields and confirmation across hosts and window modes
         }
         await page.keyboard.press("Escape");
         await page.getByRole("alertdialog").waitFor({ state: "detached" });
-        const win = page.locator('.desktop-window[data-window-id="apps"]');
-        await win.getByRole("button", { name: "最大化窗口", exact: true })
+        // The Dock is hidden while a panel is open; switch with the header tabs.
+        await page.getByRole("tab", { name: "便签工作区", exact: true })
             .click();
-        await win.getByRole("button", { name: "向下还原窗口", exact: true })
+        await page.locator('.workspace-panel[aria-label="便签工作区"]')
+            .waitFor({ state: "visible" });
+        assertEquals(await page.getByRole("alertdialog").count(), 0);
+        await page.getByRole("tab", { name: "应用工作区", exact: true })
             .click();
-        await win.getByRole("button", { name: "最小化窗口", exact: true })
-            .click();
-        await page.locator('.desktop-dock [data-workspace="apps"]').click();
         await page.locator("#app-name-input").waitFor({ state: "visible" });
+        assertEquals(
+            await page.locator("#app-url-input").inputValue(),
+            "https://edited.invalid/",
+        );
         assertEquals(
             await page.locator("#app-name-input").inputValue(),
             "编辑中的全部字段",
         );
+        assertEquals(await page.getByRole("alertdialog").count(), 0);
         await page.getByRole("button", { name: "取消", exact: true }).click();
         await page.getByRole("alertdialog").waitFor();
         await page.getByRole("button", { name: "继续编辑", exact: true })
@@ -226,7 +231,7 @@ Deno.test("Zen Apps dirty new-app draft survives a Settings route leave", async 
         );
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
-        await page.locator(".home-zen").waitFor({ state: "visible" });
+        await page.locator("main.home").waitFor({ state: "visible" });
 
         await page.locator('[data-workspace="apps"]').click();
         await page.locator(".apps-workspace-root").waitFor({
@@ -464,20 +469,15 @@ Deno.test("Zen Apps draft survives presenter and edge workspace switches; close 
             draft.url,
         );
 
-        const notesEdge = page.locator(
-            '.zen-edge-btn[data-workspace="notes"]',
-        );
-        await notesEdge.focus();
-        await notesEdge.press("Enter");
+        // The Dock is hidden while a panel is open; switch with the header tabs.
+        await page.getByRole("tab", { name: "便签工作区", exact: true })
+            .click();
         await page.locator('.workspace-panel[aria-label="便签工作区"]')
             .waitFor({ state: "visible" });
         assertEquals(await page.getByRole("alertdialog").count(), 0);
 
-        const appsEdge = page.locator(
-            '.zen-edge-btn[data-workspace="apps"]',
-        );
-        await appsEdge.focus();
-        await appsEdge.press("Enter");
+        await page.getByRole("tab", { name: "应用工作区", exact: true })
+            .click();
         await page.locator("#app-url-input").waitFor({ state: "visible" });
         assertEquals(
             await page.locator("#app-url-input").inputValue(),
@@ -583,7 +583,7 @@ Deno.test("route leave waits for an Apps form confirmation dialog to close", asy
             if (!response.ok) throw new Error(await response.text());
         }, duplicateUrl);
         await page.reload();
-        await page.locator(".home-zen").waitFor({ state: "visible" });
+        await page.locator("main.home").waitFor({ state: "visible" });
         const appsEdge = page.locator(
             '.zen-edge-btn[data-workspace="apps"]',
         );
@@ -654,7 +654,7 @@ Deno.test("Apps beforeunload warns only for a dirty active document", async () =
     try {
         page.on("dialog", dismissDialog);
         await page.reload();
-        await page.locator(".home-zen").waitFor({ state: "visible" });
+        await page.locator("main.home").waitFor({ state: "visible" });
         assertEquals(dialogTypes, []);
         page.off("dialog", dismissDialog);
 

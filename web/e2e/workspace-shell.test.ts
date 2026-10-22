@@ -58,147 +58,33 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             return (await response.json()).data;
         }, { path, method, body }) as T;
     }
-    await request("/api/preferences", "PATCH", { style: "widgets" });
     const panel = page.locator(
-        '.desktop-window[data-window-active="true"], .workspace-panel',
+        ".workspace-panel--mobile, aside.workspace-panel",
     );
-    const appsTrigger =
-        '.desktop-dock button[aria-label="应用工作区"], .workspace-mobile-navigation button[aria-label="应用工作区"]';
+    const appsTrigger = '.zen-edge-trigger button[data-workspace="apps"]';
     const search = () => panel.locator("input[data-workspace-search]");
-    async function resetPersistedLayout(target: Page = page) {
-        await target.evaluate(async () => {
-            const auth = (await (await fetch("/api/auth/me")).json()).data;
-            if (!auth?.user) return;
-            const { promise, resolve, reject } = Promise.withResolvers<void>();
-            const request = indexedDB.open("searcher-client", 1);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-                const db = request.result;
-                if (!db.objectStoreNames.contains("state")) {
-                    db.close();
-                    resolve();
-                    return;
-                }
-                const tx = db.transaction("state", "readwrite");
-                tx.objectStore("state").delete(
-                    `searcher:desktop-layout:v1:${auth.user.id}`,
-                );
-                tx.oncomplete = () => {
-                    db.close();
-                    resolve();
-                };
-                tx.onerror = () => {
-                    db.close();
-                    reject(tx.error);
-                };
-            };
-            await promise;
-        });
-    }
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
         await target.locator("main").waitFor();
-        if (path === "/" && (target.viewportSize()?.width ?? 0) >= 1024) {
-            const windowIds = await target.evaluate(async () => {
-                const auth = (await (await fetch("/api/auth/me")).json()).data;
-                if (!auth?.user) return [];
-                const preferences =
-                    (await (await fetch("/api/preferences")).json()).data;
-                if (preferences.style !== "widgets") return [];
-                const { promise, resolve, reject } = Promise.withResolvers<
-                    string[]
-                >();
-                const request = indexedDB.open("searcher-client", 1);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    const db = request.result;
-                    if (!db.objectStoreNames.contains("state")) {
-                        db.close();
-                        resolve([]);
-                        return;
-                    }
-                    const read = db.transaction("state", "readonly")
-                        .objectStore("state").get(
-                            `searcher:desktop-layout:v1:${auth.user.id}`,
-                        );
-                    read.onerror = () => {
-                        db.close();
-                        reject(read.error);
-                    };
-                    read.onsuccess = () => {
-                        const layout = read.result as {
-                            windows: Array<{ id: string }>;
-                        } | undefined;
-                        db.close();
-                        resolve(
-                            layout?.windows.map((window) => window.id) ??
-                                [],
-                        );
-                    };
-                };
-                return await promise;
-            });
-            for (const id of windowIds) {
-                await target.locator(`.desktop-window[data-window-id="${id}"]`)
-                    .waitFor({ state: "attached" });
-            }
-        }
     }
     async function closeAllWorkspaces(target: Page = page) {
-        const noteCloseBtns = target.locator(
-            '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-        );
-        const count = await noteCloseBtns.count();
-        for (let i = 0; i < count; i++) {
-            const btn = noteCloseBtns.first();
-            if (await btn.isVisible()) {
-                await btn.click();
-            }
-        }
-        const openWins = target.locator(".desktop-window");
-        const winCount = await openWins.count();
-        if (winCount > 0) {
-            const openIds = await openWins.evaluateAll((windows) =>
-                windows.sort((a, b) =>
-                    Number((b as HTMLElement).style.zIndex || 0) -
-                    Number((a as HTMLElement).style.zIndex || 0)
-                ).map((w) => (w as HTMLElement).dataset.windowId).filter(
-                    Boolean,
-                ) as string[]
-            );
-            for (const id of openIds) {
-                const win = target.locator(
-                    `.desktop-window[data-window-id="${id}"]`,
-                );
-                if (await win.isVisible()) {
-                    const btn = win.locator(
-                        '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
-                    ).first();
-                    if (await btn.isVisible()) {
-                        await btn.click();
-                        await win.waitFor({ state: "hidden" });
-                    }
-                }
-            }
-        }
         const panelOrSheet = target.locator(
-            '.workspace-panel, [data-slot="sheet-portal"] .workspace-panel',
+            ".workspace-panel--mobile, aside.workspace-panel",
         );
         if (await panelOrSheet.first().isVisible()) {
             const closeBtn = panelOrSheet.locator(
-                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                'button[aria-label="收起工作区"]',
             ).first();
             if (await closeBtn.isVisible()) {
                 await closeBtn.click();
                 await panelOrSheet.first().waitFor({ state: "detached" });
             }
         }
-        await resetPersistedLayout(target);
     }
     const close = async () => {
         const btn = panel.locator(
-            '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+            'button[aria-label="收起工作区"]',
         ).first();
         if (await btn.isVisible()) {
             await btn.click();
@@ -383,7 +269,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         "failed add/edit preserves draft and error; retry saves; delete/undo restores",
         async () => {
             await openApps();
-            await panel.locator(".workspace-footer .workspace-primary").click();
+            await panel.locator(".workspace-header .workspace-primary").click();
             await page.locator("#app-url-input").fill(
                 "https://example.org/draft",
             );
@@ -506,212 +392,167 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     await t.step(
         "viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus",
         async () => {
-            for (const style of ["widgets", "zen"] as const) {
-                await request("/api/preferences", "PATCH", { style });
-                for (const theme of ["light", "dark"] as const) {
-                    await page.emulateMedia({ colorScheme: theme });
-                    for (
-                        const viewport of [
-                            { width: 390, height: 844 },
-                            { width: 768, height: 1024 },
-                            { width: 1024, height: 768 },
-                            { width: 1440, height: 900 },
-                        ] as const
-                    ) {
-                        await page.setViewportSize({
-                            width: viewport.width,
-                            height: viewport.height,
-                        });
-                        await visit("/");
-                        await page.waitForFunction(
-                            (expected) =>
-                                document.documentElement.dataset.theme ===
-                                    expected,
-                            theme,
-                        );
-                        const trigger = page.locator(
-                            style === "widgets"
-                                ? appsTrigger
-                                : '.zen-edge-trigger button[data-workspace="apps"]',
-                        );
-                        await trigger.waitFor();
-                        await page.locator(".hero").waitFor();
-                        const hero = await page.locator(".hero").boundingBox();
-                        await trigger.focus();
-                        await page.keyboard.press("Enter");
-                        await search().waitFor();
+            for (const theme of ["light", "dark"] as const) {
+                await page.emulateMedia({ colorScheme: theme });
+                for (
+                    const viewport of [
+                        { width: 390, height: 844 },
+                        { width: 768, height: 1024 },
+                        { width: 1024, height: 768 },
+                        { width: 1440, height: 900 },
+                    ] as const
+                ) {
+                    await page.setViewportSize({
+                        width: viewport.width,
+                        height: viewport.height,
+                    });
+                    await visit("/");
+                    await page.waitForFunction(
+                        (expected) =>
+                            document.documentElement.dataset.theme === expected,
+                        theme,
+                    );
+                    const trigger = page.locator(
+                        '.zen-edge-trigger button[data-workspace="apps"]',
+                    );
+                    await trigger.waitFor();
+                    await page.locator(".hero").waitFor();
+                    const hero = await page.locator(".hero").boundingBox();
+                    await trigger.focus();
+                    await page.keyboard.press("Enter");
+                    await search().waitFor();
+                    assertEquals(
+                        await panel.getAttribute("data-presentation"),
+                        viewport.width < 768 ? "sheet" : "panel",
+                    );
+                    await page.waitForFunction(() =>
+                        document.activeElement?.getAttribute(
+                            "aria-label",
+                        ) ===
+                            "收起工作区"
+                    );
+                    await page.keyboard.press("Tab");
+                    assertEquals(
+                        await search().evaluate((el) =>
+                            el === document.activeElement
+                        ),
+                        true,
+                    );
+                    assert(await search().getAttribute("aria-label"));
+                    assertEquals(
+                        await page.locator(
+                            '.workspace-switcher button[aria-label="应用工作区"]',
+                        ).getAttribute("aria-selected"),
+                        "true",
+                    );
+                    // The open transition is one-shot (design rule 6); the shell
+                    // must never loop an animation.
+                    assert(
+                        await panel.evaluate((el) =>
+                            getComputedStyle(el).animationIterationCount !==
+                                "infinite"
+                        ),
+                        "workspace panel must not loop an animation",
+                    );
+                    await assertChromeInViewport(page);
+                    const before = await chromeBounds(page);
+                    await panel.locator(".workspace-body").evaluate(
+                        (el) => {
+                            el.scrollTop = el.scrollHeight;
+                        },
+                    );
+                    assertEquals(await chromeBounds(page), before);
+                    if (viewport.width >= 768) {
                         assertEquals(
-                            await panel.getAttribute("data-presentation"),
-                            viewport.width < 768
-                                ? "sheet"
-                                : style === "zen"
-                                ? "panel"
-                                : "window",
+                            await page.locator(
+                                '[data-slot="sheet-backdrop"]',
+                            ).count(),
+                            0,
                         );
-                        await page.waitForFunction(() =>
-                            document.activeElement?.getAttribute(
-                                "aria-label",
-                            ) ===
-                                "收起工作区"
-                        );
-                        await page.keyboard.press("Tab");
                         assertEquals(
-                            await search().evaluate((el) =>
-                                el === document.activeElement
-                            ),
+                            await page.locator(".hero").boundingBox(),
+                            hero,
+                        );
+                        await page.locator("#search-query").focus();
+                        assertEquals(
+                            await page.locator("#search-query").evaluate((
+                                el,
+                            ) => el === document.activeElement),
                             true,
                         );
-                        assert(await search().getAttribute("aria-label"));
+                    } else {
                         assertEquals(
                             await page.locator(
-                                '.desktop-dock button[aria-label="应用工作区"], .workspace-switcher button[aria-label="应用工作区"]',
-                            ).getAttribute("aria-pressed"),
-                            "true",
-                        );
-                        assertEquals(
-                            await panel.evaluate((el) =>
-                                getComputedStyle(el).animationName
-                            ),
-                            "none",
-                        );
-                        await assertChromeInViewport(page);
-                        const before = await chromeBounds(page);
-                        await panel.locator(".workspace-body").evaluate(
-                            (el) => {
-                                el.scrollTop = el.scrollHeight;
-                            },
-                        );
-                        assertEquals(await chromeBounds(page), before);
-                        if (viewport.width >= 768) {
-                            assertEquals(
-                                await page.locator(
-                                    '[data-slot="sheet-backdrop"]',
-                                ).count(),
-                                0,
-                            );
-                            assertEquals(
-                                await page.locator(".hero").boundingBox(),
-                                hero,
-                            );
-                            await page.locator("#search-query").focus();
-                            assertEquals(
-                                await page.locator("#search-query").evaluate((
-                                    el,
-                                ) => el === document.activeElement),
-                                true,
-                            );
-                        } else {
-                            assertEquals(
-                                await page.locator(
-                                    '[data-slot="sheet-backdrop"]',
-                                ).isVisible(),
-                                true,
-                            );
-                            await panel.getByRole("button", {
-                                name: "收起工作区",
-                                exact: true,
-                            }).focus();
-                            for (let tabIndex = 0; tabIndex < 12; tabIndex++) {
-                                await page.keyboard.press("Tab");
-                                assertEquals(
-                                    await page.evaluate(() =>
-                                        !!document.activeElement?.closest(
-                                            '.desktop-window[data-window-active="true"], .workspace-panel',
-                                        )
-                                    ),
-                                    true,
-                                );
-                            }
-                            const footer = await panel.locator(
-                                ".workspace-footer",
-                            ).evaluate((el) => ({
-                                padding: parseFloat(
-                                    getComputedStyle(el).paddingBottom,
-                                ),
-                                min: parseFloat(
-                                    getComputedStyle(el).getPropertyValue(
-                                        "--space-4",
-                                    ),
-                                ),
-                            }));
-                            assert(footer.padding >= footer.min);
-                        }
-                        await page.locator(
-                            '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
-                        ).focus();
-                        await page.keyboard.press("Enter");
-                        await panel.locator(".notes-workspace").waitFor();
-                        await page.waitForFunction(() =>
-                            document.activeElement?.getAttribute(
-                                "aria-label",
-                            ) === "收起工作区"
-                        );
-                        assertEquals(
-                            await page.locator(
-                                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
-                            ).getAttribute("aria-pressed"),
-                            "true",
-                        );
-                        await assertChromeInViewport(page);
-                        if (viewport.width >= 768) {
-                            assertEquals(
-                                await page.locator(".hero").boundingBox(),
-                                hero,
-                            );
-                        }
-                        const closingId = await panel.getAttribute(
-                            "data-window-id",
+                                '[data-slot="sheet-backdrop"]',
+                            ).isVisible(),
+                            true,
                         );
                         await panel.getByRole("button", {
                             name: "收起工作区",
                             exact: true,
                         }).focus();
-                        await page.keyboard.press("Enter");
-                        if (closingId) {
-                            await page.locator(
-                                '[data-window-id="' + closingId + '"]',
-                            ).waitFor({ state: "hidden" });
-                        } else await panel.waitFor({ state: "hidden" });
-                        await page.waitForFunction(
-                            (expected) =>
-                                document.activeElement?.getAttribute(
-                                    "data-workspace",
-                                ) === expected,
-                            style === "widgets" && viewport.width >= 768
-                                ? "notes"
-                                : "apps",
-                        );
-                        if (style === "zen") {
+                        for (let tabIndex = 0; tabIndex < 12; tabIndex++) {
+                            await page.keyboard.press("Tab");
                             assertEquals(
                                 await page.evaluate(() =>
-                                    document.activeElement?.closest(
-                                            ".zen-edge-trigger",
-                                        ) !== null &&
-                                    document.activeElement?.getAttribute(
-                                            "data-workspace",
-                                        ) === "apps"
-                                ),
-                                true,
-                            );
-                        } else {
-                            assertEquals(
-                                await page.evaluate(
-                                    (sel) =>
-                                        document.activeElement?.matches(sel) ===
-                                            true,
-                                    viewport.width >= 768
-                                        ? '.desktop-dock button[data-workspace="notes"]'
-                                        : appsTrigger,
+                                    !!document.activeElement?.closest(
+                                        ".workspace-panel--mobile, .workspace-panel",
+                                    )
                                 ),
                                 true,
                             );
                         }
+                    }
+                    await page.locator(
+                        '.workspace-switcher button[aria-label="便签工作区"]',
+                    ).focus();
+                    await page.keyboard.press("Enter");
+                    await panel.locator(".notes-workspace").waitFor();
+                    await page.waitForFunction(() =>
+                        document.activeElement?.getAttribute(
+                            "aria-label",
+                        ) === "收起工作区"
+                    );
+                    assertEquals(
+                        await page.locator(
+                            '.workspace-switcher button[aria-label="便签工作区"]',
+                        ).getAttribute("aria-selected"),
+                        "true",
+                    );
+                    await assertChromeInViewport(page);
+                    if (viewport.width >= 768) {
                         assertEquals(
                             await page.locator(".hero").boundingBox(),
                             hero,
                         );
-                        await closeAllWorkspaces();
                     }
+                    await panel.getByRole("button", {
+                        name: "收起工作区",
+                        exact: true,
+                    }).focus();
+                    await page.keyboard.press("Enter");
+                    await panel.waitFor({ state: "hidden" });
+                    await page.waitForFunction(() =>
+                        document.activeElement?.getAttribute(
+                            "data-workspace",
+                        ) === "apps"
+                    );
+                    assertEquals(
+                        await page.evaluate(() =>
+                            document.activeElement?.closest(
+                                    ".zen-edge-trigger",
+                                ) !== null &&
+                            document.activeElement?.getAttribute(
+                                    "data-workspace",
+                                ) === "apps"
+                        ),
+                        true,
+                    );
+                    assertEquals(
+                        await page.locator(".hero").boundingBox(),
+                        hero,
+                    );
+                    await closeAllWorkspaces();
                 }
             }
             await closeAllWorkspaces();
@@ -719,9 +560,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "keyboard-only Dock/Switcher/expand/Back/Close; overlay Escape takes priority",
+        "keyboard-only Switcher/expand/Back/Close; overlay Escape takes priority",
         async () => {
-            await request("/api/preferences", "PATCH", { style: "widgets" });
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
             await page.locator(appsTrigger).focus();
@@ -732,7 +572,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             });
             await appsSearch.fill("State");
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
@@ -758,7 +598,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.keyboard.press("Enter");
             await panel.locator(".note-preview").waitFor({ state: "detached" });
             await page.locator(
-                '.desktop-dock button[aria-label="应用工作区"], .workspace-switcher button[aria-label="应用工作区"]',
+                '.workspace-switcher button[aria-label="应用工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
@@ -802,7 +642,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
             });
             assertEquals(await panel.isVisible(), true);
-            await panel.locator(".workspace-footer .workspace-primary").focus();
+            await panel.locator(".workspace-header .workspace-primary").focus();
             await page.keyboard.press("Enter");
             await page.locator("#app-url-input").waitFor();
             await page.waitForFunction(() =>
@@ -815,47 +655,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 document.activeElement?.matches(".workspace-primary") === true
             );
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
             assertEquals(await search().inputValue(), "Shell");
-            // Issue #91 contract: Desktop ordinary Escape does NOT close windows
-            await page.keyboard.press("Escape");
-            assertEquals(
-                await page.locator('.desktop-window[data-window-id="notes"]')
-                    .isVisible(),
-                true,
-            );
-            // Tablet viewport preserves legacy Escape close behavior
-            await page.setViewportSize({ width: 800, height: 900 });
-            await page.waitForFunction(() => globalThis.innerWidth === 800);
-            const constrainedNotes = page.locator(
-                '.desktop-window[data-window-id="notes"]',
-            );
-            // Viewport metrics update before the constrained Host is committed.
-            await constrainedNotes.getByRole("button", {
-                name: "窗口尺寸",
-                exact: true,
-            }).waitFor({ state: "visible" });
-            await constrainedNotes.getByRole("searchbox", {
-                name: "搜索便签",
-                exact: true,
-            }).focus();
-            await page.keyboard.press("Escape");
-            await page.locator('.desktop-window[data-window-id="notes"]')
-                .waitFor({ state: "hidden" });
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("data-workspace") ===
-                    "notes"
-            );
-            assertEquals(
-                await page.evaluate(
-                    (sel) => document.activeElement?.matches(sel) === true,
-                    '.desktop-dock button[data-workspace="notes"]',
-                ),
-                true,
-            );
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.waitForFunction(() => globalThis.innerWidth === 1440);
             await closeAllWorkspaces();
@@ -865,8 +669,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     await t.step(
         "Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration",
         async () => {
-            await request("/api/preferences", "PATCH", { style: "zen" });
-
             for (
                 const { width, height, presentation: expectedPresentation } of [
                     { width: 1440, height: 900, presentation: "panel" },
@@ -897,7 +699,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
                 // Nested Back behavior in Zen panel/sheet
                 const createBtn = panel.locator(
-                    ".workspace-footer .workspace-primary",
+                    ".workspace-header .workspace-primary",
                 );
                 await createBtn.focus();
                 await page.keyboard.press("Enter");
@@ -936,7 +738,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
                 // Switch Apps -> Notes
                 await page.locator(
-                    '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                    '.workspace-switcher button[aria-label="便签工作区"]',
                 ).focus();
                 await page.keyboard.press("Enter");
                 await panel.locator(".notes-workspace").waitFor();
@@ -968,13 +770,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "issue #57 cross-workspace layout contract: geometry, search alignment, footer hierarchy, stability",
+        "issue #57 cross-workspace layout contract: geometry, search alignment, header primary hierarchy, stability",
         async () => {
-            await request("/api/preferences", "PATCH", {
-                style: "widgets",
-                theme: "system",
-            });
-
             for (const theme of ["light", "dark"] as const) {
                 await page.emulateMedia({ colorScheme: theme });
                 for (const width of [375, 390, 768, 1024, 1440]) {
@@ -988,14 +785,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     const appInset = await measureBodyInset(panel);
                     assertNear(appInset.searchLeftDiff, 0, 2);
                     assertNear(appInset.searchRightDiff, 0, 2);
-                    const switcher = width >= 768
-                        ? page.locator(
-                            '.desktop-dock button[data-workspace="notes"]',
-                        )
-                        : panel.getByRole("button", {
-                            name: "便签工作区",
-                            exact: true,
-                        });
+                    const switcher = panel.getByRole("tab", {
+                        name: "便签工作区",
+                        exact: true,
+                    });
                     await switcher.click();
                     await panel.locator(".notes-workspace").waitFor();
                     await assertChromeInViewport(page);
@@ -1008,15 +801,12 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             hero,
                         );
                         assertEquals(
-                            await page.locator("aside.workspace-panel").count(),
-                            0,
+                            await page.locator(
+                                'aside.workspace-panel[data-presentation="panel"]',
+                            ).count(),
+                            1,
                         );
-                        assert(await page.locator(".desktop-dock").isVisible());
                     } else {
-                        assertEquals(
-                            await page.locator(".desktop-dock").count(),
-                            0,
-                        );
                         const closeBtn = panel.getByRole("button", {
                             name: "收起工作区",
                             exact: true,
@@ -1026,7 +816,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             await panel.waitFor({ state: "detached" });
                         }
                         const mobileApps = page.locator(
-                            '.workspace-mobile-navigation button[aria-label="应用工作区"]',
+                            'button.zen-edge-btn[data-workspace="apps"]',
                         );
                         if (await mobileApps.isVisible()) {
                             await mobileApps.click();
@@ -1041,17 +831,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             }
                         }
                     }
-                    if (width >= 1024) {
-                        assertEquals(
-                            await page.locator(".desktop-window").count(),
-                            2,
-                        );
-                    }
                     await closeAllWorkspaces();
                 }
             }
 
-            // Desktop viewport for interaction, focus/blur, arrange hierarchy, and chrome stability
+            // Desktop viewport for interaction, focus/blur, and chrome stability
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
             await openApps();
@@ -1131,7 +915,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await page.keyboard.type("AppsQueryPersisted");
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             ).click();
             await panel.locator(".notes-workspace").waitFor();
             await search().waitFor();
@@ -1146,14 +930,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.keyboard.type("NotesQueryPersisted");
 
             await page.locator(
-                '.desktop-dock button[aria-label="应用工作区"], .workspace-switcher button[aria-label="应用工作区"]',
+                '.workspace-switcher button[aria-label="应用工作区"]',
             ).click();
             await panel.locator(".apps-workspace .workspace-root").waitFor();
             await search().waitFor();
             assertEquals(await search().inputValue(), "AppsQueryPersisted");
 
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             ).click();
             await panel.locator(".notes-workspace").waitFor();
             await search().waitFor();
@@ -1161,16 +945,16 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
             await search().fill("");
             await page.locator(
-                '.desktop-dock button[aria-label="应用工作区"], .workspace-switcher button[aria-label="应用工作区"]',
+                '.workspace-switcher button[aria-label="应用工作区"]',
             ).click();
             await panel.locator(".apps-workspace .workspace-root").waitFor();
             await search().fill("");
 
-            // 3. Arrange mode: search disabled, footer create not primary
+            // 3. Arrange mode: search disabled, header primary becomes 完成整理
             const rightClickBlankSurface = async () => {
                 const res = await page.evaluate(() => {
                     const panelEl = document.querySelector(
-                        '.desktop-window[data-window-active="true"], .workspace-panel',
+                        ".workspace-panel--mobile, aside.workspace-panel",
                     ) as HTMLElement;
                     const bodyEl = panelEl.querySelector(
                         ".workspace-body",
@@ -1257,9 +1041,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await arrangeItem.click();
             assertEquals(await search().isDisabled(), true);
             assertEquals(
-                await panel.locator(".workspace-footer .button--primary")
-                    .count(),
-                1,
+                await panel.locator(".workspace-header .workspace-primary")
+                    .getAttribute("aria-label"),
+                "完成整理",
             );
 
             await rightClickBlankSurface();
@@ -1273,16 +1057,16 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await doneArrangeItem.click();
             assertEquals(await search().isDisabled(), false);
             assertEquals(
-                await panel.locator(".workspace-footer .button--primary")
-                    .count(),
-                1,
+                await panel.locator(".workspace-header .workspace-primary")
+                    .getAttribute("aria-label"),
+                "添加应用",
             );
 
             // 4. Nested views: no Root create action, .app-dialog-body inset matches workspace-body
-            await panel.locator(".workspace-footer .button--primary").click();
+            await panel.locator(".workspace-header .workspace-primary").click();
             await panel.locator(".app-dialog-form").waitFor();
             assertEquals(
-                await panel.locator(".workspace-footer .button--primary")
+                await panel.locator(".workspace-header .workspace-primary")
                     .count(),
                 0,
             );
@@ -1314,7 +1098,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 .click();
             await search().waitFor();
             assertEquals(
-                await panel.locator(".workspace-footer .button--primary")
+                await panel.locator(".workspace-header .workspace-primary")
                     .count(),
                 1,
             );
@@ -1347,7 +1131,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 .waitFor({ state: "attached" });
             await assertChromeInViewport(page);
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             )
                 .click();
             await panel.locator(".notes-workspace").waitFor();
@@ -1370,7 +1154,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await openApps();
             await search().fill("State Alpha");
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             )
                 .click();
             await search().fill("private notes query");
@@ -1379,10 +1163,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.waitForFunction(
                     (expected) =>
                         document.querySelector(
-                            '.desktop-window[data-window-active="true"], .workspace-panel',
+                            ".workspace-panel--mobile, aside.workspace-panel",
                         )
                             ?.getAttribute("data-presentation") === expected,
-                    width < 768 ? "sheet" : "window",
+                    width < 768 ? "sheet" : "panel",
                 );
                 assertEquals(
                     await search().inputValue(),
@@ -1391,7 +1175,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await assertChromeInViewport(page);
             }
             await page.locator(
-                '.desktop-dock button[aria-label="应用工作区"], .workspace-switcher button[aria-label="应用工作区"]',
+                '.workspace-switcher button[aria-label="应用工作区"]',
             )
                 .click();
             assertEquals(await search().inputValue(), "State Alpha");
@@ -1421,643 +1205,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await openApps();
             assertEquals(await search().inputValue(), "");
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="便签工作区"]',
             )
                 .click();
             assertEquals(await search().inputValue(), "");
-            await closeAllWorkspaces();
-        },
-    );
-    await t.step(
-        "Issue #91: Snap edge drag preview pointer non-blocking, 7 release modes, restoreFrame threshold, resize, and reload persistence",
-        async () => {
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await resetPersistedLayout();
-            await visit("/");
-            await openApps();
-            const appsWin = page.locator(
-                '.desktop-window[data-window-id="apps"]',
-            );
-            await appsWin.waitFor({ state: "visible" });
-            const originalFrame = await measureBox(appsWin);
-            let expectedRestoreFrame = originalFrame;
-            const canvas = page.locator(".desktop-canvas");
-            await canvas.waitFor({ state: "visible" });
-            const canvasBox = await measureBox(canvas);
-            const measuredBounds = await page.evaluate(() => {
-                let chromeBottom = 0;
-                for (
-                    const element of document.querySelectorAll(
-                        ".topbar, .connection-banner",
-                    )
-                ) {
-                    const style = getComputedStyle(element);
-                    const bounds = element.getBoundingClientRect();
-                    if (
-                        style.display !== "none" && bounds.width > 0 &&
-                        bounds.height > 0 && bounds.bottom > 0
-                    ) {
-                        chromeBottom = Math.max(
-                            chromeBottom,
-                            bounds.bottom,
-                        );
-                    }
-                }
-                const dock = document.querySelector<HTMLElement>(
-                    ".desktop-dock",
-                );
-                const dockStyle = dock ? getComputedStyle(dock) : null;
-                const dockBounds = dock?.getBoundingClientRect();
-                const dockTop = dock && dockBounds &&
-                        dockStyle?.display !== "none" &&
-                        dockBounds.width > 0 && dockBounds.height > 0
-                    ? dockBounds.top
-                    : globalThis.innerHeight;
-                return { chromeBottom, dockTop };
-            });
-            const workBox = {
-                x: canvasBox.x,
-                y: measuredBounds.chromeBottom,
-                width: canvasBox.width,
-                height: Math.max(
-                    0,
-                    measuredBounds.dockTop - measuredBounds.chromeBottom,
-                ),
-            };
-
-            async function dragTitleTo(
-                toX: number,
-                toY: number,
-                release = true,
-            ) {
-                const titleEl = appsWin.locator(".desktop-window-chrome-title");
-                await titleEl.waitFor({ state: "visible" });
-                await titleEl.hover();
-                const titleBox = await measureBox(titleEl);
-                const startX = titleBox.x + titleBox.width / 2;
-                const startY = titleBox.y + titleBox.height / 2;
-                await page.mouse.move(startX, startY);
-                const hit = await page.evaluate(({ x, y }) => {
-                    const element = document.elementFromPoint(x, y);
-                    return {
-                        titlebar: !!element?.closest("[data-window-chrome]"),
-                        resize: element?.closest("[data-direction]")
-                            ?.getAttribute("data-direction"),
-                    };
-                }, { x: startX, y: startY });
-                assert(hit.titlebar && !hit.resize, JSON.stringify(hit));
-                await page.mouse.down();
-                await page.mouse.move(toX, toY, { steps: 10 });
-                if (release) {
-                    await page.mouse.up();
-                }
-            }
-
-            async function waitForSnap(
-                mode: string,
-                snap: string,
-                expectedWidth = halfW,
-            ) {
-                await page.waitForFunction(
-                    ([expectedMode, expectedSnap, expectedW]) => {
-                        const win = document.querySelector(
-                            '.desktop-window[data-window-id="apps"]',
-                        ) as HTMLElement | null;
-                        if (!win) return false;
-                        const modeMatches =
-                            win.getAttribute("data-window-mode") ===
-                                expectedMode;
-                        const snapMatches =
-                            win.getAttribute("data-window-snap") ===
-                                expectedSnap;
-                        if (!modeMatches || !snapMatches) return false;
-                        if (expectedW !== undefined) {
-                            const currentW = win.getBoundingClientRect().width;
-                            if (
-                                Math.abs(currentW - (expectedW as number)) > 4
-                            ) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    },
-                    [mode, snap, expectedWidth],
-                );
-                await waitForWindowFrame({
-                    x: workBox.x +
-                        (["right", "top-right", "bottom-right"].includes(snap)
-                            ? halfW
-                            : 0),
-                    y: workBox.y + (snap.startsWith("bottom-") ? halfH : 0),
-                    width: expectedWidth,
-                    height: snap.startsWith("top-")
-                        ? halfH
-                        : snap.startsWith("bottom-")
-                        ? workBox.height - halfH
-                        : workBox.height,
-                });
-            }
-            async function waitForWindowFrame(
-                expected: Pick<ElementBox, "x" | "y" | "width" | "height">,
-            ) {
-                await page.waitForFunction((frame) => {
-                    const el = document.querySelector<HTMLElement>(
-                        '.desktop-window[data-window-id="apps"]',
-                    );
-                    if (!el) return false;
-                    const box = el.getBoundingClientRect();
-                    return Math.abs(box.x - frame.x) <= 1 &&
-                        Math.abs(box.y - frame.y) <= 1 &&
-                        Math.abs(box.width - frame.width) <= 1 &&
-                        Math.abs(box.height - frame.height) <= 1;
-                }, expected);
-            }
-
-            const halfW = Math.floor(workBox.width / 2);
-            const halfH = Math.floor(workBox.height / 2);
-            // Pointer cancellation commits the last viewport-global drag frame.
-            const cancelTitle = appsWin.locator(
-                ".desktop-window-chrome-title",
-            );
-            const cancelTitleBox = await measureBox(cancelTitle);
-            const cancelStartX = cancelTitleBox.x + cancelTitleBox.width / 2;
-            const cancelStartY = cancelTitleBox.y + cancelTitleBox.height / 2;
-            await page.mouse.move(cancelStartX, cancelStartY);
-            await page.mouse.down();
-            await page.mouse.move(cancelStartX + 30, cancelStartY + 20, {
-                steps: 5,
-            });
-            await appsWin.locator(".desktop-window-chrome").evaluate((chrome) =>
-                chrome.dispatchEvent(
-                    new PointerEvent("pointercancel", {
-                        bubbles: true,
-                        pointerId: 1,
-                        pointerType: "mouse",
-                    }),
-                )
-            );
-            await page.mouse.up();
-            expectedRestoreFrame = {
-                ...originalFrame,
-                x: originalFrame.x + 30,
-                y: originalFrame.y + 20,
-            };
-            await waitForWindowFrame(expectedRestoreFrame);
-
-            // Shift+Arrow movement uses the same normal viewport bounds.
-            const keyboardChrome = appsWin.locator(".desktop-window-chrome");
-            await keyboardChrome.focus();
-            await page.keyboard.press("Shift+ArrowRight");
-            await waitForWindowFrame({
-                ...expectedRestoreFrame,
-                x: expectedRestoreFrame.x + 40,
-            });
-            await page.keyboard.press("Shift+ArrowLeft");
-            await waitForWindowFrame(expectedRestoreFrame);
-            await page.keyboard.press("Shift+ArrowDown");
-            await waitForWindowFrame({
-                ...expectedRestoreFrame,
-                y: expectedRestoreFrame.y + 40,
-            });
-            await page.keyboard.press("Shift+ArrowUp");
-            await waitForWindowFrame(expectedRestoreFrame);
-            async function waitForTinyPresentation() {
-                await page.waitForFunction(() => {
-                    const win = document.querySelector<HTMLElement>(
-                        '.desktop-window[data-window-id="apps"]',
-                    );
-                    const close = win?.querySelector<HTMLElement>(
-                        ".desktop-window-chrome-btn--close",
-                    );
-                    if (
-                        !win || !close || win.dataset.windowMode !== "normal"
-                    ) return false;
-
-                    const bounds = win.getBoundingClientRect();
-                    const closeBounds = close.getBoundingClientRect();
-                    let chromeBottom = 0;
-                    for (
-                        const element of document.querySelectorAll(
-                            ".topbar, .connection-banner",
-                        )
-                    ) {
-                        const style = getComputedStyle(element);
-                        const header = element.getBoundingClientRect();
-                        if (
-                            style.display !== "none" && header.width > 0 &&
-                            header.height > 0 && header.bottom > 0
-                        ) {
-                            chromeBottom = Math.max(
-                                chromeBottom,
-                                header.bottom,
-                            );
-                        }
-                    }
-
-                    const dock = document.querySelector<HTMLElement>(
-                        ".desktop-dock",
-                    );
-                    const dockBounds = dock?.getBoundingClientRect();
-                    const dockTop = dock && dockBounds &&
-                            getComputedStyle(dock).display !== "none" &&
-                            dockBounds.width > 0 && dockBounds.height > 0
-                        ? dockBounds.top
-                        : globalThis.innerHeight;
-                    return bounds.x >= 0 &&
-                        bounds.y >= chromeBottom &&
-                        bounds.right <= globalThis.innerWidth &&
-                        bounds.bottom <= globalThis.innerHeight &&
-                        closeBounds.width > 0 && closeBounds.height > 0 &&
-                        closeBounds.x >= 0 &&
-                        closeBounds.right <= globalThis.innerWidth &&
-                        closeBounds.bottom <= dockTop + 1;
-                });
-            }
-
-            // Geometry changes cancel an in-flight drag without replacing the
-            // semantic frame with its tiny-viewport presentation frame.
-            const tinyTitleBox = await measureBox(
-                appsWin.locator(".desktop-window-chrome-title"),
-            );
-            const tinyDragStart = {
-                x: tinyTitleBox.x + tinyTitleBox.width / 2,
-                y: tinyTitleBox.y + tinyTitleBox.height / 2,
-            };
-            await page.mouse.move(tinyDragStart.x, tinyDragStart.y);
-            await page.mouse.down();
-            await page.mouse.move(
-                tinyDragStart.x + 30,
-                tinyDragStart.y + 20,
-                { steps: 4 },
-            );
-            await page.setViewportSize({ width: 1024, height: 200 });
-            await waitForTinyPresentation();
-            await appsWin.locator(".desktop-window-chrome").evaluate(
-                (chrome) =>
-                    chrome.dispatchEvent(
-                        new PointerEvent("pointercancel", {
-                            bubbles: true,
-                            pointerId: 1,
-                            pointerType: "mouse",
-                        }),
-                    ),
-            );
-            await page.mouse.up();
-            await waitForTinyPresentation();
-            assertEquals(
-                await appsWin.getAttribute("data-window-mode"),
-                "normal",
-            );
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await waitForWindowFrame(expectedRestoreFrame);
-
-            // Resize cancellation follows the same presentation-only fallback.
-            const tinyResize = appsWin.locator(
-                ".desktop-window-resize-handle--se",
-            );
-            const tinyResizeBox = await measureBox(tinyResize);
-            const tinyResizeStart = {
-                x: tinyResizeBox.x + tinyResizeBox.width / 2,
-                y: tinyResizeBox.y + tinyResizeBox.height / 2,
-            };
-            await page.mouse.move(tinyResizeStart.x, tinyResizeStart.y);
-            await page.mouse.down();
-            await page.mouse.move(
-                tinyResizeStart.x + 30,
-                tinyResizeStart.y + 20,
-                { steps: 4 },
-            );
-            await page.setViewportSize({ width: 1024, height: 200 });
-            await waitForTinyPresentation();
-            await page.mouse.up();
-            await waitForTinyPresentation();
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await waitForWindowFrame(expectedRestoreFrame);
-
-            await page.keyboard.press("Shift+ArrowRight");
-            await waitForWindowFrame({
-                ...expectedRestoreFrame,
-                x: expectedRestoreFrame.x + 40,
-            });
-            await page.keyboard.press("Shift+ArrowLeft");
-            await waitForWindowFrame(expectedRestoreFrame);
-            // 1. Preview pointer-events: none and non-blocking during drag
-            await dragTitleTo(
-                workBox.x + 16,
-                workBox.y + workBox.height / 2,
-                false,
-            );
-            const preview = page.locator("[data-snap-preview]");
-            await preview.waitFor({ state: "visible" });
-            assertEquals(await preview.getAttribute("data-snap-mode"), "left");
-            const pointerEvents = await preview.evaluate((el) =>
-                getComputedStyle(el).pointerEvents
-            );
-            assertEquals(pointerEvents, "none");
-            // Complete release into "left" snap mode
-            await page.mouse.up();
-            await preview.waitFor({ state: "detached" });
-            await waitForSnap("snapped", "left", halfW);
-            const leftBox = await measureBox(appsWin);
-            assertNear(leftBox.x, workBox.x, 4);
-            assertNear(leftBox.width, halfW, 4);
-            assertNear(leftBox.height, workBox.height, 4);
-            // Resize handles hidden while snapped
-            assertEquals(
-                await appsWin.locator(".desktop-window-resize-handle").count(),
-                0,
-            );
-
-            // 2. RestoreFrame threshold: click without move (<4px) preserves snap
-            const titleEl = appsWin.locator(".desktop-window-chrome-title");
-            const titleBoxSnap = await measureBox(titleEl);
-            await page.mouse.move(
-                titleBoxSnap.x + titleBoxSnap.width / 2,
-                titleBoxSnap.y + titleBoxSnap.height / 2,
-            );
-            await page.mouse.down();
-            await page.mouse.up();
-            assertEquals(
-                await appsWin.getAttribute("data-window-mode"),
-                "snapped",
-            );
-            assertEquals(
-                await appsWin.getAttribute("data-window-snap"),
-                "left",
-            );
-
-            // Restore via titlebar button
-            const restoreBtn = appsWin.locator(
-                ".desktop-window-chrome-btn--restore",
-            );
-            await restoreBtn.click();
-            await page.waitForFunction((expected) => {
-                const el = document.querySelector<HTMLElement>(
-                    '.desktop-window[data-window-id="apps"]',
-                );
-                if (
-                    !el || el.dataset.windowMode !== "normal" ||
-                    el.hasAttribute("data-window-snap")
-                ) return false;
-                const box = el.getBoundingClientRect();
-                return Math.abs(box.x - expected.x) <= 1 &&
-                    Math.abs(box.y - expected.y) <= 1 &&
-                    Math.abs(box.width - expected.width) <= 1 &&
-                    Math.abs(box.height - expected.height) <= 1;
-            }, expectedRestoreFrame);
-            assert(
-                (await appsWin.locator(".desktop-window-resize-handle")
-                    .count()) > 0,
-            );
-
-            // 3. 7 release modes matrix
-            // right
-            const rightTargetX = workBox.x + workBox.width - 16;
-            const rightTargetY = workBox.y + workBox.height / 2;
-            await dragTitleTo(rightTargetX, rightTargetY, false);
-            await page.mouse.up();
-            await waitForSnap("snapped", "right", workBox.width - halfW);
-            const rightBox = await measureBox(appsWin);
-            assertNear(rightBox.x, workBox.x + halfW, 4);
-            assertNear(rightBox.width, workBox.width - halfW, 4);
-            assertNear(rightBox.height, workBox.height, 4);
-
-            // top-left
-            await dragTitleTo(workBox.x + 30, workBox.y + 16);
-            await waitForSnap("snapped", "top-left");
-            const tlBox = await measureBox(appsWin);
-            assertNear(tlBox.x, workBox.x, 4);
-            assertNear(tlBox.y, workBox.y, 4);
-            assertNear(tlBox.width, halfW, 4);
-            assertNear(tlBox.height, halfH, 4);
-
-            // top-right
-            await dragTitleTo(
-                workBox.x + workBox.width - 30,
-                workBox.y + 16,
-            );
-            await waitForSnap("snapped", "top-right");
-            const trBox = await measureBox(appsWin);
-            assertNear(trBox.x, workBox.x + halfW, 4);
-            assertNear(trBox.y, workBox.y, 4);
-            assertNear(trBox.width, workBox.width - halfW, 4);
-            assertNear(trBox.height, halfH, 4);
-
-            // bottom-left
-            await dragTitleTo(
-                workBox.x + 30,
-                workBox.y + workBox.height - 16,
-            );
-            await waitForSnap("snapped", "bottom-left");
-            const blBox = await measureBox(appsWin);
-            assertNear(blBox.x, workBox.x, 4);
-            assertNear(blBox.y, workBox.y + halfH, 4);
-            assertNear(blBox.width, halfW, 4);
-            assertNear(blBox.height, workBox.height - halfH, 4);
-
-            // bottom-right
-            await dragTitleTo(
-                workBox.x + workBox.width - 30,
-                workBox.y + workBox.height - 16,
-            );
-            await waitForSnap("snapped", "bottom-right");
-            const brBox = await measureBox(appsWin);
-            assertNear(brBox.x, workBox.x + halfW, 4);
-            assertNear(brBox.y, workBox.y + halfH, 4);
-            assertNear(brBox.width, workBox.width - halfW, 4);
-            assertNear(brBox.height, workBox.height - halfH, 4);
-
-            // maximize
-            await dragTitleTo(
-                workBox.x + workBox.width / 2,
-                workBox.y + 16,
-            );
-            await waitForSnap("maximized", "maximize", workBox.width);
-            const maxBox = await measureBox(appsWin);
-            assertNear(maxBox.x, workBox.x, 4);
-            assertNear(maxBox.y, workBox.y, 4);
-            assertNear(maxBox.width, workBox.width, 4);
-            assertNear(maxBox.height, workBox.height, 4);
-
-            // 4. Drag away un-snaps to normal and restores frame
-            await dragTitleTo(
-                workBox.x + workBox.width / 2,
-                workBox.y + workBox.height / 2,
-            );
-            await page.waitForFunction(() => {
-                const el = document.querySelector(
-                    '.desktop-window[data-window-id="apps"]',
-                );
-                return el?.getAttribute("data-window-mode") === "normal" &&
-                    !el?.hasAttribute("data-window-snap");
-            });
-
-            const beforeResizeReposition = await measureBox(appsWin);
-            await dragTitleTo(720, workBox.y + 150);
-            await page.waitForFunction((dockTop) => {
-                const element = document.querySelector(
-                    '[data-window-id="apps"]',
-                );
-                return !!element &&
-                    element.getBoundingClientRect().bottom < dockTop;
-            }, measuredBounds.dockTop).catch(async (cause) => {
-                throw new Error(
-                    `Normal resize fixture reposition: ${
-                        JSON.stringify({
-                            before: beforeResizeReposition,
-                            after: await measureBox(appsWin),
-                            mode: await appsWin.getAttribute(
-                                "data-window-mode",
-                            ),
-                            chrome: await appsWin.locator(
-                                "[data-window-chrome]",
-                            )
-                                .evaluate((chrome) => ({
-                                    dragging: chrome.classList.contains(
-                                        "desktop-window-chrome--dragging",
-                                    ),
-                                    capture: chrome.hasPointerCapture(1),
-                                    bounds: chrome.getBoundingClientRect()
-                                        .toJSON(),
-                                })),
-                        })
-                    }`,
-                    { cause },
-                );
-            });
-            // 5. 8-way resize handle active in normal mode
-            const seHandle = appsWin.locator(
-                ".desktop-window-resize-handle--se",
-            );
-            await seHandle.hover();
-            const handleBox = await measureBox(seHandle);
-            const boxBeforeResize = await measureBox(appsWin);
-            await page.mouse.move(
-                handleBox.x + handleBox.width / 2,
-                handleBox.y + handleBox.height / 2,
-            );
-            const resizeTarget = await page.evaluate(
-                ({ x, y }) =>
-                    document.elementFromPoint(x, y)?.closest(
-                        ".desktop-window-resize-handle",
-                    )?.getAttribute("data-direction"),
-                {
-                    x: handleBox.x + handleBox.width / 2,
-                    y: handleBox.y + handleBox.height / 2,
-                },
-            );
-            assertEquals(resizeTarget, "se", "Resize must hit the real handle");
-            await page.mouse.down();
-            await page.mouse.move(
-                handleBox.x + handleBox.width / 2 - 50,
-                handleBox.y + handleBox.height / 2 - 40,
-                { steps: 5 },
-            );
-            await page.mouse.up();
-            await page.waitForFunction(
-                (w) => {
-                    const el = document.querySelector(
-                        '.desktop-window[data-window-id="apps"]',
-                    ) as HTMLElement | null;
-                    return el &&
-                        Math.abs(el.getBoundingClientRect().width - (w - 50)) <=
-                            1;
-                },
-                boxBeforeResize.width,
-            ).catch(async (cause) => {
-                throw new Error(
-                    `SE resize: ${
-                        JSON.stringify({
-                            before: boxBeforeResize,
-                            after: await measureBox(appsWin),
-                            target: resizeTarget,
-                            handle: handleBox,
-                            currentHandle: await measureBox(seHandle),
-                            style: await appsWin.getAttribute("style"),
-                        })
-                    }`,
-                    { cause },
-                );
-            });
-            for (
-                const direction of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
-            ) {
-                const handle = appsWin.locator(
-                    `[data-direction="${direction}"]`,
-                );
-                await handle.hover();
-                const before = await measureBox(appsWin);
-                const handleBounds = await measureBox(handle);
-                const dx = direction.includes("w")
-                    ? 12
-                    : direction.includes("e")
-                    ? -12
-                    : 0;
-                const dy = direction.includes("n")
-                    ? 12
-                    : direction.includes("s")
-                    ? -12
-                    : 0;
-                const pointer = {
-                    x: direction === "s"
-                        ? handleBounds.x + handleBounds.width - 12
-                        : handleBounds.x +
-                            (direction === "n" ? 12 : handleBounds.width / 2),
-                    y: handleBounds.y + handleBounds.height / 2,
-                };
-                const expected = {
-                    x: before.x + (direction.includes("w") ? 12 : 0),
-                    y: before.y + (direction.includes("n") ? 12 : 0),
-                    width: before.width - (dx ? 12 : 0),
-                    height: before.height - (dy ? 12 : 0),
-                };
-                await page.mouse.move(pointer.x, pointer.y);
-                await page.mouse.down();
-                await page.mouse.move(pointer.x + dx, pointer.y + dy, {
-                    steps: 4,
-                });
-                await page.mouse.up();
-                await page.waitForFunction(
-                    (expected) => {
-                        const element = document.querySelector(
-                            '[data-window-id="apps"]',
-                        );
-                        if (!element) return false;
-                        const frame = element.getBoundingClientRect();
-                        return Math.abs(frame.x - expected.x) <= 1 &&
-                            Math.abs(frame.y - expected.y) <= 1 &&
-                            Math.abs(frame.width - expected.width) <= 1 &&
-                            Math.abs(frame.height - expected.height) <= 1;
-                    },
-                    expected,
-                    { timeout: 5000 },
-                ).catch(async (error: unknown) => {
-                    throw new Error(
-                        `${direction} resize: before=${
-                            JSON.stringify(before)
-                        } expected=${JSON.stringify(expected)} actual=${
-                            JSON.stringify(await measureBox(appsWin))
-                        }`,
-                        { cause: error },
-                    );
-                });
-                const after = await measureBox(appsWin);
-                assertNear(after.x, expected.x, 1);
-                assertNear(after.y, expected.y, 1);
-                assertNear(after.width, expected.width, 1);
-                assertNear(after.height, expected.height, 1);
-            }
-
-            // 6. Reload persistence of snapped state
-            await dragTitleTo(
-                workBox.x + 16,
-                workBox.y + workBox.height / 2,
-            );
-            await waitForSnap("snapped", "left", halfW);
-            await page.reload();
-            await appsWin.waitFor({ state: "visible" });
-            await waitForSnap("snapped", "left", halfW);
-
             await closeAllWorkspaces();
         },
     );
@@ -2136,7 +1287,7 @@ async function measureBodyInset(panelLocator: {
 
 async function chromeBounds(page: Page) {
     return await page.locator(
-        '.desktop-window[data-window-active="true"], .workspace-panel',
+        ".workspace-panel--mobile, aside.workspace-panel",
     ).evaluate((el) => {
         const box = (selector: string) => {
             const target = el.querySelector(selector);
@@ -2150,8 +1301,7 @@ async function chromeBounds(page: Page) {
             };
         };
         return {
-            header: box(".desktop-window-chrome, .workspace-header"),
-            footer: box(".workspace-footer"),
+            header: box(".workspace-header"),
         };
     });
 }
@@ -2159,7 +1309,7 @@ async function chromeBounds(page: Page) {
 async function assertChromeInViewport(page: Page) {
     const bounds = await chromeBounds(page);
     const viewport = page.viewportSize()!;
-    for (const rect of [bounds.header, bounds.footer]) {
+    for (const rect of [bounds.header]) {
         if (!rect) continue;
         assert(
             rect.y >= 0 && rect.y + rect.height <= viewport.height + 1,
@@ -2178,7 +1328,7 @@ async function assertChromeInViewport(page: Page) {
     );
     assertEquals(
         await page.locator(
-            '.desktop-window[data-window-active="true"] .workspace-body, .workspace-panel .workspace-body',
+            ".workspace-panel--mobile .workspace-body, aside.workspace-panel .workspace-body",
         ).evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
         true,
     );

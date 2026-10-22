@@ -24,7 +24,7 @@ import type {
 } from "../features/ask/types.ts";
 import { useAskStream } from "../features/ask/useAskStream.ts";
 import { api, json } from "../lib/api.ts";
-import { authPath, routes } from "./routes.ts";
+import { authPath } from "./routes.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 
 export function AskPage() {
@@ -439,15 +439,9 @@ export function AskPage() {
     if (!user) {
         return (
             <PageShell archetype="workbench" className="ask-page-shell">
-                <PageHeader
-                    items={[
-                        { label: "首页", to: routes.home },
-                        { label: "AI 问答" },
-                    ]}
-                    title="AI 问答"
-                />
+                <PageHeader title="AI 问答" />
                 <div className="ask-guest__content">
-                    <p>登录后，选择模型并开始智能问答对话。</p>
+                    <p>AI 问答需要登录账号。</p>
                     <Link
                         className="button button--primary"
                         to={authPath("login", location)}
@@ -562,7 +556,7 @@ export function AskPage() {
             </div>
 
             {error && (
-                <StatusBanner tone="error" className="m-3">
+                <StatusBanner tone="error" className="ask-page-banner">
                     {error}
                 </StatusBanner>
             )}

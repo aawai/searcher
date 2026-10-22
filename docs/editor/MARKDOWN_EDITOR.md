@@ -12,7 +12,7 @@ Notes 编辑依赖图。
 `NoteEditor.tsx` 拥有 canonical Markdown、1500ms autosave、手动保存、mutation
 queue、409 冲突与历史恢复。设备草稿的 key、读写、迁移、清除及退出发现统一由
 `features/notes/local-drafts.ts` 拥有，复用 local 层 FIFO 与事务提交语义。
-NotesWorkspace 与桌面便签窗口按需 lazy 加载 NoteEditor，使用共享 LoadingState
+NotesWorkspace 按需 lazy 加载 NoteEditor，使用共享 LoadingState
 展示首开加载状态；不把编辑器业务实现放进首页入口 chunk。此边界与 Documents
 编辑器的现有加载惯例一致，不改变 NoteEditor 实例内的草稿、保存队列或历史。
 `NoteLivePreviewEditor.tsx` 是 lazy consumer，仅负责挂载/销毁、受控正文替换、
@@ -109,8 +109,8 @@ HR；`notes.css` 定义 Notes chrome、focus ring 与可编辑 task layout。Liv
 仅负责 ProseMirror whitespace、selection 与 overflow，不拥有产品 typography。
 
 操作区与正文滚动分离；阅读宽度720px，最低正文240px，低高度允许整个NoteEditor滚动。
-Live/Source各自记录滚动位置，模式切换的既有runtime生命周期不变。Zen展开/收起和
-Widgets最大化/还原不更换NoteEditor key；跨Host断点挂载策略不在此契约内。
+Live/Source各自记录滚动位置，模式切换的既有runtime生命周期不变。展开/收起编辑
+不更换NoteEditor key；跨Host断点挂载策略不在此契约内。
 
 Notes根列表的`note-summary.ts`只读分析入口复用remark/remark-gfm AST，不替换共享
 editor
@@ -154,5 +154,6 @@ Documents-only modules，以及 framework package 多版本重复。
   字正文与超限草稿。
 - `deno task check:ui`：Design Token 与 owner 门禁。
 - `deno task check:bundle`：上述 byte budget、lazy 与 consumer 隔离门禁。
-- 实页矩阵、computed-style parity、Chromium composition 与 20 次销毁后的
-  DOM/listener 测量见 `UI_REVIEW_CHECKLIST.md` 的 #108 验收记录。
+- 实页矩阵、computed-style parity、Chromium composition 与重复销毁后的
+  DOM/listener 测量，依据 [UI 验收清单](../design/UI_CHECKLIST.md)
+  的实页矩阵执行，结果写入 PR 描述。

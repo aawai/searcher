@@ -10,9 +10,10 @@ import {
 import { ActionGroup } from "./semantic.tsx";
 
 export function PageHeader(
-    { items, title, titleLevel = 1, description, actions, navigation }: {
+    { items = [], title, titleLevel = 1, description, actions, navigation }: {
         titleLevel?: 1 | 2;
-        items: { label: string; to?: string }[];
+        /** Breadcrumbs only for direct-entry pages three or more levels deep. */
+        items?: { label: string; to?: string }[];
         title?: string;
         description?: string;
         actions?: ReactNode;
@@ -22,31 +23,33 @@ export function PageHeader(
     const Title = titleLevel === 1 ? "h1" : "h2";
     return (
         <header className="page-header">
-            <Breadcrumb aria-label="页面层级">
-                <BreadcrumbList>
-                    {items.map((item, index) => (
-                        <Fragment key={item.to ?? item.label}>
-                            {index > 0 && <BreadcrumbSeparator />}
-                            <BreadcrumbItem>
-                                {item.to
-                                    ? (
-                                        <Link
-                                            to={item.to}
-                                            className="page-breadcrumb-link"
-                                        >
-                                            {item.label}
-                                        </Link>
-                                    )
-                                    : (
-                                        <BreadcrumbPage>
-                                            {item.label}
-                                        </BreadcrumbPage>
-                                    )}
-                            </BreadcrumbItem>
-                        </Fragment>
-                    ))}
-                </BreadcrumbList>
-            </Breadcrumb>
+            {items.length > 0 && (
+                <Breadcrumb aria-label="页面层级">
+                    <BreadcrumbList>
+                        {items.map((item, index) => (
+                            <Fragment key={item.to ?? item.label}>
+                                {index > 0 && <BreadcrumbSeparator />}
+                                <BreadcrumbItem>
+                                    {item.to
+                                        ? (
+                                            <Link
+                                                to={item.to}
+                                                className="page-breadcrumb-link"
+                                            >
+                                                {item.label}
+                                            </Link>
+                                        )
+                                        : (
+                                            <BreadcrumbPage>
+                                                {item.label}
+                                            </BreadcrumbPage>
+                                        )}
+                                </BreadcrumbItem>
+                            </Fragment>
+                        ))}
+                    </BreadcrumbList>
+                </Breadcrumb>
+            )}
             {(title || actions) && (
                 <div className="page-header-main">
                     <div>

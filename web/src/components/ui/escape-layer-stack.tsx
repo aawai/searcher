@@ -10,7 +10,7 @@ import {
     useSyncExternalStore,
 } from "react";
 
-export type EscapeLayerKind = "host" | "immersive" | "overlay";
+export type EscapeLayerKind = "host" | "overlay";
 
 type EscapeLayer = {
     kind: EscapeLayerKind;
@@ -20,8 +20,7 @@ type EscapeLayer = {
 
 const LAYER_PRIORITY: Record<EscapeLayerKind, number> = {
     host: 0,
-    immersive: 1,
-    overlay: 2,
+    overlay: 1,
 };
 
 /** Tracks active Escape owners; event snapshots keep closing overlays from falling through. */

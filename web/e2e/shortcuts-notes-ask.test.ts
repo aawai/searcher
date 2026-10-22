@@ -60,13 +60,6 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
     await page.waitForURL(origin + "/");
     await page.locator("main").waitFor({ state: "visible" });
 
-    // Set widgets style as baseline so desktop dock is visible
-    await page.goto(origin + "/settings/appearance");
-    await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.locator('.layout-mode-card[aria-checked="true"]', {
-        hasText: "空间轻桌面",
-    }).waitFor();
-
     // Seed AI provider and model for test user so Ask composer is rendered
     await store.exclusiveNative((native) => {
         const userRow = native.prepare(
@@ -97,12 +90,12 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
             await page.goto(origin);
             await page.locator("main").waitFor({ state: "visible" });
 
-            // Open Notes workspace from Dock
-            const dockNotesBtn = page.locator(
-                '.desktop-dock button[aria-label="便签工作区"], .desktop-dock button[data-workspace="notes"]',
-            ).first();
-            await dockNotesBtn.waitFor({ state: "visible" });
-            await dockNotesBtn.click();
+            // Open Notes workspace from the Zen edge navigation
+            const notesWorkspaceBtn = page.locator(
+                'button.zen-edge-btn[data-workspace="notes"]',
+            );
+            await notesWorkspaceBtn.waitFor({ state: "visible" });
+            await notesWorkspaceBtn.click();
 
             // Click create note button
             const createBtn = page.locator(
@@ -114,9 +107,12 @@ Deno.test("production shortcuts for Notes and Ask (#103)", async (t) => {
             const bodyInput = await sourceEditor(page);
             await bodyInput.waitFor({ state: "visible" });
             // Strike is a direct tooltip-bearing button only in the wide toolbar.
-            await page.locator('.desktop-window[data-window-kind="note"]')
-                .getByRole("button", { name: "最大化窗口", exact: true })
+            await page.locator(".workspace-panel")
+                .getByRole("button", { name: "展开编辑", exact: true })
                 .click();
+            await page.locator(
+                '.workspace-panel[data-workspace-expanded="true"]',
+            ).waitFor();
 
             // Check toolbar button titles
             const boldBtn = page.locator(

@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
-Deno.test("Note card color dots have accessible names without visible labels and persist keyboard selection", async () => {
+Deno.test("Note card colour lives in the more menu with keyboard selection that persists", async () => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -36,13 +36,19 @@ Deno.test("Note card color dots have accessible names without visible labels and
     await page.reload();
     const cards = page.locator(".floating-notes .note-card");
     await cards.first().waitFor();
-    for (const name of ["纸白", "琥珀", "玫瑰", "鼠尾草", "天空"]) {
-        const trigger = page.getByRole("button", {
-            name: `便签颜色：${name}`,
+    const colors = [
+        ["paper", "纸白"],
+        ["amber", "琥珀"],
+        ["rose", "玫瑰"],
+        ["sage", "鼠尾草"],
+        ["sky", "天空"],
+    ] as const;
+    for (const [key, name] of colors) {
+        const card = cards.filter({ hasText: `颜色 ${key}` });
+        const trigger = card.getByRole("button", {
+            name: "更多操作",
             exact: true,
         });
-        await trigger.waitFor();
-        assertEquals(await trigger.innerText(), "");
         await trigger.focus();
         await trigger.press("Enter");
         assertEquals(
@@ -52,15 +58,14 @@ Deno.test("Note card color dots have accessible names without visible labels and
         );
         await page.keyboard.press("Escape");
         await page.getByRole("menu").waitFor({ state: "detached" });
-        await page.waitForFunction(
-            (label) =>
-                document.activeElement?.getAttribute("aria-label") === label,
-            `便签颜色：${name}`,
+        assertEquals(
+            await trigger.evaluate((el) => el === document.activeElement),
+            true,
         );
     }
     const card = cards.filter({ hasText: "颜色 paper" });
     const trigger = card.getByRole("button", {
-        name: "便签颜色：纸白",
+        name: "更多操作",
         exact: true,
     });
     await trigger.focus();
@@ -78,11 +83,20 @@ Deno.test("Note card color dots have accessible names without visible labels and
     await saved;
     await page.getByRole("menu").waitFor({ state: "detached" });
     await page.reload();
-    await card.getByRole("button", { name: "便签颜色：鼠尾草", exact: true })
-        .waitFor();
+    await cards.first().waitFor();
+    const reloaded = cards.filter({ hasText: "颜色 paper" });
     assertEquals(
-        await card.locator(".note-preview").innerText(),
+        await reloaded.locator(".note-preview").innerText(),
         "正文保持不变",
     );
-    assertEquals(await card.locator(".note-color-trigger").innerText(), "");
+    await reloaded.hover();
+    await reloaded.getByRole("button", { name: "更多操作", exact: true })
+        .click();
+    assertEquals(
+        await page.getByRole("menuitemradio", { name: "鼠尾草", exact: true })
+            .getAttribute("aria-checked"),
+        "true",
+    );
+    await page.keyboard.press("Escape");
+    await page.getByRole("menu").waitFor({ state: "detached" });
 });

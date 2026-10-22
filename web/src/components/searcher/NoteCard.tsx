@@ -18,11 +18,12 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 
 import { Button } from "../ui/button.tsx";
-import { NoteColorItems, NoteColorMenu } from "./NoteColorMenu.tsx";
+import { NoteColorItems } from "./NoteColorMenu.tsx";
 export interface NoteLayoutDto {
     deviceClass: "desktop" | "tablet" | "mobile";
     x?: number | null;
@@ -75,10 +76,7 @@ export function NoteCard(
         note,
         onOpen,
         dragHandle,
-        status,
         mode,
-        isHome: _isHome,
-        toggleDisabled,
         onToggleMode,
         onTogglePin,
         onToggleHomeFixed,
@@ -90,10 +88,7 @@ export function NoteCard(
         note: NoteItem;
         onOpen?: () => void;
         dragHandle?: ReactNode;
-        status?: "saved" | "saving" | "unsynced" | "error";
         mode?: "full" | "compact";
-        isHome?: boolean;
-        toggleDisabled?: boolean;
         onToggleMode?: () => void;
         onTogglePin?: () => void;
         onToggleHomeFixed?: () => void;
@@ -107,14 +102,12 @@ export function NoteCard(
     const displayTitle = getNoteDisplayTitle(note.title, note.body);
     return (
         <article
-            className={"note-card note-" + (note.color || "paper") +
+            className={"note-card" +
                 (isCompact ? " note-card--compact" : "")}
+            data-color={note.color || "paper"}
         >
             <header className="note-head">
                 <div className="note-head-left">
-                    {dragHandle && (
-                        <span className="note-drag">{dragHandle}</span>
-                    )}
                     <Button
                         type="button"
                         variant="ghost"
@@ -145,17 +138,18 @@ export function NoteCard(
                     role="toolbar"
                     aria-label="便签操作"
                 >
+                    {dragHandle && (
+                        <span className="note-drag">{dragHandle}</span>
+                    )}
                     {onToggleMode && (
                         <Button
                             type="button"
                             variant="ghost"
                             size="icon"
                             className="note-action-btn"
-                            disabled={toggleDisabled}
-                            aria-busy={toggleDisabled || undefined}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (!toggleDisabled) onToggleMode();
+                                onToggleMode();
                             }}
                             aria-label={isCompact ? "展开" : "折叠"}
                             title={isCompact ? "展开" : "折叠"}
@@ -167,7 +161,7 @@ export function NoteCard(
                     )}
 
                     {(onTogglePin || onToggleHomeFixed || onOpen ||
-                        onDelete) && (
+                        onChangeColor || onDelete) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger
                                 className="note-action-btn"
@@ -246,15 +240,16 @@ export function NoteCard(
                                         <span>编辑便签</span>
                                     </DropdownMenuItem>
                                 )}
-                                {isCompact && onChangeColor && (
+                                {onChangeColor && (
                                     <NoteColorItems
                                         color={note.color || "paper"}
                                         onChange={onChangeColor}
                                     />
                                 )}
+                                {onDelete && <DropdownMenuSeparator />}
                                 {onDelete && (
                                     <DropdownMenuItem
-                                        className="note-dropdown-item--delete"
+                                        variant="destructive"
                                         onClick={(e) => {
                                             e?.stopPropagation();
                                             onDelete();
@@ -274,49 +269,10 @@ export function NoteCard(
             </header>
 
             {isCompact && summary}
-            {!isCompact && (
+            {!isCompact && note.body?.trim() && (
                 <div className="note-preview markdown">
-                    {note.body?.trim()
-                        ? <NoteMarkdownView body={note.body} />
-                        : (
-                            <span className="note-placeholder">
-                                写下你的想法…
-                            </span>
-                        )}
+                    <NoteMarkdownView body={note.body} />
                 </div>
-            )}
-            {(!isCompact && (onChangeColor || status)) && (
-                <footer className="note-card-footer">
-                    {onChangeColor
-                        ? (
-                            <NoteColorMenu
-                                color={note.color || "paper"}
-                                onChange={onChangeColor}
-                            />
-                        )
-                        : <span />}
-                    {status && (
-                        <small className={"save-state save-" + status}>
-                            {({
-                                saved: "已保存",
-                                saving: "保存中",
-                                unsynced: "未同步",
-                                error: "保存失败",
-                            })[status]}
-                        </small>
-                    )}
-                </footer>
-            )}
-
-            {isCompact && status && (
-                <small className={"save-state save-" + status}>
-                    {({
-                        saved: "已保存",
-                        saving: "保存中",
-                        unsynced: "未同步",
-                        error: "保存失败",
-                    })[status]}
-                </small>
             )}
         </article>
     );

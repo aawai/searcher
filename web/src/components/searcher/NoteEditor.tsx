@@ -39,7 +39,15 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "../ui/alert-dialog.tsx";
-import { NoteColorMenu } from "./NoteColorMenu.tsx";
+import { NoteColorItems } from "./NoteColorMenu.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "../ui/dropdown-menu.tsx";
+import { MoreHorizontal } from "lucide-react";
 import {
     matchesShortcut,
     type ShortcutPlatform,
@@ -860,7 +868,8 @@ export function NoteEditor(
     }
     return (
         <section
-            className={"note-editor note-" + (color || "paper")}
+            className="note-editor"
+            data-color={color || "paper"}
             onBlur={editingBlur}
             onFocusCapture={(event) => {
                 if (
@@ -868,9 +877,13 @@ export function NoteEditor(
                 ) lastEditFocus.current = event.target;
             }}
             onKeyDown={(event) => {
+                // A closing menu stays mounted through its exit transition, so
+                // Escape is the menu's only if the key comes from inside it.
                 if (
                     event.key === "Escape" && historyOpen && !historyBusy &&
-                    !restoreConfirm && !document.querySelector('[role="menu"]')
+                    !restoreConfirm &&
+                    !(event.target instanceof Element &&
+                        event.target.closest('[role="menu"]'))
                 ) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -884,13 +897,13 @@ export function NoteEditor(
                 inert={historyBusy || undefined}
             >
                 <div
-                    className="note-title-wrap px-1 pt-1 pb-1"
+                    className="note-title-wrap"
                     data-note-edit-focus
                 >
                     <input
                         id={`note-title-input-${editorId}`}
                         type="text"
-                        className="note-title-frameless w-full text-lg sm:text-xl font-bold bg-transparent border-0 outline-none placeholder:text-[var(--muted)]/50 text-[var(--foreground)] px-0 py-1 transition-colors"
+                        className="note-title-frameless"
                         placeholder="便签标题…"
                         aria-label="便签标题"
                         disabled={!draftReady}
@@ -936,9 +949,9 @@ export function NoteEditor(
                             }
                         });
                     }}
-                    className="flex-1 flex flex-col min-h-0"
+                    className="note-editor-tabs"
                 >
-                    <div className="note-editor-toolbar flex items-center justify-between flex-wrap gap-2 pt-2 pb-2 border-b border-[var(--border)]">
+                    <div className="note-editor-toolbar">
                         <TabsList>
                             <TabsTrigger value="live" data-note-mode-switch>
                                 所见即所得
@@ -947,10 +960,9 @@ export function NoteEditor(
                                 源码
                             </TabsTrigger>
                         </TabsList>
-                        <div className="flex items-center gap-3">
+                        <div className="note-editor-actions">
                             <p
-                                className={"save-state save-" + status +
-                                    " text-xs m-0"}
+                                className={"save-state save-" + status}
                                 role="status"
                             >
                                 {({
@@ -960,40 +972,64 @@ export function NoteEditor(
                                     error: "保存失败，草稿仍在此设备",
                                 })[status]}
                             </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={historyBusy}
-                                onClick={() => void showVersions()}
-                            >
-                                版本历史
-                            </Button>
-                            <NoteColorMenu
-                                color={color}
-                                onChange={async (next) => {
-                                    clearTimeout(blurTimer.current);
-                                    if (
-                                        isDraftDirty() &&
-                                        submittedDraftRef.current !==
-                                            draftRef.current
-                                    ) await save(undefined, "manual");
-                                    else await mutationQueue.current;
-                                    if (!saveFailed.current) {
-                                        await selectColor(next);
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    render={
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label="便签选项"
+                                            title="便签选项"
+                                        />
                                     }
-                                }}
-                            />
+                                >
+                                    <MoreHorizontal
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    sideOffset={6}
+                                    data-note-editor-owner={editorId}
+                                >
+                                    <DropdownMenuItem
+                                        disabled={historyBusy}
+                                        onClick={() => void showVersions()}
+                                    >
+                                        版本历史
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <NoteColorItems
+                                        color={color}
+                                        onChange={async (next) => {
+                                            clearTimeout(blurTimer.current);
+                                            if (
+                                                isDraftDirty() &&
+                                                submittedDraftRef.current !==
+                                                    draftRef.current
+                                            ) await save(undefined, "manual");
+                                            else await mutationQueue.current;
+                                            if (!saveFailed.current) {
+                                                await selectColor(next);
+                                            }
+                                        }}
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
 
                     {editorError && (
-                        <p role="alert" className="error">{editorError}</p>
+                        <StatusBanner tone="error" density="compact">
+                            {editorError}
+                        </StatusBanner>
                     )}
                     {remoteError && (
-                        <p role="alert" className="error">
+                        <StatusBanner tone="error" density="compact">
                             无法读取其他设备的更新；本地草稿已保留，请重新打开便签重试。
-                        </p>
+                        </StatusBanner>
                     )}
                     {recoveryError && (
                         <StatusBanner tone="error" density="compact">
@@ -1064,7 +1100,7 @@ export function NoteEditor(
                                 }}
                                 mergeContent={
                                     <>
-                                        <label className="field">
+                                        <label className="conflict-merge">
                                             合并内容
                                             <Textarea
                                                 value={merge}
@@ -1111,10 +1147,11 @@ export function NoteEditor(
                     </header>
                     {historyBusy && <p role="status">正在加载或恢复版本…</p>}
                     {versionError && (
-                        <div role="alert">
-                            <p>{versionError}</p>
+                        <StatusBanner tone="error" density="compact">
+                            <span>{versionError}</span>
                             <Button
                                 variant="outline"
+                                size="sm"
                                 disabled={historyBusy}
                                 onClick={() =>
                                     void (versions
@@ -1124,7 +1161,7 @@ export function NoteEditor(
                             >
                                 重试
                             </Button>
-                        </div>
+                        </StatusBanner>
                     )}
                     {!historyBusy && versions?.length === 0 && (
                         <p>暂无历史版本</p>

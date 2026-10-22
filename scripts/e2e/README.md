@@ -9,11 +9,11 @@
 | `test:workspace`          | 原 Workspace 完整集合，默认原生文件级并行；见 `suites.ts` 的 `workspace`                         |
 | `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                              |
 | `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                   |
-| `test:workspace:apps`     | Workspace 中 `apps-*`、`desktop-*`、`launcher`、`home-launcher-*`                                |
+| `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                             |
 | `test:workspace:notes`    | Workspace 中 `notes-*`、`home-notes-*`                                                           |
-| `test:workspace:layout`   | Workspace 中 `workspace*`、`desktop-*`、`home-launcher-*`、`bento`                               |
+| `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                     |
 | `test:routing`            | `navigation`、`auth`、`guest-ai-auth`：导航、认证规则/注册可用性、游客 AI 登录回跳               |
-| `test:documents`          | `documents` 和五个 `document-*` 文件；完整列表见清单                                             |
+| `test:documents`          | `documents` 和四个 `document-*` 文件；完整列表见清单                                             |
 | `test:wallpaper`          | `wallpaper`                                                                                      |
 | `test:bundle`             | `bundle-loading`、`route-style-stability`                                                        |
 | `test:home-notes`         | `home-notes-order`、`home-notes-persistence`                                                     |

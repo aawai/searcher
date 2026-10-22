@@ -57,6 +57,7 @@ export function WallpaperCompositionDialog({
     );
     const [saving, setSaving] = useState(false);
     const [imageAspect, setImageAspect] = useState<number | null>(null);
+    const [wasOpen, setWasOpen] = useState(open);
     const effectivePresentation = useMemo<WallpaperPresentation>(() => {
         const base = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
         return {
@@ -89,12 +90,16 @@ export function WallpaperCompositionDialog({
         }
     }, [source]);
 
-    useEffect(() => {
+    // Start from the saved focal point whenever the dialog opens. Parent re-renders
+    // (new `initialComposition` identity, viewport changes) must not discard an
+    // in-progress adjustment, so the reset is keyed to the open transition only.
+    if (open !== wasOpen) {
+        setWasOpen(open);
         if (open) {
             setFocal(initialComposition ?? DEFAULT_WALLPAPER_COMPOSITION);
             setSaving(false);
         }
-    }, [open, initialComposition]);
+    }
 
     const updateFocalFromPointer = useCallback(
         (
@@ -236,15 +241,15 @@ export function WallpaperCompositionDialog({
                 data-testid="wallpaper-preview-dialog"
             >
                 <DialogHeader>
-                    <DialogTitle>调整壁纸构图与预览</DialogTitle>
+                    <DialogTitle>调整构图</DialogTitle>
                     <DialogDescription>
-                        在预览区域点击或拖动焦点，或使用键盘方向键微调，保证宽屏壁纸在移动设备下主体不被裁切。
+                        拖动或用方向键设置焦点，保证竖屏时主体不被裁切。
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="wallpaper-composition-toolbar">
                     <div className="wallpaper-composition-readout">
-                        <span>焦点位置：</span>
+                        <span>焦点</span>
                         <code>X: {focalXPercent} · Y: {focalYPercent}</code>
                     </div>
                     <Button
@@ -253,7 +258,6 @@ export function WallpaperCompositionDialog({
                         size="sm"
                         onClick={handleReset}
                         data-testid="wallpaper-focal-reset-btn"
-                        className="gap-1.5"
                     >
                         <RotateCcw size="1em" className="icon-sm" />
                         <span>居中重置</span>
@@ -265,7 +269,7 @@ export function WallpaperCompositionDialog({
                     <div className="wallpaper-composition-preview-card wallpaper-composition-preview-card--desktop">
                         <div className="wallpaper-composition-preview-card__header">
                             <Monitor size="1em" className="icon-md" />
-                            <span>桌面视图 (16:9)</span>
+                            <span>桌面 16:9</span>
                         </div>
                         <div
                             className="wallpaper-preview-container wallpaper-preview-container--desktop"
@@ -283,10 +287,8 @@ export function WallpaperCompositionDialog({
                             <WallpaperSurface
                                 source={source}
                                 presentation={effectivePresentation}
-                                motionOverride="off"
                                 embedded
                             />
-                            {/* Focal marker */}
                             {/* Focal marker */}
                             <div
                                 ref={positionMarker}
@@ -303,7 +305,7 @@ export function WallpaperCompositionDialog({
                     <div className="wallpaper-composition-preview-card wallpaper-composition-preview-card--mobile">
                         <div className="wallpaper-composition-preview-card__header">
                             <Smartphone size="1em" className="icon-md" />
-                            <span>移动端竖屏 (9:19.5)</span>
+                            <span>手机 9:19.5</span>
                         </div>
                         <div
                             className="wallpaper-preview-container wallpaper-preview-container--mobile"
@@ -321,7 +323,6 @@ export function WallpaperCompositionDialog({
                             <WallpaperSurface
                                 source={source}
                                 presentation={effectivePresentation}
-                                motionOverride="off"
                                 embedded
                             />
                             {/* Focal marker */}
@@ -336,7 +337,7 @@ export function WallpaperCompositionDialog({
                     </div>
                 </div>
 
-                <DialogFooter className="gap-2">
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="outline"
