@@ -1,12 +1,13 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api } from "../lib/api.ts";
+import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import { authPath, routes } from "./routes.ts";
+import { authPath } from "./routes.ts";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import {
     EmptyState,
@@ -59,9 +60,136 @@ interface TrashNote {
     updatedAt: number;
 }
 
+interface TrashRowData {
+    id: string;
+    title: string;
+    detail: string;
+    deletedAt?: number | null;
+    disabled: boolean;
+    onRestore: () => void;
+    onPurge: () => void;
+}
+
+function formatDate(ts?: number | null) {
+    if (!ts) return "—";
+    return new Date(ts).toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
+function TrashRowActions(
+    { row, layout }: { row: TrashRowData; layout: "table" | "card" },
+) {
+    return (
+        <>
+            <Button
+                type="button"
+                variant={layout === "table" ? "ghost" : "outline"}
+                size="sm"
+                onClick={row.onRestore}
+                disabled={row.disabled}
+            >
+                <RotateCcw size="1em" className="icon-sm" />
+                <span>恢复</span>
+            </Button>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                    "trash-danger",
+                    layout === "table" && "trash-purge",
+                )}
+                onClick={row.onPurge}
+                disabled={row.disabled}
+            >
+                <Trash2 size="1em" className="icon-sm" />
+                <span>彻底删除</span>
+            </Button>
+        </>
+    );
+}
+
+function TrashSection(
+    { label, emptyTitle, columnTitle, rows, loading }: {
+        label: string;
+        emptyTitle: string;
+        columnTitle: string;
+        rows: TrashRowData[];
+        loading: boolean;
+    },
+) {
+    if (rows.length === 0) {
+        return (
+            <section className="trash-section" aria-label={label}>
+                {loading ? <LoadingState /> : <EmptyState title={emptyTitle} />}
+            </section>
+        );
+    }
+    return (
+        <section className="trash-section" aria-label={label}>
+            <div className="trash-table-view">
+                <ManagementTable>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{columnTitle}</TableHead>
+                            <TableHead>删除时间</TableHead>
+                            <TableHead className="trash-cell-end">
+                                操作
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {rows.map((row) => (
+                            <TableRow key={row.id}>
+                                <TableCell>
+                                    <div className="trash-item-name">
+                                        {row.title}
+                                    </div>
+                                    <div className="trash-item-sub">
+                                        {row.detail}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="trash-item-date">
+                                    {formatDate(row.deletedAt)}
+                                </TableCell>
+                                <TableCell className="trash-cell-end">
+                                    <div className="trash-item-actions">
+                                        <TrashRowActions
+                                            row={row}
+                                            layout="table"
+                                        />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </ManagementTable>
+            </div>
+            <div className="trash-mobile-list">
+                {rows.map((row) => (
+                    <div key={row.id} className="trash-mobile-card">
+                        <div className="trash-item-name">{row.title}</div>
+                        <div className="trash-item-sub">{row.detail}</div>
+                        <div className="trash-item-date">
+                            删除时间：{formatDate(row.deletedAt)}
+                        </div>
+                        <div className="trash-card-actions">
+                            <TrashRowActions row={row} layout="card" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
 export function TrashPage() {
     const { user } = useAppState();
-    const navigate = useNavigate();
     const location = useLocation();
     const [tab, setTab] = useState<"webapps" | "notes">("webapps");
     const [webapps, setWebapps] = useState<TrashWebApp[]>([]);
@@ -179,51 +307,58 @@ export function TrashPage() {
         }
     }
 
-    function formatDate(ts?: number | null) {
-        if (!ts) return "—";
-        return new Date(ts).toLocaleString("zh-CN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    }
-
     if (!user) {
         return (
             <PageShell archetype="management" className="trash-page">
-                <PageHeader
-                    items={[
-                        { label: "首页", to: routes.home },
-                        { label: "回收站" },
-                    ]}
-                    title="回收站"
-                />
+                <PageHeader title="回收站" />
                 <EmptyState
                     title="未登录"
-                    description="请先登录以查看回收站内容。"
                     action={
-                        <Link
-                            to={authPath("login", location)}
-                            className="button button--primary"
+                        <Button
+                            variant="default"
+                            render={<Link to={authPath("login", location)} />}
                         >
                             请先登录
-                        </Link>
+                        </Button>
                     }
                 />
             </PageShell>
         );
     }
 
+    const webappRows: TrashRowData[] = webapps.map((item) => ({
+        id: item.id,
+        title: item.name,
+        detail: item.url,
+        deletedAt: item.deletedAt,
+        disabled: actionId === item.id || deleting,
+        onRestore: () => void restoreWebApp(item.id),
+        onPurge: () =>
+            setDeleteTarget({
+                type: "webapp",
+                id: item.id,
+                name: item.name,
+            }),
+    }));
+    const noteRows: TrashRowData[] = notes.map((note) => {
+        const title = note.title?.trim() || "无标题便签";
+        return {
+            id: note.id,
+            title,
+            detail: note.body.slice(0, 80) || "（空便签）",
+            deletedAt: note.deletedAt,
+            disabled: actionId === note.id || deleting,
+            onRestore: () => void restoreNote(note.id),
+            onPurge: () =>
+                setDeleteTarget({ type: "note", id: note.id, title }),
+        };
+    });
+    const pending = !initialized || loading;
+
     return (
         <PageShell archetype="management" className="trash-page">
             <PageHeader
                 title="回收站"
-                description="已删除的应用与便签将在此保留 30 天，可随时恢复或彻底删除。"
-                items={[{ label: "首页", to: routes.home }, {
-                    label: "回收站",
-                }]}
                 actions={
                     <Button
                         type="button"
@@ -234,21 +369,21 @@ export function TrashPage() {
                     >
                         <RefreshCw
                             size="1em"
-                            className={`icon-sm ${
-                                loading ? "animate-spin" : ""
-                            }`}
+                            className={cn(
+                                "icon-sm",
+                                loading && "animate-spin",
+                            )}
                         />
                         <span>{loading ? "刷新中…" : "刷新"}</span>
                     </Button>
                 }
             />
-
             <Tabs
                 value={tab}
                 onValueChange={(val) => setTab(val as "webapps" | "notes")}
-                className="mt-4"
+                className="trash-tabs"
             >
-                <TabsList className="mb-4">
+                <TabsList>
                     <TabsTrigger value="webapps">
                         应用 ({webapps.length})
                     </TabsTrigger>
@@ -258,382 +393,35 @@ export function TrashPage() {
                 </TabsList>
             </Tabs>
             {status && (
-                <StatusBanner tone="success" className="mb-4">
+                <StatusBanner tone="success" className="trash-status">
                     {status}
                 </StatusBanner>
             )}
             {error && (
-                <StatusBanner tone="error" className="mb-4">
+                <StatusBanner tone="error" className="trash-status">
                     {error}
                 </StatusBanner>
             )}
+            {tab === "webapps"
+                ? (
+                    <TrashSection
+                        label="已删除的应用"
+                        emptyTitle="没有已删除的应用"
+                        columnTitle="名称 / 网址"
+                        rows={webappRows}
+                        loading={pending}
+                    />
+                )
+                : (
+                    <TrashSection
+                        label="已删除的便签"
+                        emptyTitle="没有已删除的便签"
+                        columnTitle="标题 / 内容摘要"
+                        rows={noteRows}
+                        loading={pending}
+                    />
+                )}
 
-            {tab === "webapps" && (
-                <section
-                    className="trash-list-section"
-                    aria-label="已删除的应用"
-                >
-                    {(!initialized || loading) && webapps.length === 0
-                        ? <LoadingState>正在载入回收站内容…</LoadingState>
-                        : webapps.length === 0
-                        ? (
-                            <EmptyState
-                                title="回收站空空如也"
-                                description="没有已删除的应用"
-                                action={
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => navigate(routes.home)}
-                                    >
-                                        返回首页
-                                    </Button>
-                                }
-                            />
-                        )
-                        : (
-                            <div>
-                                {/* Desktop ManagementTable */}
-                                <div className="hidden sm:block">
-                                    <ManagementTable>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>
-                                                    名称 / 网址
-                                                </TableHead>
-                                                <TableHead>删除时间</TableHead>
-                                                <TableHead className="text-right">
-                                                    操作
-                                                </TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {webapps.map((item) => (
-                                                <TableRow key={item.id}>
-                                                    <TableCell className="trash-item-info">
-                                                        <div className="trash-item-name">
-                                                            {item.name}
-                                                        </div>
-                                                        <div className="trash-item-sub muted">
-                                                            {item.url}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="trash-item-date muted">
-                                                        {formatDate(
-                                                            item.deletedAt,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="trash-item-actions">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    void restoreWebApp(
-                                                                        item.id,
-                                                                    )}
-                                                                disabled={actionId ===
-                                                                        item.id ||
-                                                                    deleting}
-                                                                title="恢复"
-                                                            >
-                                                                <RotateCcw
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    恢复
-                                                                </span>
-                                                            </Button>
-                                                            <Button
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    setDeleteTarget(
-                                                                        {
-                                                                            type:
-                                                                                "webapp",
-                                                                            id: item
-                                                                                .id,
-                                                                            name:
-                                                                                item.name,
-                                                                        },
-                                                                    )}
-                                                                disabled={actionId ===
-                                                                        item.id ||
-                                                                    deleting}
-                                                                title="彻底删除"
-                                                            >
-                                                                <Trash2
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    彻底删除
-                                                                </span>
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </ManagementTable>
-                                </div>
-                                {/* Mobile Stacked Cards */}
-                                <div className="sm:hidden trash-mobile-list">
-                                    {webapps.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="trash-mobile-card"
-                                        >
-                                            <div>
-                                                <div className="trash-mobile-card-title">
-                                                    {item.name}
-                                                </div>
-                                                <div className="trash-mobile-card-sub">
-                                                    {item.url}
-                                                </div>
-                                            </div>
-                                            <div className="trash-mobile-card-date">
-                                                删除时间：{formatDate(
-                                                    item.deletedAt,
-                                                )}
-                                            </div>
-                                            <div className="trash-mobile-card-actions">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() =>
-                                                        void restoreWebApp(
-                                                            item.id,
-                                                        )}
-                                                    disabled={actionId ===
-                                                            item.id || deleting}
-                                                >
-                                                    <RotateCcw
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                    />
-                                                    <span>恢复</span>
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() =>
-                                                        setDeleteTarget({
-                                                            type: "webapp",
-                                                            id: item.id,
-                                                            name: item.name,
-                                                        })}
-                                                    disabled={actionId ===
-                                                            item.id || deleting}
-                                                >
-                                                    <Trash2
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                    />
-                                                    <span>彻底删除</span>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                </section>
-            )}
-
-            {tab === "notes" && (
-                <section
-                    className="trash-list-section"
-                    aria-label="已删除的便签"
-                >
-                    {(!initialized || loading) && notes.length === 0
-                        ? <LoadingState>正在载入回收站内容…</LoadingState>
-                        : notes.length === 0
-                        ? (
-                            <EmptyState
-                                title="回收站空空如也"
-                                description="没有已删除的便签记录"
-                                action={
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => navigate(routes.home)}
-                                    >
-                                        返回首页
-                                    </Button>
-                                }
-                            />
-                        )
-                        : (
-                            <div>
-                                {/* Desktop ManagementTable */}
-                                <div className="hidden sm:block">
-                                    <ManagementTable>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>
-                                                    标题 / 内容摘要
-                                                </TableHead>
-                                                <TableHead>删除时间</TableHead>
-                                                <TableHead className="text-right">
-                                                    操作
-                                                </TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {notes.map((note) => (
-                                                <TableRow key={note.id}>
-                                                    <TableCell className="trash-item-info">
-                                                        <div className="trash-item-name">
-                                                            {note.title
-                                                                ?.trim() ||
-                                                                "无标题便签"}
-                                                        </div>
-                                                        <div className="trash-item-sub muted">
-                                                            {note.body.slice(
-                                                                0,
-                                                                80,
-                                                            ) || "（空便签）"}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="trash-item-date muted">
-                                                        {formatDate(
-                                                            note.deletedAt,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="trash-item-actions">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    void restoreNote(
-                                                                        note.id,
-                                                                    )}
-                                                                disabled={actionId ===
-                                                                        note.id ||
-                                                                    deleting}
-                                                                title="恢复"
-                                                            >
-                                                                <RotateCcw
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    恢复
-                                                                </span>
-                                                            </Button>
-                                                            <Button
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    setDeleteTarget(
-                                                                        {
-                                                                            type:
-                                                                                "note",
-                                                                            id: note
-                                                                                .id,
-                                                                            title:
-                                                                                note
-                                                                                    .title
-                                                                                    ?.trim() ||
-                                                                                "无标题便签",
-                                                                        },
-                                                                    )}
-                                                                disabled={actionId ===
-                                                                        note.id ||
-                                                                    deleting}
-                                                                title="彻底删除"
-                                                            >
-                                                                <Trash2
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    彻底删除
-                                                                </span>
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </ManagementTable>
-                                </div>
-                                {/* Mobile Stacked Cards */}
-                                <div className="sm:hidden trash-mobile-list">
-                                    {notes.map((note) => (
-                                        <div
-                                            key={note.id}
-                                            className="trash-mobile-card"
-                                        >
-                                            <div>
-                                                <div className="trash-mobile-card-title">
-                                                    {note.title?.trim() ||
-                                                        "无标题便签"}
-                                                </div>
-                                                <div className="trash-mobile-card-sub line-clamp-2">
-                                                    {note.body || "（空便签）"}
-                                                </div>
-                                            </div>
-                                            <div className="trash-mobile-card-date">
-                                                删除时间：{formatDate(
-                                                    note.deletedAt,
-                                                )}
-                                            </div>
-                                            <div className="trash-mobile-card-actions">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() =>
-                                                        void restoreNote(
-                                                            note.id,
-                                                        )}
-                                                    disabled={actionId ===
-                                                            note.id || deleting}
-                                                >
-                                                    <RotateCcw
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                    />
-                                                    <span>恢复</span>
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() =>
-                                                        setDeleteTarget({
-                                                            type: "note",
-                                                            id: note.id,
-                                                            title: note.title
-                                                                ?.trim() ||
-                                                                "无标题便签",
-                                                        })}
-                                                    disabled={actionId ===
-                                                            note.id || deleting}
-                                                >
-                                                    <Trash2
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                    />
-                                                    <span>彻底删除</span>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                </section>
-            )}
-
-            {/* Permanent Delete Confirmation Dialog */}
             <AlertDialog
                 open={deleteTarget !== null}
                 onOpenChange={(open) => {
@@ -645,8 +433,8 @@ export function TrashPage() {
                         <AlertDialogTitle>彻底删除</AlertDialogTitle>
                         <AlertDialogDescription>
                             {deleteTarget?.type === "webapp"
-                                ? `确定彻底删除应用“${deleteTarget.name}”吗？彻底删除后将无法恢复。`
-                                : `确定彻底删除便签“${deleteTarget?.title}”吗？彻底删除后将无法恢复。`}
+                                ? `确定彻底删除应用“${deleteTarget.name}”吗？彻底删除后无法恢复。`
+                                : `确定彻底删除便签“${deleteTarget?.title}”吗？彻底删除后无法恢复。`}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -14,12 +14,7 @@ import {
 } from "../../components/ui/escape-layer-stack.tsx";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet.tsx";
 
-export type WorkspacePresentation = "panel" | "window" | "sheet";
-
-export interface WorkspaceViewportInsets {
-    top: number;
-    bottom: number;
-}
+export type WorkspacePresentation = "panel" | "sheet";
 
 export function WorkspaceSurface(
     {
@@ -30,7 +25,6 @@ export function WorkspaceSurface(
         onBack,
         onClose,
         children,
-        footer,
         feedback,
         onFeedbackHost,
         bodyLayout,
@@ -39,17 +33,15 @@ export function WorkspaceSurface(
         expanded = false,
         headerActions,
         backLabel = "返回上一级",
-        viewportInsets,
         chromeBottom = 0,
     }: {
-        presentation: Exclude<WorkspacePresentation, "window">;
+        presentation: WorkspacePresentation;
         title: string;
         routeKey: string;
         nested: boolean;
         onBack: () => void;
         onClose: () => void;
         children: ReactNode;
-        footer: ReactNode;
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
         bodyLayout?: "app-form" | "editor";
@@ -58,7 +50,6 @@ export function WorkspaceSurface(
         expanded?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
-        viewportInsets?: WorkspaceViewportInsets;
         chromeBottom?: number;
     },
 ) {
@@ -163,7 +154,6 @@ export function WorkspaceSurface(
             </div>
             {feedback}
             {onFeedbackHost && <div ref={onFeedbackHost} />}
-            {footer}
         </>
     );
     return mobile
@@ -202,13 +192,8 @@ export function WorkspaceSurface(
                 className="workspace-panel"
                 data-presentation={presentation}
                 data-workspace-expanded={expanded || undefined}
-                data-viewport-constrained={Boolean(viewportInsets) || undefined}
                 style={{
                     "--workspace-chrome-bottom": `${chromeBottom}px`,
-                    ...(viewportInsets && {
-                        top: viewportInsets.top,
-                        bottom: viewportInsets.bottom,
-                    }),
                 } as CSSProperties}
                 aria-label={title + "工作区"}
             >

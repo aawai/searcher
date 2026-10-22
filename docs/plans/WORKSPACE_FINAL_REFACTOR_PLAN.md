@@ -581,8 +581,8 @@ M3 只使用 test/demo content 验证窗口引擎，不迁移业务。
 
 - 删除 dead Workspace desktop panel CSS/state（仅 Widgets 路径）；
 - 保留 Zen Panel 所需 canonical owner；
-- 更新 DESIGN_SYSTEM；
-- 更新 UI_REVIEW_CHECKLIST；
+- 更新原设计系统文档（现并入 Visual Language）；
+- 更新 UI 验收清单；
 - 更新 CHANGELOG（只记录最终用户可观察变化）；
 - 必要的 UI Guard ownership rule；
 - 全矩阵 E2E / 实页验证。

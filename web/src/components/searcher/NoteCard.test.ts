@@ -67,7 +67,7 @@ Deno.test("NoteCard renders NoteMarkdown preview with shared breaks and markdown
     assertEquals(html.includes('rel="noopener noreferrer"'), true);
 });
 
-Deno.test("NoteCard renders placeholder when note body is empty or whitespace", () => {
+Deno.test("NoteCard renders no preview or placeholder when note body is empty or whitespace", () => {
     const html = ReactDOMServer.renderToStaticMarkup(
         React.createElement(NoteCard, {
             note: {
@@ -79,8 +79,9 @@ Deno.test("NoteCard renders placeholder when note body is empty or whitespace", 
             mode: "full",
         }),
     );
-    assertEquals(html.includes("note-placeholder"), true);
-    assertEquals(html.includes("写下你的想法…"), true);
+    assertEquals(html.includes("note-preview"), false);
+    assertEquals(html.includes("note-placeholder"), false);
+    assertEquals(html.includes("写下你的想法…"), false);
 });
 
 Deno.test("NoteCard omits preview in compact mode", () => {

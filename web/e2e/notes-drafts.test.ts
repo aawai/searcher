@@ -141,7 +141,7 @@ Deno.test(
 
         await page.reload();
         await page.locator(
-            '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+            '.zen-edge-btn[data-workspace="notes"]',
         ).first().click();
         await page.locator(".notes-workspace-list .note-title").filter({
             hasText: note.title,
@@ -241,7 +241,7 @@ Deno.test(
 
         await loginAndVisit(page, app.origin, "/", credentials);
         await page.locator(
-            '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+            '.zen-edge-btn[data-workspace="notes"]',
         ).first().click();
         await page.locator(".notes-workspace-list .note-title").filter({
             hasText: note.title,
@@ -274,7 +274,7 @@ Deno.test(
 
         await loginAndVisit(page, app.origin, "/", credentials);
         await page.locator(
-            '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+            '.zen-edge-btn[data-workspace="notes"]',
         ).first().click();
         await page.locator(".notes-workspace-list .note-title").filter({
             hasText: note.title,
@@ -525,7 +525,7 @@ Deno.test(
         // Legacy verification errors preserve the original and leave the
         // editor disabled until the user retries successfully.
         await page.locator(
-            '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+            '.zen-edge-btn[data-workspace="notes"]',
         ).first().click();
         const noteCard = page.locator(".notes-workspace-list .note-title")
             .filter({ hasText: ownerNote.title });
@@ -889,7 +889,7 @@ Deno.test(
             };
         }, keys.canonical);
         await page.locator(
-            '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+            '.zen-edge-btn[data-workspace="notes"]',
         ).first().click();
         await page.locator(".notes-workspace-list .note-title").filter({
             hasText: note.title,
@@ -947,11 +947,6 @@ Deno.test("closing a recovered note conflict preserves its original draft baseli
     await loginAndVisit(page, app.origin, "/", credentials);
     const localBody = "关闭后仍可恢复的本地编辑";
     const fixture = await page.evaluate(async (body) => {
-        await fetch("/api/preferences", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ style: "zen" }),
-        });
         const created = await fetch("/api/notes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -11,7 +11,6 @@ import {
     ACCENT_IDS,
     CANONICAL_REASONING_EFFORTS,
 } from "../../shared/contracts.ts";
-import { DESKTOP_SCENE_IDS } from "../../shared/desktop-scenes.ts";
 import {
     normalizeWallpaperPresentation,
     type WallpaperPresentation,
@@ -24,18 +23,6 @@ const Engine = v.optional(
     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
 );
 const Theme = v.optional(v.picklist(["system", "light", "dark"]));
-const Style = v.optional(
-    v.picklist([
-        "command",
-        "zen",
-        "widgets",
-        "quiet",
-        "minimal",
-        "glass",
-        "soft",
-        "classic",
-    ]),
-);
 const Accent = v.optional(v.picklist(ACCENT_IDS));
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
 const SearchOpacity = v.optional(
@@ -45,7 +32,7 @@ const Target = v.optional(v.picklist(["same", "new"]));
 const HistoryEnabled = v.optional(v.boolean("搜索历史开关必须为布尔值"));
 const WebAppHomeLimit = v.optional(v.picklist([8, 12, 16, "all"]));
 const WebAppIconSize = v.optional(v.picklist(["compact", "default", "large"]));
-const ShowAppLabels = v.optional(v.boolean("显示应用标签必须为布尔值"));
+const ShowAppLabels = v.optional(v.boolean("显示应用名称必须为布尔值"));
 const BackgroundImage = v.optional(v.nullable(v.pipe(
     v.string(),
     v.maxLength(2048),
@@ -81,11 +68,6 @@ const WallpaperCompositions = v.optional(
         ),
     ),
 );
-const CanvasMotionValidator = v.optional(v.picklist(["off", "ambient"]));
-const CanvasMotionLevelValidator = v.optional(
-    v.picklist(["subtle", "soft", "standard", "pronounced"]),
-);
-const DesktopScene = v.optional(v.picklist(DESKTOP_SCENE_IDS));
 const WallpaperPresentations = v.optional(
     v.nullable(
         v.record(
@@ -118,18 +100,6 @@ const WallpaperPresentations = v.optional(
                 ),
                 readability: v.optional(
                     v.picklist(["none", "clear", "balanced", "quiet", "focus"]),
-                ),
-                softness: v.optional(
-                    v.picklist(["none", "subtle", "soft", "hazy"]),
-                ),
-                tone: v.optional(
-                    v.picklist(["natural", "soft", "mono"]),
-                ),
-                motion: v.optional(
-                    v.picklist(["off", "ambient", "drift", "zoom"]),
-                ),
-                motionLevel: v.optional(
-                    v.picklist(["subtle", "soft", "standard", "pronounced"]),
                 ),
             }),
         ),
@@ -206,7 +176,6 @@ export function registerPreferencesRoutes(
         validator({
             defaultEngine: json(Engine),
             theme: json(Theme),
-            style: json(Style),
             accent: json(Accent),
             searchShape: json(Shape),
             searchOpacity: json(SearchOpacity),
@@ -217,9 +186,6 @@ export function registerPreferencesRoutes(
             showAppLabels: json(ShowAppLabels),
             backgroundImage: json(BackgroundImage),
             wallpaperPresentations: json(WallpaperPresentations),
-            canvasMotion: json(CanvasMotionValidator),
-            canvasMotionLevel: json(CanvasMotionLevelValidator),
-            desktopScene: json(DesktopScene),
             aiGenerationDefaults: json(AiGenerationDefaults),
             wallpaperCompositions: json(WallpaperCompositions),
         }),

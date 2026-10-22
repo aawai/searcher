@@ -40,15 +40,6 @@ function getInitialPoint(note: NoteItem, index: number): Point {
     return { x: 0, y: 0, z: index + 1 };
 }
 
-function getNoteTilt(id: string): string {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-        hash = (hash << 5) - hash + id.charCodeAt(i);
-    }
-    const angles = [-0.6, 0.8, -0.3, 0.5];
-    return `${angles[Math.abs(hash) % angles.length]}deg`;
-}
-
 function measurementsEqual(
     previous: Record<string, MeasuredDefaultNote>,
     next: Record<string, MeasuredDefaultNote>,
@@ -108,6 +99,7 @@ function Floating(
     return (
         <div
             className="note-position"
+            data-dragging={isDragging || undefined}
             ref={setNodeRef}
             onPointerDown={(e) => {
                 // Re-layering a code scrollport cancels its native scrollbar drag.
@@ -123,7 +115,6 @@ function Floating(
                 top: point.y,
                 zIndex: isDragging ? "var(--elevation-note-drag)" : point.z,
                 transform: CSS.Translate.toString(transform),
-                "--note-tilt": getNoteTilt(note.id),
             } as CSSProperties}
         >
             <NoteCard
@@ -492,9 +483,6 @@ export function FloatingNotes(
                                 }
                             }}
                             aria-hidden="true"
-                            style={{
-                                "--note-tilt": getNoteTilt(note.id),
-                            } as CSSProperties}
                         >
                             <NoteCard
                                 note={note}

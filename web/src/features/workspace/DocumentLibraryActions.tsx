@@ -34,6 +34,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import {
@@ -47,22 +48,17 @@ import {
     AlertDialogTitle,
 } from "../../components/ui/alert-dialog.tsx";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
-import { cn } from "../../lib/utils.ts";
 
 export interface DocumentLibraryActionsProps {
     item: DocumentSummaryDto;
     notebooks: DocumentNotebookDto[];
     onChanged: () => void;
-    onDocumentChanged?: (document: DocumentDto) => void;
-    onDocumentDeleted?: (id: string) => void;
 }
 
 export function DocumentLibraryActions({
     item,
     notebooks,
     onChanged,
-    onDocumentChanged,
-    onDocumentDeleted,
 }: DocumentLibraryActionsProps) {
     const [renameOpen, setRenameOpen] = useState(false);
     const [titleInput, setTitleInput] = useState(item.title);
@@ -122,7 +118,7 @@ export function DocumentLibraryActions({
         setRenameError(null);
         try {
             const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            const saved = await api<DocumentDto>(
+            await api<DocumentDto>(
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
@@ -130,7 +126,6 @@ export function DocumentLibraryActions({
                 }),
             );
             setRenameOpen(false);
-            onDocumentChanged?.(saved);
             onChanged();
         } catch (err) {
             setRenameError(err instanceof Error ? err.message : String(err));
@@ -146,7 +141,7 @@ export function DocumentLibraryActions({
         setMoveError(null);
         try {
             const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            const saved = await api<DocumentDto>(
+            await api<DocumentDto>(
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
@@ -154,7 +149,6 @@ export function DocumentLibraryActions({
                 }),
             );
             setMoveOpen(false);
-            onDocumentChanged?.(saved);
             onChanged();
         } catch (err) {
             setMoveError(err instanceof Error ? err.message : String(err));
@@ -174,7 +168,6 @@ export function DocumentLibraryActions({
                 { method: "DELETE" },
             );
             setTrashOpen(false);
-            onDocumentDeleted?.(item.id);
             onChanged();
         } catch (err) {
             setTrashError(err instanceof Error ? err.message : String(err));
@@ -189,14 +182,13 @@ export function DocumentLibraryActions({
         setFavoriteError(null);
         try {
             const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            const saved = await api<DocumentDto>(
+            await api<DocumentDto>(
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
                     isFavorite: !item.isFavorite,
                 }),
             );
-            onDocumentChanged?.(saved);
             onChanged();
         } catch (err) {
             setFavoriteError(err instanceof Error ? err.message : String(err));
@@ -214,10 +206,11 @@ export function DocumentLibraryActions({
                             type="button"
                             variant="ghost"
                             size="icon"
+                            className="documents-row-action"
                             aria-label={`笔记操作：${item.displayTitle}`}
                             title={`笔记操作：${item.displayTitle}`}
                         >
-                            <MoreHorizontal className="size-[var(--icon-md)]" />
+                            <MoreHorizontal className="icon-md" />
                         </Button>
                     }
                     aria-label={`笔记操作：${item.displayTitle}`}
@@ -226,7 +219,7 @@ export function DocumentLibraryActions({
                     <DropdownMenuItem
                         onClick={() => setRenameOpen(true)}
                     >
-                        <Pencil className="size-[var(--icon-md)] mr-2" />
+                        <Pencil className="icon-md" />
                         <span>重命名</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -234,25 +227,24 @@ export function DocumentLibraryActions({
                         onClick={() => void handleToggleFavorite()}
                     >
                         <Star
-                            className={cn(
-                                "size-[var(--icon-md)] mr-2",
-                                item.isFavorite &&
-                                    "fill-current text-[var(--warning)]",
-                            )}
+                            className={item.isFavorite
+                                ? "icon-md documents-favorite-icon"
+                                : "icon-md"}
                         />
                         <span>{item.isFavorite ? "取消收藏" : "收藏"}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => setMoveOpen(true)}
                     >
-                        <FolderInput className="size-[var(--icon-md)] mr-2" />
+                        <FolderInput className="icon-md" />
                         <span>移动笔记本</span>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
-                        className="text-[var(--danger)] focus:text-[var(--danger)]"
+                        variant="destructive"
                         onClick={() => setTrashOpen(true)}
                     >
-                        <Trash2 className="size-[var(--icon-md)] mr-2" />
+                        <Trash2 className="icon-md" />
                         <span>移至回收站</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -265,12 +257,15 @@ export function DocumentLibraryActions({
                     if (!isRenaming) setRenameOpen(open);
                 }}
             >
-                <DialogContent className="max-w-md">
-                    <form onSubmit={handleRenameSubmit}>
+                <DialogContent>
+                    <form
+                        className="documents-dialog-form"
+                        onSubmit={handleRenameSubmit}
+                    >
                         <DialogHeader>
                             <DialogTitle>重命名笔记</DialogTitle>
                             <DialogDescription>
-                                修改笔记的标题。留空将使用无标题或正文首行作为显示名称。
+                                留空将使用无标题或正文首行作为显示名称。
                             </DialogDescription>
                         </DialogHeader>
 
@@ -278,16 +273,15 @@ export function DocumentLibraryActions({
                             <StatusBanner
                                 tone="error"
                                 density="compact"
-                                className="mb-3"
                             >
                                 {renameError}
                             </StatusBanner>
                         )}
 
-                        <div className="flex flex-col gap-1.5 py-2">
+                        <div className="documents-dialog-field">
                             <label
                                 htmlFor={renameTitleId}
-                                className="text-xs font-medium text-[var(--muted)]"
+                                className="documents-dialog-label"
                             >
                                 笔记标题
                             </label>
@@ -300,13 +294,13 @@ export function DocumentLibraryActions({
                                 placeholder="无标题笔记"
                                 autoFocus
                             />
-                            <span className="text-[length:var(--font-metadata-size)] text-[var(--muted)] self-end">
+                            <span className="documents-dialog-counter">
                                 {titleInput.length} /{" "}
                                 {DOCUMENT_TITLE_MAX_LENGTH}
                             </span>
                         </div>
 
-                        <DialogFooter className="gap-2 mt-4">
+                        <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -336,29 +330,28 @@ export function DocumentLibraryActions({
                     if (!isMoving) setMoveOpen(open);
                 }}
             >
-                <DialogContent className="max-w-md">
-                    <form onSubmit={handleMoveSubmit}>
+                <DialogContent>
+                    <form
+                        className="documents-dialog-form"
+                        onSubmit={handleMoveSubmit}
+                    >
                         <DialogHeader>
                             <DialogTitle>移动笔记本</DialogTitle>
-                            <DialogDescription>
-                                选择笔记所属的笔记本，或移出笔记本。
-                            </DialogDescription>
                         </DialogHeader>
 
                         {moveError && (
                             <StatusBanner
                                 tone="error"
                                 density="compact"
-                                className="mb-3"
                             >
                                 {moveError}
                             </StatusBanner>
                         )}
 
-                        <div className="flex flex-col gap-1.5 py-2">
+                        <div className="documents-dialog-field">
                             <label
                                 htmlFor={moveNotebookId}
-                                className="text-xs font-medium text-[var(--muted)]"
+                                className="documents-dialog-label"
                             >
                                 所属笔记本
                             </label>
@@ -383,7 +376,7 @@ export function DocumentLibraryActions({
                             </NativeSelect>
                         </div>
 
-                        <DialogFooter className="gap-2 mt-4">
+                        <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -415,8 +408,7 @@ export function DocumentLibraryActions({
                     <AlertDialogHeader>
                         <AlertDialogTitle>移至回收站</AlertDialogTitle>
                         <AlertDialogDescription>
-                            确定将笔记“{item
-                                .displayTitle}”移至回收站吗？可在回收站中恢复。
+                            “{item.displayTitle}”可在回收站中恢复。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -424,7 +416,6 @@ export function DocumentLibraryActions({
                         <StatusBanner
                             tone="error"
                             density="compact"
-                            className="my-2"
                         >
                             {trashError}
                         </StatusBanner>
@@ -442,7 +433,7 @@ export function DocumentLibraryActions({
                                 void handleTrashConfirm();
                             }}
                         >
-                            {isTrashing ? "正在移至回收站…" : "确认移至回收站"}
+                            {isTrashing ? "正在移至回收站…" : "移至回收站"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -464,7 +455,6 @@ export function DocumentLibraryActions({
                     <StatusBanner
                         tone="error"
                         density="compact"
-                        className="my-2"
                     >
                         {favoriteError}
                     </StatusBanner>
@@ -551,10 +541,12 @@ export function CreateLibraryDocument({
         <>
             <Button
                 variant="default"
+                size="icon"
+                aria-label="新建笔记"
+                title="新建笔记"
                 onClick={() => setOpen(true)}
             >
-                <Plus className="size-[var(--icon-md)] mr-1.5" />
-                新建笔记
+                <Plus className="icon-md" />
             </Button>
 
             <Dialog
@@ -563,30 +555,29 @@ export function CreateLibraryDocument({
                     if (!isSubmitting) setOpen(next);
                 }}
             >
-                <DialogContent className="max-w-md">
-                    <form onSubmit={handleCreateSubmit}>
+                <DialogContent>
+                    <form
+                        className="documents-dialog-form"
+                        onSubmit={handleCreateSubmit}
+                    >
                         <DialogHeader>
                             <DialogTitle>新建笔记</DialogTitle>
-                            <DialogDescription>
-                                创建一篇新笔记并选择所属笔记本。
-                            </DialogDescription>
                         </DialogHeader>
 
                         {error && (
                             <StatusBanner
                                 tone="error"
                                 density="compact"
-                                className="mb-3"
                             >
                                 {error}
                             </StatusBanner>
                         )}
 
-                        <div className="flex flex-col gap-3 py-2">
-                            <div className="flex flex-col gap-1.5">
+                        <div className="documents-dialog-fields">
+                            <div className="documents-dialog-field">
                                 <label
                                     htmlFor={titleId}
-                                    className="text-xs font-medium text-[var(--muted)]"
+                                    className="documents-dialog-label"
                                 >
                                     笔记标题
                                 </label>
@@ -599,15 +590,15 @@ export function CreateLibraryDocument({
                                     disabled={isSubmitting}
                                     autoFocus
                                 />
-                                <span className="text-[length:var(--font-metadata-size)] text-[var(--muted)] self-end">
+                                <span className="documents-dialog-counter">
                                     {title.length} / {DOCUMENT_TITLE_MAX_LENGTH}
                                 </span>
                             </div>
 
-                            <div className="flex flex-col gap-1.5">
+                            <div className="documents-dialog-field">
                                 <label
                                     htmlFor={notebookId}
-                                    className="text-xs font-medium text-[var(--muted)]"
+                                    className="documents-dialog-label"
                                 >
                                     所属笔记本
                                 </label>
@@ -635,7 +626,7 @@ export function CreateLibraryDocument({
                             </div>
                         </div>
 
-                        <DialogFooter className="gap-2 mt-4">
+                        <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"

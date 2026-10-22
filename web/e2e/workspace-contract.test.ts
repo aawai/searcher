@@ -69,37 +69,28 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     await page.waitForURL(origin + "/");
     await page.locator("main").waitFor();
 
-    // Use Widgets dock layout so workspace dock buttons are accessible
-    await visit("/settings/appearance");
-    await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.locator('.layout-mode-card[aria-checked="true"]', {
-        hasText: "空间轻桌面",
-    }).waitFor();
     await visit("/");
 
     function getWorkspace(type: "apps" | "notes") {
-        return page.locator(
-            `.desktop-window[data-window-id="${type}"], .workspace-panel--mobile, aside.workspace-panel, .workspace-panel`,
-        );
+        const label = type === "apps" ? "应用工作区" : "便签工作区";
+        return page.locator(`aside.workspace-panel[aria-label="${label}"]`);
     }
 
     async function openWorkspace(type: "apps" | "notes") {
-        const label = type === "apps" ? "应用工作区" : "便签工作区";
         const target = getWorkspace(type);
-        const dockBtn = page.locator(
-            `.desktop-dock button[aria-label="${label}"], .desktop-dock button[data-workspace="${type}"], .workspace-mobile-navigation button[aria-label="${label}"], .workspace-dock button[aria-label="${label}"], button[data-workspace="${type}"]`,
-        );
-        await dockBtn.first().waitFor({ state: "visible" });
-        // Reload may already have restored this workspace from the device layout.
-        const restored = await target.waitFor({
-            state: "visible",
-            timeout: 2500,
-        }).then(() => true, () => false);
-        if (
-            !restored ||
-            await target.getAttribute("data-window-active") === "false"
-        ) {
-            await dockBtn.first().click();
+        if (!(await target.isVisible())) {
+            const openPanel = page.locator(".workspace-panel:visible");
+            if (await openPanel.count() > 0) {
+                // The Dock is hidden while a panel is open; switch via header tabs.
+                await openPanel.getByRole("tab", {
+                    name: type === "apps" ? "应用工作区" : "便签工作区",
+                    exact: true,
+                }).click();
+            } else {
+                await page.locator(
+                    `.zen-edge-trigger button[data-workspace="${type}"]`,
+                ).click();
+            }
         }
         await target.waitFor({ state: "visible" });
     }
@@ -112,15 +103,9 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             const appsPanel = getWorkspace("apps");
             await appsPanel.waitFor({ state: "visible" });
 
-            // Dock stays visible while windows open; root nav Dock not footer
-            const dock = page.locator(".desktop-dock");
-            if (await dock.count() > 0) {
-                assertEquals(await dock.isVisible(), true);
-            }
-
             // Title is accessible (chrome title or h2 in surface)
             const appsTitle = appsPanel.locator(
-                ".desktop-window-chrome-title, .workspace-title, h2",
+                ".workspace-title, h2",
             );
             await appsTitle.first().waitFor({ state: "visible" });
             assertEquals(await appsTitle.first().textContent(), "应用");
@@ -162,7 +147,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await notesPanel.waitFor({ state: "visible" });
 
             const notesTitle = notesPanel.locator(
-                ".desktop-window-chrome-title, .workspace-title, h2",
+                ".workspace-title, h2",
             );
             await notesTitle.first().waitFor({ state: "visible" });
             assertEquals(await notesTitle.first().textContent(), "便签");
@@ -284,7 +269,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     );
     // 2.5. Apps root and empty folder canonical EmptyState contract
     await t.step(
-        "Apps root and empty folder canonical EmptyState contract (h3, compact, footer primary sole action, no competing body button)",
+        "Apps root and empty folder canonical EmptyState contract (h3, compact, header primary action)",
         async () => {
             await openWorkspace("apps");
             const appsPanel = getWorkspace("apps");
@@ -300,19 +285,24 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             const emptyH3 = rootEmpty.getByRole("heading", { level: 3 });
             await emptyH3.waitFor({ state: "visible" });
 
-            // Workspace footer has the sole primary action: "添加应用"
+            // Header primary is the sole create action: icon button labelled 添加应用
             const addBtn = appsPanel.locator(
-                ".workspace-footer button.workspace-primary, .workspace-footer button:has-text('添加应用'), button:has-text('添加应用')",
-            ).first();
+                ".workspace-header .workspace-primary",
+            );
             await addBtn.waitFor({ state: "visible" });
-            assertEquals(await addBtn.textContent(), "添加应用");
+            assertEquals(await addBtn.getAttribute("aria-label"), "添加应用");
 
-            // Clicking footer "添加应用" navigates to AppForm
+            // Clicking header "添加应用" navigates to AppForm
             await addBtn.click();
-            await appsPanel.locator(".apps-workspace-form").waitFor({
+            // The panel label follows the view title (添加应用工作区 in the form),
+            // so locate the panel by the form it contains.
+            const formPanel = page.locator(
+                "aside.workspace-panel:has(.apps-workspace-form)",
+            );
+            await formPanel.locator(".apps-workspace-form").waitFor({
                 state: "visible",
             });
-            await appsPanel.locator('button[aria-label="返回上一级"]').click();
+            await formPanel.locator('button[aria-label="返回上一级"]').click();
             await rootEmpty.waitFor({ state: "visible" });
             // B. Empty folder state (0 apps in group)
             const groupId = await page.evaluate(async () => {
@@ -341,8 +331,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             const folderH3 = folderRegion.locator("h3.workspace-section-title");
             await folderH3.waitFor({ state: "visible" });
             assertEquals(await folderH3.textContent(), "空测试文件夹");
-            const folderBadge = folderRegion.locator('[data-slot="badge"]');
-            assertEquals(await folderBadge.textContent(), "0");
+            const folderCount = folderRegion.locator(
+                ".workspace-section-count",
+            );
+            assertEquals(await folderCount.textContent(), "0");
 
             // Folder body renders canonical EmptyState with heading level 3 and compact density
             const folderEmpty = appsPanel.locator(
@@ -358,12 +350,12 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await folderEmptyH3.waitFor({ state: "visible" });
 
-            // Footer primary button navigates to create inside folder
+            // Header primary button navigates to create inside folder
             await addBtn.click();
-            await appsPanel.locator(".apps-workspace-form").waitFor({
+            await formPanel.locator(".apps-workspace-form").waitFor({
                 state: "visible",
             });
-            await appsPanel.locator('button[aria-label="返回上一级"]').click();
+            await formPanel.locator('button[aria-label="返回上一级"]').click();
             await folderEmpty.waitFor({ state: "visible" });
 
             // Return to root and clean up group
@@ -376,9 +368,9 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
         },
     );
 
-    // 3. Count badge and search results contract
+    // 3. Section count and search results contract
     await t.step(
-        "Count badge and search results contract: visible count and '搜索结果' region in Apps and Notes",
+        "Section count and search results contract: visible count and '搜索结果' region in Apps and Notes",
         async () => {
             // Seed 2 webapps
             await page.evaluate(async () => {
@@ -436,10 +428,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await appsRegion.waitFor({ state: "visible" });
 
-            // Count badge in section header is visible and shows count 2
-            const appsCountBadge = appsRegion.locator('[data-slot="badge"]');
-            await appsCountBadge.waitFor({ state: "visible" });
-            assertEquals(await appsCountBadge.textContent(), "2");
+            // Section count in header is visible and shows count 2
+            const appsCount = appsRegion.locator(".workspace-section-count");
+            await appsCount.waitFor({ state: "visible" });
+            assertEquals(await appsCount.textContent(), "2");
 
             // Perform search in Apps
             const appsSearchInput = appsPanel.locator(
@@ -458,12 +450,12 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await appsSearchH3.waitFor({ state: "visible" });
 
-            // Count badge in search results shows 1
-            const searchCountBadge = appsSearchRegion.locator(
-                '[data-slot="badge"]',
+            // Section count in search results shows 1
+            const searchCount = appsSearchRegion.locator(
+                ".workspace-section-count",
             );
-            await searchCountBadge.waitFor({ state: "visible" });
-            assertEquals(await searchCountBadge.textContent(), "1");
+            await searchCount.waitFor({ state: "visible" });
+            assertEquals(await searchCount.textContent(), "1");
 
             // Matching app is displayed
             assertStringIncludes(
@@ -480,14 +472,14 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             // Clear search restores "全部应用"
             await appsSearchInput.fill("");
             await appsRegion.waitFor({ state: "visible" });
-            assertEquals(await appsCountBadge.textContent(), "2");
+            assertEquals(await appsCount.textContent(), "2");
 
-            // B. Test Notes Workspace: count badge & search
+            // B. Test Notes Workspace: section count & search
             await openWorkspace("notes");
             const notesPanel = getWorkspace("notes");
             await notesPanel.waitFor({ state: "visible" });
             const fixedRegion = notesPanel.getByRole("region", {
-                name: "置顶与首页固定",
+                name: "已固定",
             });
             const otherRegion = notesPanel.getByRole("region", {
                 name: "其他便签",
@@ -496,10 +488,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await otherRegion.waitFor({ state: "visible" });
 
             // Check counts
-            const fixedBadge = fixedRegion.locator('[data-slot="badge"]');
-            const otherBadge = otherRegion.locator('[data-slot="badge"]');
-            assertEquals(await fixedBadge.textContent(), "1");
-            assertEquals(await otherBadge.textContent(), "1");
+            const fixedCount = fixedRegion.locator(".workspace-section-count");
+            const otherCount = otherRegion.locator(".workspace-section-count");
+            assertEquals(await fixedCount.textContent(), "1");
+            assertEquals(await otherCount.textContent(), "1");
 
             // Perform search in Notes
             const notesSearchInput = notesPanel.locator(
@@ -513,7 +505,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await notesSearchRegion.waitFor({ state: "visible" });
             assertEquals(
-                await notesPanel.getByRole("region", { name: "置顶与首页固定" })
+                await notesPanel.getByRole("region", { name: "已固定" })
                     .count(),
                 0,
             );
@@ -523,12 +515,12 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 0,
             );
 
-            // Count badge shows 1
-            const notesSearchBadge = notesSearchRegion.locator(
-                '[data-slot="badge"]',
+            // Section count shows 1
+            const notesSearchCount = notesSearchRegion.locator(
+                ".workspace-section-count",
             );
-            await notesSearchBadge.waitFor({ state: "visible" });
-            assertEquals(await notesSearchBadge.textContent(), "1");
+            await notesSearchCount.waitFor({ state: "visible" });
+            assertEquals(await notesSearchCount.textContent(), "1");
             assertStringIncludes(
                 await notesSearchRegion.textContent() ?? "",
                 "Beta Regular Note",
@@ -673,7 +665,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await loadingState.waitFor({ state: "hidden" });
             notesUnrouted = true;
             await page.unroute("**/api/notes");
-            await notesPanel.getByRole("region", { name: "置顶与首页固定" })
+            await notesPanel.getByRole("region", { name: "已固定" })
                 .waitFor(
                     { state: "visible" },
                 );

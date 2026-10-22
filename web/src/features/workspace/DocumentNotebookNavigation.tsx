@@ -29,6 +29,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
@@ -327,51 +328,50 @@ export function DocumentNotebookNavigation({
             >
                 <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    variant={scope.type === "all" ? "outline" : "ghost"}
                     className="documents-notebook-scope-btn"
                     data-active={scope.type === "all"}
                     aria-pressed={scope.type === "all"}
                     onClick={() => onScopeChange({ type: "all" })}
                 >
-                    <Files size="1em" className="icon-md" />
+                    <Files className="icon-md" />
                     <span>全部笔记</span>
                 </Button>
                 <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    variant={scope.type === "recent" ? "outline" : "ghost"}
                     className="documents-notebook-scope-btn"
                     data-active={scope.type === "recent"}
                     aria-pressed={scope.type === "recent"}
                     onClick={() => onScopeChange({ type: "recent" })}
                 >
-                    <Clock size="1em" className="icon-md" />
+                    <Clock className="icon-md" />
                     <span>最近笔记</span>
                 </Button>
                 <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    variant={scope.type === "favorite" ? "outline" : "ghost"}
                     className="documents-notebook-scope-btn"
                     data-active={scope.type === "favorite"}
                     aria-pressed={scope.type === "favorite"}
                     onClick={() => onScopeChange({ type: "favorite" })}
                 >
-                    <Star size="1em" className="icon-md" />
+                    <Star className="icon-md" />
                     <span>收藏笔记</span>
                 </Button>
             </div>
 
             {/* Notebooks header with new notebook secondary button */}
-            <div className="documents-notebook-header flex items-center justify-between">
-                <span className="documents-notebook-title text-xs font-semibold text-[var(--muted)]">
+            <div className="documents-notebook-header">
+                <span className="documents-notebook-title">
                     笔记本
                 </span>
                 <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="新建笔记本"
+                    title="新建笔记本"
                     className="documents-notebook-create-trigger"
                     disabled={isPending}
                     onClick={() => {
@@ -381,8 +381,7 @@ export function DocumentNotebookNavigation({
                         setCreateOpen(true);
                     }}
                 >
-                    <Plus size="1em" className="icon-sm" />
-                    <span>新建笔记本</span>
+                    <Plus className="icon-md" />
                 </Button>
             </div>
 
@@ -422,8 +421,7 @@ export function DocumentNotebookNavigation({
                         >
                             <Button
                                 type="button"
-                                variant="ghost"
-                                size="sm"
+                                variant={isActive ? "outline" : "ghost"}
                                 className="documents-notebook-row-btn"
                                 data-active={isActive}
                                 aria-pressed={isActive}
@@ -433,7 +431,7 @@ export function DocumentNotebookNavigation({
                                         notebookId: notebook.id,
                                     })}
                             >
-                                <Folder size="1em" className="icon-md" />
+                                <Folder className="icon-md" />
                                 <span className="documents-notebook-name">
                                     {notebook.name}
                                 </span>
@@ -446,14 +444,11 @@ export function DocumentNotebookNavigation({
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            className="documents-notebook-more-btn"
+                                            className="documents-row-action"
                                             aria-label={`笔记本操作：${notebook.name}`}
                                             title={`笔记本操作：${notebook.name}`}
                                         >
-                                            <MoreHorizontal
-                                                size="1em"
-                                                className="icon-sm"
-                                            />
+                                            <MoreHorizontal className="icon-md" />
                                         </Button>
                                     }
                                 />
@@ -466,10 +461,7 @@ export function DocumentNotebookNavigation({
                                         }}
                                         disabled={isPending}
                                     >
-                                        <Pencil
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
+                                        <Pencil className="icon-md" />
                                         <span>重命名</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -482,10 +474,7 @@ export function DocumentNotebookNavigation({
                                         }}
                                         disabled={isPending || hasChildren}
                                     >
-                                        <FolderInput
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
+                                        <FolderInput className="icon-md" />
                                         <span>移动</span>
                                     </DropdownMenuItem>
                                     {depth === 0 && (
@@ -498,10 +487,7 @@ export function DocumentNotebookNavigation({
                                             }}
                                             disabled={isPending}
                                         >
-                                            <Plus
-                                                size="1em"
-                                                className="icon-sm"
-                                            />
+                                            <Plus className="icon-md" />
                                             <span>新建子笔记本</span>
                                         </DropdownMenuItem>
                                     )}
@@ -510,10 +496,7 @@ export function DocumentNotebookNavigation({
                                             handleReorder(notebook, "up")}
                                         disabled={!canMoveUp || isPending}
                                     >
-                                        <ArrowUp
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
+                                        <ArrowUp className="icon-md" />
                                         <span>上移</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -521,24 +504,19 @@ export function DocumentNotebookNavigation({
                                             handleReorder(notebook, "down")}
                                         disabled={!canMoveDown || isPending}
                                     >
-                                        <ArrowDown
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
+                                        <ArrowDown className="icon-md" />
                                         <span>下移</span>
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onClick={() => {
                                             setDeleteTarget(notebook);
                                             setDeleteError(null);
                                         }}
                                         disabled={isPending}
-                                        className="text-[var(--danger)] focus:text-[var(--danger)]"
+                                        variant="destructive"
                                     >
-                                        <Trash2
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
+                                        <Trash2 className="icon-md" />
                                         <span>删除</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -557,7 +535,7 @@ export function DocumentNotebookNavigation({
                     }
                 }}
             >
-                <DialogContent className="max-w-sm">
+                <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
                             {createParentId ? "新建子笔记本" : "新建笔记本"}
@@ -565,12 +543,12 @@ export function DocumentNotebookNavigation({
                     </DialogHeader>
                     <form
                         onSubmit={handleCreateSubmit}
-                        className="flex flex-col gap-4 mt-3"
+                        className="documents-dialog-form"
                     >
-                        <div className="flex flex-col gap-1.5">
+                        <div className="documents-dialog-field">
                             <label
                                 htmlFor="create-notebook-name"
-                                className="text-xs text-[var(--muted)] font-medium"
+                                className="documents-dialog-label"
                             >
                                 笔记本名称
                             </label>
@@ -585,10 +563,10 @@ export function DocumentNotebookNavigation({
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
+                        <div className="documents-dialog-field">
                             <label
                                 htmlFor="create-notebook-parent"
-                                className="text-xs text-[var(--muted)] font-medium"
+                                className="documents-dialog-label"
                             >
                                 所属父笔记本
                             </label>
@@ -623,7 +601,6 @@ export function DocumentNotebookNavigation({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 disabled={isCreating}
                                 onClick={() => setCreateOpen(false)}
                             >
@@ -631,7 +608,7 @@ export function DocumentNotebookNavigation({
                             </Button>
                             <Button
                                 type="submit"
-                                size="sm"
+                                variant="default"
                                 disabled={isCreating || !createName.trim() ||
                                     createName.trim().length > 100}
                             >
@@ -651,18 +628,18 @@ export function DocumentNotebookNavigation({
                     }
                 }}
             >
-                <DialogContent className="max-w-sm">
+                <DialogContent>
                     <DialogHeader>
                         <DialogTitle>重命名笔记本</DialogTitle>
                     </DialogHeader>
                     <form
                         onSubmit={handleRenameSubmit}
-                        className="flex flex-col gap-4 mt-3"
+                        className="documents-dialog-form"
                     >
-                        <div className="flex flex-col gap-1.5">
+                        <div className="documents-dialog-field">
                             <label
                                 htmlFor="rename-notebook-name"
-                                className="text-xs text-[var(--muted)] font-medium"
+                                className="documents-dialog-label"
                             >
                                 笔记本名称
                             </label>
@@ -687,7 +664,6 @@ export function DocumentNotebookNavigation({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 disabled={isRenaming}
                                 onClick={() => setRenameTarget(null)}
                             >
@@ -695,7 +671,7 @@ export function DocumentNotebookNavigation({
                             </Button>
                             <Button
                                 type="submit"
-                                size="sm"
+                                variant="default"
                                 disabled={isRenaming || !renameName.trim() ||
                                     renameName.trim().length > 100}
                             >
@@ -715,24 +691,24 @@ export function DocumentNotebookNavigation({
                     }
                 }}
             >
-                <DialogContent className="max-w-sm">
+                <DialogContent>
                     <DialogHeader>
                         <DialogTitle>移动笔记本</DialogTitle>
                     </DialogHeader>
                     <form
                         onSubmit={handleMoveSubmit}
-                        className="flex flex-col gap-4 mt-3"
+                        className="documents-dialog-form"
                     >
-                        <div className="flex flex-col gap-1.5">
+                        <div className="documents-dialog-field">
                             <label
                                 htmlFor="move-notebook-parent"
-                                className="text-xs text-[var(--muted)] font-medium"
+                                className="documents-dialog-label"
                             >
                                 所属父笔记本
                             </label>
                             {moveTargetHasChildren
                                 ? (
-                                    <p className="text-xs text-[var(--muted)] m-0">
+                                    <p className="documents-dialog-hint">
                                         含有子笔记本的根笔记本不能移动为子笔记本。
                                     </p>
                                 )
@@ -769,7 +745,6 @@ export function DocumentNotebookNavigation({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 disabled={isMoving}
                                 onClick={() => setMoveTarget(null)}
                             >
@@ -777,7 +752,7 @@ export function DocumentNotebookNavigation({
                             </Button>
                             <Button
                                 type="submit"
-                                size="sm"
+                                variant="default"
                                 disabled={isMoving || moveTargetHasChildren}
                             >
                                 {isMoving ? "移动中…" : "移动"}
@@ -800,17 +775,15 @@ export function DocumentNotebookNavigation({
                     <AlertDialogHeader>
                         <AlertDialogTitle>删除笔记本</AlertDialogTitle>
                         <AlertDialogDescription>
-                            确定删除笔记本“{deleteTarget
-                                ?.name}”吗？笔记本中的笔记会保留并移至未分类；其中的子笔记本会提升为根笔记本。
+                            “{deleteTarget
+                                ?.name}”中的笔记会移至未分类，子笔记本会提升为根笔记本。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
                     {deleteError && (
-                        <div className="px-6">
-                            <StatusBanner tone="error" density="compact">
-                                {deleteError}
-                            </StatusBanner>
-                        </div>
+                        <StatusBanner tone="error" density="compact">
+                            {deleteError}
+                        </StatusBanner>
                     )}
 
                     <AlertDialogFooter>

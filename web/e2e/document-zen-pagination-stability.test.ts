@@ -169,10 +169,7 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
             return (await response.json()).data;
         }, { path, method, body }) as T;
     }
-    await request("/api/preferences", "PATCH", {
-        style: "zen",
-        theme: "light",
-    });
+    await request("/api/preferences", "PATCH", { theme: "light" });
     const fixtures = [
         { name: "short", body: "# Short\n\nOne static paragraph." },
         {

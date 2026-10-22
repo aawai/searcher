@@ -12,7 +12,6 @@ import {
 } from "react";
 import type {
     DocumentAssetDto,
-    DocumentDto,
     DocumentSettingsDto,
 } from "@shared/documents.ts";
 import { documentDisplayTitle } from "../../../../src/features/documents/markdown.ts";
@@ -44,11 +43,8 @@ import { LoadingState } from "../../components/searcher/semantic.tsx";
 import {
     BookOpen,
     Check,
-    Code,
     Copy,
     Download,
-    Eye,
-    File,
     History,
     MoreHorizontal,
     Printer,
@@ -211,10 +207,6 @@ export interface DocumentEditorProps {
     onOpenDocument?: (id: string) => void;
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
-    onDocumentChanged?: (document: DocumentDto) => void;
-    onUnavailable?: () => void;
-    immersive?: boolean;
-    onSaveStatusChange?: (status: string) => void;
 }
 
 export function DocumentEditor({
@@ -223,15 +215,9 @@ export function DocumentEditor({
     onOpenDocument,
     onChanged,
     onDirtyChange,
-    onDocumentChanged,
-    onUnavailable,
-    immersive = false,
-    onSaveStatusChange,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
     const documentEditorOwner = useId();
-    const viewModeDescriptionId =
-        `${documentEditorOwner}-view-mode-description`;
     const session = useMemo(() => {
         return createDocumentSession({ userId, documentId });
     }, [userId, documentId]);
@@ -244,16 +230,16 @@ export function DocumentEditor({
 
     useEffect(() => {
         void session.load().catch((error: unknown) => {
-            if (error instanceof ApiError && error.code === 404) {
-                onUnavailable?.();
-            } else {setInitError(
-                    error instanceof Error ? error.message : "加载笔记失败",
-                );}
+            // 404 is shown from session.error as the unavailable document state.
+            if (error instanceof ApiError && error.code === 404) return;
+            setInitError(
+                error instanceof Error ? error.message : "加载笔记失败",
+            );
         });
         return () => {
             void session.destroy();
         };
-    }, [session, onUnavailable]);
+    }, [session]);
 
     // View choice is local to this user, device and document.
     const viewStorageKey = `document:view:${userId}:${documentId}`;
@@ -310,9 +296,6 @@ export function DocumentEditor({
         // 冲突解除后重置；下一次冲突应重新弹出。
         if (!hasConflict) setConflictDismissed(false);
     }, [hasConflict]);
-    useEffect(() => {
-        onSaveStatusChange?.(isUploading ? "正在上传图片…" : saveStatusLabel);
-    }, [isUploading, saveStatusLabel, onSaveStatusChange]);
     const [paperSettings, setPaperSettings] = useState<
         DocumentSettingsDto | null
     >(null);
@@ -486,10 +469,6 @@ export function DocumentEditor({
             viewport?.removeEventListener("scroll", scheduleAdjustment);
         };
     }, [editorReady, richMode]);
-
-    useEffect(() => {
-        if (snapshot.document) onDocumentChanged?.(snapshot.document);
-    }, [snapshot.document, onDocumentChanged]);
 
     // 5. Notify parent of save changes & dirty guard
     const prevSaveStatusRef = useRef(snapshot.saveStatus);
@@ -914,7 +893,7 @@ export function DocumentEditor({
     // 16. Initial Loading & Fatal Error state
     if (snapshot.loading && !snapshot.document) {
         return (
-            <div className="document-editor-container flex items-center justify-center p-8">
+            <div className="document-editor-container document-editor-state">
                 <LoadingState density="default">正在加载笔记…</LoadingState>
             </div>
         );
@@ -922,9 +901,9 @@ export function DocumentEditor({
 
     if (snapshot.error && !snapshot.document) {
         return (
-            <div className="document-editor-container flex items-center justify-center p-8">
-                <div className="text-center max-w-md">
-                    <p className="text-[var(--danger)] text-sm mb-4">
+            <div className="document-editor-container document-editor-state">
+                <div className="document-editor-state-body">
+                    <p className="document-load-error">
                         {snapshot.error}
                     </p>
                     <Button
@@ -951,7 +930,6 @@ export function DocumentEditor({
         <div
             className="document-editor-container"
             data-workspace-editor
-            data-immersive={immersive || undefined}
             onKeyDown={handleContainerKeyDown}
             onBlur={handleContainerBlur}
         >
@@ -971,11 +949,11 @@ export function DocumentEditor({
                     role="alert"
                 >
                     <span>
-                        发现本地未同步草稿（更新于{" "}
+                        发现未同步的草稿（更新于{" "}
                         {new Date(snapshot.draft.updatedAt).toLocaleString(
                             "zh-CN",
                         )}
-                        ）。是否恢复？
+                        ）
                     </span>
                     <div className="document-draft-offer-actions">
                         <Button
@@ -1002,7 +980,7 @@ export function DocumentEditor({
             {(uploadError ||
                 (snapshot.error && (!hasConflict || conflictDismissed))) && (
                 <div
-                    className="p-2 text-xs text-[var(--danger)] bg-[var(--surface-soft)] border-b border-[var(--border-subtle)] flex items-center justify-between"
+                    className="document-editor-alert"
                     role="alert"
                 >
                     <span>{uploadError || snapshot.error}</span>
@@ -1010,7 +988,6 @@ export function DocumentEditor({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs"
                         onClick={() => {
                             setUploadError(null);
                             if (hasConflict) {
@@ -1032,7 +1009,7 @@ export function DocumentEditor({
             {/* Init error banner with retry */}
             {initError && (
                 <div
-                    className="p-2 text-xs text-[var(--danger)] bg-[var(--surface-soft)] border-b border-[var(--border-subtle)] flex items-center justify-between"
+                    className="document-editor-alert"
                     role="alert"
                 >
                     <span>编辑器初始化失败：{initError}</span>
@@ -1040,7 +1017,6 @@ export function DocumentEditor({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs"
                         onClick={() => {
                             setInitError(null);
                             setInitKey((k) => k + 1);
@@ -1052,13 +1028,12 @@ export function DocumentEditor({
             )}
 
             {paperError && (
-                <div role="alert" className="document-draft-offer-banner">
+                <div role="alert" className="document-editor-alert">
                     <span>{paperError}</span>
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
-                            void loadPaper()}
+                        onClick={() => void loadPaper()}
                     >
                         重试纸张设置
                     </Button>
@@ -1068,63 +1043,49 @@ export function DocumentEditor({
             <header className="document-editor-header">
                 <div className="document-editor-header-main">
                     {/* One document, three presentations. */}
-                    <div className="document-editor-view-controls">
-                        <div
-                            className="inline-flex rounded-md border border-[var(--border-subtle)] p-0.5 bg-[var(--surface-soft)]"
-                            role="group"
-                            aria-label="视图模式"
-                            aria-describedby={viewModeDescriptionId}
+                    <div
+                        className="document-view-switch"
+                        role="group"
+                        aria-label="视图模式"
+                    >
+                        <Button
+                            type="button"
+                            variant={viewMode === "continuous"
+                                ? "outline"
+                                : "ghost"}
+                            size="sm"
+                            aria-label="编辑"
+                            title="编辑"
+                            aria-pressed={viewMode === "continuous"}
+                            onClick={() => handleViewChange("continuous")}
                         >
-                            <Button
-                                type="button"
-                                variant={viewMode === "continuous"
-                                    ? "default"
-                                    : "ghost"}
-                                size="sm"
-                                aria-label="编辑"
-                                title="编辑"
-                                aria-pressed={viewMode === "continuous"}
-                                onClick={() => handleViewChange("continuous")}
-                            >
-                                <Eye size="1em" className="icon-sm mr-1" />
-                                <span>编辑</span>
-                            </Button>
-                            <Button
-                                type="button"
-                                variant={viewMode === "page"
-                                    ? "default"
-                                    : "ghost"}
-                                size="sm"
-                                aria-label="分页"
-                                title="分页"
-                                aria-pressed={viewMode === "page"}
-                                disabled={!paperSettings}
-                                onClick={() => handleViewChange("page")}
-                            >
-                                <File size="1em" className="icon-sm mr-1" />
-                                <span>分页</span>
-                            </Button>
-                            <Button
-                                type="button"
-                                variant={viewMode === "source"
-                                    ? "default"
-                                    : "ghost"}
-                                size="sm"
-                                aria-label="Markdown 源码"
-                                title="Markdown 源码"
-                                aria-pressed={viewMode === "source"}
-                                onClick={() => handleViewChange("source")}
-                            >
-                                <Code size="1em" className="icon-sm mr-1" />
-                                <span>Markdown 源码</span>
-                            </Button>
-                        </div>
-                        <p
-                            id={viewModeDescriptionId}
-                            className="document-view-mode-description"
+                            编辑
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={viewMode === "page" ? "outline" : "ghost"}
+                            size="sm"
+                            aria-label="分页"
+                            title="分页"
+                            aria-pressed={viewMode === "page"}
+                            disabled={!paperSettings}
+                            onClick={() => handleViewChange("page")}
                         >
-                            编辑正文、分页预览，或直接编写 Markdown 源码。
-                        </p>
+                            分页
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={viewMode === "source"
+                                ? "outline"
+                                : "ghost"}
+                            size="sm"
+                            aria-label="Markdown 源码"
+                            title="Markdown 源码"
+                            aria-pressed={viewMode === "source"}
+                            onClick={() => handleViewChange("source")}
+                        >
+                            源码
+                        </Button>
                     </div>
                     {/* Metadata & Word Count */}
                     <div className="document-metadata-bar">
@@ -1142,7 +1103,7 @@ export function DocumentEditor({
                             {snapshot.saveStatus === "saving" && (
                                 <RefreshCw
                                     size="1em"
-                                    className="icon-sm animate-spin mr-1"
+                                    className="icon-sm animate-spin"
                                 />
                             )}
                             {saveStatusLabel}
@@ -1163,26 +1124,24 @@ export function DocumentEditor({
                         <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             aria-label="大纲"
                             title="大纲"
                             aria-pressed={showOutline}
                             disabled={viewMode === "source"}
                             onClick={() => setShowOutline(!showOutline)}
                         >
-                            <BookOpen size="1em" className="icon-sm mr-1" />
-                            <span>大纲</span>
+                            <BookOpen size="1em" className="icon-sm" />
                         </Button>
                         <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             aria-label="历史"
                             title="历史"
                             onClick={() => setHistoryOpen(true)}
                         >
-                            <History size="1em" className="icon-sm mr-1" />
-                            <span>历史</span>
+                            <History size="1em" className="icon-sm" />
                         </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger
@@ -1212,7 +1171,7 @@ export function DocumentEditor({
                                     onClick={() => setPaperOpen(true)}
                                 >
                                     <Settings
-                                        className="size-[var(--icon-md)] mr-2"
+                                        className="icon-md"
                                         aria-hidden="true"
                                     />
                                     <span>纸张设置</span>
@@ -1227,7 +1186,7 @@ export function DocumentEditor({
                                     }}
                                 >
                                     <Printer
-                                        className="size-[var(--icon-md)] mr-2"
+                                        className="icon-md"
                                         aria-hidden="true"
                                     />
                                     <span>打印或另存为 PDF</span>
@@ -1238,13 +1197,13 @@ export function DocumentEditor({
                                     {copied
                                         ? (
                                             <Check
-                                                className="size-[var(--icon-md)] mr-2"
+                                                className="icon-md"
                                                 aria-hidden="true"
                                             />
                                         )
                                         : (
                                             <Copy
-                                                className="size-[var(--icon-md)] mr-2"
+                                                className="icon-md"
                                                 aria-hidden="true"
                                             />
                                         )}
@@ -1254,7 +1213,7 @@ export function DocumentEditor({
                                     onClick={handleExportMarkdown}
                                 >
                                     <Download
-                                        className="size-[var(--icon-md)] mr-2"
+                                        className="icon-md"
                                         aria-hidden="true"
                                     />
                                     <span>导出 Markdown 文件</span>

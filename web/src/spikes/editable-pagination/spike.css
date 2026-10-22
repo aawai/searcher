@@ -27,7 +27,7 @@
     background: var(--surface-soft);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    font-size: var(--font-caption-size);
+    font-size: var(--font-metadata-size);
 }
 .pagination-diagnostic-tag {
     display: inline-flex;

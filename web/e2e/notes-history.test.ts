@@ -28,7 +28,7 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
     });
     await page.reload();
     await page.locator(
-        '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+        '.zen-edge-btn[data-workspace="notes"]',
     ).first().click();
     await page.locator(".notes-workspace-list .note-title").filter({
         hasText: "历史契约",
@@ -54,7 +54,11 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
         "第一版标题",
     );
     await source.fill("第一版手动保存");
-    await editor.getByRole("button", { name: "版本历史", exact: true }).click();
+    await editor.getByRole("button", {
+        name: "便签选项",
+        exact: true,
+    }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await editor.getByRole("button", { name: "恢复此版本", exact: true })
         .waitFor();
     assertEquals(writes, ["PATCH"]);
@@ -69,7 +73,11 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
         "第二版标题",
     );
     await source.fill("第二版手动保存");
-    await editor.getByRole("button", { name: "版本历史", exact: true }).click();
+    await editor.getByRole("button", {
+        name: "便签选项",
+        exact: true,
+    }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await editor.getByRole("button", { name: "恢复此版本", exact: true })
         .waitFor();
     const before = await state();
@@ -94,7 +102,11 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
     );
     assertEquals(restored.body, "第一版手动保存");
     assertEquals(restored.version, before.version + 1);
-    await editor.getByRole("button", { name: "版本历史", exact: true }).click();
+    await editor.getByRole("button", {
+        name: "便签选项",
+        exact: true,
+    }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await editor.getByRole("button", { name: "恢复此版本", exact: true })
         .waitFor();
     assertEquals(writes, ["PATCH", "PATCH", "POST"]);
@@ -102,7 +114,11 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
     await source.waitFor();
     await page.route(`**/api/notes/${id}`, (route) => route.abort());
     await source.fill("离线草稿");
-    await editor.getByRole("button", { name: "版本历史", exact: true }).click();
+    await editor.getByRole("button", {
+        name: "便签选项",
+        exact: true,
+    }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await editor.locator(".save-error").waitFor();
     assertEquals(await source.isVisible(), true);
     assertEquals(await source.inputValue(), "离线草稿");
@@ -137,7 +153,11 @@ Deno.test("Notes history flush, cancel, restore and failure preserve real server
             state: "detached",
         },
     );
-    await editor.getByRole("button", { name: "版本历史", exact: true }).click();
+    await editor.getByRole("button", {
+        name: "便签选项",
+        exact: true,
+    }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await editor.locator(".note-history-list button").filter({
         hasText: "版本 2 ·",
     }).click();

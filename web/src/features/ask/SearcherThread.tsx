@@ -1,6 +1,6 @@
 import { ThreadPrimitive, useAui } from "@assistant-ui/react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, SlidersHorizontal } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button.tsx";
 import type {
@@ -138,24 +138,39 @@ export function SearcherThread({
                             <h2 className="ask-empty-hero__title">
                                 有什么可以帮你的？
                             </h2>
-                            <p className="ask-empty-hero__subtitle">
-                                {selectedModelId
-                                    ? "输入任何问题，支持多轮对话、分支演进与扩展检索"
-                                    : "配置 OpenAI 或兼容 Provider 后即可使用 AI 智能问答"}
-                            </p>
                             {!selectedModelId && (
-                                <Link
-                                    to={routes.settings("ai")}
-                                    className="button button--primary ask-empty-hero__cta"
-                                >
-                                    <SlidersHorizontal
-                                        size="1em"
-                                        className="icon-sm mr-1.5"
-                                    />
-                                    <span>配置 AI 模型与 Provider</span>
-                                </Link>
+                                <>
+                                    <p className="ask-empty-hero__subtitle">
+                                        配置模型后即可开始提问。
+                                    </p>
+                                    <Link
+                                        to={routes.settings("ai")}
+                                        className="button button--primary ask-empty-hero__cta"
+                                    >
+                                        配置模型
+                                    </Link>
+                                </>
                             )}
                         </div>
+
+                        {selectedModelId && (
+                            <div className="ask-empty-composer-wrap">
+                                <SearcherComposer
+                                    models={models}
+                                    modelOptions={modelOptions}
+                                    selectedModelId={selectedModelId}
+                                    onSelectModel={onSelectModel}
+                                    generationConfig={generationConfig}
+                                    onChangeGenerationConfig={onChangeGenerationConfig}
+                                    toolsConfig={toolsConfig}
+                                    onChangeToolsConfig={onChangeToolsConfig}
+                                    capabilities={capabilities}
+                                    onSaveDefaultGenerationConfig={onSaveDefaultGenerationConfig}
+                                    onResetDefaultGenerationConfig={onResetDefaultGenerationConfig}
+                                    isDefaultGenerationConfig={isDefaultGenerationConfig}
+                                />
+                            </div>
+                        )}
                         {selectedModelId && (
                             <div
                                 className="ask-empty-prompts"
@@ -185,25 +200,6 @@ export function SearcherThread({
                                         {prompt}
                                     </Button>
                                 ))}
-                            </div>
-                        )}
-
-                        {selectedModelId && (
-                            <div className="ask-empty-composer-wrap">
-                                <SearcherComposer
-                                    models={models}
-                                    modelOptions={modelOptions}
-                                    selectedModelId={selectedModelId}
-                                    onSelectModel={onSelectModel}
-                                    generationConfig={generationConfig}
-                                    onChangeGenerationConfig={onChangeGenerationConfig}
-                                    toolsConfig={toolsConfig}
-                                    onChangeToolsConfig={onChangeToolsConfig}
-                                    capabilities={capabilities}
-                                    onSaveDefaultGenerationConfig={onSaveDefaultGenerationConfig}
-                                    onResetDefaultGenerationConfig={onResetDefaultGenerationConfig}
-                                    isDefaultGenerationConfig={isDefaultGenerationConfig}
-                                />
                             </div>
                         )}
                     </div>

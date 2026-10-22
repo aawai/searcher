@@ -59,49 +59,6 @@ Deno.test("production workspace contracts", async (t) => {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
         await target.locator("main").waitFor();
-        if (path === "/" && (target.viewportSize()?.width ?? 0) >= 1024) {
-            const windowIds = await target.evaluate(async () => {
-                const auth = (await (await fetch("/api/auth/me")).json()).data;
-                if (!auth?.user) return [];
-                const preferences =
-                    (await (await fetch("/api/preferences")).json()).data;
-                if (preferences.style !== "widgets") return [];
-                return await new Promise<string[]>((resolve, reject) => {
-                    const request = indexedDB.open("searcher-client", 1);
-                    request.onerror = () => reject(request.error);
-                    request.onsuccess = () => {
-                        const db = request.result;
-                        if (!db.objectStoreNames.contains("state")) {
-                            db.close();
-                            resolve([]);
-                            return;
-                        }
-                        const read = db.transaction("state", "readonly")
-                            .objectStore("state").get(
-                                `searcher:desktop-layout:v1:${auth.user.id}`,
-                            );
-                        read.onerror = () => {
-                            db.close();
-                            reject(read.error);
-                        };
-                        read.onsuccess = () => {
-                            const layout = read.result as {
-                                windows: Array<{ id: string }>;
-                            } | undefined;
-                            db.close();
-                            resolve(
-                                layout?.windows.map((window) => window.id) ??
-                                    [],
-                            );
-                        };
-                    };
-                });
-            });
-            for (const id of windowIds) {
-                await target.locator(`.desktop-window[data-window-id="${id}"]`)
-                    .waitFor({ state: "attached" });
-            }
-        }
     }
 
     // Register and set up user account
@@ -113,207 +70,10 @@ Deno.test("production workspace contracts", async (t) => {
     await page.waitForURL(origin + "/");
     await page.locator("main").waitFor();
 
-    // Configure user to start with widgets style
-    await visit("/settings/appearance");
-    await page.getByText("空间轻桌面", { exact: true }).click();
-    await page.locator('.layout-mode-card[aria-checked="true"]', {
-        hasText: "空间轻桌面",
-    }).waitFor();
+    await page.setViewportSize({ width: 1280, height: 800 });
     await visit("/");
 
     let createdNoteId = "";
-
-    await t.step(
-        "Widgets closed Dock -> Apps/Notes, non-modal desktop no backdrop/no focus trap/layout shift",
-        async () => {
-            await page.setViewportSize({ width: 1280, height: 800 });
-            await page.locator(".home-widgets").waitFor();
-
-            // Dock is rendered on desktop widgets layout
-            const dock = page.locator(".desktop-dock");
-            await dock.waitFor();
-            const appsDockBtn = page.locator(
-                '.desktop-dock button[aria-label="应用工作区"]',
-            );
-            const notesDockBtn = page.locator(
-                '.desktop-dock button[aria-label="便签工作区"]',
-            );
-            assertEquals(await appsDockBtn.isVisible(), true);
-            assertEquals(await notesDockBtn.isVisible(), true);
-
-            // Record initial positions of main layout elements
-            const heroBoxBefore = await page.locator(".hero").boundingBox();
-            const bentoBoxBefore = await page.locator(
-                ".widgets-bento-container",
-            ).boundingBox();
-
-            // Open Apps workspace from Dock
-            await appsDockBtn.click();
-
-            // Apps window opens as desktop window
-            const appsWindow = page.locator(
-                '.desktop-window[data-window-id="apps"]',
-            );
-            await appsWindow.waitFor();
-            assertEquals(
-                await appsWindow.getAttribute("data-window-active"),
-                "true",
-            );
-            assertEquals(
-                await appsWindow.locator(".desktop-window-chrome-title")
-                    .textContent(),
-                "应用",
-            );
-
-            // Dock stays shown while desktop window is open
-            assertEquals(await dock.isVisible(), true);
-
-            // Non-modal desktop: No backdrop exists
-            assertEquals(
-                await page.locator(
-                    "[data-slot='sheet-backdrop'], .sheet-backdrop",
-                ).count(),
-                0,
-            );
-
-            // No focus trap: background elements remain directly interactable
-            await page.locator("#search-query").focus();
-            assertEquals(
-                await page.locator("#search-query").evaluate(
-                    (el) => el === document.activeElement,
-                ),
-                true,
-            );
-            await page.locator("#search-query").fill(
-                "desktop non-modal typing",
-            );
-            assertEquals(
-                await page.locator("#search-query").inputValue(),
-                "desktop non-modal typing",
-            );
-
-            // Preserved layout: No layout shift on desktop content
-            const heroBoxAfter = await page.locator(".hero").boundingBox();
-            const bentoBoxAfter = await page.locator(".widgets-bento-container")
-                .boundingBox();
-            assertEquals(heroBoxAfter?.x, heroBoxBefore?.x);
-            assertEquals(heroBoxAfter?.y, heroBoxBefore?.y);
-            assertEquals(bentoBoxAfter?.x, bentoBoxBefore?.x);
-            assertEquals(bentoBoxAfter?.y, bentoBoxBefore?.y);
-
-            // Apps root Escape closes only the active app window and restores its opener.
-            await page.keyboard.press("Escape");
-            await appsWindow.waitFor({ state: "detached" });
-            // Dock remains visible and focus returns to the Apps dock button
-            await dock.waitFor();
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("data-workspace") ===
-                    "apps"
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    document.activeElement?.getAttribute("data-workspace")
-                ),
-                "apps",
-            );
-        },
-    );
-
-    await t.step(
-        "root in-place switch preserving queries",
-        async () => {
-            // Open Apps workspace from dock
-            await page.locator(
-                '.desktop-dock button[aria-label="应用工作区"]',
-            ).click();
-            const appsWindow = page.locator(
-                '.desktop-window[data-window-id="apps"]',
-            );
-            await appsWindow.waitFor();
-            assertEquals(
-                await appsWindow.getAttribute("data-window-active"),
-                "true",
-            );
-
-            // Enter a query into Apps workspace search
-            const appsSearchInput = appsWindow.locator(
-                "input[data-workspace-search]",
-            );
-            await appsSearchInput.fill("alpha-apps");
-            assertEquals(await appsSearchInput.inputValue(), "alpha-apps");
-
-            // Switch to Notes workspace via dock
-            const notesDockBtn = page.locator(
-                '.desktop-dock button[aria-label="便签工作区"]',
-            );
-            await notesDockBtn.click();
-
-            const notesWindow = page.locator(
-                '.desktop-window[data-window-id="notes"]',
-            );
-            await notesWindow.waitFor();
-            assertEquals(
-                await notesWindow.getAttribute("data-window-active"),
-                "true",
-            );
-            assertEquals(
-                await notesWindow.locator(".desktop-window-chrome-title")
-                    .textContent(),
-                "便签",
-            );
-            const notesSearchInput = notesWindow.locator(
-                "input[data-workspace-search]",
-            );
-            assertEquals(await notesSearchInput.inputValue(), "");
-
-            // Enter a query into Notes workspace search
-            await notesSearchInput.fill("beta-notes");
-            assertEquals(await notesSearchInput.inputValue(), "beta-notes");
-
-            // Switch back to Apps workspace via dock
-            const appsDockBtn = page.locator(
-                '.desktop-dock button[aria-label="应用工作区"]',
-            );
-            await appsDockBtn.click();
-            assertEquals(
-                await appsWindow.getAttribute("data-window-active"),
-                "true",
-            );
-            assertEquals(
-                await appsWindow.locator(".desktop-window-chrome-title")
-                    .textContent(),
-                "应用",
-            );
-            assertEquals(
-                await appsSearchInput.inputValue(),
-                "alpha-apps",
-            );
-
-            // Switch back to Notes workspace, notes query is preserved
-            await notesDockBtn.click();
-            assertEquals(
-                await notesWindow.getAttribute("data-window-active"),
-                "true",
-            );
-            assertEquals(
-                await notesWindow.locator(".desktop-window-chrome-title")
-                    .textContent(),
-                "便签",
-            );
-            assertEquals(
-                await notesSearchInput.inputValue(),
-                "beta-notes",
-            );
-
-            // Clean up queries
-            await notesWindow.getByRole("button", { name: "清除搜索" }).click();
-            await appsDockBtn.click();
-            await appsWindow.getByRole("button", { name: "清除搜索" }).click();
-            await appsWindow.getByRole("button", { name: "清除搜索" }).waitFor({
-                state: "detached",
-            });
-        },
-    );
 
     await t.step(
         "nested AppForm dirty Back/Close protection and save",
@@ -331,28 +91,34 @@ Deno.test("production workspace contracts", async (t) => {
                         }),
                     }),
             );
+            await page.locator(
+                '.zen-edge-trigger button[data-workspace="apps"]',
+            ).click();
             const appsWindow = page.locator(
-                '.desktop-window[data-window-id="apps"]',
-            );
+                ".workspace-panel--mobile, aside.workspace-panel",
+            ).first();
             await appsWindow.waitFor();
 
             // Root view has primary action "添加应用"
             const createBtn = appsWindow.locator(
-                ".workspace-footer button.workspace-primary",
+                ".workspace-header .workspace-primary",
             );
-            assertEquals(await createBtn.textContent(), "添加应用");
+            assertEquals(
+                await createBtn.getAttribute("aria-label"),
+                "添加应用",
+            );
             await createBtn.click();
 
             // Enters nested AppForm view (apps/create)
             assertEquals(
-                await appsWindow.locator(".desktop-window-chrome-title")
+                await appsWindow.locator(".workspace-title")
                     .textContent(),
                 "添加应用",
             );
 
             // Header has Back button
             const backBtn = appsWindow.locator(
-                '.desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
+                'button[aria-label="返回上一级"]',
             );
             await backBtn.waitFor();
 
@@ -360,7 +126,7 @@ Deno.test("production workspace contracts", async (t) => {
             await backBtn.click();
             await appsWindow.locator(".apps-workspace").waitFor();
             assertEquals(
-                await appsWindow.locator(".desktop-window-chrome-title")
+                await appsWindow.locator(".workspace-title")
                     .textContent(),
                 "应用",
             );
@@ -368,7 +134,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Re-enter AppForm
             await appsWindow.locator(
-                ".workspace-footer button.workspace-primary",
+                ".workspace-header .workspace-primary",
             )
                 .click();
             await page.locator("#app-url-input").waitFor();
@@ -400,7 +166,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Dirty Close navigation triggers confirmation alert dialog
             const closeBtn = appsWindow.locator(
-                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                'button[aria-label="收起工作区"]',
             );
             await closeBtn.click();
             await alert.waitFor();
@@ -412,13 +178,13 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Re-open Apps workspace and successfully create and save an app
             await page.locator(
-                '.desktop-dock button[aria-label="应用工作区"]',
+                '.zen-edge-trigger button[data-workspace="apps"]',
             ).click();
             await appsWindow.waitFor();
             await appsWindow.getByRole("status").filter({ hasText: "正在加载" })
                 .waitFor({ state: "detached" });
             await appsWindow.locator(
-                ".workspace-footer button.workspace-primary",
+                ".workspace-header .workspace-primary",
             )
                 .click();
             await page.locator("#app-url-input").waitFor();
@@ -455,7 +221,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Close apps window
             await appsWindow.locator(
-                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                'button[aria-label="收起工作区"]',
             ).click();
             await appsWindow.waitFor({ state: "detached" });
         },
@@ -465,18 +231,21 @@ Deno.test("production workspace contracts", async (t) => {
         "Notes editor immediate Close then reopen draft and eventual autosave persists, conflict/version behaviors with real server",
         async () => {
             const notesWindow = page.locator(
-                '.desktop-window[data-window-id="notes"]',
-            );
+                ".workspace-panel--mobile, aside.workspace-panel",
+            ).first();
 
-            // Open Notes workspace from Dock
+            // Open Notes workspace from Zen edge trigger
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"]',
+                '.zen-edge-trigger button[data-workspace="notes"]',
             ).click();
             await notesWindow.waitFor();
             const createNoteBtn = notesWindow.locator(
-                ".workspace-footer button.workspace-primary",
+                ".workspace-header .workspace-primary",
             );
-            assertEquals(await createNoteBtn.textContent(), "新建便签");
+            assertEquals(
+                await createNoteBtn.getAttribute("aria-label"),
+                "新建便签",
+            );
 
             // Empty state regression check before any note is created
             const emptyNotice = notesWindow.locator(".empty-state");
@@ -488,22 +257,10 @@ Deno.test("production workspace contracts", async (t) => {
                 'input[aria-label="便签标题"], [id^="note-title-input"]',
             );
             await titleInput.waitFor();
-            const noteEntityWin = page.locator(
-                '.desktop-window[data-window-kind="note"]',
+            assertEquals(
+                await notesWindow.locator(".workspace-title").textContent(),
+                "编辑便签",
             );
-            if (await noteEntityWin.count() > 0) {
-                assertEquals(
-                    await notesWindow.locator(".desktop-window-chrome-title")
-                        .textContent(),
-                    "便签",
-                );
-            } else {
-                assertEquals(
-                    await notesWindow.locator(".desktop-window-chrome-title")
-                        .textContent(),
-                    "编辑便签",
-                );
-            }
 
             // Obtain note ID from server notes
             const initialNotes = await page.evaluate(async () => {
@@ -529,23 +286,15 @@ Deno.test("production workspace contracts", async (t) => {
             );
 
             // Immediately close note window or workspace before 1500ms debounce fires
-            const noteCloseBtn = page.locator(
-                '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-            );
-            if (await noteCloseBtn.isVisible()) {
-                await noteCloseBtn.click();
-                await noteEntityWin.waitFor({ state: "detached" });
-            } else {
-                await notesWindow.locator(
-                    '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
-                ).click();
-                await notesWindow.waitFor({ state: "detached" });
-            }
+            await notesWindow.locator(
+                '.workspace-header button[aria-label="收起工作区"]',
+            ).click();
+            await notesWindow.waitFor({ state: "detached" });
 
             // Reopen Notes workspace from Dock if closed
             if (!(await notesWindow.isVisible())) {
                 await page.locator(
-                    '.desktop-dock button[aria-label="便签工作区"]',
+                    '.zen-edge-trigger button[data-workspace="notes"]',
                 ).click();
                 await notesWindow.waitFor();
             }
@@ -678,14 +427,17 @@ Deno.test("production workspace contracts", async (t) => {
                 name: "发现版本冲突",
             });
             await conflictAlert.waitFor();
-            await conflictAlert.getByRole("tab", { name: /云端最新版本/ })
+            await conflictAlert.getByRole("tab", {
+                name: "云端版本",
+                exact: true,
+            })
                 .click();
             assertStringIncludes(
                 await conflictAlert.textContent() ?? "",
                 "Server concurrent edit body",
             );
             await conflictAlert.getByRole("tab", {
-                name: "本地修改 (未保存)",
+                name: "本地修改",
                 exact: true,
             }).click();
             assertStringIncludes(
@@ -735,10 +487,11 @@ Deno.test("production workspace contracts", async (t) => {
             );
 
             // Test Version History retrieval from real server
-            const versionsBtn = page.locator(
-                '.note-editor-toolbar button:has-text("版本历史")',
-            );
-            await versionsBtn.click();
+            await page.locator(".note-editor-toolbar")
+                .getByRole("button", { name: "便签选项", exact: true })
+                .click();
+            await page.getByRole("menuitem", { name: "版本历史", exact: true })
+                .click();
             const versionsSection = page.locator(".note-history");
             await versionsSection.waitFor();
             const versionNumber = await page.evaluate(async (id) => {
@@ -786,7 +539,14 @@ Deno.test("production workspace contracts", async (t) => {
                             }),
                         }),
                 );
-                await versionsBtn.click();
+                await page.locator(".note-editor-toolbar")
+                    .getByRole("button", { name: "便签选项", exact: true })
+                    .click();
+                await page.getByRole("menuitem", {
+                    name: "版本历史",
+                    exact: true,
+                })
+                    .click();
                 const versionErrorAlert = page.locator(
                     '.note-history [role="alert"]',
                 );
@@ -837,23 +597,13 @@ Deno.test("production workspace contracts", async (t) => {
                 ).catch(() => {});
             }
 
-            // Close editor: Back button if nested, or close note window if desktop entity
-            const backBtn = notesWindow.locator(
-                '.desktop-window-chrome-btn--back, button[aria-label="返回上一级"]',
-            );
-            if (await backBtn.isVisible()) {
-                await backBtn.click();
-            } else {
-                const noteCloseBtn = page.locator(
-                    '.desktop-window[data-window-kind="note"] button[aria-label="关闭便签"]',
-                );
-                if (await noteCloseBtn.isVisible()) {
-                    await noteCloseBtn.click();
-                }
-            }
+            // Close editor: back to note list
+            await notesWindow.locator(
+                '.workspace-header button[aria-label="返回便签列表"]',
+            ).click();
             await notesWindow.locator(".notes-workspace-list").waitFor();
             assertEquals(
-                await notesWindow.locator(".desktop-window-chrome-title")
+                await notesWindow.locator(".workspace-title")
                     .textContent(),
                 "便签",
             );
@@ -864,43 +614,27 @@ Deno.test("production workspace contracts", async (t) => {
             await page.locator(
                 'input[aria-label="便签标题"], [id^="note-title-input"]',
             ).first().waitFor();
-            const noteEntityWin2 = page.locator(
-                '.desktop-window[data-window-kind="note"]',
+            assertEquals(
+                await notesWindow.locator(".workspace-title").textContent(),
+                "编辑便签",
             );
-            if (await noteEntityWin2.count() > 0) {
-                assertEquals(
-                    await notesWindow.locator(".desktop-window-chrome-title")
-                        .textContent(),
-                    "便签",
-                );
-                // Close note entity window
-                await noteEntityWin2.locator('button[aria-label="关闭便签"]')
-                    .first().click();
-                await noteEntityWin2.waitFor({ state: "detached" });
-            } else {
-                assertEquals(
-                    await notesWindow.locator(".desktop-window-chrome-title")
-                        .textContent(),
-                    "编辑便签",
-                );
-            }
 
             // Close workspace
             await notesWindow.locator(
-                '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
+                '.workspace-header button[aria-label="收起工作区"]',
             ).click();
             await notesWindow.waitFor({ state: "detached" });
         },
     );
 
     await t.step(
-        "Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Home ControlledNotes/Zen state isolation",
+        "Workspace Notes #43: expand/collapse, long title and many notes no overflow at 390/768/1440 light/dark, and Zen FloatingNotes state isolation",
         async () => {
             const panel = page.locator(
-                ".desktop-window[data-window-id='notes'], .workspace-panel--mobile, .workspace-panel",
+                ".workspace-panel--mobile, aside.workspace-panel",
             );
 
-            // Ensure created note is home-fixed so ControlledNotes board renders on Home
+            // Ensure created note is home-fixed so it renders in Zen FloatingNotes
             await page.evaluate(async (id) => {
                 const res = await fetch(`/api/notes/${encodeURIComponent(id)}`);
                 const noteData = (await res.json()).data as {
@@ -916,18 +650,7 @@ Deno.test("production workspace contracts", async (t) => {
                 });
             }, createdNoteId);
 
-            // Record Home ControlledNotes board state before opening workspace
             await visit("/");
-            const homeBoard = page.locator(".controlled-notes-board");
-            await homeBoard.waitFor({ state: "visible" });
-            const homeSlotCountBefore = await homeBoard.locator(
-                ".controlled-note-slot",
-            ).count();
-            const homeSlotsCompactBefore = await homeBoard.locator(
-                ".controlled-note-slot .note-card--compact",
-            ).count();
-            const homeBoxBefore = await homeBoard.boundingBox();
-            assertEquals(homeSlotCountBefore > 0, true);
 
             // Seed additional notes including a very long title and body with code block
             await page.evaluate(async () => {
@@ -963,7 +686,7 @@ Deno.test("production workspace contracts", async (t) => {
             // Reload page to populate notes in React state
             await page.reload();
             await page.locator(
-                '.desktop-dock button[aria-label="便签工作区"]',
+                '.zen-edge-trigger button[data-workspace="notes"]',
             ).click();
             await panel.waitFor({ state: "visible" });
             await page.waitForFunction(() =>
@@ -984,11 +707,11 @@ Deno.test("production workspace contracts", async (t) => {
                     await page.emulateMedia({ colorScheme: scheme });
 
                     const currentPanel = page.locator(
-                        ".desktop-window[data-window-id='notes'], .workspace-panel--mobile, .workspace-panel",
+                        ".workspace-panel--mobile, aside.workspace-panel",
                     );
                     if (!(await currentPanel.isVisible())) {
                         const notesTrigger = page.locator(
-                            '.desktop-dock button[aria-label="便签工作区"], .workspace-mobile-navigation button[aria-label="便签工作区"], button[data-workspace="notes"]',
+                            'button.zen-edge-btn[data-workspace="notes"]',
                         );
                         await notesTrigger.first().waitFor({
                             state: "visible",
@@ -1096,7 +819,7 @@ Deno.test("production workspace contracts", async (t) => {
                     // On mobile sheet (< 768px), dismiss sheet before switching viewport
                     if (vp.width < 768) {
                         const closeBtn = currentPanel.locator(
-                            '.desktop-window-chrome-btn--close, .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
+                            'button[aria-label="收起工作区"]',
                         );
                         if (await closeBtn.isVisible()) {
                             await closeBtn.click();
@@ -1112,11 +835,11 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Ensure workspace is closed
             const finalPanel = page.locator(
-                ".desktop-window[data-window-id='notes'], .workspace-panel--mobile, .workspace-panel",
+                ".workspace-panel--mobile, aside.workspace-panel",
             );
             if (await finalPanel.isVisible()) {
                 const closeBtn = finalPanel.locator(
-                    '.desktop-window-chrome-btn--close, .workspace-header button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
+                    'button[aria-label="收起工作区"]',
                 );
                 if (await closeBtn.isVisible()) {
                     await closeBtn.click();
@@ -1124,26 +847,7 @@ Deno.test("production workspace contracts", async (t) => {
                 }
             }
 
-            // Verify ControlledNotes on Home (widgets style) before/after isolation
-            await homeBoard.waitFor({ state: "visible" });
-            const homeSlotCountAfter = await homeBoard.locator(
-                ".controlled-note-slot",
-            ).count();
-            const homeSlotsCompactAfter = await homeBoard.locator(
-                ".controlled-note-slot .note-card--compact",
-            ).count();
-            const homeBoxAfter = await homeBoard.boundingBox();
-            assertEquals(homeSlotCountAfter, homeSlotCountBefore);
-            assertEquals(homeSlotsCompactAfter, homeSlotsCompactBefore);
-            assertEquals(homeBoxAfter?.width, homeBoxBefore?.width);
-            assertEquals(homeBoxAfter?.height, homeBoxBefore?.height);
-
             // Verify Zen layout FloatingNotes state & geometry isolation before/after
-            await visit("/settings/appearance");
-            await page.getByText("极简呼吸", { exact: true }).click();
-            await page.locator('.layout-mode-card[aria-checked="true"]', {
-                hasText: "极简呼吸",
-            }).waitFor();
             await visit("/");
 
             const floatingNote = page.locator(".pinned-area .note-position")
@@ -1192,14 +896,6 @@ Deno.test("production workspace contracts", async (t) => {
             assertEquals(floatingBoxAfter?.height, floatingBoxBefore?.height);
             assertEquals(floatingCompactAfter, floatingCompactBefore);
 
-            // Restore widgets layout
-            await visit("/settings/appearance");
-            await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.locator('.layout-mode-card[aria-checked="true"]', {
-                hasText: "空间轻桌面",
-            }).waitFor();
-            await visit("/");
-
             // Clean up extra notes, preserving only createdNoteId
             await page.evaluate(async (keepId) => {
                 const res = await fetch("/api/notes");
@@ -1216,7 +912,7 @@ Deno.test("production workspace contracts", async (t) => {
     );
 
     await t.step(
-        "Home Quick Apps pinned order, icon size and label preferences",
+        "Home pinned Quick Apps order and context menu",
         async () => {
             for (const name of ["Order Alpha", "Order Beta"]) {
                 const status = await page.evaluate(async (name) => {
@@ -1238,18 +934,6 @@ Deno.test("production workspace contracts", async (t) => {
                 assertEquals(status, 200);
             }
             await visit("/");
-            for (const id of ["apps", "notes"]) {
-                const win = page.locator(
-                    `.desktop-window[data-window-id="${id}"]`,
-                );
-                if (await win.isVisible()) {
-                    await win.locator(
-                        '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
-                    ).click();
-                    await win.waitFor({ state: "detached" });
-                }
-            }
-            const widths: number[] = [];
             const expectedPins = await page.evaluate(async () => {
                 const { data } = await (await fetch("/api/webapps")).json();
                 return data.filter((app: { isPinned: boolean }) => app.isPinned)
@@ -1259,89 +943,40 @@ Deno.test("production workspace contracts", async (t) => {
                     ) => (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0))
                     .map((app: { name: string }) => "打开 " + app.name);
             });
-            for (const size of ["compact", "default", "large"] as const) {
-                for (const showAppLabels of [false, true]) {
-                    const status = await page.evaluate(
-                        async (preferences) =>
-                            (await fetch("/api/preferences", {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify(preferences),
-                            })).status,
-                        { webAppIconSize: size, showAppLabels },
-                    );
-                    assertEquals(status, 200);
-                    await visit("/");
-                    const quick = page.locator(
-                        ".widgets-bento-card--apps .launcher-grid",
-                    );
-                    const icons = quick.locator(".webapp-icon");
-                    await icons.first().waitFor();
-                    assertEquals(
-                        await icons.evaluateAll((els) =>
-                            els.map((el) => el.getAttribute("aria-label"))
-                        ),
-                        expectedPins,
-                    );
-                    assertEquals(
-                        await icons.first().locator(".webapp-name").isVisible(),
-                        showAppLabels,
-                    );
-                    if (showAppLabels) {
-                        widths.push(
-                            await icons.first().locator(".webapp-glyph")
-                                .evaluate((el) =>
-                                    el.getBoundingClientRect().width
-                                ),
-                        );
-                    }
-                    await icons.first().click({ button: "right" });
-                    assertEquals(
-                        await page.getByRole("menuitem").allTextContents(),
-                        ["打开", "在工作区中管理"],
-                    );
-                    await page.keyboard.press("Escape");
-                    const before = await quick.evaluate((el) => ({
-                        alignment: getComputedStyle(el).justifyContent,
-                        width: el.getBoundingClientRect().width,
-                    }));
-                    await page.locator(
-                        '.desktop-dock button[aria-label="应用工作区"]',
-                    ).click();
-                    assertEquals(
-                        await page.locator(
-                            ".desktop-window[data-window-id='apps'] .workspace-footer .workspace-primary, .desktop-window[data-window-id='apps'] .workspace-primary, .workspace-panel .button--primary",
-                        ).allTextContents(),
-                        ["添加应用"],
-                    );
-                    assertEquals(
-                        await quick.evaluate((el) => ({
-                            alignment: getComputedStyle(el).justifyContent,
-                            width: el.getBoundingClientRect().width,
-                        })),
-                        before,
-                    );
-                    assertEquals(
-                        await page.locator(
-                            ".widgets-bento-card--apps .home-managing-bar, .widgets-bento-card--apps .launcher-drag-cue",
-                        ).count(),
-                        0,
-                    );
-                    const appsWindow = page.locator(
-                        '.desktop-window[data-window-id="apps"]',
-                    );
-                    await appsWindow.locator(
-                        '.desktop-window-chrome button[aria-label="收起工作区"], button[aria-label="收起工作区"]',
-                    ).click();
-                    await appsWindow.waitFor({ state: "detached" });
-                }
-            }
-            assertEquals(widths[0] < widths[1] && widths[1] < widths[2], true);
+            const pinned = page.locator(
+                ".pinned-area .launcher-grid .webapp-icon",
+            );
+            await pinned.first().waitFor();
+            assertEquals(
+                await pinned.evaluateAll((els) =>
+                    els.map((el) => el.getAttribute("aria-label"))
+                ),
+                expectedPins,
+            );
+            await pinned.first().click({ button: "right" });
+            const menuItems = await page.getByRole("menuitem")
+                .allTextContents();
+            assertEquals(menuItems[0], "打开");
+            await page.keyboard.press("Escape");
+            await page.locator(
+                '.zen-edge-trigger button[data-workspace="apps"]',
+            ).click();
+            assertEquals(
+                await page.locator(".workspace-header .workspace-primary")
+                    .getAttribute("aria-label"),
+                "添加应用",
+            );
+            await page.locator(
+                '.workspace-header button[aria-label="收起工作区"]',
+            ).click();
+            await page.locator(
+                ".workspace-panel--mobile, aside.workspace-panel",
+            ).first().waitFor({ state: "detached" });
         },
     );
 
     await t.step(
-        "Zen apps notes note edit FloatingNotes preserved desktop layout",
+        "Zen apps notes note edit FloatingNotes preserved layout",
         async () => {
             // Fix the created note to home so it appears in FloatingNotes
             const currentNotes = await page.evaluate(async () => {
@@ -1360,12 +995,6 @@ Deno.test("production workspace contracts", async (t) => {
                 });
             }, { id: noteToFix.id, version: noteToFix.version });
 
-            // Switch appearance style to "zen" via Settings UI
-            await visit("/settings/appearance");
-            await page.getByText("极简呼吸", { exact: true }).click();
-            await page.locator('.layout-mode-card[aria-checked="true"]', {
-                hasText: "极简呼吸",
-            }).waitFor();
             await visit("/");
             const zenGrid = page.locator(
                 '.pinned-area .launcher-grid[data-presentation="default"]',
@@ -1388,11 +1017,6 @@ Deno.test("production workspace contracts", async (t) => {
                 zenBefore,
             );
             await page.keyboard.press("Escape");
-            // Verify Zen layout: Dock is NOT present, Zen edge trigger IS present
-            assertEquals(
-                await page.locator(".desktop-dock, .workspace-dock").count(),
-                0,
-            );
             const zenEdge = page.locator(".zen-edge-trigger");
             await zenEdge.waitFor();
             assertEquals(
@@ -1417,15 +1041,23 @@ Deno.test("production workspace contracts", async (t) => {
             // The title is the explicit edit entry; body interactions are read-only.
             await floatingNote.locator(".note-title").click();
 
-            // Workspace opens as desktop aside
+            // Workspace opens as the Zen panel
             const panel = page.locator("aside.workspace-panel");
             await panel.waitFor();
             assertEquals(
                 await panel.locator(".workspace-title").textContent(),
                 "编辑便签",
             );
-            // Switcher is hidden in editing view
-            assertEquals(await page.locator(".workspace-switcher").count(), 0);
+            // The title bar keeps the workspace switcher in nested views
+            assertEquals(await page.locator(".workspace-switcher").count(), 1);
+            const notesSwitchTab = page.getByRole("tab", {
+                name: "便签工作区",
+                exact: true,
+            });
+            assertEquals(
+                await notesSwitchTab.getAttribute("aria-selected"),
+                "true",
+            );
             // Back button is present
             assertEquals(
                 await panel.locator(
@@ -1453,39 +1085,12 @@ Deno.test("production workspace contracts", async (t) => {
     await t.step(
         "Mobile focustrap/swipe/escape and focus return",
         async () => {
-            // Switch back to widgets layout so dock is available
-            await visit("/settings/appearance");
-            await page.getByText("空间轻桌面", { exact: true }).click();
-            await page.locator('.layout-mode-card[aria-checked="true"]', {
-                hasText: "空间轻桌面",
-            }).waitFor();
-            await visit("/");
-            const openIds = await page.locator(".desktop-window").evaluateAll((
-                windows,
-            ) => windows.sort((a, b) =>
-                Number((b as HTMLElement).style.zIndex) -
-                Number((a as HTMLElement).style.zIndex)
-            )
-                .map((window) => (window as HTMLElement).dataset.windowId!)
-            );
-            for (const id of openIds) {
-                const win = page.locator(
-                    `.desktop-window[data-window-id="${id}"]`,
-                );
-                if (await win.isVisible()) {
-                    await win.locator(
-                        '.desktop-window-chrome-btn--close, button[aria-label="收起工作区"]',
-                    ).click();
-                    await win.waitFor({ state: "detached" });
-                }
-            }
-
             // Set mobile viewport (< 768px)
             await page.setViewportSize({ width: 375, height: 667 });
 
             // Open workspace from mobile navigation
             const mobileAppsBtn = page.locator(
-                '.workspace-mobile-navigation button[aria-label="应用工作区"], button[data-workspace="apps"]',
+                'button.zen-edge-btn[data-workspace="apps"]',
             );
             await mobileAppsBtn.first().click();
 

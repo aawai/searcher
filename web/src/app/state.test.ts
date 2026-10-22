@@ -59,44 +59,16 @@ Deno.test("AppState: Recovery after connectionError restores normal state", () =
     assertEquals(result.connectionError, false);
 });
 
-Deno.test("Appearance: old device preferences migrate to semantic wallpaper presentations and canvas motion", () => {
+Deno.test("Appearance: old device preferences migrate wallpaper mask to semantic readability", () => {
     const wallpaper = "https://example.com/bg.png";
     const result = normalizeAppearance({
         wallpaper,
         mask: 0,
         accent: "violet",
-        wallpaperGlowStrength: 0.14,
-        ambientMotionMode: "breathe_ripple",
-        ambientMotionStrength: 0.35,
     });
     assertEquals(result.accent, "violet");
-    assertEquals(result.canvasMotion, "ambient");
-    assertEquals(result.canvasMotionLevel, "soft");
     const pres = result.wallpaperPresentations[wallpaper];
     assertEquals(pres.readability, "clear");
-    assertEquals(pres.motion, "ambient");
-    assertEquals(pres.motionLevel, "soft");
-});
-
-Deno.test("Appearance: invalid canvas motion cache values fall back while valid boundaries survive", () => {
-    const invalid = normalizeAppearance({
-        canvasMotion: "invalid_mode",
-        canvasMotionLevel: "hyper_fast",
-    });
-    assertEquals(invalid.canvasMotion, "off");
-    assertEquals(invalid.canvasMotionLevel, "soft");
-    for (const motion of ["off", "ambient"] as const) {
-        for (
-            const level of ["subtle", "soft", "standard", "pronounced"] as const
-        ) {
-            const valid = normalizeAppearance({
-                canvasMotion: motion,
-                canvasMotionLevel: level,
-            });
-            assertEquals(valid.canvasMotion, motion);
-            assertEquals(valid.canvasMotionLevel, level);
-        }
-    }
 });
 
 Deno.test("Appearance: switching cached wallpapers restores their own presentation and composition", () => {
@@ -108,18 +80,10 @@ Deno.test("Appearance: switching cached wallpapers restores their own presentati
             [first]: {
                 composition: { focalX: 0.2, focalY: 0.3 },
                 readability: "clear",
-                softness: "subtle",
-                tone: "natural",
-                motion: "off",
-                motionLevel: "soft",
             },
             [second]: {
                 composition: { focalX: 0.8, focalY: 0.7 },
                 readability: "quiet",
-                softness: "hazy",
-                tone: "mono",
-                motion: "drift",
-                motionLevel: "pronounced",
             },
         },
     });
@@ -133,7 +97,6 @@ Deno.test("Appearance: switching cached wallpapers restores their own presentati
         focalY: 0.7,
     });
     assertEquals(result.wallpaperPresentations[second].readability, "quiet");
-    assertEquals(result.wallpaperPresentations[second].motion, "drift");
 });
 
 Deno.test("Appearance: guest image cache keeps only the current local asset and rejects oversized images", () => {
@@ -145,18 +108,10 @@ Deno.test("Appearance: guest image cache keeps only the current local asset and 
             [current]: {
                 composition: { focalX: 0.2, focalY: 0.3 },
                 readability: "clear",
-                softness: "none",
-                tone: "natural",
-                motion: "off",
-                motionLevel: "soft",
             },
             [previous]: {
                 composition: { focalX: 0.8, focalY: 0.7 },
                 readability: "quiet",
-                softness: "none",
-                tone: "natural",
-                motion: "off",
-                motionLevel: "soft",
             },
         },
     });
@@ -174,48 +129,18 @@ Deno.test("Appearance: malformed presentation records normalize to canonical def
         wallpaperPresentations: {
             "https://example.com/test.png": {
                 readability: "invalid_readability",
-                softness: "invalid_softness",
-                tone: "invalid_tone",
-                motion: "invalid_motion",
-                motionLevel: "invalid_level",
             },
         },
     });
     const pres = result.wallpaperPresentations["https://example.com/test.png"];
     assertEquals(pres.readability, "balanced");
-    assertEquals(pres.softness, "none");
-    assertEquals(pres.tone, "natural");
-    assertEquals(pres.motion, "off");
-    assertEquals(pres.motionLevel, "soft");
-});
-
-Deno.test("Appearance: desktopScene survives valid values and degrades unknown or corrupted caches to none without touching other fields", () => {
-    assertEquals(normalizeAppearance({}).desktopScene, "none");
-    assertEquals(
-        normalizeAppearance({ desktopScene: "amusement-park" }).desktopScene,
-        "amusement-park",
-    );
-    for (
-        const raw of [null, "", "undersea", "AMUSEMENT-PARK", 1, {}, [
-            "amusement-park",
-        ]]
-    ) {
-        const result = normalizeAppearance({
-            accent: "violet",
-            canvasMotion: "ambient",
-            desktopScene: raw,
-        });
-        assertEquals(result.desktopScene, "none");
-        assertEquals(result.accent, "violet");
-        assertEquals(result.canvasMotion, "ambient");
-    }
 });
 
 Deno.test("Appearance sync: a failed patch remains queued for an explicit retry", async () => {
     const queue: AppearanceSyncQueue = {
         owner: "user-a",
         tail: Promise.resolve(),
-        pending: { desktopScene: "amusement-park" },
+        pending: { theme: "dark" },
         reconciled: {},
     };
     const calls: Record<string, unknown>[] = [];
@@ -243,14 +168,14 @@ Deno.test("Appearance sync: a failed patch remains queued for an explicit retry"
     } catch {
         // The failed request remains available for the next explicit retry.
     }
-    assertEquals(queue.pending, { desktopScene: "amusement-park" });
+    assertEquals(queue.pending, { theme: "dark" });
     assertEquals(failures, [failure]);
 
     shouldFail = false;
     await retry();
     assertEquals(calls, [
-        { desktopScene: "amusement-park" },
-        { desktopScene: "amusement-park" },
+        { theme: "dark" },
+        { theme: "dark" },
     ]);
     assertEquals(queue.pending, {});
     assertEquals(succeeded, true);

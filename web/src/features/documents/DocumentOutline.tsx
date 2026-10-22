@@ -18,14 +18,13 @@ export function DocumentOutline({
             className="document-outline-sidebar"
             aria-label="笔记大纲"
         >
-            <div className="flex items-center justify-between pb-1">
+            <div className="document-outline-header">
                 <h3 className="document-outline-title">大纲</h3>
                 {onClose && (
                     <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
                         aria-label="收起大纲"
                         onClick={onClose}
                     >
@@ -36,7 +35,7 @@ export function DocumentOutline({
 
             {outline.length === 0
                 ? (
-                    <p className="text-xs text-[var(--muted)] py-4 text-center">
+                    <p className="document-outline-empty">
                         暂无标题大纲
                     </p>
                 )
@@ -54,9 +53,6 @@ export function DocumentOutline({
                                         onClick={() =>
                                             onSelectHeading(item.index)}
                                     >
-                                        <span className="opacity-70 text-xs mr-1 font-mono">
-                                            H{item.level}
-                                        </span>
                                         {item.text}
                                     </Button>
                                 </li>

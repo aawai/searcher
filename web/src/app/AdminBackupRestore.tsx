@@ -4,31 +4,29 @@ import {
     CheckCircle2,
     Download,
     FileCheck,
-    HardDrive,
     RotateCcw,
-    ShieldAlert,
     Upload,
 } from "lucide-react";
-import { Button, type ButtonProps } from "../components/ui/button.tsx";
+import { Button } from "../components/ui/button.tsx";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "../components/ui/dialog.tsx";
+    AlertDialog,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
 import {
-    Section,
-    SectionHeader,
-    SettingsCard,
+    SettingsGroup,
+    SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
 import { api } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
 import "./admin.css";
 
-export interface BackupManifest {
+interface BackupManifest {
     version: "1.0.0";
     createdAt: number;
     appName: "Searcher";
@@ -53,9 +51,8 @@ interface FilePickerProps {
     buttonText: string;
     onFileSelect: (file: File) => void;
     disabled?: boolean;
-    buttonVariant?: ButtonProps["variant"];
     icon?: ReactNode;
-    selectedFileName?: string | null;
+    selectedFileName?: string;
     placeholder?: string;
 }
 
@@ -66,46 +63,36 @@ function FilePicker({
     buttonText,
     onFileSelect,
     disabled = false,
-    buttonVariant = "outline",
     icon,
     selectedFileName,
     placeholder,
 }: FilePickerProps) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const fileNameId = `${id}-filename`;
 
-    const handleButtonClick = () => {
+    function handleButtonClick() {
         if (inputRef.current) {
-            // Reset input value before file dialog opens to allow selecting the same file again
+            // 先清空，才能重复选择同一个文件
             inputRef.current.value = "";
             inputRef.current.click();
         }
-    };
+    }
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
-        if (file) {
-            onFileSelect(file);
-        }
-        // Reset value after handling to ensure same-file reselection works
+        if (file) onFileSelect(file);
         e.target.value = "";
-    };
-
-    const fileNameId = `${id}-filename`;
+    }
 
     return (
-        <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor={id} className="sr-only">
-                {label}
-            </label>
+        <div className="admin-file-row">
+            <label htmlFor={id} className="sr-only">{label}</label>
             <input
                 ref={inputRef}
                 id={id}
                 type="file"
                 accept={accept}
                 onChange={handleInputChange}
-                onClick={(e) => {
-                    (e.target as HTMLInputElement).value = "";
-                }}
                 disabled={disabled}
                 className="sr-only"
                 tabIndex={-1}
@@ -113,7 +100,7 @@ function FilePicker({
             />
             <Button
                 type="button"
-                variant={buttonVariant}
+                variant="outline"
                 disabled={disabled}
                 onClick={handleButtonClick}
                 aria-describedby={selectedFileName ? fileNameId : undefined}
@@ -125,18 +112,14 @@ function FilePicker({
                 ? (
                     <span
                         id={fileNameId}
-                        className="text-xs text-muted truncate max-w-xs font-mono"
+                        className="admin-file-name"
                         title={selectedFileName}
                     >
                         {selectedFileName}
                     </span>
                 )
                 : placeholder
-                ? (
-                    <span className="text-xs text-muted italic">
-                        {placeholder}
-                    </span>
-                )
+                ? <span className="admin-file-placeholder">{placeholder}</span>
                 : null}
         </div>
     );
@@ -145,13 +128,11 @@ function FilePicker({
 export function AdminBackupRestore() {
     const restoreTriggerRef = useRef<HTMLButtonElement>(null);
 
-    // Config export/import state
     const [configImporting, setConfigImporting] = useState(false);
     const [configSuccess, setConfigSuccess] = useState("");
     const [configError, setConfigError] = useState("");
     const [selectedConfigFileName, setSelectedConfigFileName] = useState("");
 
-    // Full ZIP backup state
     const [backupExporting, setBackupExporting] = useState(false);
     const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
     const [validating, setValidating] = useState(false);
@@ -160,19 +141,16 @@ export function AdminBackupRestore() {
     >(null);
     const [validationError, setValidationError] = useState("");
 
-    // Restore execution state
     const [restoring, setRestoring] = useState(false);
     const [restoreModalOpen, setRestoreModalOpen] = useState(false);
     const [restoreSuccess, setRestoreSuccess] = useState("");
     const [restoreError, setRestoreError] = useState("");
 
-    // 1. Export Config JSON
-    const handleExportConfig = () => {
+    function handleExportConfig() {
         globalThis.open("/api/admin/system/config/export", "_blank");
-    };
+    }
 
-    // 2. Import Config JSON
-    const handleConfigFileChange = async (file: File) => {
+    async function handleConfigFileChange(file: File) {
         setSelectedConfigFileName(file.name);
         setConfigImporting(true);
         setConfigError("");
@@ -183,66 +161,53 @@ export function AdminBackupRestore() {
             try {
                 parsed = JSON.parse(text);
             } catch {
-                throw new Error("无法解析 JSON 文件，请确认格式正确");
+                throw new Error("无法解析 JSON 文件，格式不正确");
             }
-
             const res = await api<{
                 importedProvidersCount: number;
                 createdProvidersCount?: number;
                 updatedProvidersCount?: number;
                 importedModelsCount?: number;
-            }>(
-                "/api/admin/system/config/import",
-                {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify(parsed),
-                },
-            );
-
+            }>("/api/admin/system/config/import", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(parsed),
+            });
             const created = res.createdProvidersCount ?? 0;
             const updated = res.updatedProvidersCount ??
                 res.importedProvidersCount;
             const models = res.importedModelsCount ?? 0;
-            const parts: string[] = ["系统设置已同步"];
+            const parts = ["系统设置已同步"];
             if (created > 0 || updated > 0) {
-                parts.push(
-                    `AI 提供商（新建 ${created} 个，更新 ${updated} 个）`,
-                );
+                parts.push(`AI 提供商新建 ${created} 个、更新 ${updated} 个`);
             }
-            if (models > 0) {
-                parts.push(`已同步 ${models} 个模型配置`);
-            }
+            if (models > 0) parts.push(`模型配置同步 ${models} 个`);
             const keyWarning = created > 0
-                ? "。新导入的提供商默认处于禁用状态，必须在 AI 设置中配置 API Key 后方可使用"
+                ? "。新提供商默认禁用，需在 AI 设置中配置 API Key 后启用"
                 : "";
-            setConfigSuccess(
-                `配置导入成功！${parts.join("，")}${keyWarning}。`,
-            );
+            setConfigSuccess(`配置已导入：${parts.join("，")}${keyWarning}。`);
         } catch (err) {
             setConfigError(errorMessage(err));
         } finally {
             setConfigImporting(false);
         }
-    };
+    }
 
-    // 3. Export Full Backup ZIP
-    const handleExportFullBackup = () => {
+    function handleExportFullBackup() {
         setBackupExporting(true);
         globalThis.open("/api/admin/backup/export", "_blank");
         setTimeout(() => setBackupExporting(false), 2000);
-    };
+    }
 
-    // 4. Handle ZIP Selection and Pre-validate
-    const handleZipFileChange = (file: File) => {
+    function handleZipFileChange(file: File) {
         setSelectedZipFile(file);
         setValidatedManifest(null);
         setValidationError("");
         setRestoreSuccess("");
         setRestoreError("");
-    };
+    }
 
-    const handlePreValidate = async () => {
+    async function handlePreValidate() {
         if (!selectedZipFile) return;
         setValidating(true);
         setValidationError("");
@@ -250,15 +215,10 @@ export function AdminBackupRestore() {
         try {
             const formData = new FormData();
             formData.append("backup", selectedZipFile);
-
             const res = await api<{ valid: boolean; manifest: BackupManifest }>(
                 "/api/admin/backup/validate",
-                {
-                    method: "POST",
-                    body: formData,
-                },
+                { method: "POST", body: formData },
             );
-
             if (res.valid && res.manifest) {
                 setValidatedManifest(res.manifest);
             } else {
@@ -269,10 +229,9 @@ export function AdminBackupRestore() {
         } finally {
             setValidating(false);
         }
-    };
+    }
 
-    // 5. Execute Full Restore
-    const handleExecuteRestore = async () => {
+    async function handleExecuteRestore() {
         if (!selectedZipFile) return;
         setRestoring(true);
         setRestoreError("");
@@ -280,412 +239,238 @@ export function AdminBackupRestore() {
         try {
             const formData = new FormData();
             formData.append("backup", selectedZipFile);
-
             await api<{
                 manifest: BackupManifest;
                 snapshotCreated: boolean;
                 snapshotPath: string;
-            }>(
-                "/api/admin/backup/restore",
-                {
-                    method: "POST",
-                    body: formData,
-                },
-            );
-
+            }>("/api/admin/backup/restore", { method: "POST", body: formData });
             setRestoreSuccess(
-                "系统数据已恢复。恢复前快照已自动保存，失败时可用于回滚。请重新加载页面，如被登出请重新登录。",
+                "已还原，恢复前快照已保存。重新加载页面后生效；若被登出，需重新登录。",
             );
             setRestoreModalOpen(false);
         } catch (err) {
-            setRestoreError(errorMessage(err));
+            setRestoreError(`还原失败：${errorMessage(err)}`);
             setRestoreModalOpen(false);
         } finally {
             setRestoring(false);
         }
-    };
+    }
 
     return (
-        <div className="semantic-section">
-            <SectionHeader
-                title="备份与恢复"
-                description="配置导入导出、全量 ZIP 打包备份、预验证与安全快照回滚"
-                headingLevel={2}
-            />
+        <div className="admin-panel">
+            {configError && (
+                <StatusBanner tone="error" density="compact">
+                    <span className="admin-banner-message">
+                        <AlertCircle size="1em" />
+                        <span>{configError}</span>
+                    </span>
+                </StatusBanner>
+            )}
+            {configSuccess && (
+                <StatusBanner tone="success" density="compact">
+                    <span className="admin-banner-message">
+                        <CheckCircle2 size="1em" />
+                        <span>{configSuccess}</span>
+                    </span>
+                </StatusBanner>
+            )}
 
-            {/* Security Isolation Banner */}
-            <StatusBanner tone="info">
-                <div className="flex items-start gap-3">
-                    <HardDrive
-                        size="1em"
-                        className="icon-lg text-accent shrink-0 mt-0.5"
-                    />
-                    <div className="leading-relaxed">
-                        <strong className="text-foreground">
-                            密钥隔离与数据安全保障：
-                        </strong>
-                        <span className="text-muted">
-                            系统加密主密钥
-                            永不包含在数据库、备份文件或配置导出中。备份 ZIP
-                            包含完整 <code>manifest.json</code>、<code>
-                                database.sqlite
-                            </code>{" "}
-                            以及 <code>assets/</code> 资源目录。
-                        </span>
-                    </div>
-                </div>
-            </StatusBanner>
-
-            {/* Module 1: Configuration Export / Import */}
-            <Section
-                title="配置导入导出"
-                headingLevel={3}
-                description="轻量导出系统设置、AI 提供商元数据及模型可见性（不包含用户私人数据、聊天历史或 API Key 密文）。新导入的 AI 提供商默认处于禁用状态，导入后必须在 AI 设置中手动配置 API Key 并刷新可用模型方可启用。"
+            <SettingsGroup
+                title="系统配置"
+                footer="仅含系统设置与 AI 提供商，不含用户数据和 API Key。"
             >
-                {configError && (
-                    <StatusBanner tone="error">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle
-                                size="1em"
-                                className="icon-md shrink-0"
-                            />
-                            <span>{configError}</span>
-                        </div>
-                    </StatusBanner>
-                )}
+                <SettingsRow title="导出配置">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleExportConfig}
+                    >
+                        <Download size="1em" />
+                        <span>导出 JSON</span>
+                    </Button>
+                </SettingsRow>
+                <SettingsRow title="导入配置">
+                    <FilePicker
+                        id="config-import-file"
+                        label="选择配置 JSON 文件"
+                        accept=".json,application/json"
+                        buttonText={configImporting ? "正在导入…" : "导入 JSON"}
+                        icon={<Upload size="1em" />}
+                        disabled={configImporting}
+                        selectedFileName={selectedConfigFileName}
+                        onFileSelect={handleConfigFileChange}
+                    />
+                </SettingsRow>
+            </SettingsGroup>
 
-                {configSuccess && (
-                    <StatusBanner tone="success">
-                        <div className="flex items-center gap-2">
-                            <CheckCircle2
-                                size="1em"
-                                className="icon-md shrink-0"
-                            />
-                            <span>{configSuccess}</span>
-                        </div>
-                    </StatusBanner>
-                )}
-
-                <SettingsCard>
-                    <div className="admin-backup-content admin-backup-content--actions">
+            {validationError && (
+                <StatusBanner tone="error" density="compact">
+                    <span className="admin-banner-message">
+                        <AlertCircle size="1em" />
+                        <span>预检失败：{validationError}</span>
+                    </span>
+                </StatusBanner>
+            )}
+            {restoreError && (
+                <StatusBanner tone="error" density="compact">
+                    <span className="admin-banner-message">
+                        <AlertCircle size="1em" />
+                        <span>{restoreError}</span>
+                    </span>
+                </StatusBanner>
+            )}
+            {restoreSuccess && (
+                <StatusBanner tone="success" density="compact">
+                    <div className="admin-banner-row">
+                        <span className="admin-banner-message">
+                            <CheckCircle2 size="1em" />
+                            <span>{restoreSuccess}</span>
+                        </span>
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={handleExportConfig}
+                            size="sm"
+                            onClick={() => globalThis.location.reload()}
                         >
-                            <Download size="1em" className="icon-md" />
-                            <span>导出系统配置 (JSON)</span>
+                            重新加载页面
                         </Button>
-
-                        <FilePicker
-                            id="config-file-picker"
-                            label="导入系统配置"
-                            accept=".json,application/json"
-                            buttonText={configImporting
-                                ? "正在导入…"
-                                : "导入系统配置 (JSON)"}
-                            buttonVariant="outline"
-                            icon={<Upload size="1em" className="icon-md" />}
-                            disabled={configImporting}
-                            selectedFileName={selectedConfigFileName}
-                            onFileSelect={handleConfigFileChange}
-                        />
                     </div>
-                </SettingsCard>
-            </Section>
+                </StatusBanner>
+            )}
 
-            {/* Module 2: Full ZIP Backup & Safe Restore */}
-            <Section
-                title="全量 ZIP 备份与恢复"
-                headingLevel={3}
-                description="先验证备份，再创建当前快照并恢复；失败时自动回滚。"
+            <SettingsGroup
+                title="完整备份"
+                footer="还原前会先保存当前数据快照，失败时尝试回滚。"
             >
-                <SettingsCard>
-                    <div className="admin-backup-content">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <span className="font-medium text-foreground text-sm">
-                                安全恢复保障流程
+                <SettingsRow title="创建备份">
+                    <Button
+                        type="button"
+                        variant="default"
+                        onClick={handleExportFullBackup}
+                        disabled={backupExporting}
+                    >
+                        <Download size="1em" />
+                        <span>
+                            {backupExporting
+                                ? "正在生成备份…"
+                                : "下载备份 (ZIP)"}
+                        </span>
+                    </Button>
+                </SettingsRow>
+                <SettingsRow title="备份文件">
+                    <div className="admin-file-row">
+                        <FilePicker
+                            id="backup-restore-file"
+                            label="选择备份 ZIP 文件"
+                            accept=".zip,application/zip"
+                            buttonText="选择 ZIP 文件"
+                            selectedFileName={selectedZipFile?.name}
+                            placeholder="未选择文件"
+                            onFileSelect={handleZipFileChange}
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handlePreValidate}
+                            disabled={!selectedZipFile || validating}
+                        >
+                            <FileCheck size="1em" />
+                            <span>{validating ? "正在验证…" : "预检验证"}</span>
+                        </Button>
+                    </div>
+                </SettingsRow>
+            </SettingsGroup>
+
+            {validatedManifest && (
+                <>
+                    <StatusBanner tone="success" density="compact">
+                        <span className="admin-banner-message">
+                            <CheckCircle2 size="1em" />
+                            <span>
+                                备份文件校验通过，数据库完整性与外键检查正常。
                             </span>
-                            <div className="text-xs text-muted flex items-center gap-1.5 flex-wrap">
-                                <span>验证备份</span>
-                                <span className="text-muted-foreground/40">
-                                    →
-                                </span>
-                                <span>创建当前快照</span>
-                                <span className="text-muted-foreground/40">
-                                    →
-                                </span>
-                                <span>执行恢复</span>
-                                <span className="text-muted-foreground/40">
-                                    →
-                                </span>
-                                <span>失败自动回滚</span>
-                            </div>
-                        </div>
-                        <details className="text-xs text-muted leading-relaxed cursor-pointer group">
-                            <summary className="hover:text-foreground transition-colors select-none">
-                                查看恢复管线技术细节 (Specification §18)
-                            </summary>
-                            <div className="mt-2.5 pt-2.5 border-t border-border/40 space-y-1.5 pl-1">
-                                <div>
-                                    1.{" "}
-                                    <strong>格式与清单验证 (Validate):</strong>
-                                    {" "}
-                                    预检 ZIP 解压，核验 manifest.json
-                                    及应用兼容性。
-                                </div>
-                                <div>
-                                    2.{" "}
-                                    <strong>
-                                        数据库完整性核验 (Compatibility Check):
-                                    </strong>{" "}
-                                    通过 SQLite PRAGMA quick_check 与
-                                    foreign_key_check。
-                                </div>
-                                <div>
-                                    3.{" "}
-                                    <strong>
-                                        当前状态快照存档 (Current Snapshot):
-                                    </strong>{" "}
-                                    恢复动作前立即生成当前内存/物理快照。
-                                </div>
-                                <div>
-                                    4.{" "}
-                                    <strong>
-                                        安全原子还原 (Atomic Restore):
-                                    </strong>{" "}
-                                    覆盖替换 SQLite 库与 assets
-                                    静态资源；若中途出错自动无损回滚。
-                                </div>
-                            </div>
-                        </details>
-                    </div>
-                </SettingsCard>
-
-                {restoreError && (
-                    <StatusBanner tone="error">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle
-                                size="1em"
-                                className="icon-md shrink-0"
-                            />
-                            <span>{restoreError}</span>
-                        </div>
+                        </span>
                     </StatusBanner>
-                )}
-
-                {restoreSuccess && (
-                    <StatusBanner tone="success">
-                        <div className="flex items-center gap-3">
-                            <CheckCircle2
-                                size="1em"
-                                className="icon-md shrink-0"
-                            />
-                            <div className="flex-1">{restoreSuccess}</div>
+                    <SettingsGroup title="备份内容">
+                        <SettingsRow title="生成时间">
+                            <span className="admin-value">
+                                {new Date(validatedManifest.createdAt)
+                                    .toLocaleString("zh-CN")}
+                            </span>
+                        </SettingsRow>
+                        <SettingsRow title="用户">
+                            <span className="admin-value">
+                                {validatedManifest.counts.users}
+                            </span>
+                        </SettingsRow>
+                        <SettingsRow title="应用">
+                            <span className="admin-value">
+                                {validatedManifest.counts.webapps}
+                            </span>
+                        </SettingsRow>
+                        <SettingsRow title="便签">
+                            <span className="admin-value">
+                                {validatedManifest.counts.notes}
+                            </span>
+                        </SettingsRow>
+                        <SettingsRow title="AI 提供商 / 模型">
+                            <span className="admin-value">
+                                {validatedManifest.counts.aiProviders} /{" "}
+                                {validatedManifest.counts.aiModels}
+                            </span>
+                        </SettingsRow>
+                        <SettingsRow title="壁纸 / 图标">
+                            <span className="admin-value">
+                                {validatedManifest.assets.wallpapersCount} /
+                                {" "}
+                                {validatedManifest.assets.iconsCount}
+                            </span>
+                        </SettingsRow>
+                        <SettingsRow title="还原备份">
                             <Button
+                                ref={restoreTriggerRef}
                                 type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => globalThis.location.reload()}
+                                variant="destructive"
+                                disabled={restoring}
+                                onClick={() => setRestoreModalOpen(true)}
                             >
-                                重新加载页面
+                                <RotateCcw size="1em" />
+                                <span>还原此备份…</span>
                             </Button>
-                        </div>
-                    </StatusBanner>
-                )}
+                        </SettingsRow>
+                    </SettingsGroup>
+                </>
+            )}
 
-                {/* Step 1: Download Backup */}
-                <SettingsCard>
-                    <div className="admin-backup-content">
-                        <h4 className="admin-step-title">
-                            1. 创建全量备份
-                        </h4>
-                        <div>
-                            <Button
-                                type="button"
-                                onClick={handleExportFullBackup}
-                                disabled={backupExporting}
-                            >
-                                <Download size="1em" className="icon-md" />
-                                <span>
-                                    {backupExporting
-                                        ? "正在生成备份…"
-                                        : "下载完整备份 (ZIP)"}
-                                </span>
-                            </Button>
-                        </div>
-                    </div>
-                </SettingsCard>
-                {/* Step 2: Restore from Backup */}
-                <SettingsCard>
-                    <div className="admin-backup-content">
-                        <h4 className="admin-step-title">
-                            2. 从备份文件还原
-                        </h4>
-
-                        <div className="flex flex-wrap items-center gap-3">
-                            <FilePicker
-                                id="restore-file-picker"
-                                label="选择备份文件"
-                                accept=".zip,application/zip"
-                                buttonText="选择备份文件 (ZIP)"
-                                buttonVariant="outline"
-                                icon={<Upload size="1em" className="icon-md" />}
-                                selectedFileName={selectedZipFile
-                                    ? selectedZipFile.name
-                                    : null}
-                                placeholder="未选择文件"
-                                onFileSelect={handleZipFileChange}
-                            />
-
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handlePreValidate}
-                                disabled={!selectedZipFile || validating}
-                            >
-                                <FileCheck size="1em" className="icon-md" />
-                                <span>
-                                    {validating
-                                        ? "正在预检验证…"
-                                        : "预检验证备份文件"}
-                                </span>
-                            </Button>
-                        </div>
-
-                        {validationError && (
-                            <StatusBanner tone="error">
-                                <div className="flex items-center gap-2">
-                                    <AlertCircle
-                                        size="1em"
-                                        className="icon-md shrink-0"
-                                    />
-                                    <span>预检失败: {validationError}</span>
-                                </div>
-                            </StatusBanner>
-                        )}
-
-                        {validatedManifest && (
-                            <div className="admin-validated-card">
-                                <div className="admin-validated-header">
-                                    <CheckCircle2
-                                        size="1em"
-                                        className="icon-md"
-                                    />
-                                    <span>
-                                        备份验证通过 (SQLite
-                                        数据库完整性正常，外键校验无违规)
-                                    </span>
-                                </div>
-
-                                <div className="admin-manifest-grid">
-                                    <div>
-                                        备份生成时间：{new Date(
-                                            validatedManifest.createdAt,
-                                        ).toLocaleString("zh-CN")}
-                                    </div>
-                                    <div>
-                                        用户总数：{validatedManifest.counts
-                                            .users}
-                                    </div>
-                                    <div>
-                                        应用数量：{validatedManifest.counts
-                                            .webapps}
-                                    </div>
-                                    <div>
-                                        便签总数：{validatedManifest.counts
-                                            .notes}
-                                    </div>
-                                    <div>
-                                        AI 提供商/模型：{validatedManifest
-                                            .counts
-                                            .aiProviders} /{" "}
-                                        {validatedManifest.counts.aiModels}
-                                    </div>
-                                    <div>
-                                        壁纸/图标资源：{validatedManifest.assets
-                                            .wallpapersCount} /{" "}
-                                        {validatedManifest.assets.iconsCount}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <Button
-                                        ref={restoreTriggerRef}
-                                        type="button"
-                                        variant="destructive"
-                                        onClick={() =>
-                                            setRestoreModalOpen(true)}
-                                    >
-                                        <RotateCcw
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>确认还原此备份…</span>
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </SettingsCard>
-            </Section>
-
-            <Dialog
+            <AlertDialog
                 open={restoreModalOpen}
                 onOpenChange={(open) => {
                     if (!restoring) setRestoreModalOpen(open);
                 }}
             >
-                <DialogContent
-                    className="max-w-md"
-                    finalFocus={restoreTriggerRef}
-                >
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-destructive">
-                            <ShieldAlert
-                                size="1em"
-                                className="icon-lg"
-                                aria-hidden="true"
-                            />
-                            <span>警告：即将执行全量数据还原</span>
-                        </DialogTitle>
-                        <DialogDescription>
-                            将使用「{selectedZipFile?.name}」覆盖当前系统的
-                            SQLite 数据库、系统设置、图标和壁纸。
-                            备份时间：{validatedManifest
-                                ? new Date(validatedManifest.createdAt)
-                                    .toLocaleString()
-                                : "未知"}。操作前会在数据库旁保存当前完整 ZIP
-                            快照；失败时尝试回滚。请确认目标文件与范围。
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setRestoreModalOpen(false)}
-                            disabled={restoring}
-                        >
+                <AlertDialogContent finalFocus={restoreTriggerRef}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>还原此备份？</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            将用「{selectedZipFile
+                                ?.name}」覆盖当前的数据库、系统设置、图标和壁纸。还原前会保存当前数据快照，失败时尝试回滚。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={restoring}>
                             取消
-                        </Button>
+                        </AlertDialogCancel>
                         <Button
                             type="button"
                             variant="destructive"
-                            onClick={handleExecuteRestore}
                             disabled={restoring}
+                            onClick={handleExecuteRestore}
                         >
-                            <RotateCcw
-                                size="1em"
-                                className="icon-md"
-                                aria-hidden="true"
-                            />
-                            <span>
-                                {restoring ? "正在还原中…" : "确认覆盖并还原"}
-                            </span>
+                            {restoring ? "正在还原…" : "确认还原"}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

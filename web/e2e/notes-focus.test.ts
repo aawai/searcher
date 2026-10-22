@@ -28,7 +28,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
     });
     await page.reload();
     await page.locator(
-        '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+        '.zen-edge-btn[data-workspace="notes"]',
     ).first().click();
     await page.locator(".notes-workspace-list .note-title").filter({
         hasText: "Focus contract",
@@ -91,7 +91,11 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             const before = await readState();
             await title.click();
             await live.click();
-            await editor.getByRole("button", { name: "版本历史", exact: true })
+            await editor.getByRole("button", {
+                name: "便签选项",
+                exact: true,
+            }).click();
+            await page.getByRole("menuitem", { name: "版本历史", exact: true })
                 .click();
             await page.waitForTimeout(1800);
             assertEquals(writes, []);
@@ -202,11 +206,18 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                 const response = saved("manual");
                 if (destination === "history") {
                     await editor.getByRole("button", {
+                        name: "便签选项",
+                        exact: true,
+                    }).click();
+                    await page.getByRole("menuitem", {
                         name: "版本历史",
                         exact: true,
                     }).click();
                 } else {
-                    await editor.locator(".note-color-trigger").focus();
+                    await editor.getByRole("button", {
+                        name: "便签选项",
+                        exact: true,
+                    }).focus();
                 }
                 assertEquals((await response).status(), 200);
                 await settled();
@@ -257,7 +268,10 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             );
             await editor.getByRole("button", { name: "粗体", exact: true })
                 .click();
-            await editor.locator(".note-color-trigger").focus();
+            await editor.getByRole("button", {
+                name: "便签选项",
+                exact: true,
+            }).focus();
             await page.waitForTimeout(1800);
             assertEquals(writes.length, count);
             const response = saved("autosave");
@@ -316,7 +330,7 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             });
             await page.reload();
             await page.locator(
-                '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+                '.zen-edge-btn[data-workspace="notes"]',
             ).first().click();
             await page.locator(".notes-workspace-list .note-title").filter({
                 hasText: "Esc退出前保存",
@@ -398,6 +412,10 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             try {
                 await title.fill("失败后重试");
                 await editor.getByRole("button", {
+                    name: "便签选项",
+                    exact: true,
+                }).click();
+                await page.getByRole("menuitem", {
                     name: "版本历史",
                     exact: true,
                 }).click();
@@ -408,7 +426,10 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
             }
             await title.focus();
             const response = saved("manual");
-            await editor.locator(".note-color-trigger").focus();
+            await editor.getByRole("button", {
+                name: "便签选项",
+                exact: true,
+            }).focus();
             assertEquals((await response).status(), 200);
             await settled();
             assertEquals((await readState()).note.title, "失败后重试");
@@ -432,7 +453,10 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                 const count = writes.length;
                 await title.fill("在途标题");
                 const response = saved("manual");
-                await editor.locator(".note-color-trigger").focus();
+                await editor.getByRole("button", {
+                    name: "便签选项",
+                    exact: true,
+                }).focus();
                 await Promise.race([held.promise, response]);
                 await editor.getByRole("tab", { name: "源码", exact: true })
                     .click();
@@ -465,93 +489,6 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
                 release.resolve();
                 await page.unroute(`**/api/notes/${id}`);
             }
-        },
-    );
-    await t.step(
-        "two note instances flush only the dirty instance actually left",
-        async () => {
-            const secondId = await page.evaluate(async () => {
-                await fetch("/api/preferences", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ style: "widgets" }),
-                });
-                const response = await fetch("/api/notes", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title: "第二实例",
-                        body: "独立正文",
-                    }),
-                });
-                return (await response.json()).data.id as string;
-            });
-            await page.reload();
-            await page.locator('.desktop-dock button[data-workspace="notes"]')
-                .click();
-            await page.locator(".notes-workspace-list .note-title").filter({
-                hasText: "在途标题",
-            }).click();
-            await page.locator('.desktop-dock button[data-workspace="notes"]')
-                .click();
-            await page.locator(".notes-workspace-list .note-title").filter({
-                hasText: "第二实例",
-            }).click();
-            const first = page.locator(
-                `.desktop-window[data-window-id="note:${id}"] .note-editor`,
-            );
-            const second = page.locator(
-                `.desktop-window[data-window-id="note:${secondId}"] .note-editor`,
-            );
-            const firstTitle = first.getByRole("textbox", {
-                name: "便签标题",
-                exact: true,
-            });
-            const secondTitle = second.getByRole("textbox", {
-                name: "便签标题",
-                exact: true,
-            });
-            await first.locator(".ProseMirror").waitFor();
-            await second.locator(".ProseMirror").waitFor();
-            const secondWrites: string[] = [];
-            page.on("request", (request) => {
-                if (
-                    request.method() === "PATCH" &&
-                    request.url().endsWith(`/api/notes/${secondId}`)
-                ) secondWrites.push(request.postDataJSON().origin);
-            });
-            const count = writes.length;
-            await firstTitle.fill("第一实例保存");
-            const firstSaved = saved("manual");
-            await secondTitle.focus();
-            assertEquals((await firstSaved).status(), 200);
-            await first.locator(".save-state.save-saved").waitFor();
-            await page.waitForTimeout(1800);
-            assertEquals(writes.length, count + 1);
-            assertEquals(secondWrites, []);
-            await secondTitle.fill("第二实例保存");
-            const secondSaved = page.waitForResponse((response) =>
-                response.request().method() === "PATCH" &&
-                response.url().endsWith(`/api/notes/${secondId}`)
-            );
-            await firstTitle.focus();
-            assertEquals((await secondSaved).status(), 200);
-            await second.locator(".save-state.save-saved").waitFor();
-            await page.waitForTimeout(1800);
-            assertEquals(writes.length, count + 1);
-            assertEquals(secondWrites, ["manual"]);
-            const titles = await page.evaluate(
-                (ids) =>
-                    Promise.all(
-                        ids.map(async (id) =>
-                            (await (await fetch(`/api/notes/${id}`)).json())
-                                .data
-                                .title as string
-                        ),
-                    ),
-                [id, secondId],
-            );
-            assertEquals(titles, ["第一实例保存", "第二实例保存"]);
         },
     );
 });

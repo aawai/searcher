@@ -143,9 +143,6 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                 const adminChunk = Object.values(manifest).find((c) =>
                     c.src?.includes("AdminPage")
                 )?.file;
-                const inspectorChunk = Object.values(manifest).find((c) =>
-                    c.src?.includes("WallpaperMotionInspector")
-                )?.file;
 
                 if (askChunk) {
                     assert(
@@ -175,12 +172,6 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                     assert(
                         !jsRequests.includes(adminChunk),
                         "AdminPage chunk must not load on /",
-                    );
-                }
-                if (inspectorChunk) {
-                    assert(
-                        !jsRequests.includes(inspectorChunk),
-                        "WallpaperMotionInspector chunk must not load on /",
                     );
                 }
             } finally {
@@ -278,7 +269,7 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                         `Direct visit to ${path} status`,
                     );
                     await page.locator(".topbar").waitFor();
-                    await page.locator("main, [data-archetype], .auth-surface")
+                    await page.locator("main, [data-archetype], .auth-form")
                         .first().waitFor();
                     const hasError = await page.locator(
                         '[data-testid="route-error-boundary"]',
@@ -352,74 +343,6 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                 );
             } finally {
                 await close();
-            }
-        },
-    );
-
-    await t.step(
-        "Scenario 5: Motion Inspector diagnostic dynamic boundary",
-        async () => {
-            // 5a. Normal home visit does not request Motion Inspector
-            {
-                const { page, close } = await createIsolatedPage();
-                try {
-                    const requestedFiles: string[] = [];
-                    page.on("request", (req) => {
-                        requestedFiles.push(req.url());
-                    });
-
-                    await page.goto(origin + "/");
-                    await page.locator(".topbar").waitFor();
-
-                    const inspectorRequested = requestedFiles.some((u) =>
-                        u.includes("WallpaperMotionInspector")
-                    );
-                    assert(
-                        !inspectorRequested,
-                        "Normal / visit must not request WallpaperMotionInspector",
-                    );
-
-                    const inspectorCount = await page.locator(
-                        '[data-testid="wallpaper-motion-inspector"]',
-                    ).count();
-                    assertEquals(
-                        inspectorCount,
-                        0,
-                        "Diagnostic panel must not be present on normal visit",
-                    );
-                } finally {
-                    await close();
-                }
-            }
-
-            // 5b. Diagnostic query visit requests Motion Inspector and renders panel
-            {
-                const { page, close } = await createIsolatedPage();
-                try {
-                    const requestedFiles: string[] = [];
-                    page.on("request", (req) => {
-                        requestedFiles.push(req.url());
-                    });
-
-                    await page.goto(origin + "/?motion_inspector=true");
-                    await page.locator(".topbar").waitFor();
-
-                    await page.locator(
-                        '[data-testid="wallpaper-motion-inspector"]',
-                    ).waitFor({
-                        timeout: 5000,
-                    });
-
-                    const inspectorRequested = requestedFiles.some((u) =>
-                        u.includes("WallpaperMotionInspector")
-                    );
-                    assert(
-                        inspectorRequested,
-                        "Visit with ?motion_inspector=true must request WallpaperMotionInspector",
-                    );
-                } finally {
-                    await close();
-                }
             }
         },
     );

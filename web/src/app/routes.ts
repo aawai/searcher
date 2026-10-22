@@ -9,8 +9,7 @@ export const routes = {
     account: "/account",
     trash: "/trash",
     designLab: "/design-lab",
-    settings: (tab: SettingsTab = "search") =>
-        tab === "search" ? "/settings" : `/settings/${tab}`,
+    settings: (tab?: SettingsTab) => tab ? `/settings/${tab}` : "/settings",
     admin: (tab: AdminTab = "overview") =>
         tab === "overview" ? "/admin" : `/admin/${tab}`,
 };
@@ -18,6 +17,7 @@ export const routes = {
 export function settingsTab(pathname: string): SettingsTab | null {
     switch (pathname) {
         case routes.settings():
+        case routes.settings("search"):
             return "search";
         case routes.settings("appearance"):
             return "appearance";

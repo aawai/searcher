@@ -3,8 +3,7 @@
  *
  * Rules distinguish between:
  * 1. Runtime geometry / dynamic domain values (wallpaper filters, drag transforms,
- *    masonry layout coordinates, domain-specific colors/points) scoped to their
- *    exact file and domain owners.
+ *    domain-specific colors/points) scoped to their exact file and domain owners.
  * 2. Primitives owning structural geometry in `components/ui/`.
  * 3. Design-system token definitions in `tokens.css` and base resets in `global.css`.
  * 4. Forbidden static visual presentation (raw box-shadow, font-size, border-radius,
@@ -12,17 +11,6 @@
  */
 
 import { RUNTIME_CSS_VARIABLE_REGISTRY } from "./ownership.ts";
-
-const MASONRY_GEOMETRY_PROPS: Record<string, true> = {
-    left: true,
-    top: true,
-    width: true,
-    height: true,
-    minHeight: true,
-    gridColumn: true,
-    gridRow: true,
-    position: true,
-};
 
 const ALLOWED_PRIMITIVE_PROPS: Record<string, true> = {
     width: true,
@@ -46,23 +34,12 @@ function normalizePath(file: string): string {
     return file.replaceAll("\\", "/");
 }
 
-function isLayoutOwner(file: string): boolean {
-    const p = normalizePath(file);
-    return (
-        p.endsWith("SearchHome.tsx") ||
-        p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("FloatingNotes.tsx") ||
-        p.includes("/fixtures/layout/")
-    );
-}
-
 function isDragOwner(file: string): boolean {
     const p = normalizePath(file);
     return (
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
         p.endsWith("FloatingNotes.tsx") ||
-        p.endsWith("DesignLab.tsx") ||
         p.includes("/fixtures/drag/")
     );
 }
@@ -85,7 +62,7 @@ function isSwatchOwner(file: string): boolean {
 
 /**
  * Wallpaper filter exception:
- * Explicit CSS custom variables used for dynamic desktop wallpaper filters,
+ * Explicit CSS custom variables used for dynamic wallpaper filters,
  * or dynamic filter expressions driven by wallpaper state, scoped to wallpaper owners.
  */
 export function isWallpaperFilterException(
@@ -93,7 +70,6 @@ export function isWallpaperFilterException(
     prop: string,
     value: string,
 ): boolean {
-    if (prop === "--search-opacity") return true;
     if (RUNTIME_CSS_VARIABLE_REGISTRY[prop]) {
         return normalizePath(file).endsWith(
             "/components/wallpaper/WallpaperSurface.tsx",
@@ -168,63 +144,48 @@ export function isDragTransformException(
     return false;
 }
 
+const RUNTIME_LAYOUT_PROPS: Record<string, true> = {
+    left: true,
+    top: true,
+    width: true,
+    height: true,
+    minHeight: true,
+    gridColumn: true,
+    gridRow: true,
+    position: true,
+};
+
+function isRuntimeLayoutOwner(file: string): boolean {
+    const p = normalizePath(file);
+    return (
+        p.endsWith("SearchHome.tsx") ||
+        p.endsWith("WebAppLauncher.tsx") ||
+        p.endsWith("FloatingNotes.tsx") ||
+        p.includes("/fixtures/layout/")
+    );
+}
+
 /**
- * Masonry layout geometry exception:
- * Dynamic positioning computed at runtime from layout calculations.
- * NotesWorkspace accepts only its measured masonry expressions; other layout
- * owners retain their existing coordinate contract.
+ * Runtime layout geometry exception:
+ * Launcher grid placement and floating-note coordinates computed at runtime,
+ * scoped to their layout owners and to explicit layout expressions.
  */
-export function isMasonryGeometryException(
+export function isRuntimeLayoutGeometryException(
     file: string,
     prop: string,
     value: string,
 ): boolean {
-    if (
-        normalizePath(file) ===
-            "web/src/features/workspace/NotesWorkspace.tsx"
-    ) {
-        const norm = value.trim().replaceAll(/\s+/g, " ");
-        switch (prop) {
-            case "height":
-                return norm === "layout.containerHeight";
-            case "width":
-                // Unmeasured cards fill the column until a placement is available.
-                return norm === "layout.columnWidth" ||
-                    /^placement\?\.width\s*\?\?\s*(["'])100%\1$/.test(norm);
-            case "transform":
-                return /^placement\s*\?\s*`translate3d\(\$\{placement\.x\}px,\s*\$\{placement\.y\}px,\s*0\)`\s*:\s*undefined$/
-                    .test(norm);
-            case "visibility":
-                return /^placement\s*&&\s*heights\.has\(note\.id\)\s*\?\s*undefined\s*:\s*(["'])hidden\1$/
-                    .test(norm);
-            default:
-                return false;
-        }
-    }
-
-    if (!MASONRY_GEOMETRY_PROPS[prop]) {
+    if (!RUNTIME_LAYOUT_PROPS[prop] || !isRuntimeLayoutOwner(file)) {
         return false;
     }
-
-    // Must be in a recognized layout owner
-    if (!isLayoutOwner(file)) {
-        return false;
-    }
-
     const norm = value.trim();
-
-    // Position absolute when used for masonry / coordinate positioning in layout owners
     if (prop === "position") {
         return norm === "'absolute'" || norm === '"absolute"';
     }
-
-    // Explicit layout calculation formulas
-    const isLayoutFormula = norm.includes("columnLayout") ||
+    return norm.includes("columnLayout") ||
         norm.includes("placement") ||
         norm.includes("pos.") ||
         norm.includes("point.");
-
-    return isLayoutFormula;
 }
 
 /**
@@ -239,26 +200,6 @@ export function isDomainValueException(
 ): boolean {
     const norm = value.trim();
     const p = normalizePath(file);
-
-    // Canvas owns viewport V; Window frames are viewport-global, including immersion.
-    if (p === "web/src/features/desktop/DesktopCanvas.tsx") {
-        return ((prop === "left" || prop === "top") && norm === "0") ||
-            ((prop === "width" || prop === "height") &&
-                norm === `rect.viewportRect.${prop}`);
-    }
-    if (p === "web/src/features/desktop/DesktopWindow.tsx") {
-        const compact = norm.replaceAll(/\s+/g, "");
-        return (prop === "zIndex" && norm === "win.zOrder") ||
-            ((prop === "width" || prop === "height") &&
-                compact ===
-                    `\`\${immersive?rect.viewportRect.${prop}:frame.${prop}}px\``) ||
-            (prop === "transform" && compact ===
-                    'immersive?"translate3d(0,0,0)":`translate3d(${frame.x}px,${frame.y}px,0)`');
-    }
-    if (p === "web/src/features/desktop/WindowChrome.tsx") {
-        return /^(width|height|transform)$/.test(prop) &&
-            norm.includes("snapPreviewFrame.");
-    }
 
     // Floating note domain coordinates and tilt (scoped to FloatingNotes)
     if (p.endsWith("FloatingNotes.tsx") || p.includes("/fixtures/notes/")) {

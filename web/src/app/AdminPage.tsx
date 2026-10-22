@@ -9,7 +9,6 @@ import {
     LoadingState,
     LocalNavigation,
     ManagementTable,
-    SectionHeader,
     StatusBanner,
     WorkspaceToolbar,
 } from "../components/searcher/semantic.tsx";
@@ -21,20 +20,7 @@ import {
     TableRow,
 } from "../components/ui/table.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
-import {
-    AlertCircle,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    KeyRound,
-    MoreHorizontal,
-    RefreshCw,
-    Search,
-    Trash2,
-    UserCheck,
-    UserPlus,
-    UserX,
-} from "lucide-react";
+import { AlertCircle, MoreHorizontal, RefreshCw } from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
 import { AdminBackupRestore } from "./AdminBackupRestore.tsx";
@@ -48,14 +34,23 @@ import {
     DialogTitle,
 } from "../components/ui/dialog.tsx";
 import {
+    AlertDialog,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
-import { Badge } from "../components/ui/badge.tsx";
 import {
     NativeSelect,
     NativeSelectOption,
@@ -87,10 +82,9 @@ interface AuditLogResponse {
     total: number;
 }
 
-function formatTime(timestamp: number | null | undefined): string {
+function formatTime(timestamp: number): string {
     if (!timestamp) return "—";
-    const date = new Date(timestamp);
-    return date.toLocaleString("zh-CN", {
+    return new Date(timestamp).toLocaleString("zh-CN", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -101,22 +95,20 @@ function formatTime(timestamp: number | null | undefined): string {
     });
 }
 
-function actionLabel(
-    action: string,
-): { label: string; tone: "info" | "warning" | "danger" | "success" } {
+function actionLabel(action: string): { label: string; danger: boolean } {
     switch (action) {
         case "admin.user.create":
-            return { label: "创建用户", tone: "success" };
+            return { label: "创建用户", danger: false };
         case "admin.user.disable":
-            return { label: "禁用用户", tone: "warning" };
+            return { label: "禁用用户", danger: false };
         case "admin.user.enable":
-            return { label: "启用用户", tone: "info" };
+            return { label: "启用用户", danger: false };
         case "admin.user.reset_password":
-            return { label: "重置密码", tone: "warning" };
+            return { label: "重置密码", danger: false };
         case "admin.user.delete":
-            return { label: "删除用户", tone: "danger" };
+            return { label: "删除用户", danger: true };
         default:
-            return { label: action, tone: "info" };
+            return { label: action, danger: false };
     }
 }
 
@@ -132,14 +124,12 @@ export function AdminPage() {
     const { user: currentUser } = useAppState();
     const location = useLocation();
     const navigate = useNavigate();
-
     const activeTab = adminTab(location.pathname);
 
-    const setActiveTab = (tab: AdminTab) => {
+    function setActiveTab(tab: AdminTab) {
         navigate(routes.admin(tab), { replace: true });
-    };
+    }
 
-    // User management state
     const [users, setUsers] = useState<AdminUserDto[]>([]);
     const [userTotal, setUserTotal] = useState(0);
     const [userPage, setUserPage] = useState(1);
@@ -150,14 +140,15 @@ export function AdminPage() {
     const [userError, setUserError] = useState("");
     const [userSuccess, setUserSuccess] = useState("");
 
-    // Create user modal state
+    // 对话框关闭后焦点回到触发它的元素
     const modalTriggerRef = useRef<HTMLButtonElement | HTMLElement | null>(
         null,
     );
-    const actionTriggerRefs = useRef<Record<string, HTMLButtonElement | null>>(
+    const actionTriggerRefs = useRef<Record<string, HTMLElement | null>>(
         {},
     );
     const createTriggerRef = useRef<HTMLButtonElement>(null);
+
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [newUsername, setNewUsername] = useState("");
     const [newDisplayName, setNewDisplayName] = useState("");
@@ -166,7 +157,6 @@ export function AdminPage() {
     const [createBusy, setCreateBusy] = useState(false);
     const [createError, setCreateError] = useState("");
 
-    // Reset password modal state
     const [resetModalUser, setResetModalUser] = useState<AdminUserDto | null>(
         null,
     );
@@ -174,7 +164,6 @@ export function AdminPage() {
     const [resetBusy, setResetBusy] = useState(false);
     const [resetError, setResetError] = useState("");
 
-    // Delete confirmation modal state (two-stage delete)
     const [deleteModalUser, setDeleteModalUser] = useState<AdminUserDto | null>(
         null,
     );
@@ -182,10 +171,8 @@ export function AdminPage() {
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [deleteError, setDeleteError] = useState("");
 
-    // Toggle status state
     const [togglingId, setTogglingId] = useState<string | null>(null);
 
-    // Audit logs state
     const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
     const [auditTotal, setAuditTotal] = useState(0);
     const [auditPage, setAuditPage] = useState(1);
@@ -194,19 +181,14 @@ export function AdminPage() {
     const [auditError, setAuditError] = useState("");
     const [auditActionFilter, setAuditActionFilter] = useState("");
 
-    // Load users
-    const loadUsers = async (page = userPage, q = submittedSearch) => {
+    async function loadUsers(page = userPage, q = submittedSearch) {
         if (currentUser?.role !== "admin") return;
         setUsersLoading(true);
         setUserError("");
         try {
-            const queryParams = new URLSearchParams();
-            queryParams.set("page", String(page));
-            if (q.trim()) queryParams.set("q", q.trim());
-
-            const res = await api<UserListResponse>(
-                `/api/admin/users?${queryParams.toString()}`,
-            );
+            const qs = new URLSearchParams({ page: String(page) });
+            if (q.trim()) qs.set("q", q);
+            const res = await api<UserListResponse>(`/api/admin/users?${qs}`);
             setUsers(res.items);
             setUserTotal(res.total);
             setUserPage(res.page);
@@ -216,24 +198,17 @@ export function AdminPage() {
             setUsersLoading(false);
             setUsersInitialized(true);
         }
-    };
+    }
 
-    // Load audit logs
-    const loadAuditLogs = async (
-        page = auditPage,
-        action = auditActionFilter,
-    ) => {
+    async function loadAuditLogs(page = auditPage, action = auditActionFilter) {
         if (currentUser?.role !== "admin") return;
         setAuditLoading(true);
         setAuditError("");
         try {
-            const queryParams = new URLSearchParams();
-            queryParams.set("page", String(page));
-            queryParams.set("limit", "25");
-            if (action) queryParams.set("action", action);
-
+            const qs = new URLSearchParams({ page: String(page), limit: "25" });
+            if (action) qs.set("action", action);
             const res = await api<AuditLogResponse>(
-                `/api/admin/audit-logs?${queryParams.toString()}`,
+                `/api/admin/audit-logs?${qs}`,
             );
             setAuditLogs(res.items);
             setAuditTotal(res.total);
@@ -244,7 +219,7 @@ export function AdminPage() {
             setAuditLoading(false);
             setAuditInitialized(true);
         }
-    };
+    }
 
     useEffect(() => {
         if (currentUser?.role === "admin" && activeTab) {
@@ -262,29 +237,38 @@ export function AdminPage() {
         auditActionFilter,
     ]);
 
-    // Localize Users feedback to Users tab only
     useEffect(() => {
         if (activeTab !== "users") {
             setUserError("");
             setUserSuccess("");
         }
     }, [activeTab]);
-    // Handle user search submit
-    const handleSearchSubmit = (e: FormEvent) => {
+
+    function handleSearchSubmit(e: FormEvent) {
         e.preventDefault();
         setUserPage(1);
         setSubmittedSearch(userSearch);
-    };
+    }
 
-    // Handle user creation
-    const handleCreateUser = async (e: FormEvent) => {
+    function clearSearch() {
+        setUserSearch("");
+        setUserPage(1);
+        setSubmittedSearch("");
+    }
+
+    function openCreateModal(trigger: HTMLElement) {
+        modalTriggerRef.current = trigger;
+        setCreateError("");
+        setCreateModalOpen(true);
+    }
+
+    async function handleCreateUser(e: FormEvent) {
         e.preventDefault();
         setCreateError("");
         if (newPassword.length < 12) {
             setCreateError("密码长度不能小于 12 个字符");
             return;
         }
-
         setCreateBusy(true);
         try {
             await api(
@@ -308,10 +292,9 @@ export function AdminPage() {
         } finally {
             setCreateBusy(false);
         }
-    };
+    }
 
-    // Handle user enable/disable
-    const handleToggleDisable = async (targetUser: AdminUserDto) => {
+    async function handleToggleDisable(targetUser: AdminUserDto) {
         if (targetUser.id === currentUser?.id) {
             setUserError("不能修改当前登录管理员的状态");
             return;
@@ -320,7 +303,6 @@ export function AdminPage() {
             setUserError("不能禁用管理员账户");
             return;
         }
-
         setTogglingId(targetUser.id);
         setUserError("");
         setUserSuccess("");
@@ -341,19 +323,16 @@ export function AdminPage() {
         } finally {
             setTogglingId(null);
         }
-    };
+    }
 
-    // Handle reset password submit
-    const handleResetPasswordSubmit = async (e: FormEvent) => {
+    async function handleResetPasswordSubmit(e: FormEvent) {
         e.preventDefault();
         if (!resetModalUser) return;
         setResetError("");
-
         if (resetNewPassword.length < 12) {
             setResetError("新密码长度不能少于 12 位");
             return;
         }
-
         setResetBusy(true);
         try {
             await api(
@@ -371,33 +350,30 @@ export function AdminPage() {
         } finally {
             setResetBusy(false);
         }
-    };
+    }
 
-    // Handle soft delete submit (two-stage delete)
-    const handleDeleteSubmit = async (e: FormEvent) => {
+    async function handleDeleteSubmit(e: FormEvent) {
         e.preventDefault();
         if (!deleteModalUser) return;
         setDeleteError("");
-
         if (
             deleteConfirmText !== deleteModalUser.username &&
             deleteConfirmText !== "CONFIRM"
         ) {
             setDeleteError(
-                `请输入完整的用户名 @${deleteModalUser.username} 或 CONFIRM 以确认`,
+                `输入 @${deleteModalUser.username} 或 CONFIRM 以确认删除`,
             );
             return;
         }
-
         setDeleteBusy(true);
         try {
-            await api(
-                `/api/admin/users/${deleteModalUser.id}?confirm=true`,
-                { method: "DELETE" },
-            );
+            await api(`/api/admin/users/${deleteModalUser.id}?confirm=true`, {
+                method: "DELETE",
+            });
             setUserSuccess(
                 `已删除用户 @${deleteModalUser.username}，其会话已立即终止。`,
             );
+            // 触发行已消失，焦点回到页面上稳定的「添加用户」按钮
             modalTriggerRef.current = createTriggerRef.current;
             setDeleteModalUser(null);
             setDeleteConfirmText("");
@@ -407,7 +383,24 @@ export function AdminPage() {
         } finally {
             setDeleteBusy(false);
         }
-    };
+    }
+
+    function openResetModal(target: AdminUserDto, trigger: HTMLElement | null) {
+        modalTriggerRef.current = trigger;
+        setResetNewPassword("");
+        setResetError("");
+        setResetModalUser(target);
+    }
+
+    function openDeleteModal(
+        target: AdminUserDto,
+        trigger: HTMLElement | null,
+    ) {
+        modalTriggerRef.current = trigger;
+        setDeleteConfirmText("");
+        setDeleteError("");
+        setDeleteModalUser(target);
+    }
 
     if (!activeTab) {
         return (
@@ -415,24 +408,14 @@ export function AdminPage() {
         );
     }
 
-    // Non-admin permission check
-    if (!currentUser || currentUser.role !== "admin") {
+    if (currentUser?.role !== "admin") {
         return (
-            <PageShell
-                archetype="management"
-                className="admin-unauthorized-shell"
-            >
-                <PageHeader
-                    items={[
-                        { label: "首页", to: routes.home },
-                        { label: "管理后台", to: routes.admin() },
-                        { label: adminTabLabels[activeTab] },
-                    ]}
-                />
+            <PageShell archetype="management">
+                <PageHeader title="管理后台" />
                 <EmptyState
                     headingLevel={3}
                     title="无权访问"
-                    description="管理后台仅限具有管理员角色的账户访问。若您是管理员，请使用正确的管理员账户登录。"
+                    description="管理后台仅限管理员访问。"
                     action={currentUser
                         ? (
                             <Button
@@ -457,46 +440,36 @@ export function AdminPage() {
 
     const totalPages = Math.max(1, Math.ceil(userTotal / 50));
     const auditTotalPages = Math.max(1, Math.ceil(auditTotal / 25));
+    const resetUsername = resetModalUser?.username ?? "";
+    const deleteUsername = deleteModalUser?.username ?? "";
 
     return (
         <PageShell archetype="management">
             <PageHeader
-                items={[
-                    { label: "首页", to: routes.home },
-                    { label: "管理后台", to: routes.admin() },
-                    { label: adminTabLabels[activeTab] },
-                ]}
-                title="系统管理后台"
-                description="用户账户维护、权限控制及系统审计日志"
-                actions={
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        render={<Link to={routes.account} />}
-                    >
-                        个人安全设置
-                    </Button>
-                }
+                title="管理后台"
                 navigation={
                     <LocalNavigation
                         compact
                         label="管理后台主导航"
                         items={[
-                            { label: "系统概览", to: routes.admin("overview") },
                             {
-                                label: `用户管理 (${userTotal})`,
+                                label: adminTabLabels.overview,
+                                to: routes.admin("overview"),
+                            },
+                            {
+                                label: adminTabLabels.users,
                                 to: routes.admin("users"),
                             },
                             {
-                                label: "系统设置",
+                                label: adminTabLabels.settings,
                                 to: routes.admin("settings"),
                             },
                             {
-                                label: "审计日志",
+                                label: adminTabLabels.audit,
                                 to: routes.admin("audit"),
                             },
                             {
-                                label: "备份与恢复",
+                                label: adminTabLabels.backup,
                                 to: routes.admin("backup"),
                             },
                         ]}
@@ -504,467 +477,275 @@ export function AdminPage() {
                 }
             />
 
-            {/* ===================== Tab 0: Overview ===================== */}
             {activeTab === "overview" && (
                 <AdminOverview onNavigateTab={(t) => setActiveTab(t)} />
             )}
 
-            {/* ===================== Tab 1: Users ===================== */}
             {activeTab === "users" && (
                 <div className="semantic-section">
-                    <SectionHeader
-                        title="用户管理"
-                        description="管理账户状态、凭据与用户生命周期"
-                    />
-
                     {userError && (
-                        <StatusBanner tone="error">
-                            <div className="flex items-center gap-2">
-                                <AlertCircle
-                                    size="1em"
-                                    className="icon-md shrink-0"
-                                />
+                        <StatusBanner tone="error" density="compact">
+                            <span className="admin-banner-message">
+                                <AlertCircle size="1em" />
                                 <span>{userError}</span>
-                            </div>
+                            </span>
+                        </StatusBanner>
+                    )}
+                    {userSuccess && (
+                        <StatusBanner tone="success" density="compact">
+                            {userSuccess}
                         </StatusBanner>
                     )}
 
-                    {userSuccess && (
-                        <StatusBanner tone="success">
-                            <div className="flex items-center gap-2">
-                                <span>{userSuccess}</span>
-                            </div>
-                        </StatusBanner>
-                    )}
-                    {/* Toolbar */}
-                    <WorkspaceToolbar className="admin-toolbar">
+                    <WorkspaceToolbar>
                         <form
-                            onSubmit={handleSearchSubmit}
                             className="admin-search-form"
+                            onSubmit={handleSearchSubmit}
                         >
-                            <div className="admin-search-input-wrapper">
-                                <Search
-                                    size="1em"
-                                    className="icon-md admin-search-icon"
-                                    aria-hidden="true"
-                                />
-                                <Input
-                                    type="text"
-                                    value={userSearch}
-                                    onChange={(e) =>
-                                        setUserSearch(e.target.value)}
-                                    placeholder="按用户名、显示名称或邮箱搜索…"
-                                    className="admin-search-input"
-                                />
-                            </div>
-                            <Button variant="outline" type="submit">
-                                搜索
-                            </Button>
+                            <Input
+                                type="search"
+                                className="admin-search-input"
+                                aria-label="搜索用户"
+                                placeholder="按用户名、显示名称或邮箱搜索"
+                                value={userSearch}
+                                onChange={(e) => setUserSearch(e.target.value)}
+                            />
                             {submittedSearch && (
                                 <Button
-                                    variant="ghost"
                                     type="button"
-                                    onClick={() => {
-                                        setUserSearch("");
-                                        setSubmittedSearch("");
-                                    }}
-                                    title="清空搜索"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearSearch}
                                 >
                                     清除
                                 </Button>
                             )}
                         </form>
-
                         <ActionGroup>
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => void loadUsers()}
-                                disabled={usersLoading}
                                 title="刷新用户列表"
+                                disabled={usersLoading}
+                                onClick={() =>
+                                    void loadUsers(userPage, submittedSearch)}
                             >
                                 <RefreshCw
                                     size="1em"
-                                    className={`icon-md ${
-                                        usersLoading ? "animate-spin" : ""
-                                    }`}
+                                    className={usersLoading
+                                        ? "animate-spin"
+                                        : undefined}
                                 />
                                 <span>{usersLoading ? "刷新中…" : "刷新"}</span>
                             </Button>
                             <Button
                                 ref={createTriggerRef}
-                                variant="default"
                                 type="button"
-                                onClick={(event) => {
-                                    modalTriggerRef.current =
-                                        event.currentTarget;
-                                    setCreateModalOpen(true);
-                                }}
+                                variant="default"
+                                onClick={(event) =>
+                                    openCreateModal(event.currentTarget)}
                             >
-                                <UserPlus size="1em" className="icon-md" />
-                                <span>添加新用户</span>
+                                添加用户
                             </Button>
                         </ActionGroup>
                     </WorkspaceToolbar>
 
-                    {/* Table */}
-                    {(!usersInitialized || usersLoading) && users.length === 0
-                        ? <LoadingState>正在载入用户数据…</LoadingState>
+                    {!usersInitialized && usersLoading
+                        ? <LoadingState>正在加载用户…</LoadingState>
+                        : userError && users.length === 0
+                        ? (
+                            <EmptyState
+                                headingLevel={3}
+                                title="无法加载用户列表"
+                                action={
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() =>
+                                            void loadUsers(
+                                                userPage,
+                                                submittedSearch,
+                                            )}
+                                    >
+                                        重试
+                                    </Button>
+                                }
+                            />
+                        )
                         : users.length === 0
                         ? (
-                            userError
-                                ? (
-                                    <EmptyState
-                                        headingLevel={3}
-                                        title="用户列表加载失败"
-                                        description="无法获取用户列表，请检查网络连接或稍后重试。"
-                                        action={
-                                            <Button
-                                                variant="outline"
-                                                onClick={() =>
-                                                    void loadUsers(
-                                                        userPage,
-                                                        submittedSearch,
-                                                    )}
-                                            >
-                                                重试
-                                            </Button>
-                                        }
-                                    />
-                                )
-                                : (
-                                    <EmptyState
-                                        headingLevel={3}
-                                        title="未找到符合条件的用户"
-                                        description={submittedSearch
-                                            ? `未找到与「${submittedSearch}」匹配的用户`
-                                            : "暂无用户数据"}
-                                        action={submittedSearch
-                                            ? (
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        setUserSearch("");
-                                                        setSubmittedSearch("");
-                                                    }}
-                                                >
-                                                    清空搜索重试
-                                                </Button>
-                                            )
-                                            : undefined}
-                                    />
-                                )
+                            <EmptyState
+                                headingLevel={3}
+                                title={submittedSearch
+                                    ? `没有匹配「${submittedSearch}」的用户`
+                                    : "暂无用户"}
+                                action={submittedSearch
+                                    ? (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={clearSearch}
+                                        >
+                                            清除搜索
+                                        </Button>
+                                    )
+                                    : undefined}
+                            />
                         )
                         : (
                             <>
-                                <ManagementTable
-                                    caption={userTotal > 0
-                                        ? `共 ${userTotal} 位用户`
-                                        : undefined}
-                                >
+                                <ManagementTable>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>用户</TableHead>
-                                            <TableHead>角色</TableHead>
+                                            <TableHead className="admin-hide-narrow">
+                                                角色
+                                            </TableHead>
                                             <TableHead>状态</TableHead>
-                                            <TableHead>创建时间</TableHead>
-                                            <TableHead className="text-right">
-                                                操作
+                                            <TableHead className="admin-hide-narrow">
+                                                创建时间
+                                            </TableHead>
+                                            <TableHead className="admin-cell-actions">
+                                                <span className="sr-only">
+                                                    操作
+                                                </span>
                                             </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {users.map((u) => {
                                             const isSelf =
-                                                u.id === currentUser.id;
+                                                u.id === currentUser?.id;
                                             const isAdmin = u.role === "admin";
-                                            const isToggling =
-                                                togglingId === u.id;
-                                            const initial = (
-                                                u.displayName || u.username
-                                            ).slice(0, 1).toUpperCase();
-
                                             return (
                                                 <TableRow key={u.id}>
                                                     <TableCell>
-                                                        <div className="admin-user-cell">
-                                                            <div
-                                                                className={`admin-user-avatar ${
-                                                                    isAdmin
-                                                                        ? "admin-user-avatar--admin"
-                                                                        : ""
-                                                                }`}
-                                                            >
-                                                                {initial}
-                                                            </div>
-                                                            <div className="admin-user-names">
-                                                                <div className="admin-user-display">
-                                                                    <span>
-                                                                        {u.displayName ||
-                                                                            u.username}
-                                                                    </span>
-                                                                    {isSelf && (
-                                                                        <Badge variant="secondary">
-                                                                            当前登录
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                                <div className="admin-user-meta">
-                                                                    @{u.username}
-                                                                    {u.email &&
-                                                                        (
-                                                                            <span>
-                                                                                {" "}·
-                                                                                {" "}
-                                                                                {u.email}
-                                                                            </span>
-                                                                        )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        <span className="admin-user-name">
+                                                            {u.displayName ||
+                                                                u.username}
+                                                        </span>
+                                                        <span className="admin-user-handle">
+                                                            @{u.username}
+                                                            {u.email
+                                                                ? ` · ${u.email}`
+                                                                : ""}
+                                                            {isSelf
+                                                                ? " · 当前登录"
+                                                                : ""}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="admin-hide-narrow">
+                                                        {isAdmin
+                                                            ? "系统管理员"
+                                                            : "普通用户"}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            variant={isAdmin
-                                                                ? "default"
-                                                                : "outline"}
-                                                        >
-                                                            {isAdmin
-                                                                ? "系统管理员"
-                                                                : "普通用户"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            variant={u.disabled
-                                                                ? "destructive"
-                                                                : "secondary"}
+                                                        <span
+                                                            className={u
+                                                                    .disabled
+                                                                ? "admin-danger"
+                                                                : undefined}
                                                         >
                                                             {u.disabled
                                                                 ? "已禁用"
                                                                 : "正常"}
-                                                        </Badge>
+                                                        </span>
                                                     </TableCell>
-                                                    <TableCell className="text-muted text-sm whitespace-nowrap">
+                                                    <TableCell className="admin-hide-narrow admin-nowrap admin-muted">
                                                         {formatTime(
                                                             u.createdAt,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <ActionGroup className="admin-user-inline-actions justify-end">
+                                                    <TableCell className="admin-cell-actions">
+                                                        <div className="admin-row-actions">
                                                             <Button
-                                                                variant="outline"
+                                                                type="button"
+                                                                variant="ghost"
                                                                 size="sm"
+                                                                className="admin-row-reset"
                                                                 onClick={(
                                                                     event,
-                                                                ) => {
-                                                                    modalTriggerRef
-                                                                        .current =
-                                                                            event
-                                                                                .currentTarget;
-                                                                    setResetModalUser(
-                                                                        u,
-                                                                    );
-                                                                }}
-                                                                title="重置用户密码"
+                                                                ) => openResetModal(
+                                                                    u,
+                                                                    event
+                                                                        .currentTarget,
+                                                                )}
                                                             >
-                                                                <KeyRound
-                                                                    size="1em"
-                                                                    className="icon-sm"
-                                                                />
-                                                                <span>
-                                                                    重置密码
-                                                                </span>
+                                                                重置密码
                                                             </Button>
-                                                            {!isSelf &&
-                                                                !isAdmin && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    disabled={isToggling}
-                                                                    onClick={() =>
-                                                                        void handleToggleDisable(
-                                                                            u,
-                                                                        )}
-                                                                    title={u
-                                                                            .disabled
-                                                                        ? "启用该用户"
-                                                                        : "禁用该用户"}
-                                                                >
-                                                                    {u.disabled
-                                                                        ? (
-                                                                            <UserCheck
-                                                                                size="1em"
-                                                                                className="icon-sm"
-                                                                            />
-                                                                        )
-                                                                        : (
-                                                                            <UserX
-                                                                                size="1em"
-                                                                                className="icon-sm"
-                                                                            />
-                                                                        )}
-                                                                    <span>
-                                                                        {u.disabled
-                                                                            ? "启用"
-                                                                            : "禁用"}
-                                                                    </span>
-                                                                </Button>
-                                                            )}
-                                                            {!isSelf && (
-                                                                <Button
-                                                                    variant="destructive"
-                                                                    size="sm"
-                                                                    onClick={(
-                                                                        event,
-                                                                    ) => {
-                                                                        modalTriggerRef
-                                                                            .current =
-                                                                                event
-                                                                                    .currentTarget;
-                                                                        setDeleteModalUser(
-                                                                            u,
-                                                                        );
-                                                                        setDeleteConfirmText(
-                                                                            "",
-                                                                        );
-                                                                        setDeleteError(
-                                                                            "",
-                                                                        );
-                                                                    }}
-                                                                    title="删除用户"
-                                                                >
-                                                                    <Trash2
-                                                                        size="1em"
-                                                                        className="icon-sm"
-                                                                    />
-                                                                    <span>
-                                                                        删除
-                                                                    </span>
-                                                                </Button>
-                                                            )}
-                                                        </ActionGroup>
-
-                                                        <div className="admin-user-menu-actions">
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger
                                                                     render={
                                                                         <Button
                                                                             ref={(
-                                                                                el:
-                                                                                    | HTMLButtonElement
-                                                                                    | null,
+                                                                                node,
                                                                             ) => {
-                                                                                if (el) {
-                                                                                    actionTriggerRefs
-                                                                                        .current[
-                                                                                            u.id
-                                                                                        ] = el;
-                                                                                } else {
-                                                                                    delete actionTriggerRefs
-                                                                                        .current[
-                                                                                            u.id
-                                                                                        ];
-                                                                                }
+                                                                                actionTriggerRefs
+                                                                                    .current[
+                                                                                        u.id
+                                                                                    ] = node;
                                                                             }}
                                                                             type="button"
                                                                             variant="ghost"
-                                                                            size="sm"
+                                                                            size="icon"
                                                                             aria-label={`用户 @${u.username} 的更多操作`}
                                                                             title="更多操作"
                                                                         />
                                                                     }
                                                                 >
-                                                                    <MoreHorizontal
-                                                                        size="1em"
-                                                                        className="icon-sm"
-                                                                    />
+                                                                    <MoreHorizontal size="1em" />
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent
                                                                     sideOffset={4}
                                                                 >
                                                                     <DropdownMenuItem
-                                                                        onClick={() => {
-                                                                            modalTriggerRef
-                                                                                .current =
-                                                                                    actionTriggerRefs
-                                                                                        .current[
-                                                                                            u.id
-                                                                                        ] ??
-                                                                                        null;
-                                                                            setResetModalUser(
+                                                                        onClick={() =>
+                                                                            openResetModal(
                                                                                 u,
-                                                                            );
-                                                                        }}
+                                                                                actionTriggerRefs
+                                                                                    .current[
+                                                                                        u.id
+                                                                                    ] ??
+                                                                                    null,
+                                                                            )}
                                                                     >
-                                                                        <KeyRound
-                                                                            size="1em"
-                                                                            className="icon-sm mr-2"
-                                                                        />
-                                                                        <span>
-                                                                            重置密码
-                                                                        </span>
+                                                                        重置密码
                                                                     </DropdownMenuItem>
                                                                     {!isSelf &&
                                                                         !isAdmin &&
                                                                         (
                                                                             <DropdownMenuItem
-                                                                                disabled={isToggling}
+                                                                                disabled={togglingId ===
+                                                                                    u.id}
                                                                                 onClick={() =>
                                                                                     void handleToggleDisable(
                                                                                         u,
                                                                                     )}
                                                                             >
                                                                                 {u.disabled
-                                                                                    ? (
-                                                                                        <UserCheck
-                                                                                            size="1em"
-                                                                                            className="icon-sm mr-2"
-                                                                                        />
-                                                                                    )
-                                                                                    : (
-                                                                                        <UserX
-                                                                                            size="1em"
-                                                                                            className="icon-sm mr-2"
-                                                                                        />
-                                                                                    )}
-                                                                                <span>
-                                                                                    {u.disabled
-                                                                                        ? "启用用户"
-                                                                                        : "禁用用户"}
-                                                                                </span>
+                                                                                    ? "启用用户"
+                                                                                    : "禁用用户"}
                                                                             </DropdownMenuItem>
                                                                         )}
                                                                     {!isSelf &&
                                                                         (
+                                                                            <DropdownMenuSeparator />
+                                                                        )}
+                                                                    {!isSelf &&
+                                                                        (
                                                                             <DropdownMenuItem
-                                                                                className="text-destructive focus:text-destructive"
-                                                                                onClick={() => {
-                                                                                    modalTriggerRef
-                                                                                        .current =
-                                                                                            actionTriggerRefs
-                                                                                                .current[
-                                                                                                    u.id
-                                                                                                ] ??
-                                                                                                null;
-                                                                                    setDeleteModalUser(
+                                                                                variant="destructive"
+                                                                                onClick={() =>
+                                                                                    openDeleteModal(
                                                                                         u,
-                                                                                    );
-                                                                                    setDeleteConfirmText(
-                                                                                        "",
-                                                                                    );
-                                                                                    setDeleteError(
-                                                                                        "",
-                                                                                    );
-                                                                                }}
+                                                                                        actionTriggerRefs
+                                                                                            .current[
+                                                                                                u.id
+                                                                                            ] ??
+                                                                                            null,
+                                                                                    )}
                                                                             >
-                                                                                <Trash2
-                                                                                    size="1em"
-                                                                                    className="icon-sm mr-2"
-                                                                                />
-                                                                                <span>
-                                                                                    删除用户
-                                                                                </span>
+                                                                                删除用户
                                                                             </DropdownMenuItem>
                                                                         )}
                                                                 </DropdownMenuContent>
@@ -976,41 +757,39 @@ export function AdminPage() {
                                         })}
                                     </TableBody>
                                 </ManagementTable>
-
                                 <div className="admin-pagination">
-                                    <div className="admin-pagination-info">
-                                        共 {userTotal} 位用户 · 第 {userPage} /
-                                        {" "}
+                                    <span>
+                                        共 {userTotal} 位 · 第 {userPage} /{" "}
                                         {totalPages} 页
-                                    </div>
+                                    </span>
                                     <ActionGroup>
                                         <Button
+                                            type="button"
                                             variant="outline"
                                             size="sm"
                                             disabled={userPage <= 1 ||
                                                 usersLoading}
                                             onClick={() =>
-                                                void loadUsers(userPage - 1)}
+                                                void loadUsers(
+                                                    userPage - 1,
+                                                    submittedSearch,
+                                                )}
                                         >
-                                            <ChevronLeft
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                            <span>上一页</span>
+                                            上一页
                                         </Button>
                                         <Button
+                                            type="button"
                                             variant="outline"
                                             size="sm"
                                             disabled={userPage >= totalPages ||
                                                 usersLoading}
                                             onClick={() =>
-                                                void loadUsers(userPage + 1)}
+                                                void loadUsers(
+                                                    userPage + 1,
+                                                    submittedSearch,
+                                                )}
                                         >
-                                            <span>下一页</span>
-                                            <ChevronRight
-                                                size="1em"
-                                                className="icon-md"
-                                            />
+                                            下一页
                                         </Button>
                                     </ActionGroup>
                                 </div>
@@ -1019,65 +798,53 @@ export function AdminPage() {
                 </div>
             )}
 
-            {/* ===================== Tab 2: Audit Logs ===================== */}
+            {activeTab === "settings" && <AdminSystemSettings />}
+
             {activeTab === "audit" && (
                 <div className="semantic-section">
-                    <SectionHeader
-                        title="审计日志"
-                        description="查看管理员操作记录与关键安全事件"
-                    />
-
                     {auditError && (
-                        <StatusBanner tone="error">
-                            <div className="flex items-center gap-2">
-                                <AlertCircle
-                                    size="1em"
-                                    className="icon-md shrink-0"
-                                />
+                        <StatusBanner tone="error" density="compact">
+                            <span className="admin-banner-message">
+                                <AlertCircle size="1em" />
                                 <span>{auditError}</span>
-                            </div>
+                            </span>
                         </StatusBanner>
                     )}
-                    <WorkspaceToolbar className="admin-toolbar">
-                        <div className="admin-filter-group">
-                            <span className="admin-filter-label">
-                                动作筛选:
-                            </span>
-                            <div className="admin-select-wrapper">
-                                <NativeSelect
-                                    size="sm"
-                                    aria-label="审计操作筛选"
-                                    value={auditActionFilter}
-                                    onChange={(e) => {
-                                        setAuditActionFilter(e.target.value);
-                                        setAuditPage(1);
-                                    }}
-                                >
-                                    <NativeSelectOption value="">
-                                        全部管理员操作
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="admin.user.create">
-                                        创建用户
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="admin.user.disable">
-                                        禁用用户
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="admin.user.enable">
-                                        启用用户
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="admin.user.reset_password">
-                                        重置密码
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="admin.user.delete">
-                                        删除用户
-                                    </NativeSelectOption>
-                                </NativeSelect>
-                            </div>
+                    <WorkspaceToolbar>
+                        <ActionGroup>
+                            <NativeSelect
+                                size="sm"
+                                aria-label="审计操作筛选"
+                                value={auditActionFilter}
+                                onChange={(e) => {
+                                    setAuditActionFilter(e.target.value);
+                                    setAuditPage(1);
+                                }}
+                            >
+                                <NativeSelectOption value="">
+                                    全部操作
+                                </NativeSelectOption>
+                                <NativeSelectOption value="admin.user.create">
+                                    创建用户
+                                </NativeSelectOption>
+                                <NativeSelectOption value="admin.user.disable">
+                                    禁用用户
+                                </NativeSelectOption>
+                                <NativeSelectOption value="admin.user.enable">
+                                    启用用户
+                                </NativeSelectOption>
+                                <NativeSelectOption value="admin.user.reset_password">
+                                    重置密码
+                                </NativeSelectOption>
+                                <NativeSelectOption value="admin.user.delete">
+                                    删除用户
+                                </NativeSelectOption>
+                            </NativeSelect>
                             {auditActionFilter && (
                                 <Button
+                                    type="button"
                                     variant="ghost"
                                     size="sm"
-                                    type="button"
                                     onClick={() => {
                                         setAuditActionFilter("");
                                         setAuditPage(1);
@@ -1086,161 +853,151 @@ export function AdminPage() {
                                     清除筛选
                                 </Button>
                             )}
-                        </div>
-
-                        <ActionGroup>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => void loadAuditLogs()}
-                                disabled={auditLoading}
-                                title="刷新审计日志"
-                            >
-                                <RefreshCw
-                                    size="1em"
-                                    className={`icon-sm ${
-                                        auditLoading ? "animate-spin" : ""
-                                    }`}
-                                />
-                                <span>{auditLoading ? "刷新中…" : "刷新"}</span>
-                            </Button>
                         </ActionGroup>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            title="刷新审计日志"
+                            disabled={auditLoading}
+                            onClick={() =>
+                                void loadAuditLogs(
+                                    auditPage,
+                                    auditActionFilter,
+                                )}
+                        >
+                            <RefreshCw
+                                size="1em"
+                                className={auditLoading
+                                    ? "animate-spin"
+                                    : undefined}
+                            />
+                            <span>刷新</span>
+                        </Button>
                     </WorkspaceToolbar>
 
-                    {(!auditInitialized || auditLoading) &&
-                            auditLogs.length === 0
-                        ? <LoadingState>正在载入审计日志…</LoadingState>
+                    {!auditInitialized && auditLoading
+                        ? <LoadingState>正在加载审计日志…</LoadingState>
+                        : auditError && auditLogs.length === 0
+                        ? (
+                            <EmptyState
+                                headingLevel={3}
+                                title="无法加载审计日志"
+                                action={
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() =>
+                                            void loadAuditLogs(
+                                                auditPage,
+                                                auditActionFilter,
+                                            )}
+                                    >
+                                        重试
+                                    </Button>
+                                }
+                            />
+                        )
                         : auditLogs.length === 0
                         ? (
-                            auditError
-                                ? (
-                                    <EmptyState
-                                        headingLevel={3}
-                                        title="审计日志加载失败"
-                                        description="无法获取审计日志记录，请检查网络连接或稍后重试。"
-                                        action={
-                                            <Button
-                                                variant="outline"
-                                                onClick={() =>
-                                                    void loadAuditLogs(
-                                                        auditPage,
-                                                        auditActionFilter,
-                                                    )}
-                                            >
-                                                重试
-                                            </Button>
-                                        }
-                                    />
-                                )
-                                : (
-                                    <EmptyState
-                                        headingLevel={3}
-                                        title="暂无符合条件的审计记录"
-                                        description={auditActionFilter
-                                            ? "未找到该操作类型的审计日志"
-                                            : "系统中尚无审计事件记录"}
-                                    />
-                                )
+                            <EmptyState
+                                headingLevel={3}
+                                title="暂无审计记录"
+                                action={auditActionFilter
+                                    ? (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setAuditActionFilter("");
+                                                setAuditPage(1);
+                                            }}
+                                        >
+                                            清除筛选
+                                        </Button>
+                                    )
+                                    : undefined}
+                            />
                         )
                         : (
                             <>
-                                <ManagementTable
-                                    caption={auditTotal > 0
-                                        ? `共 ${auditTotal} 条审计记录`
-                                        : undefined}
-                                >
+                                <ManagementTable>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>时间</TableHead>
-                                            <TableHead>操作类型</TableHead>
-                                            <TableHead>目标类型 / ID</TableHead>
-                                            <TableHead>操作明细</TableHead>
+                                            <TableHead>操作</TableHead>
+                                            <TableHead>对象</TableHead>
+                                            <TableHead>明细</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {auditLogs.map((log) => {
-                                            const { label, tone } = actionLabel(
-                                                log.action,
-                                            );
-                                            const badgeVariant =
-                                                tone === "danger"
-                                                    ? "destructive"
-                                                    : tone === "warning"
-                                                    ? "secondary"
-                                                    : tone === "success"
-                                                    ? "default"
-                                                    : "outline";
-
+                                            const { label, danger } =
+                                                actionLabel(log.action);
+                                            const entries = log.metadata
+                                                ? Object.entries(log.metadata)
+                                                : [];
                                             return (
                                                 <TableRow key={log.id}>
-                                                    <TableCell className="text-muted text-sm whitespace-nowrap">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Clock
-                                                                size="1em"
-                                                                className="icon-sm"
-                                                            />
-                                                            <span>
-                                                                {formatTime(
-                                                                    log.createdAt,
-                                                                )}
-                                                            </span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="whitespace-nowrap">
-                                                        <Badge
-                                                            variant={badgeVariant}
-                                                        >
-                                                            {label}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm">
-                                                        <span className="font-semibold">
-                                                            {log.targetType}
-                                                        </span>
-                                                        {log.targetId && (
-                                                            <span className="text-muted font-mono text-xs ml-1.5">
-                                                                {log.targetId
-                                                                    .slice(
-                                                                        0,
-                                                                        10,
-                                                                    )}…
-                                                            </span>
+                                                    <TableCell className="admin-nowrap admin-muted">
+                                                        {formatTime(
+                                                            log.createdAt,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="text-sm">
-                                                        {log.metadata
+                                                    <TableCell>
+                                                        <span
+                                                            className={danger
+                                                                ? "admin-danger"
+                                                                : undefined}
+                                                        >
+                                                            {label}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {log.targetType}
+                                                        <span
+                                                            className="admin-audit-target-id"
+                                                            title={log.targetId}
+                                                        >
+                                                            {log.targetId
+                                                                    .length > 10
+                                                                ? `${
+                                                                    log.targetId
+                                                                        .slice(
+                                                                            0,
+                                                                            10,
+                                                                        )
+                                                                }…`
+                                                                : log.targetId}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {entries.length > 0
                                                             ? (
-                                                                <div className="admin-audit-metadata flex flex-wrap gap-1.5">
-                                                                    {Object
-                                                                        .entries(
-                                                                            log.metadata,
-                                                                        ).map(
-                                                                            (
-                                                                                [
-                                                                                    k,
+                                                                <ul className="admin-audit-details">
+                                                                    {entries
+                                                                        .map((
+                                                                            [
+                                                                                k,
+                                                                                v,
+                                                                            ],
+                                                                        ) => (
+                                                                            <li
+                                                                                key={k}
+                                                                            >
+                                                                                <strong>
+                                                                                    {k}
+                                                                                </strong>
+                                                                                {" "}
+                                                                                {String(
                                                                                     v,
-                                                                                ],
-                                                                            ) => (
-                                                                                <Badge
-                                                                                    key={k}
-                                                                                    variant="outline"
-                                                                                    className="font-normal text-xs"
-                                                                                >
-                                                                                    <strong className="font-semibold">
-                                                                                        {k}:
-                                                                                    </strong>
-                                                                                    {" "}
-                                                                                    {String(
-                                                                                        v,
-                                                                                    )}
-                                                                                </Badge>
-                                                                            ),
-                                                                        )}
-                                                                </div>
+                                                                                )}
+                                                                            </li>
+                                                                        ))}
+                                                                </ul>
                                                             )
                                                             : (
-                                                                <span className="text-muted">
+                                                                <span className="admin-muted">
                                                                     无
                                                                 </span>
                                                             )}
@@ -1250,45 +1007,35 @@ export function AdminPage() {
                                         })}
                                     </TableBody>
                                 </ManagementTable>
-
                                 <div className="admin-pagination">
-                                    <div className="admin-pagination-info">
-                                        共 {auditTotal} 条审计日志 · 第{" "}
-                                        {auditPage} / {auditTotalPages} 页
-                                    </div>
+                                    <span>
+                                        共 {auditTotal} 条 · 第 {auditPage} /
+                                        {" "}
+                                        {auditTotalPages} 页
+                                    </span>
                                     <ActionGroup>
                                         <Button
+                                            type="button"
                                             variant="outline"
                                             size="sm"
                                             disabled={auditPage <= 1 ||
                                                 auditLoading}
                                             onClick={() =>
-                                                void loadAuditLogs(
-                                                    auditPage - 1,
-                                                )}
+                                                setAuditPage(auditPage - 1)}
                                         >
-                                            <ChevronLeft
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                            <span>上一页</span>
+                                            上一页
                                         </Button>
                                         <Button
+                                            type="button"
                                             variant="outline"
                                             size="sm"
                                             disabled={auditPage >=
                                                     auditTotalPages ||
                                                 auditLoading}
                                             onClick={() =>
-                                                void loadAuditLogs(
-                                                    auditPage + 1,
-                                                )}
+                                                setAuditPage(auditPage + 1)}
                                         >
-                                            <span>下一页</span>
-                                            <ChevronRight
-                                                size="1em"
-                                                className="icon-md"
-                                            />
+                                            下一页
                                         </Button>
                                     </ActionGroup>
                                 </div>
@@ -1297,107 +1044,91 @@ export function AdminPage() {
                 </div>
             )}
 
-            {/* ===================== Tab 3: System Settings ===================== */}
-            {activeTab === "settings" && <AdminSystemSettings />}
-
-            {/* ===================== Tab 5: Backup / Restore ===================== */}
             {activeTab === "backup" && <AdminBackupRestore />}
 
-            {/* ===================== Modals ===================== */}
-
-            {/* 1. Create User Modal */}
             <Dialog
                 open={createModalOpen}
                 onOpenChange={(open) => {
                     if (!createBusy) setCreateModalOpen(open);
                 }}
             >
-                <DialogContent
-                    className="max-w-md"
-                    finalFocus={modalTriggerRef}
-                >
+                <DialogContent finalFocus={modalTriggerRef}>
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <UserPlus
-                                size="1em"
-                                className="icon-lg text-accent"
-                            />
-                            <span>创建新用户</span>
-                        </DialogTitle>
-                        <DialogDescription>
-                            输入用户名、显示名称、邮箱及初始密码以创建新用户。
-                        </DialogDescription>
+                        <DialogTitle>创建新用户</DialogTitle>
                     </DialogHeader>
-
-                    <form
-                        onSubmit={handleCreateUser}
-                        className="admin-modal-form"
-                    >
-                        <div className="admin-modal-field">
+                    <form className="admin-form" onSubmit={handleCreateUser}>
+                        {createError && (
+                            <StatusBanner tone="error" density="compact">
+                                {createError}
+                            </StatusBanner>
+                        )}
+                        <div className="admin-field">
                             <label
+                                className="admin-field-label"
                                 htmlFor="create-username"
-                                className="admin-modal-label"
                             >
-                                用户名{" "}
-                                <span className="text-destructive">*</span>{" "}
-                                (3–32 位字母、数字、下划线)
+                                用户名
                             </label>
                             <Input
                                 id="create-username"
                                 type="text"
                                 required
+                                autoFocus
+                                autoComplete="off"
                                 pattern="^[a-zA-Z0-9_]{3,32}$"
+                                placeholder="例如: alice"
+                                aria-describedby="create-username-hint"
                                 value={newUsername}
                                 onChange={(e) => setNewUsername(e.target.value)}
-                                placeholder="例如: alice"
-                                autoFocus
                             />
-                        </div>
-
-                        <div className="admin-modal-field">
-                            <label
-                                htmlFor="create-display-name"
-                                className="admin-modal-label"
+                            <span
+                                id="create-username-hint"
+                                className="admin-field-hint"
                             >
-                                显示名称{" "}
-                                <span className="text-destructive">*</span>
+                                3–32 位字母、数字或下划线
+                            </span>
+                        </div>
+                        <div className="admin-field">
+                            <label
+                                className="admin-field-label"
+                                htmlFor="create-display-name"
+                            >
+                                显示名称
                             </label>
                             <Input
                                 id="create-display-name"
                                 type="text"
                                 required
                                 maxLength={40}
+                                autoComplete="off"
+                                placeholder="例如: 爱丽丝"
                                 value={newDisplayName}
                                 onChange={(e) =>
                                     setNewDisplayName(e.target.value)}
-                                placeholder="例如: 爱丽丝"
                             />
                         </div>
-
-                        <div className="admin-modal-field">
+                        <div className="admin-field">
                             <label
+                                className="admin-field-label"
                                 htmlFor="create-email"
-                                className="admin-modal-label"
                             >
-                                电子邮箱 (可选)
+                                邮箱（可选）
                             </label>
                             <Input
                                 id="create-email"
                                 type="email"
+                                autoComplete="off"
+                                placeholder="alice@example.com"
                                 value={newEmail}
                                 onChange={(e) => setNewEmail(e.target.value)}
-                                placeholder="alice@example.com"
                             />
                         </div>
-
-                        <div className="admin-modal-field">
+                        <div className="admin-field">
                             <label
+                                className="admin-field-label"
                                 htmlFor="create-password"
-                                className="admin-modal-label"
                             >
-                                初始密码{" "}
-                                <span className="text-destructive">*</span>{" "}
-                                (至少 12 位)
+                                初始密码（至少 12 位）
                             </label>
                             <Input
                                 id="create-password"
@@ -1405,239 +1136,153 @@ export function AdminPage() {
                                 required
                                 minLength={12}
                                 maxLength={128}
+                                autoComplete="new-password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="设置初始安全密码"
                             />
                         </div>
-
-                        {createError && (
-                            <StatusBanner tone="error">
-                                <div className="flex items-center gap-2">
-                                    <AlertCircle
-                                        size="1em"
-                                        className="icon-md shrink-0"
-                                    />
-                                    <span>{createError}</span>
-                                </div>
-                            </StatusBanner>
-                        )}
-
                         <DialogFooter>
                             <Button
-                                variant="outline"
                                 type="button"
-                                onClick={() => setCreateModalOpen(false)}
+                                variant="outline"
                                 disabled={createBusy}
+                                onClick={() => setCreateModalOpen(false)}
                             >
                                 取消
                             </Button>
                             <Button
-                                variant="default"
                                 type="submit"
-                                disabled={createBusy ||
-                                    !newUsername ||
-                                    !newDisplayName ||
-                                    !newPassword}
+                                variant="default"
+                                disabled={createBusy || !newUsername ||
+                                    !newDisplayName || !newPassword}
                             >
-                                <UserPlus size="1em" className="icon-md" />
-                                <span>
-                                    {createBusy ? "正在创建…" : "确认创建"}
-                                </span>
+                                {createBusy ? "正在创建…" : "创建"}
                             </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
 
-            {/* 2. Reset Password Modal */}
             <Dialog
                 open={Boolean(resetModalUser)}
                 onOpenChange={(open) => {
                     if (!resetBusy && !open) setResetModalUser(null);
                 }}
             >
-                <DialogContent
-                    className="max-w-md"
-                    finalFocus={modalTriggerRef}
-                >
+                <DialogContent finalFocus={modalTriggerRef}>
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <KeyRound
-                                size="1em"
-                                className="icon-lg text-accent"
-                            />
-                            <span>
-                                重置密码: @{resetModalUser?.username}
-                            </span>
-                        </DialogTitle>
+                        <DialogTitle>重置密码：@{resetUsername}</DialogTitle>
                         <DialogDescription>
-                            重置密码将<strong>
-                                立即注销该用户的所有设备会话
-                            </strong>，并强制该用户在下次登录时必须修改密码。
+                            将注销该用户的全部会话，并要求其下次登录时修改密码。
                         </DialogDescription>
                     </DialogHeader>
-
                     <form
+                        className="admin-form"
                         onSubmit={handleResetPasswordSubmit}
-                        className="admin-modal-form"
                     >
-                        <div className="admin-modal-field">
+                        {resetError && (
+                            <StatusBanner tone="error" density="compact">
+                                {resetError}
+                            </StatusBanner>
+                        )}
+                        <div className="admin-field">
                             <label
-                                htmlFor="reset-new-password"
-                                className="admin-modal-label"
+                                className="admin-field-label"
+                                htmlFor="reset-password-input"
                             >
-                                输入新密码 (至少 12 位)
+                                新密码（至少 12 位）
                             </label>
                             <Input
-                                id="reset-new-password"
+                                id="reset-password-input"
                                 type="password"
                                 required
+                                autoFocus
                                 minLength={12}
                                 maxLength={128}
+                                autoComplete="new-password"
+                                placeholder="输入该用户的临时新密码"
                                 value={resetNewPassword}
                                 onChange={(e) =>
                                     setResetNewPassword(e.target.value)}
-                                placeholder="输入该用户的临时新密码"
-                                autoFocus
                             />
                         </div>
-
-                        {resetError && (
-                            <StatusBanner tone="error">
-                                <div className="flex items-center gap-2">
-                                    <AlertCircle
-                                        size="1em"
-                                        className="icon-md shrink-0"
-                                    />
-                                    <span>{resetError}</span>
-                                </div>
-                            </StatusBanner>
-                        )}
-
                         <DialogFooter>
                             <Button
-                                variant="outline"
                                 type="button"
-                                onClick={() => setResetModalUser(null)}
+                                variant="outline"
                                 disabled={resetBusy}
+                                onClick={() => setResetModalUser(null)}
                             >
                                 取消
                             </Button>
                             <Button
-                                variant="default"
                                 type="submit"
+                                variant="default"
                                 disabled={resetBusy || !resetNewPassword}
                             >
-                                <KeyRound size="1em" className="icon-md" />
-                                <span>
-                                    {resetBusy ? "正在重置…" : "确认重置"}
-                                </span>
+                                {resetBusy ? "正在重置…" : "重置密码"}
                             </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
 
-            {/* 3. Soft Delete Confirmation Modal (Two-Stage Delete) */}
-            <Dialog
+            <AlertDialog
                 open={Boolean(deleteModalUser)}
                 onOpenChange={(open) => {
                     if (!deleteBusy && !open) setDeleteModalUser(null);
                 }}
             >
-                <DialogContent
-                    className="max-w-md"
-                    finalFocus={modalTriggerRef}
-                >
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-destructive">
-                            <Trash2 size="1em" className="icon-lg" />
-                            <span>确认删除用户</span>
-                        </DialogTitle>
-                        <DialogDescription>
-                            确定要删除用户{" "}
-                            <strong>@{deleteModalUser?.username}</strong>{" "}
-                            ({deleteModalUser?.displayName}) 吗？
-                            删除后该用户将被软删除，其所有登录会话将被彻底撤销。
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form
-                        onSubmit={handleDeleteSubmit}
-                        className="admin-modal-form"
-                    >
-                        <div className="admin-modal-delete-warning">
-                            <AlertCircle
-                                size="1em"
-                                className="icon-md text-destructive shrink-0 mt-0.5"
-                            />
-                            <div>
-                                删除用户后，该用户的会话将被立即强制终止，其创建的便签、应用及偏好将不可再被访问。此操作不可撤销。
-                            </div>
-                        </div>
-
-                        <div className="admin-modal-field">
+                <AlertDialogContent finalFocus={modalTriggerRef}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>删除用户</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            删除 @{deleteUsername}{" "}
+                            后，其会话将被立即终止，便签、应用和偏好将无法访问。此操作不可撤销。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <form className="admin-form" onSubmit={handleDeleteSubmit}>
+                        {deleteError && (
+                            <StatusBanner tone="error" density="compact">
+                                {deleteError}
+                            </StatusBanner>
+                        )}
+                        <div className="admin-field">
                             <label
+                                className="admin-field-label"
                                 htmlFor="delete-confirm-input"
-                                className="admin-modal-label"
                             >
-                                请输入完整的用户名{" "}
-                                <strong>@{deleteModalUser?.username}</strong>
-                                {" "}
-                                确认:
+                                输入 @{deleteUsername} 确认
                             </label>
                             <Input
                                 id="delete-confirm-input"
                                 type="text"
                                 required
+                                autoFocus
+                                autoComplete="off"
+                                placeholder={deleteUsername}
                                 value={deleteConfirmText}
                                 onChange={(e) =>
                                     setDeleteConfirmText(e.target.value)}
-                                placeholder={deleteModalUser?.username}
-                                autoFocus
                             />
                         </div>
-
-                        {deleteError && (
-                            <StatusBanner tone="error">
-                                <div className="flex items-center gap-2">
-                                    <AlertCircle
-                                        size="1em"
-                                        className="icon-md shrink-0"
-                                    />
-                                    <span>{deleteError}</span>
-                                </div>
-                            </StatusBanner>
-                        )}
-
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                type="button"
-                                onClick={() => setDeleteModalUser(null)}
-                                disabled={deleteBusy}
-                            >
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={deleteBusy}>
                                 取消
-                            </Button>
+                            </AlertDialogCancel>
                             <Button
-                                variant="destructive"
                                 type="submit"
-                                disabled={deleteBusy ||
-                                    !deleteModalUser ||
-                                    (deleteConfirmText !==
-                                            deleteModalUser.username &&
+                                variant="destructive"
+                                disabled={deleteBusy || !deleteModalUser ||
+                                    (deleteConfirmText !== deleteUsername &&
                                         deleteConfirmText !== "CONFIRM")}
                             >
-                                <Trash2 size="1em" className="icon-md" />
-                                <span>
-                                    {deleteBusy ? "正在删除…" : "确认删除用户"}
-                                </span>
+                                {deleteBusy ? "正在删除…" : "删除用户"}
                             </Button>
-                        </DialogFooter>
+                        </AlertDialogFooter>
                     </form>
-                </DialogContent>
-            </Dialog>
+                </AlertDialogContent>
+            </AlertDialog>
         </PageShell>
     );
 }

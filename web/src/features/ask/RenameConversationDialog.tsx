@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -48,27 +47,20 @@ export function RenameConversationDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-sm">
+            <DialogContent className="ask-rename-dialog">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle className="text-base">
-                            重命名对话
-                        </DialogTitle>
-                        <DialogDescription>
-                            为当前对话设置一个新的简短标题
-                        </DialogDescription>
+                        <DialogTitle>重命名对话</DialogTitle>
                     </DialogHeader>
 
-                    <div className="py-3">
-                        <Input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="输入对话标题..."
-                            autoFocus
-                        />
-                    </div>
+                    <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="输入对话标题..."
+                        autoFocus
+                    />
 
-                    <DialogFooter className="gap-2">
+                    <DialogFooter>
                         <Button
                             variant="outline"
                             type="button"

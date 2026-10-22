@@ -12,13 +12,13 @@ import {
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../ui/dialog.tsx";
 import { Button } from "../ui/button.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import { StatusBanner } from "./semantic.tsx";
 
 export interface ConflictDialogProps {
     open: boolean;
@@ -91,68 +91,46 @@ export function ConflictDialog({
                 onDismiss();
             }}
         >
-            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-                <DialogHeader className="shrink-0">
+            <DialogContent className="conflict-dialog">
+                <DialogHeader>
                     <DialogTitle>发现版本冲突</DialogTitle>
-                    <DialogDescription>
-                        云端已更新至版本 #{serverVersion?.version ?? "?"}
-                        ，您的本地编辑基于较早版本。请选择如何解决冲突：
-                    </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 min-h-0 flex flex-col gap-3 py-2 overflow-y-auto">
-                    <Tabs
-                        defaultValue="local"
-                        className="shrink-0 flex flex-col"
-                    >
-                        <TabsList className="grid grid-cols-2">
-                            <TabsTrigger value="local">
-                                本地修改 (未保存)
-                            </TabsTrigger>
-                            <TabsTrigger value="server">
-                                云端最新版本 (#{serverVersion?.version ?? "?"})
-                            </TabsTrigger>
+                <div className="conflict-body">
+                    <Tabs defaultValue="local" className="conflict-tabs">
+                        <TabsList>
+                            <TabsTrigger value="local">本地修改</TabsTrigger>
+                            <TabsTrigger value="server">云端版本</TabsTrigger>
                         </TabsList>
 
-                        <TabsContent
-                            value="local"
-                            className="flex-1 min-h-0 mt-3 p-3 bg-[var(--surface-soft)] rounded-md overflow-y-auto border border-[var(--border-subtle)]"
-                        >
-                            <div className="mb-2">
-                                <span className="text-xs text-[var(--muted)] font-semibold uppercase">
-                                    标题
-                                </span>
-                                <p className="font-medium text-sm text-[var(--foreground)] mt-0.5">
+                        <TabsContent value="local" className="conflict-panel">
+                            <div className="conflict-field">
+                                <span className="conflict-label">标题</span>
+                                <p className="conflict-value">
                                     {localTitle || "（未命名标题）"}
                                 </p>
                             </div>
-                            <div>
-                                <span className="text-xs text-[var(--muted)] font-semibold uppercase">
-                                    正文内容
-                                </span>
-                                <pre className="text-xs font-mono whitespace-pre-wrap text-[var(--foreground)] mt-1 max-h-[220px] overflow-y-auto">
+                            <div className="conflict-field">
+                                <span className="conflict-label">正文</span>
+                                <pre className="conflict-preview">
                                     {localBody || "（正文为空）"}
                                 </pre>
                             </div>
                         </TabsContent>
 
-                        <TabsContent
-                            value="server"
-                            className="flex-1 min-h-0 mt-3 p-3 bg-[var(--surface-soft)] rounded-md overflow-y-auto border border-[var(--border-subtle)]"
-                        >
-                            <div className="mb-2">
-                                <span className="text-xs text-[var(--muted)] font-semibold uppercase">
-                                    云端标题
-                                </span>
-                                <p className="font-medium text-sm text-[var(--foreground)] mt-0.5">
+                        <TabsContent value="server" className="conflict-panel">
+                            <span className="conflict-label">
+                                版本 #{serverVersion?.version ?? "?"}
+                            </span>
+                            <div className="conflict-field">
+                                <span className="conflict-label">标题</span>
+                                <p className="conflict-value">
                                     {serverVersion?.title || "（未命名标题）"}
                                 </p>
                             </div>
-                            <div>
-                                <span className="text-xs text-[var(--muted)] font-semibold uppercase">
-                                    云端正文内容
-                                </span>
-                                <pre className="text-xs font-mono whitespace-pre-wrap text-[var(--foreground)] mt-1 max-h-[220px] overflow-y-auto">
+                            <div className="conflict-field">
+                                <span className="conflict-label">正文</span>
+                                <pre className="conflict-preview">
                                     {serverVersion?.body || "（正文为空）"}
                                 </pre>
                             </div>
@@ -162,15 +140,12 @@ export function ConflictDialog({
                 </div>
 
                 {error && (
-                    <p
-                        role="alert"
-                        className="text-sm text-[var(--danger)]"
-                    >
+                    <StatusBanner tone="error" density="compact">
                         {error}
-                    </p>
+                    </StatusBanner>
                 )}
 
-                <DialogFooter className="shrink-0 flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
+                <DialogFooter className="conflict-actions">
                     <Button
                         type="button"
                         variant="ghost"

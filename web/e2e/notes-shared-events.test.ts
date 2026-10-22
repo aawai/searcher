@@ -6,7 +6,7 @@ declare global {
     var __noteStreams: EventSource[];
 }
 
-Deno.test("three note windows share events and preserve conflict drafts", async () => {
+Deno.test("note editor opens share events and preserve conflict drafts", async () => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -44,7 +44,6 @@ Deno.test("three note windows share events and preserve conflict drafts", async 
             if (!response.ok) throw new Error(await response.text());
             return (await response.json()).data;
         };
-        await request("/api/preferences", { style: "widgets" }, "PATCH");
         const notes: Array<
             { id: string; title: string; body: string; version: number }
         > = [];
@@ -59,33 +58,37 @@ Deno.test("three note windows share events and preserve conflict drafts", async 
         return notes;
     });
     await page.reload();
-    let eventRequests = 0;
-    page.on("request", (request) => {
-        if (new URL(request.url()).pathname === "/api/notes/events") {
-            eventRequests++;
+    await page.locator('.zen-edge-btn[data-workspace="notes"]').click();
+    for (const [index, note] of notes.entries()) {
+        if (index > 0) {
+            await page.getByRole("button", {
+                name: "返回便签列表",
+                exact: true,
+            })
+                .click();
         }
-    });
-    for (const note of notes) {
-        await page.locator('.desktop-dock button[data-workspace="notes"]')
-            .click();
         await page.locator(".notes-workspace-list .note-title").filter({
             hasText: note.title,
         }).click();
+        await page.waitForFunction(
+            (title) =>
+                document.querySelector<HTMLInputElement>(
+                    '.workspace-panel input[aria-label="便签标题"]',
+                )?.value === title,
+            note.title,
+        );
         await page.locator(
-            `.desktop-window[data-window-id="note:${note.id}"] .note-live-editor .ProseMirror`,
+            ".workspace-panel .note-live-editor .ProseMirror",
         ).waitFor();
     }
+    // The panel shows one editor at a time, so each open subscribes anew and
+    // the previous stream closes. Exactly one stream may be live at any moment.
     await page.waitForFunction(() => {
-        const streams = globalThis.__noteStreams;
-        return streams.filter((stream) =>
-            stream.readyState === EventSource.OPEN
-        ).length === 1;
+        const live = globalThis.__noteStreams.filter((stream) =>
+            stream.readyState !== EventSource.CLOSED
+        );
+        return live.length === 1 && live[0].readyState === EventSource.OPEN;
     });
-    assertEquals(
-        eventRequests,
-        1,
-        "opening three windows must not create three stream requests",
-    );
     const remoteUpdate = async (id: string, body: string) => {
         await page.evaluate(async ({ id, body }) => {
             const note = (await (await fetch(`/api/notes/${id}`)).json()).data;
@@ -97,22 +100,19 @@ Deno.test("three note windows share events and preserve conflict drafts", async 
             if (!response.ok) throw new Error(await response.text());
         }, { id, body });
     };
-    await remoteUpdate(notes[0].id, "静默同步的云端正文");
+    await remoteUpdate(notes[2].id, "静默同步的云端正文");
     await page.waitForFunction(
-        (id) =>
+        () =>
             document.querySelector(
-                `.desktop-window[data-window-id="note:${id}"] .ProseMirror`,
+                ".workspace-panel .note-live-editor .ProseMirror",
             )?.textContent === "静默同步的云端正文",
-        notes[0].id,
     );
     assertEquals(
         await page.getByRole("dialog", { name: "发现版本冲突" }).count(),
         0,
     );
     const dirty = page.locator(
-        `.desktop-window[data-window-id="note:${
-            notes[2].id
-        }"] .note-live-editor .ProseMirror`,
+        ".workspace-panel .note-live-editor .ProseMirror",
     );
     await dirty.fill("不得丢失的本地草稿");
     await remoteUpdate(notes[2].id, "另一设备的新正文");
@@ -160,11 +160,10 @@ Deno.test("three note windows share events and preserve conflict drafts", async 
     assertEquals(copy.body, localMarkdown);
     await conflict.waitFor({ state: "hidden" });
     await page.waitForFunction(
-        (id) =>
+        () =>
             document.querySelector(
-                `.desktop-window[data-window-id="note:${id}"] .ProseMirror`,
+                ".workspace-panel .note-live-editor .ProseMirror",
             )?.textContent === "另一设备的新正文",
-        notes[2].id,
     );
     const saved = await page.evaluate(async ({ original, copy }) => {
         const list = (await (await fetch("/api/notes")).json()).data as Array<
@@ -179,20 +178,13 @@ Deno.test("three note windows share events and preserve conflict drafts", async 
         original: "另一设备的新正文",
         copy: localMarkdown,
     });
-    for (const note of [...notes].reverse()) {
-        await page.locator(
-            `.desktop-dock [data-running-note="note:${note.id}"]`,
-        ).click();
-        await page.locator(`.desktop-window[data-window-id="note:${note.id}"]`)
-            .getByRole("button", { name: "关闭便签", exact: true }).click();
-    }
+    await page.getByRole("button", { name: "收起工作区", exact: true }).click();
     await page.waitForFunction(() =>
         globalThis.__noteStreams.every((stream) =>
             stream.readyState === EventSource.CLOSED
         )
     );
-    assertEquals(eventRequests, 1);
-    await page.locator('.desktop-dock button[data-workspace="notes"]').click();
+    await page.locator('.zen-edge-btn[data-workspace="notes"]').click();
     await page.locator(".notes-workspace-list .note-title").filter({
         hasText: notes[0].title,
     }).click();

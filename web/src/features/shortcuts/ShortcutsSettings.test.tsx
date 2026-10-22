@@ -37,7 +37,7 @@ Deno.test("ShortcutsSettings: renders all 5 required sections with proper headin
     for (const cmd of SEARCH_QUICK_COMMANDS) {
         assertStringIncludes(html, cmd.action);
         assertStringIncludes(html, cmd.prefix);
-        assertStringIncludes(html, `${cmd.prefix} query`);
+        assertStringIncludes(html, `${cmd.prefix} 关键词`);
     }
 });
 

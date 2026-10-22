@@ -172,7 +172,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
         await page.locator("#auth-password").fill(
             "Auth-recovery-password-199!",
         );
-        await page.locator(".auth-surface form").evaluate((form) => {
+        await page.locator(".auth-form form").evaluate((form) => {
             (form as HTMLFormElement).requestSubmit();
         });
         const blockedSubmission = page.getByRole("alert");
@@ -183,13 +183,13 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
         );
         assertEquals(registrationPosts, 0);
 
-        await page.getByRole("button", { name: "重新检查注册状态" }).click();
+        await page.getByRole("button", { name: "重新检查" }).click();
         const closedMessage = page.getByText("当前未开放注册", {
             exact: false,
         });
         await closedMessage.waitFor({ state: "visible" });
         assertEquals(await submit.isDisabled(), true);
-        await page.locator(".auth-surface form").evaluate((form) => {
+        await page.locator(".auth-form form").evaluate((form) => {
             (form as HTMLFormElement).requestSubmit();
         });
         await blockedSubmission.waitFor({ state: "visible" });
@@ -198,10 +198,10 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
             "当前未开放注册",
         );
         assertEquals(registrationPosts, 0);
-        await page.getByRole("button", { name: "重新检查注册状态" }).click();
+        await page.getByRole("button", { name: "重新检查" }).click();
         await page.waitForFunction(() => {
             const button = document.querySelector<HTMLButtonElement>(
-                '.auth-surface form button[type="submit"]',
+                '.auth-form form button[type="submit"]',
             );
             return button !== null && !button.disabled;
         });
@@ -251,7 +251,7 @@ Deno.test("login hides registration during an unavailable status check", async (
             { exact: false },
         );
         await unavailableMessage.waitFor({ state: "visible" });
-        await page.getByRole("button", { name: "重新检查注册状态" }).click();
+        await page.getByRole("button", { name: "重新检查" }).click();
         await page.getByRole("link", { name: "注册", exact: true }).waitFor({
             state: "visible",
         });

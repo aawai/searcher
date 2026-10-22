@@ -9,7 +9,6 @@ import {
 } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-type Style = "zen" | "widgets";
 type Theme = "light" | "dark";
 type Viewport = { width: number; height: number };
 type Box = { x: number; y: number; width: number; height: number };
@@ -69,7 +68,6 @@ const TOUCH_VIEWPORTS: Viewport[] = [
     { width: 767, height: 1024 },
     { width: 768, height: 1024 },
 ];
-const STYLES: Style[] = ["zen", "widgets"];
 const THEMES: Theme[] = ["light", "dark"];
 const GRID_SELECTOR = ".apps-workspace-root .launcher-grid--workspace";
 
@@ -85,19 +83,19 @@ function assertNear(
     );
 }
 
-async function setPreferences(page: Page, style: Style, theme: Theme) {
-    const response = await page.evaluate(async ({ style, theme }) => {
+async function setPreferences(page: Page, theme: Theme) {
+    const response = await page.evaluate(async (theme) => {
         const result = await fetch("/api/preferences", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ style, theme }),
+            body: JSON.stringify({ theme }),
         });
         return { ok: result.ok, status: result.status };
-    }, { style, theme });
+    }, theme);
     assertEquals(
         response.ok,
         true,
-        `Could not set ${style}/${theme} preferences`,
+        `Could not set ${theme} preferences`,
     );
 }
 
@@ -227,7 +225,7 @@ async function openAppsWorkspace(page: Page) {
         return;
     }
     const triggers = page.locator(
-        '.workspace-mobile-navigation button[data-workspace="apps"], .desktop-dock button[data-workspace="apps"], .zen-edge-trigger button[data-workspace="apps"], .zen-edge-btn[data-workspace="apps"], button[aria-label="应用工作区"]',
+        '.zen-edge-trigger button[data-workspace="apps"], .zen-edge-btn[data-workspace="apps"], button[aria-label="应用工作区"]',
     );
     let opened = false;
     for (let index = 0; index < await triggers.count(); index++) {
@@ -655,7 +653,6 @@ async function runTouchInteractions(
     page: Page,
     cdp: CDPSession,
     fixtures: AppFixtures,
-    style: Style,
     theme: Theme,
     report: {
         evidenceDirectory: string;
@@ -696,6 +693,7 @@ async function runTouchInteractions(
     await more.click();
     const menu = page.getByRole("menu", { name: "应用更多操作", exact: true });
     await menu.waitFor({ state: "visible" });
+    await settlePresentation(page);
     const createFolderItem = menu.getByRole("menuitem", {
         name: "新建文件夹",
         exact: true,
@@ -742,6 +740,10 @@ async function runTouchInteractions(
     );
     await largeOpener.scrollIntoViewIfNeeded();
     const largeBox = (await largeOpener.boundingBox())!;
+    // DragOverlay follows the sortable tile, not its expanded hit target.
+    const sourceBox = (await root.locator(
+        `.launcher-tile[data-folder-id="${fixtures.largeGroupId}"]`,
+    ).boundingBox())!;
     const start = {
         x: largeBox.x + largeBox.width / 2,
         y: largeBox.y + largeBox.height - 22,
@@ -765,23 +767,23 @@ async function runTouchInteractions(
         const r = document.querySelector(".launcher-overlay--large")
             ?.getBoundingClientRect();
         return r && Math.abs(r.x - x) < 1 && Math.abs(r.y - y) < 1;
-    }, { x: largeBox.x + 24, y: largeBox.y - 24 });
+    }, { x: sourceBox.x + 24, y: sourceBox.y - 24 });
     const overlayBox = (await overlay.boundingBox())!;
     assertNear(overlayBox.width, 140, "Large-folder touch overlay width");
     assertNear(overlayBox.height, 140, "Large-folder touch overlay height");
     assertNear(
         overlayBox.x,
-        largeBox.x + 24,
+        sourceBox.x + 24,
         "Large-folder overlay horizontal alignment",
     );
     assertNear(
         overlayBox.y,
-        largeBox.y - 24,
+        sourceBox.y - 24,
         "Large-folder overlay vertical alignment",
     );
     await settlePresentation(page);
     const arrangeScreenshot =
-        `${report.evidenceDirectory}/arrange-${style}-${theme}-390x844.png`;
+        `${report.evidenceDirectory}/arrange-${theme}-390x844.png`;
     await page.screenshot({ path: arrangeScreenshot });
     report.screenshots.push(arrangeScreenshot);
     await cdp.send("Input.dispatchTouchEvent", {
@@ -794,6 +796,8 @@ async function runTouchInteractions(
         name: "完成整理",
         exact: true,
     });
+    await finishItem.waitFor({ state: "visible" });
+    await settlePresentation(page);
     const finishTarget = await assertTouchTarget(
         finishItem,
         "Finish-arranging management action",
@@ -872,7 +876,7 @@ async function runTouchInteractions(
         }
         folderDetails[folder.name] = await appButtons.count();
         const screenshot =
-            `${report.evidenceDirectory}/detail-${style}-${theme}-${folder.name}-folder.png`;
+            `${report.evidenceDirectory}/detail-${theme}-${folder.name}-folder.png`;
         await page.screenshot({ path: screenshot });
         report.screenshots.push(screenshot);
         screenshots.push(screenshot);
@@ -882,12 +886,11 @@ async function runTouchInteractions(
     }
 
     const managementScreenshot =
-        `${report.evidenceDirectory}/management-${style}-${theme}-390x844.png`;
+        `${report.evidenceDirectory}/management-${theme}-390x844.png`;
     await page.screenshot({ path: managementScreenshot });
     report.screenshots.push(managementScreenshot);
     report.interactions.push({
         viewport: { width: 390, height: 844 },
-        style,
         theme,
         a9SearchResults: await root.locator(".apps-search-row").count(),
         management,
@@ -947,93 +950,87 @@ async function runDesktopMatrix(
         evidenceDirectory: string;
         screenshots: string[];
         desktop: Record<string, unknown>[];
-        homeQuick: Record<string, unknown>[];
+        homeLauncher: Record<string, unknown>[];
     },
 ) {
-    for (const style of STYLES) {
-        for (const theme of THEMES) {
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await setPreferences(page, style, theme);
-            await page.reload();
-            await page.locator("main").waitFor({ state: "visible" });
-            await page.waitForFunction(
-                ({ style, theme }) =>
-                    document.documentElement.dataset.theme === theme &&
-                    document.querySelector(`main.home-${style}`) !== null,
-                { style, theme },
-            );
-            const media = await page.evaluate(() => ({
-                fine: matchMedia("(pointer: fine)").matches,
-                hover: matchMedia("(hover: hover)").matches,
-                theme: document.documentElement.getAttribute("data-theme"),
-            }));
-            assertEquals(
-                media.fine,
-                true,
-                "Desktop must emulate a fine pointer",
-            );
-            assertEquals(
-                media.hover,
-                true,
-                "Desktop must emulate hover support",
-            );
-            assertEquals(media.theme, theme);
+    for (const theme of THEMES) {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await setPreferences(page, theme);
+        await page.reload();
+        await page.locator("main").waitFor({ state: "visible" });
+        await page.waitForFunction(
+            (theme) =>
+                document.documentElement.dataset.theme === theme &&
+                document.querySelector("main.home") !== null,
+            theme,
+        );
+        const media = await page.evaluate(() => ({
+            fine: matchMedia("(pointer: fine)").matches,
+            hover: matchMedia("(hover: hover)").matches,
+            theme: document.documentElement.getAttribute("data-theme"),
+        }));
+        assertEquals(
+            media.fine,
+            true,
+            "Desktop must emulate a fine pointer",
+        );
+        assertEquals(
+            media.hover,
+            true,
+            "Desktop must emulate hover support",
+        );
+        assertEquals(media.theme, theme);
 
-            const homeSelector = style === "widgets"
-                ? ".launcher-grid--quick"
-                : ".pinned-area .launcher-grid--home";
-            const homeGrid = page.locator(homeSelector).first();
-            await homeGrid.waitFor({ state: "visible" });
-            const homeBefore = await collectHomeGeometry(page, homeSelector);
-            assertNear(
-                homeBefore.cellWidth,
-                64,
-                `${style} Home/Quick track width`,
-            );
-            assertNear(
-                homeBefore.rowHeight,
-                64,
-                `${style} Home/Quick row height`,
-            );
-            assertNear(
-                homeBefore.columnGap,
-                style === "widgets" ? 8 : 6,
-                `${style} Home/Quick column gap`,
-            );
-            assertNear(
-                homeBefore.rowGap,
-                style === "widgets" ? 8 : 6,
-                `${style} Home/Quick row gap`,
-            );
+        const homeSelector = ".pinned-area .launcher-grid--home";
+        const homeGrid = page.locator(homeSelector).first();
+        await homeGrid.waitFor({ state: "visible" });
+        const homeBefore = await collectHomeGeometry(page, homeSelector);
+        assertNear(
+            homeBefore.cellWidth,
+            84,
+            "Home track width",
+        );
+        assertNear(
+            homeBefore.rowHeight,
+            84,
+            "Home row height",
+        );
+        assertNear(
+            homeBefore.columnGap,
+            12,
+            "Home column gap",
+        );
+        assertNear(
+            homeBefore.rowGap,
+            12,
+            "Home row gap",
+        );
 
-            await openAppsWorkspace(page);
-            const metrics = await collectDensityMetrics(page, fixtures);
-            const screenshot =
-                `${report.evidenceDirectory}/desktop-${style}-${theme}-1440x900.png`;
-            await page.screenshot({ path: screenshot });
-            report.screenshots.push(screenshot);
-            report.desktop.push({
-                style,
-                theme,
-                pointer: media,
-                metrics,
-                screenshot,
-            });
-            assertDensityMetrics(metrics, { width: 1440, height: 900 }, 38);
-            assertFolderPreviewMetrics(metrics, false);
-            const homeAfter = await collectHomeGeometry(page, homeSelector);
-            assertEquals(
-                homeAfter,
-                homeBefore,
-                `${style} Home/Quick geometry must not change when the Apps workspace opens`,
-            );
-            report.homeQuick.push({
-                style,
-                theme,
-                before: homeBefore,
-                after: homeAfter,
-            });
-        }
+        await openAppsWorkspace(page);
+        const metrics = await collectDensityMetrics(page, fixtures);
+        const screenshot =
+            `${report.evidenceDirectory}/desktop-${theme}-1440x900.png`;
+        await page.screenshot({ path: screenshot });
+        report.screenshots.push(screenshot);
+        report.desktop.push({
+            theme,
+            pointer: media,
+            metrics,
+            screenshot,
+        });
+        assertDensityMetrics(metrics, { width: 1440, height: 900 }, 38);
+        assertFolderPreviewMetrics(metrics, false);
+        const homeAfter = await collectHomeGeometry(page, homeSelector);
+        assertEquals(
+            homeAfter,
+            homeBefore,
+            "Home geometry must not change when the Apps workspace opens",
+        );
+        report.homeLauncher.push({
+            theme,
+            before: homeBefore,
+            after: homeAfter,
+        });
     }
 }
 
@@ -1054,7 +1051,7 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
         screenshots: string[];
         touchMatrix: Record<string, unknown>[];
         desktop: Record<string, unknown>[];
-        homeQuick: Record<string, unknown>[];
+        homeLauncher: Record<string, unknown>[];
         interactions: Record<string, unknown>[];
     } = {
         issue: 149,
@@ -1063,7 +1060,7 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
         screenshots: [],
         touchMatrix: [],
         desktop: [],
-        homeQuick: [],
+        homeLauncher: [],
         interactions: [],
     };
     let touchContext: BrowserContext | undefined;
@@ -1082,131 +1079,121 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
         const cdp = await touchContext.newCDPSession(touchPage);
         report.fixture = fixtures;
 
-        for (const style of STYLES) {
-            for (const theme of THEMES) {
-                await setPreferences(touchPage, style, theme);
-                for (const viewport of TOUCH_VIEWPORTS) {
-                    await touchPage.setViewportSize(viewport);
-                    await touchPage.reload();
-                    await touchPage.locator("main").waitFor({
-                        state: "visible",
+        for (const theme of THEMES) {
+            await setPreferences(touchPage, theme);
+            for (const viewport of TOUCH_VIEWPORTS) {
+                await touchPage.setViewportSize(viewport);
+                await touchPage.reload();
+                await touchPage.locator("main").waitFor({
+                    state: "visible",
+                });
+                await touchPage.waitForFunction(
+                    (theme) =>
+                        document.documentElement.dataset.theme === theme &&
+                        document.querySelector("main.home") !== null,
+                    theme,
+                );
+                const media = await touchPage.evaluate(() => ({
+                    coarse: matchMedia("(pointer: coarse)").matches,
+                    noHover: matchMedia("(hover: none)").matches,
+                    theme: document.documentElement.getAttribute(
+                        "data-theme",
+                    ),
+                }));
+                assertEquals(
+                    media.coarse,
+                    true,
+                    "Touch matrix requires a coarse pointer",
+                );
+                assertEquals(
+                    media.noHover,
+                    true,
+                    "Touch matrix requires no-hover media",
+                );
+                assertEquals(media.theme, theme);
+                const homeSelector = ".pinned-area .launcher-grid--home";
+                await touchPage.locator(homeSelector).first().waitFor();
+                const home = await collectHomeGeometry(
+                    touchPage,
+                    homeSelector,
+                );
+                const compactHome = viewport.width < 768;
+                assertNear(
+                    home.cellWidth,
+                    compactHome ? 68 : 84,
+                    "Mobile Home presenters share compact touch tracks",
+                );
+                assertNear(
+                    home.rowHeight,
+                    compactHome ? 68 : 84,
+                    "Home touch row geometry",
+                );
+                assertNear(
+                    home.columnGap,
+                    compactHome ? 4 : 12,
+                    "Mobile Home presenters share compact gaps",
+                );
+                assertNear(
+                    home.rowGap,
+                    compactHome ? 4 : 12,
+                    "Home touch row gaps",
+                );
+                await openAppsWorkspace(touchPage);
+                const metrics = await collectDensityMetrics(
+                    touchPage,
+                    fixtures,
+                );
+                const screenshot =
+                    `${EVIDENCE_DIR}/touch-${theme}-${viewport.width}x${viewport.height}.png`;
+                await touchPage.screenshot({
+                    path: screenshot,
+                });
+                report.screenshots.push(screenshot);
+                report.touchMatrix.push({
+                    theme,
+                    pointer: media,
+                    metrics,
+                    screenshot,
+                });
+
+                assertDensityMetrics(metrics, viewport);
+                assertFolderPreviewMetrics(metrics, true);
+                const targets = await assertWorkspaceHitTargets(
+                    touchPage,
+                    true,
+                );
+                const entry = report.touchMatrix[report.touchMatrix.length - 1];
+                entry.targets = targets;
+                entry.home = home;
+                if (viewport.width === 390 && viewport.height === 640) {
+                    const scroll = await touchPage.locator(
+                        ".workspace-body",
+                    ).evaluate((body) => {
+                        body.scrollTop = body.scrollHeight;
+                        const result = {
+                            height: body.clientHeight,
+                            contentHeight: body.scrollHeight,
+                            moved: body.scrollTop,
+                        };
+                        body.scrollTop = 0;
+                        return result;
                     });
-                    await touchPage.waitForFunction(
-                        ({ style, theme }) =>
-                            document.documentElement.dataset.theme === theme &&
-                            document.querySelector(`main.home-${style}`) !==
-                                null,
-                        { style, theme },
+                    assert(
+                        scroll.contentHeight > scroll.height &&
+                            scroll.moved > 0,
+                        "Short-screen content must genuinely scroll",
                     );
-                    const media = await touchPage.evaluate(() => ({
-                        coarse: matchMedia("(pointer: coarse)").matches,
-                        noHover: matchMedia("(hover: none)").matches,
-                        theme: document.documentElement.getAttribute(
-                            "data-theme",
-                        ),
-                    }));
-                    assertEquals(
-                        media.coarse,
-                        true,
-                        "Touch matrix requires a coarse pointer",
-                    );
-                    assertEquals(
-                        media.noHover,
-                        true,
-                        "Touch matrix requires no-hover media",
-                    );
-                    assertEquals(media.theme, theme);
-                    const homeSelector = style === "widgets"
-                        ? ".launcher-grid--quick"
-                        : ".pinned-area .launcher-grid--home";
-                    await touchPage.locator(homeSelector).first().waitFor();
-                    const home = await collectHomeGeometry(
+                    entry.scroll = scroll;
+                }
+
+                if (viewport.width === 390 && viewport.height === 844) {
+                    await runTouchInteractions(
                         touchPage,
-                        homeSelector,
-                    );
-                    const compactHome = viewport.width < 768;
-                    assertNear(
-                        home.cellWidth,
-                        compactHome ? 68 : 88,
-                        "Mobile Home presenters share compact touch tracks",
-                    );
-                    assertNear(
-                        home.rowHeight,
-                        compactHome ? 68 : 88,
-                        "Home touch row geometry",
-                    );
-                    assertNear(
-                        home.columnGap,
-                        compactHome ? 4 : style === "widgets" ? 8 : 6,
-                        "Mobile Home presenters share compact gaps",
-                    );
-                    assertNear(
-                        home.rowGap,
-                        compactHome ? 4 : style === "widgets" ? 8 : 6,
-                        "Home touch row gaps",
-                    );
-                    await openAppsWorkspace(touchPage);
-                    const metrics = await collectDensityMetrics(
-                        touchPage,
+                        cdp,
                         fixtures,
-                    );
-                    const screenshot =
-                        `${EVIDENCE_DIR}/touch-${style}-${theme}-${viewport.width}x${viewport.height}.png`;
-                    await touchPage.screenshot({
-                        // Capture the actual viewport: fullPage temporarily resizes
-                        // tall Widgets pages and can reset Chromium's touch media.
-                        path: screenshot,
-                    });
-                    report.screenshots.push(screenshot);
-                    report.touchMatrix.push({
-                        style,
                         theme,
-                        pointer: media,
-                        metrics,
-                        screenshot,
-                    });
-
-                    assertDensityMetrics(metrics, viewport);
-                    assertFolderPreviewMetrics(metrics, true);
-                    const targets = await assertWorkspaceHitTargets(
-                        touchPage,
-                        true,
+                        report,
                     );
-                    const entry =
-                        report.touchMatrix[report.touchMatrix.length - 1];
-                    entry.targets = targets;
-                    entry.home = home;
-                    if (viewport.width === 390 && viewport.height === 640) {
-                        const scroll = await touchPage.locator(
-                            ".workspace-body",
-                        ).evaluate((body) => {
-                            body.scrollTop = body.scrollHeight;
-                            const result = {
-                                height: body.clientHeight,
-                                contentHeight: body.scrollHeight,
-                                moved: body.scrollTop,
-                            };
-                            body.scrollTop = 0;
-                            return result;
-                        });
-                        assert(
-                            scroll.contentHeight > scroll.height &&
-                                scroll.moved > 0,
-                            "Short-screen content must genuinely scroll",
-                        );
-                        entry.scroll = scroll;
-                    }
-
-                    if (viewport.width === 390 && viewport.height === 844) {
-                        await runTouchInteractions(
-                            touchPage,
-                            cdp,
-                            fixtures,
-                            style,
-                            theme,
-                            report,
-                        );
-                    }
                 }
             }
         }
@@ -1226,13 +1213,11 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                 ).filter((grid) => grid.isConnected);
                 if (grids.length !== 1) return false;
                 const host = grids[0].closest<HTMLElement>(
-                    '[data-presentation="sheet"], [data-presentation="window"]',
+                    width < 768
+                        ? ".workspace-panel--mobile"
+                        : 'aside.workspace-panel[data-presentation="panel"]',
                 );
-                if (
-                    innerWidth !== width ||
-                    host?.dataset.presentation !==
-                        (width < 768 ? "sheet" : "window")
-                ) return false;
+                if (innerWidth !== width || !host) return false;
                 const bounds = host.getBoundingClientRect();
                 if (bounds.left < -0.75 || bounds.right > width + 0.75) {
                     return false;
@@ -1305,7 +1290,7 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
             return ids;
         });
         await touchPage.reload();
-        await touchPage.locator("main.home-widgets").waitFor();
+        await touchPage.locator("main.home").waitFor();
         await openAppsWorkspace(touchPage);
         for (const { id, count } of variants) {
             const tile = touchPage.locator(

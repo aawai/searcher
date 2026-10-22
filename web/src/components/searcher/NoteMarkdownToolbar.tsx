@@ -6,6 +6,7 @@ import {
     Bold,
     Code,
     CodeXml,
+    Heading,
     Heading1,
     Heading2,
     Heading3,
@@ -14,14 +15,15 @@ import {
     List,
     ListChecks,
     ListOrdered,
+    type LucideIcon,
     Minus,
+    MoreHorizontal,
     Quote,
     Strikethrough,
     Table,
 } from "lucide-react";
 import { Button } from "../ui/button.tsx";
 import { useEffect, useRef, useState } from "react";
-import { Heading, MoreHorizontal } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,7 +31,6 @@ import {
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 import type { MarkdownCommand } from "./note-markdown-edit.ts";
-import type { LucideIcon } from "lucide-react";
 import {
     formatShortcut,
     SHORTCUTS,
@@ -157,8 +158,9 @@ export function NoteMarkdownToolbar(
                                     : label}
                                 onPointerDown={(event) => {
                                     // Keep the editor selection and avoid a premature blur save.
-                                    if (event.button === 0) {event
-                                            .preventDefault();}
+                                    if (event.button === 0) {
+                                        event.preventDefault();
+                                    }
                                 }}
                                 onClick={() => onCommand(command)}
                             >

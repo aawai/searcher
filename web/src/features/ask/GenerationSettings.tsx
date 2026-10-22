@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, RotateCcw, Save, Settings2, X } from "lucide-react";
+import { Settings2, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     Popover,
@@ -106,7 +106,7 @@ export function GenerationSettings({
                         variant="ghost"
                         size="icon"
                         className={`ask-composer__icon-btn ${
-                            isCustomized ? "is-active text-primary" : ""
+                            isCustomized ? "is-active" : ""
                         }`}
                         aria-label="高级生成设置"
                         title="高级生成设置 (Temperature, Top P, Max Tokens)"
@@ -125,23 +125,21 @@ export function GenerationSettings({
                 aria-label="生成参数设置"
             >
                 <div className="ask-generation-settings__head">
-                    <span className="font-medium text-sm">
+                    <span className="ask-generation-settings__title">
                         生成参数{model
                             ? ` (${model.displayName || model.modelId})`
                             : ""}
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="ask-generation-settings__head-actions">
                         {isCustomized && (
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
                                 onClick={handleResetCurrent}
-                                className="h-6 text-xs px-1.5 flex items-center gap-1"
                                 title="恢复默认参数"
                             >
-                                <RotateCcw size="1em" className="icon-sm" />
-                                <span>重置</span>
+                                重置
                             </Button>
                         )}
                         <PopoverClose
@@ -150,7 +148,6 @@ export function GenerationSettings({
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 p-0 text-muted hover:text-foreground"
                                     aria-label="关闭"
                                 />
                             }
@@ -160,20 +157,19 @@ export function GenerationSettings({
                     </div>
                 </div>
 
-                <div className="ask-generation-settings__body space-y-4">
+                <div className="ask-generation-settings__body">
                     {isStrict
                         ? (
-                            <div className="text-xs text-muted bg-surface-soft p-2.5 rounded-md border border-border/40 leading-relaxed">
-                                当前模型为严格推理模型，服务端禁止自定义
-                                Temperature 与 Top P 采样参数。
-                            </div>
+                            <p className="ask-generation-settings__note">
+                                严格推理模型不支持调整 Temperature 与 Top P。
+                            </p>
                         )
                         : (
                             <>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-xs">
+                                <div className="ask-generation-settings__field">
+                                    <div className="ask-generation-settings__label">
                                         <span>Temperature (随机性)</span>
-                                        <span className="font-mono text-muted">
+                                        <span className="ask-generation-settings__value">
                                             {temperature.toFixed(2)}
                                         </span>
                                     </div>
@@ -193,17 +189,16 @@ export function GenerationSettings({
                                         }}
                                         aria-label="Temperature"
                                     />
-                                    <div className="flex justify-between text-xs text-muted">
-                                        <span>严谨 (0.0)</span>
-                                        <span>平衡 (0.7)</span>
-                                        <span>创造 (2.0)</span>
+                                    <div className="ask-generation-settings__scale">
+                                        <span>严谨</span>
+                                        <span>创造</span>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-xs">
+                                <div className="ask-generation-settings__field">
+                                    <div className="ask-generation-settings__label">
                                         <span>Top P (核采样)</span>
-                                        <span className="font-mono text-muted">
+                                        <span className="ask-generation-settings__value">
                                             {topP.toFixed(2)}
                                         </span>
                                     </div>
@@ -224,10 +219,10 @@ export function GenerationSettings({
                             </>
                         )}
 
-                    <div className="space-y-1.5">
-                        <div className="flex justify-between text-xs">
+                    <div className="ask-generation-settings__field">
+                        <div className="ask-generation-settings__label">
                             <span>Max Tokens (最大长度)</span>
-                            <span className="font-mono text-muted">
+                            <span className="ask-generation-settings__value">
                                 {maxTokens}
                             </span>
                         </div>
@@ -245,61 +240,40 @@ export function GenerationSettings({
                     </div>
 
                     {(onSaveDefault || onResetDefault) && (
-                        <div className="pt-2 border-t border-border/40 space-y-1.5">
-                            <div className="flex items-center justify-between gap-2">
-                                {onResetDefault && isDefault && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        disabled={resetting}
-                                        onClick={handleResetDefaultAction}
-                                        className="text-xs h-7 px-2 text-muted hover:text-foreground"
-                                        title="恢复模型全局预设默认"
-                                    >
-                                        {resetting ? "恢复中..." : "恢复预设"}
-                                    </Button>
-                                )}
-                                {onSaveDefault && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={saving}
-                                        onClick={handleSaveAsDefault}
-                                        className="text-xs h-7 px-2.5 ml-auto flex items-center gap-1.5"
-                                        title="保存当前设置为该模型的默认生成参数"
-                                    >
-                                        {savedNotice
-                                            ? (
-                                                <>
-                                                    <Check
-                                                        size="1em"
-                                                        className="icon-sm text-accent"
-                                                    />
-                                                    <span>已保存默认</span>
-                                                </>
-                                            )
-                                            : (
-                                                <>
-                                                    <Save
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                    />
-                                                    <span>
-                                                        {saving
-                                                            ? "保存中..."
-                                                            : "设为默认"}
-                                                    </span>
-                                                </>
-                                            )}
-                                    </Button>
-                                )}
-                            </div>
+                        <div className="ask-generation-settings__footer">
+                            {onResetDefault && isDefault && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={resetting}
+                                    onClick={handleResetDefaultAction}
+                                    title="恢复模型全局预设默认"
+                                >
+                                    {resetting ? "恢复中..." : "恢复预设"}
+                                </Button>
+                            )}
+                            {onSaveDefault && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={saving}
+                                    onClick={handleSaveAsDefault}
+                                    className="ask-generation-settings__save"
+                                    title="保存当前设置为该模型的默认生成参数"
+                                >
+                                    {savedNotice
+                                        ? "已保存默认"
+                                        : saving
+                                        ? "保存中..."
+                                        : "设为默认"}
+                                </Button>
+                            )}
                             {actionError && (
-                                <div className="text-xs text-destructive">
+                                <p className="ask-generation-settings__error">
                                     {actionError}
-                                </div>
+                                </p>
                             )}
                         </div>
                     )}

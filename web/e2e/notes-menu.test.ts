@@ -83,7 +83,10 @@ Deno.test("Notes format menus retain Source selection, keyboard focus and deboun
     await page.locator(".save-saved").waitFor();
     assertEquals(writes.length, 1);
     for (const name of ["纸白", "琥珀", "玫瑰", "鼠尾草", "天空"]) {
-        const trigger = page.locator(".note-color-trigger");
+        const trigger = page.getByRole("button", {
+            name: "便签选项",
+            exact: true,
+        });
         await trigger.click();
         await page.getByRole("menuitemradio", { name, exact: true }).click();
         await page.getByRole("menu").waitFor({ state: "detached" });

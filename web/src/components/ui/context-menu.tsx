@@ -56,7 +56,7 @@ function ContextMenuContent({
             >
                 <ContextMenuPrimitive.Popup
                     data-slot="context-menu-content"
-                    className={cn("engine-menu", className)}
+                    className={cn("menu-popup", className)}
                     {...props}
                 >
                     {children}
@@ -66,16 +66,39 @@ function ContextMenuContent({
     );
 }
 
-function ContextMenuItem(
-    { className, ...props }: ContextMenuPrimitive.Item.Props,
-) {
+function ContextMenuItem({
+    className,
+    variant = "default",
+    ...props
+}: ContextMenuPrimitive.Item.Props & {
+    variant?: "default" | "destructive";
+}) {
     return (
         <ContextMenuPrimitive.Item
             data-slot="context-menu-item"
-            className={cn("engine-option", className)}
+            data-variant={variant}
+            className={cn("menu-item", className)}
             {...props}
         />
     );
 }
 
-export { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger };
+function ContextMenuSeparator(
+    { className, ...props }: ContextMenuPrimitive.Separator.Props,
+) {
+    return (
+        <ContextMenuPrimitive.Separator
+            data-slot="context-menu-separator"
+            className={cn("menu-separator", className)}
+            {...props}
+        />
+    );
+}
+
+export {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+};

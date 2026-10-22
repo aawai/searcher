@@ -58,7 +58,7 @@
     padding: var(--space-control-gap);
     text-align: center;
     color: var(--muted);
-    font-size: var(--font-caption-size);
+    font-size: var(--font-metadata-size);
 }
 
 .markdown-spike-rich .milkdown-pagebreak {

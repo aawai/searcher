@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertNotEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { eq } from "drizzle-orm";
 import { createApp } from "../../src/app.ts";
@@ -13,16 +13,7 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 
-interface SurfaceMetrics {
-    radius: string;
-    surface: string;
-    shadow: string;
-    cardBorderRadius?: string;
-    cardBackground?: string;
-    cardBoxShadow?: string;
-}
-
-Deno.test("UI Ownership and style scoping contracts", async (t) => {
+Deno.test("UI Ownership and scoping contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher_ownership_e2e_" });
     cleanup.defer(() => Deno.remove(files, { recursive: true }));
@@ -134,38 +125,13 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
         );
     }
 
-    async function getSurfaceMetrics(
-        target: Page = page,
-    ): Promise<SurfaceMetrics> {
-        await target.getByRole("status").filter({ hasText: /加载/ }).waitFor({
-            state: "hidden",
-        });
-        return await target.evaluate(() => {
-            const main = document.querySelector("main") ||
-                document.documentElement;
-            const mainStyle = getComputedStyle(main);
-            const card = document.querySelector(
-                ".card, [data-slot='card'], .settings-card, .auth-surface, section",
-            );
-            const cardStyle = card ? getComputedStyle(card) : null;
-
-            return {
-                radius: mainStyle.getPropertyValue("--radius").trim(),
-                surface: mainStyle.getPropertyValue("--surface").trim(),
-                shadow: mainStyle.getPropertyValue("--shadow").trim(),
-                cardBorderRadius: cardStyle?.borderRadius,
-                cardBackground: cardStyle?.backgroundColor,
-                cardBoxShadow: cardStyle?.boxShadow,
-            };
-        });
-    }
-
     await t.step(
         "Admin login fixture establishes authenticated session",
         async () => {
             await visit("/admin");
             // Verify admin dashboard renders without '无权访问'
-            await page.getByRole("heading", { name: "管理后台" }).first()
+            await page.getByRole("heading", { name: "管理后台", exact: true })
+                .first()
                 .waitFor({
                     state: "visible",
                 });
@@ -179,117 +145,13 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
     );
 
     await t.step(
-        "Home style zen vs widgets switching isolates Settings/Admin/Account/Trash/Ask",
-        async () => {
-            const monitoredPaths = [
-                "/settings",
-                "/admin",
-                "/account",
-                "/trash",
-                "/ask",
-            ];
-
-            // 1. Set style to zen
-            await visit("/settings/appearance");
-            await updatePreferences({ style: "zen" });
-            await page.reload();
-            await page.locator("main").waitFor({ state: "visible" });
-
-            // Record zen metrics for monitored pages
-            const zenMetrics: Record<string, SurfaceMetrics> = {};
-            for (const path of monitoredPaths) {
-                await visit(path);
-
-                zenMetrics[path] = await getSurfaceMetrics(page);
-            }
-
-            // Record zen Home metrics
-            await visit("/");
-            await page.waitForFunction(
-                () =>
-                    document.querySelector("main")?.classList.contains(
-                        "home-zen",
-                    ),
-            );
-
-            const zenHomeMetrics = await getSurfaceMetrics(page);
-
-            // 2. Set style to widgets
-            await visit("/settings/appearance");
-            await updatePreferences({ style: "widgets" });
-            await page.reload();
-            await page.locator("main").waitFor({ state: "visible" });
-
-            // Record widgets Home metrics
-            await visit("/");
-            await page.waitForFunction(
-                () =>
-                    document.querySelector("main")?.classList.contains(
-                        "home-widgets",
-                    ),
-            );
-
-            const widgetsHomeMetrics = await getSurfaceMetrics(page);
-
-            // Verify Home root appearance actually changed
-            assertNotEquals(
-                zenHomeMetrics.radius,
-                widgetsHomeMetrics.radius,
-                "Home root radius must change between zen and widgets",
-            );
-            assertNotEquals(
-                zenHomeMetrics.shadow,
-                widgetsHomeMetrics.shadow,
-                "Home root shadow must change between zen and widgets",
-            );
-
-            // 3. Verify monitored pages have identical surface/radius/shadow metrics
-            for (const path of monitoredPaths) {
-                await visit(path);
-
-                const widgetsMetric = await getSurfaceMetrics(page);
-                const zenMetric = zenMetrics[path];
-
-                assertEquals(
-                    widgetsMetric.radius,
-                    zenMetric.radius,
-                    `${path} radius must remain unchanged between zen and widgets`,
-                );
-                assertEquals(
-                    widgetsMetric.surface,
-                    zenMetric.surface,
-                    `${path} surface must remain unchanged between zen and widgets`,
-                );
-                assertEquals(
-                    widgetsMetric.shadow,
-                    zenMetric.shadow,
-                    `${path} shadow must remain unchanged between zen and widgets`,
-                );
-                assertEquals(
-                    widgetsMetric.cardBorderRadius,
-                    zenMetric.cardBorderRadius,
-                    `${path} card border-radius must remain unchanged`,
-                );
-                assertEquals(
-                    widgetsMetric.cardBackground,
-                    zenMetric.cardBackground,
-                    `${path} card background must remain unchanged`,
-                );
-                assertEquals(
-                    widgetsMetric.cardBoxShadow,
-                    zenMetric.cardBoxShadow,
-                    `${path} card box-shadow must remain unchanged`,
-                );
-            }
-        },
-    );
-    await t.step(
-        "Global theme, accent, and search shape preferences remain effective globally",
+        "Global theme and accent preferences remain effective globally",
         async () => {
             await visit("/settings/appearance");
 
             // 1. Theme global application via Appearance UI
-            await page.getByRole("tab", { name: "深色", exact: true }).click();
+            await page.getByRole("radio", { name: "深色", exact: true })
+                .click();
             await page.waitForFunction(
                 () => document.documentElement.dataset.theme === "dark",
             );
@@ -300,7 +162,8 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
                 "dark",
             );
 
-            await page.getByRole("tab", { name: "浅色", exact: true }).click();
+            await page.getByRole("radio", { name: "浅色", exact: true })
+                .click();
             await page.waitForFunction(
                 () => document.documentElement.dataset.theme === "light",
             );
@@ -335,66 +198,83 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
                 "violet",
             );
 
-            // Return to appearance
             await visit("/settings/appearance");
-
-            // 3. Search shape global application via Appearance UI
-            await page.getByRole("tab", { name: "胶囊", exact: true }).click();
-            await page.waitForFunction(
-                () =>
-                    document.documentElement.dataset.shape === "pill" &&
-                    getComputedStyle(document.documentElement).getPropertyValue(
-                            "--search-radius",
-                        ).trim() === "999px",
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    document.documentElement.dataset.shape
-                ),
-                "pill",
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    getComputedStyle(document.documentElement).getPropertyValue(
+            await page.getByRole("radio", { name: "胶囊", exact: true })
+                .click();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.shape === "pill" &&
+                getComputedStyle(document.documentElement).getPropertyValue(
                         "--search-radius",
-                    ).trim()
-                ),
-                "999px",
+                    ).trim() === "999px"
             );
 
-            await page.getByRole("tab", { name: "默认", exact: true }).click();
-            await page.waitForFunction(
-                () =>
-                    document.documentElement.dataset.shape === "rounded" &&
-                    getComputedStyle(document.documentElement).getPropertyValue(
-                            "--search-radius",
-                        ).trim() === "16px",
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    document.documentElement.dataset.shape
+            const opacity = page.getByRole("slider", {
+                name: "搜索框透明度",
+                exact: true,
+            });
+            await opacity.focus();
+            await Promise.all([
+                page.waitForResponse((response) =>
+                    response.url().endsWith("/api/preferences") &&
+                    response.request().method() === "PATCH" &&
+                    response.ok() &&
+                    response.request().postDataJSON().searchOpacity === 0.95
                 ),
-                "rounded",
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    getComputedStyle(document.documentElement).getPropertyValue(
+                opacity.press("ArrowLeft"),
+            ]);
+            await Promise.all([
+                page.waitForResponse((response) =>
+                    response.url().endsWith("/api/preferences") &&
+                    response.request().method() === "PATCH" &&
+                    response.ok() &&
+                    response.request().postDataJSON().webAppIconSize === "large"
+                ),
+                page.getByRole("radio", { name: "大", exact: true }).click(),
+            ]);
+            await Promise.all([
+                page.waitForResponse((response) =>
+                    response.url().endsWith("/api/preferences") &&
+                    response.request().method() === "PATCH" &&
+                    response.ok() &&
+                    response.request().postDataJSON().showAppLabels === false
+                ),
+                page.getByRole("switch", { name: "显示应用名称" }).click(),
+            ]);
+            await page.reload();
+            await page.getByRole("radio", {
+                name: "胶囊",
+                exact: true,
+                checked: true,
+            }).waitFor();
+            await page.getByRole("radio", {
+                name: "大",
+                exact: true,
+                checked: true,
+            }).waitFor();
+            await page.getByRole("switch", {
+                name: "显示应用名称",
+                checked: false,
+            }).waitFor();
+            assertEquals(await opacity.getAttribute("aria-valuenow"), "0.95");
+
+            await page.getByRole("radio", { name: "圆角", exact: true })
+                .click();
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.shape === "rounded" &&
+                getComputedStyle(document.documentElement).getPropertyValue(
                         "--search-radius",
-                    ).trim()
-                ),
-                "16px",
+                    ).trim() === "16px"
             );
-
-            // Dataset style remains unpolluted
-            assertEquals(
-                await page.evaluate(() =>
-                    document.documentElement.dataset.style
-                ),
-                undefined,
-            );
+            await updatePreferences({
+                searchShape: "rounded",
+                searchOpacity: 1,
+                webAppIconSize: "default",
+                showAppLabels: true,
+            });
+            await page.reload();
 
             // Restore defaults for subsequent tests
-            await page.getByRole("tab", { name: "跟随系统", exact: true })
+            await page.getByRole("radio", { name: "跟随系统", exact: true })
                 .click();
             await page.getByRole("radio", { name: "经典蓝" }).click();
             await page.waitForFunction(
@@ -478,17 +358,26 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
             await page.getByRole("status").filter({
                 hasText: "个人资料更新成功",
             }).waitFor({ state: "visible" });
-            const currentPassInput = page.getByLabel("当前密码");
-            const newPassInput = page.getByLabel("新密码 (至少 12 个字符)");
-            const confirmPassInput = page.getByLabel("确认新密码");
+            // Password change lives in a dialog opened from the security row
+            await page.getByRole("button", { name: "修改密码" }).click();
+            const passwordDialog = page.getByRole("dialog");
+            await passwordDialog.waitFor({ state: "visible" });
+            const currentPassInput = passwordDialog.getByLabel("当前密码");
+            const newPassInput = passwordDialog.getByLabel("新密码", {
+                exact: true,
+            });
+            const confirmPassInput = passwordDialog.getByLabel("确认新密码");
 
             await currentPassInput.fill(password);
             await newPassInput.fill("New-valid-password-123!");
             await confirmPassInput.fill("Mismatch-different-password-456!");
-            await page.getByRole("button", { name: "更新密码" }).click();
-            await page.getByRole("alert").filter({
+            await passwordDialog.getByRole("button", { name: "更新密码" })
+                .click();
+            await passwordDialog.getByRole("alert").filter({
                 hasText: "两次输入的新密码不一致",
             }).waitFor({ state: "visible" });
+            await passwordDialog.getByRole("button", { name: "取消" }).click();
+            await passwordDialog.waitFor({ state: "hidden" });
 
             // Trigger logout confirmation AlertDialog
             await page.getByRole("button", { name: "退出此设备" }).click();
@@ -519,25 +408,13 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
                     state: "visible",
                 },
             );
-            await page.getByRole("heading", { name: "回收站空空如也" }).waitFor(
-                {
-                    state: "visible",
-                },
-            );
-            await page.getByText("没有已删除的应用").waitFor({
-                state: "visible",
-            });
+            await page.getByRole("heading", { name: "没有已删除的应用" })
+                .waitFor({ state: "visible" });
 
             // Switch to notes tab
             await page.getByRole("tab", { name: /^便签/ }).click();
-            await page.getByRole("heading", { name: "回收站空空如也" }).waitFor(
-                {
-                    state: "visible",
-                },
-            );
-            await page.getByText("没有已删除的便签记录").waitFor({
-                state: "visible",
-            });
+            await page.getByRole("heading", { name: "没有已删除的便签" })
+                .waitFor({ state: "visible" });
 
             // 3. Admin user management table canonical rendering
             await visit("/admin/users", page);
@@ -547,9 +424,12 @@ Deno.test("UI Ownership and style scoping contracts", async (t) => {
                 .waitFor({
                     state: "visible",
                 });
-            await page.getByRole("cell", { name: username }).waitFor({
-                state: "visible",
-            });
+            // The row's more-actions button carries the handle in its aria-label, so a name match
+            // hits two cells. Match the identity cell by its visible handle text instead.
+            await page.getByRole("cell").filter({ hasText: `@${username}` })
+                .waitFor({
+                    state: "visible",
+                });
 
             // 4. Ask page workbench layout canonical rendering
             await visit("/ask", page);

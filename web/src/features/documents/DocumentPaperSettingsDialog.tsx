@@ -16,6 +16,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
@@ -26,7 +27,7 @@ import {
     NativeSelectOption,
 } from "../../components/ui/native-select.tsx";
 import { api, json } from "../../lib/api.ts";
-import { AlertCircle } from "lucide-react";
+import { StatusBanner } from "../../components/searcher/semantic.tsx";
 import { DEFAULT_PAPER_SETTINGS } from "./paper.ts";
 
 export interface DocumentPaperSettingsDialogProps {
@@ -177,29 +178,24 @@ function DocumentPaperSettingsForm({
     };
 
     return (
-        <div className="flex-1 min-h-0 flex flex-col space-y-4">
+        <div className="document-paper-settings">
             {error && (
-                <div
-                    className="flex items-center gap-2 p-3 text-xs text-[var(--danger)] bg-[var(--surface-soft)] rounded-md border border-[var(--border-subtle)]"
-                    role="alert"
-                    aria-live="assertive"
-                >
-                    <AlertCircle className="size-[var(--icon-md)] shrink-0" />
-                    <span className="flex-1">{error}</span>
-                </div>
+                <StatusBanner tone="error" density="compact">
+                    {error}
+                </StatusBanner>
             )}
 
             <form
                 noValidate
                 onSubmit={handleSubmit}
-                className="flex-1 min-h-0 overflow-y-auto space-y-5 py-1 pr-1"
+                className="document-paper-form"
             >
                 {/* Paper Specification & Orientation */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
+                <div className="document-paper-fields">
+                    <div className="document-paper-field">
                         <label
                             htmlFor="paper-size-select"
-                            className="text-xs font-medium text-[var(--foreground)]"
+                            className="document-paper-label"
                         >
                             纸张规格
                         </label>
@@ -221,10 +217,10 @@ function DocumentPaperSettingsForm({
                         </NativeSelect>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="document-paper-field">
                         <label
                             htmlFor="paper-orientation-select"
-                            className="text-xs font-medium text-[var(--foreground)]"
+                            className="document-paper-label"
                         >
                             版面方向
                         </label>
@@ -240,22 +236,22 @@ function DocumentPaperSettingsForm({
                                 )}
                         >
                             <NativeSelectOption value="portrait">
-                                纵向 (Portrait)
+                                纵向
                             </NativeSelectOption>
                             <NativeSelectOption value="landscape">
-                                横向 (Landscape)
+                                横向
                             </NativeSelectOption>
                         </NativeSelect>
                     </div>
                 </div>
 
                 {/* Margin Presets & Numeric Controls */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-[var(--foreground)]">
+                <div className="document-paper-section">
+                    <div className="document-paper-section-head">
+                        <span className="document-paper-label">
                             页边距 (5–50 mm)
                         </span>
-                        <div className="flex items-center gap-1.5">
+                        <div className="document-paper-presets">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -263,7 +259,6 @@ function DocumentPaperSettingsForm({
                                 disabled={submitting}
                                 onClick={() =>
                                     applyPreset(MARGIN_PRESETS.standard)}
-                                className="h-7 text-xs px-2"
                             >
                                 标准 20mm
                             </Button>
@@ -274,7 +269,6 @@ function DocumentPaperSettingsForm({
                                 disabled={submitting}
                                 onClick={() =>
                                     applyPreset(MARGIN_PRESETS.narrow)}
-                                className="h-7 text-xs px-2"
                             >
                                 窄边距 12.7mm
                             </Button>
@@ -284,18 +278,17 @@ function DocumentPaperSettingsForm({
                                 size="sm"
                                 disabled={submitting}
                                 onClick={() => applyPreset(MARGIN_PRESETS.wide)}
-                                className="h-7 text-xs px-2"
                             >
                                 宽边距 25.4mm
                             </Button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="space-y-1">
+                    <div className="document-paper-margins">
+                        <div className="document-paper-field">
                             <label
                                 htmlFor="margin-top-input"
-                                className="text-xs text-[var(--muted)]"
+                                className="document-paper-sublabel"
                             >
                                 上边距 (mm)
                             </label>
@@ -319,10 +312,10 @@ function DocumentPaperSettingsForm({
                             />
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="document-paper-field">
                             <label
                                 htmlFor="margin-right-input"
-                                className="text-xs text-[var(--muted)]"
+                                className="document-paper-sublabel"
                             >
                                 右边距 (mm)
                             </label>
@@ -346,10 +339,10 @@ function DocumentPaperSettingsForm({
                             />
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="document-paper-field">
                             <label
                                 htmlFor="margin-bottom-input"
-                                className="text-xs text-[var(--muted)]"
+                                className="document-paper-sublabel"
                             >
                                 下边距 (mm)
                             </label>
@@ -373,10 +366,10 @@ function DocumentPaperSettingsForm({
                             />
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="document-paper-field">
                             <label
                                 htmlFor="margin-left-input"
-                                className="text-xs text-[var(--muted)]"
+                                className="document-paper-sublabel"
                             >
                                 左边距 (mm)
                             </label>
@@ -402,7 +395,7 @@ function DocumentPaperSettingsForm({
                     </div>
                 </div>
 
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-2 gap-2 border-t border-[var(--border-subtle)]">
+                <DialogFooter>
                     <Button
                         type="button"
                         variant="ghost"
@@ -413,11 +406,12 @@ function DocumentPaperSettingsForm({
                     </Button>
                     <Button
                         type="submit"
+                        variant="default"
                         disabled={submitting}
                     >
                         {submitting ? "保存中…" : "保存设置"}
                     </Button>
-                </div>
+                </DialogFooter>
             </form>
         </div>
     );
@@ -432,11 +426,11 @@ export function DocumentPaperSettingsDialog({
 }: DocumentPaperSettingsDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+            <DialogContent className="document-paper-dialog">
                 <DialogHeader>
                     <DialogTitle>纸张与打印设置</DialogTitle>
                     <DialogDescription>
-                        配置笔记的物理纸张规格、版面方向及打印边距（5mm–50mm）。
+                        仅影响此笔记的分页与打印。
                     </DialogDescription>
                 </DialogHeader>
 

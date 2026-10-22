@@ -11,7 +11,6 @@ import {
     Ellipsis,
     Paperclip,
     Square,
-    Wrench,
     X,
 } from "lucide-react";
 import {
@@ -66,7 +65,7 @@ function ComposerAttachmentChip() {
     return (
         <AttachmentPrimitive.Root
             className={`ask-composer__attachment-chip ${
-                isError ? "is-error border-danger/50 text-danger" : ""
+                isError ? "is-error" : ""
             }`}
         >
             {image?.type === "image" && (
@@ -79,7 +78,7 @@ function ComposerAttachmentChip() {
             {isError && (
                 <AlertCircle
                     size="1em"
-                    className="icon-sm shrink-0 text-danger"
+                    className="icon-sm"
                 />
             )}
             <span className="ask-composer__attachment-name">
@@ -198,19 +197,19 @@ export function SearcherComposer({
                         role="alert"
                         className="ask-composer__attachment-error"
                     >
-                        <div className="flex items-center gap-1.5 overflow-hidden">
-                            <AlertCircle
-                                size="1em"
-                                className="icon-sm shrink-0"
-                            />
-                            <span className="truncate">{attachmentError}</span>
-                        </div>
+                        <AlertCircle
+                            size="1em"
+                            className="icon-sm"
+                        />
+                        <span className="ask-composer__attachment-error-msg">
+                            {attachmentError}
+                        </span>
                         <Button
                             type="button"
                             variant="ghost"
                             size="icon"
                             onClick={clearAttachmentError}
-                            className="h-5 w-5 p-0 hover:bg-transparent"
+                            className="ask-composer__attachment-error-close"
                             aria-label="关闭附件错误"
                         >
                             <X size="1em" className="icon-sm" />
@@ -269,7 +268,7 @@ export function SearcherComposer({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="ask-composer__icon-btn ask-composer__settings-trigger"
+                                        className="ask-composer__icon-btn"
                                         aria-label="更多设置"
                                         title="推理、检索与生成设置"
                                     />
@@ -290,11 +289,6 @@ export function SearcherComposer({
                                 className="ask-composer__settings-panel"
                                 aria-label="问答设置"
                             >
-                                <div className="ask-composer__settings-heading">
-                                    <Wrench size="1em" className="icon-sm" />
-                                    <span>问答设置</span>
-                                </div>
-
                                 <section className="ask-composer__tools-panel">
                                     <h3>扩展检索</h3>
                                     {!supportsTools && (
@@ -326,7 +320,7 @@ export function SearcherComposer({
                                             />
                                         </div>
                                         <div className="ask-composer__tool-option">
-                                            <div>
+                                            <div className="ask-composer__tool-label">
                                                 <label htmlFor="tool-documents">
                                                     搜索笔记
                                                 </label>
@@ -378,7 +372,7 @@ export function SearcherComposer({
                                         </div>
 
                                         <div className="ask-composer__tool-option">
-                                            <div>
+                                            <div className="ask-composer__tool-label">
                                                 <label htmlFor="tool-web">
                                                     联网搜索 (SearXNG)
                                                 </label>
@@ -441,7 +435,7 @@ export function SearcherComposer({
                                 <Button
                                     variant="default"
                                     size="icon"
-                                    className="ask-composer__send-btn is-ready min-w-[44px] min-h-[44px]"
+                                    className="ask-composer__send-btn"
                                     aria-label="发送问题 (Enter)"
                                     title="发送问题 (Enter)"
                                 >
@@ -455,7 +449,7 @@ export function SearcherComposer({
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="ask-composer__send-btn is-stop min-w-[44px] min-h-[44px]"
+                                    className="ask-composer__send-btn"
                                     aria-label="停止生成"
                                     title="停止生成"
                                 >
@@ -468,7 +462,7 @@ export function SearcherComposer({
             </ComposerPrimitive.Root>
 
             <div className="ask-composer__disclaimer">
-                AI 生成内容可能存在疏漏，请注意甄别重要事实与信息
+                AI 可能出错，请核对重要信息。
             </div>
         </div>
     );

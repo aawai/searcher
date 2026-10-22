@@ -43,8 +43,6 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                 userId: uid,
                 defaultEngine: "bing",
                 theme: "system",
-                visualStyle: "linear-dark",
-                backgroundOpacity: 0.36,
                 searchTarget: "same",
             });
         } else {
@@ -77,8 +75,6 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                 userId: uid,
                 defaultEngine: "google",
                 theme: "light",
-                visualStyle: "linear-dark",
-                backgroundOpacity: 0.36,
                 searchTarget: "same",
             });
         } else {
@@ -163,8 +159,6 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                 userId: uid,
                 defaultEngine: "bing",
                 theme: "dark",
-                visualStyle: "spatial-glass",
-                backgroundOpacity: 0.36,
                 searchTarget: "new",
             });
         } else {

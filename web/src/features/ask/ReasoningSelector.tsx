@@ -1,13 +1,16 @@
-import { Brain, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import { REASONING_EFFORT_LABELS, type ReasoningEffort } from "./types.ts";
+
+const PROVIDER_DEFAULT = "default";
 
 interface ReasoningSelectorProps {
     model: AiModelDto | undefined;
@@ -41,16 +44,13 @@ export function ReasoningSelector({
                     <Button
                         type="button"
                         variant="outline"
+                        size="sm"
                         className="ask-composer__action-pill"
                         aria-label={`选择推理强度: 当前为 ${currentLabel}`}
                         title={`推理强度: ${currentLabel}`}
                     />
                 }
             >
-                <Brain
-                    size="1em"
-                    className="icon-sm ask-composer__pill-icon"
-                />
                 <span className="ask-composer__pill-text">
                     推理: {currentLabel}
                 </span>
@@ -60,26 +60,29 @@ export function ReasoningSelector({
                 />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={6} aria-label="可用推理强度">
-                <DropdownMenuItem
-                    onClick={() => onChange(undefined)}
-                    className={value === undefined
-                        ? "is-selected font-medium"
-                        : ""}
+                <DropdownMenuRadioGroup
+                    value={value ?? PROVIDER_DEFAULT}
+                    onValueChange={(next) =>
+                        onChange(
+                            availableLevels.find((level) => level === next),
+                        )}
                 >
-                    默认 (Provider 默认)
-                </DropdownMenuItem>
-                {availableLevels.map((level) => (
-                    <DropdownMenuItem
-                        key={level}
-                        onClick={() => onChange(level)}
-                        className={value === level
-                            ? "is-selected font-medium"
-                            : ""}
+                    <DropdownMenuRadioItem
+                        value={PROVIDER_DEFAULT}
+                        closeOnClick
                     >
-                        {REASONING_EFFORT_LABELS[level] ?? level}
-                        <span className="muted text-xs ml-2">({level})</span>
-                    </DropdownMenuItem>
-                ))}
+                        默认
+                    </DropdownMenuRadioItem>
+                    {availableLevels.map((level) => (
+                        <DropdownMenuRadioItem
+                            key={level}
+                            value={level}
+                            closeOnClick
+                        >
+                            {REASONING_EFFORT_LABELS[level] ?? level}
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
             </DropdownMenuContent>
         </DropdownMenu>
     );

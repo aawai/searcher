@@ -116,8 +116,8 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         }, { path, method, body });
     }
 
-    async function waitForHome(style: "zen" | "widgets" = "zen") {
-        await page.locator(`main.home-${style}`).waitFor({ state: "visible" });
+    async function waitForHome() {
+        await page.locator("main.home").waitFor({ state: "visible" });
         await page.locator(".search-form-wrap").waitFor({ state: "visible" });
         await page.evaluate(async () => {
             await document.fonts.ready;
@@ -125,7 +125,6 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     }
 
     async function setHome(
-        style: "zen" | "widgets",
         theme: "light" | "dark",
         backgroundImage: string | null = null,
     ) {
@@ -134,12 +133,11 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
             reducedMotion: "no-preference",
         });
         await apiData("/api/preferences", "PATCH", {
-            style,
             theme,
             backgroundImage,
         });
         await page.reload();
-        await waitForHome(style);
+        await waitForHome();
         await page.waitForFunction(
             (expected) =>
                 document.documentElement.getAttribute("data-theme") ===
@@ -316,7 +314,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     }
 
     // The fixed collection is independent from ordinary pinning, including its empty state.
-    await setHome("zen", "light");
+    await setHome("light");
     const pinnedOnly = await createNote(
         "Pinned, not home-fixed",
         "This pinned-only note must never enter the Zen preview.",
@@ -471,14 +469,23 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         if (!content) throw new Error("Inline note content is missing");
         return { region: inspect(region), content: inspect(content) };
     });
+    // The wrapper is bare; the active note is the single translucent material card.
+    assertEquals(visualChrome.region.backgroundAlpha, 0, "region has no fill");
+    assertEquals(visualChrome.region.boxShadow, "none", "region has no shadow");
+    assert(
+        visualChrome.content.backgroundAlpha > 0,
+        "the active note has a material fill",
+    );
+    assert(
+        visualChrome.content.boxShadow !== "none",
+        "the active note floats on one shadow",
+    );
     for (const [scope, chrome] of Object.entries(visualChrome)) {
-        assertEquals(chrome.backgroundAlpha, 0, `${scope} has no card fill`);
         assertEquals(
             chrome.visibleBorder,
             false,
             `${scope} has no visible border`,
         );
-        assertEquals(chrome.boxShadow, "none", `${scope} has no card shadow`);
     }
     const visibleExtras = await notesRegion.locator(
         "button, a[href], input, [role='button'], [role='link']",
@@ -712,7 +719,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         accountB.password,
         "Zen Inline Notes B",
     );
-    await setHome("zen", "light");
+    await setHome("light");
     assertEquals(
         await page.locator(".zen-inline-notes .zen-inline-note").count(),
         0,
@@ -737,7 +744,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     await logoutCurrentAccount();
 
     await loginAndVisit(page, app.origin, "/", accountA);
-    await setHome("zen", "light");
+    await setHome("light");
     await waitForCurrent(accountAExtra2.id);
     assertEquals(
         await page.evaluate(() =>
@@ -747,7 +754,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     );
     await logoutCurrentAccount();
     await loginAndVisit(page, app.origin, "/", accountB);
-    await setHome("zen", "light");
+    await setHome("light");
     await waitForCurrent(noteB2.id);
     assertEquals(
         await page.evaluate(() =>
@@ -772,59 +779,55 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         ]
     ) {
         for (const theme of ["light", "dark"] as const) {
-            for (const style of ["zen", "widgets"] as const) {
-                await page.setViewportSize(viewport);
-                await setHome(style, theme);
-                if (style === "zen" && viewport.width < 768) {
-                    await waitForCurrent(noteB2.id);
-                    await settlePaint();
-                    const axes = await page.evaluate(() => {
-                        const center = (element: Element) => {
-                            const rect = element.getBoundingClientRect();
-                            return rect.x + rect.width / 2;
-                        };
-                        const search = document.querySelector(
-                            ".search-form-wrap",
-                        )!;
-                        const expected = center(search);
-                        const launcher = document.querySelector(
-                            ".pinned-area .launcher-grid--home",
-                        )!;
-                        return [
-                            center(launcher) - expected,
-                            center(
-                                document.querySelector(".zen-inline-note")!,
-                            ) - expected,
-                            center(
-                                document.querySelector(".zen-edge-trigger")!,
-                            ) - expected,
-                        ];
-                    });
-                    assert(
-                        axes.every((offset) => Math.abs(offset) <= 1),
-                        `Search, launcher grid, note, and navigation share an axis: ${axes}`,
-                    );
-                } else {
-                    await waitForNoInlineNotes();
-                    await page.locator(
-                        style === "zen"
-                            ? ".floating-notes .note-position, .notes-flow-grid .note-flow-item, .floating-notes--flow .note-position"
-                            : ".controlled-note-slot",
-                    ).first().waitFor({ state: "visible" });
-                }
+            await page.setViewportSize(viewport);
+            await setHome(theme);
+            if (viewport.width < 768) {
+                await waitForCurrent(noteB2.id);
                 await settlePaint();
-                assertEquals(
-                    await page.evaluate(() =>
-                        document.documentElement.scrollWidth <= innerWidth + 1
-                    ),
-                    true,
-                );
-                await page.screenshot({
-                    path:
-                        `${evidenceDir}/matrix-${viewport.width}x${viewport.height}-${theme}-${style}.png`,
-                    fullPage: false,
+                const axes = await page.evaluate(() => {
+                    const center = (element: Element) => {
+                        const rect = element.getBoundingClientRect();
+                        return rect.x + rect.width / 2;
+                    };
+                    const search = document.querySelector(
+                        ".search-form-wrap",
+                    )!;
+                    const expected = center(search);
+                    const launcher = document.querySelector(
+                        ".pinned-area .launcher-grid--home",
+                    )!;
+                    return [
+                        center(launcher) - expected,
+                        center(
+                            document.querySelector(".zen-inline-note")!,
+                        ) - expected,
+                        center(
+                            document.querySelector(".zen-edge-trigger")!,
+                        ) - expected,
+                    ];
                 });
+                assert(
+                    axes.every((offset) => Math.abs(offset) <= 1),
+                    `Search, launcher grid, note, and navigation share an axis: ${axes}`,
+                );
+            } else {
+                await waitForNoInlineNotes();
+                await page.locator(
+                    ".floating-notes .note-position, .notes-flow-grid .note-flow-item",
+                ).first().waitFor({ state: "visible" });
             }
+            await settlePaint();
+            assertEquals(
+                await page.evaluate(() =>
+                    document.documentElement.scrollWidth <= innerWidth + 1
+                ),
+                true,
+            );
+            await page.screenshot({
+                path:
+                    `${evidenceDir}/matrix-${viewport.width}x${viewport.height}-${theme}.png`,
+                fullPage: false,
+            });
         }
     }
 
@@ -835,7 +838,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         ]
     ) {
         await page.setViewportSize({ width: 390, height: 844 });
-        await setHome("zen", "light", background);
+        await setHome("light", background);
         await waitForCurrent(noteB2.id);
         await settlePaint();
         await page.screenshot({
@@ -896,13 +899,13 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         return envelope.data.url;
     });
     await page.setViewportSize({ width: 390, height: 844 });
-    await setHome("zen", "light", wallpaperUrl);
+    await setHome("light", wallpaperUrl);
     await waitForCurrent(noteB2.id);
     await page.screenshot({
         path: `${evidenceDir}/wallpaper-gradient-light-390x844.png`,
         fullPage: false,
     });
-    await setHome("zen", "dark", wallpaperUrl);
+    await setHome("dark", wallpaperUrl);
     await waitForCurrent(noteB2.id);
     await page.locator('.wallpaper-surface[data-wallpaper-image="true"]')
         .first()
@@ -957,8 +960,9 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         for (
             const token of [
                 "--font-body-size",
-                "--font-component-title-size",
-                "--font-component-title-line-height",
+                "--font-body-line-height",
+                "--font-title-size",
+                "--font-title-line-height",
             ]
         ) {
             root.style.setProperty(
@@ -1023,8 +1027,9 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         for (
             const token of [
                 "--font-body-size",
-                "--font-component-title-size",
-                "--font-component-title-line-height",
+                "--font-body-line-height",
+                "--font-title-size",
+                "--font-title-line-height",
             ]
         ) {
             document.documentElement.style.removeProperty(token);
@@ -1033,7 +1038,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
 
     // Crossing 767/768 while the existing editor is open must preserve its draft and note identity.
     await page.setViewportSize({ width: 767, height: 844 });
-    await setHome("zen", "light");
+    await setHome("light");
     await waitForCurrent(noteB2.id);
     const responsiveOpener = page.locator(
         `.zen-inline-note[data-note-id="${noteB2.id}"]`,

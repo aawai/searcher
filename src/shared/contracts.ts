@@ -1,12 +1,6 @@
 export * from "./wallpaper.ts";
-export type { DesktopSceneId } from "./desktop-scenes.ts";
-import type { DesktopSceneId } from "./desktop-scenes.ts";
-import type {
-    CanvasMotion,
-    WallpaperMotionLevel,
-    WallpaperPresentation,
-} from "./wallpaper-presentation.ts";
-export type { CanvasMotion, WallpaperMotionLevel, WallpaperPresentation };
+import type { WallpaperPresentation } from "./wallpaper-presentation.ts";
+export type { WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
 
 export type ThemeId = "system" | "light" | "dark";
@@ -19,22 +13,6 @@ export const AUTH_CREDENTIAL_RULES = {
 export const AUTH_USERNAME_PATTERN =
     `^\\s*[a-zA-Z0-9_]{${AUTH_CREDENTIAL_RULES.username.minLength},${AUTH_CREDENTIAL_RULES.username.maxLength}}\\s*$`;
 
-export type StylePreset = "zen" | "widgets";
-export type LegacyStylePreset =
-    | "command"
-    | "quiet"
-    | "minimal"
-    | "glass"
-    | "soft"
-    | "classic";
-
-export function normalizeStylePreset(raw: unknown): StylePreset {
-    if (raw === "zen" || raw === "widgets") {
-        return raw;
-    }
-    if (raw === "glass" || raw === "soft") return "widgets";
-    return "zen";
-}
 export const ACCENT_IDS = [
     "blue",
     "cyan",
@@ -182,31 +160,15 @@ export interface AiGenerationDefaultsDto {
     models?: Record<string, UserGenerationConfig>;
 }
 
-export const DEFAULT_WALLPAPER_MASK = 0.36;
-export const DEFAULT_WALLPAPER_GLOW_STRENGTH = 0.14;
-export const AMBIENT_MOTION_MODES = [
-    "off",
-    "breathe",
-    "breathe_ripple",
-] as const;
-export type AmbientMotionMode = typeof AMBIENT_MOTION_MODES[number];
-export const DEFAULT_AMBIENT_MOTION_MODE: AmbientMotionMode = "breathe_ripple";
-export const DEFAULT_AMBIENT_MOTION_STRENGTH = 0.35;
-
 export interface PreferencesDto {
     defaultEngine: EngineId;
     theme: ThemeId;
-    style: StylePreset;
     accent: AccentId;
     searchShape: SearchShape;
     /** 搜索框不透明度，取值范围 [0.1, 1.0] */
     searchOpacity: number;
     backgroundImage: string | null;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
-    canvasMotion: CanvasMotion;
-    canvasMotionLevel: WallpaperMotionLevel;
-    /** 叠加在壁纸之上的动态桌面场景；`none` 为关闭 */
-    desktopScene: DesktopSceneId;
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";

@@ -1,85 +1,97 @@
-/* Searcher Trash Page Styles */
+/* Trash: one hairline list per tab. Purge stays quiet until the row is hovered or focused. */
 
-.trash-list-section {
-    margin-top: var(--space-row-gap);
+.trash-tabs {
+    margin-block-end: var(--space-4);
 }
 
-.trash-item-info {
-    max-width: 380px;
+.trash-status {
+    margin-block-end: var(--space-4);
 }
 
 .trash-item-name {
-    font-weight: var(--font-title-weight);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-label-weight);
+    line-height: var(--font-body-line-height);
+    overflow-wrap: anywhere;
 }
 
 .trash-item-sub {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: var(--muted);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-top: calc(var(--space-1) / 2);
+    overflow-wrap: anywhere;
 }
 
 .trash-item-date {
-    font-size: var(--font-caption-size);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     white-space: nowrap;
+}
+
+.trash-cell-end {
+    text-align: end;
 }
 
 .trash-item-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--space-control-gap);
-    white-space: nowrap;
+    gap: var(--space-2);
 }
 
-/* Mobile Stacked Cards */
+.trash-page .trash-danger {
+    color: var(--danger);
+}
+
+.trash-page .trash-purge {
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.trash-page tr:hover .trash-purge,
+.trash-page tr:focus-within .trash-purge,
+.trash-page .trash-purge:focus-visible {
+    opacity: 1;
+}
+
 .trash-mobile-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-row-gap);
+    display: none;
 }
 
 .trash-mobile-card {
-    padding: var(--space-card-padding);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface-solid);
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+}
+
+.trash-mobile-card + .trash-mobile-card {
+    border-block-start: 1px solid var(--border-subtle);
+}
+
+.trash-card-actions {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-control-gap);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block-start: var(--space-2);
 }
 
-.trash-mobile-card-title {
-    font-weight: var(--font-title-weight);
-    font-size: var(--font-body-size);
-    color: var(--foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+@media (pointer: coarse), (hover: none) {
+    .trash-page .trash-purge {
+        opacity: 1;
+    }
 }
 
-.trash-mobile-card-sub {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+@media (max-width: 767px) {
+    .trash-table-view {
+        display: none;
+    }
 
-.trash-mobile-card-date {
-    font-size: var(--font-caption-size);
-    color: var(--muted);
-}
-
-.trash-mobile-card-actions {
-    display: flex;
-    gap: var(--space-control-gap);
-    padding-top: var(--space-control-gap);
-    border-top: 1px solid var(--border);
+    .trash-mobile-list {
+        display: block;
+    }
 }

@@ -4,6 +4,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 import type { Reachability } from "./SearcherSearchInput.tsx";
@@ -136,7 +137,6 @@ export function EngineSelector(
         reachability,
         onCheck,
         isChecking = false,
-        isGuest = false,
     }: {
         engine: EngineId;
         mode: "search" | "ai";
@@ -145,7 +145,6 @@ export function EngineSelector(
         reachability: Reachability;
         onCheck?: () => void;
         isChecking?: boolean;
-        isGuest?: boolean;
     },
 ) {
     const current = SEARCH_ENGINES.find((item) => item.id === engine);
@@ -159,9 +158,9 @@ export function EngineSelector(
                     : `当前搜索引擎: ${current?.label || engine}，点击切换`}
             >
                 {mode === "ai"
-                    ? <Sparkles size="1em" className="icon-md text-accent" />
+                    ? <Sparkles size="1em" className="icon-md engine-ai-icon" />
                     : <EngineIcon id={engine || "bing"} className="icon-md" />}
-                <ChevronDown size="1em" className="icon-sm engine-chevron" />
+                <ChevronDown size="1em" className="icon-sm" />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={10}>
                 {SEARCH_ENGINES.map((item) => {
@@ -178,22 +177,22 @@ export function EngineSelector(
                                 onEngineChange(item.id);
                             }}
                         >
-                            <span className="engine-option-label">
-                                <EngineIcon id={item.id} className="icon-md" />
-                                <span>{item.label}</span>
-                            </span>
+                            <EngineIcon id={item.id} className="icon-md" />
+                            <span>{item.label}</span>
                             {status && (
                                 <span
-                                    className="text-xs text-[var(--muted)]"
+                                    className={status.ok
+                                        ? "status-dot online"
+                                        : "status-dot"}
+                                    role="img"
+                                    aria-label={status.ok
+                                        ? "最近检测可连接"
+                                        : "最近检测失败"}
                                     title={`${
                                         new Date(status.checkedAt)
                                             .toLocaleString()
                                     } · ${status.latency}ms`}
-                                >
-                                    {status.ok
-                                        ? "最近检测可连接"
-                                        : "最近检测失败"}
-                                </span>
+                                />
                             )}
                         </DropdownMenuItem>
                     );
@@ -202,32 +201,25 @@ export function EngineSelector(
                     onClick={() => onModeChange("ai")}
                     onSelect={() => onModeChange("ai")}
                 >
-                    <span className="engine-option-label">
-                        <Sparkles size="1em" className="icon-md text-accent" />
-                        <span>AI 问答</span>
-                    </span>
-                    {isGuest && (
-                        <span className="engine-guest-label">
-                            登录后可用
-                        </span>
-                    )}
+                    <Sparkles size="1em" className="icon-md" />
+                    <span>AI 问答</span>
                 </DropdownMenuItem>
                 {onCheck && (
-                    <DropdownMenuItem
-                        className="engine-check"
-                        closeOnClick={false}
-                        disabled={isChecking}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onCheck();
-                        }}
-                        onSelect={(e) => {
-                            e.preventDefault();
-                            onCheck();
-                        }}
-                    >
-                        <span className="engine-check-label">
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            closeOnClick={false}
+                            disabled={isChecking}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onCheck();
+                            }}
+                            onSelect={(e) => {
+                                e.preventDefault();
+                                onCheck();
+                            }}
+                        >
                             <RotateCw
                                 size="1em"
                                 className={`icon-sm ${
@@ -235,12 +227,10 @@ export function EngineSelector(
                                 }`}
                             />
                             <span>
-                                {isChecking
-                                    ? "正在检测资源连接…"
-                                    : "重新检测资源连接"}
+                                {isChecking ? "正在检测…" : "重新检测"}
                             </span>
-                        </span>
-                    </DropdownMenuItem>
+                        </DropdownMenuItem>
+                    </>
                 )}
             </DropdownMenuContent>
         </DropdownMenu>

@@ -6,10 +6,6 @@ export const suites = {
         "workspace",
         "workspace-shell",
         "workspace-chrome-inset",
-        "desktop-drag",
-        "desktop-presentation",
-        "desktop-navigation",
-        "desktop-scenes",
         "launcher",
         "apps-density",
         "home-launcher-density",
@@ -19,7 +15,6 @@ export const suites = {
         "apps-ordering",
         "apps-ai-session",
         "notes-workspace",
-        "notes-masonry",
         "notes-live-preview",
         "notes-live-editing",
         "notes-shared-events",
@@ -31,7 +26,6 @@ export const suites = {
         "notes-color",
         "home-notes-order",
         "zen-inline-notes",
-        "bento",
         "workspace-contract",
         "workspace-matrix",
         "accent-contrast",
@@ -39,14 +33,12 @@ export const suites = {
     routing: ["navigation", "auth", "guest-ai-auth"],
     documents: [
         "documents",
-        "document-immersion",
         "document-vertical-layout",
         "document-zen-pagination-stability",
         "document-host-boundaries",
         "document-presentation-contracts",
     ],
     wallpaper: ["wallpaper"],
-    "desktop-scenes": ["desktop-scenes"],
     bundle: ["bundle-loading", "route-style-stability"],
     "home-notes": [
         "home-notes-order",
@@ -74,7 +66,7 @@ export function suiteFiles(suite: Suite): string[] {
         names = [...new Set(Object.values(suites).flat())];
     } else if (suite === "apps") {
         names = suites.workspace.filter((name) =>
-            /^(apps-|desktop-|launcher$|home-launcher-)/.test(name)
+            /^(apps-|launcher$|home-launcher-)/.test(name)
         );
     } else if (suite === "notes") {
         names = suites.workspace.filter((name) =>
@@ -82,7 +74,7 @@ export function suiteFiles(suite: Suite): string[] {
         );
     } else if (suite === "layout") {
         names = suites.workspace.filter((name) =>
-            /^(workspace|desktop-|home-launcher-|bento$)/.test(name)
+            /^(workspace|home-launcher-)/.test(name)
         );
     } else {
         names = suites[suite];

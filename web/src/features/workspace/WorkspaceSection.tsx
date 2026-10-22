@@ -1,5 +1,4 @@
 import { type ReactNode, useId } from "react";
-import { Badge } from "../../components/ui/badge.tsx";
 import { ActionGroup } from "../../components/searcher/semantic.tsx";
 
 export function WorkspaceSection({ title, count, actions, leading, children }: {
@@ -19,7 +18,7 @@ export function WorkspaceSection({ title, count, actions, leading, children }: {
                         {title}
                     </h3>
                     {count !== undefined && (
-                        <Badge variant="secondary">{count}</Badge>
+                        <span className="workspace-section-count">{count}</span>
                     )}
                 </div>
                 {actions && <ActionGroup>{actions}</ActionGroup>}

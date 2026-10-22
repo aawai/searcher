@@ -4,7 +4,7 @@
 
 .markdown h1 {
     font-size: var(--font-markdown-title-size);
-    font-weight: 700;
+    font-weight: 600;
     margin: var(--space-markdown-heading-before) 0
         var(--space-markdown-heading-after);
     line-height: 1.25;

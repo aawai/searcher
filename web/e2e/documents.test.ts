@@ -105,34 +105,10 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             },
         ),
     );
-    async function resetHome(
-        style: "zen" | "widgets",
-        theme: "light" | "dark",
-    ) {
-        // Home's exit flush must finish before changing its persisted layout.
+    async function resetHome(theme: "light" | "dark") {
+        // Leave home first so its exit flush finishes before preferences change.
         await page.goto(app.origin + "/settings");
-        const { user } = await request<{ user: { id: string } }>(
-            "/api/auth/me",
-        );
-        await page.evaluate(async (userId) => {
-            const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                const request = indexedDB.open("searcher-client", 1);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-            if (db.objectStoreNames.contains("state")) {
-                await new Promise<void>((resolve, reject) => {
-                    const tx = db.transaction("state", "readwrite");
-                    tx.objectStore("state").delete(
-                        `searcher:desktop-layout:v1:${userId}`,
-                    );
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = () => reject(tx.error);
-                });
-            }
-            db.close();
-        }, user.id);
-        await request("/api/preferences", "PATCH", { style, theme });
+        await request("/api/preferences", "PATCH", { theme });
         await page.goto(app.origin + "/");
         await page.waitForFunction(
             (theme) => document.documentElement.dataset.theme === theme,
@@ -150,100 +126,91 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             900,
         ]]
     ) {
-        for (const style of ["zen", "widgets"] as const) {
-            for (const theme of ["light", "dark"] as const) {
-                assert(
-                    await t.step(
-                        `${width}x${height} ${style} ${theme}: modes, overflow and Host boundary`,
-                        async () => {
-                            await page.setViewportSize({ width, height });
-                            await page.emulateMedia({
-                                colorScheme: theme,
-                                reducedMotion: "reduce",
-                            });
-                            await resetHome(style, theme);
-                            const entityCount = await page.locator(
-                                '[data-window-id^="document:"]',
-                            ).count();
-                            assertEquals(
-                                entityCount,
-                                style === "widgets" && width >= 1024 ? 1 : 0,
-                            );
-                            const initialBody = await request<DocumentDto>(
+        for (const theme of ["light", "dark"] as const) {
+            assert(
+                await t.step(
+                    `${width}x${height} ${theme}: modes, overflow and Host boundary`,
+                    async () => {
+                        await page.setViewportSize({ width, height });
+                        await page.emulateMedia({
+                            colorScheme: theme,
+                            reducedMotion: "reduce",
+                        });
+                        await resetHome(theme);
+                        const initialBody = await request<DocumentDto>(
+                            `/api/documents/${doc.id}`,
+                        );
+                        await page.getByRole("button", {
+                            name: "编辑",
+                            exact: true,
+                        }).click();
+                        const editor = page.locator(".ProseMirror");
+                        await editor.waitFor();
+                        assertStringIncludes(
+                            await editor.textContent() ?? "",
+                            "内容锚点",
+                        );
+                        await captureMode(
+                            `${width}x${height}-${theme}-continuous`,
+                        );
+                        const element = await editor.elementHandle();
+                        assert(element);
+                        await page.getByRole("button", {
+                            name: "分页",
+                            exact: true,
+                        }).click();
+                        await page.waitForFunction(() =>
+                            !!document.querySelector(
+                                '[data-pagination-mode="page"][data-page-count]',
+                            )
+                        );
+                        assert(
+                            await element.evaluate((node) =>
+                                node ===
+                                    document.querySelector(".ProseMirror")
+                            ),
+                            "mode switch must retain the editing instance",
+                        );
+                        await captureMode(
+                            `${width}x${height}-${theme}-page`,
+                        );
+                        await page.getByRole("button", {
+                            name: "Markdown 源码",
+                            exact: true,
+                        }).click();
+                        const source = page.getByRole("textbox", {
+                            name: "Markdown 源码正文",
+                            exact: true,
+                        });
+                        await source.waitFor();
+                        assertEquals(
+                            await source.inputValue(),
+                            initialBody.body,
+                        );
+                        await captureMode(
+                            `${width}x${height}-${theme}-source`,
+                        );
+                        await page.getByRole("button", {
+                            name: "编辑",
+                            exact: true,
+                        }).click();
+                        assertEquals(
+                            (await request<DocumentDto>(
                                 `/api/documents/${doc.id}`,
-                            );
-                            await page.getByRole("button", {
-                                name: "编辑",
-                                exact: true,
-                            }).click();
-                            const editor = page.locator(".ProseMirror");
-                            await editor.waitFor();
-                            assertStringIncludes(
-                                await editor.textContent() ?? "",
-                                "内容锚点",
-                            );
-                            await captureMode(
-                                `${width}x${height}-${style}-${theme}-continuous`,
-                            );
-                            const element = await editor.elementHandle();
-                            assert(element);
-                            await page.getByRole("button", {
-                                name: "分页",
-                                exact: true,
-                            }).click();
-                            await page.waitForFunction(() =>
-                                !!document.querySelector(
-                                    '[data-pagination-mode="page"][data-page-count]',
-                                )
-                            );
-                            assert(
-                                await element.evaluate((node) =>
-                                    node ===
-                                        document.querySelector(".ProseMirror")
-                                ),
-                                "mode switch must retain the editing instance",
-                            );
-                            await captureMode(
-                                `${width}x${height}-${style}-${theme}-page`,
-                            );
-                            await page.getByRole("button", {
-                                name: "Markdown 源码",
-                                exact: true,
-                            }).click();
-                            const source = page.getByRole("textbox", {
-                                name: "Markdown 源码正文",
-                                exact: true,
-                            });
-                            await source.waitFor();
-                            assertEquals(
-                                await source.inputValue(),
-                                initialBody.body,
-                            );
-                            await captureMode(
-                                `${width}x${height}-${style}-${theme}-source`,
-                            );
-                            await page.getByRole("button", {
-                                name: "编辑",
-                                exact: true,
-                            }).click();
-                            assertEquals(
-                                (await request<DocumentDto>(
-                                    `/api/documents/${doc.id}`,
-                                )).version,
-                                initialBody.version,
-                                "view switching must not create a save",
-                            );
-                            assert(
-                                await page.evaluate(() =>
-                                    document.documentElement.scrollWidth <=
-                                        innerWidth + 1
-                                ),
-                                "viewport must not scroll horizontally",
-                            );
-                        },
-                    ),
-                );
-            }
+                            )).version,
+                            initialBody.version,
+                            "view switching must not create a save",
+                        );
+                        assert(
+                            await page.evaluate(() =>
+                                document.documentElement.scrollWidth <=
+                                    innerWidth + 1
+                            ),
+                            "viewport must not scroll horizontally",
+                        );
+                    },
+                ),
+            );
         }
     }
     assert(
@@ -251,7 +218,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             "390px document toolbar keeps a single keyboard entry and caret clear of the viewport edge",
             async () => {
                 await page.setViewportSize({ width: 390, height: 844 });
-                await resetHome("widgets", "dark");
+                await resetHome("dark");
                 await page.getByRole("button", {
                     name: "编辑",
                     exact: true,
@@ -261,20 +228,10 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     exact: true,
                 });
                 await toolbar.waitFor({ state: "visible" });
-                const viewModeGroup = page.getByRole("group", {
+                await page.getByRole("group", {
                     name: "视图模式",
                     exact: true,
-                });
-                const viewModeDescription = page.getByText(
-                    "编辑正文、分页预览，或直接编写 Markdown 源码。",
-                    { exact: true },
-                );
-                await viewModeDescription.waitFor({ state: "visible" });
-                assertEquals(
-                    await viewModeGroup.getAttribute("aria-describedby"),
-                    await viewModeDescription.getAttribute("id"),
-                    "view mode group should reference its explanation",
-                );
+                }).waitFor({ state: "visible" });
                 assertEquals(
                     await page.getByRole("button", {
                         name: "编辑",
@@ -625,7 +582,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             "short viewport keeps the focused source text visible and saves typed content",
             async () => {
                 await page.setViewportSize({ width: 390, height: 400 });
-                await resetHome("widgets", "dark");
+                await resetHome("dark");
                 await page.getByRole("button", {
                     name: "Markdown 源码",
                     exact: true,
@@ -678,12 +635,16 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             "100k Markdown / 200 headings / 50 images / 20 tables / 30 breaks survive input, page and source",
             async () => {
                 await page.setViewportSize({ width: 1440, height: 900 });
-                await resetHome("widgets", "light");
+                await resetHome("light");
                 // Close the existing editor before seeding a separate long document.
                 await page.getByRole("button", {
-                    name: "关闭笔记",
+                    name: "返回上一级",
                     exact: true,
                 }).click();
+                await page.getByRole("textbox", {
+                    name: "笔记标题",
+                    exact: true,
+                }).waitFor({ state: "detached" });
                 const large = await request<DocumentDto>(
                     "/api/documents",
                     "POST",
@@ -715,10 +676,8 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     version: large.version,
                 });
                 await page.reload();
-                await page.getByRole("button", {
-                    name: "笔记工作区",
-                    exact: true,
-                }).click();
+                await page.locator('button[data-workspace="documents"]').first()
+                    .click();
                 await page.locator(`[data-document-id="${large.id}"] h4 button`)
                     .click();
                 const editor = page.locator(".ProseMirror");

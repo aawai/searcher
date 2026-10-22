@@ -2,7 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-// Production-page regression for mobile Home presenters: square touch tracks,
+// Production-page regression for mobile Home: square touch tracks,
 // centered glyphs and usable targets, without changing tablet or desktop.
 Deno.test("Home touch grid density and drag alignment", async () => {
     const app = await startProductionApp();
@@ -45,26 +45,14 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 }
             }
         }, longAppName);
-        const setStyle = async (style: "zen" | "widgets") => {
-            const status = await page.evaluate(async (value) => {
-                const response = await fetch("/api/preferences", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ style: value }),
-                });
-                return response.status;
-            }, style);
-            assertEquals(status, 200);
-            await page.reload();
-        };
-        await setStyle("zen");
+        await page.reload();
 
         const grid = page.locator(".pinned-area .launcher-grid--home");
         // Visibility alone is not enough: useDesktopColumns initializes with
         // six columns and ResizeObserver updates the responsive grid later.
-        const waitForHomeColumns = async (expected: number) => {
+        const waitForHomeColumns = async (expected: number, track = 68) => {
             await grid.waitFor({ state: "visible" });
-            await page.waitForFunction((columns) => {
+            await page.waitForFunction(([columns, track]) => {
                 const home = document.querySelector<HTMLElement>(
                     ".pinned-area .launcher-grid--home",
                 );
@@ -84,7 +72,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     ),
                 );
                 if (
-                    cell !== 68 || gap !== 4 || tiles.length !== 6 ||
+                    cell !== track || gap !== 4 || tiles.length !== 6 ||
                     width <= 0
                 ) return false;
                 const measured = Math.max(
@@ -96,13 +84,139 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     Math.abs(tile.getBoundingClientRect().top - top) < 1
                 ).length;
                 return measured === columns && firstRow === columns;
-            }, expected);
+            }, [expected, track]);
+        };
+
+        // Persist an appearance change and reload so assertions read the
+        // layout the user will actually see.
+        const setHomeVisuals = async (values: {
+            webAppIconSize?: "compact" | "default" | "large";
+            showAppLabels?: boolean;
+        }) => {
+            const status = await page.evaluate(async (body) => {
+                const response = await fetch("/api/preferences", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+                return response.status;
+            }, values);
+            assertEquals(status, 200);
+            await page.reload();
+            await grid.waitFor({ state: "visible" });
+        };
+
+        // Touch Home resizes tracks, glyphs and labels together. Columns follow
+        // the measured parent width, so the expected count is derived from it.
+        const assertTouchGeometry = async (
+            track: number,
+            glyph: number,
+            showLabels: boolean,
+        ) => {
+            await page.waitForFunction(
+                ([glyphSize, labelCount]) => {
+                    const home = document.querySelector<HTMLElement>(
+                        ".pinned-area .launcher-grid--home",
+                    );
+                    const glyphNode = home?.querySelector<HTMLElement>(
+                        ".webapp-glyph",
+                    );
+                    return !!home && !!glyphNode &&
+                        Math.abs(
+                                glyphNode.getBoundingClientRect().width -
+                                    glyphSize,
+                            ) < 1 &&
+                        home.querySelectorAll(".webapp-name").length ===
+                            labelCount;
+                },
+                [glyph, showLabels ? 6 : 0],
+            );
+            const columns = await grid.evaluate((node, cell) => {
+                const width = node.parentElement?.getBoundingClientRect()
+                    .width ?? 0;
+                const gap = Number.parseFloat(getComputedStyle(node).columnGap);
+                return Math.min(6, Math.floor((width + gap) / (cell + gap)));
+            }, track);
+            await waitForHomeColumns(columns, track);
+            const metrics = await grid.evaluate((node) => {
+                const home = node as HTMLElement;
+                const css = getComputedStyle(home);
+                const container = home.parentElement!.getBoundingClientRect();
+                const boxes = Array.from(
+                    home.querySelectorAll<HTMLElement>(
+                        ":scope > .launcher-tile",
+                    ),
+                ).map((tile) => tile.getBoundingClientRect());
+                const left = Math.min(...boxes.map((box) => box.left));
+                const right = Math.max(...boxes.map((box) => box.right));
+                return {
+                    cell: Number.parseFloat(
+                        css.getPropertyValue("--launcher-col-w"),
+                    ),
+                    row: Number.parseFloat(
+                        css.getPropertyValue("--launcher-row-h"),
+                    ),
+                    gapX: Number.parseFloat(css.columnGap),
+                    gapY: Number.parseFloat(css.rowGap),
+                    columns: Number(home.dataset.columns),
+                    firstRow: boxes.filter((box) =>
+                        Math.abs(box.top - boxes[0].top) < 1
+                    ).length,
+                    centerOffset: Math.abs(
+                        (left + right) / 2 -
+                            (container.left + container.right) / 2,
+                    ),
+                    overflow: home.scrollWidth > home.clientWidth + 1,
+                    labels: home.querySelectorAll(".webapp-name").length,
+                    buttons: Array.from(
+                        home.querySelectorAll<HTMLElement>(".webapp-icon"),
+                        (button) => {
+                            const box = button.getBoundingClientRect();
+                            const glyphBox = button.querySelector(
+                                ".webapp-glyph",
+                            )!.getBoundingClientRect();
+                            const hit = document.elementFromPoint(
+                                box.left + box.width / 2,
+                                box.top + box.height / 2,
+                            );
+                            return {
+                                width: box.width,
+                                height: box.height,
+                                glyph: glyphBox.width,
+                                centeredX: Math.abs(
+                                    glyphBox.left + glyphBox.width / 2 -
+                                        (box.left + box.width / 2),
+                                ),
+                                centeredY: Math.abs(
+                                    glyphBox.top + glyphBox.height / 2 -
+                                        (box.top + box.height / 2),
+                                ),
+                                hittable: hit === button ||
+                                    button.contains(hit),
+                            };
+                        },
+                    ),
+                };
+            });
+            assertEquals(metrics.cell, track);
+            assertEquals(metrics.row, track);
+            assertEquals(metrics.gapX, 4);
+            assertEquals(metrics.gapY, 4);
+            assertEquals(metrics.columns, columns);
+            assertEquals(metrics.firstRow, columns);
+            assert(metrics.centerOffset < 1, JSON.stringify(metrics));
+            assertEquals(metrics.overflow, false);
+            assertEquals(metrics.labels, showLabels ? 6 : 0);
+            for (const button of metrics.buttons) {
+                assertEquals(button.width, track);
+                assertEquals(button.height, track);
+                assertEquals(button.glyph, glyph);
+                assert(button.centeredX < 1);
+                if (!showLabels) assert(button.centeredY < 1);
+                assertEquals(button.hittable, true);
+            }
         };
         await waitForHomeColumns(5);
-        const hint = page.locator(".launcher-management-hint");
-        await hint.waitFor({ state: "visible" });
-        assertEquals(await hint.getAttribute("role"), "status");
-        assertEquals(await hint.getAttribute("aria-live"), "polite");
         const keyboardTrigger = grid.locator(".launcher-tile").first()
             .locator(".webapp-icon");
         const appMenu = page.getByRole("menu");
@@ -115,16 +229,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await appMenu.waitFor({ state: "visible" });
         await page.keyboard.press("Escape");
         await appMenu.waitFor({ state: "hidden" });
-        const hintText = await hint.innerText();
-        assert(hintText.includes("右键或长按"));
-        assert(hintText.includes("Shift+F10"));
-        await hint.getByRole("button", {
-            name: "关闭应用整理提示",
-            exact: true,
-        }).click();
         await page.reload();
         await waitForHomeColumns(5);
-        assertEquals(await hint.count(), 0);
         assertEquals(
             await page.evaluate(() =>
                 matchMedia("(pointer: coarse), (hover: none)").matches
@@ -371,74 +477,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             }
         }
 
-        // Icon size and label preferences must not change tracks or columns.
         await page.setViewportSize({ width: 390, height: 844 });
-        const setHomeVisuals = async (payload: {
-            webAppIconSize?: "compact" | "default" | "large";
-            showAppLabels?: boolean;
-        }) => {
-            const status = await page.evaluate(async (values) => {
-                const response = await fetch("/api/preferences", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(values),
-                });
-                return response.status;
-            }, payload);
-            assertEquals(status, 200);
-            await page.reload();
-            await waitForHomeColumns(5);
-        };
-        for (
-            const { size, iconWidth } of [
-                { size: "compact", iconWidth: 40 },
-                { size: "default", iconWidth: 42 },
-                { size: "large", iconWidth: 44 },
-            ] as const
-        ) {
-            await setHomeVisuals({
-                webAppIconSize: size,
-                showAppLabels: true,
-            });
-            await page.waitForFunction((width) => {
-                const glyph = document.querySelector<HTMLElement>(
-                    ".pinned-area .launcher-grid--home .webapp-glyph",
-                );
-                return glyph &&
-                    Math.abs(glyph.getBoundingClientRect().width - width) < 1;
-            }, iconWidth);
-            const visual = await grid.evaluate((element) => ({
-                tileCount: element.querySelectorAll(".launcher-tile").length,
-                labels: element.querySelectorAll(".webapp-name").length,
-                track: Number.parseFloat(
-                    getComputedStyle(element).getPropertyValue(
-                        "--launcher-col-w",
-                    ),
-                ),
-                columns: Number((element as HTMLElement).dataset.columns),
-            }));
-            assertEquals(visual.tileCount, 6);
-            assertEquals(visual.labels, 6);
-            assertEquals(visual.track, 68);
-            assertEquals(visual.columns, 5);
-        }
-        await setHomeVisuals({
-            webAppIconSize: "default",
-            showAppLabels: false,
-        });
-        await page.waitForFunction(() =>
-            document.querySelector(
-                ".pinned-area .launcher-grid--home.launcher-grid--icons-only",
-            ) !== null
-        );
-        assertEquals(await grid.locator(".webapp-name").count(), 0);
-        assertEquals(await grid.getAttribute("data-columns"), "5");
-        await setHomeVisuals({ showAppLabels: true });
-        await page.waitForFunction(() =>
-            document.querySelectorAll(
-                ".pinned-area .launcher-grid--home .webapp-name",
-            ).length === 6
-        );
+        await waitForHomeColumns(5);
 
         // Enter arranging via context menu; reproduce real CDP touch dragging
         // into another cell and verify the portaled preview + persistence.
@@ -525,7 +565,6 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         // glyph rectangles to their own tile/overlay to account for dragging.
         const assertPreviewAlignment = async (
             expectedGlyphSize: number,
-            showLabelsForAlignment = true,
         ) => {
             const relative = await page.evaluate(() => {
                 const original = document.querySelector<HTMLElement>(
@@ -570,19 +609,6 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             assertEquals(relative.preview.tileWidth, 68);
             assertEquals(relative.tile.tileHeight, 68);
             assertEquals(relative.preview.tileHeight, 68);
-            // Without labels the glyph itself must be centered, not simply
-            // shifted by the same amount in both source and preview.
-            if (expectedGlyphSize === 42 && !showLabelsForAlignment) {
-                const centered = (68 - expectedGlyphSize) / 2;
-                assert(
-                    Math.abs(relative.tile.y - centered) < 1,
-                    `Hidden-label home glyph not centered: ${detail}`,
-                );
-                assert(
-                    Math.abs(relative.preview.y - centered) < 1,
-                    `Hidden-label drag glyph not centered: ${detail}`,
-                );
-            }
         };
         await assertPreviewAlignment(42);
 
@@ -638,10 +664,11 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         // Repeat the alignment regression without app labels. Cancel this
         // gesture to leave the already-persisted Home order unchanged.
         await setHomeVisuals({ showAppLabels: false });
+        await waitForHomeColumns(5);
         await page.waitForFunction(() =>
-            document.querySelector(
-                ".pinned-area .launcher-grid--home.launcher-grid--icons-only",
-            ) !== null
+            document.querySelectorAll(
+                ".pinned-area .launcher-grid--home .webapp-name",
+            ).length === 0
         );
         const hiddenTiles = grid.locator(":scope > .launcher-tile");
         await hiddenTiles.first().locator(".webapp-icon").click({
@@ -675,137 +702,38 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             touchPoints: [{ ...hiddenStart, x: hiddenStart.x + 20 }],
         });
         await overlay.waitFor({ state: "visible" });
-        await assertPreviewAlignment(42, false);
+        await assertPreviewAlignment(42);
         await cdp.send("Input.dispatchTouchEvent", {
             type: "touchCancel",
             touchPoints: [],
         });
         await overlay.waitFor({ state: "detached" });
         await setHomeVisuals({ showAppLabels: true });
+        await waitForHomeColumns(5);
 
-        // Both mobile Home presenters share tracks, glyphs and hit areas.
-        await page.setViewportSize({ width: 390, height: 844 });
-        await setStyle("widgets");
-        const quick = page.locator(".widgets-bento-card .launcher-grid--quick");
-        await quick.waitFor({ state: "visible" });
-        const assertQuickGeometry = async (
-            columns: number,
-            glyphSize: number,
-            showLabels: boolean,
-        ) => {
-            await page.waitForFunction((columns) => {
-                const element = document.querySelector<HTMLElement>(
-                    ".widgets-bento-card .launcher-grid--quick",
-                );
-                return element?.dataset.columns === String(columns) &&
-                    element.querySelectorAll(".launcher-tile").length === 6;
-            }, columns);
-            const metrics = await quick.evaluate((node) => {
-                const css = getComputedStyle(node);
-                const container = node.getBoundingClientRect();
-                const tiles = Array.from(
-                    node.querySelectorAll<HTMLElement>(
-                        ":scope > .launcher-tile",
-                    ),
-                    (tile) => tile.getBoundingClientRect(),
-                );
-                const left = Math.min(...tiles.map((tile) => tile.left));
-                const right = Math.max(...tiles.map((tile) => tile.right));
-                return {
-                    cell: parseFloat(css.getPropertyValue("--launcher-col-w")),
-                    row: parseFloat(css.getPropertyValue("--launcher-row-h")),
-                    gapX: parseFloat(css.columnGap),
-                    gapY: parseFloat(css.rowGap),
-                    firstRow: tiles.filter((tile) =>
-                        Math.abs(tile.top - tiles[0].top) < 1
-                    ).length,
-                    centerOffset: Math.abs(
-                        (left + right) / 2 -
-                            (container.left + container.right) / 2,
-                    ),
-                    overflow: node.scrollWidth > node.clientWidth + 1,
-                    labels: node.querySelectorAll(".webapp-name").length,
-                    buttons: Array.from(
-                        node.querySelectorAll<HTMLElement>(".webapp-icon"),
-                        (button) => {
-                            const box = button.getBoundingClientRect();
-                            const glyph = button.querySelector(".webapp-glyph")!
-                                .getBoundingClientRect();
-                            const hit = document.elementFromPoint(
-                                box.left + box.width / 2,
-                                box.top + box.height / 2,
-                            );
-                            return {
-                                width: box.width,
-                                height: box.height,
-                                glyph: glyph.width,
-                                centeredX: Math.abs(
-                                    glyph.left + glyph.width / 2 -
-                                        (box.left + box.width / 2),
-                                ),
-                                centeredY: Math.abs(
-                                    glyph.top + glyph.height / 2 -
-                                        (box.top + box.height / 2),
-                                ),
-                                hittable: hit === button ||
-                                    button.contains(hit),
-                            };
-                        },
-                    ),
-                };
-            });
-            assertEquals(metrics.cell, 68);
-            assertEquals(metrics.row, 68);
-            assertEquals(metrics.gapX, 4);
-            assertEquals(metrics.gapY, 4);
-            assertEquals(metrics.firstRow, columns);
-            assert(metrics.centerOffset < 1, JSON.stringify(metrics));
-            assertEquals(metrics.overflow, false);
-            assertEquals(metrics.labels, showLabels ? 6 : 0);
-            for (const button of metrics.buttons) {
-                assertEquals(button.width, 68);
-                assertEquals(button.height, 68);
-                assertEquals(button.glyph, glyphSize);
-                assert(button.centeredX < 1);
-                if (!showLabels) assert(button.centeredY < 1);
-                assertEquals(button.hittable, true);
-            }
-        };
-        for (
-            const { width, columns } of [
-                { width: 375, columns: 4 },
-                { width: 390, columns: 4 },
-                { width: 430, columns: 5 },
-            ]
-        ) {
-            await page.setViewportSize({ width, height: 844 });
-            await assertQuickGeometry(columns, 42, true);
-        }
-        await page.setViewportSize({ width: 390, height: 844 });
-        for (
-            const { size, glyph } of [
-                { size: "compact", glyph: 40 },
-                { size: "default", glyph: 42 },
-                { size: "large", glyph: 44 },
-            ]
-        ) {
+        // Touch Home resizes tracks, glyphs and labels per icon size. Each size
+        // is checked with and without labels, then restored to the default.
+        const touchTiers = [
+            { size: "compact", track: 60, glyph: 36 },
+            { size: "default", track: 68, glyph: 42 },
+            { size: "large", track: 76, glyph: 48 },
+        ] as const;
+        for (const { size, track, glyph } of touchTiers) {
             for (const showLabels of [true, false]) {
-                const status = await page.evaluate(async (values) => {
-                    const response = await fetch("/api/preferences", {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(values),
-                    });
-                    return response.status;
-                }, { webAppIconSize: size, showAppLabels: showLabels });
-                assertEquals(status, 200);
-                await page.reload();
-                await assertQuickGeometry(4, glyph, showLabels);
+                await setHomeVisuals({
+                    webAppIconSize: size,
+                    showAppLabels: showLabels,
+                });
+                await assertTouchGeometry(track, glyph, showLabels);
             }
         }
+        await setHomeVisuals({
+            webAppIconSize: "default",
+            showAppLabels: true,
+        });
+        await waitForHomeColumns(5);
 
         // Fine-pointer Home keeps the pre-existing 64px / 6px layout.
-        await setStyle("zen");
         const fineContext = await browser.newContext({
             viewport: { width: 390, height: 844 },
             storageState: await context.storageState(),
@@ -829,50 +757,6 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         } finally {
             await fineContext.close();
         }
-        const otherContext = await browser.newContext({
-            colorScheme: "light",
-            viewport: { width: 390, height: 844 },
-        });
-        const otherPage = await otherContext.newPage();
-        await otherPage.goto(app.origin + "/register");
-        await otherPage.locator("#auth-username").fill(
-            "zen_pinned_other_account",
-        );
-        await otherPage.locator("#auth-display-name").fill(
-            "Other account",
-        );
-        await otherPage.locator("#auth-password").fill(
-            "Other-account-Password-150!",
-        );
-        await otherPage.locator('form button[type="submit"]').click();
-        await otherPage.waitForURL(app.origin + "/");
-        const otherSession = (await otherContext.cookies(app.origin)).find(
-            (cookie) => cookie.name === "searcher_session",
-        );
-        assert(otherSession);
-        await context.addCookies([otherSession]);
-        await page.reload();
-        await page.evaluate(async () => {
-            const response = await fetch("/api/webapps", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: "Other Account App",
-                    url: "https://other-account.example/",
-                    isPinned: true,
-                }),
-            });
-            if (!response.ok) {
-                throw new Error(
-                    "Seed other account app: " + await response.text(),
-                );
-            }
-        });
-        await page.reload();
-        await page.locator(".launcher-management-hint").waitFor({
-            state: "visible",
-        });
-        await otherContext.close();
     } finally {
         await browser.close();
         await app.close();

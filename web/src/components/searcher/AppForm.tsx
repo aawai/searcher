@@ -94,8 +94,7 @@ export function AppForm() {
                             className="app-dialog-field-label"
                         >
                             <span>
-                                网址 (URL){" "}
-                                <span className="text-red-500">*</span>
+                                网址
                             </span>
                         </label>
                         <Input
@@ -138,7 +137,6 @@ export function AppForm() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleRetryFetch}
-                                    className="h-6 px-2 text-xs"
                                 >
                                     重新获取
                                 </Button>
@@ -203,9 +201,6 @@ export function AppForm() {
                                 >
                                     固定到首页
                                 </label>
-                                <span className="app-dialog-option-desc">
-                                    在搜索框下方快速显示
-                                </span>
                             </div>
                             <Switch
                                 id="app-pin-switch"
@@ -240,23 +235,14 @@ export function AppForm() {
                                     )}
                                 className="w-full"
                             >
-                                <TabsList className="w-full grid grid-cols-3 h-8">
-                                    <TabsTrigger
-                                        value="global"
-                                        className="text-xs"
-                                    >
+                                <TabsList className="w-full">
+                                    <TabsTrigger value="global">
                                         跟随全局
                                     </TabsTrigger>
-                                    <TabsTrigger
-                                        value="new_tab"
-                                        className="text-xs"
-                                    >
+                                    <TabsTrigger value="new_tab">
                                         新标签页
                                     </TabsTrigger>
-                                    <TabsTrigger
-                                        value="current"
-                                        className="text-xs"
-                                    >
+                                    <TabsTrigger value="current">
                                         当前标签页
                                     </TabsTrigger>
                                 </TabsList>
@@ -277,7 +263,7 @@ export function AppForm() {
                                     ? (
                                         <img
                                             src={iconPreviewUrl}
-                                            alt="Preview"
+                                            alt="应用图标"
                                             onError={() =>
                                                 setImageLoadError(true)}
                                         />
@@ -311,7 +297,7 @@ export function AppForm() {
                                 >
                                     {iconPreviewUrl
                                         ? (previewName || previewDomain)
-                                        : "未设置自定义图标，使用首字母占位"}
+                                        : "使用首字母"}
                                 </span>
                             </div>
                             {iconPreviewUrl && (
@@ -348,31 +334,23 @@ export function AppForm() {
                             {/* 图标来源模式切换 */}
                             <Tabs
                                 value={iconTab}
-                                onValueChange={(val) => setIconTab(
-                                    val as "auto" | "upload" | "url" | "ai",
-                                )}
+                                onValueChange={(val) =>
+                                    setIconTab(
+                                        val as "auto" | "upload" | "url" | "ai",
+                                    )}
                                 className="w-full"
                             >
-                                <TabsList className="w-full grid grid-cols-4 h-8">
-                                    <TabsTrigger
-                                        value="auto"
-                                        className="text-xs"
-                                    >
+                                <TabsList className="w-full">
+                                    <TabsTrigger value="auto">
                                         自动获取
                                     </TabsTrigger>
-                                    <TabsTrigger
-                                        value="upload"
-                                        className="text-xs"
-                                    >
+                                    <TabsTrigger value="upload">
                                         上传图片
                                     </TabsTrigger>
-                                    <TabsTrigger
-                                        value="url"
-                                        className="text-xs"
-                                    >
+                                    <TabsTrigger value="url">
                                         网络图片
                                     </TabsTrigger>
-                                    <TabsTrigger value="ai" className="text-xs">
+                                    <TabsTrigger value="ai">
                                         AI 生成
                                     </TabsTrigger>
                                 </TabsList>
@@ -382,10 +360,6 @@ export function AppForm() {
                             <div className="app-dialog-icon-subpanel-wrap">
                                 {iconTab === "auto" && (
                                     <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--auto">
-                                        <span className="app-dialog-helper-text">
-                                            根据填写的网址自动获取高清 Favicon
-                                            或网站图标。
-                                        </span>
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -394,7 +368,6 @@ export function AppForm() {
                                                     "loading" || !appUrl.trim()}
                                             onClick={() =>
                                                 void handleRetryFetch()}
-                                            className="h-7 text-xs gap-1.5 flex-shrink-0"
                                         >
                                             {urlFetchStatus === "loading"
                                                 ? (
@@ -412,7 +385,7 @@ export function AppForm() {
                                             <span>
                                                 {urlFetchStatus === "loading"
                                                     ? "正在抓取…"
-                                                    : "重新抓取网站图标"}
+                                                    : "重新获取"}
                                             </span>
                                         </Button>
                                     </div>
@@ -428,7 +401,7 @@ export function AppForm() {
                                             <span className="app-upload-text">
                                                 {isUploadingIcon
                                                     ? "正在上传…"
-                                                    : "点击或拖拽上传本地图片"}
+                                                    : "上传图片"}
                                             </span>
                                             <span className="app-upload-hint">
                                                 支持
@@ -438,7 +411,7 @@ export function AppForm() {
                                             <input
                                                 type="file"
                                                 accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
-                                                hidden
+                                                className="app-upload-input"
                                                 disabled={isUploadingIcon}
                                                 onChange={(e) =>
                                                     void handleFileUpload(e)}
@@ -452,13 +425,13 @@ export function AppForm() {
                                         <div className="app-input-with-button">
                                             <Input
                                                 type="url"
+                                                aria-label="图片网址"
                                                 placeholder="https://example.com/icon.png"
                                                 value={iconImageUrl}
                                                 onChange={(e) =>
                                                     setIconImageUrl(
                                                         e.target.value,
                                                     )}
-                                                className="h-8 text-xs"
                                             />
                                             <Button
                                                 type="button"
@@ -469,17 +442,13 @@ export function AppForm() {
                                                     isFetchingUrlIcon}
                                                 onClick={() =>
                                                     void handleUseImageUrl()}
-                                                className="h-8 text-xs flex-shrink-0"
+                                                className="flex-shrink-0"
                                             >
                                                 {isFetchingUrlIcon
                                                     ? "提取中…"
                                                     : "使用图片"}
                                             </Button>
                                         </div>
-                                        <p className="app-dialog-helper-text">
-                                            支持公开可直接访问的 PNG、JPG、SVG
-                                            或 WebP 图片链接。
-                                        </p>
                                     </div>
                                 )}
 

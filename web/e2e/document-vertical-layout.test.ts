@@ -166,10 +166,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     await page.locator("#auth-password").fill("Vertical-consumer-147!");
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(app.origin + "/");
-    await request("/api/preferences", "PATCH", {
-        style: "widgets",
-        theme: "light",
-    });
+    await request("/api/preferences", "PATCH", { theme: "light" });
     const created = await request<DocumentDto>("/api/documents", "POST", {
         title: "Vertical consumer #147",
         body: "Image fixture will be attached.",
@@ -208,10 +205,10 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     );
 
     await page.reload();
-    await page.locator('.desktop-dock button[data-workspace="documents"]')
+    await page.locator('.zen-edge-trigger button[data-workspace="documents"]')
         .click();
     await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
-    const win = page.locator(`[data-window-id="document:${doc.id}"]`);
+    const win = page.locator("aside.workspace-panel");
     const editor = win.locator(".ProseMirror");
     await editor.waitFor();
     const originalEditor = await editor.elementHandle();

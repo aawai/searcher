@@ -12,6 +12,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
@@ -24,7 +25,6 @@ import type {
 } from "../../components/searcher/launcherTiles.ts";
 import { FolderDeleteDialog, FolderNameDialog } from "./FolderNameDialog.tsx";
 import { EmptyState } from "../../components/searcher/semantic.tsx";
-import { Badge } from "../../components/ui/badge.tsx";
 import { WorkspaceSection } from "./WorkspaceSection.tsx";
 
 export interface AppsRootViewProps {
@@ -37,7 +37,6 @@ export interface AppsRootViewProps {
     activeFolderId?: string | null;
     onFolderChange?: (folderId: string | null) => void;
     onNavigateToEdit: (appId: string, expandIcon?: boolean) => void;
-    onNavigateToAdd?: (groupId?: string | null) => void;
     onOpen: (app: {
         name: string;
         url: string;
@@ -78,7 +77,6 @@ export function AppsRootView({
     activeFolderId,
     onFolderChange,
     onNavigateToEdit,
-    onNavigateToAdd,
     onOpen,
     onPin,
     onMove,
@@ -193,8 +191,8 @@ export function AppsRootView({
                                     )}
                             >
                                 {activeFolder.folderSize === "small"
-                                    ? "切换为大文件夹"
-                                    : "切换为小文件夹"}
+                                    ? "大文件夹"
+                                    : "小文件夹"}
                             </DropdownMenuItem>
                         )}
                         {onRenameFolder && (
@@ -205,11 +203,16 @@ export function AppsRootView({
                             </DropdownMenuItem>
                         )}
                         {onDeleteFolder && (
-                            <DropdownMenuItem
-                                onClick={() => setDeletingFolder(activeFolder)}
-                            >
-                                删除文件夹
-                            </DropdownMenuItem>
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() =>
+                                        setDeletingFolder(activeFolder)}
+                                >
+                                    删除文件夹
+                                </DropdownMenuItem>
+                            </>
                         )}
                     </>
                 )}
@@ -225,21 +228,11 @@ export function AppsRootView({
                     onChange={onQueryChange}
                     placeholder={isArranging
                         ? "整理模式下暂停搜索"
-                        : "搜索应用、网址或文件夹…"}
+                        : "搜索应用、网址或文件夹"}
                     disabled={isArranging}
                     ariaLabel="搜索应用"
                 />
             </div>
-            <p className="apps-management-help" role="note">
-                右键或长按应用图标可整理、移动、固定或移至回收站；键盘用户可按
-                {" "}
-                Shift+F10 或菜单键打开操作菜单。
-            </p>
-            {isArranging && (
-                <p className="apps-arrange-help">
-                    拖动应用或文件夹调整顺序，应用可移入文件夹
-                </p>
-            )}
             <ContextMenu>
                 <ContextMenuTrigger
                     className="launcher-surface-wrap"
@@ -267,8 +260,7 @@ export function AppsRootView({
                                     <EmptyState
                                         headingLevel={3}
                                         density="compact"
-                                        title="未找到匹配的应用或文件夹"
-                                        description="尝试搜索其他名称或网址关键词"
+                                        title="未找到匹配内容"
                                         action={
                                             <Button
                                                 variant="outline"
@@ -320,11 +312,11 @@ export function AppsRootView({
                                                                         {group
                                                                             .name}
                                                                     </span>
-                                                                    <Badge variant="secondary">
+                                                                    <span className="apps-workspace-group-count">
                                                                         {count}
                                                                         {" "}
                                                                         个应用
-                                                                    </Badge>
+                                                                    </span>
                                                                 </button>
                                                             );
                                                         },
@@ -413,8 +405,6 @@ export function AppsRootView({
                                     groups={groups}
                                     showFolders
                                     showFolderHeader={false}
-                                    size="default"
-                                    showAppLabels
                                     managing={isArranging}
                                     activeFolderId={activeFolderId}
                                     onFolderChange={onFolderChange}
@@ -426,8 +416,6 @@ export function AppsRootView({
                                     onRenameFolder={onRenameFolder}
                                     onDeleteFolder={onDeleteFolder}
                                     onFolderSizeChange={onFolderSizeChange}
-                                    onAdd={() =>
-                                        onNavigateToAdd?.(activeFolderId)}
                                 />
                             )}
                     </WorkspaceSection>

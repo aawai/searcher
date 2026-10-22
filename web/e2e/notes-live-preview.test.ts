@@ -28,7 +28,7 @@ Deno.test("Notes Live Preview: opening and switching preserve canonical Markdown
     }, body);
     await page.reload();
     await page.locator(
-        '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+        '.zen-edge-btn[data-workspace="notes"]',
     ).first().click();
     await page.locator(".notes-workspace-list .note-title").filter({
         hasText: "Live contract",

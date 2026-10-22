@@ -1,14 +1,13 @@
 import type React from "react";
 import type { EngineId } from "@shared/engines.ts";
 import type { Reachability } from "../../components/searcher/SearcherSearchInput.tsx";
+import type { WebAppIconSize } from "../../components/searcher/WebAppLauncher.tsx";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import type { NoteItem } from "../../components/searcher/NoteCard.tsx";
-import type { Appearance } from "../../app/state.tsx";
 import type { UserDto } from "@shared/contracts.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
 export interface HomeLayoutProps {
     user: UserDto | null;
-    appearance: Appearance;
     engine: EngineId;
     setEngine: (engine: EngineId) => void;
     mode: "search" | "ai";
@@ -28,12 +27,7 @@ export interface HomeLayoutProps {
     appsError: string;
     onReloadApps: () => void;
     notesLoading: boolean;
-    notesError: string;
-    announceAppsFeedback: boolean;
-    announceNotesFeedback: boolean;
-    notes: NoteItem[];
     fixedNotes: NoteItem[];
-    reorderNotes: (notes: NoteItem[]) => Promise<void>;
     isManagingApps: boolean;
     setIsManagingApps: React.Dispatch<React.SetStateAction<boolean>>;
     openApp: (
@@ -43,7 +37,6 @@ export interface HomeLayoutProps {
             openMode?: "current" | "new_tab" | "global" | null;
         },
     ) => void;
-    openAddModal: () => void;
     openEditModal: (app: ExtendedWebApp) => void;
     reorderPinned: (ids: string[]) => Promise<void>;
     togglePinApp: (app: ExtendedWebApp) => Promise<void>;
@@ -53,9 +46,6 @@ export interface HomeLayoutProps {
         groupId: string | null,
     ) => Promise<void>;
     // notes
-    createNote: () => Promise<void>;
-    openNote?: (noteId: string) => void;
-    createAndOpenNote?: () => Promise<void>;
     editNote: (note: NoteItem) => void;
     deleteNote: (note: NoteItem) => Promise<void>;
     updateNote: (
@@ -68,7 +58,10 @@ export interface HomeLayoutProps {
     ) => Promise<void>;
     // sheet controls
     openWorkspace: (workspace: WorkspaceKind) => void;
+    workspaceOpen: boolean;
+    // appearance
+    webAppIconSize: WebAppIconSize;
+    showAppLabels: boolean;
     // error
-    error: string;
     setError: (err: string) => void;
 }

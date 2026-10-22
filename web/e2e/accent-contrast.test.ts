@@ -106,18 +106,20 @@ Deno.test("accent palette meets WCAG contrast in light and dark themes", async (
             viewport: { width: 1440, height: 900 },
         });
         await page.goto(`${app.origin}/settings/appearance`);
-        await page.getByRole("heading", { name: "主题与配色" }).waitFor({
-            state: "visible",
-        });
+        await page.getByRole("heading", {
+            level: 1,
+            name: "外观",
+            exact: true,
+        }).waitFor({ state: "visible" });
 
         const failures: string[] = [];
         for (const theme of themes) {
-            await page.getByRole("tab", { name: theme.label, exact: true })
+            await page.getByRole("radio", { name: theme.label, exact: true })
                 .click();
-            await page.getByRole("tab", {
+            await page.getByRole("radio", {
                 name: theme.label,
                 exact: true,
-                selected: true,
+                checked: true,
             }).waitFor({ state: "visible" });
 
             for (const accent of ACCENTS) {

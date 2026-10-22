@@ -24,12 +24,12 @@
 | 功能 | 概要 | 详细说明 |
 | --- | --- | --- |
 | 搜索 | 多搜索引擎、搜索联想与快捷命令；访客即可使用 | [docs/workspace.md](docs/workspace.md#搜索框) |
-| 首页与工作区 | Zen（极简）/ Widgets（空间桌面）两种风格；Widgets 宽屏为可拖动、Snap、最小化的多窗口桌面，Task Dock 负责导航 | [docs/workspace.md](docs/workspace.md) |
+| 首页与工作区 | 单一 Zen（极简）首页：搜索框为主操作，应用、便签与笔记在非模态右侧 Panel 中打开，移动端使用底部 Sheet | [docs/workspace.md](docs/workspace.md) |
 | 应用 | 网址快捷方式与文件夹，首页固定、拖拽整理，可用 AI 生成图标 | [docs/apps.md](docs/apps.md) |
 | 便签 | 短 Markdown 便签，Live Preview / 源码模式，自动保存、实时同步、冲突处理与版本历史 | [docs/notes.md](docs/notes.md) |
 | 笔记 | 长篇 Markdown 文档，笔记本、图片、分页与打印、回收站与版本历史 | [docs/documents.md](docs/documents.md) |
 | AI 问答 | `/ask` 多模型对话、分支历史、附件、只读工具与 SearXNG 联网搜索；Provider 使用 OpenAI-compatible API | [docs/ai.md](docs/ai.md) |
-| 外观与壁纸 | 主题光晕、动态氛围、壁纸构图与上传历史、动态桌面场景、控件形状 | [docs/appearance.md](docs/appearance.md) |
+| 外观与壁纸 | 主题与强调色、搜索引擎与打开方式、壁纸来源与构图、可读性遮罩与上传历史、AI 生成默认参数 | [docs/appearance.md](docs/appearance.md) |
 
 快捷键说明统一在“设置 → 快捷键”（`/settings/shortcuts`），无需登录即可查阅。
 
@@ -184,7 +184,7 @@ docker exec -it searcher deno run -A --cached-only src/commands/admin.ts reset <
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | 工程原则、架构、数据流、代码约定与验证流程 |
 | [docs/frontend.md](docs/frontend.md) | 组件与样式位置、UI 门禁、前端路由、构建分包 |
-| [Design Principles](docs/design/DESIGN_PRINCIPLES.md) / [Design System](docs/design/DESIGN_SYSTEM.md) / [UI Review Checklist](docs/design/UI_REVIEW_CHECKLIST.md) | UI Contract |
+| [Visual Language](docs/design/VISUAL_LANGUAGE.md) / [UI 验收清单](docs/design/UI_CHECKLIST.md) | UI Contract |
 | [Markdown Editor](docs/editor/MARKDOWN_EDITOR.md) / [M0A 报告](docs/editor/MARKDOWN_EDITOR_M0A.md) | 共享编辑器接口、consumer / lazy / styling 契约、草稿降级；M0A 技术验证 |
 | [docs/testing.md](docs/testing.md) / [Production E2E](scripts/e2e/README.md) | 测试入口与 E2E 机制 |
 | [docs/deployment.md](docs/deployment.md) | 部署细节与 CI 发布 |
@@ -194,7 +194,7 @@ docker exec -it searcher deno run -A --cached-only src/commands/admin.ts reset <
 ## 贡献
 
 1. 从 `main` 创建分支，按 [AGENTS.md](AGENTS.md) 的工程原则与验证阶梯实现改动。
-2. 提交前至少运行与改动相关的测试；涉及 UI 时运行 `deno task check:ui` 并填写 [UI Review Checklist](docs/design/UI_REVIEW_CHECKLIST.md)。
+2. 提交前至少运行与改动相关的测试；涉及 UI 时运行 `deno task check:ui`，并按 [UI 验收清单](docs/design/UI_CHECKLIST.md) 在 PR 描述中逐项填写。
 3. 修改 schema 后执行 `deno task db:generate` 并提交迁移。
 4. 用户可观察的行为变化同步更新 `docs/` 中对应文档，并记录在 [CHANGELOG.md](CHANGELOG.md) 的 `## [Unreleased]` 下。
 5. 不提交 `data/`、`.env*`（`.env.example` 除外）、`node_modules/` 与 `web/dist/`。

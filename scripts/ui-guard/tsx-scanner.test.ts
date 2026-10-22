@@ -106,9 +106,9 @@ Deno.test("tsx-scanner - detects arbitrary Tailwind classes", () => {
 });
 
 Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exceptions on designated owners", () => {
-    // SearchHome owns masonry geometry and drag transform
+    // SearchHome owns drag transform
     const searchHomeCode = `
-        export function SearchHomeComponent({ transform, isDragging, columnLayout }: Record<string, unknown>) {
+        export function SearchHomeComponent({ transform, isDragging }: Record<string, unknown>) {
             return (
                 <div
                     className="p-4 rounded-lg shadow-none text-sm text-foreground bg-surface"
@@ -116,10 +116,6 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
                         transform: CSS.Transform.toString(transform),
                         zIndex: isDragging ? 50 : undefined,
                         opacity: isDragging ? 0.5 : 1,
-                        left: columnLayout.left + "px",
-                        top: columnLayout.top + "px",
-                        width: columnLayout.width + "px",
-                        position: "absolute",
                         borderRadius: "var(--radius)",
                         fontSize: "var(--font-body-size)",
                     }}
@@ -154,7 +150,7 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
     );
     assertEquals(setViolations.length, 0);
 
-    // Unrelated component using swatch or masonry geometry is DENIED
+    // Unrelated component using swatch or column layout geometry is DENIED
     const unrelatedCode = `
         export function UnrelatedComponent({ swatchId, columnLayout }: Record<string, unknown>) {
             return (
@@ -174,39 +170,7 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
     assertEquals(unrelViolations.length, 2);
 });
 
-Deno.test("tsx-scanner - allows measured NotesWorkspace masonry geometry", () => {
-    const code = `
-        export function MasonryNotes() {
-            return (
-                <div style={{ height: layout.containerHeight }}>
-                    <div style={{
-                        width: placement?.width ?? "100%",
-                        transform: placement
-                            ? \`translate3d(\${placement.x}px, \${placement.y}px, 0)\`
-                            : undefined,
-                        visibility: placement && heights.has(note.id)
-                            ? undefined
-                            : "hidden",
-                    }} />
-                    <div style={{ width: layout.columnWidth }} />
-                    <div style={geometry?.style ?? (sortable
-                        ? { transform: CSS.Transform.toString(transform), transition }
-                        : undefined)} />
-                </div>
-            );
-        }
-    `;
-    assertEquals(
-        scanTsxCode("web/src/features/workspace/NotesWorkspace.tsx", code),
-        [],
-    );
-    assertEquals(
-        scanTsxCode("web\\src\\features\\workspace\\NotesWorkspace.tsx", code),
-        [],
-    );
-});
-
-Deno.test("tsx-scanner - NotesWorkspace masonry does not exempt static visuals or other coordinates", () => {
+Deno.test("tsx-scanner - NotesWorkspace does not exempt static visuals or other coordinates", () => {
     const code = `
         export function InvalidNotes() {
             return <div style={{
@@ -242,42 +206,6 @@ Deno.test("tsx-scanner - NotesWorkspace masonry does not exempt static visuals o
             ["width", "inline-visual-style"],
         ],
     );
-});
-
-Deno.test("tsx-scanner - NotesWorkspace masonry expressions stay at their exact owner", () => {
-    const code = `
-        export function UnownedMasonry() {
-            return <div style={{
-                height: layout.containerHeight,
-                width: layout.columnWidth,
-                transform: placement
-                    ? \`translate3d(\${placement.x}px, \${placement.y}px, 0)\`
-                    : undefined,
-                visibility: placement && heights.has(note.id)
-                    ? undefined
-                    : "hidden",
-            }}>
-                <div style={{ width: placement?.width ?? "100%" }} />
-            </div>;
-        }
-    `;
-    for (
-        const file of [
-            "web/src/features/workspace/OtherWorkspace.tsx",
-            "web/src/features/other/NotesWorkspace.tsx",
-            "web/src/features/workspace/NotesWorkspaceCopy.tsx",
-        ]
-    ) {
-        const violations = scanTsxCode(file, code);
-        assertEquals(violations.length, 5, file);
-        assertEquals(
-            violations.every((violation) =>
-                violation.rule === "inline-visual-style"
-            ),
-            true,
-            file,
-        );
-    }
 });
 
 Deno.test("tsx-scanner - rejects static numeric z-index but allows tokens and runtime order", () => {

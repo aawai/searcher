@@ -26,6 +26,7 @@ import {
     ContextMenu,
     ContextMenuContent,
     ContextMenuItem,
+    ContextMenuSeparator,
     ContextMenuTrigger,
 } from "../ui/context-menu.tsx";
 import {
@@ -45,20 +46,8 @@ import {
 } from "../../features/workspace/FolderNameDialog.tsx";
 
 import { AppMenuItems } from "./AppMenuItems.tsx";
-import { useAppState } from "../../app/state.tsx";
 
-const LAUNCHER_MANAGEMENT_HINT_STORAGE_KEY =
-    "searcher.launcher-management-hint.";
-
-function hasDismissedManagementHint(userId: string): boolean {
-    try {
-        return globalThis.localStorage.getItem(
-            LAUNCHER_MANAGEMENT_HINT_STORAGE_KEY + userId,
-        ) === "dismissed";
-    } catch {
-        return false;
-    }
-}
+export type WebAppIconSize = "compact" | "default" | "large";
 
 interface Actions {
     onOpen: (app: LauncherApp) => void;
@@ -69,14 +58,14 @@ interface Actions {
     onDelete: (app: LauncherApp) => void;
     onToggleManaging?: () => void;
     onResetLayout?: () => void;
-    onManage?: (app: LauncherApp) => void;
     onRenameFolder?: (group: LauncherGroup) => void;
     onDeleteFolder?: (group: LauncherGroup) => void;
     onFolderSizeChange?: (
         group: LauncherGroup,
         size: "small" | "large",
     ) => void;
-    presentation?: "default" | "quick" | "workspace";
+    presentation?: "default" | "workspace";
+    showAppLabels: boolean;
 }
 
 function AppActions({
@@ -84,7 +73,6 @@ function AppActions({
     groups,
     managing,
     actions,
-    showAppLabels = true,
     dragAttributes,
     dragListeners,
     isDragging,
@@ -93,40 +81,10 @@ function AppActions({
     groups: LauncherGroup[];
     managing: boolean;
     actions: Actions;
-    showAppLabels?: boolean;
     dragAttributes?: object;
     dragListeners?: object;
     isDragging?: boolean;
 }) {
-    if (actions.presentation === "quick") {
-        return (
-            <ContextMenu>
-                <ContextMenuTrigger className="launcher-app">
-                    <WebAppIcon
-                        app={app}
-                        onOpen={() => actions.onOpen(app)}
-                        showLabel={showAppLabels}
-                        dragAttributes={dragAttributes}
-                        dragListeners={dragListeners}
-                        movable={managing && Boolean(dragListeners)}
-                        isDragging={isDragging}
-                    />
-                </ContextMenuTrigger>
-                <ContextMenuContent aria-label={`${app.name} 的操作`}>
-                    <ContextMenuItem onClick={() => actions.onOpen(app)}>
-                        打开
-                    </ContextMenuItem>
-                    {actions.onManage && (
-                        <ContextMenuItem
-                            onClick={() => actions.onManage?.(app)}
-                        >
-                            在工作区中管理
-                        </ContextMenuItem>
-                    )}
-                </ContextMenuContent>
-            </ContextMenu>
-        );
-    }
     return (
         <ContextMenu>
             <ContextMenuTrigger className="launcher-app">
@@ -134,10 +92,10 @@ function AppActions({
                     app={app}
                     onOpen={() =>
                         managing ? actions.onEdit(app) : actions.onOpen(app)}
-                    showLabel={showAppLabels}
                     dragAttributes={dragAttributes}
                     dragListeners={dragListeners}
                     movable={managing && Boolean(dragListeners)}
+                    showLabel={actions.showAppLabels}
                     isDragging={isDragging}
                 />
             </ContextMenuTrigger>
@@ -198,7 +156,6 @@ function FolderView({
     managing,
     onFolder,
     onOpen,
-    showAppLabels,
     onSizeChange,
     dragAttributes,
     dragListeners,
@@ -210,7 +167,6 @@ function FolderView({
     managing: boolean;
     onFolder: (id: string) => void;
     onOpen: (app: LauncherApp) => void;
-    showAppLabels: boolean;
     onSizeChange?: (group: LauncherGroup, size: "small" | "large") => void;
     dragAttributes?: object;
     dragListeners?: object;
@@ -352,65 +308,46 @@ function FolderView({
                         </span>
                     )}
                 </div>
-                {showAppLabels && (
-                    <span
-                        className="launcher-folder-name"
-                        title={tile.group.name}
-                    >
-                        {tile.group.name}
-                    </span>
-                )}
+                <span
+                    className="launcher-folder-name"
+                    title={tile.group.name}
+                >
+                    {tile.group.name}
+                </span>
             </ContextMenuTrigger>
             <ContextMenuContent aria-label={`${tile.group.name} 的操作`}>
                 <ContextMenuItem onClick={() => onFolder(tile.group.id)}>
                     打开文件夹
                 </ContextMenuItem>
-                {actions?.presentation === "quick"
-                    ? (
-                        actions.onManage && (
-                            <ContextMenuItem
-                                onClick={() =>
-                                    actions.onManage?.({
-                                        id: tile.group.id,
-                                        name: tile.group.name,
-                                        url: "",
-                                    } as LauncherApp)}
-                            >
-                                在工作区中管理
-                            </ContextMenuItem>
-                        )
-                    )
-                    : (
-                        <>
-                            {onSizeChange && (
-                                <ContextMenuItem
-                                    onClick={() =>
-                                        onSizeChange(
-                                            tile.group,
-                                            large ? "small" : "large",
-                                        )}
-                                >
-                                    显示为{large ? "小" : "大"}文件夹
-                                </ContextMenuItem>
+                {onSizeChange && (
+                    <ContextMenuItem
+                        onClick={() =>
+                            onSizeChange(
+                                tile.group,
+                                large ? "small" : "large",
                             )}
-                            {actions?.onRenameFolder && (
-                                <ContextMenuItem
-                                    onClick={() =>
-                                        actions.onRenameFolder?.(tile.group)}
-                                >
-                                    重命名
-                                </ContextMenuItem>
-                            )}
-                            {actions?.onDeleteFolder && (
-                                <ContextMenuItem
-                                    onClick={() =>
-                                        actions.onDeleteFolder?.(tile.group)}
-                                >
-                                    删除文件夹
-                                </ContextMenuItem>
-                            )}
-                        </>
-                    )}
+                    >
+                        显示为{large ? "小" : "大"}文件夹
+                    </ContextMenuItem>
+                )}
+                {actions?.onRenameFolder && (
+                    <ContextMenuItem
+                        onClick={() => actions.onRenameFolder?.(tile.group)}
+                    >
+                        重命名
+                    </ContextMenuItem>
+                )}
+                {actions?.onDeleteFolder && (
+                    <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem
+                            variant="destructive"
+                            onClick={() => actions.onDeleteFolder?.(tile.group)}
+                        >
+                            删除文件夹
+                        </ContextMenuItem>
+                    </>
+                )}
             </ContextMenuContent>
         </ContextMenu>
     );
@@ -422,7 +359,6 @@ function SortableTile({
     groups,
     managing,
     actions,
-    showAppLabels,
     onFolder,
     onSizeChange,
     onMoveByKey,
@@ -433,7 +369,6 @@ function SortableTile({
     groups: LauncherGroup[];
     managing: boolean;
     actions: Actions;
-    showAppLabels: boolean;
     onFolder: (id: string) => void;
     onSizeChange?: (group: LauncherGroup, size: "small" | "large") => void;
     onMoveByKey: (id: string, direction: number) => void;
@@ -503,7 +438,6 @@ function SortableTile({
                         groups={groups}
                         managing={managing}
                         actions={actions}
-                        showAppLabels={showAppLabels}
                         dragAttributes={managing ? attributes : undefined}
                         dragListeners={dragListeners}
                         isDragging={isDragging}
@@ -515,7 +449,6 @@ function SortableTile({
                         managing={managing}
                         onFolder={onFolder}
                         onOpen={managing ? actions.onEdit : actions.onOpen}
-                        showAppLabels={showAppLabels}
                         onSizeChange={onSizeChange}
                         dragAttributes={managing ? attributes : undefined}
                         dragListeners={dragListeners}
@@ -530,15 +463,15 @@ function SortableTile({
 
 /** Observe the actual desktop container, not the window or the sheet height. */
 function useDesktopColumns(
-    size: "compact" | "default" | "large",
-    showAppLabels: boolean,
     hasLargeFolder: boolean,
-    presentation?: "default" | "quick" | "workspace",
+    iconSize: WebAppIconSize,
+    presentation?: "default" | "workspace",
 ) {
     const gridRef = useRef<HTMLDivElement>(null);
     const [columns, setColumns] = useState(
         presentation === "workspace" ? 4 : 6,
     );
+    // Cell width follows the icon-size tier; re-measure when it changes.
     useEffect(() => {
         const grid = gridRef.current;
         if (!grid) return;
@@ -560,7 +493,7 @@ function useDesktopColumns(
         });
         observer.observe(target);
         return () => observer.disconnect();
-    }, [size, showAppLabels, hasLargeFolder, presentation]);
+    }, [hasLargeFolder, presentation, iconSize]);
     return { gridRef, columns };
 }
 
@@ -588,8 +521,6 @@ export interface WebAppLauncherProps {
     apps: LauncherApp[];
     groups: LauncherGroup[];
     showFolders: boolean;
-    size: "compact" | "default" | "large";
-    showAppLabels?: boolean;
     managing: boolean;
     onOpen: (app: LauncherApp) => void;
     onEdit: (app: LauncherApp) => void;
@@ -603,15 +534,14 @@ export interface WebAppLauncherProps {
         group: LauncherGroup,
         size: "small" | "large",
     ) => void;
-    onAdd: () => void;
     onToggleManaging?: () => void;
     onResetLayout?: () => void;
     emptyMessage?: string;
-    emptyAction?: boolean;
     activeFolderId?: string | null;
     onFolderChange?: (folderId: string | null) => void;
-    presentation?: "default" | "quick" | "workspace";
-    onManage?: (app: LauncherApp) => void;
+    presentation?: "default" | "workspace";
+    iconSize?: WebAppIconSize;
+    showAppLabels?: boolean;
     onRenameFolder?: (group: LauncherGroup, name: string) => Promise<void>;
     onDeleteFolder?: (group: LauncherGroup) => Promise<void>;
     onMoveAppToFolder?: (
@@ -629,8 +559,6 @@ export function WebAppLauncher({
     apps,
     groups,
     showFolders,
-    size,
-    showAppLabels = true,
     managing,
     onOpen,
     onEdit,
@@ -641,34 +569,20 @@ export function WebAppLauncher({
     onDelete,
     onReorder,
     onFolderSizeChange,
-    onAdd,
     onToggleManaging,
     onResetLayout,
     emptyMessage = "还没有常用应用",
-    emptyAction = true,
     activeFolderId,
     onFolderChange,
     presentation = "default",
-    onManage,
+    iconSize = "default",
+    showAppLabels = true,
     onRenameFolder,
     onDeleteFolder,
     onMoveAppToFolder,
     onReorderRoot,
     onReorderFolder,
 }: WebAppLauncherProps) {
-    const { user } = useAppState();
-    const [managementHintDismissal, setManagementHintDismissal] = useState(
-        () => ({
-            userId: user?.id ?? null,
-            dismissed: user?.id ? hasDismissedManagementHint(user.id) : true,
-        }),
-    );
-    const accountId = user?.id ?? null;
-    const managementHintDismissed = managementHintDismissal.userId === accountId
-        ? managementHintDismissal.dismissed
-        : accountId
-        ? hasDismissedManagementHint(accountId)
-        : true;
     const tiles = useMemo(
         (): LauncherTile[] =>
             showFolders ? launcherTiles(apps, groups) : apps.map((app) => ({
@@ -678,15 +592,12 @@ export function WebAppLauncher({
             })),
         [apps, groups, showFolders],
     );
-    const showManagementHint = presentation !== "workspace" &&
-        tiles.length > 0 && Boolean(accountId) && !managementHintDismissed;
     const largeFolderCount = showFolders
         ? tiles.filter((tile) => tile.group?.folderSize === "large").length
         : 0;
     const { gridRef, columns } = useDesktopColumns(
-        size,
-        showAppLabels,
         largeFolderCount > 0,
+        iconSize,
         presentation,
     );
     const effectiveColumns = useMemo(
@@ -817,8 +728,8 @@ export function WebAppLauncher({
         onDelete,
         onToggleManaging,
         onResetLayout,
-        onManage,
         presentation,
+        showAppLabels,
         onRenameFolder: (group) => setFolderToRename(group),
         onDeleteFolder: (group) => setFolderToDelete(group),
         onFolderSizeChange,
@@ -867,33 +778,30 @@ export function WebAppLauncher({
                 aria-label={`文件夹：${folder.group.name}`}
             >
                 {showFolderHeader && (
-                    <div className="launcher-folder-inline-header flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--border)]">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={closeFolder}
-                                className="gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
-                                aria-label="返回应用列表"
-                            >
-                                <ArrowLeft size="1em" className="icon-sm" />
-                                <span>返回</span>
-                            </Button>
-                            <span aria-hidden="true">/</span>
-                            <h3 className="text-base font-semibold text-[var(--foreground)] truncate m-0">
-                                {folder.group.name}
-                            </h3>
-                            <span className="text-xs text-[var(--muted)] shrink-0">
-                                ({folderApps.length} 个应用)
-                            </span>
-                        </div>
+                    <div className="launcher-folder-inline-header">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={closeFolder}
+                            aria-label="返回应用列表"
+                        >
+                            <ArrowLeft size="1em" className="icon-sm" />
+                            <span>返回</span>
+                        </Button>
+                        <span aria-hidden="true">/</span>
+                        <h3 className="launcher-folder-title">
+                            {folder.group.name}
+                        </h3>
+                        <span className="launcher-folder-count">
+                            ({folderApps.length} 个应用)
+                        </span>
                     </div>
                 )}
 
                 {folderApps.length === 0
                     ? (
                         <EmptyState
-                            title="文件夹暂无应用"
+                            title="暂无应用"
                             headingLevel={3}
                             density="compact"
                         />
@@ -934,7 +842,7 @@ export function WebAppLauncher({
                                 strategy={rectSortingStrategy}
                             >
                                 <div
-                                    className={`launcher-folder-contents launcher-grid--${size}${
+                                    className={`launcher-folder-contents${
                                         presentation === "workspace"
                                             ? " launcher-grid--workspace"
                                             : ""
@@ -959,12 +867,7 @@ export function WebAppLauncher({
 
     if (tiles.length === 0) {
         if (presentation !== "workspace") {
-            return (
-                <div className="launcher-empty">
-                    {emptyMessage}{" "}
-                    {emptyAction && <Button onClick={onAdd}>添加应用</Button>}
-                </div>
-            );
+            return <div className="launcher-empty">{emptyMessage}</div>;
         }
         return (
             <EmptyState
@@ -993,15 +896,13 @@ export function WebAppLauncher({
                 <div
                     ref={gridRef}
                     aria-label="应用启动器"
-                    className={`pinned-apps launcher-grid launcher-grid--${size}${
-                        showFolders ? "" : " launcher-grid--home"
-                    }${showAppLabels ? "" : " launcher-grid--icons-only"}${
+                    className={`launcher-grid${
+                        showFolders
+                            ? ""
+                            : ` launcher-grid--home launcher-grid--icon-${iconSize}`
+                    }${
                         presentation === "workspace"
                             ? " launcher-grid--workspace"
-                            : ""
-                    }${
-                        presentation === "quick"
-                            ? " launcher-grid--quick"
                             : ""
                     }`}
                     data-presentation={presentation}
@@ -1015,7 +916,6 @@ export function WebAppLauncher({
                             groups={groups}
                             managing={managing}
                             actions={actions}
-                            showAppLabels={showAppLabels}
                             onFolder={openFolder}
                             onSizeChange={onFolderSizeChange}
                             activeDragId={activeId}
@@ -1064,16 +964,12 @@ export function WebAppLauncher({
                     {active && managing
                         ? (
                             <div
-                                className={`launcher-overlay launcher-grid--${size}${
+                                className={`launcher-overlay${
                                     presentation === "workspace"
                                         ? " launcher-grid--workspace"
                                         : !showFolders
-                                        ? " launcher-overlay--home"
+                                        ? ` launcher-overlay--home launcher-grid--icon-${iconSize}`
                                         : ""
-                                }${
-                                    showAppLabels
-                                        ? ""
-                                        : " launcher-grid--icons-only"
                                 }${
                                     active.group?.folderSize === "large"
                                         ? " launcher-overlay--large"
@@ -1093,7 +989,6 @@ export function WebAppLauncher({
                                             tile={active}
                                             managing={false}
                                             onFolder={openFolder}
-                                            showAppLabels={showAppLabels}
                                             onOpen={onOpen}
                                             presentation={presentation}
                                         />
@@ -1103,41 +998,6 @@ export function WebAppLauncher({
                         : null}
                 </DragOverlay>,
                 document.body,
-            )}
-            {showManagementHint && (
-                <p
-                    className="launcher-management-hint"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span>
-                        右键或长按应用图标可打开操作菜单；键盘用户可按 Shift+F10
-                        或菜单键。
-                    </span>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-label="关闭应用整理提示"
-                        onClick={() => {
-                            if (!accountId) return;
-                            try {
-                                globalThis.localStorage.setItem(
-                                    LAUNCHER_MANAGEMENT_HINT_STORAGE_KEY +
-                                        accountId,
-                                    "dismissed",
-                                );
-                            } catch {
-                                // A denied device store must not block use of the launcher.
-                            }
-                            setManagementHintDismissal({
-                                userId: accountId,
-                                dismissed: true,
-                            });
-                        }}
-                    >
-                        关闭提示
-                    </Button>
-                </p>
             )}
         </DndContext>
     );

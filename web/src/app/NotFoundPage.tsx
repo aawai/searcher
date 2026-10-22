@@ -19,26 +19,26 @@ export function NotFoundPage(
     return (
         <PageShell archetype="utility">
             <PageHeader
-                items={[
-                    { label: "首页", to: routes.home },
-                    ...(workspace ? [workspace] : []),
-                    { label: "页面不存在" },
-                ]}
                 title="页面不存在"
-                description="当前页面不存在，请检查地址或返回上层页面。"
-            />
-            <div className="space-y-4">
-                <p className="text-sm font-medium text-[var(--muted)]">404</p>
-
-                <div className="flex flex-wrap gap-2">
-                    <Button render={<Link to={routes.home} />}>返回首页</Button>
-                    {workspace && (
-                        <Button render={<Link to={workspace.to} />}>
-                            返回{workspace.label}
+                actions={
+                    <>
+                        <Button
+                            variant="default"
+                            render={<Link to={routes.home} />}
+                        >
+                            返回首页
                         </Button>
-                    )}
-                </div>
-            </div>
+                        {workspace && (
+                            <Button
+                                variant="outline"
+                                render={<Link to={workspace.to} />}
+                            >
+                                返回{workspace.label}
+                            </Button>
+                        )}
+                    </>
+                }
+            />
         </PageShell>
     );
 }

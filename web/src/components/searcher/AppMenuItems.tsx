@@ -1,5 +1,8 @@
-import { ContextMenuItem } from "../ui/context-menu.tsx";
-import { DropdownMenuItem } from "../ui/dropdown-menu.tsx";
+import { ContextMenuItem, ContextMenuSeparator } from "../ui/context-menu.tsx";
+import {
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+} from "../ui/dropdown-menu.tsx";
 import type { LauncherApp, LauncherGroup } from "./launcherTiles.ts";
 
 export interface AppMenuActions {
@@ -20,9 +23,15 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
     actions: AppMenuActions;
     Item: typeof ContextMenuItem | typeof DropdownMenuItem;
 }) {
+    const Separator = Item === ContextMenuItem
+        ? ContextMenuSeparator
+        : DropdownMenuSeparator;
     return (
         <>
             <div className="launcher-menu-title">{app.name}</div>
+            <Item onClick={() => actions.onOpen(app)}>
+                打开
+            </Item>
             {actions.onToggleManaging && (
                 <Item onClick={actions.onToggleManaging}>
                     {managing ? "完成整理" : "整理布局"}
@@ -33,9 +42,6 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
                     恢复默认布局
                 </Item>
             )}
-            <Item onClick={() => actions.onOpen(app)}>
-                打开
-            </Item>
             <Item onClick={() => actions.onPin(app)}>
                 {app.isPinned ? "取消固定" : "固定到首页"}
             </Item>
@@ -60,7 +66,8 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
             <Item onClick={() => (actions.onChangeIcon ?? actions.onEdit)(app)}>
                 更换图标
             </Item>
-            <Item onClick={() => actions.onDelete(app)}>
+            <Separator />
+            <Item variant="destructive" onClick={() => actions.onDelete(app)}>
                 移至回收站
             </Item>
         </>

@@ -16,29 +16,20 @@ function NativeSelect({
         <div
             data-slot="native-select-wrapper"
             data-size={size}
-            className={cn(
-                "group/native-select relative w-full has-[select:disabled]:opacity-50",
-                className,
-            )}
+            className={cn("relative w-full", className)}
         >
             <select
                 data-slot="native-select"
                 data-size={size}
-                className={cn(
-                    "w-full min-w-0 appearance-none rounded-[var(--input-radius)] border border-[var(--border-control)] bg-[var(--surface-solid)] text-[var(--foreground)] transition-colors outline-none select-none",
-                    "disabled:pointer-events-none disabled:cursor-not-allowed",
-                    "focus-visible:border-[var(--ring)] focus-visible:ring-[2px] focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2",
-                    "aria-invalid:border-[var(--danger)] aria-invalid:ring-[var(--danger)]",
-                    size === "default" && "h-10 pl-3 pr-8 text-sm",
-                    size === "sm" && "h-8 pl-2.5 pr-7 text-xs",
-                )}
+                className="select-none"
                 {...props}
             >
                 {children}
             </select>
             <ChevronDownIcon
                 data-slot="native-select-indicator"
-                className="pointer-events-none absolute top-1/2 right-2.5 size-[var(--icon-md)] -translate-y-1/2 text-[var(--muted)] transition-transform group-focus-within/native-select:text-[var(--foreground)]"
+                size="1em"
+                className="native-select-indicator icon-md"
                 aria-hidden="true"
             />
         </div>

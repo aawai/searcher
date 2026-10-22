@@ -78,7 +78,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
                 `${id} must be touch-accessible: ${JSON.stringify(rect)}`,
             );
         }
-        await page.getByRole("button", { name: "生成 3 个候选", exact: true })
+        await page.getByRole("button", { name: "生成图标", exact: true })
             .click();
         await page.getByRole("alertdialog").waitFor();
         await page.setViewportSize({ width: 390, height: 844 });

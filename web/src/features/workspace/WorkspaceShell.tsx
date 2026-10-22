@@ -6,10 +6,15 @@ import {
     useState,
 } from "react";
 import { Button } from "../../components/ui/button.tsx";
+import { Check, Plus } from "lucide-react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import {
     type WorkspacePresentation,
     WorkspaceSurface,
-    type WorkspaceViewportInsets,
 } from "./WorkspaceSurface.tsx";
 import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 import {
@@ -25,8 +30,7 @@ export function WorkspaceShell(
         open = true,
         state,
         title,
-        style,
-        navigate,
+        onSwitch,
         onBack,
         onClose,
         onCreate,
@@ -36,14 +40,13 @@ export function WorkspaceShell(
         onFeedbackHost,
         appsArranging = false,
         children,
-        viewportInsets,
         chromeBottom,
     }: {
         open?: boolean;
         state: WorkspaceRoute;
         title: string;
-        style: "zen" | "widgets";
-        navigate: (state: WorkspaceRoute) => void;
+        /** Switches the visible domain; each domain keeps its own route and draft. */
+        onSwitch: (kind: WorkspaceKind) => void;
         onBack: () => void;
         onClose: () => void;
         onCreate?: () => void;
@@ -53,7 +56,6 @@ export function WorkspaceShell(
         onFeedbackHost?: (host: HTMLElement | null) => void;
         appsArranging?: boolean;
         children: ReactNode;
-        viewportInsets?: WorkspaceViewportInsets;
         chromeBottom?: number;
     },
 ) {
@@ -104,42 +106,71 @@ export function WorkspaceShell(
         }
         wasOpen.current = open;
     }, [open, workspace]);
-    const select = (kind: WorkspaceKind) => navigate({ view: `${kind}/root` });
-    if (!open || (style === "widgets" && !mobile && !viewportInsets)) {
+    if (!open) {
         return null;
     }
     const root = state.view === "apps/root" || state.view === "notes/root" ||
         state.view === "documents/root";
-    const editing = state.view === "apps/create" ||
-        state.view === "apps/edit" || state.view === "notes/edit" ||
-        state.view === "documents/edit" || state.view === "documents/create";
     let bodyLayout: "app-form" | "editor" | undefined;
     if (state.view === "apps/create" || state.view === "apps/edit") {
         bodyLayout = "app-form";
     } else if (state.view === "notes/edit" || state.view === "documents/edit") {
         bodyLayout = "editor";
     }
+    const createLabel = workspace === "apps"
+        ? appsArranging ? "完成整理" : "添加应用"
+        : workspace === "notes"
+        ? "新建便签"
+        : "新建笔记";
     return (
         <WorkspaceSurface
             presentation={presentation}
-            viewportInsets={viewportInsets}
             chromeBottom={chromeBottom}
             title={title}
             expanded={state.view === "documents/edit" ||
                 (state.view === "notes/edit" && notesExpanded)}
             backLabel={state.view === "notes/edit" ? "返回便签列表" : undefined}
-            headerActions={state.view === "notes/edit" && !mobile
-                ? (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-pressed={notesExpanded}
-                        onClick={() => setNotesExpanded((value) => !value)}
-                    >
-                        {notesExpanded ? "收起编辑" : "展开编辑"}
-                    </Button>
-                )
-                : undefined}
+            headerActions={
+                <>
+                    <WorkspaceNavigation
+                        selected={workspace}
+                        onSelect={onSwitch}
+                    />
+                    {root && onCreate && (
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        className="workspace-primary"
+                                        variant="default"
+                                        size="icon"
+                                        aria-label={createLabel}
+                                        onClick={workspace === "apps" &&
+                                                appsArranging
+                                            ? onFinishArrange
+                                            : onCreate}
+                                    />
+                                }
+                            >
+                                {workspace === "apps" && appsArranging
+                                    ? <Check size="1em" className="icon-lg" />
+                                    : <Plus size="1em" className="icon-lg" />}
+                            </TooltipTrigger>
+                            <TooltipContent>{createLabel}</TooltipContent>
+                        </Tooltip>
+                    )}
+                    {state.view === "notes/edit" && !mobile && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-pressed={notesExpanded}
+                            onClick={() => setNotesExpanded((value) => !value)}
+                        >
+                            {notesExpanded ? "收起编辑" : "展开编辑"}
+                        </Button>
+                    )}
+                </>
+            }
             routeKey={JSON.stringify(state)}
             nested={!root}
             onBack={onBack}
@@ -149,32 +180,6 @@ export function WorkspaceShell(
             bodyLayout={bodyLayout}
             feedback={mobile ? feedback : undefined}
             onFeedbackHost={mobile ? onFeedbackHost : undefined}
-            footer={!editing &&
-                (
-                    <footer className="workspace-footer">
-                        {root && onCreate && (
-                            <Button
-                                className="workspace-primary"
-                                variant="default"
-                                onClick={workspace === "apps" && appsArranging
-                                    ? onFinishArrange
-                                    : onCreate}
-                            >
-                                {workspace === "apps"
-                                    ? appsArranging ? "完成整理" : "添加应用"
-                                    : workspace === "notes"
-                                    ? "新建便签"
-                                    : "新建笔记"}
-                            </Button>
-                        )}
-                        {!editing && (
-                            <WorkspaceNavigation
-                                selected={workspace}
-                                onSelect={select}
-                            />
-                        )}
-                    </footer>
-                )}
         >
             {children}
         </WorkspaceSurface>

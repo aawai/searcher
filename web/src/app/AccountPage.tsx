@@ -1,26 +1,19 @@
-import { PageShell } from "../components/searcher/PageShell.tsx";
-import { EmptyState, StatusBanner } from "../components/searcher/semantic.tsx";
-import { type FormEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-    ArrowRight,
-    Globe,
-    Key,
-    Laptop,
-    LogOut,
-    RefreshCw,
-    Shield,
-    Smartphone,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import type { UserDto } from "@shared/contracts.ts";
 import { Badge } from "../components/ui/badge.tsx";
-import { Button } from "../components/ui/button.tsx";
+import { Button, buttonVariants } from "../components/ui/button.tsx";
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "../components/ui/card.tsx";
+    Dialog,
+    DialogBackdrop,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogPopup,
+    DialogPortal,
+    DialogTitle,
+} from "../components/ui/dialog.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
     AlertDialog,
@@ -32,9 +25,17 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
-import { api, json } from "../lib/api.ts";
-import { errorMessage, useAppState } from "./state.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import {
+    EmptyState,
+    SettingsGroup,
+    SettingsRow,
+    StatusBanner,
+} from "../components/searcher/semantic.tsx";
+import { api, json } from "../lib/api.ts";
+import { cn } from "../lib/utils.ts";
+import { errorMessage, useAppState } from "./state.tsx";
 import { authPath, routes } from "./routes.ts";
 import "./account.css";
 
@@ -48,39 +49,31 @@ interface SessionDevice {
     expiresAt: number;
 }
 
-function parseUserAgent(ua: string | null): {
-    name: string;
-    type: "desktop" | "mobile" | "tablet" | "unknown";
-} {
-    if (!ua) return { name: "未知设备", type: "unknown" };
+function describeDevice(userAgent: string | null): string {
+    if (!userAgent) return "未知设备";
+
     let os = "未知系统";
-    if (/Windows NT 10/i.test(ua)) os = "Windows 10/11";
-    else if (/Windows/i.test(ua)) os = "Windows";
-    else if (/Macintosh|Mac OS X/i.test(ua)) os = "macOS";
-    else if (/Android/i.test(ua)) os = "Android";
-    else if (/iPhone/i.test(ua)) os = "iPhone";
-    else if (/iPad/i.test(ua)) os = "iPad";
-    else if (/Linux/i.test(ua)) os = "Linux";
+    if (/Windows NT 10/i.test(userAgent)) os = "Windows 10/11";
+    else if (/Windows/i.test(userAgent)) os = "Windows";
+    else if (/Macintosh|Mac OS X/i.test(userAgent)) os = "macOS";
+    else if (/Android/i.test(userAgent)) os = "Android";
+    else if (/iPhone/i.test(userAgent)) os = "iPhone";
+    else if (/iPad/i.test(userAgent)) os = "iPad";
+    else if (/Linux/i.test(userAgent)) os = "Linux";
 
     let browser = "浏览器";
-    if (/Edg\//i.test(ua)) browser = "Microsoft Edge";
-    else if (/Chrome\//i.test(ua)) browser = "Chrome";
-    else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
-    else if (/Firefox\//i.test(ua)) browser = "Firefox";
+    if (/Edg\//i.test(userAgent)) browser = "Microsoft Edge";
+    else if (/Chrome\//i.test(userAgent)) browser = "Chrome";
+    else if (/Safari\//i.test(userAgent) && !/Chrome/i.test(userAgent)) {
+        browser = "Safari";
+    } else if (/Firefox\//i.test(userAgent)) browser = "Firefox";
 
-    const isMobile = /Android|iPhone|iPod|Mobile/i.test(ua);
-    const isTablet = /iPad|Tablet/i.test(ua);
-
-    return {
-        name: `${browser} (${os})`,
-        type: isTablet ? "tablet" : isMobile ? "mobile" : "desktop",
-    };
+    return `${browser} (${os})`;
 }
 
 function formatTime(timestamp: number | null | undefined): string {
     if (!timestamp) return "—";
-    const date = new Date(timestamp);
-    return date.toLocaleString("zh-CN", {
+    return new Date(timestamp).toLocaleString("zh-CN", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -102,6 +95,7 @@ export function AccountPage() {
     const [profileError, setProfileError] = useState("");
 
     // Password change state
+    const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -155,7 +149,7 @@ export function AccountPage() {
     }, [user]);
 
     // Save profile
-    const handleSaveProfile = async (e: FormEvent) => {
+    const handleSaveProfile = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setProfileError("");
         setProfileSuccess("");
@@ -178,7 +172,7 @@ export function AccountPage() {
     };
 
     // Change password
-    const handleChangePassword = async (e: FormEvent) => {
+    const handleChangePassword = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPasswordError("");
         setPasswordSuccess("");
@@ -218,6 +212,20 @@ export function AccountPage() {
         }
     };
 
+    const resetPasswordForm = () => {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setPasswordSuccess("");
+        setPasswordError("");
+    };
+
+    const handlePasswordDialogOpenChange = (open: boolean) => {
+        if (!open && passwordSaving) return;
+        if (!open) resetPasswordForm();
+        setPasswordDialogOpen(open);
+    };
+
     // Revoke single device
     const handleRevokeDevice = async (device: SessionDevice) => {
         if (device.isCurrent) {
@@ -230,7 +238,7 @@ export function AccountPage() {
         setDevicesActionMsg("");
         try {
             await api(`/api/auth/devices/${device.id}`, { method: "DELETE" });
-            setDevicesActionMsg("已成功撤销该设备会话");
+            setDevicesActionMsg("已退出该设备");
             await loadDevices();
         } catch (err) {
             setDevicesError(errorMessage(err));
@@ -276,489 +284,398 @@ export function AccountPage() {
 
     if (!user) {
         return (
-            <PageShell archetype="utility" className="account-page">
-                <PageHeader
-                    title="账户与安全"
-                    items={[{ label: "首页", to: routes.home }, {
-                        label: "账户与安全",
-                    }]}
-                />
-                <EmptyState
-                    title="未登录"
-                    description="请先登录以访问账户设置、安全配置及设备管理。"
-                    action={
-                        <Link
-                            to={authPath("login", location)}
-                            className="button button--primary"
-                        >
-                            前往登录
-                        </Link>
-                    }
-                />
+            <PageShell archetype="utility">
+                <div className="account-column">
+                    <PageHeader title="账户与安全" />
+                    <EmptyState
+                        title="未登录"
+                        action={
+                            <Link
+                                to={authPath("login", location)}
+                                className={buttonVariants({
+                                    variant: "default",
+                                })}
+                            >
+                                前往登录
+                            </Link>
+                        }
+                    />
+                </div>
             </PageShell>
         );
     }
 
-    const hasOtherDevices = devices.some((d) => !d.isCurrent);
+    const isForcedReset = user.mustChangePassword;
+    const roleLabel = user.role === "admin" ? "系统管理员" : "标准用户";
+    const hasOtherDevices = devices.some((device) => !device.isCurrent);
+    const profileUnchanged = displayName === user.displayName &&
+        email === (user.email ?? "");
 
     return (
-        <PageShell archetype="utility" className="account-page">
-            <PageHeader
-                title="账户与安全"
-                description="管理您的个人资料、密码凭据与已登录设备"
-                items={[{ label: "首页", to: routes.home }, {
-                    label: "账户与安全",
-                }]}
-                actions={user.role === "admin"
-                    ? (
-                        <Link
-                            to={routes.admin()}
-                            className="button button--subtle"
-                        >
-                            <Shield size="1em" className="icon-md" />
-                            <span>管理后台</span>
-                            <ArrowRight size="1em" className="icon-md" />
-                        </Link>
-                    )
-                    : undefined}
-            />
+        <PageShell archetype="utility">
+            <div className="account-column">
+                <PageHeader
+                    title="账户与安全"
+                    actions={user.role === "admin"
+                        ? (
+                            <Link
+                                to={routes.admin()}
+                                className={buttonVariants({
+                                    variant: "outline",
+                                    size: "sm",
+                                })}
+                            >
+                                管理后台
+                            </Link>
+                        )
+                        : undefined}
+                />
 
-            {/* Forced Password Reset Banner */}
-            {user.mustChangePassword && (
-                <StatusBanner tone="warning" className="account-reset-banner">
-                    <div className="account-reset-banner-body">
-                        <h2 className="account-reset-banner-title">
-                            必须重置密码
-                        </h2>
-                        <p className="account-reset-banner-text">
-                            管理员已重置了您的账户密码。为了账户安全，您必须在此设置新密码后方可正常使用。
-                            修改密码后，所有设备将立即注销，您需要使用新密码重新登录。
+                {isForcedReset && (
+                    <StatusBanner
+                        tone="warning"
+                        className="account-forced-banner"
+                    >
+                        管理员已重置密码，请先设置新密码。
+                    </StatusBanner>
+                )}
+
+                <div className="account-identity">
+                    <span className="account-avatar" aria-hidden="true">
+                        {(user.displayName || user.username).slice(0, 1)
+                            .toUpperCase()}
+                    </span>
+                    <div className="account-identity-text">
+                        <p className="account-identity-name">
+                            {user.displayName}
+                        </p>
+                        <p className="account-identity-meta">
+                            @{user.username} · {roleLabel}
                         </p>
                     </div>
-                </StatusBanner>
-            )}
+                </div>
 
-            <div className="account-grid">
-                {/* 1. Profile Card */}
-                <Card className="account-card">
-                    <CardHeader className="account-card-header">
-                        <div className="account-profile-header">
-                            <div
-                                className="account-profile-avatar"
-                                aria-hidden="true"
+                <form className="account-profile" onSubmit={handleSaveProfile}>
+                    <SettingsGroup
+                        title="个人资料"
+                        actions={
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={profileSaving || profileUnchanged}
                             >
-                                {(user.displayName || user.username).slice(0, 1)
-                                    .toUpperCase()}
-                            </div>
-                            <div className="account-profile-info">
-                                <div className="account-profile-name-row">
-                                    <h2 className="account-profile-name">
-                                        {user.displayName}
-                                    </h2>
-                                    <Badge
-                                        variant={user.role === "admin"
-                                            ? "default"
-                                            : "secondary"}
-                                    >
-                                        {user.role === "admin"
-                                            ? "系统管理员"
-                                            : "标准用户"}
-                                    </Badge>
-                                </div>
-                                <p className="account-profile-username muted">
-                                    @{user.username}
-                                </p>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="account-card-content">
-                        <form onSubmit={handleSaveProfile}>
-                            <div className="account-form-grid">
-                                <label className="field account-field">
-                                    <span>
-                                        用户名{" "}
-                                        <span className="muted account-field-hint">
-                                            (不可修改)
-                                        </span>
-                                    </span>
-                                    <Input
-                                        type="text"
-                                        value={user.username}
-                                        disabled
-                                        className="account-input-disabled"
-                                    />
-                                </label>
-                                <label className="field account-field">
-                                    <span>显示名称</span>
-                                    <Input
-                                        type="text"
-                                        required
-                                        maxLength={40}
-                                        value={displayName}
-                                        onChange={(e) =>
-                                            setDisplayName(e.target.value)}
-                                        placeholder="输入显示名称"
-                                    />
-                                </label>
-                            </div>
-                            <label className="field account-field account-field--full">
-                                <span>
-                                    邮箱地址{" "}
-                                    <span className="muted account-field-hint">
-                                        (可选，用于找回与识别)
-                                    </span>
-                                </span>
-                                <Input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="name@example.com"
-                                />
-                            </label>
-                            {profileSuccess && (
-                                <StatusBanner
-                                    tone="success"
-                                    className="account-status-banner"
-                                >
-                                    {profileSuccess}
-                                </StatusBanner>
-                            )}
-                            {profileError && (
-                                <StatusBanner
-                                    tone="error"
-                                    className="account-status-banner"
-                                >
-                                    {profileError}
-                                </StatusBanner>
-                            )}
-                            <div className="account-form-actions">
-                                <Button
-                                    variant="default"
-                                    type="submit"
-                                    disabled={profileSaving ||
-                                        (displayName === user.displayName &&
-                                            email === (user.email ?? ""))}
-                                >
-                                    {profileSaving ? "保存中…" : "保存资料"}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* 2. Password Security Card */}
-                <Card
-                    className="account-card"
-                    data-urgent={user.mustChangePassword ? "" : undefined}
-                >
-                    <CardHeader className="account-card-header">
-                        <div className="account-card-title-row">
-                            <Key
-                                size="1em"
-                                className="icon-lg account-card-icon"
+                                {profileSaving ? "保存中…" : "保存资料"}
+                            </Button>
+                        }
+                    >
+                        <SettingsRow title="用户名">
+                            <span>{user.username}</span>
+                        </SettingsRow>
+                        <SettingsRow title="显示名称">
+                            <Input
+                                className="account-input"
+                                aria-label="显示名称"
+                                type="text"
+                                required
+                                maxLength={40}
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
                             />
-                            <CardTitle className="account-card-title">
-                                {user.mustChangePassword
-                                    ? "重置密码 (必须修改)"
-                                    : "修改密码"}
-                            </CardTitle>
-                        </div>
-                        <p className="account-card-desc muted">
-                            修改密码需要提供当前密码。修改成功后，将在所有已登录设备（包括当前设备）退出登录。
-                        </p>
-                    </CardHeader>
-                    <CardContent className="account-card-content">
-                        <form onSubmit={handleChangePassword}>
-                            <label className="field account-field--spaced">
-                                <span>当前密码</span>
+                        </SettingsRow>
+                        <SettingsRow title="邮箱">
+                            <Input
+                                className="account-input"
+                                aria-label="邮箱"
+                                type="email"
+                                autoComplete="email"
+                                placeholder="name@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </SettingsRow>
+                    </SettingsGroup>
+                    {profileSuccess && (
+                        <StatusBanner tone="success">
+                            {profileSuccess}
+                        </StatusBanner>
+                    )}
+                    {profileError && (
+                        <StatusBanner tone="error">{profileError}</StatusBanner>
+                    )}
+                </form>
+
+                <SettingsGroup title="安全">
+                    <SettingsRow title="密码">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={isForcedReset ? "default" : "outline"}
+                            onClick={() => setPasswordDialogOpen(true)}
+                        >
+                            {isForcedReset ? "重置密码" : "修改密码"}
+                        </Button>
+                    </SettingsRow>
+                </SettingsGroup>
+
+                <SettingsGroup
+                    title="登录设备"
+                    actions={
+                        <>
+                            {hasOtherDevices && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="account-danger"
+                                    disabled={devicesLoading ||
+                                        revokeOthersPending ||
+                                        logoutCurrentPending}
+                                    onClick={() => setRevokeOthersOpen(true)}
+                                >
+                                    退出其他所有设备
+                                </Button>
+                            )}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                aria-label="刷新设备列表"
+                                title="刷新设备列表"
+                                disabled={devicesLoading}
+                                onClick={() => void loadDevices()}
+                            >
+                                <RefreshCw
+                                    size="1em"
+                                    className={cn(
+                                        "icon-md",
+                                        devicesLoading && "animate-spin",
+                                    )}
+                                />
+                                <span>
+                                    {devicesLoading ? "刷新中…" : "刷新"}
+                                </span>
+                            </Button>
+                        </>
+                    }
+                >
+                    {devicesLoading && devices.length === 0
+                        ? (
+                            <p className="account-device-empty">
+                                正在加载登录设备…
+                            </p>
+                        )
+                        : devices.length === 0
+                        ? (
+                            <p className="account-device-empty">
+                                暂无活跃设备记录
+                            </p>
+                        )
+                        : (
+                            <div className="account-device-list">
+                                {devices.map((device) => {
+                                    const isRevoking = revokingId === device.id;
+                                    return (
+                                        <SettingsRow
+                                            key={device.id}
+                                            className="account-device-item"
+                                            title={describeDevice(
+                                                device.userAgent,
+                                            )}
+                                            description={
+                                                <span className="account-device-meta">
+                                                    {device.isCurrent && (
+                                                        <Badge variant="secondary">
+                                                            当前设备
+                                                        </Badge>
+                                                    )}
+                                                    <span>
+                                                        {device.ip || "未知 IP"}
+                                                    </span>
+                                                    <span>
+                                                        登录于 {formatTime(
+                                                            device.createdAt,
+                                                        )}
+                                                    </span>
+                                                    {device.lastActiveAt && (
+                                                        <span>
+                                                            最近活动{" "}
+                                                            {formatTime(
+                                                                device
+                                                                    .lastActiveAt,
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            }
+                                        >
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant={device.isCurrent
+                                                    ? "outline"
+                                                    : "ghost"}
+                                                className={device.isCurrent
+                                                    ? undefined
+                                                    : "account-danger"}
+                                                disabled={isRevoking ||
+                                                    devicesLoading ||
+                                                    logoutCurrentPending ||
+                                                    revokeOthersPending}
+                                                onClick={() =>
+                                                    void handleRevokeDevice(
+                                                        device,
+                                                    )}
+                                            >
+                                                {isRevoking
+                                                    ? "处理中…"
+                                                    : device.isCurrent
+                                                    ? "退出此设备"
+                                                    : "退出"}
+                                            </Button>
+                                        </SettingsRow>
+                                    );
+                                })}
+                            </div>
+                        )}
+                </SettingsGroup>
+
+                {devicesActionMsg && (
+                    <StatusBanner tone="success" className="account-status">
+                        {devicesActionMsg}
+                    </StatusBanner>
+                )}
+                {devicesError && (
+                    <StatusBanner tone="error" className="account-status">
+                        {devicesError}
+                    </StatusBanner>
+                )}
+            </div>
+
+            <Dialog
+                open={passwordDialogOpen}
+                onOpenChange={handlePasswordDialogOpenChange}
+            >
+                <DialogPortal>
+                    <DialogBackdrop />
+                    <DialogPopup className="account-password-dialog">
+                        <form
+                            className="account-password-form"
+                            onSubmit={handleChangePassword}
+                        >
+                            <DialogHeader>
+                                <DialogTitle>
+                                    {isForcedReset ? "重置密码" : "修改密码"}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    修改后，所有设备都将退出登录。
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="account-field">
+                                <label
+                                    className="account-field-label"
+                                    htmlFor="account-current-password"
+                                >
+                                    当前密码
+                                </label>
                                 <Input
+                                    id="account-current-password"
                                     type="password"
                                     required
                                     autoComplete="current-password"
                                     value={currentPassword}
                                     onChange={(e) =>
                                         setCurrentPassword(e.target.value)}
-                                    placeholder="输入当前使用的密码"
                                 />
-                            </label>
-                            <div className="account-form-grid">
-                                <label className="field account-field">
-                                    <span>新密码 (至少 12 个字符)</span>
-                                    <Input
-                                        type="password"
-                                        required
-                                        minLength={12}
-                                        maxLength={128}
-                                        autoComplete="new-password"
-                                        value={newPassword}
-                                        onChange={(e) =>
-                                            setNewPassword(e.target.value)}
-                                        placeholder="输入新密码 (12-128 位)"
-                                    />
-                                </label>
-                                <label className="field account-field">
-                                    <span>确认新密码</span>
-                                    <Input
-                                        type="password"
-                                        required
-                                        minLength={12}
-                                        maxLength={128}
-                                        autoComplete="new-password"
-                                        value={confirmPassword}
-                                        onChange={(e) =>
-                                            setConfirmPassword(e.target.value)}
-                                        placeholder="再次输入新密码"
-                                    />
-                                </label>
                             </div>
-                            {passwordSuccess && (
-                                <StatusBanner
-                                    tone="success"
-                                    className="account-status-banner"
+
+                            <div className="account-field">
+                                <label
+                                    className="account-field-label"
+                                    htmlFor="account-new-password"
                                 >
+                                    新密码
+                                </label>
+                                <Input
+                                    id="account-new-password"
+                                    type="password"
+                                    required
+                                    minLength={12}
+                                    maxLength={128}
+                                    autoComplete="new-password"
+                                    aria-describedby="account-new-password-hint"
+                                    value={newPassword}
+                                    onChange={(e) =>
+                                        setNewPassword(e.target.value)}
+                                />
+                                <p
+                                    id="account-new-password-hint"
+                                    className="account-field-hint"
+                                >
+                                    至少 12 个字符
+                                </p>
+                            </div>
+
+                            <div className="account-field">
+                                <label
+                                    className="account-field-label"
+                                    htmlFor="account-confirm-password"
+                                >
+                                    确认新密码
+                                </label>
+                                <Input
+                                    id="account-confirm-password"
+                                    type="password"
+                                    required
+                                    minLength={12}
+                                    maxLength={128}
+                                    autoComplete="new-password"
+                                    value={confirmPassword}
+                                    onChange={(e) =>
+                                        setConfirmPassword(e.target.value)}
+                                />
+                            </div>
+
+                            {passwordSuccess && (
+                                <StatusBanner tone="success">
                                     {passwordSuccess}
                                 </StatusBanner>
                             )}
                             {passwordError && (
-                                <StatusBanner
-                                    tone="error"
-                                    className="account-status-banner"
-                                >
+                                <StatusBanner tone="error">
                                     {passwordError}
                                 </StatusBanner>
                             )}
-                            <div className="account-form-actions">
+
+                            <DialogFooter>
                                 <Button
-                                    variant="default"
+                                    type="button"
+                                    variant="outline"
+                                    disabled={passwordSaving}
+                                    onClick={() =>
+                                        handlePasswordDialogOpenChange(false)}
+                                >
+                                    取消
+                                </Button>
+                                <Button
                                     type="submit"
                                     disabled={passwordSaving ||
                                         !currentPassword ||
-                                        !newPassword || !confirmPassword}
+                                        !newPassword ||
+                                        !confirmPassword}
                                 >
                                     {passwordSaving
                                         ? "正在更新…"
-                                        : user.mustChangePassword
+                                        : isForcedReset
                                         ? "确认重置密码"
                                         : "更新密码"}
                                 </Button>
-                            </div>
+                            </DialogFooter>
                         </form>
-                    </CardContent>
-                </Card>
+                    </DialogPopup>
+                </DialogPortal>
+            </Dialog>
 
-                {/* 3. Devices Management Card */}
-                <Card className="account-card">
-                    <CardHeader className="account-card-header">
-                        <div className="account-card-header-between">
-                            <div className="account-card-title-row">
-                                <Laptop
-                                    size="1em"
-                                    className="icon-lg account-card-icon"
-                                />
-                                <CardTitle className="account-card-title">
-                                    设备会话管理
-                                </CardTitle>
-                            </div>
-                            <p className="account-devices-count muted">
-                                当前账号共在 {devices.length} 个设备上保持登录
-                            </p>
-                            <div className="account-devices-actions">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    type="button"
-                                    onClick={() => void loadDevices()}
-                                    disabled={devicesLoading}
-                                    title="刷新设备列表"
-                                    aria-label="刷新设备列表"
-                                >
-                                    <RefreshCw
-                                        size="1em"
-                                        className={`icon-md ${
-                                            devicesLoading ? "animate-spin" : ""
-                                        }`}
-                                    />
-                                    <span>
-                                        {devicesLoading ? "刷新中…" : "刷新"}
-                                    </span>
-                                </Button>
-                                {hasOtherDevices && (
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        type="button"
-                                        onClick={() =>
-                                            setRevokeOthersOpen(true)}
-                                        disabled={devicesLoading ||
-                                            revokeOthersPending ||
-                                            logoutCurrentPending}
-                                    >
-                                        <LogOut
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>退出其他所有设备</span>
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="account-card-content">
-                        {devicesActionMsg && (
-                            <StatusBanner
-                                tone="success"
-                                className="account-status-banner--section"
-                            >
-                                {devicesActionMsg}
-                            </StatusBanner>
-                        )}
-                        {devicesError && (
-                            <StatusBanner
-                                tone="error"
-                                className="account-status-banner--section"
-                            >
-                                {devicesError}
-                            </StatusBanner>
-                        )}
-
-                        {devicesLoading && devices.length === 0
-                            ? (
-                                <p className="account-empty-notice muted">
-                                    正在加载登录设备…
-                                </p>
-                            )
-                            : devices.length === 0
-                            ? (
-                                <p className="account-empty-notice muted">
-                                    暂无活跃设备记录
-                                </p>
-                            )
-                            : (
-                                <div className="account-device-list">
-                                    {devices.map((device) => {
-                                        const parsed = parseUserAgent(
-                                            device.userAgent,
-                                        );
-                                        const isRevoking =
-                                            revokingId === device.id;
-                                        return (
-                                            <div
-                                                key={device.id}
-                                                className="account-device-item"
-                                                data-current={device.isCurrent
-                                                    ? "true"
-                                                    : undefined}
-                                            >
-                                                <div className="account-device-main">
-                                                    <div
-                                                        className="account-device-icon"
-                                                        aria-hidden="true"
-                                                    >
-                                                        {parsed.type ===
-                                                                "mobile"
-                                                            ? (
-                                                                <Smartphone
-                                                                    size="1em"
-                                                                    className="icon-lg"
-                                                                />
-                                                            )
-                                                            : parsed.type ===
-                                                                    "tablet"
-                                                            ? (
-                                                                <Laptop
-                                                                    size="1em"
-                                                                    className="icon-lg"
-                                                                />
-                                                            )
-                                                            : parsed.type ===
-                                                                    "desktop"
-                                                            ? (
-                                                                <Laptop
-                                                                    size="1em"
-                                                                    className="icon-lg"
-                                                                />
-                                                            )
-                                                            : (
-                                                                <Globe
-                                                                    size="1em"
-                                                                    className="icon-lg"
-                                                                />
-                                                            )}
-                                                    </div>
-                                                    <div className="account-device-info">
-                                                        <div className="account-device-name-row">
-                                                            <span className="account-device-name">
-                                                                {parsed.name}
-                                                            </span>
-                                                            {device
-                                                                .isCurrent && (
-                                                                <Badge variant="default">
-                                                                    当前设备
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                        <div className="account-device-meta muted">
-                                                            <span>
-                                                                IP:{" "}
-                                                                {device.ip ||
-                                                                    "本地 / 未知"}
-                                                            </span>
-                                                            <span>
-                                                                登录时间:{" "}
-                                                                {formatTime(
-                                                                    device
-                                                                        .createdAt,
-                                                                )}
-                                                            </span>
-                                                            {device
-                                                                .lastActiveAt &&
-                                                                (
-                                                                    <span>
-                                                                        最后活动:
-                                                                        {" "}
-                                                                        {formatTime(
-                                                                            device
-                                                                                .lastActiveAt,
-                                                                        )}
-                                                                    </span>
-                                                                )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="account-device-action">
-                                                    <Button
-                                                        variant={device
-                                                                .isCurrent
-                                                            ? "outline"
-                                                            : "destructive"}
-                                                        size="sm"
-                                                        type="button"
-                                                        disabled={isRevoking ||
-                                                            devicesLoading ||
-                                                            logoutCurrentPending ||
-                                                            revokeOthersPending}
-                                                        onClick={() =>
-                                                            void handleRevokeDevice(
-                                                                device,
-                                                            )}
-                                                    >
-                                                        {isRevoking
-                                                            ? "处理中…"
-                                                            : device.isCurrent
-                                                            ? "退出此设备"
-                                                            : "撤销会话"}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Confirm Logout Current Device Dialog */}
             <AlertDialog
                 open={logoutCurrentOpen}
                 onOpenChange={(open) => {
@@ -771,8 +688,7 @@ export function AccountPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>退出当前设备</AlertDialogTitle>
                         <AlertDialogDescription>
-                            确定要退出当前设备吗？退出后您需要重新登录以继续使用
-                            Searcher。
+                            确定要退出当前设备吗？退出后需要重新登录。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -790,7 +706,6 @@ export function AccountPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Confirm Revoke Other Devices Dialog */}
             <AlertDialog
                 open={revokeOthersOpen}
                 onOpenChange={(open) => {
@@ -803,7 +718,7 @@ export function AccountPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>退出其他所有设备</AlertDialogTitle>
                         <AlertDialogDescription>
-                            确定要退出除当前设备外的所有其他设备吗？其他设备上的会话将立即失效，需要重新登录。
+                            确定要退出除当前设备外的所有其他设备吗？
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

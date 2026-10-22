@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -43,35 +42,24 @@ export function SystemInstructionDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
+            <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-base">
-                        <Sparkles
-                            size="1em"
-                            className="icon-md text-accent"
-                        />
-                        <span>会话系统指令 (System Instruction)</span>
-                    </DialogTitle>
+                    <DialogTitle>会话系统指令 (System Instruction)</DialogTitle>
                     <DialogDescription>
-                        为当前会话设定专属的系统提示词，定制 AI
-                        回复的身份、语调或专属上下文。
+                        定义 AI 在本对话中的身份与回答方式。
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="py-2">
-                    <Textarea
-                        rows={6}
-                        placeholder="例如：你是一位资深前端架构师，回答时言简意赅，只给出最核心的代码实现与必要的关键点说明..."
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        className="resize-none text-sm"
-                    />
-                    <div className="mt-2 text-xs text-muted">
-                        注：指令仅对当前对话生效，不影响全局和其他会话。
-                    </div>
-                </div>
+                <Textarea
+                    rows={6}
+                    placeholder="例如：你是一位资深前端架构师，回答时言简意赅，只给出最核心的代码实现与必要的关键点说明..."
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    className="ask-system-dialog__textarea"
+                />
+                <p className="ask-system-dialog__note">仅对当前对话生效。</p>
 
-                <DialogFooter className="gap-2">
+                <DialogFooter>
                     <Button
                         variant="outline"
                         type="button"

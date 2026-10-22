@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Eye, EyeOff, Plus, RotateCcw, Settings2 } from "lucide-react";
+import { Eye, EyeOff, MoreHorizontal, Plus, RotateCcw } from "lucide-react";
 import type {
     AiModelDto,
     AiProviderDto,
@@ -9,12 +9,12 @@ import {
     CANONICAL_REASONING_EFFORTS,
     type DiscoveryMode,
     parseModelMetadata,
+    type ReasoningCapability,
     type ReasoningEffort,
     type ReasoningOverride,
     resolveEffectiveCapability,
 } from "../../../src/features/ai/model-capabilities.ts";
-import { Badge } from "../components/ui/badge.tsx";
-import { Button } from "../components/ui/button.tsx";
+import { Button, buttonVariants } from "../components/ui/button.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Checkbox } from "../components/ui/checkbox.tsx";
 import {
@@ -35,6 +35,13 @@ import {
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu.tsx";
+import {
     NativeSelect,
     NativeSelectOption,
 } from "../components/ui/native-select.tsx";
@@ -43,11 +50,10 @@ import { errorMessage, useAppState } from "./state.tsx";
 import { authPath } from "./routes.ts";
 import "./settings.css";
 import {
-    ActionGroup,
-    SettingsCard,
+    SettingsGroup,
+    SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
-import { SettingsActionCard, SettingsSection } from "./SettingsPrimitives.tsx";
 
 function getCapabilitySourceLabel(source: string | undefined): string {
     switch (source) {
@@ -85,6 +91,24 @@ function getReasoningEffortLabel(effort: ReasoningEffort): string {
         default:
             return effort;
     }
+}
+
+function describeReasoning(
+    cap: ReasoningCapability,
+): { label: string; title: string } {
+    if (cap.status === "supported") {
+        const levels = cap.levels.length > 0 ? cap.levels.join("/") : "支持";
+        return {
+            label: `推理 ${levels}${cap.source === "manual" ? "（手动）" : ""}`,
+            title: `来源：${getCapabilitySourceLabel(cap.source)}，默认强度：${
+                cap.defaultLevel ?? "无"
+            }`,
+        };
+    }
+    if (cap.status === "unsupported") {
+        return { label: "无推理", title: "该模型不支持推理或已手动关闭" };
+    }
+    return { label: "推理未知", title: "Provider 未声明推理支持状态" };
 }
 
 export function AiSettings() {
@@ -135,24 +159,23 @@ export function AiSettings() {
         if (!user) return;
         void load().catch((e) => setError(errorMessage(e)));
     }, [user?.id]);
+    useEffect(() => {
+        if (!status) return;
+        const timer = setTimeout(() => setStatus(""), 4000);
+        return () => clearTimeout(timer);
+    }, [status]);
     if (!user) {
         return (
-            <SettingsSection
-                title="已配置的 Provider"
-                description="配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存"
-            >
-                <SettingsActionCard
-                    title="登录后配置 Provider"
-                    description="登录后可管理账户的 AI Provider。"
-                >
+            <SettingsGroup>
+                <SettingsRow title="管理 Provider">
                     <Button
                         variant="outline"
                         render={<Link to={authPath("login", location)} />}
                     >
-                        登录后配置 Provider
+                        登录
                     </Button>
-                </SettingsActionCard>
-            </SettingsSection>
+                </SettingsRow>
+            </SettingsGroup>
         );
     }
     function openAdd() {
@@ -314,10 +337,10 @@ export function AiSettings() {
             setWorking(false);
         }
     }
-    function openDelete(provider: AiProviderDto, e?: React.MouseEvent) {
-        deleteTriggerRef.current = (e?.currentTarget as HTMLElement) ??
-            (document.activeElement as HTMLElement) ??
-            null;
+    function openDelete(provider: AiProviderDto) {
+        deleteTriggerRef.current =
+            document.getElementById("provider-menu-" + provider.id) ??
+                (document.activeElement as HTMLElement | null);
         setDeleteTarget(provider);
     }
     function handleCloseDelete() {
@@ -349,17 +372,210 @@ export function AiSettings() {
             setWorking(false);
         }
     }
+    const configuringSource = configuringModel
+        ? getCapabilitySourceLabel(
+            resolveEffectiveCapability(
+                configuringModel.metadataJson,
+                configuringModel.modelId,
+            ).source,
+        )
+        : "";
     return (
-        <SettingsSection
-            title="已配置的 Provider"
-            description="配置 OpenAI 兼容 API Endpoint，Key 在服务端加密保存"
-            actions={
-                <Button variant="default" onClick={openAdd}>
+        <>
+            {providers.map((provider) => {
+                const manageable = provider.ownerUserId === user.id ||
+                    user.role === "admin";
+                const providerModels = models.filter((model) =>
+                    model.providerId === provider.id
+                );
+                return (
+                    <SettingsGroup
+                        key={provider.id}
+                        title={provider.name}
+                        footer={
+                            <span className="ai-provider-meta">
+                                {`${
+                                    provider.scope === "system"
+                                        ? "系统共享"
+                                        : "个人"
+                                } · ${provider.baseUrl} · Key ${provider.apiKeyMasked}`}
+                            </span>
+                        }
+                        actions={manageable
+                            ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                        id={"provider-menu-" + provider.id}
+                                        className={buttonVariants({
+                                            variant: "ghost",
+                                            size: "icon",
+                                        })}
+                                        aria-label={`Provider 操作：${provider.name}`}
+                                        disabled={working}
+                                    >
+                                        <MoreHorizontal
+                                            size="1em"
+                                            className="icon-md"
+                                        />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem
+                                            onClick={() => openEdit(provider)}
+                                        >
+                                            编辑
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            disabled={working}
+                                            onClick={() =>
+                                                void refresh(provider.id)}
+                                        >
+                                            刷新模型
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            variant="destructive"
+                                            disabled={working || isDeleting}
+                                            onClick={() => openDelete(provider)}
+                                        >
+                                            删除
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )
+                            : undefined}
+                    >
+                        {providerModels.length === 0 && (
+                            <SettingsRow title="暂无模型">
+                                {manageable && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={working}
+                                        onClick={() =>
+                                            void refresh(provider.id)}
+                                    >
+                                        刷新
+                                    </Button>
+                                )}
+                            </SettingsRow>
+                        )}
+                        {providerModels.map((model) => {
+                            const reasoning = describeReasoning(
+                                resolveEffectiveCapability(
+                                    model.metadataJson,
+                                    model.modelId,
+                                ),
+                            );
+                            const summary = [
+                                model.displayName !== model.modelId
+                                    ? model.modelId
+                                    : null,
+                                model.supportsText ? "文本" : null,
+                                model.supportsVision ? "视觉" : null,
+                                model.supportsTools ? "工具" : null,
+                                model.supportsStreaming ? "流式" : null,
+                            ].filter(Boolean).join(" · ");
+                            return (
+                                <SettingsRow
+                                    key={model.id}
+                                    title={model.displayName}
+                                    description={
+                                        <span className="ai-model-meta">
+                                            {summary}
+                                            {summary && " · "}
+                                            <span title={reasoning.title}>
+                                                {reasoning.label}
+                                            </span>
+                                        </span>
+                                    }
+                                >
+                                    {manageable && (
+                                        <div className="ai-model-controls">
+                                            <label className="ai-model-toggle">
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label={`启用 ${model.displayName}`}
+                                                    checked={model.enabled}
+                                                    onChange={(e) =>
+                                                        void changeModel(
+                                                            model.id,
+                                                            {
+                                                                enabled:
+                                                                    e.target
+                                                                        .checked,
+                                                            },
+                                                        )}
+                                                />
+                                                启用
+                                            </label>
+                                            <label className="ai-model-toggle">
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label={`可见 ${model.displayName}`}
+                                                    checked={model
+                                                        .visibleToUsers}
+                                                    onChange={(e) =>
+                                                        void changeModel(
+                                                            model.id,
+                                                            {
+                                                                visibleToUsers:
+                                                                    e.target
+                                                                        .checked,
+                                                            },
+                                                        )}
+                                                />
+                                                可见
+                                            </label>
+                                            <label className="ai-model-toggle">
+                                                <input
+                                                    type="radio"
+                                                    name={"default-" +
+                                                        provider.id}
+                                                    aria-label={`设为默认 ${model.displayName}`}
+                                                    checked={model.isDefault}
+                                                    onChange={() =>
+                                                        void changeModel(
+                                                            model.id,
+                                                            {
+                                                                isDefault: true,
+                                                            },
+                                                        )}
+                                                />
+                                                默认
+                                            </label>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                    openModelConfig(model)}
+                                            >
+                                                推理设置
+                                            </Button>
+                                        </div>
+                                    )}
+                                </SettingsRow>
+                            );
+                        })}
+                    </SettingsGroup>
+                );
+            })}
+            <SettingsGroup
+                footer={providers.length === 0
+                    ? "尚未添加 Provider，添加后即可在首页使用 AI 问答。"
+                    : undefined}
+            >
+                <Button
+                    type="button"
+                    variant="ghost"
+                    className="settings-add-row"
+                    onClick={openAdd}
+                >
                     <Plus size="1em" className="icon-md" />
                     <span>添加 Provider</span>
                 </Button>
-            }
-        >
+            </SettingsGroup>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent
                     aria-label={editing ? "编辑 Provider" : "添加 Provider"}
@@ -369,14 +585,10 @@ export function AiSettings() {
                             {editing ? "编辑 Provider" : "添加 Provider"}
                         </DialogTitle>
                         <DialogDescription>
-                            填写 OpenAI 兼容 API 信息。保存前会自动请求 /models
-                            进行连接验证。
+                            OpenAI 兼容 API，保存时自动验证连接。
                         </DialogDescription>
                     </DialogHeader>
-                    <form
-                        onSubmit={save}
-                        className="ai-provider-form"
-                    >
+                    <form onSubmit={save} className="ai-provider-form">
                         <label className="field">
                             名称
                             <input
@@ -398,28 +610,23 @@ export function AiSettings() {
                             />
                         </label>
                         <label className="field">
-                            发现模式 (Discovery Mode)
+                            发现模式
                             <NativeSelect
                                 value={discoveryMode}
-                                onChange={(e) =>
-                                    setDiscoveryMode(
-                                        e.target.value as DiscoveryMode,
-                                    )}
+                                onChange={(e) => setDiscoveryMode(
+                                    e.target.value as DiscoveryMode,
+                                )}
                             >
                                 <NativeSelectOption value="auto">
-                                    自动检测 (Auto)
+                                    自动
                                 </NativeSelectOption>
                                 <NativeSelectOption value="openai-compatible">
-                                    标准 OpenAI 兼容 (OpenAI-compatible)
+                                    OpenAI 兼容
                                 </NativeSelectOption>
                                 <NativeSelectOption value="cliproxyapi">
-                                    CLIProxyAPIHome 扩展目录
+                                    CLIProxyAPIHome
                                 </NativeSelectOption>
                             </NativeSelect>
-                            <p className="muted">
-                                自动：优先标准模型列表；CLIProxyAPIHome：尝试
-                                /user/models 发现推理等级与扩展字段。
-                            </p>
                         </label>
                         <div className="field">
                             <label htmlFor="ai-api-key">API Key</label>
@@ -461,33 +668,29 @@ export function AiSettings() {
                                         )}
                                 </Button>
                             </div>
-                            <p className="muted ai-api-key-help">
-                                Key
-                                仅存储在服务端，并经过安全密钥加密，不会向前端明文暴露。
-                            </p>
+                            <p className="ai-field-hint">加密保存在服务端。</p>
                         </div>
                         {!editing && user.role === "admin" && (
                             <label className="field">
                                 范围
-                                <select
+                                <NativeSelect
                                     value={scope}
                                     onChange={(e) =>
                                         setScope(
                                             e.target.value as "user" | "system",
                                         )}
                                 >
-                                    <option value="user">仅自己可用</option>
-                                    <option value="system">
-                                        系统共享（所有用户）
-                                    </option>
-                                </select>
+                                    <NativeSelectOption value="user">
+                                        仅自己
+                                    </NativeSelectOption>
+                                    <NativeSelectOption value="system">
+                                        所有用户
+                                    </NativeSelectOption>
+                                </NativeSelect>
                             </label>
                         )}
                         {error && (
-                            <p
-                                role="alert"
-                                className="error ai-form-error"
-                            >
+                            <p role="alert" className="error ai-form-error">
                                 {error}
                             </p>
                         )}
@@ -505,7 +708,7 @@ export function AiSettings() {
                                 disabled={working}
                             >
                                 {working
-                                    ? "正在验证模型…"
+                                    ? "正在验证…"
                                     : editing
                                     ? "保存并验证"
                                     : "验证并添加"}
@@ -514,278 +717,21 @@ export function AiSettings() {
                     </form>
                 </DialogContent>
             </Dialog>
-
-            {!providers.length && (
-                <SettingsActionCard
-                    title="尚未添加 AI Provider"
-                    description="添加 Provider 并验证模型后，即可在主页直接切换使用 AI 问答。"
-                >
-                    <Button variant="outline" onClick={openAdd}>
-                        <Plus size="1em" className="icon-md" />
-                        <span>添加第一个 Provider</span>
-                    </Button>
-                </SettingsActionCard>
-            )}
-            {providers.map((provider) => (
-                <SettingsCard padded key={provider.id}>
-                    <div className="provider-head">
-                        <div>
-                            <strong>
-                                {provider.name}{" "}
-                                <small>
-                                    {provider.scope === "system"
-                                        ? "系统"
-                                        : "个人"}
-                                </small>
-                            </strong>
-                            <p className="muted">
-                                {provider.baseUrl} · Key {provider.apiKeyMasked}
-                            </p>
-                        </div>
-                        {(provider.ownerUserId === user.id ||
-                            user.role === "admin") && (
-                            <ActionGroup>
-                                <Button
-                                    type="button"
-                                    disabled={working}
-                                    onClick={() => openEdit(provider)}
-                                >
-                                    编辑
-                                </Button>
-                                <Button
-                                    type="button"
-                                    disabled={working}
-                                    onClick={() => void refresh(provider.id)}
-                                >
-                                    刷新模型
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    disabled={working || isDeleting}
-                                    onClick={(e) => openDelete(provider, e)}
-                                >
-                                    删除
-                                </Button>
-                            </ActionGroup>
-                        )}
-                    </div>
-                    <div className="provider-models">
-                        {models.filter((model) =>
-                            model.providerId === provider.id
-                        ).map((model) => {
-                            const cap = resolveEffectiveCapability(
-                                model.metadataJson,
-                                model.modelId,
-                            );
-                            return (
-                                <div key={model.id} className="model-row">
-                                    <div className="model-row-main">
-                                        <span>
-                                            <strong>{model.displayName}</strong>
-                                            {" "}
-                                            <small className="muted">
-                                                {model.modelId}
-                                            </small>
-                                        </span>
-                                        <div className="model-badges">
-                                            {model.supportsText && (
-                                                <Badge variant="secondary">
-                                                    文本
-                                                </Badge>
-                                            )}
-                                            {model.supportsVision && (
-                                                <Badge variant="secondary">
-                                                    视觉
-                                                </Badge>
-                                            )}
-                                            {model.supportsTools && (
-                                                <Badge variant="secondary">
-                                                    工具
-                                                </Badge>
-                                            )}
-                                            {model.supportsStreaming && (
-                                                <Badge variant="secondary">
-                                                    流式
-                                                </Badge>
-                                            )}
-                                            {cap.status === "supported"
-                                                ? (
-                                                    <Badge
-                                                        variant="default"
-                                                        title={`来源: ${
-                                                            getCapabilitySourceLabel(
-                                                                cap.source,
-                                                            )
-                                                        }，默认强度: ${
-                                                            cap.defaultLevel ??
-                                                                "无"
-                                                        }`}
-                                                    >
-                                                        推理:{" "}
-                                                        {cap.levels.length > 0
-                                                            ? cap.levels.join(
-                                                                "/",
-                                                            )
-                                                            : "支持"}
-                                                        {cap.source ===
-                                                                "manual" && (
-                                                            <span className="model-manual-tag">
-                                                                [手动]
-                                                            </span>
-                                                        )}
-                                                    </Badge>
-                                                )
-                                                : cap.status === "unsupported"
-                                                ? (
-                                                    <Badge
-                                                        variant="outline"
-                                                        title="该模型不支持推理或已手动关闭"
-                                                    >
-                                                        无推理
-                                                    </Badge>
-                                                )
-                                                : (
-                                                    <Badge
-                                                        variant="outline"
-                                                        title="Provider 未声明推理支持状态"
-                                                    >
-                                                        推理未知
-                                                    </Badge>
-                                                )}
-                                        </div>
-                                    </div>
-                                    {(provider.ownerUserId === user.id ||
-                                        user.role === "admin") && (
-                                        <ActionGroup>
-                                            <label>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={model.enabled}
-                                                    onChange={(e) =>
-                                                        void changeModel(
-                                                            model.id,
-                                                            {
-                                                                enabled:
-                                                                    e.target
-                                                                        .checked,
-                                                            },
-                                                        )}
-                                                />{" "}
-                                                启用
-                                            </label>
-                                            <label>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={model
-                                                        .visibleToUsers}
-                                                    onChange={(e) =>
-                                                        void changeModel(
-                                                            model.id,
-                                                            {
-                                                                visibleToUsers:
-                                                                    e.target
-                                                                        .checked,
-                                                            },
-                                                        )}
-                                                />{" "}
-                                                可见
-                                            </label>
-                                            <label>
-                                                <input
-                                                    type="radio"
-                                                    name={"default-" +
-                                                        provider.id}
-                                                    checked={model.isDefault}
-                                                    onChange={() =>
-                                                        void changeModel(
-                                                            model.id,
-                                                            {
-                                                                isDefault: true,
-                                                            },
-                                                        )}
-                                                />{" "}
-                                                默认
-                                            </label>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() =>
-                                                    openModelConfig(model)}
-                                                title="手动配置该模型的推理能力与强度"
-                                            >
-                                                <Settings2
-                                                    size="1em"
-                                                    className="icon-sm"
-                                                />
-                                                <span>配置推理</span>
-                                            </Button>
-                                        </ActionGroup>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </SettingsCard>
-            ))}
             <Dialog
                 open={!!configuringModel}
                 onOpenChange={(open) => !open && setConfiguringModel(null)}
             >
-                <DialogContent aria-label="配置模型推理能力">
+                <DialogContent aria-label="推理设置">
                     <DialogHeader>
-                        <DialogTitle>配置模型推理能力</DialogTitle>
+                        <DialogTitle>推理设置</DialogTitle>
                         <DialogDescription>
-                            手动配置 {configuringModel?.displayName} (
-                            {configuringModel?.modelId}
-                            )
-                            的推理强度。手动配置优先级最高，不会被模型刷新覆盖。
+                            {configuringModel
+                                ? `${configuringModel.displayName} · 来源：${configuringSource}`
+                                : ""}
                         </DialogDescription>
                     </DialogHeader>
                     {configuringModel && (
                         <div className="model-config-dialog-body">
-                            <div className="model-capabilities-summary">
-                                <div>
-                                    <strong>基础能力：</strong>文本 ✓ · 视觉
-                                    {" "}
-                                    {configuringModel.supportsVision
-                                        ? "✓"
-                                        : "✗"} · 工具{" "}
-                                    {configuringModel.supportsTools ? "✓" : "✗"}
-                                    {" "}
-                                    · 流式{" "}
-                                    {configuringModel.supportsStreaming
-                                        ? "✓"
-                                        : "✗"}
-                                </div>
-                                <div>
-                                    <strong>能力来源：</strong>
-                                    {getCapabilitySourceLabel(
-                                        resolveEffectiveCapability(
-                                            configuringModel.metadataJson,
-                                            configuringModel.modelId,
-                                        ).source,
-                                    )}
-                                </div>
-                                <div>
-                                    <strong>配置状态：</strong>
-                                    {parseModelMetadata(
-                                            configuringModel.metadataJson,
-                                        ).capabilities?.overrides?.reasoning
-                                        ? (
-                                            <Badge variant="default">
-                                                已手动覆盖
-                                            </Badge>
-                                        )
-                                        : (
-                                            <Badge variant="outline">
-                                                自动发现 / 预设 (未覆盖)
-                                            </Badge>
-                                        )}
-                                </div>
-                            </div>
-
                             <div className="reasoning-toggle-row">
                                 <Switch
                                     id="manual-reasoning-toggle"
@@ -797,14 +743,19 @@ export function AiSettings() {
                                     htmlFor="manual-reasoning-toggle"
                                     className="reasoning-toggle-label"
                                 >
-                                    开启该模型的推理能力 (Reasoning Effort)
+                                    开启推理
                                 </label>
                             </div>
-
                             {manualReasoningEnabled && (
                                 <>
-                                    <div className="field">
-                                        <label>支持的推理强度（可多选）</label>
+                                    <div
+                                        className="field"
+                                        role="group"
+                                        aria-labelledby="reasoning-levels-label"
+                                    >
+                                        <span id="reasoning-levels-label">
+                                            支持的强度
+                                        </span>
                                         <div className="reasoning-levels-grid">
                                             {CANONICAL_REASONING_EFFORTS.map(
                                                 (effort) => (
@@ -825,7 +776,6 @@ export function AiSettings() {
                                                                     effort,
                                                                 )}
                                                         />
-
                                                         <span>
                                                             {getReasoningEffortLabel(
                                                                 effort,
@@ -836,9 +786,8 @@ export function AiSettings() {
                                             )}
                                         </div>
                                     </div>
-
                                     <label className="field">
-                                        默认推理强度
+                                        默认强度
                                         <NativeSelect
                                             value={defaultLevel}
                                             onChange={(e) =>
@@ -863,13 +812,11 @@ export function AiSettings() {
                                     </label>
                                 </>
                             )}
-
                             <div className="model-config-actions">
                                 <Button
                                     type="button"
-                                    variant="outline"
+                                    variant="ghost"
                                     onClick={revertModelConfig}
-                                    title="清除手动配置，恢复为 Provider 自动发现或预设"
                                 >
                                     <RotateCcw size="1em" className="icon-sm" />
                                     <span>恢复自动发现</span>
@@ -890,7 +837,7 @@ export function AiSettings() {
                                         disabled={manualReasoningEnabled &&
                                             selectedLevels.length === 0}
                                     >
-                                        保存配置
+                                        保存
                                     </Button>
                                 </div>
                             </div>
@@ -908,13 +855,11 @@ export function AiSettings() {
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            删除 Provider 及其模型？
-                        </AlertDialogTitle>
+                        <AlertDialogTitle>删除 Provider？</AlertDialogTitle>
                         <AlertDialogDescription>
                             {activeDeleteTarget
-                                ? `确定要删除 Provider “${activeDeleteTarget.name}” 及其关联的模型吗？此操作无法撤销。`
-                                : "确定要删除该 Provider 及其关联的模型吗？此操作无法撤销。"}
+                                ? `“${activeDeleteTarget.name}” 及其模型将被永久删除。`
+                                : "该 Provider 及其模型将被永久删除。"}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -929,13 +874,21 @@ export function AiSettings() {
                             disabled={isDeleting}
                             onClick={handleConfirmDelete}
                         >
-                            {isDeleting ? "正在删除..." : "删除"}
+                            {isDeleting ? "正在删除…" : "删除"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            {status && <StatusBanner>{status}</StatusBanner>}
-            {error && <StatusBanner tone="error">{error}</StatusBanner>}
-        </SettingsSection>
+            {status && (
+                <StatusBanner tone="success" presentation="floating">
+                    {status}
+                </StatusBanner>
+            )}
+            {error && !isModalOpen && (
+                <StatusBanner tone="error" className="ai-error">
+                    {error}
+                </StatusBanner>
+            )}
+        </>
     );
 }

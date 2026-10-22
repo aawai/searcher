@@ -29,7 +29,7 @@ Deno.test("Notes long document actions and history stay reachable without replac
     });
     await page.reload();
     await page.locator(
-        '.desktop-dock button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+        '.zen-edge-btn[data-workspace="notes"]',
     ).first().click();
     await page.locator(".notes-workspace-list .note-title").filter({
         hasText: "长文操作",
@@ -62,7 +62,8 @@ Deno.test("Notes long document actions and history stay reachable without replac
     await scroll.evaluate((element) => {
         element.scrollTop = 400;
     });
-    await page.getByRole("button", { name: "版本历史", exact: true }).click();
+    await page.getByRole("button", { name: "便签选项", exact: true }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await page.getByRole("button", { name: "返回编辑", exact: true }).waitFor();
     assertEquals(await live.count(), 1);
     assertEquals(await live.isVisible(), false);
@@ -84,7 +85,8 @@ Deno.test("Notes long document actions and history stay reachable without replac
         element.setSelectionRange(100, 110);
         element.scrollTop = 400;
     });
-    await page.getByRole("button", { name: "版本历史", exact: true }).click();
+    await page.getByRole("button", { name: "便签选项", exact: true }).click();
+    await page.getByRole("menuitem", { name: "版本历史", exact: true }).click();
     await page.getByRole("button", { name: "返回编辑", exact: true }).waitFor();
     await page.waitForFunction(() => {
         const back = document.querySelector<HTMLButtonElement>(
