@@ -2,6 +2,8 @@
 /* Searcher Visual Language tokens. Contract: docs/design/VISUAL_LANGUAGE.md */
 :root {
     color-scheme: light;
+    /* Shared website glyphs use the same squircle in grids and app previews. */
+    --radius-launcher-ratio: .23;
 
     /* Color roles: neutral, no hue cast. */
     --background: #F4F4F5;

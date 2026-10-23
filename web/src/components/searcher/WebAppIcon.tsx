@@ -1,5 +1,6 @@
 import { GripVertical } from "lucide-react";
 import { useState } from "react";
+import { iconFallback } from "./iconFallback.ts";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 export interface WebAppItem {
@@ -14,29 +15,30 @@ export interface WebAppItem {
     openMode?: "global" | "current" | "new_tab";
 }
 
-export function WebAppGlyph({
-    app,
-    className = "",
-}: {
+export function WebAppGlyph({ app, className = "" }: {
     app: Pick<WebAppItem, "name" | "url" | "iconUrl" | "iconAssetId">;
     className?: string;
 }) {
-    const [failedUrl, setFailedUrl] = useState<string | null>(null);
-    const iconUrl = app.iconUrl ||
+    const source = app.iconUrl ||
         (app.iconAssetId ? `/api/webapp-icons/${app.iconAssetId}` : null);
-    const firstChar = app.name.trim().slice(0, 1).toUpperCase() || "W";
+    const [failedSource, setFailedSource] = useState<string | null>(null);
+    const effective = source !== failedSource ? source : null;
     return (
-        <span className={`webapp-glyph ${className}`} aria-hidden="true">
-            {iconUrl && iconUrl !== failedUrl
+        <span
+            className={`webapp-glyph ${className}`}
+            style={effective ? undefined : iconFallback(app.url)}
+            aria-hidden="true"
+        >
+            {effective
                 ? (
                     <img
-                        src={iconUrl}
+                        src={effective}
                         alt=""
                         loading="lazy"
-                        onError={() => setFailedUrl(iconUrl)}
+                        onError={() => setFailedSource(source)}
                     />
                 )
-                : <span>{firstChar}</span>}
+                : <span>{Array.from(app.name.trim())[0] || "W"}</span>}
         </span>
     );
 }

@@ -14,6 +14,7 @@ import {
 } from "./fetcher.ts";
 import { validateImageBytes } from "./validator.ts";
 import { validateUrlForSafeFetch } from "./ssrf.ts";
+import { normalizeIcon } from "./presentation.ts";
 
 export interface IconRecord {
     id: string;
@@ -23,6 +24,7 @@ export interface IconRecord {
     sha256: string;
     relativePath: string;
     createdAt: number;
+    presentationVersion?: 1;
 }
 
 export class WebAppIconService {
@@ -143,7 +145,10 @@ export class WebAppIconService {
             throw new Error(validation.reason);
         }
 
-        const finalBytes = validation.sanitizedBytes ?? rawBytes;
+        const finalBytes = await normalizeIcon(
+            validation.sanitizedBytes ?? rawBytes,
+            validation.contentType,
+        );
         const sha256 = await this.#computeSha256(finalBytes);
 
         return await this.#withLock(async () => {
@@ -160,12 +165,7 @@ export class WebAppIconService {
             }
 
             const id = crypto.randomUUID();
-            let ext = "png";
-            if (validation.contentType === "image/jpeg") ext = "jpg";
-            else if (validation.contentType === "image/webp") ext = "webp";
-            else if (validation.contentType === "image/avif") ext = "avif";
-            else if (validation.contentType === "image/svg+xml") ext = "svg";
-            else if (validation.contentType === "image/x-icon") ext = "ico";
+            const ext = "png";
 
             const fileName = `${id}.${ext}`;
             const relativePath = fileName;
@@ -177,11 +177,12 @@ export class WebAppIconService {
             const record: IconRecord = {
                 id,
                 ownerUserId: userId,
-                contentType: validation.contentType,
+                contentType: "image/png",
                 size: finalBytes.length,
                 sha256,
                 relativePath,
                 createdAt: this.#now(),
+                presentationVersion: 1,
             };
 
             manifest.set(id, record);
@@ -207,7 +208,16 @@ export class WebAppIconService {
 
             const fullPath = join(this.#storageDir, record.relativePath);
             try {
-                const bytes = await Deno.readFile(fullPath);
+                let bytes: Uint8Array = await Deno.readFile(fullPath);
+                if (record.presentationVersion !== 1) {
+                    bytes = await normalizeIcon(bytes, record.contentType);
+                    await Deno.writeFile(fullPath, bytes);
+                    record.contentType = "image/png";
+                    record.size = bytes.length;
+                    record.sha256 = await this.#computeSha256(bytes);
+                    record.presentationVersion = 1;
+                    await this.#atomicWriteManifest([...manifest.values()]);
+                }
                 return { record, bytes };
             } catch {
                 return null;
@@ -268,21 +278,33 @@ export class WebAppIconService {
                             "icons" in manifestJson &&
                             Array.isArray(manifestJson.icons)
                         ) {
-                            const icon = manifestJson.icons.at(-1) as unknown;
-                            if (
-                                icon && typeof icon === "object" &&
-                                "src" in icon &&
-                                typeof icon.src === "string"
-                            ) {
-                                const iconAbs = new URL(icon.src, candidate.url)
-                                    .toString();
-                                const { bytes } = await fetchWithSafeLimit(
-                                    iconAbs,
-                                );
-                                return {
-                                    ...await this.saveIcon(userId, bytes),
-                                    siteName,
-                                };
+                            const icons = manifestJson.icons.filter(
+                                (
+                                    icon,
+                                ): icon is { src: string; sizes?: unknown } =>
+                                    Boolean(icon) && typeof icon === "object" &&
+                                    "src" in icon &&
+                                    typeof icon.src === "string",
+                            ).sort((a, b) =>
+                                (Number.parseInt(String(b.sizes ?? "")) || 0) -
+                                (Number.parseInt(String(a.sizes ?? "")) || 0)
+                            );
+                            for (const icon of icons) {
+                                try {
+                                    const iconAbs = new URL(
+                                        icon.src,
+                                        candidate.url,
+                                    ).toString();
+                                    const { bytes } = await fetchWithSafeLimit(
+                                        iconAbs,
+                                    );
+                                    return {
+                                        ...await this.saveIcon(userId, bytes),
+                                        siteName,
+                                    };
+                                } catch {
+                                    // A broken large candidate must not hide another manifest icon.
+                                }
                             }
                         }
                     } catch {

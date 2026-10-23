@@ -1,7 +1,6 @@
 import type React from "react";
 import type { EngineId } from "@shared/engines.ts";
 import type { Reachability } from "../../components/searcher/SearcherSearchInput.tsx";
-import type { WebAppIconSize } from "../../components/searcher/WebAppLauncher.tsx";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import type { NoteItem } from "../../components/searcher/NoteCard.tsx";
 import type { UserDto } from "@shared/contracts.ts";
@@ -60,7 +59,6 @@ export interface HomeLayoutProps {
     openWorkspace: (workspace: WorkspaceKind) => void;
     workspaceOpen: boolean;
     // appearance
-    webAppIconSize: WebAppIconSize;
     showAppLabels: boolean;
     // error
     setError: (err: string) => void;

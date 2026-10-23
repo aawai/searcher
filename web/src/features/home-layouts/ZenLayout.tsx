@@ -60,7 +60,6 @@ export function ZenLayout(
         openWorkspace,
         workspaceOpen,
         panelDocked,
-        webAppIconSize,
         showAppLabels,
     } = props;
     const heroRef = useRef<HTMLElement>(null);
@@ -220,7 +219,6 @@ export function ZenLayout(
                                 apps={pinned}
                                 groups={groups}
                                 showFolders={false}
-                                iconSize={webAppIconSize}
                                 showAppLabels={showAppLabels}
                                 managing={isManagingApps}
                                 onToggleManaging={() =>

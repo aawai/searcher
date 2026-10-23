@@ -3,6 +3,7 @@ import { json, param, query, validator } from "@internal/validator/hono.ts";
 import type { Routes } from "@internal/hono/routes.ts";
 import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
+import { WebAppIconService } from "../webapp-icons/service.ts";
 import {
     BookmarksService,
     normalizeWebAppUrl,
@@ -56,6 +57,7 @@ export function registerBookmarksRoutes(
     deps: AppDeps,
 ): void {
     const service = new BookmarksService(deps.store, deps.now);
+    const icons = deps.icons ?? new WebAppIconService();
 
     // ==========================================
     // WebApp Groups: /api/webapp-groups
@@ -237,6 +239,44 @@ export function registerBookmarksRoutes(
                     error instanceof WebAppNotFoundError ||
                     error instanceof WebAppGroupNotFoundError
                 ) {
+                    return c.fail(STATUS_CODE.NotFound, error.message);
+                }
+                throw error;
+            }
+        },
+    );
+
+    // Fetch outside the database queue; apply only to the unchanged icon draft.
+    routes.post(
+        "/api/webapps/:id/fetch-icon",
+        validator({ id: param(IdParamSchema) }),
+        async (c, data) => {
+            const user = c.get("user");
+            try {
+                const app = await service.getWebAppById(user.id, data.id);
+                if (
+                    app.iconSource !== "default" &&
+                    (app.iconAssetId || app.iconSource !== "website")
+                ) return c.success(app);
+                let asset;
+                try {
+                    asset = await icons.fetchAndSaveFromWebsite(
+                        user.id,
+                        app.url,
+                    );
+                } catch (error) {
+                    return c.fail(
+                        STATUS_CODE.BadRequest,
+                        error instanceof Error
+                            ? error.message
+                            : "获取站点图标失败",
+                    );
+                }
+                return c.success(
+                    await service.applyFetchedIcon(user.id, app, asset.id),
+                );
+            } catch (error) {
+                if (error instanceof WebAppNotFoundError) {
                     return c.fail(STATUS_CODE.NotFound, error.message);
                 }
                 throw error;

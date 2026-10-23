@@ -36,6 +36,14 @@ Deno.test("extractCandidateIconsFromHtml respects priority: apple-touch-icon -> 
     );
 });
 
+Deno.test("apple touch icon chooses 180px before smaller HTML candidates", () => {
+    const icons = extractCandidateIconsFromHtml(
+        '<link rel="apple-touch-icon" sizes="57x57" href="/small.png"><link rel="apple-touch-icon" sizes="180x180" href="/large.png">',
+        "https://example.com",
+    );
+    assertEquals(icons[0].url, "https://example.com/large.png");
+});
+
 Deno.test("website quick add derives a readable title from remote HTML without markup", () => {
     assertEquals(
         extractSiteNameFromHtml(

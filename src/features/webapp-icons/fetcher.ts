@@ -96,6 +96,9 @@ export function extractCandidateIconsFromHtml(
     }
 
     // 1. apple-touch-icon
+    const distanceFrom180 = (icon: CandidateIcon) =>
+        Math.abs((Number.parseInt(icon.sizes ?? "") || 180) - 180);
+    appleIcons.sort((a, b) => distanceFrom180(a) - distanceFrom180(b));
     candidates.push(...appleIcons);
 
     // 2. manifest icons (placeholder URL marker for manifest resolution)

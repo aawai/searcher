@@ -722,17 +722,6 @@ export function SettingsPage() {
                                 values={GLASS_CHOICES}
                                 select={(v) => set("glassIntensity", v)}
                             />
-                            <Choices
-                                title="应用图标大小"
-                                control="segmented"
-                                value={appearance.webAppIconSize}
-                                values={[
-                                    ["compact", "小"],
-                                    ["default", "标准"],
-                                    ["large", "大"],
-                                ] as const}
-                                select={(v) => set("webAppIconSize", v)}
-                            />
                             <SettingsRow title="显示应用名称">
                                 <Switch
                                     checked={appearance

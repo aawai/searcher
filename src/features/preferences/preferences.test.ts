@@ -48,7 +48,6 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 glassIntensity: "clear",
                 defaultEngine: "google",
                 webAppHomeLimit: 16,
-                webAppIconSize: "large",
                 showAppLabels: false,
             }),
         });
@@ -58,7 +57,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
         assertEquals(saved.data?.webAppHomeLimit, 16);
-        assertEquals(saved.data?.webAppIconSize, "large");
+        assertEquals("webAppIconSize" in (saved.data ?? {}), false);
         assertEquals(saved.data?.showAppLabels, false);
         const partial = await app.request("/api/preferences", {
             method: "PATCH",
@@ -78,7 +77,6 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.searchShape, "pill");
         assertEquals(changed.data?.glassIntensity, "clear");
-        assertEquals(changed.data?.webAppIconSize, "large");
         assertEquals(changed.data?.showAppLabels, false);
         const updateEmerald = await app.request("/api/preferences", {
             method: "PATCH",
@@ -114,7 +112,6 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.searchShape, "rounded");
         assertEquals(isolated.data?.glassIntensity, "regular");
-        assertEquals(isolated.data?.webAppIconSize, "default");
         assertEquals(isolated.data?.showAppLabels, true);
     } finally {
         await store.close();
@@ -157,7 +154,6 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { searchShape: "square" },
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },
-                { webAppIconSize: "huge" },
                 { showAppLabels: "not-a-bool" },
                 { accent: "neon_green" },
             ]

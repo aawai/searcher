@@ -451,7 +451,7 @@ async function collectDensityMetrics(
 function assertDensityMetrics(
     metrics: DensityMetrics,
     viewport: Viewport,
-    glyphSize = 40,
+    glyphSize = viewport.width >= 768 ? 48 : 44,
 ) {
     assertNear(metrics.cellWidth, 68, "Workspace column track");
     assertNear(metrics.rowHeight, 68, "Workspace row track");
@@ -858,7 +858,7 @@ async function runTouchInteractions(
             track: 68,
             gapX: 4,
             gapY: 4,
-            glyph: [40, 40],
+            glyph: [44, 44],
             overflow: false,
         });
         assertEquals(
@@ -1019,7 +1019,7 @@ async function runDesktopMatrix(
             metrics,
             screenshot,
         });
-        assertDensityMetrics(metrics, { width: 1440, height: 900 }, 38);
+        assertDensityMetrics(metrics, { width: 1440, height: 900 });
         assertFolderPreviewMetrics(metrics, false);
         await page.waitForFunction(() =>
             document.querySelector(".home")?.getAnimations().length === 0
@@ -1171,12 +1171,12 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                 const compactHome = viewport.width < 768;
                 assertNear(
                     home.cellWidth,
-                    compactHome ? 68 : 84,
+                    compactHome ? 68 : 88,
                     "Mobile Home presenters share compact touch tracks",
                 );
                 assertNear(
                     home.rowHeight,
-                    compactHome ? 68 : 84,
+                    compactHome ? 68 : 88,
                     "Home touch row geometry",
                 );
                 assertNear(

@@ -29,6 +29,8 @@
     },
     "imports": {
         "@internal/": "./src/internal/",
+        "icojs": "npm:icojs@0.20.1",
+        "sharp": "npm:sharp@0.34.5",
         "typescript": "npm:typescript@5.9.3",
         "@logger": "./src/internal/logger/logger.ts",
         "@shared/": "./src/shared/",

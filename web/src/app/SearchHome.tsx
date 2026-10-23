@@ -1184,7 +1184,6 @@ export function SearchHome() {
         updateNoteLayout,
         openWorkspace,
         workspaceOpen: Boolean(host.activeKind),
-        webAppIconSize: appearance.webAppIconSize,
         showAppLabels: appearance.showAppLabels,
         setError,
     };

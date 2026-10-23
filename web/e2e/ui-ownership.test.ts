@@ -223,15 +223,10 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     "--material-filter",
                 ).includes("blur(12px)")
             );
-            await Promise.all([
-                page.waitForResponse((response) =>
-                    response.url().endsWith("/api/preferences") &&
-                    response.request().method() === "PATCH" &&
-                    response.ok() &&
-                    response.request().postDataJSON().webAppIconSize === "large"
-                ),
-                page.getByRole("radio", { name: "大", exact: true }).click(),
-            ]);
+            assertEquals(
+                await page.getByText("应用图标大小", { exact: true }).count(),
+                0,
+            );
             await Promise.all([
                 page.waitForResponse((response) =>
                     response.url().endsWith("/api/preferences") &&
@@ -247,11 +242,10 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 exact: true,
                 checked: true,
             }).waitFor();
-            await page.getByRole("radio", {
-                name: "大",
-                exact: true,
-                checked: true,
-            }).waitFor();
+            assertEquals(
+                await page.getByText("应用图标大小", { exact: true }).count(),
+                0,
+            );
             await page.getByRole("switch", {
                 name: "显示应用名称",
                 checked: false,
@@ -279,7 +273,6 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             await updatePreferences({
                 searchShape: "rounded",
                 glassIntensity: "regular",
-                webAppIconSize: "default",
                 showAppLabels: true,
             });
             await page.reload();

@@ -6,6 +6,7 @@ import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
 import { Switch } from "../ui/switch.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
+import { WebAppGlyph } from "./WebAppIcon.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -32,7 +33,6 @@ export function AppForm() {
         appIconSource,
         iconPreviewUrl,
         iconImageUrl,
-        imageLoadError,
         urlFetchStatus,
         urlFetchMessage,
         formError,
@@ -44,7 +44,6 @@ export function AppForm() {
         urlValidationError,
         previewName,
         previewDomain,
-        previewInitial,
         iconExpanded,
         iconError,
         logo,
@@ -258,22 +257,14 @@ export function AppForm() {
                     <div className="app-dialog-icon-card">
                         {/* 实时图标预览栏 */}
                         <div className="app-dialog-preview-bar">
-                            <div className="app-dialog-preview-icon">
-                                {iconPreviewUrl && !imageLoadError
-                                    ? (
-                                        <img
-                                            src={iconPreviewUrl}
-                                            alt="应用图标"
-                                            onError={() =>
-                                                setImageLoadError(true)}
-                                        />
-                                    )
-                                    : (
-                                        <span className="app-dialog-preview-fallback">
-                                            {previewInitial}
-                                        </span>
-                                    )}
-                            </div>
+                            <WebAppGlyph
+                                className="app-dialog-preview-icon"
+                                app={{
+                                    name: previewName,
+                                    url: `https://${previewDomain}`,
+                                    iconUrl: iconPreviewUrl,
+                                }}
+                            />
                             <div className="app-dialog-preview-meta">
                                 <div className="flex items-center gap-1.5">
                                     <span className="app-dialog-preview-meta-title">

@@ -83,9 +83,6 @@ export const preferences = sqliteTable("preferences", {
     webAppHomeLimit: text("webapp_home_limit", {
         enum: ["8", "12", "16", "all"],
     }).notNull().default("12"),
-    webAppIconSize: text("webapp_icon_size", {
-        enum: ["compact", "default", "large"],
-    }).notNull().default("default"),
     showAppLabels: integer("show_app_labels", { mode: "boolean" })
         .notNull().default(true),
     aiGenerationDefaults: text("ai_generation_defaults"),
@@ -119,10 +116,6 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_webapp_home_limit_check",
         sql`${t.webAppHomeLimit} in ('8','12','16','all')`,
-    ),
-    check(
-        "preferences_webapp_icon_size_check",
-        sql`${t.webAppIconSize} in ('compact','default','large')`,
     ),
 ]);
 

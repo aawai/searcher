@@ -521,6 +521,13 @@ export function useAppSession(options: AppSessionOptions) {
         overrideIconPreviewUrl?: string | null;
     }) {
         const operationKey = entry.current.revision;
+        // Persist the current draft immediately; missing icons are filled after
+        // creation by the workspace queue, not by awaiting remote metadata here.
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = undefined;
+        urlRevision.current++;
+        urlPending.current?.controller.abort();
+        urlPending.current = null;
         let normalizedUrl = appUrl.trim();
         if (!/^https?:\/\//i.test(normalizedUrl)) {
             normalizedUrl = "https://" + normalizedUrl;

@@ -8,6 +8,7 @@ import { WebAppIconService } from "./service.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
 import type { Envelope } from "@shared/contracts.ts";
 import type { AppDeps } from "../../serve/env.ts";
+import sharp from "sharp";
 
 const ORIGIN = "http://localhost:8000";
 
@@ -60,26 +61,20 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
         assertEquals(res404.status, STATUS_CODE.NotFound);
 
         // 3. Test POST upload without auth -> 401
-        const pngHeader = new Uint8Array([
-            0x89,
-            0x50,
-            0x4e,
-            0x47,
-            0x0d,
-            0x0a,
-            0x1a,
-            0x0a,
-            0x00,
-            0x00,
-            0x00,
-            0x0d,
-        ]);
-        const imageBytes = new Uint8Array(2 * 1024 * 1024);
-        imageBytes.set(pngHeader);
+        const imageBytes = await sharp({
+            create: {
+                width: 180,
+                height: 180,
+                channels: 4,
+                background: "#dc1e28",
+            },
+        }).png().toBuffer();
         const form1 = new FormData();
         form1.append(
             "icon",
-            new File([imageBytes], "test.png", { type: "image/png" }),
+            new File([new Uint8Array(imageBytes)], "test.png", {
+                type: "image/png",
+            }),
         );
         const unauthRes = await app.request(
             `${ORIGIN}/api/webapp-icons/upload`,
@@ -95,7 +90,9 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
         const form2 = new FormData();
         form2.append(
             "icon",
-            new File([imageBytes], "test.png", { type: "image/png" }),
+            new File([new Uint8Array(imageBytes)], "test.png", {
+                type: "image/png",
+            }),
         );
         const uploadRes = await app.request(
             `${ORIGIN}/api/webapp-icons/upload`,
@@ -122,7 +119,7 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
             true,
         );
         const resBytes = new Uint8Array(await getRes.arrayBuffer());
-        assertEquals(resBytes, imageBytes);
+        assertEquals((await sharp(resBytes).metadata()).width, 256);
         const oversized = new FormData();
         oversized.append(
             "icon",
