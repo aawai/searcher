@@ -76,9 +76,10 @@
 .app-shell[data-wallpaper-image] .launcher-grid--home .webapp-name {
     padding: 0 var(--space-2);
     border-radius: var(--radius-pill);
-    background: var(--material-regular);
+    background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge);
     text-shadow: none;
 }
 

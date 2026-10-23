@@ -70,6 +70,13 @@ import {
 } from "../components/searcher/semantic.tsx";
 import "./design-lab.css";
 
+const GLASS_TIERS = [
+    ["off", "关闭"],
+    ["soft", "柔和"],
+    ["regular", "标准"],
+    ["clear", "通透"],
+] as const;
+
 const COLOR_ROLES: readonly [label: string, token: string][] = [
     ["背景", "--background"],
     ["表面", "--surface-solid"],
@@ -171,13 +178,24 @@ export function DesignLab() {
             </Section>
 
             <Section title="材质">
-                <div className="design-lab-wallpaper">
-                    <div className="design-lab-material">
-                        <span>常规</span>
-                    </div>
-                    <div className="design-lab-material design-lab-material-thick">
-                        <span>厚</span>
-                    </div>
+                <div
+                    className="design-lab-wallpaper"
+                    data-testid="design-lab-glass-fixture"
+                >
+                    {GLASS_TIERS.map(([tier, label]) => (
+                        <div
+                            className="design-lab-glass-tier"
+                            data-glass={tier}
+                            key={tier}
+                        >
+                            <div className="design-lab-material">
+                                <span>{label} · 常规</span>
+                            </div>
+                            <div className="design-lab-material design-lab-material-thick">
+                                <span>{label} · 厚</span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </Section>
 

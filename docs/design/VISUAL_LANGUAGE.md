@@ -21,7 +21,7 @@ Searcher
    `⋯` 中出现； 快捷键写在 tooltip、菜单项右侧与
    `/settings/shortcuts`，不写常驻段落。
 5. **材质与纸张只出现在壁纸之上。** 搜索框、Dock
-   使用材质（搜索框不透明度由用户设定）；首页便签使用纸张；设置、账户等页面使用实色。
+   使用材质；菜单、Popover、建议列表使用厚材质；首页便签使用纸张；设置、账户等页面使用实色。材质的透明程度由用户的“玻璃效果”档位统一决定。
 6. **动效回应操作。** 打开、展开、确认时用短过渡说明变化；不做无操作的循环动画。
 
 ## Token
@@ -77,19 +77,47 @@ SC），数字用 `font-variant-numeric: tabular-nums`。Markdown 正文标题�
 
 ### 层级与材质
 
-| 层       | 背景                        | 阴影                 | 示例                    |
-| -------- | --------------------------- | -------------------- | ----------------------- |
-| Canvas   | `--background` / 壁纸       | 无                   | 页面、首页              |
-| Content  | `--surface`                 | 无                   | 分组列表、笔记纸张      |
-| Material | `--material-regular` + blur | `--shadow-l2`        | 搜索框、Dock            |
-| Paper    | `--note-color`（不透明）    | `--shadow-note-card` | 首页便签                |
-| Floating | `--surface-l3`              | `--shadow-l2`        | 菜单、Popover、建议列表 |
-| Overlay  | `--surface-l3`              | `--shadow-l3`        | 对话框、面板、Sheet     |
+| 层       | 背景                        | 阴影                                     | 示例                              |
+| -------- | --------------------------- | ---------------------------------------- | --------------------------------- |
+| Canvas   | `--background` / 壁纸       | 无                                       | 页面、首页                        |
+| Content  | `--surface`                 | 无                                       | 分组列表、笔记纸张                |
+| Material | `--material-regular` + blur | `--shadow-material-edge` + `--shadow-l2` | 搜索框、Dock、顶栏悬停            |
+| Paper    | `--note-color`（不透明）    | `--shadow-note-card`                     | 首页便签                          |
+| Floating | `--material-thick` + blur   | `--shadow-material-edge` + `--shadow-l2` | 菜单、Popover、建议列表、撤销提示 |
+| Overlay  | `--surface-l3`              | `--shadow-l3`                            | 对话框、面板、Sheet               |
 
-`--material-regular` = surface 72% 透明混合 +
-`backdrop-filter: blur(24px) saturate(1.6)`； 不支持 `backdrop-filter` 或
-`prefers-reduced-transparency: reduce` 时回退为实色 surface。 叠放顺序只由
-`--elevation-*` 表达，不授权更强阴影。
+### 玻璃效果
+
+“设置 → 外观 →
+玻璃效果”是全局档位（`glassIntensity`）：关闭（`off`）、柔和（`soft`）、标准（`regular`，默认）、通透（`clear`）。`AppState`
+把档位写到 `<html data-glass>`；每档在 `tokens.css` 里同时固定 fill、blur 与
+saturate，Material 与 Floating 不得自带透明度或模糊取值。
+
+| 档位    | Material fill（亮 / 暗） | Floating fill（亮 / 暗） | blur | saturate |
+| ------- | ------------------------ | ------------------------ | ---- | -------- |
+| off     | 100% / 100%              | 100% / 100%              | 无   | 1        |
+| soft    | 90% / 92%                | 95% / 95%                | 16px | 1.6      |
+| regular | 78% / 84%                | 86% / 90%                | 20px | 2        |
+| clear   | 71% / 82%                | 76% / 84%                | 12px | 2.2      |
+
+- fill 是 `--material-solid`（Floating 为 `--surface-l3`）与透明的混合比例。fill
+  有下限：在深 / 浅照片极值与饱和色背景上，正文 ≥ 4.5:1，`--muted` 次要文字 ≥
+  3:1；暗色的下限更高，因为浅色文字在亮背景上需要更厚的底。 每档每主题由
+  `design-system/glass-contrast.test.ts` 检验，低于下限的档位不得合入。
+- `--shadow-material-edge`（顶部 1px 高光、1px 内环和底部 1px
+  暗线）在所有档位保留，只与 `--shadow-l2` 叠加，不授权更强阴影。
+- `--glass-sheen`：Material 与 Floating 背景最上层的白色顶光（顶部最亮，到 55%
+  高度渐隐；亮色峰值 60%，暗色 6%），随档位缩放（off 0、soft 0.6、regular /
+  clear 1）。对比度测试按文字所在位置计入顶光。
+- 玻璃的可感知度来自
+  blur、saturate、边缘高光、顶光与默认画布的色相变化，而不是更低的
+  fill；不得为“更透”下调 fill 下限。
+- 不支持 `backdrop-filter` 或系统开启 `prefers-reduced-transparency: reduce`
+  时，所有档位按 `off` 渲染（实色、无 blur），`--shadow-material-edge`
+  保留。设置页显示一行说明，但不禁用控件，也不改写已存值。
+- 无壁纸时的默认画布是低饱和 mesh 渐变（强调色加 `--canvas-mesh-secondary`
+  的大色斑），让玻璃背后有色相与明暗可折射；不提供关闭选项。
+- 档位对比在设计实验室“材质”区块，用高对比夹具并排渲染四档。
 
 ### 纸张（Paper）
 
@@ -225,8 +253,9 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - 主题（跟随系统 / 浅色 / 深色）与强调色（9 种调色板）：`tokens.css`。
 - 控件形状（圆角 / 胶囊）：`[data-shape="pill"]` 把 `--search-radius` 设为
   `--radius-pill`， 搜索框内控件按 `--search-inner-radius` 同心变化。
-- 搜索框透明度（10%–100%，默认 100%）：`--search-opacity`
-  只调节搜索框材质的不透明度， 模糊与阴影不变；`search.css` 唯一消费。
+- 玻璃效果（关闭 / 柔和 / 标准 / 通透，默认标准）：`<html data-glass>` 选择
+  `tokens.css` 中的整档材质取值，作用于全部 Material 与 Floating
+  表面，不再有搜索框独立透明度。
 - 应用图标大小（小 / 标准 /
   大）与显示应用名称：仅作用于首页图标网格，`launcher.css` 的
   离散网格档位；隐藏名称时保留可访问名称。工作区网格固定标准尺寸并显示名称。

@@ -13,29 +13,20 @@
     height: 56px;
     gap: var(--space-1);
     padding: var(--space-search-inset-block) var(--space-search-inset-inline);
-    /* --search-opacity is the user's "搜索框透明度": 100% is opaque, lower values reveal the blurred wallpaper. */
-    background: color-mix(in srgb, var(--material-solid)
-        calc(var(--search-opacity) * 100%), transparent);
+    background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     border-radius: var(--search-radius);
-    box-shadow: var(--shadow-l2);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     transition: background-color var(--motion-fast) var(--ease-standard),
         box-shadow var(--motion-fast) var(--ease-standard);
 }
 
+/* Focus lifts the fill to the thick material so typing stays legible over any wallpaper. */
 .search-frame:has(input:focus-visible) {
-    background: color-mix(in srgb, var(--material-solid)
-        calc(max(var(--search-opacity), 0.88) * 100%), transparent);
-    box-shadow: 0 0 0 2px var(--ring), var(--shadow-l2);
-}
-
-/* The OS accessibility preference wins over the user's search opacity. */
-@media (prefers-reduced-transparency: reduce) {
-    .search-frame,
-    .search-frame:has(input:focus-visible) {
-        background: var(--material-solid);
-    }
+    background: var(--glass-sheen), var(--material-thick);
+    box-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge),
+        var(--shadow-l2);
 }
 
 .search-engine {
@@ -175,9 +166,11 @@
     overflow-y: auto;
     scrollbar-width: thin;
     padding: var(--space-1);
-    background: var(--surface-l3);
+    background: var(--glass-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
     border-radius: var(--radius);
-    box-shadow: var(--shadow-l2);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     z-index: var(--elevation-suggestions);
     transition: opacity var(--motion-fast) var(--ease-standard);
 }

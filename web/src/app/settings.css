@@ -86,23 +86,6 @@
     outline-offset: 2px;
 }
 
-.settings-opacity {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    width: calc(var(--control-height) * 4 + var(--space-5));
-    max-width: 100%;
-}
-.settings-opacity output {
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    font-variant-numeric: tabular-nums;
-}
-.settings-opacity .slider {
-    flex: 1;
-    min-width: 0;
-}
-
 /* Narrow: /settings is the list; each item opens its own detail view. */
 @media (max-width: 767px) {
     .settings-layout {

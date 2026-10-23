@@ -1,4 +1,4 @@
-import { ACCENTS } from "@shared/contracts.ts";
+import { ACCENTS, type GlassIntensity } from "@shared/contracts.ts";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     parseWallpaperSource,
@@ -22,6 +22,7 @@ import {
     useMemo,
     useRef,
     useState,
+    useSyncExternalStore,
 } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -54,7 +55,6 @@ import {
     NativeSelectOption,
 } from "../components/ui/native-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
-import { Slider } from "../components/ui/slider.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
 import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
@@ -68,9 +68,32 @@ import { SettingsShell } from "./SettingsShell.tsx";
 import "./settings.css";
 import { type Appearance, useAppState } from "./state.tsx";
 
+const GLASS_CHOICES = [
+    ["off", "关闭"],
+    ["soft", "柔和"],
+    ["regular", "标准"],
+    ["clear", "通透"],
+] as const satisfies readonly (readonly [GlassIntensity, string])[];
+
+const REDUCED_TRANSPARENCY_QUERY = "(prefers-reduced-transparency: reduce)";
+
+/** OS 的「减少透明度」偏好；它优先于用户选择的玻璃档位。 */
+function useReducedTransparency(): boolean {
+    return useSyncExternalStore(
+        (onChange) => {
+            const media = globalThis.matchMedia(REDUCED_TRANSPARENCY_QUERY);
+            media.addEventListener("change", onChange);
+            return () => media.removeEventListener("change", onChange);
+        },
+        () => globalThis.matchMedia(REDUCED_TRANSPARENCY_QUERY).matches,
+        () => false,
+    );
+}
+
 function Choices<T extends string>(
-    { title, value, values, control, select }: {
+    { title, description, value, values, control, select }: {
         title: string;
+        description?: ReactNode;
         value: string;
         values: readonly (readonly [T, string])[];
         control: "select" | "segmented" | "swatches";
@@ -134,7 +157,11 @@ function Choices<T extends string>(
             </RadioGroup>
         );
     }
-    return <SettingsRow title={title}>{input}</SettingsRow>;
+    return (
+        <SettingsRow title={title} description={description}>
+            {input}
+        </SettingsRow>
+    );
 }
 
 export interface WallpaperHistoryRecord {
@@ -148,6 +175,7 @@ export function SettingsPage() {
     const { appearance, setAppearance, user, settleAppearanceSync } =
         useAppState();
     const isAdmin = user?.role === "admin";
+    const reducedTransparency = useReducedTransparency();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [wallpaperHistory, setWallpaperHistory] = useState<
         WallpaperHistoryRecord[]
@@ -684,37 +712,16 @@ export function SettingsPage() {
                                 ] as const}
                                 select={(v) => set("shape", v)}
                             />
-                            <SettingsRow title="搜索框透明度">
-                                <div className="settings-opacity">
-                                    <output>
-                                        {Math.round(
-                                            appearance
-                                                .searchOpacity *
-                                                100,
-                                        )}%
-                                    </output>
-                                    <Slider
-                                        min={0.1}
-                                        max={1}
-                                        step={0.05}
-                                        value={appearance
-                                            .searchOpacity}
-                                        onValueChange={(value) =>
-                                            set(
-                                                "searchOpacity",
-                                                typeof value ===
-                                                        "number"
-                                                    ? value
-                                                    : value[0],
-                                            )}
-                                        aria-label="搜索框透明度"
-                                        getAriaValueText={(
-                                            _formatted,
-                                            value,
-                                        ) => `${Math.round(value * 100)}%`}
-                                    />
-                                </div>
-                            </SettingsRow>
+                            <Choices
+                                title="玻璃效果"
+                                description={reducedTransparency
+                                    ? "系统已开启「减少透明度」，玻璃效果暂以实色显示"
+                                    : undefined}
+                                control="segmented"
+                                value={appearance.glassIntensity}
+                                values={GLASS_CHOICES}
+                                select={(v) => set("glassIntensity", v)}
+                            />
                             <Choices
                                 title="应用图标大小"
                                 control="segmented"

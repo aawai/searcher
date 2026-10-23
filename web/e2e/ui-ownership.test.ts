@@ -208,20 +208,21 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     ).trim() === "999px"
             );
 
-            const opacity = page.getByRole("slider", {
-                name: "搜索框透明度",
-                exact: true,
-            });
-            await opacity.focus();
             await Promise.all([
                 page.waitForResponse((response) =>
                     response.url().endsWith("/api/preferences") &&
                     response.request().method() === "PATCH" &&
                     response.ok() &&
-                    response.request().postDataJSON().searchOpacity === 0.95
+                    response.request().postDataJSON().glassIntensity === "clear"
                 ),
-                opacity.press("ArrowLeft"),
+                page.getByRole("radio", { name: "通透", exact: true }).click(),
             ]);
+            await page.waitForFunction(() =>
+                document.documentElement.dataset.glass === "clear" &&
+                getComputedStyle(document.documentElement).getPropertyValue(
+                    "--material-filter",
+                ).includes("blur(12px)")
+            );
             await Promise.all([
                 page.waitForResponse((response) =>
                     response.url().endsWith("/api/preferences") &&
@@ -255,7 +256,17 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 name: "显示应用名称",
                 checked: false,
             }).waitFor();
-            assertEquals(await opacity.getAttribute("aria-valuenow"), "0.95");
+            await page.getByRole("radio", {
+                name: "通透",
+                exact: true,
+                checked: true,
+            }).waitFor();
+            assertEquals(
+                await page.evaluate(() =>
+                    document.documentElement.dataset.glass
+                ),
+                "clear",
+            );
 
             await page.getByRole("radio", { name: "圆角", exact: true })
                 .click();
@@ -267,7 +278,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             );
             await updatePreferences({
                 searchShape: "rounded",
-                searchOpacity: 1,
+                glassIntensity: "regular",
                 webAppIconSize: "default",
                 showAppLabels: true,
             });

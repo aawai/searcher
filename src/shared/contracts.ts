@@ -26,6 +26,21 @@ export const ACCENT_IDS = [
 ] as const;
 export type AccentId = (typeof ACCENT_IDS)[number];
 
+/** 玻璃效果档位：驱动 Material 与 Floating 表面的 fill、blur、edge。 */
+export const GLASS_INTENSITIES = ["off", "soft", "regular", "clear"] as const;
+export type GlassIntensity = (typeof GLASS_INTENSITIES)[number];
+export const DEFAULT_GLASS_INTENSITY: GlassIntensity = "regular";
+
+export function normalizeGlassIntensity(raw: unknown): GlassIntensity {
+    if (
+        typeof raw === "string" &&
+        (GLASS_INTENSITIES as readonly string[]).includes(raw)
+    ) {
+        return raw as GlassIntensity;
+    }
+    return DEFAULT_GLASS_INTENSITY;
+}
+
 export interface AccentMeta {
     readonly id: AccentId;
     readonly label: string;
@@ -165,8 +180,7 @@ export interface PreferencesDto {
     theme: ThemeId;
     accent: AccentId;
     searchShape: SearchShape;
-    /** 搜索框不透明度，取值范围 [0.1, 1.0] */
-    searchOpacity: number;
+    glassIntensity: GlassIntensity;
     backgroundImage: string | null;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     searchTarget: SearchTarget;

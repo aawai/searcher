@@ -50,6 +50,20 @@ workspace-matrix，以及 Notes Live/Source
 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的
 A–C 分层响应式、主题与壁纸。
 
+### 玻璃效果
+
+数值契约由 `deno task test` 内的 `glass-contrast.test.ts` 和迁移测试覆盖（4 档 ×
+亮 / 暗的对比度，`search_opacity` 的 `1`、`0.72`、`0.5`、`0.1`
+边界）。实页验收不做档位 × 视口 × 主题 × 背景的全组合：
+
+- 默认档位：390 / 768 / 1440 × light/dark，默认 mesh 画布，共 6 张。
+- 档位差异：设计实验室并排四档，1440 × light/dark，共 2 张。
+- 照片壁纸：首页 1440 × light/dark，标准档，共 2 张。
+- `prefers-reduced-transparency`：1440 light 断言 Material 表面 fill
+  为实色、`backdrop-filter` 为 `none`、`--shadow-material-edge` 仍在。
+- 行为：`ui-ownership`
+  切换到“通透”，断言保存请求、`data-glass`、`--material-filter` 与刷新后保持。
+
 ### Documents
 
 - 390×844、768×1024、1024×768、1440×900 × Zen × light/dark 三视图矩阵。

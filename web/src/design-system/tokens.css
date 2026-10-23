@@ -43,11 +43,18 @@
     --shadow-choice-selected: inset 0 0 0 1px var(--accent);
     --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
 
-    /* Material: translucent surfaces that sit on the wallpaper only. */
-    --material-regular: color-mix(in srgb, var(--surface-solid) 72%, transparent);
-    --material-thick: color-mix(in srgb, var(--surface-solid) 86%, transparent);
+    /* Material: translucent surfaces. Fill, blur and saturation come from the glass tier below; --material-solid is the theme's opaque base. */
     --material-solid: var(--surface-solid);
-    --material-filter: blur(24px) saturate(1.6);
+    /* Glass rim: a bright top line, a faint inner ring and a darker bottom line. Kept in every tier. */
+    --glass-edge-top: rgb(255 255 255 / 1);
+    --glass-edge-ring: rgb(255 255 255 / 0.7);
+    --glass-edge-bottom: rgb(0 0 0 / 0.07);
+    /* Light catching the top of the glass: peak white at the top edge, fading out by 55% of the height. Scaled by the tier. */
+    --glass-sheen-peak: 60%;
+    /* Default canvas (no wallpaper): accent blobs plus this secondary tint give the glass something to refract. */
+    --canvas-mesh-secondary: #FFC9A8;
+    --canvas-mesh-accent-mix: 36%;
+    --canvas-mesh-secondary-mix: 95%;
 
     /* Paper: opaque home note sheet. Stuck at the top, its bottom edge lifts: hover lifts further, dragging lifts it fully. */
     --paper-white: #FFFCF4;
@@ -282,9 +289,14 @@
     --paper-edge-highlight: rgb(255 255 255 / 0.08);
     --shadow-document-paper: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.4);
     /* Dark materials lift from the soft surface so they read against the canvas. */
-    --material-regular: color-mix(in srgb, var(--surface-soft) 72%, transparent);
-    --material-thick: color-mix(in srgb, var(--surface-soft) 88%, transparent);
     --material-solid: var(--surface-soft);
+    --glass-edge-top: rgb(255 255 255 / 0.32);
+    --glass-edge-ring: rgb(255 255 255 / 0.12);
+    --glass-edge-bottom: rgb(0 0 0 / 0.35);
+    --glass-sheen-peak: 6%;
+    --canvas-mesh-secondary: #4B3A8F;
+    --canvas-mesh-accent-mix: 44%;
+    --canvas-mesh-secondary-mix: 80%;
 }
 
 /* Each palette owns both themes; color-scheme selects the light-dark pair. */
@@ -348,30 +360,103 @@
     --accent-border-mix: var(--accent-mono-border-mix);
 }
 
-/* User preference default; AppState overrides it on :root (0.1–1). */
-:root {
-    --search-opacity: 1;
-}
-
 /* User preference: pill-shaped search box and its inner controls. */
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);
 }
 
-/* Without backdrop-filter, or when transparency is reduced, materials are solid. */
+/*
+ * Glass intensity: AppState sets data-glass on :root; design-lab nests it to
+ * compare tiers. A tier fixes fill, blur and saturation together. Fills are
+ * declared per theme: the floor is what keeps body text (4.5:1) and --muted
+ * (3:1) legible over a bright or dark backdrop, which
+ * glass-contrast.test.ts checks for every tier. The `:root` values are
+ * `regular`, the no-attribute default.
+ */
+:root {
+    --glass-regular-light: 78%;
+    --glass-regular-dark: 84%;
+    --glass-thick-light: 86%;
+    --glass-thick-dark: 90%;
+    --glass-sheen-scale: 1;
+    --material-filter: blur(20px) saturate(2);
+}
+[data-glass="regular"] {
+    --glass-regular-light: 78%;
+    --glass-regular-dark: 84%;
+    --glass-thick-light: 86%;
+    --glass-thick-dark: 90%;
+    --glass-sheen-scale: 1;
+    --material-filter: blur(20px) saturate(2);
+}
+[data-glass="off"] {
+    --glass-regular-light: 100%;
+    --glass-regular-dark: 100%;
+    --glass-thick-light: 100%;
+    --glass-thick-dark: 100%;
+    --glass-sheen-scale: 0;
+    --material-filter: none;
+}
+[data-glass="soft"] {
+    --glass-regular-light: 90%;
+    --glass-regular-dark: 92%;
+    --glass-thick-light: 95%;
+    --glass-thick-dark: 95%;
+    --glass-sheen-scale: 0.6;
+    --material-filter: blur(16px) saturate(1.6);
+}
+[data-glass="clear"] {
+    --glass-regular-light: 71%;
+    --glass-regular-dark: 82%;
+    --glass-thick-light: 76%;
+    --glass-thick-dark: 84%;
+    --glass-sheen-scale: 1;
+    --material-filter: blur(12px) saturate(2.2);
+}
+
+/* Pick the active theme's fills. */
+:root,
+[data-glass] {
+    --glass-fill-regular: var(--glass-regular-light);
+    --glass-fill-thick: var(--glass-thick-light);
+}
+[data-theme="dark"],
+[data-theme="dark"] [data-glass] {
+    --glass-fill-regular: var(--glass-regular-dark);
+    --glass-fill-thick: var(--glass-thick-dark);
+}
+
+/* Derived once per scope. Floating (thick) keeps its own base so the dark menu colour does not shift; the edge layers with --shadow-l2 on every Material and Floating surface. */
+:root,
+[data-theme],
+[data-glass] {
+    --material-regular: color-mix(in srgb, var(--material-solid) var(--glass-fill-regular), transparent);
+    --material-thick: color-mix(in srgb, var(--surface-l3) var(--glass-fill-thick), transparent);
+    --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
+    --glass-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--glass-sheen-scale)), transparent), transparent 55%);
+}
+
+/* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
     blur(1px))) {
     :root,
-    [data-theme="dark"] {
-        --material-regular: var(--material-solid);
-        --material-thick: var(--material-solid);
+    [data-glass] {
+        --glass-regular-light: 100%;
+        --glass-regular-dark: 100%;
+        --glass-thick-light: 100%;
+        --glass-thick-dark: 100%;
+        --glass-sheen-scale: 0;
+        --material-filter: none;
     }
 }
 @media (prefers-reduced-transparency: reduce) {
     :root,
-    [data-theme="dark"] {
-        --material-regular: var(--material-solid);
-        --material-thick: var(--material-solid);
+    [data-glass] {
+        --glass-regular-light: 100%;
+        --glass-regular-dark: 100%;
+        --glass-thick-light: 100%;
+        --glass-thick-dark: 100%;
+        --glass-sheen-scale: 0;
         --material-filter: none;
     }
 }

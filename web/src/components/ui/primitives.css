@@ -478,8 +478,10 @@
     max-width: min(320px, calc(100vw - var(--space-6)));
     padding: var(--space-1);
     border-radius: var(--radius);
-    background: var(--surface-l3);
-    box-shadow: var(--shadow-l2);
+    background: var(--glass-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     color: var(--foreground);
     font-size: var(--font-body-size);
     outline: none;
@@ -1054,8 +1056,10 @@
     max-width: calc(100vw - var(--space-6));
     padding: var(--space-3);
     border-radius: var(--radius);
-    background: var(--surface-l3);
-    box-shadow: var(--shadow-l2);
+    background: var(--glass-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     color: var(--foreground);
     outline: none;
 }
