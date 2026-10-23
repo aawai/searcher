@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import type { UiViolation } from "./types.ts";
 import { scanDirectory } from "./scanner.ts";
+import { FIXTURE_REGISTRY } from "./test-registry.ts";
 
 Deno.test("scanner - scans directory with TSX and CSS files, ignoring tests", async () => {
     const tempDir = await Deno.makeTempDir({ prefix: "ui-guard-test-" });
@@ -26,7 +27,10 @@ Deno.test("scanner - scans directory with TSX and CSS files, ignoring tests", as
             `export function TestMock() { return <div style={{ fontSize: 99 }}>Mock</div>; }`,
         );
 
-        const { violations, totalFiles } = await scanDirectory(tempDir);
+        const { violations, totalFiles } = await scanDirectory(
+            tempDir,
+            FIXTURE_REGISTRY,
+        );
 
         assertEquals(totalFiles, 2); // 2 presentation files (test file excluded)
         assertEquals(violations.length, 2);

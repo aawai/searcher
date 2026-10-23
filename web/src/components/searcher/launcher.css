@@ -3,9 +3,7 @@
     /* App icons are squircles: the corner radius is a fixed share of the edge. */
     --radius-launcher-ratio: .23;
     --radius-launcher-mini: calc(14px * var(--radius-launcher-ratio));
-    /* Letter shown when an app has no icon. */
-    --font-launcher-glyph: var(--font-title-size);
-    --font-launcher-folder-glyph: var(--font-title-size);
+    /* Initial inside the 14px folder preview tiles; registered in Visual Language. */
     --font-launcher-micro: 9px;
     --launcher-folder-empty-icon-size: 22px;
     --launcher-folder-empty-icon-size-large: 38px;
@@ -46,7 +44,7 @@
     border-radius: var(--radius-launcher-icon);
     background: var(--surface-soft);
     color: var(--foreground);
-    font-size: var(--font-launcher-glyph);
+    font-size: var(--font-title-size);
     font-weight: var(--font-title-weight);
     overflow: hidden;
 }
@@ -463,13 +461,14 @@
 }
 .launcher-folder-item--large .launcher-folder-mini-glyph {
     width: min(100%, 42px);
-    border-radius: calc(var(--launcher-mini-size) *
-        var(--radius-launcher-ratio));
-    font-size: var(--font-launcher-folder-glyph);
+    --radius-launcher-mini: calc(var(--launcher-mini-size) * var(--radius-launcher-ratio));
+    border-radius: var(--radius-launcher-mini);
+    font-size: var(--font-title-size);
 }
 .launcher-folder-item--large .launcher-folder-preview--single .launcher-folder-mini-glyph {
     width: min(100%, 56px);
-    border-radius: calc(56px * var(--radius-launcher-ratio));
+    --radius-launcher-mini: calc(56px * var(--radius-launcher-ratio));
+    border-radius: var(--radius-launcher-mini);
     font-size: var(--font-page-title-size);
 }
 .launcher-folder-item--large .launcher-folder-mini-glyph img {

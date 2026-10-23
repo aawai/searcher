@@ -1,5 +1,10 @@
 import { assertEquals } from "@std/assert";
-import { scanTsxCode } from "./tsx-scanner.ts";
+import { scanTsxCode as scanTsxWithRegistry } from "./tsx-scanner.ts";
+import { FIXTURE_REGISTRY } from "./test-registry.ts";
+
+function scanTsxCode(file: string, code: string) {
+    return scanTsxWithRegistry(file, code, FIXTURE_REGISTRY);
+}
 
 Deno.test("tsx-scanner - detects raw box-shadow in style and className", () => {
     const code = `
@@ -292,6 +297,63 @@ Deno.test("tsx-scanner - rejects CSS variables in SVG geometry attributes", () =
             ["svg-attribute-css-variable", "size", "var(--icon-md)"],
             ["svg-attribute-css-variable", "width", "var(--icon-md)"],
             ["svg-attribute-css-variable", "height", "var(--icon-lg)"],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - inline font-size and radius accept registered Tokens only", () => {
+    const code = `
+        export function Sample() {
+            return (
+                <div>
+                    <p style={{ fontSize: "var(--font-body-size)" }}>ok</p>
+                    <p style={{ fontSize: "var(--font-made-up-size)" }}>bad</p>
+                    <i style={{ borderRadius: "var(--radius)" }}>ok</i>
+                    <i style={{ borderRadius: "var(--radius-card)" }}>bad</i>
+                </div>
+            );
+        }
+    `;
+    assertEquals(
+        scanTsxCode("web/src/features/Sample.tsx", code).map((v) => [
+            v.rule,
+            v.value,
+        ]),
+        [
+            [
+                "unregistered-font-token",
+                'fontSize: "var(--font-made-up-size)"',
+            ],
+            [
+                "unregistered-radius-token",
+                'borderRadius: "var(--radius-card)"',
+            ],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - accent fills as Tailwind utilities are rejected, tints and text are not", () => {
+    const code = `
+        export function Sample() {
+            return (
+                <div>
+                    <i className="bg-primary" />
+                    <i className="data-[checked]:bg-accent/50" />
+                    <i className="fill-accent" />
+                    <i className="bg-accent-soft text-primary border-accent ring-primary" />
+                </div>
+            );
+        }
+    `;
+    assertEquals(
+        scanTsxCode("web/src/features/Sample.tsx", code).map((v) => [
+            v.rule,
+            v.value,
+        ]),
+        [
+            ["unregistered-accent-fill", "bg-primary"],
+            ["unregistered-accent-fill", "data-[checked]:bg-accent/50"],
+            ["unregistered-accent-fill", "fill-accent"],
         ],
     );
 });

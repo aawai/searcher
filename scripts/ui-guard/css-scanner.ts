@@ -1,5 +1,13 @@
 import type { UiViolation } from "./types.ts";
 import { isDesignSystemAllowed } from "./exceptions.ts";
+import {
+    checkFontSize,
+    checkRadius,
+    isFontTokenName,
+    isRadiusTokenName,
+    isRegisteredAccentFill,
+    type VisualRegistry,
+} from "./registry.ts";
 
 const CSS_SPACING_PROPS: Record<string, true> = {
     margin: true,
@@ -41,40 +49,15 @@ function isAllowedCssShadow(value: string): boolean {
     return v.includes("var(--shadow");
 }
 
-function isAllowedCssFontSize(value: string): boolean {
-    const v = value.trim();
-    if (
-        v === "inherit" ||
-        v === "1em" ||
-        v === "100%" ||
-        v === "initial" ||
-        v === "unset"
-    ) {
-        return true;
-    }
-    return v.includes("var(--font-");
-}
+const ACCENT_FILL_PROPS: Record<string, true> = {
+    background: true,
+    "background-color": true,
+    "background-image": true,
+    fill: true,
+};
 
-function isAllowedCssRadius(value: string): boolean {
-    const v = value.trim();
-    if (
-        v === "0" ||
-        v === "0px" ||
-        v === "999px" ||
-        v === "9999px" ||
-        v === "50%" ||
-        v === "inherit" ||
-        v === "initial" ||
-        v === "unset"
-    ) {
-        return true;
-    }
-    return (
-        v.includes("var(--radius") ||
-        v.includes("var(--control-radius)") ||
-        v.includes("var(--search-radius)")
-    );
-}
+/** `--accent`, `--accent-hover` and `--accent-active`; tints such as `--accent-soft` are not fills. */
+const ACCENT_FAMILY_FILL = /var\(\s*--accent(?:-hover|-active)?\s*\)/;
 export function isResponsiveCssMetric(value: string): boolean {
     const v = value.trim();
     if (v.includes("env(safe-area-inset-")) {
@@ -124,7 +107,11 @@ function isAllowedCssSpacing(value: string): boolean {
 /**
  * Parses CSS code and extracts violations according to documented visual guard rules.
  */
-export function scanCssCode(file: string, cssText: string): UiViolation[] {
+export function scanCssCode(
+    file: string,
+    cssText: string,
+    registry: VisualRegistry,
+): UiViolation[] {
     const violations: UiViolation[] = [];
 
     // Replace comment bodies with spaces so line numbers and offsets are preserved
@@ -180,31 +167,62 @@ export function scanCssCode(file: string, cssText: string): UiViolation[] {
         return { line: 1, col: pos + 1 };
     }
 
-    // Parse blocks and declarations
+    // Parse blocks and declarations, tracking the enclosing rule prelude
     let depth = 0;
     let declStart = -1;
+    let preludeStart = 0;
+    const preludes: string[] = [];
+
+    // The innermost style-rule selector; at-rules such as @media do not count.
+    function currentSelector(): string {
+        for (let i = preludes.length - 1; i >= 0; i--) {
+            if (!preludes[i].startsWith("@")) return preludes[i];
+        }
+        return "";
+    }
 
     for (let i = 0; i < cleanCss.length; i++) {
         const ch = cleanCss[i];
 
         if (ch === "{") {
+            preludes.push(
+                normalizeSnippet(cleanCss.slice(preludeStart, i)),
+            );
+            preludeStart = i + 1;
             depth++;
             declStart = i + 1;
         } else if (ch === "}") {
             if (declStart !== -1 && declStart < i) {
-                processDeclaration(cleanCss.slice(declStart, i), declStart);
+                processDeclaration(
+                    cleanCss.slice(declStart, i),
+                    declStart,
+                    currentSelector(),
+                );
             }
+            preludes.pop();
+            preludeStart = i + 1;
             depth--;
             declStart = -1;
-        } else if (ch === ";" && depth > 0) {
-            if (declStart !== -1 && declStart < i) {
-                processDeclaration(cleanCss.slice(declStart, i), declStart);
+        } else if (ch === ";") {
+            if (depth > 0) {
+                if (declStart !== -1 && declStart < i) {
+                    processDeclaration(
+                        cleanCss.slice(declStart, i),
+                        declStart,
+                        currentSelector(),
+                    );
+                }
+                declStart = i + 1;
             }
-            declStart = i + 1;
+            preludeStart = i + 1;
         }
     }
 
-    function processDeclaration(rawDecl: string, offset: number) {
+    function processDeclaration(
+        rawDecl: string,
+        offset: number,
+        selector: string,
+    ) {
         const colonIdx = rawDecl.indexOf(":");
         if (colonIdx === -1) {
             return;
@@ -218,6 +236,55 @@ export function scanCssCode(file: string, cssText: string): UiViolation[] {
         }
 
         const { line, col } = getLineAndCol(offset + rawDecl.indexOf(prop));
+
+        function pushViolation(
+            rule: UiViolation["rule"],
+            property: string,
+            text: string,
+        ) {
+            const snippet = normalizeSnippet(text);
+            violations.push({
+                file,
+                rule,
+                property,
+                value: snippet,
+                line,
+                column: col,
+                fingerprint: `${rule}:${property}:${snippet}`,
+            });
+        }
+
+        // Font-size and radius Tokens must be registered wherever they are defined,
+        // including tokens.css and feature-local aliases.
+        if (prop.startsWith("--")) {
+            if (
+                (isFontTokenName(prop) && !registry.fontTokens.has(prop)) ||
+                (isRadiusTokenName(prop) && !registry.radiusTokens.has(prop))
+            ) {
+                pushViolation(
+                    "unregistered-token-definition",
+                    prop,
+                    `${prop}: ${value}`,
+                );
+            }
+            if (isDesignSystemAllowed(file, prop, value)) {
+                return;
+            }
+        }
+
+        // Accent fills are limited to the semantics registered in Visual Language.
+        if (
+            ACCENT_FILL_PROPS[prop] && ACCENT_FAMILY_FILL.test(value)
+        ) {
+            if (!isRegisteredAccentFill(file, selector, registry)) {
+                pushViolation(
+                    "unregistered-accent-fill",
+                    prop,
+                    `${selector} { ${prop}: ${value} }`,
+                );
+            }
+            return;
+        }
 
         // Documented rules: check design-system permissions
         if (isDesignSystemAllowed(file, prop, value)) {
@@ -261,36 +328,32 @@ export function scanCssCode(file: string, cssText: string): UiViolation[] {
             return;
         }
 
-        // Check raw font-size
+        // font-size: only registered Tokens or relative keywords
         if (prop === "font-size") {
-            if (!isAllowedCssFontSize(value)) {
-                const snippet = normalizeSnippet(`${prop}: ${value}`);
-                violations.push({
-                    file,
-                    rule: "raw-font-size",
-                    property: prop,
-                    value: snippet,
-                    line,
-                    column: col,
-                    fingerprint: `raw-font-size:${prop}:${snippet}`,
-                });
+            const verdict = checkFontSize(value, registry);
+            if (verdict !== "ok") {
+                pushViolation(
+                    verdict === "raw"
+                        ? "raw-font-size"
+                        : "unregistered-font-token",
+                    prop,
+                    `${prop}: ${value}`,
+                );
             }
             return;
         }
 
-        // Check raw border-radius
+        // border-radius: only registered Tokens, keywords or Token insets
         if (CSS_RADIUS_PROPS[prop]) {
-            if (!isAllowedCssRadius(value)) {
-                const snippet = normalizeSnippet(`${prop}: ${value}`);
-                violations.push({
-                    file,
-                    rule: "raw-border-radius",
-                    property: prop,
-                    value: snippet,
-                    line,
-                    column: col,
-                    fingerprint: `raw-border-radius:${prop}:${snippet}`,
-                });
+            const verdict = checkRadius(value, registry);
+            if (verdict !== "ok") {
+                pushViolation(
+                    verdict === "raw"
+                        ? "raw-border-radius"
+                        : "unregistered-radius-token",
+                    prop,
+                    `${prop}: ${value}`,
+                );
             }
             return;
         }

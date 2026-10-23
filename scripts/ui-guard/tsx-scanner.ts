@@ -1,5 +1,6 @@
 import ts from "typescript";
 import type { UiViolation } from "./types.ts";
+import { checkFontSize, checkRadius, type VisualRegistry } from "./registry.ts";
 import {
     isDesignSystemAllowed,
     isDomainValueException,
@@ -52,31 +53,8 @@ function isAllowedShadow(value: string): boolean {
     return v.includes("var(--shadow");
 }
 
-function isAllowedFontSize(value: string): boolean {
-    const v = value.trim();
-    if (
-        v === "inherit" || v === "'inherit'" || v === '"inherit"' ||
-        v === "1em" || v === "100%"
-    ) {
-        return true;
-    }
-    return v.includes("var(--font-");
-}
-
-function isAllowedRadius(value: string): boolean {
-    const v = value.trim();
-    if (
-        v === "0" || v === "'0'" || v === '"0"' ||
-        v === "'0px'" || v === '"0px"' ||
-        v === "999px" || v === "'999px'" || v === '"999px"' ||
-        v === "9999px" || v === "'9999px'" || v === '"9999px"' ||
-        v === "50%" || v === "'50%'" || v === '"50%"' ||
-        v === "inherit" || v === "'inherit'" || v === '"inherit"'
-    ) {
-        return true;
-    }
-    return v.includes("var(--radius") || v.includes("var(--control-radius)") ||
-        v.includes("var(--search-radius)");
+function stripQuotes(value: string): string {
+    return value.trim().replaceAll(/^['"`]|['"`]$/g, "");
 }
 
 function isAllowedSpacing(value: string): boolean {
@@ -180,6 +158,23 @@ function checkTailwindClass(
         };
     }
 
+    // Accent fills as Tailwind utilities: bg-primary, fill-accent/50, data-[checked]:bg-accent.
+    // A utility cannot be registered by CSS selector, so it is always rejected.
+    if (
+        /^(?:[^:]+:)*(?:bg|fill|from|via|to)-(?:primary|accent)(?:\/\d+)?$/
+            .test(cls)
+    ) {
+        return {
+            file,
+            rule: "unregistered-accent-fill",
+            property: "className",
+            value: cls,
+            line,
+            column: col,
+            fingerprint: `unregistered-accent-fill:className:${cls}`,
+        };
+    }
+
     return null;
 }
 
@@ -230,7 +225,11 @@ function geometryCssVariables(expression: ts.Expression): string[] {
     return [];
 }
 
-export function scanTsxCode(file: string, code: string): UiViolation[] {
+export function scanTsxCode(
+    file: string,
+    code: string,
+    registry: VisualRegistry,
+): UiViolation[] {
     const sourceFile = ts.createSourceFile(
         file,
         code,
@@ -454,19 +453,26 @@ export function scanTsxCode(file: string, code: string): UiViolation[] {
 
                                 // Check raw font-size
                                 if (propName === "fontSize") {
-                                    if (!isAllowedFontSize(propValue)) {
+                                    const verdict = checkFontSize(
+                                        stripQuotes(propValue),
+                                        registry,
+                                    );
+                                    if (verdict !== "ok") {
+                                        const rule = verdict === "raw"
+                                            ? "raw-font-size"
+                                            : "unregistered-font-token";
                                         const snippet = normalizeSnippet(
                                             `${propName}: ${propValue}`,
                                         );
                                         violations.push({
                                             file,
-                                            rule: "raw-font-size",
+                                            rule,
                                             property: propName,
                                             value: snippet,
                                             line: posLine,
                                             column: posCol,
                                             fingerprint:
-                                                `raw-font-size:${propName}:${snippet}`,
+                                                `${rule}:${propName}:${snippet}`,
                                         });
                                     }
                                     continue;
@@ -474,19 +480,26 @@ export function scanTsxCode(file: string, code: string): UiViolation[] {
 
                                 // Check raw border-radius
                                 if (RADIUS_PROPS[propName]) {
-                                    if (!isAllowedRadius(propValue)) {
+                                    const verdict = checkRadius(
+                                        stripQuotes(propValue),
+                                        registry,
+                                    );
+                                    if (verdict !== "ok") {
+                                        const rule = verdict === "raw"
+                                            ? "raw-border-radius"
+                                            : "unregistered-radius-token";
                                         const snippet = normalizeSnippet(
                                             `${propName}: ${propValue}`,
                                         );
                                         violations.push({
                                             file,
-                                            rule: "raw-border-radius",
+                                            rule,
                                             property: propName,
                                             value: snippet,
                                             line: posLine,
                                             column: posCol,
                                             fingerprint:
-                                                `raw-border-radius:${propName}:${snippet}`,
+                                                `${rule}:${propName}:${snippet}`,
                                         });
                                     }
                                     continue;

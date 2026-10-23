@@ -7,7 +7,11 @@ export type RuleId =
     | "inline-visual-style"
     | "nonstandard-icon-size"
     | "svg-attribute-css-variable"
-    | "arbitrary-tailwind";
+    | "arbitrary-tailwind"
+    | "unregistered-font-token"
+    | "unregistered-radius-token"
+    | "unregistered-token-definition"
+    | "unregistered-accent-fill";
 
 export interface UiViolation {
     file: string;
