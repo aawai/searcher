@@ -74,7 +74,7 @@ deno task check:ui --update
 ## 可访问性契约
 
 对比度、焦点环与触控目标的数值底线见
-[Visual Language](design/VISUAL_LANGUAGE.md#可访问性底线)。以下为代码必须保持的行为：
+[Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
 
 - Escape 由 `components/ui/escape-layer-stack.tsx`
   统一裁决，每次只消费最上层的菜单、弹窗或工作区；输入法合成中不分发；注销层不得穿透到
