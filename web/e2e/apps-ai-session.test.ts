@@ -19,8 +19,14 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await page.locator("#auth-username").fill("apps_ai_session");
         await page.locator("#auth-display-name").fill("AI session tester");
         await page.locator("#auth-password").fill("Apps-AI-password-141!");
+        // The home search box asks for model availability once after sign-in;
+        // wait for it so the count below only measures the logo session.
+        const homeModels = page.waitForResponse((response) =>
+            new URL(response.url()).pathname === "/api/ai/models"
+        );
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
+        await homeModels;
         let metadataRequests = 0;
         await page.route("**/api/ai/models", (route) => {
             metadataRequests++;

@@ -290,11 +290,9 @@ Deno.test("production search shortcuts respect editable focus and submit command
             );
 
             await search.focus();
+            await search.press("ArrowDown");
             await search.press("Enter");
-            assertEquals(await search.inputValue(), "");
-            assert(
-                (await engine.getAttribute("aria-label"))?.includes("Google"),
-            );
+            assertEquals(await search.inputValue(), "/g ");
         },
     );
     await t.step(
@@ -352,27 +350,17 @@ Deno.test("production search shortcuts respect editable focus and submit command
         },
     );
     await t.step(
-        "all quick commands select their target without query pollution",
+        "engine prefixes fill their command, run with a query, and /ai needs a session",
         async () => {
-            for (
-                const [prefix, label] of [["/g", "Google"], ["/b", "Bing"], [
-                    "/ba",
-                    "百度",
-                ], ["/d", "DuckDuckGo"]]
-            ) {
+            for (const prefix of ["/g", "/b", "/ba", "/d"]) {
                 await search.fill(prefix);
                 await page.getByRole("option").filter({ hasText: prefix })
                     .first().waitFor();
+                await search.press("ArrowDown");
                 await search.press("Enter");
-                assertEquals(await search.inputValue(), "");
-                assert(
-                    (await page.locator(".search-engine").getAttribute(
-                        "aria-label",
-                    ))?.includes(label),
-                );
+                assertEquals(await search.inputValue(), `${prefix} `);
             }
-            await search.fill("/ai");
-            await page.getByRole("option").filter({ hasText: "/ai" }).waitFor();
+            await search.fill("/ai guest question");
             await search.press("Enter");
             await page.getByText("登录后使用 AI 问答", { exact: true })
                 .waitFor();
@@ -384,10 +372,9 @@ Deno.test("production search shortcuts respect editable focus and submit command
             );
             await page.locator("form button[type=submit]").click();
             await page.waitForURL(origin + "/");
-            await search.fill("/ai");
-            await page.getByRole("option").filter({ hasText: "/ai" }).waitFor();
+            await search.fill("/ai signed in question");
             await search.press("Enter");
-            await page.getByPlaceholder("输入问题，开始对话").waitFor();
+            await page.waitForURL(/\/ask\?q=signed\+in\+question/);
         },
     );
     await t.step(
@@ -470,9 +457,9 @@ Deno.test("production search shortcuts respect editable focus and submit command
                     icon.url,
                 );
                 assertEquals(
-                    await options.nth(1).evaluate((element) =>
-                        getComputedStyle(element).borderTopStyle
-                    ),
+                    await page.getByRole("group", { name: "网页" }).evaluate((
+                        element,
+                    ) => getComputedStyle(element).borderTopStyle),
                     "solid",
                 );
                 await search.press("ArrowDown");

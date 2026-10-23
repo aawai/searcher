@@ -1,9 +1,11 @@
 import { assertEquals } from "@std/assert";
 import {
+    commandTakesQuery,
     formatShortcut,
     formatShortcutAccessible,
     KEYBOARD_SHORTCUTS,
     matchesShortcut,
+    matchSearchCommands,
     parseCommandPrefix,
     SEARCH_QUICK_COMMANDS,
     SHORTCUTS,
@@ -122,4 +124,159 @@ Deno.test("command parsing preserves boundaries whitespace case and all canonica
     assertEquals(parseCommandPrefix("/unknown query"), null);
     assertEquals(parseCommandPrefix("query /g"), null);
     assertEquals(parseCommandPrefix("/ba")?.hasSpace, false);
+});
+
+Deno.test("executable commands cover theme, wallpaper, settings, trash and workspace entries", () => {
+    const byId = new Map(
+        SEARCH_QUICK_COMMANDS.map((entry) => [entry.id, entry]),
+    );
+    assertEquals(byId.get("theme-light")?.target, {
+        type: "theme",
+        theme: "light",
+    });
+    assertEquals(byId.get("theme-dark")?.target, {
+        type: "theme",
+        theme: "dark",
+    });
+    assertEquals(byId.get("theme-system")?.target, {
+        type: "theme",
+        theme: "system",
+    });
+    assertEquals(byId.get("wallpaper")?.target, {
+        type: "route",
+        to: "/settings/appearance",
+    });
+    assertEquals(byId.get("settings")?.target, {
+        type: "route",
+        to: "/settings",
+    });
+    assertEquals(byId.get("trash")?.target, { type: "route", to: "/trash" });
+    assertEquals(byId.get("notes")?.target, {
+        type: "workspace",
+        kind: "documents",
+    });
+    assertEquals(byId.get("apps")?.target, { type: "apps" });
+    for (const entry of SEARCH_QUICK_COMMANDS) {
+        assertEquals(entry.prefix, entry.prefix.toLowerCase());
+        assertEquals(/^\/[a-z]+$/.test(entry.prefix), true);
+    }
+});
+
+Deno.test("matchSearchCommands lists by prefix or action, hides AI and personal commands by capability", () => {
+    const all = { aiAvailable: true, signedIn: true };
+    const ids = (raw: string, context = all) =>
+        matchSearchCommands(raw, context).map((entry) => entry.id);
+
+    assertEquals(ids("hello"), []);
+    assertEquals(ids("/g rust"), []);
+    assertEquals(ids("/g "), []);
+    assertEquals(ids("/").length, SEARCH_QUICK_COMMANDS.length);
+    assertEquals(ids("/b"), ["bing", "baidu"]);
+    assertEquals(ids("  /DARK"), ["theme-dark"]);
+    assertEquals(ids("/壁纸"), ["wallpaper"]);
+
+    assertEquals(ids("/ai", all), ["ai"]);
+    assertEquals(ids("/ai", { aiAvailable: false, signedIn: true }), []);
+    const guest = ids("/", { aiAvailable: false, signedIn: false });
+    for (const hidden of ["ai", "trash", "notes", "apps"]) {
+        assertEquals(guest.includes(hidden), false);
+    }
+    for (const kept of ["google", "theme-dark", "wallpaper", "settings"]) {
+        assertEquals(guest.includes(kept), true);
+    }
+});
+
+Deno.test("only engine and AI prefixes take a query argument", () => {
+    for (const entry of SEARCH_QUICK_COMMANDS) {
+        assertEquals(
+            commandTakesQuery(entry),
+            entry.target.type === "engine" || entry.target.type === "mode",
+        );
+    }
+});
+
+Deno.test("search shortcuts document Alt+Enter and Shift+Enter in the same catalog", () => {
+    assertEquals(SHORTCUTS.searchAskAi.binding, {
+        key: "Enter",
+        modifiers: ["alt"],
+    });
+    assertEquals(SHORTCUTS.searchCapture.binding, {
+        key: "Enter",
+        modifiers: ["shift"],
+    });
+    assertEquals(SHORTCUTS.searchAskAi.section, "search");
+    assertEquals(SHORTCUTS.searchCapture.section, "search");
+});
+
+Deno.test("parseCommandPrefix accurately extracts command, target engine, and rest query without pollution", () => {
+    // 1. Regular query without command
+    assertEquals(parseCommandPrefix("rust 教程"), null);
+    assertEquals(parseCommandPrefix("https://example.com"), null);
+
+    // 2. Command prefix without trailing space (user still typing the command itself)
+    const cmdOnlyG = parseCommandPrefix("/g");
+    assertEquals(cmdOnlyG, {
+        command: "g",
+        rest: "",
+        isAi: false,
+        targetEngine: "google",
+        hasSpace: false,
+        prefix: "/g",
+    });
+
+    const cmdOnlyBa = parseCommandPrefix("/ba");
+    assertEquals(cmdOnlyBa, {
+        command: "ba",
+        rest: "",
+        isAi: false,
+        targetEngine: "baidu",
+        hasSpace: false,
+        prefix: "/ba",
+    });
+
+    // 3. Command prefix followed by space but no keywords yet
+    const cmdSpaceEmpty = parseCommandPrefix("/b ");
+    assertEquals(cmdSpaceEmpty, {
+        command: "b",
+        rest: "",
+        isAi: false,
+        targetEngine: "bing",
+        hasSpace: true,
+        prefix: "/b ",
+    });
+
+    // 4. Command prefix with actual keyword: rest must be stripped of command prefix
+    const cmdWithQuery = parseCommandPrefix("/g rust language");
+    assertEquals(cmdWithQuery, {
+        command: "g",
+        rest: "rust language",
+        isAi: false,
+        targetEngine: "google",
+        hasSpace: true,
+        prefix: "/g ",
+    });
+    // The query used for suggestion / engine search must be the rest, never polluted by /g
+    assertEquals(cmdWithQuery?.rest.includes("/g"), false);
+
+    // 5. DuckDuckGo command
+    const ddg = parseCommandPrefix("/d deno 2.0");
+    assertEquals(ddg, {
+        command: "d",
+        rest: "deno 2.0",
+        isAi: false,
+        targetEngine: "duckduckgo",
+        hasSpace: true,
+        prefix: "/d ",
+    });
+
+    // 6. AI command
+    const aiCmd = parseCommandPrefix("/ai 今天天气怎么样");
+    assertEquals(aiCmd, {
+        command: "ai",
+        rest: "今天天气怎么样",
+        isAi: true,
+        targetEngine: undefined,
+        hasSpace: true,
+        prefix: "/ai ",
+    });
 });

@@ -2,6 +2,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import ReactDOMServer from "react-dom/server";
 import { routes, settingsTab } from "../../app/routes.ts";
 import {
+    commandTakesQuery,
     KEYBOARD_SHORTCUTS,
     SEARCH_QUICK_COMMANDS,
 } from "./shortcut-catalog.ts";
@@ -37,7 +38,9 @@ Deno.test("ShortcutsSettings: renders all 5 required sections with proper headin
     for (const cmd of SEARCH_QUICK_COMMANDS) {
         assertStringIncludes(html, cmd.action);
         assertStringIncludes(html, cmd.prefix);
-        assertStringIncludes(html, `${cmd.prefix} 关键词`);
+        if (commandTakesQuery(cmd)) {
+            assertStringIncludes(html, `${cmd.prefix} 关键词`);
+        }
     }
 });
 

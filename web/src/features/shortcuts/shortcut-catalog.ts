@@ -1,4 +1,6 @@
 import type { EngineId } from "@shared/engines.ts";
+import { routes } from "../../app/routes.ts";
+import type { WorkspaceKind } from "../workspace/workspace-state.ts";
 
 export type ShortcutScope = "global" | "search" | "ask" | "documents";
 export type ShortcutPlatform = "mac" | "other";
@@ -42,6 +44,24 @@ export const SHORTCUTS = {
         action: "在新标签页提交搜索",
         context: "主搜索框",
         binding: { key: "Enter", modifiers: ["mod"] },
+    },
+    searchAskAi: {
+        id: "search-ask-ai",
+        kind: "keyboard",
+        section: "search",
+        action: "把输入交给 AI",
+        context: "主搜索框",
+        description: "等同于选中“问 AI”后回车；没有可用模型时不响应。",
+        binding: { key: "Enter", modifiers: ["alt"] },
+    },
+    searchCapture: {
+        id: "search-capture",
+        kind: "keyboard",
+        section: "search",
+        action: "快速记录为笔记",
+        context: "主搜索框",
+        description: "创建未固定到首页的笔记并清空输入；登录后可用。",
+        binding: { key: "Enter", modifiers: ["shift"] },
     },
     askFind: {
         id: "ask-find",
@@ -97,11 +117,20 @@ export const SHORTCUTS = {
 export const KEYBOARD_SHORTCUTS: readonly KeyboardShortcutDefinition[] = Object
     .values(SHORTCUTS);
 
+export type SearchCommandTarget =
+    | { type: "engine"; engine: EngineId }
+    | { type: "mode"; mode: "ai" }
+    | { type: "theme"; theme: "light" | "dark" | "system" }
+    | { type: "route"; to: string }
+    | { type: "workspace"; kind: WorkspaceKind }
+    | { type: "apps" };
 export type SearchQuickCommand = {
     id: string;
-    prefix: "/g" | "/b" | "/ba" | "/d" | "/ai";
+    prefix: `/${string}`;
     action: string;
-    target: { type: "engine"; engine: EngineId } | { type: "mode"; mode: "ai" };
+    target: SearchCommandTarget;
+    /** Needs a signed-in user: guests never see it. */
+    requiresUser?: boolean;
 };
 export const SEARCH_QUICK_COMMANDS: readonly SearchQuickCommand[] = [
     {
@@ -133,8 +162,91 @@ export const SEARCH_QUICK_COMMANDS: readonly SearchQuickCommand[] = [
         prefix: "/ai",
         action: "AI 问答",
         target: { type: "mode", mode: "ai" },
+        requiresUser: true,
+    },
+    {
+        id: "theme-light",
+        prefix: "/light",
+        action: "切换到浅色主题",
+        target: { type: "theme", theme: "light" },
+    },
+    {
+        id: "theme-dark",
+        prefix: "/dark",
+        action: "切换到深色主题",
+        target: { type: "theme", theme: "dark" },
+    },
+    {
+        id: "theme-system",
+        prefix: "/system",
+        action: "主题跟随系统",
+        target: { type: "theme", theme: "system" },
+    },
+    {
+        id: "wallpaper",
+        prefix: "/wallpaper",
+        action: "更换壁纸",
+        target: { type: "route", to: routes.settings("appearance") },
+    },
+    {
+        id: "settings",
+        prefix: "/settings",
+        action: "打开设置",
+        target: { type: "route", to: routes.settings() },
+    },
+    {
+        id: "trash",
+        prefix: "/trash",
+        action: "打开回收站",
+        target: { type: "route", to: routes.trash },
+        requiresUser: true,
+    },
+    {
+        id: "notes",
+        prefix: "/notes",
+        action: "打开笔记",
+        target: { type: "workspace", kind: "documents" },
+        requiresUser: true,
+    },
+    {
+        id: "apps",
+        prefix: "/apps",
+        action: "打开应用",
+        target: { type: "apps" },
+        requiresUser: true,
     },
 ];
+
+/** Engine prefixes and /ai are followed by a query; every other command stands alone. */
+export function commandTakesQuery(command: SearchQuickCommand): boolean {
+    return command.target.type === "engine" || command.target.type === "mode";
+}
+
+export type SearchCommandContext = { aiAvailable: boolean; signedIn: boolean };
+
+/**
+ * Commands listed for input that is still a command token: "/" lists all, more
+ * characters filter by prefix or by a substring of the action. Once whitespace
+ * follows the token the input is arguments, not a command list. /ai needs an
+ * available model; account commands need a signed-in user.
+ */
+export function matchSearchCommands(
+    raw: string,
+    context: SearchCommandContext,
+): SearchQuickCommand[] {
+    const text = raw.trimStart();
+    if (!text.startsWith("/") || /\s/.test(text)) return [];
+    const token = text.toLowerCase();
+    return SEARCH_QUICK_COMMANDS.filter((command) => {
+        if (command.target.type === "mode" && !context.aiAvailable) {
+            return false;
+        }
+        if (command.requiresUser && !context.signedIn) return false;
+        return command.prefix.startsWith(token) ||
+            (token.length > 1 &&
+                command.action.toLowerCase().includes(token.slice(1)));
+    });
+}
 
 export function parseCommandPrefix(raw: string) {
     const trimmedLead = raw.trimStart();
