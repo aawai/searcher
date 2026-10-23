@@ -43,7 +43,8 @@ COPY src ./src
 COPY drizzle ./drizzle
 COPY --from=build /app/web/dist ./web/dist
 
-RUN mkdir -p /app/data && chown deno:deno /app/data
+# sharp 的 musl 原生模块需要 libstdc++。
+RUN apk add --no-cache libstdc++ && mkdir -p /app/data && chown deno:deno /app/data
 
 USER deno
 
