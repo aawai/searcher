@@ -1,10 +1,16 @@
 import { assertEquals } from "@std/assert";
-import { authDestination, authPath } from "./routes.ts";
+import {
+    askConversationId,
+    authDestination,
+    authPath,
+    routes,
+} from "./routes.ts";
 
 Deno.test("auth return destination preserves page context and rejects external redirects", () => {
     for (
         const next of [
             "/ask?q=foo",
+            "/ask/conv-1",
             "/trash",
             "/account?section=password#security",
         ]
@@ -35,4 +41,18 @@ Deno.test("auth return destination preserves page context and rejects external r
     ) {
         assertEquals(authDestination(`?next=${encodeURIComponent(next)}`), "/");
     }
+});
+
+Deno.test("ask conversation deep links round-trip ids, including reserved characters", () => {
+    assertEquals(routes.askConversation("conv_1"), "/ask/conv_1");
+    for (const id of ["conv_1", "a b/c", "中文#1"]) {
+        assertEquals(
+            askConversationId(routes.askConversation(id)),
+            id,
+        );
+    }
+    assertEquals(askConversationId(routes.ask), null);
+    assertEquals(askConversationId("/ask/"), null);
+    assertEquals(askConversationId("/settings/ai"), null);
+    assertEquals(askConversationId("/ask/a/b"), null);
 });

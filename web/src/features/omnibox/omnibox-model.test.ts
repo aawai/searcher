@@ -17,12 +17,10 @@ const guest = { aiAvailable: false, signedIn: false };
 const resolve = (
     raw: string,
     context = signedIn,
-    mode: "search" | "ai" = "search",
     hasQuickEntries = false,
 ) => resolveOmniboxQuery({
     raw,
     engine: "bing",
-    mode,
     context,
     hasQuickEntries,
 });
@@ -76,10 +74,9 @@ const groupIds = (
     }),
 ).map((group) => group.id);
 
-Deno.test("query resolution: empty, AI mode, prefixes and plain text", () => {
+Deno.test("query resolution: empty, prefixes and plain text", () => {
     assertEquals(resolve("   "), { kind: "idle" });
-    assertEquals(resolve("   ", signedIn, "search", true), { kind: "entries" });
-    assertEquals(resolve("rust", signedIn, "ai"), { kind: "idle" });
+    assertEquals(resolve("   ", signedIn, true), { kind: "entries" });
     assertEquals(resolve("rust"), {
         kind: "search",
         text: "rust",
@@ -206,7 +203,7 @@ Deno.test("engine prefix lists only web results for the stripped query", () => {
 
 Deno.test("empty focus offers quick entries under 命令", () => {
     const groups = buildOmniboxGroups(
-        resolve("", signedIn, "search", true),
+        resolve("", signedIn, true),
         data({ quickEntries: [{ id: "apps", label: "应用" }] }),
     );
     assertEquals(groups.map((group) => group.id), ["commands"]);
@@ -247,9 +244,17 @@ Deno.test("explicit prefixes with a query: engine prefix searches that engine, /
         engine: "google",
         newTab: false,
     });
-    assertEquals(defaultSubmitAction("/AI  hi there", false), {
+    assertEquals(defaultSubmitAction("/AI  hi there", false, true), {
         type: "ask-ai",
         text: "hi there",
+    });
+});
+
+Deno.test("/ai without a usable model is just text: a literal default-engine search", () => {
+    assertEquals(defaultSubmitAction("/AI  hi there", false, false), {
+        type: "search",
+        text: "/AI  hi there",
+        newTab: false,
     });
 });
 

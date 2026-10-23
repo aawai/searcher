@@ -6,6 +6,10 @@ import { PageShell } from "../components/searcher/PageShell.tsx";
 import { Section } from "../components/searcher/semantic.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { useEscapeLayer } from "../components/ui/escape-layer-stack.tsx";
+import {
+    runSharedElementTransition,
+    supportsSharedElementTransition,
+} from "../lib/shared-element.ts";
 import "./motion-lab.css";
 
 const CARDS = [
@@ -35,8 +39,7 @@ export default function MotionLab() {
     const objects = useRef(new Map<string, HTMLElement>());
     const triggers = useRef(new Map<string, HTMLElement>());
     const close = useRef<HTMLButtonElement>(null);
-    const running = useRef<ViewTransition | null>(null);
-    const supported = typeof document.startViewTransition === "function";
+    const supported = supportsSharedElementTransition();
 
     useEffect(() => {
         const media = matchMedia("(prefers-reduced-motion: reduce)");
@@ -45,44 +48,23 @@ export default function MotionLab() {
         return () => media.removeEventListener("change", change);
     }, []);
 
-    useEffect(() => () => {
-        running.current?.skipTransition();
-        document.documentElement.classList.remove("motion-lab-transition");
-    }, []);
-
     async function changeCard(id: string, open: boolean) {
         if (busy) return;
-        const focusTarget = () => {
+        const object = objects.current.get(id);
+        if (!object) return;
+        setBusy(true);
+        try {
+            await runSharedElementTransition({
+                source: object,
+                update: () => flushSync(() => setExpanded(open ? id : null)),
+                // React retains the same keyed object across states.
+                findTarget: () => objects.current.get(id) ?? null,
+            });
+        } finally {
+            flushSync(() => setBusy(false));
             (open ? close.current : triggers.current.get(id))?.focus({
                 preventScroll: true,
             });
-        };
-        if (!supported) {
-            flushSync(() => setExpanded(open ? id : null));
-            focusTarget();
-            return;
-        }
-        const object = objects.current.get(id);
-        if (!object) return;
-        const root = document.documentElement;
-        const name = `motion-card-${crypto.randomUUID()}`;
-        object.style.viewTransitionName = name;
-        root.classList.add("motion-lab-transition");
-        setBusy(true);
-        const transition = document.startViewTransition(() => {
-            flushSync(() => setExpanded(open ? id : null));
-            // React retains the same keyed object across states.
-            objects.current.get(id)!.style.viewTransitionName = name;
-        });
-        running.current = transition;
-        try {
-            await transition.finished;
-        } finally {
-            object.style.removeProperty("view-transition-name");
-            root.classList.remove("motion-lab-transition");
-            running.current = null;
-            flushSync(() => setBusy(false));
-            focusTarget();
         }
     }
 

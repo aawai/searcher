@@ -10,6 +10,7 @@ import type {
     ToolsConfig,
 } from "./types.ts";
 import { ConversationHeader } from "./ConversationHeader.tsx";
+import { ASK_SHARED_TARGET } from "./shared-target.ts";
 import { SearcherThread } from "./SearcherThread.tsx";
 import { SearcherAssistantRuntimeProvider } from "./assistant-runtime.tsx";
 import {
@@ -147,7 +148,11 @@ export function ConversationWorkspace({
             }}
             onBranchChange={(targetId) => handleSwitchBranch(targetId)}
         >
-            <section className="ask-workspace" aria-label="对话工作区">
+            <section
+                className="ask-workspace"
+                aria-label="对话工作区"
+                data-shared-target={ASK_SHARED_TARGET}
+            >
                 <ConversationHeader
                     conversation={conversation}
                     messages={branchMessages}

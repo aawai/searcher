@@ -350,7 +350,7 @@ Deno.test("production search shortcuts respect editable focus and submit command
         },
     );
     await t.step(
-        "engine prefixes fill their command, run with a query, and /ai needs a session",
+        "engine prefixes fill their command and run with a query; /ai is plain text without a usable model",
         async () => {
             for (const prefix of ["/g", "/b", "/ba", "/d"]) {
                 await search.fill(prefix);
@@ -360,10 +360,18 @@ Deno.test("production search shortcuts respect editable focus and submit command
                 await search.press("Enter");
                 assertEquals(await search.inputValue(), `${prefix} `);
             }
+            await page.context().route(
+                /https:\/\/www\.bing\.com\//,
+                (route) => route.fulfill({ status: 200, body: "search" }),
+            );
+            // Without a usable model /ai is not an AI route: a literal web search.
             await search.fill("/ai guest question");
             await search.press("Enter");
-            await page.getByText("登录后使用 AI 问答", { exact: true })
-                .waitFor();
+            await page.waitForURL(/bing\.com\/search/);
+            assertEquals(
+                new URL(page.url()).searchParams.get("q"),
+                "/ai guest question",
+            );
             await page.goto(origin + "/register");
             await page.locator("#auth-username").fill("shortcut_search");
             await page.locator("#auth-display-name").fill("Shortcut Search");
@@ -374,7 +382,11 @@ Deno.test("production search shortcuts respect editable focus and submit command
             await page.waitForURL(origin + "/");
             await search.fill("/ai signed in question");
             await search.press("Enter");
-            await page.waitForURL(/\/ask\?q=signed\+in\+question/);
+            await page.waitForURL(/bing\.com\/search/);
+            assertEquals(
+                new URL(page.url()).searchParams.get("q"),
+                "/ai signed in question",
+            );
         },
     );
     await t.step(

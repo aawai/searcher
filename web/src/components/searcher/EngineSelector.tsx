@@ -1,4 +1,4 @@
-import { ChevronDown, RotateCw, Sparkles } from "lucide-react";
+import { ChevronDown, RotateCw } from "lucide-react";
 import { ENGINE_IDS, type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     DropdownMenu,
@@ -133,54 +133,40 @@ export function EngineIcon(
 export function EngineSelector(
     {
         engine,
-        mode,
         onEngineChange,
-        onModeChange,
         reachability,
         onCheck,
         isChecking = false,
     }: {
         engine: EngineId;
-        mode: "search" | "ai";
         onEngineChange: (id: EngineId) => void;
-        onModeChange: (mode: "search" | "ai") => void;
         reachability: Reachability;
         onCheck?: () => void;
         isChecking?: boolean;
     },
 ) {
     const current = SEARCH_ENGINES.find((item) => item.id === engine);
-    // Engines and AI are mutually exclusive search targets: one radio group.
-    const target = mode === "ai" ? "ai" : engine;
-    function chooseTarget(value: string) {
-        if (value === "ai") {
-            onModeChange("ai");
-            return;
-        }
+    function chooseEngine(value: string) {
         const id = ENGINE_IDS.find((candidate) => candidate === value);
-        if (!id) return;
-        onModeChange("search");
-        onEngineChange(id);
+        if (id) onEngineChange(id);
     }
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger
                 className="search-engine"
-                aria-label={mode === "ai"
-                    ? "当前模式: AI 问答，点击切换"
-                    : `当前搜索引擎: ${current?.label || engine}，点击切换`}
+                aria-label={`当前搜索引擎: ${
+                    current?.label || engine
+                }，点击切换`}
             >
-                {mode === "ai"
-                    ? <Sparkles size="1em" className="icon-md engine-ai-icon" />
-                    : <EngineIcon id={engine || "bing"} className="icon-md" />}
+                <EngineIcon id={engine || "bing"} className="icon-md" />
                 <ChevronDown size="1em" className="icon-sm" />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={10}>
                 <DropdownMenuRadioGroup
                     aria-label="搜索方式"
-                    value={target}
-                    onValueChange={chooseTarget}
+                    value={engine}
+                    onValueChange={chooseEngine}
                 >
                     {SEARCH_ENGINES.map((item) => {
                         const status = reachability[item.id];
@@ -210,10 +196,6 @@ export function EngineSelector(
                             </DropdownMenuRadioItem>
                         );
                     })}
-                    <DropdownMenuRadioItem value="ai" closeOnClick>
-                        <Sparkles size="1em" className="icon-md" />
-                        <span>AI 问答</span>
-                    </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 {onCheck && (
                     <>

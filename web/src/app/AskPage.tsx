@@ -2,8 +2,8 @@ import type {
     AiGenerationDefaultsDto,
     PreferencesDto,
 } from "@shared/contracts.ts";
-import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
 import type {
     AiConversationDto,
@@ -24,25 +24,34 @@ import type {
 } from "../features/ask/types.ts";
 import { useAskStream } from "../features/ask/useAskStream.ts";
 import { api, json } from "../lib/api.ts";
-import { authPath } from "./routes.ts";
+import type { ExpandedAnswerState } from "../features/inline-ai/inline-answer.ts";
+import { requestSearchFocus } from "../features/inline-ai/search-focus.ts";
+import { authPath, routes } from "./routes.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 
 export function AskPage() {
     const { user } = useAppState();
     const location = useLocation();
-    const params = new URLSearchParams(location.search);
-    const initialPrompt =
-        (location.state as { prompt?: string } | null)?.prompt ??
-            params.get("q") ?? "";
+    const navigate = useNavigate();
+    const { id: routeId } = useParams<{ id: string }>();
+    // The home answer card hands over its conversation so the first frame of the
+    // shared-element transition already shows it; the server copy replaces it.
+    const handedOver = (location.state as Partial<ExpandedAnswerState> | null)
+        ?.conversation;
 
-    const [input, setInput] = useState(initialPrompt);
+    const [input, setInput] = useState("");
     const [models, setModels] = useState<AiModelDto[]>([]);
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
     const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
     const [history, setHistory] = useState<AiConversationDto[]>([]);
     const [conversation, setConversation] = useState<
         ConversationFullData | null
-    >(null);
+    >(() =>
+        handedOver && handedOver.conversation.id === routeId ? handedOver : null
+    );
+    const [loaded, setLoaded] = useState(false);
+    const handedOverRef = useRef(Boolean(conversation));
+    const openedRouteRef = useRef<string | null>(null);
     const [capabilities, setCapabilities] = useState<AiCapabilitiesDto | null>(
         null,
     );
@@ -158,6 +167,7 @@ export function AskPage() {
                 setModels(m);
                 setHistory(h);
                 setCapabilities(caps);
+                setLoaded(true);
 
                 const defaults = preferences.aiGenerationDefaults ?? {};
                 setUserDefaults(defaults);
@@ -189,6 +199,40 @@ export function AskPage() {
             alive = false;
         };
     }, [user?.id]);
+
+    // The URL names the conversation: /ask/:id opens it (deep link, sidebar,
+    // history navigation) and /ask is the empty workspace.
+    useEffect(() => {
+        if (!loaded) return;
+        if (!routeId) {
+            if (openedRouteRef.current !== null) {
+                openedRouteRef.current = null;
+                startNewConversation();
+            }
+            return;
+        }
+        if (openedRouteRef.current === routeId) return;
+        openedRouteRef.current = routeId;
+        const alreadyShown = conversation?.conversation.id === routeId &&
+            !handedOverRef.current;
+        handedOverRef.current = false;
+        if (!alreadyShown) void openConversation(routeId);
+    }, [routeId, loaded]);
+
+    // A conversation started on this page gets its own URL once the server names it.
+    const shownConversationId = conversation?.conversation.id;
+    useEffect(() => {
+        if (shownConversationId && shownConversationId !== routeId) {
+            navigate(routes.askConversation(shownConversationId), {
+                replace: true,
+            });
+        }
+    }, [shownConversationId]);
+
+    // Leaving for the home page puts focus back in its search box.
+    useLayoutEffect(() => () => {
+        if (globalThis.location.pathname === routes.home) requestSearchFocus();
+    }, []);
 
     // Handle model change and resolve reasoning level compatibility
     function handleSelectModel(newModelId: string) {
@@ -334,6 +378,7 @@ export function AskPage() {
                 stopStream();
                 setConversation(null);
                 switchDraft(null);
+                navigate(routes.ask, { replace: true });
             }
             if (undoConversation?.timer) clearTimeout(undoConversation.timer);
             const timer = Number(globalThis.setTimeout(() => {
@@ -465,8 +510,14 @@ export function AskPage() {
                     activeId={conversation?.conversation.id ?? null}
                     drawerOpen={drawerOpen}
                     onDrawerOpenChange={setDrawerOpen}
-                    onSelectConversation={(id) => void openConversation(id)}
-                    onNewConversation={startNewConversation}
+                    onSelectConversation={(id) => {
+                        if (id === routeId) void openConversation(id);
+                        else navigate(routes.askConversation(id));
+                    }}
+                    onNewConversation={() => {
+                        if (routeId) navigate(routes.ask);
+                        else startNewConversation();
+                    }}
                     onRenameConversation={renameConversation}
                     onDeleteConversation={deleteConversation}
                 />

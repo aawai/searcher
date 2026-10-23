@@ -215,7 +215,11 @@ export const CSS_PREFIX_OWNER_MAP: Record<string, readonly string[]> = {
     "settings-": ["web/src/app/settings.css"],
     "admin-": ["web/src/app/admin.css"],
     "account-": ["web/src/app/account.css"],
-    "ask-": ["web/src/features/ask/ask-workspace.css"],
+    "ask-": [
+        "web/src/features/ask/ask-workspace.css",
+        "web/src/features/ask/ask-answer.css",
+    ],
+    "inline-ai-": ["web/src/features/inline-ai/inline-ai.css"],
     "workspace-": ["web/src/features/workspace/workspace.css"],
     "apps-workspace-": [],
     "notes-workspace-": ["web/src/features/workspace/notes-workspace.css"],

@@ -261,31 +261,48 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
             assertEquals(new URL(page.url()).pathname, "/");
         });
 
-        await t.step("Alt+Enter hands the input to AI", async () => {
-            await openHome(page, app.origin);
-            await search.fill("问题");
-            await page.getByRole("option", { name: /问 AI：问题/ }).waitFor();
-            await search.press("Alt+Enter");
-            await page.waitForURL(/\/ask\?q=/);
-            assertEquals(
-                new URL(page.url()).searchParams.get("q"),
-                "问题",
-            );
-        });
-
         await t.step(
-            "selecting 问 AI then Enter equals Alt+Enter",
+            "Alt+Enter and the 问 AI row open the inline answer with the input",
             async () => {
-                await openHome(page, app.origin);
-                await search.fill("另一个问题");
-                await page.getByRole("option", { name: /问 AI：/ }).waitFor();
-                await search.press("ArrowDown");
-                await search.press("Enter");
-                await page.waitForURL(/\/ask\?q=/);
-                assertEquals(
-                    new URL(page.url()).searchParams.get("q"),
-                    "另一个问题",
+                // Streaming itself is covered by inline-ai-answer; here only the hand-over.
+                await page.route(
+                    "**/api/ai/chat/stream",
+                    (route) =>
+                        route.fulfill({
+                            status: 500,
+                            contentType: "application/json",
+                            body: JSON.stringify({ message: "stub" }),
+                        }),
                 );
+                try {
+                    for (
+                        const [text, select] of [
+                            ["问题", false],
+                            ["另一个问题", true],
+                        ] as const
+                    ) {
+                        await openHome(page, app.origin);
+                        await search.fill(text);
+                        await page.getByRole("option", { name: /问 AI：/ })
+                            .waitFor();
+                        const request = page.waitForRequest(
+                            /\/api\/ai\/chat\/stream/,
+                        );
+                        if (select) {
+                            await search.press("ArrowDown");
+                            await search.press("Enter");
+                        } else await search.press("Alt+Enter");
+                        assertEquals(
+                            (await request).postDataJSON().message,
+                            text,
+                        );
+                        await page.getByRole("region", { name: "AI 回答" })
+                            .waitFor();
+                        assertEquals(new URL(page.url()).pathname, "/");
+                    }
+                } finally {
+                    await page.unroute("**/api/ai/chat/stream");
+                }
             },
         );
 

@@ -14,19 +14,18 @@ import type { UserDto } from "@shared/contracts.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
 import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
 import type { PaperItem } from "./home-papers.ts";
+import type { InlineAnswer } from "../inline-ai/useInlineAnswer.ts";
 export interface HomeLayoutProps {
     user: UserDto | null;
     engine: EngineId;
     setEngine: (engine: EngineId) => void;
-    mode: "search" | "ai";
-    setMode: (mode: "search" | "ai") => void;
     reachability: Reachability;
     isCheckingConnections: boolean;
     onCheckConnections: () => Promise<void>;
     search: (
         query: string,
         newTab: boolean,
-        override?: { engine?: EngineId; mode?: "search" | "ai" },
+        override?: { engine?: EngineId },
     ) => void;
     apps: ExtendedWebApp[];
     groups: WebAppGroup[];
@@ -67,6 +66,8 @@ export interface HomeLayoutProps {
     openDocument: (id: string) => void;
     /** An enabled model exists for the signed-in user: AI entry points show. */
     aiAvailable: boolean;
+    /** The streamed answer card under the search box. */
+    inlineAnswer: InlineAnswer;
     /** Runs a theme, route or workspace command from the search box. */
     onSearchCommand: (command: SearchQuickCommand) => void;
     /** Shift+Enter quick capture; resolves true once the note exists. */

@@ -1,0 +1,150 @@
+/* Home answer card: a floating material under the search box, same family as
+   the suggestion list. The answer text and code blocks come from ask-answer.css. */
+.inline-ai-card {
+    width: 100%;
+    max-width: var(--layout-search-max);
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--glass-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    border-radius: var(--radius-sheet);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    color: var(--foreground);
+    transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+@starting-style {
+    .inline-ai-card {
+        opacity: 0;
+    }
+}
+
+.inline-ai-card[data-ending-style] {
+    opacity: 0;
+}
+
+.inline-ai-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.inline-ai-question {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.inline-ai-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.inline-ai-body {
+    max-height: min(50dvh, 360px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    overflow-wrap: anywhere;
+}
+
+.inline-ai-pending {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.inline-ai-notice {
+    margin: var(--space-2) 0 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.inline-ai-notice.is-failed {
+    color: var(--danger);
+}
+
+/* Sources are rows under a hairline, not tiles: the card is already the container. */
+.inline-ai-sources {
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border);
+}
+
+.inline-ai-sources-title {
+    margin: 0 0 var(--space-1);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
+}
+
+.inline-ai-sources ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.inline-ai-source {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--control-compact-height);
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--motion-fast) var(--ease-standard);
+}
+
+.inline-ai-source:hover {
+    background: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.inline-ai-source:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+.inline-ai-source-kind {
+    flex-shrink: 0;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--surface-soft);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.inline-ai-source-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (any-pointer: coarse) {
+    .inline-ai-source {
+        min-height: var(--control-touch-target);
+    }
+}

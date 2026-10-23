@@ -4,6 +4,7 @@ export type AdminTab = "overview" | "users" | "settings" | "audit" | "backup";
 export const routes = {
     home: "/",
     ask: "/ask",
+    askConversation: (id: string) => `/ask/${encodeURIComponent(id)}`,
     login: "/login",
     register: "/register",
     account: "/account",
@@ -13,6 +14,19 @@ export const routes = {
     admin: (tab: AdminTab = "overview") =>
         tab === "overview" ? "/admin" : `/admin/${tab}`,
 };
+
+/** The conversation id of an `/ask/:id` deep link; null for any other path. */
+export function askConversationId(pathname: string): string | null {
+    const prefix = `${routes.ask}/`;
+    if (!pathname.startsWith(prefix)) return null;
+    const segment = pathname.slice(prefix.length);
+    if (!segment || segment.includes("/")) return null;
+    try {
+        return decodeURIComponent(segment);
+    } catch {
+        return null;
+    }
+}
 
 export function settingsTab(pathname: string): SettingsTab | null {
     switch (pathname) {
