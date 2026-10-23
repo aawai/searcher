@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { type AccentId, ACCENTS } from "@shared/contracts.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
 
@@ -137,6 +138,9 @@ export function DesignLab() {
     return (
         <PageShell archetype="workbench" className="design-lab-page">
             <PageHeader title="设计实验室" />
+            <Section title="交互原型">
+                <Link to="/design-lab/omnibox">统一输入框</Link>
+            </Section>
 
             <Section title="首页构图：31% / 38%">
                 <p>
