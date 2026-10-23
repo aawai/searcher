@@ -189,7 +189,7 @@ export interface PreferencesDto {
     showAppLabels: boolean;
     aiGenerationDefaults?: AiGenerationDefaultsDto;
 }
-export type NoteColor = "paper" | "amber" | "rose" | "sage" | "sky";
+export * from "./documents.ts";
 export interface Envelope<T> {
     code: number;
     status: boolean;

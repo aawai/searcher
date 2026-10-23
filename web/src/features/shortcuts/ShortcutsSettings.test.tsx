@@ -21,7 +21,7 @@ Deno.test("ShortcutsSettings: renders all 5 required sections with proper headin
     assertStringIncludes(html, "全局");
     assertStringIncludes(html, "搜索");
     assertStringIncludes(html, "AI 问答");
-    assertStringIncludes(html, "便签编辑");
+    assertStringIncludes(html, "笔记编辑");
     assertStringIncludes(html, "快捷命令");
 
     // All keyboard shortcut actions from catalog are present

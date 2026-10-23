@@ -219,7 +219,7 @@ async function settlePresentation(page: Page) {
 }
 
 async function openAppsWorkspace(page: Page) {
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     if (await page.locator(GRID_SELECTOR).isVisible()) {
         await settlePresentation(page);
         return;

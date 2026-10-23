@@ -406,7 +406,7 @@ Deno.test("production navigation contracts", async (t) => {
     await t.step(
         "register after a guest CTA retains destination through auth mode switching",
         async () => {
-            await visit("/trash?filter=notes");
+            await visit("/trash?filter=documents");
             await page.getByRole("link", { name: "请先登录", exact: true })
                 .click();
             await page.getByRole("link", { name: "注册", exact: true })
@@ -415,7 +415,7 @@ Deno.test("production navigation contracts", async (t) => {
             await page.getByRole("link", { name: "注册", exact: true }).click();
             assertStringIncludes(
                 page.url(),
-                "next=%2Ftrash%3Ffilter%3Dnotes",
+                "next=%2Ftrash%3Ffilter%3Ddocuments",
             );
             await page.locator("#auth-username").fill(username);
             await page.locator("#auth-display-name").fill(
@@ -423,7 +423,7 @@ Deno.test("production navigation contracts", async (t) => {
             );
             await page.locator("#auth-password").fill(password);
             await page.locator('form button[type="submit"]').click();
-            await page.waitForURL(origin + "/trash?filter=notes");
+            await page.waitForURL(origin + "/trash?filter=documents");
         },
     );
     await t.step(
@@ -510,7 +510,7 @@ Deno.test("production navigation contracts", async (t) => {
         async () => {
             for (
                 const [path, label] of [["/ask?q=foo", "登录后提问"], [
-                    "/trash?filter=notes",
+                    "/trash?filter=documents",
                     "请先登录",
                 ], ["/account?section=password", "前往登录"]]
             ) {

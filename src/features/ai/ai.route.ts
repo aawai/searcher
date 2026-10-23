@@ -114,7 +114,6 @@ const AttachmentInputSchema = v.object({
 });
 
 const ToolsConfigSchema = v.object({
-    notes: v.optional(v.boolean()),
     documents: v.optional(v.boolean()),
     apps: v.optional(v.boolean()),
     webSearch: v.optional(v.boolean()),

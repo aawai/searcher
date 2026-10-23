@@ -125,6 +125,73 @@ export function createDocumentSession(
     let inFlightSavePromise: Promise<boolean> | null = null;
     let isDestroyed = false;
     let userEditedSinceLoad = false;
+    let pendingRemoteVersion = 0;
+    let remoteRefresh: Promise<void> | null = null;
+    async function refreshRemote(): Promise<void> {
+        if (isDestroyed || !snapshot.document) return;
+        if (inFlightSavePromise) await inFlightSavePromise;
+        if (isDestroyed || pendingRemoteVersion <= snapshot.document.version) {
+            return;
+        }
+        if (remoteRefresh) return await remoteRefresh;
+        remoteRefresh = (async () => {
+            try {
+                while (
+                    !isDestroyed && snapshot.document &&
+                    pendingRemoteVersion > snapshot.document.version
+                ) {
+                    const requestedVersion = pendingRemoteVersion;
+                    const current = await request<DocumentDto>(
+                        `/api/documents/${encodeURIComponent(documentId)}`,
+                    );
+                    if (isDestroyed) return;
+                    if (current.version <= (snapshot.document?.version ?? 0)) {
+                        break;
+                    }
+                    if (snapshot.saveStatus === "saved" && !snapshot.draft) {
+                        snapshot = {
+                            ...snapshot,
+                            document: current,
+                            title: current.title ?? "",
+                            body: current.body,
+                        };
+                    } else {
+                        snapshot = {
+                            ...snapshot,
+                            conflict: current,
+                            saveStatus: "conflict",
+                            error: "笔记已在其他位置更新，请解决版本冲突",
+                        };
+                    }
+                    notify();
+                    if (
+                        pendingRemoteVersion <= requestedVersion ||
+                        snapshot.conflict
+                    ) break;
+                }
+            } catch (error) {
+                if (!isDestroyed) {
+                    snapshot = {
+                        ...snapshot,
+                        error: error instanceof Error
+                            ? error.message
+                            : "同步笔记失败",
+                    };
+                    notify();
+                }
+            } finally {
+                remoteRefresh = null;
+            }
+        })();
+        await remoteRefresh;
+    }
+    const unsubscribeEvents = options.events?.subscribe(
+        documentId,
+        (version) => {
+            pendingRemoteVersion = Math.max(pendingRemoteVersion, version);
+            void refreshRemote();
+        },
+    );
 
     function notify(): void {
         for (const listener of listeners) {
@@ -224,7 +291,7 @@ export function createDocumentSession(
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         version: savingVersion,
-                        title: savingTitle,
+                        title: savingTitle.trim() ? savingTitle : null,
                         body: savingBody,
                         origin,
                     }),
@@ -263,13 +330,20 @@ export function createDocumentSession(
                     conflict: conflictDoc,
                     saveStatus: "conflict",
                     error: err.message || "笔记存在版本冲突",
+                    draft: {
+                        userId,
+                        documentId,
+                        title: snapshot.title,
+                        body: snapshot.body,
+                        version: savingVersion,
+                        updatedAt: Date.now(),
+                    },
                 };
                 await persistDraftToStorage(
                     snapshot.title,
                     snapshot.body,
                     savingVersion,
                 );
-                notify();
                 return false;
             }
 
@@ -411,7 +485,7 @@ export function createDocumentSession(
                         document: serverDoc,
                         title: userEditedSinceLoad
                             ? snapshot.title
-                            : serverDoc.title,
+                            : serverDoc.title ?? "",
                         body: userEditedSinceLoad
                             ? snapshot.body
                             : serverDoc.body,
@@ -422,6 +496,7 @@ export function createDocumentSession(
                     };
 
                     notify();
+                    void refreshRemote();
                 } catch (err) {
                     snapshot = {
                         ...snapshot,
@@ -468,7 +543,9 @@ export function createDocumentSession(
             };
             notify();
 
-            const version = snapshot.document?.version ?? 1;
+            const version = snapshot.conflict
+                ? (snapshot.draft?.version ?? 1)
+                : (snapshot.document?.version ?? 1);
             void persistDraftToStorage(snapshot.title, snapshot.body, version);
 
             if (!inConflict) {
@@ -496,6 +573,38 @@ export function createDocumentSession(
             origin: "autosave" | "manual" = "autosave",
         ): Promise<boolean> {
             return await save(origin);
+        },
+
+        async updatePresentation(change): Promise<boolean> {
+            if (!await save("autosave") || !snapshot.document) return false;
+            try {
+                const updated = await request<DocumentDto>(
+                    `/api/documents/${encodeURIComponent(documentId)}`,
+                    {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            version: snapshot.document.version,
+                            ...change,
+                        }),
+                    },
+                );
+                snapshot = { ...snapshot, document: updated };
+                notify();
+                return true;
+            } catch (error) {
+                const conflict = extractConflictDocument(error);
+                snapshot = {
+                    ...snapshot,
+                    conflict,
+                    saveStatus: conflict ? "conflict" : snapshot.saveStatus,
+                    error: error instanceof Error
+                        ? error.message
+                        : "更新笔记失败",
+                };
+                notify();
+                return false;
+            }
         },
 
         applyDraft(): void {
@@ -563,7 +672,7 @@ export function createDocumentSession(
                 snapshot = {
                     ...snapshot,
                     document: serverDoc,
-                    title: serverDoc.title,
+                    title: serverDoc.title ?? "",
                     body: serverDoc.body,
                     conflict: null,
                     saveStatus: "saved",
@@ -597,7 +706,9 @@ export function createDocumentSession(
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
                                 version: conflictDoc.version,
-                                title: resolvingTitle,
+                                title: resolvingTitle.trim()
+                                    ? resolvingTitle
+                                    : null,
                                 body: resolvingBody,
                                 origin: "conflict_resolution",
                             }),
@@ -685,7 +796,9 @@ export function createDocumentSession(
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                title: resolvingTitle,
+                                title: resolvingTitle.trim()
+                                    ? resolvingTitle
+                                    : null,
                                 body: resolvingBody,
                                 notebookId: snapshot.document?.notebookId ??
                                     null,
@@ -745,6 +858,15 @@ export function createDocumentSession(
         },
 
         async listVersions(): Promise<DocumentVersionDto[]> {
+            if (snapshot.saveStatus === "dirty") {
+                await save("manual");
+            } else if (inFlightSavePromise !== null) {
+                try {
+                    await inFlightSavePromise;
+                } catch {
+                    // prior save handled its own error
+                }
+            }
             const versions = await request<DocumentVersionDto[]>(
                 `/api/documents/${encodeURIComponent(documentId)}/versions`,
             );
@@ -753,20 +875,33 @@ export function createDocumentSession(
 
         async restoreVersion(targetVersion: number): Promise<boolean> {
             if (!snapshot.document) return false;
-
-            // Always call save("autosave") first: awaits in-flight saves, flushes dirty edits,
-            // and returns false on conflict or error to prevent overwriting unsaved data.
-            const saved = await save("autosave");
-            if (!saved) {
+            if (
+                snapshot.saveStatus === "conflict" || snapshot.conflict !== null
+            ) {
                 return false;
+            }
+
+            if (inFlightSavePromise !== null) {
+                try {
+                    await inFlightSavePromise;
+                } catch {
+                    // prior save handled its own error
+                }
             }
 
             const currentDoc = snapshot.document;
-            if (!currentDoc) {
-                return false;
-            }
-            const currentVersion = currentDoc.version;
+            if (!currentDoc) return false;
 
+            const isContentDirty = snapshot.saveStatus === "dirty" ||
+                snapshot.body !== currentDoc.body ||
+                snapshot.title !== (currentDoc.title ?? "");
+
+            if (isContentDirty) {
+                const saved = await save("manual");
+                if (!saved) return false;
+            }
+
+            const currentVersion = currentDoc.version;
             snapshot = {
                 ...snapshot,
                 saveStatus: "saving",
@@ -790,7 +925,7 @@ export function createDocumentSession(
                 snapshot = {
                     ...snapshot,
                     document: restored,
-                    title: restored.title,
+                    title: restored.title ?? "",
                     body: restored.body,
                     saveStatus: "saved",
                     conflict: null,
@@ -831,6 +966,8 @@ export function createDocumentSession(
         },
 
         async destroy(): Promise<void> {
+            unsubscribeEvents?.();
+            isDestroyed = true;
             if (autosaveTimer !== null) {
                 clearTimeout(autosaveTimer);
                 autosaveTimer = null;
@@ -851,7 +988,7 @@ export function createDocumentSession(
                 await persistDraftToStorage(
                     snapshot.title,
                     snapshot.body,
-                    snapshot.document?.version ?? 1,
+                    snapshot.draft?.version ?? 1,
                 );
             } else if (snapshot.saveStatus === "dirty") {
                 try {

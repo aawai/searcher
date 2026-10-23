@@ -152,14 +152,14 @@ export interface AttachmentPart {
 export interface ToolCallPart {
     type: "tool-call";
     callId: string;
-    toolName: "notes" | "documents" | "apps" | "webSearch";
+    toolName: "documents" | "apps" | "webSearch";
     args: Record<string, unknown>;
 }
 
 export interface ToolResultPart {
     type: "tool-result";
     callId: string;
-    toolName: "notes" | "documents" | "apps" | "webSearch";
+    toolName: "documents" | "apps" | "webSearch";
     result: unknown;
     error?: string;
 }
@@ -201,7 +201,6 @@ export interface AttachmentInput {
 }
 
 export interface ToolsConfig {
-    notes?: boolean;
     documents?: boolean;
     apps?: boolean;
     webSearch?: boolean;
@@ -223,7 +222,6 @@ export interface ChatStreamRequest extends GenerationConfig {
 
 export interface AiCapabilitiesDto {
     tools: {
-        notes: boolean;
         documents: boolean;
         apps: boolean;
         webSearch: boolean;

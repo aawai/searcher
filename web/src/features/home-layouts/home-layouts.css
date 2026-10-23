@@ -2,7 +2,7 @@
    labels sit directly on the wallpaper. */
 
 :root {
-    /* Inline-note preview geometry. The swipe distance is read by ZenInlineNotes. */
+    /* Inline-paper preview geometry. The swipe distance is read by ZenInlinePapers. */
     --zen-note-preview-lines: 4;
     --zen-note-title-lines: 2;
     --zen-note-swipe-distance: 32;
@@ -155,7 +155,7 @@
     }
 }
 
-/* Flow grid for pinned notes laid out in normal flow; used by FloatingNotes. */
+/* Flow grid for pinned papers laid out in normal flow; used by HomePapers. */
 .notes-flow-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

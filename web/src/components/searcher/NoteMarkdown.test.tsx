@@ -67,3 +67,11 @@ Deno.test("NoteMarkdown: renders code block with tabIndex for keyboard scrolling
     assertEquals(html.includes("<code"), true);
     assertEquals(html.includes("const x = 1;"), true);
 });
+
+Deno.test("NoteMarkdown: task checkboxes are interactive only when a toggle handler is provided", () => {
+    const html = ReactDOMServer.renderToStaticMarkup(
+        <NoteMarkdown body="- [ ] Todo" onToggleTask={() => {}} />,
+    );
+    assertEquals(html.includes("disabled="), false);
+    assertEquals(html.includes("点击标记为已完成"), true);
+});

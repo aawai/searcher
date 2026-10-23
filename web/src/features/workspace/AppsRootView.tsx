@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { ArrowLeft, Folder, MoreHorizontal } from "lucide-react";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
 import { Button } from "../../components/ui/button.tsx";
@@ -65,6 +65,7 @@ export interface AppsRootViewProps {
         group: LauncherGroup,
         size: "small" | "large",
     ) => void;
+    iconAction?: ReactNode;
 }
 
 export function AppsRootView({
@@ -89,6 +90,7 @@ export function AppsRootView({
     onRenameFolder,
     onDeleteFolder,
     onFolderSizeChange,
+    iconAction,
 }: AppsRootViewProps) {
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [renamingFolder, setRenamingFolder] = useState<LauncherGroup | null>(
@@ -232,6 +234,7 @@ export function AppsRootView({
                     disabled={isArranging}
                     ariaLabel="搜索应用"
                 />
+                {iconAction}
             </div>
             <ContextMenu>
                 <ContextMenuTrigger

@@ -144,10 +144,10 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
 });
 
 Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic colors", () => {
-    // Floating note domain coordinates and tilt (in FloatingNotes.tsx)
+    // Home paper domain coordinates (in HomePapers.tsx)
     assertEquals(
         isDomainValueException(
-            "web/src/components/searcher/FloatingNotes.tsx",
+            "web/src/features/home-layouts/HomePapers.tsx",
             "left",
             "`${point.x}px`",
         ),
@@ -155,7 +155,7 @@ Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic co
     );
     assertEquals(
         isDomainValueException(
-            "web/src/components/searcher/FloatingNotes.tsx",
+            "web/src/features/home-layouts/HomePapers.tsx",
             "top",
             "`${point.y}px`",
         ),
@@ -163,7 +163,7 @@ Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic co
     );
     assertEquals(
         isDomainValueException(
-            "web/src/components/searcher/FloatingNotes.tsx",
+            "web/src/features/home-layouts/HomePapers.tsx",
             "zIndex",
             "isDragging ? 2000 : point.z",
         ),
@@ -171,11 +171,11 @@ Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic co
     );
     assertEquals(
         isDomainValueException(
-            "web/src/components/searcher/FloatingNotes.tsx",
+            "web/src/features/home-layouts/HomePapers.tsx",
             "--note-tilt",
             "getNoteTilt(note.id)",
         ),
-        true,
+        false,
     );
 
     // Theme color swatch preview in SettingsPage / AiSettings

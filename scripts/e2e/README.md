@@ -10,18 +10,17 @@
 | `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                              |
 | `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                   |
 | `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                             |
-| `test:workspace:notes`    | Workspace 中 `notes-*`、`home-notes-*`                                                           |
 | `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                     |
 | `test:routing`            | `navigation`、`auth`、`guest-ai-auth`：导航、认证规则/注册可用性、游客 AI 登录回跳               |
-| `test:documents`          | `documents` 和四个 `document-*` 文件；完整列表见清单                                             |
+| `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                 |
 | `test:wallpaper`          | `wallpaper`                                                                                      |
 | `test:bundle`             | `bundle-loading`、`route-style-stability`                                                        |
-| `test:home-notes`         | `home-notes-order`、`home-notes-persistence`                                                     |
+| `test:home-papers`        | `home-papers-*`：首页纸张的排序、持久化、颜色、直接勾选与移动端预览                              |
 | `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；只 build 一次，每个文件只运行一次                      |
 | `check:e2e`               | 校验清单与磁盘 `.test.ts` 文件一一覆盖，遗漏、陈旧路径或集合内重复时报错；不 build、不启动浏览器 |
 
 `suites.ts` 是唯一权威清单。目前 supplemental 包含 UI
-ownership/feedback、设置/搜索/Notes/Ask 快捷键及 Markdown editor/pagination
+ownership/feedback、设置/搜索/笔记/Ask 快捷键及 Markdown editor/pagination
 独立场景。新增 E2E 必须登记；任何执行入口都先检查遗漏。类别可以重叠，full
 使用去重并集。模块入口仅用于局部开发，不替代完整 Workspace 合并回归。本次不新增
 Quick，不使用 `--filter`、`--changed` 或 `--related`

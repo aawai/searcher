@@ -1,9 +1,10 @@
 import { backup, DatabaseSync } from "node:sqlite";
 import { dirname, join } from "@std/path";
 import * as fflate from "fflate";
-import type { DatabaseStore } from "../../db/database.ts";
+import { DatabaseStore } from "../../db/database.ts";
+import { migrateDatabase } from "../../db/migrate.ts";
 import { aiModels, aiProviders } from "../../db/ai-schema.ts";
-import { auditLogs, notes, users, webapps } from "../../db/schema.ts";
+import { auditLogs, documents, users, webapps } from "../../db/schema.ts";
 import { and, count, eq, isNull } from "drizzle-orm";
 import * as v from "@valibot/valibot";
 import { encryptApiKey } from "../ai/crypto.ts";
@@ -137,7 +138,7 @@ export class SystemService {
                 activeUsersRows,
                 disabledUsersRows,
                 webappsRows,
-                notesRows,
+                documentsRows,
                 aiProvidersRows,
                 aiModelsRows,
                 auditRows,
@@ -154,8 +155,8 @@ export class SystemService {
                 db.select({ count: count() }).from(webapps).where(
                     isNull(webapps.deletedAt),
                 ).all(),
-                db.select({ count: count() }).from(notes).where(
-                    isNull(notes.deletedAt),
+                db.select({ count: count() }).from(documents).where(
+                    isNull(documents.deletedAt),
                 ).all(),
                 db.select({ count: count() }).from(aiProviders).all(),
                 db.select({ count: count() }).from(aiModels).all(),
@@ -167,7 +168,7 @@ export class SystemService {
                 activeUsers: activeUsersRows[0]?.count ?? 0,
                 disabledUsers: disabledUsersRows[0]?.count ?? 0,
                 totalWebApps: webappsRows[0]?.count ?? 0,
-                totalNotes: notesRows[0]?.count ?? 0,
+                totalDocuments: documentsRows[0]?.count ?? 0,
                 totalAiProviders: aiProvidersRows[0]?.count ?? 0,
                 totalAiModels: aiModelsRows[0]?.count ?? 0,
                 totalAuditLogs: auditRows[0]?.count ?? 0,
@@ -418,7 +419,7 @@ export class SystemService {
             counts: {
                 users: countTable("users"),
                 webapps: countTable("webapps"),
-                notes: countTable("notes"),
+                documents: countTable("documents"),
                 auditLogs: countTable("audit_logs"),
                 aiProviders: countTable("ai_providers"),
                 aiModels: countTable("ai_models"),
@@ -457,6 +458,7 @@ export class SystemService {
         files: fflate.Unzipped;
         manifest: BackupManifest;
         settings: SystemSettingsDto;
+        warnings: string[];
     }> {
         if (zipBytes.length > 50 * 1024 * 1024) {
             throw new Error("备份文件超过 50 MiB");
@@ -554,6 +556,7 @@ export class SystemService {
             throw new Error("备份中的系统设置无效");
         }
         const testDb = new DatabaseSync(":memory:");
+        const warnings: string[] = [];
         try {
             testDb.deserialize(files["database.sqlite"]);
             if (
@@ -563,33 +566,70 @@ export class SystemService {
             ) {
                 throw new Error("备份中的 SQLite 数据库完整性校验失败");
             }
-            const backupHash = testDb.prepare(
-                "SELECT hash FROM __drizzle_migrations ORDER BY id DESC LIMIT 1",
-            ).all()[0]?.hash;
+            const backupMigration = testDb.prepare(
+                "SELECT hash, created_at FROM __drizzle_migrations ORDER BY id DESC LIMIT 1",
+            ).all()[0];
             // deno-lint-ignore require-await
-            const currentHash = await this.#store.exclusiveNative(async (
+            const currentMigrations = await this.#store.exclusiveNative(async (
                 native,
             ) => native.prepare(
-                "SELECT hash FROM __drizzle_migrations ORDER BY id DESC LIMIT 1",
-            ).all()[0]?.hash);
-            if (!backupHash || backupHash !== currentHash) {
+                "SELECT hash, created_at FROM __drizzle_migrations ORDER BY id",
+            ).all());
+            const currentHash = currentMigrations.at(-1)?.hash;
+            const hasLegacyData = testDb.prepare(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='notes'",
+            ).all().length > 0;
+            const knownMigration = currentMigrations.some((migration) =>
+                migration.hash === backupMigration?.hash &&
+                migration.created_at === backupMigration?.created_at
+            );
+            if (
+                !backupMigration || !knownMigration ||
+                (backupMigration.hash !== currentHash && !hasLegacyData)
+            ) {
                 throw new Error("备份数据库迁移版本与当前服务不兼容");
             }
             validateBackupConsistency({ files, manifest, db: testDb });
+            if (hasLegacyData) {
+                await migrateDatabase(new DatabaseStore(testDb));
+                testDb.exec(`
+                    DROP TABLE IF EXISTS note_layouts;
+                    DROP TABLE IF EXISTS note_versions;
+                    DROP TABLE IF EXISTS notes_fts;
+                    DROP TABLE IF EXISTS notes;
+                `);
+                files["database.sqlite"] = await this.#snapshotNative(testDb);
+                manifest.counts = {
+                    users: manifest.counts.users,
+                    webapps: manifest.counts.webapps,
+                    documents: Number(
+                        testDb.prepare(
+                            "SELECT count(*) AS total FROM documents",
+                        ).all()[0]?.total ?? 0,
+                    ),
+                    auditLogs: manifest.counts.auditLogs,
+                    aiProviders: manifest.counts.aiProviders,
+                    aiModels: manifest.counts.aiModels,
+                };
+                warnings.push(
+                    "备份包含旧版便签数据；便签、便签版本历史与旧首页布局已忽略，不会恢复。现有笔记数据已保留。",
+                );
+            }
         } finally {
             testDb.close();
         }
-        return { files, manifest, settings };
+        return { files, manifest, settings, warnings };
     }
 
     async validateBackupZip(zipBytes: Uint8Array): Promise<{
         valid: boolean;
         manifest?: BackupManifest;
         error?: string;
+        warnings?: string[];
     }> {
         try {
-            const { manifest } = await this.#unpack(zipBytes);
-            return { valid: true, manifest };
+            const { manifest, warnings } = await this.#unpack(zipBytes);
+            return { valid: true, manifest, warnings };
         } catch (error) {
             return {
                 valid: false,
@@ -602,8 +642,11 @@ export class SystemService {
         manifest: BackupManifest;
         snapshotCreated: boolean;
         snapshotPath: string;
+        warnings: string[];
     }> {
-        const { files, manifest, settings } = await this.#unpack(zipBytes);
+        const { files, manifest, settings, warnings } = await this.#unpack(
+            zipBytes,
+        );
         const runRestore = () =>
             this.#store.exclusiveNative(async (native, replace) => {
                 const currentBytes = await this.#snapshotNative(native);
@@ -723,7 +766,12 @@ export class SystemService {
                         await Deno.remove(item.old, { recursive: true });
                     }
                 }
-                return { manifest, snapshotCreated: true, snapshotPath };
+                return {
+                    manifest,
+                    snapshotCreated: true,
+                    snapshotPath,
+                    warnings,
+                };
             });
         return await this.#withLock(() =>
             this.#wallpaperService

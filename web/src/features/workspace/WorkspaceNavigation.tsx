@@ -14,22 +14,16 @@ export function WorkspaceNavigation(
             onValueChange={(value) => onSelect(value as WorkspaceKind)}
         >
             <TabsList aria-label="工作区导航">
-                {(["apps", "notes", "documents"] as const).map((workspace) => (
+                {(["apps", "documents"] as const).map((workspace) => (
                     <TabsTrigger
                         key={workspace}
                         value={workspace}
                         data-workspace={workspace}
                         aria-label={workspace === "apps"
                             ? "应用工作区"
-                            : workspace === "notes"
-                            ? "便签工作区"
                             : "笔记工作区"}
                     >
-                        {workspace === "apps"
-                            ? "应用"
-                            : workspace === "notes"
-                            ? "便签"
-                            : "笔记"}
+                        {workspace === "apps" ? "应用" : "笔记"}
                     </TabsTrigger>
                 ))}
             </TabsList>

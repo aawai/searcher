@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
 import {
     FolderInput,
+    Home,
     MoreHorizontal,
     Pencil,
     Plus,
@@ -61,7 +62,7 @@ export function DocumentLibraryActions({
     onChanged,
 }: DocumentLibraryActionsProps) {
     const [renameOpen, setRenameOpen] = useState(false);
-    const [titleInput, setTitleInput] = useState(item.title);
+    const [titleInput, setTitleInput] = useState(item.title ?? "");
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameError, setRenameError] = useState<string | null>(null);
 
@@ -84,7 +85,7 @@ export function DocumentLibraryActions({
 
     useEffect(() => {
         if (renameOpen) {
-            setTitleInput(item.title);
+            setTitleInput(item.title ?? "");
             setRenameError(null);
             setIsRenaming(false);
         }
@@ -122,7 +123,7 @@ export function DocumentLibraryActions({
                 `/api/documents/${item.id}`,
                 json("PATCH", {
                     version: doc.version,
-                    title: titleInput.trim(),
+                    title: titleInput.trim() || null,
                 }),
             );
             setRenameOpen(false);
@@ -197,6 +198,27 @@ export function DocumentLibraryActions({
         }
     }
 
+    async function handleToggleHomeFixed() {
+        if (isFavoriting) return;
+        setIsFavoriting(true);
+        setFavoriteError(null);
+        try {
+            const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
+            await api<DocumentDto>(
+                `/api/documents/${item.id}`,
+                json("PATCH", {
+                    version: doc.version,
+                    isHomeFixed: !item.isHomeFixed,
+                }),
+            );
+            onChanged();
+        } catch (err) {
+            setFavoriteError(err instanceof Error ? err.message : String(err));
+        } finally {
+            setIsFavoriting(false);
+        }
+    }
+
     return (
         <>
             <DropdownMenu>
@@ -232,6 +254,15 @@ export function DocumentLibraryActions({
                                 : "icon-md"}
                         />
                         <span>{item.isFavorite ? "取消收藏" : "收藏"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        disabled={isFavoriting}
+                        onClick={() => void handleToggleHomeFixed()}
+                    >
+                        <Home className="icon-md" />
+                        <span>
+                            {item.isHomeFixed ? "移出首页" : "固定到首页"}
+                        </span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => setMoveOpen(true)}
@@ -521,6 +552,7 @@ export function CreateLibraryDocument({
             const payload: CreateDocumentInput = {
                 ...(trimmed ? { title: trimmed } : {}),
                 notebookId: selectedNotebookId || null,
+                isHomeFixed: scope.type === "home",
             };
             const document = await api<DocumentDto>(
                 "/api/documents",

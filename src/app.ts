@@ -10,7 +10,6 @@ import { createApiSecurityMiddleware } from "./features/auth/security.ts";
 import { registerAuthRoutes } from "./features/auth/auth.route.ts";
 import { registerUserRoutes } from "./features/users/users.route.ts";
 import { registerBookmarksRoutes } from "./features/bookmarks/bookmarks.route.ts";
-import { registerNotesRoutes } from "./features/notes/notes.route.ts";
 import { registerDocumentsRoutes } from "./features/documents/documents.route.ts";
 import { registerPreferencesRoutes } from "./features/preferences/preferences.route.ts";
 import { registerWallpaperRoutes } from "./features/wallpaper/wallpaper.route.ts";
@@ -76,7 +75,6 @@ export function createApp(
     registerAuthRoutes(routes, sharedDeps);
     registerUserRoutes(routes, sharedDeps);
     registerBookmarksRoutes(routes, deps);
-    registerNotesRoutes(routes, deps);
     registerDocumentsRoutes(routes, deps);
     registerPreferencesRoutes(routes, sharedDeps);
     registerWallpaperRoutes(routes, sharedDeps);

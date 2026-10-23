@@ -24,7 +24,7 @@ export interface SystemOverviewDto {
     activeUsers: number;
     disabledUsers: number;
     totalWebApps: number;
-    totalNotes: number;
+    totalDocuments: number;
     totalAiProviders: number;
     totalAiModels: number;
     totalAuditLogs: number;
@@ -129,9 +129,9 @@ export function AdminOverview({
                     </div>
 
                     <div className="admin-stat">
-                        <p className="admin-stat-label">应用 / 便签</p>
+                        <p className="admin-stat-label">应用 / 笔记</p>
                         <p className="admin-stat-value">
-                            {`${overview.totalWebApps} / ${overview.totalNotes}`}
+                            {`${overview.totalWebApps} / ${overview.totalDocuments}`}
                         </p>
                         <Button
                             variant="link"

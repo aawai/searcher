@@ -11,7 +11,7 @@ export interface SystemOverviewDto {
     activeUsers: number;
     disabledUsers: number;
     totalWebApps: number;
-    totalNotes: number;
+    totalDocuments: number;
     totalAiProviders: number;
     totalAiModels: number;
     totalAuditLogs: number;
@@ -55,7 +55,7 @@ export interface BackupManifest {
     counts: {
         users: number;
         webapps: number;
-        notes: number;
+        documents: number;
         auditLogs: number;
         aiProviders: number;
         aiModels: number;

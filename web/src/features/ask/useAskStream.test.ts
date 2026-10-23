@@ -64,27 +64,27 @@ Deno.test("useAskStream: parseSseBlock parses valid SSE events", () => {
     });
 
     const toolCallBlock =
-        'event: tool-call\ndata: {"callId":"tc_1","toolName":"notes","args":{"query":"search"}}';
+        'event: tool-call\ndata: {"callId":"tc_1","toolName":"documents","args":{"query":"search"}}';
     const toolCallRes = parseSseBlock(toolCallBlock);
     assertEquals(toolCallRes, {
         ok: true,
         event: "tool-call",
         data: {
             callId: "tc_1",
-            toolName: "notes",
+            toolName: "documents",
             args: { query: "search" },
         },
     });
 
     const toolResultBlock =
-        'event: tool-result\ndata: {"callId":"tc_1","toolName":"notes","result":"found 1 item"}';
+        'event: tool-result\ndata: {"callId":"tc_1","toolName":"documents","result":"found 1 item"}';
     const toolResultRes = parseSseBlock(toolResultBlock);
     assertEquals(toolResultRes, {
         ok: true,
         event: "tool-result",
         data: {
             callId: "tc_1",
-            toolName: "notes",
+            toolName: "documents",
             result: "found 1 item",
         },
     });

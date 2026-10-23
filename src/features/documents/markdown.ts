@@ -86,8 +86,11 @@ export function documentSnippet(body: string, maxLength = 160): string {
     return singleLine.slice(0, maxLength).trim();
 }
 
-export function documentDisplayTitle(title: string, body: string): string {
-    const explicit = title.trim();
+export function documentDisplayTitle(
+    title: string | null,
+    body: string,
+): string {
+    const explicit = title?.trim();
     if (explicit) return explicit;
     const firstReadable = (node: MdastNode): string => {
         if (node.type === "heading" || node.type === "paragraph") {

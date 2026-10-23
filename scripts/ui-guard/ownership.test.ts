@@ -725,7 +725,7 @@ export function NotesLegacyEmpty() {
 }
 `;
     const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/NotesWorkspace.tsx",
+        "web/src/features/workspace/DocumentsWorkspace.tsx",
         tsxCode,
     );
     assertEquals(tsxViolations.length, 3);
@@ -855,7 +855,7 @@ export function CanonicalFeedbackSample() {
 `;
     assertEquals(
         checkRuleE_ForbiddenLegacyUiClass(
-            "web/src/features/workspace/NotesWorkspace.tsx",
+            "web/src/features/workspace/DocumentsWorkspace.tsx",
             tsxCode,
         ).length,
         0,
@@ -949,10 +949,10 @@ Deno.test("Issue 80 P6 Integration: scanOwnership detects workspace negative fix
             `.apps-workspace-foo { display: block; }`,
         );
 
-        // 4. NotesWorkspace.tsx using workspace-empty (Rule E)
+        // 4. DocumentsWorkspace.tsx using workspace-empty (Rule E)
         await Deno.writeTextFile(
-            `${dirtyDir}/features/workspace/NotesWorkspace.tsx`,
-            `export function NotesWorkspace() { return <p className="workspace-empty">Empty</p>; }`,
+            `${dirtyDir}/features/workspace/DocumentsWorkspace.tsx`,
+            `export function DocumentsWorkspace() { return <p className="workspace-empty">Empty</p>; }`,
         );
 
         const result = await scanOwnership(dirtyDir, dirtyDir);
@@ -1066,9 +1066,9 @@ export type AppsRoute =
     | { view: "apps/root" }
     | { view: "apps/create"; groupId?: string }
     | { view: "apps/edit"; id: string };
-export type NotesRoute =
-    | { view: "notes/root" }
-    | { view: "notes/edit"; id: string };
+export type DocumentsRoute =
+    | { view: "documents/root" }
+    | { view: "documents/edit"; id: string };
 export interface DomainWorkspaceState<TRoute> {
     route: TRoute;
     stack: TRoute[];
@@ -1243,7 +1243,7 @@ Deno.test("Issue 92 Full Integration: scanOwnership detects multiple Issue 92 vi
         );
         await Deno.writeTextFile(
             `${cleanDir}/web/src/features/workspace/workspace-state.ts`,
-            `export type AppsRoute = { view: "apps/root" }; export type NotesRoute = { view: "notes/root" };`,
+            `export type AppsRoute = { view: "apps/root" }; export type DocumentsRoute = { view: "documents/root" };`,
         );
         await Deno.writeTextFile(
             `${cleanDir}/web/src/features/workspace/workspace.css`,

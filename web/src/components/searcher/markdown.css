@@ -67,6 +67,10 @@
 .markdown .task-list-item input[type="checkbox"] {
     margin: 0 var(--space-2) 0 0;
     vertical-align: middle;
+}
+
+/* Read-only renderings are disabled; only interactive task lists accept pointer input. */
+.markdown .task-list-item input[type="checkbox"]:disabled {
     pointer-events: none;
 }
 

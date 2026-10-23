@@ -429,7 +429,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             url: `https://example.org/many-${index}`,
         });
     }
-    await request("/api/notes", "POST", {
+    await request("/api/documents", "POST", {
         title: "Shell note",
         body: "Shell body",
     });
@@ -547,10 +547,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         }
                     }
                     await page.locator(
-                        '.workspace-switcher button[aria-label="便签工作区"]',
+                        '.workspace-switcher button[aria-label="笔记工作区"]',
                     ).focus();
                     await page.keyboard.press("Enter");
-                    await panel.locator(".notes-workspace").waitFor();
+                    await panel.locator(".documents-workspace").waitFor();
                     await page.waitForFunction(() =>
                         document.activeElement?.getAttribute(
                             "aria-label",
@@ -558,7 +558,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     );
                     assertEquals(
                         await page.locator(
-                            '.workspace-switcher button[aria-label="便签工作区"]',
+                            '.workspace-switcher button[aria-label="笔记工作区"]',
                         ).getAttribute("aria-selected"),
                         "true",
                     );
@@ -614,31 +614,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             });
             await appsSearch.fill("State");
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
             await panel.getByRole("searchbox", {
-                name: "搜索便签",
+                name: "搜索笔记",
                 exact: true,
             }).fill("Shell");
-            const expand = panel.getByRole("button", {
-                name: "展开",
-                exact: true,
-            });
-            await expand.focus();
-            await page.keyboard.press("Enter");
-            await panel.locator(".note-preview").waitFor();
-            assertEquals(
-                await page.locator(
-                    'input[aria-label="便签标题"], [id^="note-title-input"]',
-                ).count(),
-                0,
-            );
-            await panel.getByRole("button", { name: "折叠", exact: true })
-                .focus();
-            await page.keyboard.press("Enter");
-            await panel.locator(".note-preview").waitFor({ state: "detached" });
             await page.locator(
                 '.workspace-switcher button[aria-label="应用工作区"]',
             )
@@ -697,7 +680,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 document.activeElement?.matches(".workspace-primary") === true
             );
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             )
                 .focus();
             await page.keyboard.press("Enter");
@@ -778,18 +761,18 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.getByRole("menu").waitFor({ state: "detached" });
                 assertEquals(await panel.isVisible(), true);
 
-                // Switch Apps -> Notes
+                // Switch Apps -> Documents
                 await page.locator(
-                    '.workspace-switcher button[aria-label="便签工作区"]',
+                    '.workspace-switcher button[aria-label="笔记工作区"]',
                 ).focus();
                 await page.keyboard.press("Enter");
-                await panel.locator(".notes-workspace").waitFor();
+                await panel.locator(".documents-workspace").waitFor();
 
                 // Second Escape closes the Zen panel/sheet
                 await page.keyboard.press("Escape");
                 await panel.first().waitFor({ state: "detached" });
 
-                // Proves actual opener restoration: restores Apps edge trigger, not Notes
+                // Proves actual opener restoration: restores Apps edge trigger, not Documents
                 await page.waitForFunction(() =>
                     document.activeElement?.getAttribute("data-workspace") ===
                         "apps"
@@ -828,11 +811,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     assertNear(appInset.searchLeftDiff, 0, 2);
                     assertNear(appInset.searchRightDiff, 0, 2);
                     const switcher = panel.getByRole("tab", {
-                        name: "便签工作区",
+                        name: "笔记工作区",
                         exact: true,
                     });
                     await switcher.click();
-                    await panel.locator(".notes-workspace").waitFor();
+                    await panel.locator(".documents-workspace").waitFor();
                     await assertChromeInViewport(page);
                     const noteInset = await measureBodyInset(panel);
                     assertNear(noteInset.searchLeftDiff, 0, 2);
@@ -886,6 +869,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
 
             // 1. Focus visibility and blur without shift
+            await homeSettled();
+            await page.waitForFunction(() =>
+                document.querySelector("aside.workspace-panel")?.getAnimations()
+                    .length === 0
+            );
             await search().evaluate(async (el) => {
                 await Promise.all(el.getAnimations().map((a) => a.finished));
             });
@@ -955,19 +943,19 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await page.keyboard.type("AppsQueryPersisted");
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             ).click();
-            await panel.locator(".notes-workspace").waitFor();
+            await panel.locator(".documents-workspace").waitFor();
             await search().waitFor();
             assertEquals(await search().inputValue(), "");
-            await search().fill("NotesQueryToClear");
+            await search().fill("DocumentsQueryToClear");
             await clearBtn.focus();
             await page.keyboard.press("Enter");
             assertEquals(await search().inputValue(), "");
             await page.waitForFunction(() =>
                 document.activeElement?.matches("input[data-workspace-search]")
             );
-            await page.keyboard.type("NotesQueryPersisted");
+            await page.keyboard.type("DocumentsQueryPersisted");
 
             await page.locator(
                 '.workspace-switcher button[aria-label="应用工作区"]',
@@ -977,11 +965,14 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             assertEquals(await search().inputValue(), "AppsQueryPersisted");
 
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             ).click();
-            await panel.locator(".notes-workspace").waitFor();
+            await panel.locator(".documents-workspace").waitFor();
             await search().waitFor();
-            assertEquals(await search().inputValue(), "NotesQueryPersisted");
+            assertEquals(
+                await search().inputValue(),
+                "DocumentsQueryPersisted",
+            );
 
             await search().fill("");
             await page.locator(
@@ -1152,8 +1143,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     url: "https://example.com/" + "u".repeat(120),
                 },
             );
-            const longNote = await request<{ id: string }>(
-                "/api/notes",
+            const longNote = await request<{ id: string; version: number }>(
+                "/api/documents",
                 "POST",
                 {
                     title: "T".repeat(200),
@@ -1171,18 +1162,22 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 .waitFor({ state: "attached" });
             await assertChromeInViewport(page);
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             )
                 .click();
-            await panel.locator(".notes-workspace").waitFor();
-            await panel.locator(".note-card").filter({
-                hasText: "T".repeat(200),
+            await panel.locator(".documents-workspace").waitFor();
+            await panel.getByRole("button", {
+                name: "打开笔记：" + "T".repeat(200),
+                exact: true,
             })
                 .waitFor({ state: "attached" });
             await assertChromeInViewport(page);
 
             await request(`/api/webapps/${longApp.id}`, "DELETE");
-            await request(`/api/notes/${longNote.id}`, "DELETE");
+            await request(
+                `/api/documents/${longNote.id}?version=${longNote.version}`,
+                "DELETE",
+            );
             await closeAllWorkspaces();
         },
     );
@@ -1444,10 +1439,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await openApps();
             await search().fill("State Alpha");
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             )
                 .click();
-            await search().fill("private notes query");
+            await search().fill("private documents query");
             for (const width of [390, 768, 1024, 1440]) {
                 await page.setViewportSize({ width, height: 900 });
                 await page.waitForFunction(
@@ -1460,7 +1455,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
                 assertEquals(
                     await search().inputValue(),
-                    "private notes query",
+                    "private documents query",
                 );
                 await assertChromeInViewport(page);
             }
@@ -1498,7 +1493,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await openApps();
             assertEquals(await search().inputValue(), "");
             await page.locator(
-                '.workspace-switcher button[aria-label="便签工作区"]',
+                '.workspace-switcher button[aria-label="笔记工作区"]',
             )
                 .click();
             assertEquals(await search().inputValue(), "");

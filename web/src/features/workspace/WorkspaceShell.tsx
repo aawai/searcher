@@ -19,7 +19,6 @@ import {
 import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 import {
     isAppsWorkspaceView,
-    isNotesWorkspaceView,
     type WorkspaceKind,
     type WorkspaceRoute,
 } from "./workspace-state.ts";
@@ -30,7 +29,6 @@ type WorkspaceView = {
     state: WorkspaceRoute;
     title: string;
     appsArranging: boolean;
-    notesExpanded: boolean;
     onCreate: (() => void) | undefined;
     feedback: ReactNode;
     children: ReactNode;
@@ -101,10 +99,6 @@ export function WorkspaceShell(
         onExited?: () => void;
     },
 ) {
-    const [notesExpanded, setNotesExpanded] = useState(false);
-    useEffect(() => {
-        if (open && state.view !== "notes/edit") setNotesExpanded(false);
-    }, [open, state.view]);
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
     );
@@ -118,7 +112,6 @@ export function WorkspaceShell(
         state,
         title,
         appsArranging,
-        notesExpanded,
         onCreate,
         feedback,
         children,
@@ -127,8 +120,6 @@ export function WorkspaceShell(
     const presentation: WorkspacePresentation = mobile ? "sheet" : "panel";
     const workspace: WorkspaceKind = isAppsWorkspaceView(route)
         ? "apps"
-        : isNotesWorkspaceView(route)
-        ? "notes"
         : "documents";
     const opener = useRef<HTMLElement | null>(null);
     const openingWorkspace = useRef<WorkspaceKind>(workspace);
@@ -157,25 +148,22 @@ export function WorkspaceShell(
         }
         wasOpen.current = open;
     }, [open, workspace]);
-    const expanded = route.view === "documents/edit" ||
-        (route.view === "notes/edit" && view.notesExpanded);
+    const expanded = route.view === "documents/edit";
     const docked = open && presentation === "panel" && !expanded;
     useLayoutEffect(() => {
         onDockedChange?.(docked);
         return () => onDockedChange?.(false);
     }, [docked, onDockedChange]);
-    const root = route.view === "apps/root" || route.view === "notes/root" ||
+    const root = route.view === "apps/root" ||
         route.view === "documents/root";
     let bodyLayout: "app-form" | "editor" | undefined;
     if (route.view === "apps/create" || route.view === "apps/edit") {
         bodyLayout = "app-form";
-    } else if (route.view === "notes/edit" || route.view === "documents/edit") {
+    } else if (route.view === "documents/edit") {
         bodyLayout = "editor";
     }
     const createLabel = workspace === "apps"
         ? view.appsArranging ? "完成整理" : "添加应用"
-        : workspace === "notes"
-        ? "新建便签"
         : "新建笔记";
     return (
         <WorkspaceSurface
@@ -184,7 +172,6 @@ export function WorkspaceShell(
             chromeBottom={chromeBottom}
             title={view.title}
             expanded={expanded}
-            backLabel={route.view === "notes/edit" ? "返回便签列表" : undefined}
             headerActions={
                 <>
                     <WorkspaceNavigation
@@ -214,16 +201,6 @@ export function WorkspaceShell(
                             <TooltipContent>{createLabel}</TooltipContent>
                         </Tooltip>
                     )}
-                    {route.view === "notes/edit" && !mobile && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-pressed={view.notesExpanded}
-                            onClick={() => setNotesExpanded((value) => !value)}
-                        >
-                            {view.notesExpanded ? "收起编辑" : "展开编辑"}
-                        </Button>
-                    )}
                 </>
             }
             routeKey={JSON.stringify(route)}
@@ -231,10 +208,7 @@ export function WorkspaceShell(
             onBack={onBack}
             onClose={onClose}
             onEscape={onEscape}
-            onExited={() => {
-                setNotesExpanded(false);
-                onExited?.();
-            }}
+            onExited={onExited}
             escapeManaged={workspace === "apps"}
             bodyLayout={bodyLayout}
             feedback={mobile ? view.feedback : undefined}

@@ -6,7 +6,6 @@ import {
     domainWorkspaceReducer,
     initialDocumentsWorkspaceState,
     initialWorkspaceCoreState,
-    type NotesRoute,
     type WorkspaceCoreState,
     type WorkspaceKind,
 } from "./workspace-state.ts";
@@ -19,7 +18,7 @@ export interface WorkspaceHostState {
 
 export const initialWorkspaceHost: WorkspaceHostState = {
     models: initialWorkspaceCoreState,
-    open: { apps: false, notes: false, documents: false },
+    open: { apps: false, documents: false },
     activeKind: null,
 };
 
@@ -34,11 +33,6 @@ export type WorkspaceHostAction =
         type: "domain";
         kind: "apps";
         action: DomainWorkspaceAction<AppsRoute>;
-    }
-    | {
-        type: "domain";
-        kind: "notes";
-        action: DomainWorkspaceAction<NotesRoute>;
     }
     | { type: "open"; kind: WorkspaceKind }
     | { type: "close"; kind?: WorkspaceKind }
@@ -144,30 +138,11 @@ export function workspaceHostReducer(
                     activeKind: "documents",
                 };
             }
-            if (action.kind === "apps") {
-                const model = domainWorkspaceReducer(
-                    state.models.apps,
-                    action.action,
-                );
-                const nextModels = { ...state.models, apps: model };
-                if (
-                    action.action.type === "query" ||
-                    action.action.type === "reset"
-                ) {
-                    return { ...state, models: nextModels };
-                }
-                return {
-                    ...state,
-                    models: nextModels,
-                    open: { ...state.open, apps: true },
-                    activeKind: "apps",
-                };
-            }
             const model = domainWorkspaceReducer(
-                state.models.notes,
+                state.models.apps,
                 action.action,
             );
-            const nextModels = { ...state.models, notes: model };
+            const nextModels = { ...state.models, apps: model };
             if (
                 action.action.type === "query" ||
                 action.action.type === "reset"
@@ -177,8 +152,8 @@ export function workspaceHostReducer(
             return {
                 ...state,
                 models: nextModels,
-                open: { ...state.open, notes: true },
-                activeKind: "notes",
+                open: { ...state.open, apps: true },
+                activeKind: "apps",
             };
         }
     }

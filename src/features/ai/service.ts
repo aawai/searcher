@@ -1950,19 +1950,16 @@ export class AiService {
                             }
 
                             const canonicalName:
-                                | "notes"
                                 | "documents"
                                 | "apps"
-                                | "webSearch" = tc.name === "lookup_notes" ||
-                                        tc.name === "notes"
-                                    ? "notes"
-                                    : tc.name === "lookup_documents" ||
-                                            tc.name === "documents"
-                                    ? "documents"
-                                    : tc.name === "lookup_apps" ||
-                                            tc.name === "apps"
-                                    ? "apps"
-                                    : "webSearch";
+                                | "webSearch" =
+                                    tc.name === "lookup_documents" ||
+                                        tc.name === "documents"
+                                        ? "documents"
+                                        : tc.name === "lookup_apps" ||
+                                                tc.name === "apps"
+                                        ? "apps"
+                                        : "webSearch";
 
                             yield {
                                 event: "tool-call",

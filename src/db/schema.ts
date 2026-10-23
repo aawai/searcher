@@ -198,93 +198,6 @@ export const webapps = sqliteTable("webapps", {
     ),
 ]);
 
-export const notes = sqliteTable("notes", {
-    id: text("id").primaryKey(),
-    userId: text("user_id").notNull().references(() => users.id, {
-        onDelete: "cascade",
-    }),
-    title: text("title"),
-    currentBody: text("current_body").notNull().default(""),
-    content: text("content").notNull().default(""),
-    currentVersion: integer("current_version").notNull().default(1),
-    color: text("color", {
-        enum: ["paper", "amber", "rose", "sage", "sky"],
-    }).notNull().default("paper"),
-    isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(
-        false,
-    ),
-    isHomeFixed: integer("is_home_fixed", { mode: "boolean" }).notNull()
-        .default(false),
-    sortOrder: integer("sort_order").notNull().default(0),
-    deletedAt: integer("deleted_at"),
-    createdAt: integer("created_at").notNull(),
-    updatedAt: integer("updated_at").notNull(),
-}, (t) => [
-    index("notes_user_idx").on(t.userId),
-    index("notes_deleted_at_idx").on(t.deletedAt),
-    check(
-        "notes_color_check",
-        sql`${t.color} in ('paper','amber','rose','sage','sky')`,
-    ),
-]);
-
-export const noteLayouts = sqliteTable("note_layouts", {
-    id: text("id").primaryKey(),
-    noteId: text("note_id").notNull().references(() => notes.id, {
-        onDelete: "cascade",
-    }),
-    userId: text("user_id").notNull().references(() => users.id, {
-        onDelete: "cascade",
-    }),
-    deviceClass: text("device_class", {
-        enum: ["desktop", "tablet", "mobile"],
-    }).notNull().default("desktop"),
-    x: real("x"),
-    y: real("y"),
-    width: real("width"),
-    zIndex: integer("z_index").notNull().default(0),
-    expanded: integer("expanded", { mode: "boolean" }).notNull().default(false),
-    sortOrder: integer("sort_order"),
-    updatedAt: integer("updated_at").notNull(),
-}, (t) => [
-    index("note_layouts_user_idx").on(t.userId),
-    index("note_layouts_note_idx").on(t.noteId),
-    check(
-        "note_layouts_device_class_check",
-        sql`${t.deviceClass} in ('desktop','tablet','mobile')`,
-    ),
-]);
-
-export const noteVersions = sqliteTable("note_versions", {
-    id: text("id").primaryKey(),
-    noteId: text("note_id").notNull().references(() => notes.id, {
-        onDelete: "cascade",
-    }),
-    userId: text("user_id").notNull().references(() => users.id, {
-        onDelete: "cascade",
-    }),
-    version: integer("version").notNull(),
-    title: text("title"),
-    body: text("body").notNull(),
-    reason: text("reason", {
-        enum: [
-            "snapshot",
-            "manual",
-            "conflict_resolution",
-            "restore",
-            "system",
-        ],
-    }).notNull().default("snapshot"),
-    createdAt: integer("created_at").notNull(),
-}, (t) => [
-    index("note_versions_note_idx").on(t.noteId),
-    index("note_versions_user_idx").on(t.userId),
-    check(
-        "note_versions_reason_check",
-        sql`${t.reason} in ('snapshot','manual','conflict_resolution','restore','system')`,
-    ),
-]);
-
 export const auditLogs = sqliteTable("audit_logs", {
     id: text("id").primaryKey(),
     actorUserId: text("actor_user_id").references(() => users.id, {
@@ -351,12 +264,18 @@ export const documents = sqliteTable("documents", {
     notebookId: text("notebook_id").references(() => documentNotebooks.id, {
         onDelete: "set null",
     }),
-    title: text("title").notNull().default(""),
+    title: text("title"),
     currentBody: text("current_body").notNull().default(""),
     currentVersion: integer("current_version").notNull().default(1),
     isFavorite: integer("is_favorite", { mode: "boolean" }).notNull().default(
         false,
     ),
+    color: text("color", {
+        enum: ["paper", "amber", "rose", "sage", "sky"],
+    }).notNull().default("paper"),
+    isHomeFixed: integer("is_home_fixed", { mode: "boolean" }).notNull()
+        .default(false),
+    homeSortOrder: integer("home_sort_order").notNull().default(0),
     deletedAt: integer("deleted_at"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
@@ -365,6 +284,37 @@ export const documents = sqliteTable("documents", {
     index("documents_notebook_idx").on(t.notebookId),
     index("documents_deleted_at_idx").on(t.deletedAt),
     index("documents_user_updated_idx").on(t.userId, t.updatedAt),
+    check(
+        "documents_color_check",
+        sql`${t.color} in ('paper','amber','rose','sage','sky')`,
+    ),
+]);
+
+export const documentLayouts = sqliteTable("document_layouts", {
+    id: text("id").primaryKey(),
+    documentId: text("document_id").notNull().references(() => documents.id, {
+        onDelete: "cascade",
+    }),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    deviceClass: text("device_class", {
+        enum: ["desktop", "tablet", "mobile"],
+    }).notNull().default("desktop"),
+    x: real("x"),
+    y: real("y"),
+    width: real("width"),
+    zIndex: integer("z_index").notNull().default(0),
+    expanded: integer("expanded", { mode: "boolean" }).notNull().default(false),
+    sortOrder: integer("sort_order"),
+    updatedAt: integer("updated_at").notNull(),
+}, (t) => [
+    index("document_layouts_user_idx").on(t.userId),
+    index("document_layouts_document_idx").on(t.documentId),
+    check(
+        "document_layouts_device_class_check",
+        sql`${t.deviceClass} in ('desktop','tablet','mobile')`,
+    ),
 ]);
 
 export const documentVersions = sqliteTable("document_versions", {
@@ -376,7 +326,7 @@ export const documentVersions = sqliteTable("document_versions", {
         onDelete: "cascade",
     }),
     version: integer("version").notNull(),
-    title: text("title").notNull(),
+    title: text("title"),
     body: text("body").notNull(),
     reason: text("reason", {
         enum: [

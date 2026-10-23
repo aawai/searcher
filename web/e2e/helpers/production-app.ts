@@ -112,11 +112,11 @@ export async function startProductionApp(): Promise<ProductionAppInstance> {
             const userId = crypto.randomUUID();
             const passwordHash = await auth.hashPassword(password);
 
-            const providerId = "prov_stability_1";
-            const modelId = "model_stability_1";
-            const conversationId = "conv_stability_fixture";
-            const userMessageId = "msg_user_1";
-            const assistantMessageId = "msg_asst_1";
+            const providerId = `prov_${crypto.randomUUID()}`;
+            const modelId = `model_${crypto.randomUUID()}`;
+            const conversationId = `conv_${crypto.randomUUID()}`;
+            const userMessageId = `msg_${crypto.randomUUID()}`;
+            const assistantMessageId = `msg_${crypto.randomUUID()}`;
 
             await store.run(async (db) => {
                 await db.insert(users).values({

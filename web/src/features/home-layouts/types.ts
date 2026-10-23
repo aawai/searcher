@@ -1,10 +1,14 @@
 import type React from "react";
 import type { EngineId } from "@shared/engines.ts";
+import type {
+    DocumentLayoutDto,
+    UpdateDocumentInput,
+} from "@shared/documents.ts";
 import type { Reachability } from "../../components/searcher/SearcherSearchInput.tsx";
 import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
-import type { NoteItem } from "../../components/searcher/NoteCard.tsx";
 import type { UserDto } from "@shared/contracts.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
+import type { PaperItem } from "./home-papers.ts";
 export interface HomeLayoutProps {
     user: UserDto | null;
     engine: EngineId;
@@ -25,8 +29,8 @@ export interface HomeLayoutProps {
     appsStatus: "loading" | "ready" | "offline" | "error";
     appsError: string;
     onReloadApps: () => void;
-    notesLoading: boolean;
-    fixedNotes: NoteItem[];
+    papersLoading: boolean;
+    papers: PaperItem[];
     isManagingApps: boolean;
     setIsManagingApps: React.Dispatch<React.SetStateAction<boolean>>;
     openApp: (
@@ -44,16 +48,16 @@ export interface HomeLayoutProps {
         app: ExtendedWebApp,
         groupId: string | null,
     ) => Promise<void>;
-    // notes
-    editNote: (note: NoteItem) => void;
-    deleteNote: (note: NoteItem) => Promise<void>;
-    updateNote: (
-        note: NoteItem,
-        patch: Record<string, unknown>,
+    // papers
+    openPaper: (paper: PaperItem) => void;
+    deletePaper: (paper: PaperItem) => Promise<void>;
+    updatePaper: (
+        paper: PaperItem,
+        patch: Omit<UpdateDocumentInput, "version">,
     ) => Promise<void>;
-    updateNoteLayout: (
-        note: NoteItem,
-        layout: NonNullable<NoteItem["layout"]>,
+    updatePaperLayout: (
+        paper: PaperItem,
+        layout: DocumentLayoutDto,
     ) => Promise<void>;
     // sheet controls
     openWorkspace: (workspace: WorkspaceKind) => void;

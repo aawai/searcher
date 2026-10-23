@@ -34,17 +34,17 @@ deno run -A npm:playwright@1.56.1 install chromium
 
 `scripts/seed-mock-users.ts` 只创建或重置
 `user_empty`、`user_sparse`、`user_dense` 三个普通用户的样本内容（分别 0/3/12
-个首页应用、0/2/5 张便签），不授予管理员权限。 应用写入当前 `webapps`
-模型；非空账号包含固定到首页的便签与结构化 Markdown。
-仅向隔离临时数据库运行；重复运行会替换这三个账号的应用和便签，不清除其他用户的数据。
+个首页应用、0/2/5 个固定到首页的笔记），不授予管理员权限。 应用写入当前 `webapps`
+模型；非空账号包含固定到首页的笔记与结构化 Markdown。
+仅向隔离临时数据库运行；重复运行会替换这三个账号的应用和笔记，不清除其他用户的数据。
 密码通过 `MOCK_USER_PASSWORD` 提供；既有账号密码不变，不在生产数据库上执行。
 
 ## 专项集合
 
 ### Workspace
 
-覆盖 Workspace、Shell、Unified Launcher、Notes、workspace-contract 与
-workspace-matrix，以及 Notes Live/Source
+覆盖 Workspace、Shell、Unified Launcher、Documents、workspace-contract 与
+workspace-matrix，以及笔记 Live/Source
 两套编辑实页回归（无副作用切换、IME、选区、undo/redo、任务列表、409
 和恢复）。验证 loading/error/cache retry、表单与
 autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的

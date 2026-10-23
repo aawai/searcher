@@ -16,7 +16,7 @@ import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
  * Covers:
  * Matrix A: 4 viewports x 2 themes - overflow, search/home geometry, presenter type, focus-visible
  * Matrix B: Wallpaper material - 390 wallpaper on/off, light surface boundary and readability
- * Matrix C: Apps/Notes states (root/nested/empty/loading/error) at 390 mobile and 1440
+ * Matrix C: Apps/Documents states (root/nested/empty/loading/error) at 390 mobile and 1440
  */
 
 Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
@@ -111,14 +111,17 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         url: "https://chat.example.com",
         sortOrder: 1,
     });
-    await request<{ id: string }>("/api/notes", "POST", {
+    await request<{ id: string }>("/api/documents", "POST", {
         title: "Welcome Note",
         body: "First note content for matrix verification",
         color: "amber",
     });
 
-    async function openWorkspace(type: "apps" | "notes", target: Page = page) {
-        const label = type === "apps" ? "应用工作区" : "便签工作区";
+    async function openWorkspace(
+        type: "apps" | "documents",
+        target: Page = page,
+    ) {
+        const label = type === "apps" ? "应用工作区" : "笔记工作区";
         const trigger = target.locator(
             `.zen-edge-btn[data-workspace="${type}"], button[aria-label="${label}"]`,
         ).first();
@@ -136,7 +139,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         ).first();
         if (await win.isVisible()) {
             const closeBtn = win.locator(
-                'button[aria-label="收起工作区"], button[aria-label="关闭便签"]',
+                'button[aria-label="收起工作区"]',
             ).first();
             await closeBtn.waitFor({ state: "visible" });
             await closeBtn.click();
@@ -355,10 +358,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     );
 
     // =========================================================================
-    // Matrix C: Apps/Notes states (root/nested/empty) at 390 mobile
+    // Matrix C: Apps/Documents states (root/nested/empty) at 390 mobile
     // =========================================================================
     await t.step(
-        "Matrix C: Apps/Notes states (root/nested/empty) at 390 mobile",
+        "Matrix C: Apps/Documents states (root/nested/empty) at 390 mobile",
         async () => {
             // Part 1: 390 Mobile
             await page.setViewportSize({ width: 390, height: 844 });
@@ -408,43 +411,46 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             ).first().waitFor({ state: "visible" });
             await closeWorkspace();
 
-            // 1e. Notes root state
-            await openWorkspace("notes");
-            await page.getByRole("dialog", { name: "便签", exact: true })
+            // 1e. Documents root state
+            await openWorkspace("documents");
+            await page.getByRole("dialog", { name: "笔记", exact: true })
                 .waitFor({ state: "visible" });
-            const notesPanel = page.getByRole("dialog");
-            await notesPanel.locator(".note-card, [data-note-id]").first()
+            const documentsPanel = page.getByRole("dialog", {
+                name: "笔记",
+                exact: true,
+            });
+            await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
 
-            // 1f. Notes edit state
-            const noteCard = notesPanel.locator(".note-card, [data-note-id]")
+            // 1f. Documents edit state
+            const docCard = documentsPanel.locator("[data-document-id]")
                 .first();
-            await noteCard.waitFor({ state: "visible" });
-            await noteCard.locator(".note-title").click();
-            const noteEditor = notesPanel.locator(
-                ".notes-workspace-editor, textarea",
+            await docCard.waitFor({ state: "visible" });
+            await docCard.locator("h4 button, .documents-summary-open").click();
+            const docEditor = documentsPanel.locator(
+                ".document-editor-container, [data-workspace-editor]",
             ).first();
-            await noteEditor.waitFor({ state: "visible" });
-            const mobileNotesBack = notesPanel.locator(
-                'button[aria-label="返回便签列表"]',
+            await docEditor.waitFor({ state: "visible" });
+            const mobileDocBack = documentsPanel.locator(
+                'button[aria-label="返回上一级"]',
             ).first();
-            await mobileNotesBack.waitFor({ state: "visible" });
-            await mobileNotesBack.click();
-            await notesPanel.locator(".note-card, [data-note-id]").first()
+            await mobileDocBack.waitFor({ state: "visible" });
+            await mobileDocBack.click();
+            await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
 
-            // 1g. Notes empty state
-            const notesSearch = notesPanel.locator(
+            // 1g. Documents empty state
+            const documentsSearch = documentsPanel.locator(
                 "input[data-workspace-search], input[type='search']",
             ).first();
-            await notesSearch.waitFor({ state: "visible" });
-            await notesSearch.fill("xyznonexistent");
-            const notesEmpty = notesPanel.locator(
+            await documentsSearch.waitFor({ state: "visible" });
+            await documentsSearch.fill("xyznonexistent");
+            const documentsEmpty = documentsPanel.locator(
                 ".empty-state, [data-slot='empty-state']",
             ).first();
-            await notesEmpty.waitFor({ state: "visible" });
-            await notesSearch.fill("");
-            await notesPanel.locator(".note-card, [data-note-id]").first()
+            await documentsEmpty.waitFor({ state: "visible" });
+            await documentsSearch.fill("");
+            await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
             await closeWorkspace();
             await visit("/");
@@ -452,10 +458,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     );
 
     // =========================================================================
-    // Matrix C (loading/error): Apps/Notes loading, error and retry at 390 and 1440
+    // Matrix C (loading/error): Apps/Documents loading, error and retry at 390 and 1440
     // =========================================================================
     await t.step(
-        "Matrix C: Apps/Notes loading, error and retry at 390 and 1440",
+        "Matrix C: Apps/Documents loading, error and retry at 390 and 1440",
         async () => {
             await request("/api/preferences", "PATCH", {
                 theme: "light",
@@ -467,10 +473,11 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 }]
             ) {
                 await page.setViewportSize(viewport);
-                for (const kind of ["apps", "notes"] as const) {
-                    const url = kind === "apps"
-                        ? "**/api/webapps"
-                        : "**/api/notes";
+                for (const kind of ["apps", "documents"] as const) {
+                    const targetPath = kind === "apps"
+                        ? "/api/webapps"
+                        : "/api/documents";
+                    const isTarget = (url: URL) => url.pathname === targetPath;
                     const getSurface = () =>
                         page.locator(
                             viewport.width === 390
@@ -479,9 +486,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                         );
                     const rows = kind === "apps"
                         ? ".launcher-tile"
-                        : ".note-card";
+                        : "[data-document-id]";
                     const gate = Promise.withResolvers<void>();
-                    await page.route(url, async (route) => {
+                    await page.route(isTarget, async (route) => {
                         if (route.request().method() === "GET") {
                             await gate.promise;
                         }
@@ -508,7 +515,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     }
                     const message = "网络状态验收失败";
                     await page.route(
-                        url,
+                        isTarget,
                         (route) =>
                             route.request().method() === "GET"
                                 ? route.fulfill({

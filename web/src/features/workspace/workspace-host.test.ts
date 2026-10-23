@@ -6,10 +6,9 @@ import {
 import {
     initialAppsWorkspaceState,
     initialDocumentsWorkspaceState,
-    initialNotesWorkspaceState,
 } from "./workspace-state.ts";
 
-Deno.test("Workspace Host: simultaneous domains retain nested routes, query, scope and Back independently across all 3 domains", () => {
+Deno.test("Workspace Host: simultaneous domains retain nested routes, query, scope and Back independently across both domains", () => {
     // Open Apps
     let host = workspaceHostReducer(initialWorkspaceHost, {
         type: "open",
@@ -26,25 +25,6 @@ Deno.test("Workspace Host: simultaneous domains retain nested routes, query, sco
         action: {
             type: "navigate",
             route: { view: "apps/create", groupId: "folder" },
-        },
-    });
-
-    // Open Notes
-    host = workspaceHostReducer(host, {
-        type: "open",
-        kind: "notes",
-    });
-    host = workspaceHostReducer(host, {
-        type: "domain",
-        kind: "notes",
-        action: { type: "query", value: "ideas" },
-    });
-    host = workspaceHostReducer(host, {
-        type: "domain",
-        kind: "notes",
-        action: {
-            type: "navigate",
-            route: { view: "notes/edit", id: "note-1" },
         },
     });
 
@@ -75,9 +55,8 @@ Deno.test("Workspace Host: simultaneous domains retain nested routes, query, sco
         },
     });
 
-    // All three domains are open simultaneously
+    // Both domains are open simultaneously
     assertEquals(host.open.apps, true);
-    assertEquals(host.open.notes, true);
     assertEquals(host.open.documents, true);
     assertEquals(host.activeKind, "documents");
 
@@ -95,23 +74,12 @@ Deno.test("Workspace Host: simultaneous domains retain nested routes, query, sco
     });
     assertEquals(host.models.documents.stack, []);
 
-    // Apps and Notes remain nested and unaffected
+    // Apps remains nested and unaffected
     assertEquals(host.models.apps.route, {
         view: "apps/create",
         groupId: "folder",
     });
     assertEquals(host.models.apps.query, "docs");
-    assertEquals(host.models.notes.route, { view: "notes/edit", id: "note-1" });
-    assertEquals(host.models.notes.query, "ideas");
-
-    // Notes can navigate Back independently
-    host = workspaceHostReducer(host, {
-        type: "domain",
-        kind: "notes",
-        action: { type: "back" },
-    });
-    assertEquals(host.models.notes.route, { view: "notes/root" });
-    assertEquals(host.models.notes.query, "ideas");
 
     // Apps domain remains in nested create with its own query
     assertEquals(host.models.apps.route, {
@@ -119,17 +87,6 @@ Deno.test("Workspace Host: simultaneous domains retain nested routes, query, sco
         groupId: "folder",
     });
     assertEquals(host.models.apps.query, "docs");
-
-    // Host closes notes: notes route returns to root, query preserved
-    host = workspaceHostReducer(host, {
-        type: "close",
-        kind: "notes",
-    });
-    assertEquals(host.open.notes, false);
-    assertEquals(host.open.apps, true);
-    assertEquals(host.open.documents, true);
-    assertEquals(host.models.notes.route, { view: "notes/root" });
-    assertEquals(host.models.notes.query, "ideas");
 
     // Host closes documents: documents route returns to root, query & scope preserved
     host = workspaceHostReducer(host, {
@@ -170,14 +127,11 @@ Deno.test("Workspace Host: simultaneous domains retain nested routes, query, sco
     // Full host reset resets all domains including Docs scope back to "all"
     host = workspaceHostReducer(host, { type: "reset" });
     assertEquals(host.models.apps.route, { view: "apps/root" });
-    assertEquals(host.models.notes.route, { view: "notes/root" });
     assertEquals(host.models.documents.route, { view: "documents/root" });
     assertEquals(host.models.apps.query, "");
-    assertEquals(host.models.notes.query, "");
     assertEquals(host.models.documents.query, "");
     assertEquals(host.models.documents.scope, { type: "all" });
     assertEquals(host.open.apps, false);
-    assertEquals(host.open.notes, false);
     assertEquals(host.open.documents, false);
     assertEquals(host.activeKind, null);
 });
@@ -590,7 +544,7 @@ Deno.test("Workspace Host: domain reset silently resets domain route/stack/query
 });
 
 Deno.test("Workspace Host: auth reset clears all domains and resets documents scope to all", () => {
-    // Setup all three domains open with nested state and custom scopes/queries
+    // Setup both domains open with nested state and custom scopes/queries
     let host = workspaceHostReducer(initialWorkspaceHost, {
         type: "open",
         kind: "apps",
@@ -604,21 +558,6 @@ Deno.test("Workspace Host: auth reset clears all domains and resets documents sc
         type: "domain",
         kind: "apps",
         action: { type: "navigate", route: { view: "apps/edit", id: "a1" } },
-    });
-
-    host = workspaceHostReducer(host, {
-        type: "open",
-        kind: "notes",
-    });
-    host = workspaceHostReducer(host, {
-        type: "domain",
-        kind: "notes",
-        action: { type: "query", value: "note-q" },
-    });
-    host = workspaceHostReducer(host, {
-        type: "domain",
-        kind: "notes",
-        action: { type: "navigate", route: { view: "notes/edit", id: "n1" } },
     });
 
     host = workspaceHostReducer(host, {
@@ -648,7 +587,6 @@ Deno.test("Workspace Host: auth reset clears all domains and resets documents sc
     });
 
     assertEquals(host.open.apps, true);
-    assertEquals(host.open.notes, true);
     assertEquals(host.open.documents, true);
     assertEquals(host.activeKind, "documents");
 
@@ -657,13 +595,11 @@ Deno.test("Workspace Host: auth reset clears all domains and resets documents sc
 
     // Verify host state is completely reset
     assertEquals(host.open.apps, false);
-    assertEquals(host.open.notes, false);
     assertEquals(host.open.documents, false);
     assertEquals(host.activeKind, null);
 
-    // Verify all 3 models reset to initials, especially documents scope to all
+    // Verify both models reset to initials, especially documents scope to all
     assertEquals(host.models.apps, initialAppsWorkspaceState);
-    assertEquals(host.models.notes, initialNotesWorkspaceState);
     assertEquals(host.models.documents, initialDocumentsWorkspaceState);
     assertEquals(host.models.documents.scope, { type: "all" });
 });

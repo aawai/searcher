@@ -293,8 +293,6 @@ export function SearcherAssistantMessage() {
                                                 />
                                                 {call.toolName === "webSearch"
                                                     ? "网页搜索 (SearXNG)"
-                                                    : call.toolName === "notes"
-                                                    ? "搜索便签"
                                                     : call.toolName ===
                                                             "documents"
                                                     ? "搜索笔记"

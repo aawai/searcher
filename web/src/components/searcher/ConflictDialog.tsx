@@ -32,6 +32,7 @@ export interface ConflictDialogProps {
     onDismiss: () => void;
     mergeContent?: ReactNode;
     onMerge?: () => Promise<void>;
+    onCopyDraft?: () => Promise<void>;
 }
 
 type ConflictChoice = "server" | "local" | "new";
@@ -50,6 +51,7 @@ export function ConflictDialog({
     onDismiss,
     mergeContent,
     onMerge,
+    onCopyDraft,
 }: ConflictDialogProps) {
     const [submittingChoice, setSubmittingChoice] = useState<
         ConflictChoice | null
@@ -81,6 +83,7 @@ export function ConflictDialog({
     };
 
     const busy = submittingChoice !== null;
+    const [copied, setCopied] = useState(false);
 
     return (
         <Dialog
@@ -156,6 +159,26 @@ export function ConflictDialog({
                     >
                         暂不处理
                     </Button>
+                    {onCopyDraft && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() => {
+                                setError("");
+                                void onCopyDraft().then(() => setCopied(true))
+                                    .catch((error: unknown) =>
+                                        setError(
+                                            error instanceof Error
+                                                ? error.message
+                                                : "复制草稿失败",
+                                        )
+                                    );
+                            }}
+                        >
+                            {copied ? "已复制草稿" : "复制草稿"}
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="outline"
@@ -187,7 +210,7 @@ export function ConflictDialog({
                             disabled={busy}
                             onClick={() => setConfirming("merge")}
                         >
-                            合并并保存
+                            编辑合并内容后保存
                         </Button>
                     )}
                 </DialogFooter>

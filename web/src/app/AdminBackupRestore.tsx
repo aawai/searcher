@@ -33,7 +33,7 @@ interface BackupManifest {
     counts: {
         users: number;
         webapps: number;
-        notes: number;
+        documents: number;
         auditLogs: number;
         aiProviders: number;
         aiModels: number;
@@ -140,11 +140,13 @@ export function AdminBackupRestore() {
         BackupManifest | null
     >(null);
     const [validationError, setValidationError] = useState("");
+    const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
 
     const [restoring, setRestoring] = useState(false);
     const [restoreModalOpen, setRestoreModalOpen] = useState(false);
     const [restoreSuccess, setRestoreSuccess] = useState("");
     const [restoreError, setRestoreError] = useState("");
+    const [restoreWarnings, setRestoreWarnings] = useState<string[]>([]);
 
     function handleExportConfig() {
         globalThis.open("/api/admin/system/config/export", "_blank");
@@ -203,8 +205,9 @@ export function AdminBackupRestore() {
         setSelectedZipFile(file);
         setValidatedManifest(null);
         setValidationError("");
+        setValidationWarnings([]);
         setRestoreSuccess("");
-        setRestoreError("");
+        setRestoreWarnings([]);
     }
 
     async function handlePreValidate() {
@@ -212,15 +215,21 @@ export function AdminBackupRestore() {
         setValidating(true);
         setValidationError("");
         setValidatedManifest(null);
+        setValidationWarnings([]);
         try {
             const formData = new FormData();
             formData.append("backup", selectedZipFile);
-            const res = await api<{ valid: boolean; manifest: BackupManifest }>(
+            const res = await api<{
+                valid: boolean;
+                manifest: BackupManifest;
+                warnings: string[];
+            }>(
                 "/api/admin/backup/validate",
                 { method: "POST", body: formData },
             );
             if (res.valid && res.manifest) {
                 setValidatedManifest(res.manifest);
+                setValidationWarnings(res.warnings);
             } else {
                 setValidationError("备份文件校验未通过");
             }
@@ -236,14 +245,17 @@ export function AdminBackupRestore() {
         setRestoring(true);
         setRestoreError("");
         setRestoreSuccess("");
+        setRestoreWarnings([]);
         try {
             const formData = new FormData();
             formData.append("backup", selectedZipFile);
-            await api<{
+            const restored = await api<{
                 manifest: BackupManifest;
                 snapshotCreated: boolean;
                 snapshotPath: string;
+                warnings: string[];
             }>("/api/admin/backup/restore", { method: "POST", body: formData });
+            setRestoreWarnings(restored.warnings);
             setRestoreSuccess(
                 "已还原，恢复前快照已保存。重新加载页面后生效；若被登出，需重新登录。",
             );
@@ -337,6 +349,14 @@ export function AdminBackupRestore() {
                     </div>
                 </StatusBanner>
             )}
+            {restoreWarnings.length > 0 && (
+                <StatusBanner tone="warning" density="compact">
+                    <span className="admin-banner-message">
+                        <AlertCircle size="1em" />
+                        <span>{restoreWarnings.join(" ")}</span>
+                    </span>
+                </StatusBanner>
+            )}
 
             <SettingsGroup
                 title="完整备份"
@@ -391,6 +411,14 @@ export function AdminBackupRestore() {
                             </span>
                         </span>
                     </StatusBanner>
+                    {validationWarnings.length > 0 && (
+                        <StatusBanner tone="warning" density="compact">
+                            <span className="admin-banner-message">
+                                <AlertCircle size="1em" />
+                                <span>{validationWarnings.join(" ")}</span>
+                            </span>
+                        </StatusBanner>
+                    )}
                     <SettingsGroup title="备份内容">
                         <SettingsRow title="生成时间">
                             <span className="admin-value">
@@ -408,9 +436,9 @@ export function AdminBackupRestore() {
                                 {validatedManifest.counts.webapps}
                             </span>
                         </SettingsRow>
-                        <SettingsRow title="便签">
+                        <SettingsRow title="笔记">
                             <span className="admin-value">
-                                {validatedManifest.counts.notes}
+                                {validatedManifest.counts.documents}
                             </span>
                         </SettingsRow>
                         <SettingsRow title="AI 提供商 / 模型">

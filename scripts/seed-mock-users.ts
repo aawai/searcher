@@ -2,14 +2,14 @@ import { openDatabase } from "../src/db/database.ts";
 import { migrateDatabase } from "../src/db/migrate.ts";
 import {
     bookmarks,
-    notes,
+    documents,
     preferences,
     users,
     webapps,
 } from "../src/db/schema.ts";
 import { CryptoVault } from "@internal/crypto/vault.ts";
 import { eq } from "drizzle-orm";
-import { NotesService } from "../src/features/notes/service.ts";
+import { DocumentsService } from "../src/features/documents/service.ts";
 
 const appFixtures = [
     ["GitHub", "https://github.com"],
@@ -53,7 +53,7 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
     );
     try {
         await migrateDatabase(store);
-        const noteService = new NotesService(store);
+        const documentService = new DocumentsService(store);
         const fixtures = [
             {
                 username: "user_empty",
@@ -102,7 +102,7 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                 }
                 await db.delete(bookmarks).where(eq(bookmarks.userId, userId));
                 await db.delete(webapps).where(eq(webapps.userId, userId));
-                await db.delete(notes).where(eq(notes.userId, userId));
+                await db.delete(documents).where(eq(documents.userId, userId));
                 if (fixture.apps > 0) {
                     await db.insert(webapps).values(
                         appFixtures.slice(0, fixture.apps).map((
@@ -127,13 +127,13 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                 const [index, note] of noteFixtures.slice(0, fixture.notes)
                     .entries()
             ) {
-                await noteService.create(userId, {
+                await documentService.create(userId, {
                     title: note.title,
                     body: note.body,
                     color: note.color,
-                    isPinned: index < 2,
+                    isFavorite: index < 2,
                     isHomeFixed: index < 3,
-                    sortOrder: index,
+                    homeSortOrder: index,
                 });
             }
         }

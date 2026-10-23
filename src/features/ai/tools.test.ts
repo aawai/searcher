@@ -21,24 +21,6 @@ function createInMemoryStore(): DatabaseStore {
             must_change_password INTEGER NOT NULL DEFAULT 0, auth_version INTEGER NOT NULL DEFAULT 1,
             soft_deleted_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
         );`,
-        `CREATE TABLE notes (
-            id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            title TEXT, current_body TEXT NOT NULL DEFAULT '', content TEXT NOT NULL DEFAULT '',
-            current_version INTEGER NOT NULL DEFAULT 1, color TEXT NOT NULL DEFAULT 'paper',
-            is_pinned INTEGER NOT NULL DEFAULT 0, is_home_fixed INTEGER NOT NULL DEFAULT 0,
-            sort_order INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER,
-            created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
-        );`,
-        `CREATE TABLE notes_fts (
-            title TEXT,
-            body TEXT
-        );`,
-        `CREATE TABLE note_layouts (
-            id TEXT PRIMARY KEY, note_id TEXT NOT NULL, user_id TEXT NOT NULL,
-            device_class TEXT NOT NULL, x REAL, y REAL, width REAL,
-            z_index INTEGER NOT NULL DEFAULT 0, expanded INTEGER NOT NULL DEFAULT 1,
-            sort_order INTEGER, updated_at INTEGER NOT NULL
-        );`,
         `CREATE TABLE webapps (
             id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             group_id TEXT, name TEXT NOT NULL, url TEXT NOT NULL, icon_asset_id TEXT,
@@ -78,7 +60,6 @@ async function createDocumentsStore(): Promise<DatabaseStore> {
 
 Deno.test("Tools: getAiCapabilities returns tool and attachment caps", () => {
     const caps = getAiCapabilities();
-    assertEquals(caps.tools.notes, true);
     assertEquals(caps.tools.documents, true);
     assertEquals(caps.tools.apps, true);
     assertEquals(caps.attachments.maxFiles, 4);
@@ -88,27 +69,23 @@ Deno.test("Tools: getAiCapabilities returns tool and attachment caps", () => {
 
 Deno.test("Tools: buildToolDefinitions respects opt-in flags", () => {
     const empty = buildToolDefinitions({
-        notes: false,
         documents: false,
         apps: false,
         webSearch: false,
     });
     assertEquals(empty.length, 0);
 
-    const withNotes = buildToolDefinitions({ notes: true, apps: true });
-    assertEquals(withNotes.length, 2);
-    assertEquals(withNotes[0].function.name, "lookup_notes");
-    assertEquals(
-        withNotes[0].function.description.includes("short sticky notes"),
-        true,
-    );
-    assertEquals(withNotes[1].function.name, "lookup_apps");
+    const withApps = buildToolDefinitions({ documents: true, apps: true });
+    assertEquals(withApps.map((tool) => tool.function.name), [
+        "lookup_documents",
+        "lookup_apps",
+    ]);
 
     const withDocuments = buildToolDefinitions({ documents: true });
     assertEquals(withDocuments.length, 1);
     assertEquals(withDocuments[0].function.name, "lookup_documents");
     assertEquals(
-        withDocuments[0].function.description.includes("short sticky notes"),
+        withDocuments[0].function.description.includes("all the user's notes"),
         true,
     );
     assertEquals(buildToolDefinitions({ documents: true }, false).length, 0);
@@ -118,8 +95,9 @@ Deno.test("Tools: lookup_documents searches owned live documents and returns doc
     try {
         const documents = new DocumentsService(store);
         const owned = await documents.create("u1", {
-            title: "Owned Long Document",
-            body: "A long-form plan about stellar quartz.",
+            title: null,
+            body: "A short plan about stellar quartz.",
+            isHomeFixed: true,
         });
         await documents.create("u2", {
             title: "Another Account",
@@ -183,32 +161,6 @@ Deno.test("Tools: lookup_documents rejects disabled and missing session opt-in",
                 true,
             );
         }
-    } finally {
-        await store.close();
-    }
-});
-
-Deno.test("Tools: executeToolCall notes lookup returns read-only notes", async () => {
-    const store = createInMemoryStore();
-    try {
-        await store.run(async (db) => {
-            await db.run(
-                `INSERT INTO users (id, username, display_name, password_hash, created_at, updated_at) VALUES ('u1', 'test', 'Test', 'h', 0, 0)`,
-            );
-            await db.run(
-                `INSERT INTO notes (id, user_id, title, current_body, content, created_at, updated_at) VALUES ('n1', 'u1', 'Meeting Note', 'Discussed issue 38 roadmap', 'Discussed issue 38 roadmap', 100, 100)`,
-            );
-        });
-
-        const res = await executeToolCall("lookup_notes", {}, {
-            userId: "u1",
-            store,
-        });
-        assertEquals(res.toolName, "notes");
-        const list = res.result as Array<{ id: string; title: string }>;
-        assertEquals(list.length, 1);
-        assertEquals(list[0].id, "n1");
-        assertEquals(list[0].title, "Meeting Note");
     } finally {
         await store.close();
     }
