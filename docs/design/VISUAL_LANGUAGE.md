@@ -23,17 +23,17 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 不可协商。系统语法与风格方向都在这些约束之内选择。
 
-| 约束                           | 要求                                                                                                                               | 机检                                                                              |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（见 [玻璃效果](#玻璃效果)）                                                   | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts` |
-| 控件边界与焦点环               | 控件边界与焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                          | 实页清单                                                                          |
-| 选中不只靠颜色                 | 配合勾号、外环或 `aria-current` / `aria-pressed`                                                                                   | 实页清单                                                                          |
-| 命中区                         | 粗指针（`any-pointer: coarse`）下所有可操作目标 ≥ 44px；仅 hover 出现的操作在触屏常显或进入 `⋯` 菜单                               | 部分 e2e（`apps-density`、`route-style-stability`），其余实页清单                 |
-| `prefers-reduced-motion`       | 位移、缩放、旋转一律改为同时长的纯透明度变化，页面切换不做过渡；加载指示（spinner）属于必要动效，保持旋转；不使用全局 `*` 清零规则 | 实页清单                                                                          |
-| `prefers-reduced-transparency` | 所有玻璃档位按 `off` 渲染（实色、无 blur）；不支持 `backdrop-filter` 时同样处理                                                    | 实页清单                                                                          |
-| Escape 层栈                    | `components/ui/escape-layer-stack.tsx` 拥有 Escape：每次只关闭最上一层，关闭后焦点回到触发控件                                     | `web/src/components/ui/escape-layer-stack.test.ts`                                |
-| 键盘                           | 主要流程可仅用键盘完成                                                                                                             | 实页清单                                                                          |
-| 壁纸可读性                     | 自定义壁纸由用户选择的“可读性”遮罩保证首页文字可读；“无”遮罩下不承诺可读性                                                         | 实页清单                                                                          |
+| 约束                           | 要求                                                                                                                                                          | 机检                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（见 [玻璃效果](#玻璃效果)）                                                                              | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts` |
+| 控件边界与焦点环               | 控件边界与焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                                                     | 实页清单                                                                          |
+| 选中不只靠颜色                 | 配合勾号、外环或 `aria-current` / `aria-pressed`                                                                                                              | 实页清单                                                                          |
+| 命中区                         | 粗指针（`any-pointer: coarse`）下所有可操作目标 ≥ 44px；仅 hover 出现的操作在触屏常显或进入 `⋯` 菜单                                                          | 部分 e2e（`apps-density`、`route-style-stability`），其余实页清单                 |
+| `prefers-reduced-motion`       | 位移、缩放、旋转及共享元素的尺寸 / 位置插值一律改为同时长的纯透明度变化，页面切换不做过渡；加载指示（spinner）属于必要动效，保持旋转；不使用全局 `*` 清零规则 | `/design-lab/motion` + 实页清单                                                   |
+| `prefers-reduced-transparency` | 所有玻璃档位按 `off` 渲染（实色、无 blur）；不支持 `backdrop-filter` 时同样处理                                                                               | 实页清单                                                                          |
+| Escape 层栈                    | `components/ui/escape-layer-stack.tsx` 拥有 Escape：每次只关闭最上一层，关闭后焦点回到触发控件                                                                | `web/src/components/ui/escape-layer-stack.test.ts`                                |
+| 键盘                           | 主要流程可仅用键盘完成                                                                                                                                        | 实页清单                                                                          |
+| 壁纸可读性                     | 自定义壁纸由用户选择的“可读性”遮罩保证首页文字可读；“无”遮罩下不承诺可读性                                                                                    | 实页清单                                                                          |
 
 ## 二、系统语法
 
@@ -245,8 +245,12 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 `--motion-fast` 120ms（hover、按压、Tooltip / Popover / 菜单）、`--motion-base` 200ms（展开、切换、淡入淡出、退场）、`--motion-panel` 280ms + `--ease-out-expo`（面板、Sheet、对话框进入）。
 
 - 出现与消失成对：浮层（菜单、Tooltip、Popover、对话框、Sheet、工作区面板、Dock、撤销提示）进入与退出都有过渡；退出期间元素 `inert`，不再接收焦点与 Escape。Base UI 浮层用 `data-starting-style` / `data-ending-style`；自管挂载的元素用 `components/ui/presence.ts` 的 `usePresence`，在元素自身的动画结束后再卸载。
-- 入场位移不超过 8px；唯一例外是底部 Sheet 从视口底边滑入、滑出。
-- 顶层页面切换（首页、设置、AI 问答、回收站等之间）使用 View Transition 的纯透明度交叉淡入；设置、管理内部切换不使用。
+- 入场位移不超过 8px；唯一例外是底部 Sheet 从视口底边滑入、滑出。禁止装饰性位移、视差、交错（staggered）或循环动画，以及对无关元素的缩放；同一对象的几何变化仅按下述共享元素契约允许，不是入场位移例外。
+- 顶层页面切换（首页、设置、AI 问答、回收站等之间）使用 View Transition 的纯透明度交叉淡入；`prefers-reduced-motion: reduce` 下不做页面过渡；设置、管理内部切换不使用过渡。
+- **共享元素过渡（shared-element transition）**：仅允许**同一个对象改变容器 / 状态**时使用（例如行内卡片展开为完整视图，再收回卡片）。实现使用 `document.startViewTransition`，每次生成唯一的 `view-transition-name`；旧快照恰好一个 source、新快照恰好一个 target 使用该名称，不得同帧重名。React 的 DOM 更新在 transition callback 内用 `flushSync` 同步提交。仅该对象可做 geometry morph，持续 `--motion-panel`（280ms），缓动 `--ease-out-expo`；无关元素不参与几何动画。
+- **回退**：浏览器不支持 `startViewTransition` 时立即切换状态、无动画，焦点处理不变。`prefers-reduced-motion: reduce` 下共享元素 morph 改为**同时长**的纯 opacity cross-fade：无 translate、无 scale，也不插值共享元素的 width / height / position。必须显式禁用默认 `::view-transition-group` 的尺寸 / 位置动画与 `::view-transition-image-pair` 动画（例如 `animation: none`），只在 old / new 快照上保留透明度动画，不能仅移除业务 CSS 的 transform。
+- **焦点与 Escape**：过渡结束后焦点移至目标的第一个可聚焦控件；反向关闭后回到原触发控件（无动画回退时立即处理）。Escape 由 `escape-layer-stack` 拥有，每次只关闭最上层，遵守底线，不另挂全局 Escape handler。
+- **验证**：`/design-lab/motion` 演示展开 / 收回、模式状态与键盘焦点；在普通模式检查 group 几何动画，在 reduced-motion 下检查 pseudo-tree 的 keyframes 仅含 opacity、无 transform / 尺寸 / 位置插值，并检查不支持 API 时立即切换。生产采用此契约时须填写 [实页清单](UI_CHECKLIST.md) 并验证主题、键盘与降级路径。
 
 ### 强调色用途
 
@@ -300,7 +304,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 `/design-lab/*` 是风格方向与系统语法的原型通道，用于在不改契约的前提下探索。
 
 - **可见性**：入口只对管理员显示（设置 → 设计实验室）；其他页面、导航与搜索结果不链接到它。路由是客户端路由，其代码随公开静态资源发布，**不是安全边界**，因此不得放置私有数据或需要鉴权的能力。
-- **不进入生产路由**：原型不得被生产页面引用或依赖，生产首屏 bundle 不包含它们（`scripts/check-bundle.ts` 已把 `src/design-lab/DesignLab` 列为首屏禁止项）；原型代码按需动态加载。
+- **不进入生产路由**：原型不得被生产页面引用或依赖，生产首屏 bundle 不包含它们（`scripts/check-bundle.ts` 已把 `src/design-lab/` 整个目录列为首屏禁止项）；原型代码按需动态加载。
 - **约束范围**：不受 [UI_CHECKLIST](UI_CHECKLIST.md) 的 390 / 768 / 1440 × light / dark 实页矩阵约束；仍受 [底线](#一底线) 约束——实验不得示范违反底线的做法。
 - **转正**：原型要进入生产，必须先有对应阶段的契约子任务：改写本文的相应层（风格方向可改，系统语法须写语义与验证方式，底线不可放宽），再实现，再按 UI_CHECKLIST 验收。原型本身不是契约。
-- 现有入口：`/design-lab`（正式组件、交互状态、主题与响应式预览，含玻璃档位对比）、`/design-lab/markdown-editor`、`/design-lab/editable-pagination`（编辑技术验证，见 [M0A 报告](../editor/MARKDOWN_EDITOR_M0A.md)）。
+- 现有入口：`/design-lab`（正式组件、交互状态、主题与响应式预览，含玻璃档位对比）、`/design-lab/motion`（共享元素展开 / 收回、reduced-motion 与焦点回退）、`/design-lab/markdown-editor`、`/design-lab/editable-pagination`（编辑技术验证，见 [M0A 报告](../editor/MARKDOWN_EDITOR_M0A.md)）。

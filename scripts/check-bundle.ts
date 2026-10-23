@@ -187,7 +187,7 @@ export function checkBundle(rootDir = Deno.cwd()): {
         "src/features/ask/",
         "src/app/SettingsPage",
         "src/app/AdminPage",
-        "src/design-lab/DesignLab",
+        "src/design-lab/",
         "src/app/AuthPage",
         "src/app/AccountPage",
         "src/app/TrashPage",

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { type AccentId, ACCENTS } from "@shared/contracts.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
 
@@ -137,6 +138,7 @@ export function DesignLab() {
     return (
         <PageShell archetype="workbench" className="design-lab-page">
             <PageHeader title="设计实验室" />
+            <Link to="/design-lab/motion">共享元素动效实验</Link>
 
             <Section title="首页构图：31% / 38%">
                 <p>

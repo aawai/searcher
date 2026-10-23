@@ -769,13 +769,14 @@ Deno.test("DocumentsService - search: FTS matches title & body, excludes trash, 
     const d2Result = result.items.find((i) => i.id === d2.id);
     assertEquals(d2Result?.notebookName, "Work Notebook");
 
-    // Search with complex punctuation / symbols does not break FTS and matches correctly
-    const specialResult = await service.search(
-        "user-1",
-        "SQLite (Guide) [Engine]*:",
+    // Every whitespace-separated term is a literal phrase: punctuation is content, not FTS syntax.
+    const specialResult = await service.search("user-1", "SQLite Guide");
+    assertEquals(specialResult.items.map((i) => i.id), [d1.id]);
+    assertEquals(
+        (await service.search("user-1", "SQLite (Guide) [Engine]*:")).items
+            .length,
+        0,
     );
-    assertEquals(specialResult.items.length, 1);
-    assertEquals(specialResult.items[0].id, d1.id);
 
     // Search with symbols that have no match returns empty without throwing FTS errors
     const noMatchResult = await service.search(
@@ -799,6 +800,122 @@ Deno.test("DocumentsService - search: FTS matches title & body, excludes trash, 
     await assertRejects(
         () =>
             service.search("user-1", "DifferentQuery", {
+                cursor: p1.nextCursor!,
+            }),
+        DocumentValidationError,
+        "无效的游标",
+    );
+});
+
+Deno.test("DocumentsService - search matches CJK substrings and terms shorter than 3 characters", async () => {
+    const { service, advanceTime } = await setupTestContext();
+    const inspiration = await service.create("user-1", {
+        title: "灵感",
+        body: "今天的灵感来源是散步",
+    });
+    advanceTime(10);
+    const coffee = await service.create("user-1", {
+        title: null,
+        body: "傍晚在咖啡馆写代码 AB-12",
+    });
+    const trashed = await service.create("user-1", {
+        title: "灵感回收",
+        body: "来源已删除",
+    });
+    await service.softDelete("user-1", trashed.id, 1);
+    await service.create("user-2", { title: "灵感", body: "别人的来源" });
+
+    const ids = async (q: string) =>
+        (await service.search("user-1", q)).items.map((i) => i.id);
+
+    // >= 3 characters: trigram MATCH, substring anywhere in the body.
+    assertEquals(await ids("灵感来源"), [inspiration.id]);
+    assertEquals(await ids("咖啡馆"), [coffee.id]);
+    // 2 and 1 characters: fallback scan, substring in title or body.
+    assertEquals(await ids("来源"), [inspiration.id]);
+    assertEquals(await ids("灵感"), [inspiration.id]);
+    assertEquals(await ids("咖"), [coffee.id]);
+    // Case-insensitive, substring (no prefix-only semantics).
+    assertEquals(await ids("ab-1"), [coffee.id]);
+    assertEquals(await ids("ab"), [coffee.id]);
+    // Terms are ANDed across the match and fallback paths.
+    assertEquals(await ids("灵感来源 散步"), [inspiration.id]);
+    assertEquals(await ids("来源 咖啡馆"), []);
+    assertEquals(await ids("来源 咖"), []);
+});
+
+Deno.test("DocumentsService - short-term search ranks title hits before newer body hits", async () => {
+    const { service, advanceTime } = await setupTestContext();
+    const titled = await service.create("user-1", {
+        title: "灵感",
+        body: "空",
+    });
+    advanceTime(10);
+    const mentioned = await service.create("user-1", {
+        title: "周记",
+        body: "今天的灵感来源是散步",
+    });
+    assertEquals(
+        (await service.search("user-1", "灵感")).items.map((i) => i.id),
+        [titled.id, mentioned.id],
+    );
+});
+
+Deno.test("DocumentsService - search treats FTS syntax characters as literal text", async () => {
+    const { service } = await setupTestContext();
+    const dash = await service.create("user-1", {
+        body: "release foo-bar done",
+    });
+    const or = await service.create("user-1", { body: "cats OR dogs" });
+    const quoted = await service.create("user-1", {
+        body: 'say "hello" loudly',
+    });
+    const paren = await service.create("user-1", { body: "call fn(a, b) now" });
+    const star = await service.create("user-1", {
+        body: "glob *.ts and NEAR/2",
+    });
+
+    const ids = async (q: string) =>
+        (await service.search("user-1", q)).items.map((i) => i.id);
+
+    assertEquals(await ids("foo-bar"), [dash.id]);
+    assertEquals(await ids("-bar"), [dash.id]);
+    assertEquals(await ids("cats OR dogs"), [or.id]);
+    assertEquals(await ids("OR"), [or.id]);
+    assertEquals(await ids('"hello"'), [quoted.id]);
+    assertEquals(await ids('"'), [quoted.id]);
+    assertEquals(await ids("fn(a,"), [paren.id]);
+    assertEquals(await ids("("), [paren.id]);
+    assertEquals(await ids("*.ts"), [star.id]);
+    assertEquals(await ids("NEAR/2"), [star.id]);
+    // Unbalanced / operator input never raises: AND matches the literal word, not an operator.
+    assertEquals(await ids('foo-bar "'), []);
+    assertEquals(await ids("AND"), [star.id]);
+    assertEquals(await ids("NOT"), []);
+    assertEquals(await ids("^"), []);
+});
+
+Deno.test("DocumentsService - short-term search honours cursor ownership and pagination", async () => {
+    const { service, advanceTime } = await setupTestContext();
+    const created: string[] = [];
+    for (let i = 0; i < 3; i++) {
+        advanceTime(10);
+        created.push(
+            (await service.create("user-1", { body: `第${i}条 来源记录` })).id,
+        );
+    }
+    const p1 = await service.search("user-1", "来源", { limit: 2 });
+    assertEquals(p1.items.map((i) => i.id), [created[2], created[1]]);
+    const p2 = await service.search("user-1", "来源", {
+        limit: 2,
+        cursor: p1.nextCursor!,
+    });
+    assertEquals(p2.items.map((i) => i.id), [created[0]]);
+    assertEquals(p2.nextCursor, null);
+    await assertRejects(
+        () =>
+            service.search("user-1", "记录", {
+                limit: 2,
                 cursor: p1.nextCursor!,
             }),
         DocumentValidationError,

@@ -1,0 +1,86 @@
+.motion-lab-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.motion-lab-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: var(--space-4);
+}
+
+.motion-lab-object {
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sheet);
+    background: var(--surface-solid);
+    color: var(--foreground);
+}
+
+.motion-lab-object h2,
+.motion-lab-object h3 {
+    font-size: var(--font-title-size);
+    line-height: var(--font-title-line-height);
+    font-weight: var(--font-title-weight);
+}
+
+.motion-lab-object p {
+    margin-block: var(--space-4);
+}
+
+.motion-lab-object[data-expanded="true"] {
+    grid-column: 1 / -1;
+    min-height: 60dvh;
+}
+
+.motion-lab-detail {
+    margin-top: var(--space-6);
+    max-width: 65ch;
+}
+
+/* Capture only the shared object, not unrelated page content. These rules
+   apply solely during a lab transition and leave route transitions untouched. */
+:root.motion-lab-transition {
+    view-transition-name: none;
+}
+
+:root.motion-lab-transition::view-transition-group(*) {
+    animation-duration: var(--motion-panel);
+    animation-timing-function: var(--ease-out-expo);
+}
+
+:root.motion-lab-transition::view-transition-old(*) {
+    animation: motion-lab-out var(--motion-panel) var(--ease-out-expo) both;
+}
+
+:root.motion-lab-transition::view-transition-new(*) {
+    animation: motion-lab-in var(--motion-panel) var(--ease-out-expo) both;
+}
+
+@keyframes motion-lab-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes motion-lab-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* UA group animation morphs width, height and transform by default.
+       Disable it AND image-pair animation; only old/new opacity may animate. */
+    :root.motion-lab-transition::view-transition-group(*),
+    :root.motion-lab-transition::view-transition-image-pair(*) {
+        animation: none;
+    }
+}
