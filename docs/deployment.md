@@ -10,7 +10,10 @@ Unraid、管理员与备份的常用操作；本文记录镜像构成、
 
 1. `/api` 与 `/api/*`：未知 API 返回 JSON 404。
 2. `/assets` 与 `/assets/*`：缺失文件返回静态 404。
-3. 其余 GET/HEAD 返回 SPA shell（HTTP 200），由 React Router 决定页面、canonical
+3. 安装文件 `/manifest.webmanifest`、`/sw.js` 与 `/icons/*`（Vite 从
+   `web/public/` 复制到构建根目录）：GET/HEAD 返回文件，缺失或其他方法返回静态
+   404，不回退 HTML。`web/public/` 的其他文件不对外提供。
+4. 其余 GET/HEAD 返回 SPA shell（HTTP 200），由 React Router 决定页面、canonical
    redirect 或客户端 404。非 GET/HEAD 不回退 HTML。
 
 Settings/Admin 子页面可直访、刷新和分享。反向代理应将页面请求交给
@@ -40,7 +43,7 @@ enforcement。反向代理的请求体上限不应低于下表最大值。
 `no-cache`。
 
 - `/assets/` 只应包含受控 Vite 构建产物，不放置用户上传文件。
-- SPA HTML 保持 `no-cache`；API、私有壁纸和应用图标的缓存策略独立。
+- SPA HTML 与安装文件（manifest、`sw.js`、`/icons/*`）保持 `no-cache`，新版本部署后浏览器即可取得；API、私有壁纸和应用图标的缓存策略独立。
 
 部署后人工检查：在 Chrome Network 关闭
 `Disable cache`，首次访问后在同一会话新标签页访问，哈希 JS/CSS 应来自

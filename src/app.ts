@@ -23,9 +23,16 @@ import { SystemSettingsStore } from "./features/system/settings-store.ts";
 import { WebAppIconService } from "./features/webapp-icons/service.ts";
 import { WallpaperService } from "./features/wallpaper/service.ts";
 import type { AppDeps, AppEnv } from "./serve/env.ts";
+import {
+    PWA_ICONS_PATH,
+    PWA_MANIFEST_PATH,
+    SERVICE_WORKER_PATH,
+} from "@shared/pwa.ts";
+import type { Context } from "hono";
 
 const frontend = new URL("../web/dist/", import.meta.url);
 const frontendPath = decodeURIComponent(frontend.pathname);
+const staticNotFound = (c: Context) => c.text("Not Found", 404);
 
 export interface CreateAppOptions {
     frontendPath?: string;
@@ -106,8 +113,25 @@ export function createApp(
             },
         }),
     );
-    app.all("/assets/*", (c) => c.text("Not Found", 404));
-    app.all("/assets", (c) => c.text("Not Found", 404));
+    app.all("/assets/*", staticNotFound);
+    app.all("/assets", staticNotFound);
+
+    // Unversioned install files revalidate so a deploy reaches clients at once.
+    const revalidated = serveStatic<AppEnv>({
+        root: staticRoot,
+        onFound: (_path, c) => c.header("Cache-Control", "no-cache"),
+    });
+    for (
+        const path of [
+            PWA_MANIFEST_PATH,
+            SERVICE_WORKER_PATH,
+            `${PWA_ICONS_PATH}/*`,
+        ]
+    ) {
+        app.on(["GET", "HEAD"], path, revalidated);
+        app.all(path, staticNotFound);
+    }
+    app.all(PWA_ICONS_PATH, staticNotFound);
 
     app.on(["GET", "HEAD"], "*", async (c) => {
         const path = c.req.path;
