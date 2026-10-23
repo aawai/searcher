@@ -11,12 +11,12 @@ import {
     AlertTriangle,
     LogIn,
     LogOut,
-    Monitor,
     Moon,
     Settings,
     Shield,
     Sparkles,
     Sun,
+    SunMoon,
     UserRound,
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
@@ -196,7 +196,7 @@ function Layout() {
                             ? <Sun size="1em" className="icon-lg" />
                             : appearance.theme === "light"
                             ? <Moon size="1em" className="icon-lg" />
-                            : <Monitor size="1em" className="icon-lg" />}
+                            : <SunMoon size="1em" className="icon-lg" />}
                     </button>
                     <Link
                         to={routes.settings()}
@@ -236,7 +236,7 @@ function Layout() {
                                 >
                                     <span className="user-avatar-badge">
                                         {(user.displayName || user.username)
-                                            .slice(0, 1).toUpperCase()}
+                                            .slice(0, 1)}
                                     </span>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent sideOffset={8}>

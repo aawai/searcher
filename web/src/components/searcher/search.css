@@ -49,8 +49,19 @@
     background: var(--surface-soft);
 }
 
-.search-engine .engine-ai-icon {
-    color: var(--accent);
+/* Only the engine menu uses brand colors; search chrome uses neutral ink. */
+:is(.search-engine, .suggestion-item) .engine-icon,
+:is(.search-engine, .suggestion-item) .engine-icon [fill] {
+    fill: currentColor;
+}
+
+:is(.search-engine, .suggestion-item) .engine-icon--duckduckgo > circle:first-child {
+    fill: none;
+    stroke: currentColor;
+}
+
+:is(.search-engine, .suggestion-item) .engine-icon--duckduckgo > circle:not(:first-child) {
+    fill: var(--surface);
 }
 
 .engine-mark {
@@ -58,8 +69,8 @@
     height: var(--icon-md);
     display: grid;
     place-items: center;
-    background: var(--accent-subtle);
-    color: var(--accent);
+    background: var(--surface-soft);
+    color: var(--foreground);
     border-radius: var(--control-radius);
     font-size: var(--font-metadata-size);
     font-weight: var(--font-label-weight);

@@ -551,9 +551,7 @@ export function SearcherSearchInput(
                     )}
                     <Button
                         className="search-submit"
-                        variant={query.trim() && !disabled
-                            ? "default"
-                            : "ghost"}
+                        variant="ghost"
                         type="submit"
                         disabled={disabled || !query.trim()}
                         aria-label={mode === "ai" ? "发送问题" : "搜索"}

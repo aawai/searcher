@@ -89,7 +89,7 @@ export function DuckDuckGoIcon(
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className={`engine-icon ${className}`}
+            className={`engine-icon engine-icon--duckduckgo ${className}`}
         >
             <circle cx="12" cy="12" r="11" fill="#DE5833" />
             <path
