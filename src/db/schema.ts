@@ -71,7 +71,9 @@ export const preferences = sqliteTable("preferences", {
     searchShape: text("search_shape", {
         enum: ["rounded", "pill"],
     }).default("rounded"),
-    searchOpacity: real("search_opacity").notNull().default(1),
+    glassIntensity: text("glass_intensity", {
+        enum: ["off", "soft", "regular", "clear"],
+    }).notNull().default("regular"),
     backgroundImage: text("background_image"),
     wallpaperMask: real("wallpaper_mask").notNull().default(0.36),
     searchTarget: text("search_target", { enum: ["same", "new"] })
@@ -107,8 +109,8 @@ export const preferences = sqliteTable("preferences", {
         sql`${t.searchShape} in ('rounded','pill')`,
     ),
     check(
-        "preferences_search_opacity_check",
-        sql`${t.searchOpacity} >= 0.1 and ${t.searchOpacity} <= 1`,
+        "preferences_glass_intensity_check",
+        sql`${t.glassIntensity} in ('off','soft','regular','clear')`,
     ),
     check(
         "preferences_search_target_check",

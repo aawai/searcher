@@ -10,6 +10,7 @@ import { SESSION_COOKIE_NAME } from "../auth/service.ts";
 import {
     ACCENT_IDS,
     CANONICAL_REASONING_EFFORTS,
+    GLASS_INTENSITIES,
 } from "../../shared/contracts.ts";
 import {
     normalizeWallpaperPresentation,
@@ -25,9 +26,7 @@ const Engine = v.optional(
 const Theme = v.optional(v.picklist(["system", "light", "dark"]));
 const Accent = v.optional(v.picklist(ACCENT_IDS));
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
-const SearchOpacity = v.optional(
-    v.pipe(v.number(), v.finite(), v.minValue(0.1), v.maxValue(1)),
-);
+const GlassIntensity = v.optional(v.picklist(GLASS_INTENSITIES));
 const Target = v.optional(v.picklist(["same", "new"]));
 const HistoryEnabled = v.optional(v.boolean("搜索历史开关必须为布尔值"));
 const WebAppHomeLimit = v.optional(v.picklist([8, 12, 16, "all"]));
@@ -178,7 +177,7 @@ export function registerPreferencesRoutes(
             theme: json(Theme),
             accent: json(Accent),
             searchShape: json(Shape),
-            searchOpacity: json(SearchOpacity),
+            glassIntensity: json(GlassIntensity),
             searchTarget: json(Target),
             searchHistoryEnabled: json(HistoryEnabled),
             webAppHomeLimit: json(WebAppHomeLimit),

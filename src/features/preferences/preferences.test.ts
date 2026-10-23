@@ -45,7 +45,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 theme: "dark",
                 accent: "violet",
                 searchShape: "pill",
-                searchOpacity: 0.85,
+                glassIntensity: "clear",
                 defaultEngine: "google",
                 webAppHomeLimit: 16,
                 webAppIconSize: "large",
@@ -56,7 +56,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         const saved = await response.json() as Envelope<PreferencesDto>;
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
-        assertEquals(saved.data?.searchOpacity, 0.85);
+        assertEquals(saved.data?.glassIntensity, "clear");
         assertEquals(saved.data?.webAppHomeLimit, 16);
         assertEquals(saved.data?.webAppIconSize, "large");
         assertEquals(saved.data?.showAppLabels, false);
@@ -77,7 +77,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.webAppHomeLimit, 16);
         assertEquals(changed.data?.searchShape, "pill");
-        assertEquals(changed.data?.searchOpacity, 0.85);
+        assertEquals(changed.data?.glassIntensity, "clear");
         assertEquals(changed.data?.webAppIconSize, "large");
         assertEquals(changed.data?.showAppLabels, false);
         const updateEmerald = await app.request("/api/preferences", {
@@ -113,7 +113,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.defaultEngine, "bing");
         assertEquals(isolated.data?.webAppHomeLimit, 12);
         assertEquals(isolated.data?.searchShape, "rounded");
-        assertEquals(isolated.data?.searchOpacity, 1);
+        assertEquals(isolated.data?.glassIntensity, "regular");
         assertEquals(isolated.data?.webAppIconSize, "default");
         assertEquals(isolated.data?.showAppLabels, true);
     } finally {
@@ -155,8 +155,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { backgroundImage: "https://user:pass@example.com/a.png" },
                 { webAppHomeLimit: 15 },
                 { searchShape: "square" },
-                { searchOpacity: 0.05 },
-                { searchOpacity: 1.5 },
+                { glassIntensity: "ultra" },
+                { glassIntensity: 0.5 },
                 { webAppIconSize: "huge" },
                 { showAppLabels: "not-a-bool" },
                 { accent: "neon_green" },

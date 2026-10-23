@@ -80,11 +80,11 @@
     gap: var(--space-3);
     margin-block-end: var(--space-4);
     padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
-    background: var(--material-regular);
+    background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     border-radius: var(--radius-pill);
-    box-shadow: var(--shadow-l2);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
 }
 
 .home-managing-text {
@@ -105,11 +105,11 @@
     align-items: center;
     gap: var(--space-1);
     padding: var(--space-1);
-    background: var(--material-regular);
+    background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     border-radius: var(--radius-pill);
-    box-shadow: var(--shadow-l2);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     transition: opacity var(--motion-base) var(--ease-standard);
 }
 
@@ -195,10 +195,10 @@
     );
     padding: var(--space-4);
     border-radius: var(--radius);
-    background: var(--material-regular);
+    background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-l2);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     text-align: center;
     touch-action: pan-y pinch-zoom;
     user-select: none;

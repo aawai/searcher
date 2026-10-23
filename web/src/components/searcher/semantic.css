@@ -326,9 +326,9 @@
     padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
     border-radius: var(--radius-lg);
     color: var(--foreground);
-    background: var(--material-thick);
+    background: var(--glass-sheen), var(--material-thick);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-l2);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     z-index: var(--elevation-toast);
 }
 .status-banner[data-presentation="floating"] {

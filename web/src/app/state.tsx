@@ -1,6 +1,9 @@
 import {
     type AccentId,
+    DEFAULT_GLASS_INTENSITY,
+    type GlassIntensity,
     normalizeAccent,
+    normalizeGlassIntensity,
     type PreferencesDto,
     type UserDto,
 } from "@shared/contracts.ts";
@@ -39,7 +42,7 @@ export type Appearance = {
     theme: "system" | "light" | "dark";
     accent: AccentId;
     shape: "rounded" | "pill";
-    searchOpacity: number;
+    glassIntensity: GlassIntensity;
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
@@ -53,7 +56,7 @@ const initial: Appearance = {
     theme: "system",
     accent: "blue",
     shape: "rounded",
-    searchOpacity: 1,
+    glassIntensity: DEFAULT_GLASS_INTENSITY,
     engine: "bing",
     target: "current",
     wallpaper: "",
@@ -77,11 +80,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
     if (saved.shape === "rounded" || saved.shape === "pill") {
         result.shape = saved.shape;
     }
-    const searchOpacity = saved.searchOpacity;
-    if (
-        typeof searchOpacity === "number" && Number.isFinite(searchOpacity) &&
-        searchOpacity >= 0.1 && searchOpacity <= 1
-    ) result.searchOpacity = searchOpacity;
+    result.glassIntensity = normalizeGlassIntensity(saved.glassIntensity);
     if (
         saved.engine === "bing" || saved.engine === "google" ||
         saved.engine === "baidu" || saved.engine === "duckduckgo"
@@ -321,7 +320,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     theme: prefs.theme,
                     accent: normalizeAccent(prefs.accent),
                     shape: prefs.searchShape,
-                    searchOpacity: prefs.searchOpacity ?? 1,
+                    glassIntensity: prefs.glassIntensity,
                     target: prefs.searchTarget === "new"
                         ? "new_tab"
                         : "current",
@@ -393,11 +392,8 @@ export function AppState({ children }: { children: ReactNode }) {
         const root = document.documentElement;
         root.dataset.accent = appearance.accent;
         root.dataset.shape = appearance.shape;
-        root.style.setProperty(
-            "--search-opacity",
-            String(appearance.searchOpacity),
-        );
-    }, [appearance.accent, appearance.shape, appearance.searchOpacity]);
+        root.dataset.glass = appearance.glassIntensity;
+    }, [appearance.accent, appearance.shape, appearance.glassIntensity]);
 
     const setAppearance = (
         next: Partial<Appearance>,
@@ -410,8 +406,8 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.theme !== undefined) updates.theme = next.theme;
             if (next.accent !== undefined) updates.accent = next.accent;
             if (next.shape !== undefined) updates.searchShape = next.shape;
-            if (next.searchOpacity !== undefined) {
-                updates.searchOpacity = next.searchOpacity;
+            if (next.glassIntensity !== undefined) {
+                updates.glassIntensity = next.glassIntensity;
             }
             if (next.engine !== undefined) updates.defaultEngine = next.engine;
             if (next.target !== undefined) {

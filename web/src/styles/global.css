@@ -62,16 +62,24 @@ a {
     isolation: isolate;
     overflow: hidden;
     pointer-events: none;
-    background: linear-gradient(155deg,
-        color-mix(in srgb, var(--accent) 3%, var(--surface-soft)),
+    /* Default canvas: three soft blobs over a quiet gradient so glass has tone and hue to refract. */
+    background:
+        radial-gradient(70% 55% at 14% 10%,
+        color-mix(in srgb, var(--accent) var(--canvas-mesh-accent-mix),
+        transparent),
+        transparent),
+        radial-gradient(60% 60% at 90% 22%,
+        color-mix(in srgb, var(--canvas-mesh-secondary)
+        var(--canvas-mesh-secondary-mix), transparent),
+        transparent),
+        radial-gradient(75% 60% at 62% 100%,
+        color-mix(in srgb, var(--accent) var(--canvas-mesh-accent-mix),
+        transparent),
+        transparent),
+        linear-gradient(155deg,
+        var(--surface-soft),
         var(--background) 52%,
-        color-mix(in srgb, var(--accent) 4%, var(--surface-soft)));
-}
-[data-theme="dark"] .wallpaper-surface {
-    background: linear-gradient(155deg,
-        color-mix(in srgb, var(--accent) 6%, var(--surface-soft)),
-        var(--background) 52%,
-        color-mix(in srgb, var(--accent) 4%, var(--surface-soft)));
+        var(--surface-soft));
 }
 .wallpaper-surface--embedded {
     position: absolute;
@@ -179,8 +187,9 @@ a {
 }
 .app-shell[data-home] .top-actions a:hover,
 .app-shell[data-home] .top-actions button:hover {
-    background: var(--material-regular);
+    background: var(--glass-sheen), var(--material-regular);
     backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge);
 }
 .top-actions .topbar-link--active {
     background: var(--surface-soft);

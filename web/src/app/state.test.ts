@@ -71,6 +71,26 @@ Deno.test("Appearance: old device preferences migrate wallpaper mask to semantic
     assertEquals(pres.readability, "clear");
 });
 
+Deno.test("Appearance: device caches keep a valid glass tier and fall back for stale or unknown values", () => {
+    assertEquals(
+        normalizeAppearance({ glassIntensity: "clear" }).glassIntensity,
+        "clear",
+    );
+    assertEquals(
+        normalizeAppearance({ glassIntensity: "off" }).glassIntensity,
+        "off",
+    );
+    // Caches written before glass tiers carried a numeric searchOpacity.
+    assertEquals(
+        normalizeAppearance({ searchOpacity: 0.4 }).glassIntensity,
+        "regular",
+    );
+    assertEquals(
+        normalizeAppearance({ glassIntensity: "frosted" }).glassIntensity,
+        "regular",
+    );
+});
+
 Deno.test("Appearance: switching cached wallpapers restores their own presentation and composition", () => {
     const first = "https://example.com/left.png";
     const second = "https://example.com/right.png";

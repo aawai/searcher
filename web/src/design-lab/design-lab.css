@@ -156,15 +156,22 @@
     border-radius: var(--radius-sheet);
 }
 
-/* Materials over a sample wallpaper */
+/* Materials over a high-contrast fixture: stripes plus saturated blobs, so blur, fill and edge are all visible. */
 .design-lab-wallpaper {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
     gap: var(--space-3);
     padding: var(--space-4);
     border-radius: var(--radius-sheet);
-    background: linear-gradient(135deg, var(--accent-soft),
-        var(--surface-soft));
+    background:
+        radial-gradient(40% 60% at 15% 30%, #E5322D, transparent),
+        radial-gradient(40% 60% at 85% 70%, #1F6FEB, transparent),
+        repeating-linear-gradient(90deg, #111 0 14px, #F5F5F5 14px 28px);
+}
+.design-lab-glass-tier {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
 }
 
 .design-lab-material {
@@ -174,15 +181,16 @@
     width: 160px;
     height: 88px;
     border-radius: var(--radius);
-    background: var(--material-regular);
+    background: var(--glass-sheen), var(--material-regular);
     backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     color: var(--foreground);
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
 }
 
 .design-lab-material-thick {
-    background: var(--material-thick);
+    background: var(--glass-sheen), var(--material-thick);
 }
 
 @media (max-width: 480px) {
