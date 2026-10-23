@@ -1,5 +1,10 @@
 import { assertEquals } from "@std/assert";
-import { scanCssCode } from "./css-scanner.ts";
+import { scanCssCode as scanCssWithRegistry } from "./css-scanner.ts";
+import { FIXTURE_REGISTRY } from "./test-registry.ts";
+
+function scanCssCode(file: string, css: string) {
+    return scanCssWithRegistry(file, css, FIXTURE_REGISTRY);
+}
 
 Deno.test("css-scanner - detects raw box-shadow", () => {
     const css = `
@@ -133,5 +138,120 @@ Deno.test("css-scanner - rejects numeric z-index and allows tokens and runtime v
             ["raw-z-index", "z-index: -1"],
             ["raw-z-index", "z-index: 0"],
         ],
+    );
+});
+
+function rulesAndValues(file: string, css: string) {
+    return scanCssCode(file, css).map((v) => [v.rule, v.value]);
+}
+
+Deno.test("css-scanner - font-size only accepts registered Tokens", () => {
+    const css = `
+        .ok { font-size: var(--font-body-size); }
+        .relative { font-size: 1em; }
+        .unregistered { font-size: var(--font-launcher-glyph); }
+        .raw { font-size: 15px; }
+    `;
+    assertEquals(rulesAndValues("web/src/features/a.css", css), [
+        ["unregistered-font-token", "font-size: var(--font-launcher-glyph)"],
+        ["raw-font-size", "font-size: 15px"],
+    ]);
+});
+
+Deno.test("css-scanner - border-radius only accepts registered Tokens and Token insets", () => {
+    const css = `
+        .ok { border-radius: var(--radius); }
+        .inset { border-radius: calc(var(--control-radius) - 2px); }
+        .sides { border-radius: var(--radius) var(--radius) 0 0; }
+        .unregistered { border-radius: var(--radius-card); }
+        .scaled { border-radius: calc(56px * var(--radius)); }
+        .raw { border-top-left-radius: 10px; }
+    `;
+    assertEquals(rulesAndValues("web/src/features/a.css", css), [
+        ["unregistered-radius-token", "border-radius: var(--radius-card)"],
+        ["raw-border-radius", "border-radius: calc(56px * var(--radius))"],
+        ["raw-border-radius", "border-top-left-radius: 10px"],
+    ]);
+});
+
+Deno.test("css-scanner - font and radius Token definitions must be registered, in tokens.css and feature CSS alike", () => {
+    const tokens = `
+        :root {
+            --font-body-size: 14px;
+            --font-brand-size: 19px;
+            --font-body-weight: 400;
+            --font-body-line-height: 22px;
+            --font-sans: system-ui;
+            --radius: 12px;
+            --multiline-radius: 10px;
+            --space-4: 16px;
+        }
+    `;
+    assertEquals(rulesAndValues("web/src/design-system/tokens.css", tokens), [
+        ["unregistered-token-definition", "--font-brand-size: 19px"],
+        ["unregistered-token-definition", "--multiline-radius: 10px"],
+    ]);
+    const local =
+        `.x { --radius-local: 5px; --font-local-size: 11px; --radius: 3px; }`;
+    assertEquals(rulesAndValues("web/src/features/a.css", local), [
+        ["unregistered-token-definition", "--radius-local: 5px"],
+        ["unregistered-token-definition", "--font-local-size: 11px"],
+    ]);
+});
+
+Deno.test("css-scanner - accent background and fill are limited to registered semantics", () => {
+    const file = "web/src/components/ui/button.css";
+    const css = `
+        .button--primary { background: var(--accent); }
+        .button--primary:hover { background: var(--accent-hover); }
+        .button--primary:active:not(:disabled) { background: var(--accent-active); }
+        .card--decor { background: var(--accent); }
+        .card--glow { background-image: linear-gradient(var(--accent), transparent); }
+        .icon--tinted { fill: var(--accent); }
+        .card--tint { background: var(--accent-soft); }
+        .card--outline { border-color: var(--accent); color: var(--accent); }
+        @media (max-width: 767px) {
+            .card--mobile { background-color: var(--accent); }
+        }
+    `;
+    assertEquals(rulesAndValues(file, css), [
+        [
+            "unregistered-accent-fill",
+            ".card--decor { background: var(--accent) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".card--glow { background-image: linear-gradient(var(--accent), transparent) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".icon--tinted { fill: var(--accent) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".card--mobile { background-color: var(--accent) }",
+        ],
+    ]);
+});
+
+Deno.test("css-scanner - a registered accent selector is not registered for other files or other selectors in its list", () => {
+    const css = `.button--primary { background: var(--accent); }`;
+    assertEquals(rulesAndValues("web/src/features/other.css", css), [
+        [
+            "unregistered-accent-fill",
+            ".button--primary { background: var(--accent) }",
+        ],
+    ]);
+    const list =
+        `.switch[data-checked], .switch--sneaky { background: var(--accent); }`;
+    assertEquals(
+        rulesAndValues("web/src/components/ui/switch.css", list).length,
+        1,
+    );
+    const registered =
+        `.switch[data-checked], .switch--on { background: var(--accent); }`;
+    assertEquals(
+        rulesAndValues("web/src/components/ui/switch.css", registered),
+        [],
     );
 });

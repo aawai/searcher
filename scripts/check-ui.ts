@@ -3,6 +3,7 @@
 import { parseArgs } from "@std/cli/parse-args";
 import { resolve } from "@std/path/resolve";
 import { scanDirectory } from "./ui-guard/scanner.ts";
+import { loadVisualRegistry } from "./ui-guard/registry.ts";
 import { formatOwnershipReport, scanOwnership } from "./ui-guard/ownership.ts";
 import {
     buildBaseline,
@@ -65,8 +66,13 @@ export async function runCheck(args: string[]): Promise<number> {
     }
     if (!flags.json) console.log(formatOwnershipReport(ownership));
 
-    // 1. Scan target directory
-    const { violations, totalFiles } = await scanDirectory(targetPath, baseDir);
+    // 1. Scan target directory against the Visual Language registries
+    const registry = await loadVisualRegistry();
+    const { violations, totalFiles } = await scanDirectory(
+        targetPath,
+        registry,
+        baseDir,
+    );
 
     // 2. Handle --initialize mode (explicit initial bootstrap)
     if (flags.initialize) {

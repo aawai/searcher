@@ -69,7 +69,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 字重只用 400 / 500 / 600。不用全大写、字距拉伸或衬线标题。字体使用平台原生栈（Apple: SF + PingFang；Windows: Segoe UI + 微软雅黑；其他: Noto Sans SC），数字用 `font-variant-numeric: tabular-nums`。Markdown 正文标题由 `markdown.css` 用 `em` 相对缩放。
 
-**字号阶梯登记。** `font-size` 只能引用本表的 Token，或 `inherit` / `1em` / `100%`；`tokens.css` 与 feature CSS 中新定义的字号 Token 必须先登记于此。
+**字号阶梯登记。** `font-size` 只能引用本表的 Token，或 `inherit` / `1em` / `100%`。名称为 `--font-*` 的 Token（字体族、字重、行高除外）必须登记于此，在哪个 CSS 文件定义都一样。
 
 | Token                             | 尺寸 / 行高        | 字重        | 用途                                                            |
 | --------------------------------- | ------------------ | ----------- | --------------------------------------------------------------- |
@@ -94,7 +94,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 - 控件高度：`--control-height` 36、`--control-compact-height` 28、粗指针命中区 `--control-touch-target` 44；列表行最小高度 `--row-min-height` 44。
 - 图标：`--icon-sm/md/lg` = 14/16/20，Lucide 默认描边。
 
-**圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> - Npx)` 表达同心内缩。别名与其目标同值，新代码优先使用目标 Token。
+**圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> ± Npx)` 表达同心内缩，其他 `calc()` 不允许。名称为 `--radius`、`--radius-*` 或 `--*-radius` 的 Token 必须登记于此，在哪个 CSS 文件定义都一样。别名与其目标同值，新代码优先使用目标 Token。
 
 | Token                     | 值                                  | 用途                                                   |
 | ------------------------- | ----------------------------------- | ------------------------------------------------------ |
@@ -174,7 +174,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 | reset、AppShell、顶栏、壁纸画布 | `web/src/styles/global.css`                                           |
 | 场景布局与领域呈现              | 对应 feature 的 CSS（如 `launcher.css`、`notes.css`、`settings.css`） |
 
-feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 拒绝 raw 颜色、字号、圆角、阴影、间距与 z-index，以及未定义的 CSS 变量。
+feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 拒绝 raw 颜色、字号、圆角、阴影、间距与 z-index，以及未定义的 CSS 变量；并按本文登记表拒绝未登记的字号 / 圆角 Token（`unregistered-font-token`、`unregistered-radius-token`）、未登记的字号 / 圆角 Token 定义（`unregistered-token-definition`，覆盖 `tokens.css` 与 feature CSS）和未登记的强调色填充（`unregistered-accent-fill`）。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败，不会静默放行。
 
 ### 例外
 
@@ -268,7 +268,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - 状态含义：错误、成功、警告用 `--danger`、`--success`、`--warning`，不借强调色。
 - 应用图标的首字母底色（用中性色）。
 
-**强调色填充登记。** `--accent` 系列用作 `background` / `fill` 时，只允许出现在下表的位置；新增必须先登记语义、文件与选择器。`:hover`、`:active`、`:focus-visible`、`:disabled` 等状态变体随基础选择器登记。登记表是门禁的输入（`check:ui` 规则由 #236 B 引入，此前由评审执行）。
+**强调色填充登记。** `--accent`、`--accent-hover`、`--accent-active` 用作 `background`、`background-color`、`background-image` 或 `fill` 时（包括 `color-mix()` 等表达式内部引用），只允许出现在下表的位置；新增必须先登记语义、文件与选择器。`:hover`、`:active`、`:focus-visible`、`:disabled` 等状态变体随基础选择器登记；`--accent-soft`、`--accent-subtle` 等着色不在此列。`check:ui` 的 `unregistered-accent-fill` 规则读取本表执行；Tailwind 的 `bg-primary`、`bg-accent`、`fill-accent` 等工具类无法按选择器登记，同样被拒绝。
 
 | 语义        | 文件                                       | 选择器                                                                     |
 | ----------- | ------------------------------------------ | -------------------------------------------------------------------------- |

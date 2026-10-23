@@ -3,6 +3,7 @@ import { relative } from "@std/path/relative";
 import type { UiViolation } from "./types.ts";
 import { scanTsxCode } from "./tsx-scanner.ts";
 import { scanCssCode } from "./css-scanner.ts";
+import type { VisualRegistry } from "./registry.ts";
 
 export interface ScanResult {
     violations: UiViolation[];
@@ -26,6 +27,7 @@ function isTestFile(path: string): boolean {
  */
 export async function scanDirectory(
     dirPath: string,
+    registry: VisualRegistry,
     baseDir = dirPath,
 ): Promise<ScanResult> {
     const violations: UiViolation[] = [];
@@ -53,10 +55,10 @@ export async function scanDirectory(
         const content = await Deno.readTextFile(entry.path);
 
         if (entry.path.endsWith(".tsx")) {
-            const fileViolations = scanTsxCode(relPath, content);
+            const fileViolations = scanTsxCode(relPath, content, registry);
             violations.push(...fileViolations);
         } else if (entry.path.endsWith(".css")) {
-            const fileViolations = scanCssCode(relPath, content);
+            const fileViolations = scanCssCode(relPath, content, registry);
             violations.push(...fileViolations);
         }
     }
