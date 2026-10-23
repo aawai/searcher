@@ -35,6 +35,7 @@ import {
 } from "../features/documents/document-event-subscriptions.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
+import { syncThemeColor } from "../pwa/theme-color.ts";
 import {
     appearanceStorageKey,
     type AppearanceSyncQueue,
@@ -378,7 +379,9 @@ export function AppState({ children }: { children: ReactNode }) {
             const theme = appearance.theme === "system"
                 ? (media.matches ? "dark" : "light")
                 : appearance.theme;
-            document.documentElement.dataset.theme = theme;
+            const root = document.documentElement;
+            root.dataset.theme = theme;
+            syncThemeColor(root);
         };
         apply();
         media.addEventListener("change", apply);

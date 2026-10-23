@@ -300,6 +300,75 @@ Deno.test("SPA route boundary: non-GET/HEAD methods do not fall back to SPA shel
     }
 });
 
+Deno.test("PWA files: manifest, service worker and icons are served before the SPA fallback", async () => {
+    const ctx = await setupTestApp();
+    try {
+        await Deno.mkdir(`${ctx.tempDir}/icons`);
+        const files = [
+            {
+                path: "/manifest.webmanifest",
+                body: '{"name":"Searcher"}',
+                mime: "application/manifest+json",
+            },
+            {
+                path: "/sw.js",
+                body: "self.addEventListener('fetch', () => {});",
+                mime: "javascript",
+            },
+            { path: "/icons/icon.svg", body: "<svg/>", mime: "image/svg+xml" },
+        ];
+        for (const { path, body, mime } of files) {
+            await Deno.writeTextFile(`${ctx.tempDir}${path}`, body);
+            const get = await ctx.app.request(path);
+            assertEquals(get.status, 200, path);
+            assertStringIncludes(get.headers.get("content-type") ?? "", mime);
+            // Browsers must see a new build as soon as it is deployed.
+            assertEquals(get.headers.get("cache-control"), "no-cache", path);
+            assertEquals(await get.text(), body, path);
+
+            const head = await ctx.app.request(path, { method: "HEAD" });
+            assertEquals(head.status, 200, path);
+            assertEquals(head.headers.get("cache-control"), "no-cache", path);
+            assertEquals(await head.text(), "", path);
+        }
+    } finally {
+        await ctx.cleanup();
+    }
+});
+
+Deno.test("PWA files: missing manifest, service worker or icon return static 404 not shell", async () => {
+    const ctx = await setupTestApp();
+    try {
+        for (
+            const path of [
+                "/manifest.webmanifest",
+                "/sw.js",
+                "/icons",
+                "/icons/",
+                "/icons/missing.png",
+            ]
+        ) {
+            const get = await ctx.app.request(path);
+            assertEquals(get.status, 404, path);
+            assertEquals(await get.text(), "Not Found", path);
+            assertStringIncludes(
+                get.headers.get("content-type") ?? "",
+                "text/plain",
+            );
+
+            const head = await ctx.app.request(path, { method: "HEAD" });
+            assertEquals(head.status, 404, path);
+            assertEquals(await head.text(), "", path);
+
+            const post = await ctx.app.request(path, { method: "POST" });
+            assertEquals(post.status, 404, path);
+            assertEquals(await post.text(), "Not Found", path);
+        }
+    } finally {
+        await ctx.cleanup();
+    }
+});
+
 Deno.test("SPA route: existing static assets are served properly", async () => {
     const ctx = await setupTestApp();
     try {

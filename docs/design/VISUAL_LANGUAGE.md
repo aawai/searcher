@@ -297,7 +297,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 品牌表达
 
-品牌只以顶栏的小字标“s.”（`.wordmark-small`，`--font-brand-size`）出现；首页不显示品牌大标题，不用品牌色铺面。品牌表达方向属于本层，可在实验通道挑战。
+品牌在界面内只以顶栏的小字标“s.”（`.wordmark-small`，`--font-brand-size`）出现；首页不显示品牌大标题，不用品牌色铺面。浏览器标签图标与安装图标（`web/public/icons/`）沿用同一放大镜字形：白底、`#245DBD` 描边，maskable 版本满版铺底、字形留在中央安全区内；它们属于操作系统表面，不进入界面 Token。品牌表达方向属于本层，可在实验通道挑战。
 
 ## 实验通道
 
