@@ -53,8 +53,8 @@ const defaults: PreferencesDto = {
     backgroundImage: null,
     searchTarget: "same",
     searchHistoryEnabled: false,
-    webAppHomeLimit: 12,
     showAppLabels: true,
+    showHomeApps: true,
     aiGenerationDefaults: {
         models: {},
     },
@@ -189,10 +189,8 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         wallpaperPresentations: presentations,
         searchTarget: row.searchTarget,
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
-        webAppHomeLimit: row.webAppHomeLimit === "all"
-            ? "all"
-            : Number(row.webAppHomeLimit) as 8 | 12 | 16,
         showAppLabels: row.showAppLabels ?? true,
+        showHomeApps: row.showHomeApps ?? true,
         aiGenerationDefaults: parseAiGenerationDefaults(
             row.aiGenerationDefaults,
         ),
@@ -248,7 +246,6 @@ export class PreferencesService {
     ): Promise<PreferencesDto> {
         const canonicalDefaults = await this.getDefaults();
         const {
-            webAppHomeLimit,
             aiGenerationDefaults,
             wallpaperCompositions,
             wallpaperPresentations,
@@ -436,9 +433,6 @@ export class PreferencesService {
                 patchValues.wallpaperPresentations =
                     serializedWallpaperPresentations;
             }
-            if (webAppHomeLimit !== undefined) {
-                patchValues.webAppHomeLimit = String(webAppHomeLimit);
-            }
 
             if (Object.keys(patchValues).length === 0) {
                 const rows = await db.select().from(preferences)
@@ -458,12 +452,8 @@ export class PreferencesService {
                 searchTarget: canonicalDefaults.searchTarget,
                 searchHistoryEnabled: canonicalDefaults.searchHistoryEnabled ??
                     false,
-                webAppHomeLimit: String(canonicalDefaults.webAppHomeLimit) as
-                    | "8"
-                    | "12"
-                    | "16"
-                    | "all",
                 showAppLabels: canonicalDefaults.showAppLabels,
+                showHomeApps: canonicalDefaults.showHomeApps,
                 aiGenerationDefaults: JSON.stringify(
                     canonicalDefaults.aiGenerationDefaults ?? { models: {} },
                 ),

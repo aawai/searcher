@@ -60,7 +60,6 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
                         }.example/`,
                         iconAssetId: asset.id,
                         iconSource: "upload",
-                        isPinned: true,
                     },
                     headers: { Origin: app.origin },
                 },
@@ -74,7 +73,6 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
                     name: "域名回退",
                     url: "https://fallback.example/",
                     iconSource: "default",
-                    isPinned: true,
                 },
                 headers: { Origin: app.origin },
             },
@@ -90,16 +88,20 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
             ) {
                 await page.setViewportSize({ width, height });
                 await page.reload();
-                await page.locator(".pinned-area .webapp-glyph img").first()
+                await page.locator(
+                    ".launcher-library .launcher-tile[data-tile-id] .webapp-glyph img",
+                ).first()
                     .waitFor();
                 await page.waitForFunction(() =>
                     [...document.querySelectorAll<HTMLImageElement>(
-                        ".pinned-area .webapp-glyph img",
+                        ".launcher-library .launcher-tile[data-tile-id] .webapp-glyph img",
                     )].every((image) =>
                         image.complete && image.naturalWidth === 256
                     )
                 );
-                const widths = await page.locator(".pinned-area .webapp-glyph")
+                const widths = await page.locator(
+                    ".launcher-library .launcher-tile[data-tile-id] .webapp-glyph",
+                )
                     .evaluateAll((nodes) =>
                         nodes.map((node) => node.getBoundingClientRect().width)
                     );

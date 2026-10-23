@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { chromium, type Page } from "playwright";
+import { chromium, type Locator, type Page } from "playwright";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";
@@ -8,8 +8,16 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 
+interface ServerApp {
+    id: string;
+    groupId: string | null;
+    sortOrder: number;
+}
+
 // Run with: NODE_ENV=test deno test -A web/e2e/launcher.test.ts
-Deno.test("production launcher contracts - Issue #47", async (t) => {
+// The home page is the app library (#244): folders open in a popup, layout
+// changes happen in 整理 mode on home.
+Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher_launcher_" });
     cleanup.defer(() => Deno.remove(files, { recursive: true }));
@@ -40,6 +48,11 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     });
     cleanup.defer(() => browser.close());
     const context = await browser.newContext({ colorScheme: "light" });
+    // Launcher interactions must not depend on real website/DNS backfill.
+    await context.route(
+        "**/api/webapps/*/fetch-icon",
+        (route) => route.abort(),
+    );
     const page = await context.newPage();
 
     const username = "launcher_user_47";
@@ -51,25 +64,20 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         await target.locator("main").waitFor();
     }
 
-    // Register test account
+    async function showHome(target: Page = page) {
+        await visit("/", target);
+        await target.locator(".launcher-grid--home").waitFor();
+    }
+
     await visit("/register");
     await page.locator("#auth-username").fill(username);
     await page.locator("#auth-display-name").fill("Launcher Tester");
     await page.locator("#auth-password").fill(password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor();
-
-    // Configure system theme
-    await visit("/settings/appearance");
-    await page.getByText("跟随系统", { exact: true }).click();
-    await page.waitForFunction(() =>
-        document.documentElement.dataset.theme !== undefined
-    );
-    await visit("/");
     await page.locator("main.home").waitFor({ state: "visible" });
+    await page.setViewportSize({ width: 1280, height: 800 });
 
-    // Helper for authenticated API calls
     async function apiRequest(
         endpoint: string,
         method = "GET",
@@ -79,9 +87,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             async ({ endpoint, method, body }) => {
                 const res = await fetch(endpoint, {
                     method,
-                    headers: {
-                        "content-type": "application/json",
-                    },
+                    headers: { "content-type": "application/json" },
                     body: body ? JSON.stringify(body) : undefined,
                 });
                 const json = await res.json();
@@ -99,13 +105,22 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
     async function settlePresentation(targetPage: Page = page) {
         await targetPage.evaluate(async () => {
             await document.fonts.ready;
-            await Promise.all(
-                document.getAnimations().filter((animation) =>
-                    Number.isFinite(
+        });
+        // Transitions can be replaced or cancelled while a popup closes.
+        // Poll the live animation set instead of rejecting a cancelled finished
+        // promise, and bound the wait if the presentation never settles.
+        await targetPage.waitForFunction(
+            () =>
+                document.getAnimations().every((animation) =>
+                    !Number.isFinite(
                         animation.effect?.getComputedTiming().endTime,
-                    )
-                ).map((animation) => animation.finished),
-            );
+                    ) ||
+                    (animation.playState !== "running" && !animation.pending)
+                ),
+            undefined,
+            { timeout: 5000 },
+        );
+        await targetPage.evaluate(async () => {
             for (let frame = 0; frame < 2; frame++) {
                 const { promise, resolve } = Promise.withResolvers<number>();
                 requestAnimationFrame(resolve);
@@ -114,135 +129,151 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         });
     }
 
-    // Helper to calculate a blank coordinate below the last grid row, inside the panel body
-    async function getSurfaceBlankCoordinate(targetPage: Page = page) {
-        // Visibility includes the first translated frame of the mobile Sheet.
-        // Coordinates must describe its final interactive surface.
-        await settlePresentation(targetPage);
-        return await targetPage.evaluate(() => {
-            const panelEl = document.querySelector(
-                ".workspace-panel--mobile, aside.workspace-panel, .workspace-panel",
-            );
-            if (!panelEl) throw new Error("Workspace panel not found");
-            const panelRect = panelEl.getBoundingClientRect();
-            const bodyEl = panelEl.querySelector<HTMLElement>(
-                ".workspace-body",
-            );
-            const bottomLimit = bodyEl
-                ? bodyEl.getBoundingClientRect().bottom - 16
-                : panelRect.bottom - 16;
-            const boundaryTop = Math.min(bottomLimit, globalThis.innerHeight);
-
-            const contentElements = Array.from(
-                panelEl.querySelectorAll<HTMLElement>(
-                    ".launcher-tile, .launcher-folder-item, .launcher-app, .apps-workspace-group-card, .empty-state, .launcher-empty, .launcher-folder-inline-header, .workspace-section-header",
-                ),
-            ).filter((el) => {
-                const r = el.getBoundingClientRect();
-                return r.width > 0 && r.height > 0;
-            });
-
-            let contentBottom: number;
-            if (contentElements.length > 0) {
-                contentBottom = Math.max(
-                    ...contentElements.map((el) =>
-                        el.getBoundingClientRect().bottom
-                    ),
-                );
-            } else {
-                const controls = panelEl.querySelector<HTMLElement>(
-                    ".workspace-root-controls",
-                );
-                contentBottom = controls
-                    ? controls.getBoundingClientRect().bottom
-                    : panelEl.getBoundingClientRect().top + 50;
-            }
-
-            const x = Math.round(panelRect.left + panelRect.width / 2);
-            const gap = boundaryTop - contentBottom;
-            const y = Math.round(
-                gap > 20
-                    ? contentBottom + gap / 2
-                    : (gap > 5
-                        ? contentBottom + gap * 0.7
-                        : contentBottom + 20),
-            );
-            return { x, y, contentBottom, boundaryTop };
-        });
-    }
-
-    async function rightClickBlankSurface(targetPage: Page = page) {
-        const { x, y } = await getSurfaceBlankCoordinate(targetPage);
-        await targetPage.mouse.click(x, y, { button: "right" });
-    }
-
-    async function openSurfaceMenu(targetPage: Page = page) {
-        await rightClickBlankSurface(targetPage);
-        const menu = targetPage.locator('[data-slot="context-menu-content"]');
-        await menu.waitFor({ timeout: 5000 });
-        await targetPage.waitForFunction(() =>
-            document.querySelector(
-                '[data-slot="context-menu-content"]',
-            )?.contains(document.activeElement)
+    const homeGrid = page.locator(".launcher-grid--home");
+    const homeTiles = page.locator(
+        ".launcher-grid--home > .launcher-tile[data-tile-id]",
+    );
+    const popup = page.locator(".launcher-popup");
+    const menu = page.locator('[data-slot="context-menu-content"]');
+    const readTileIds = (scope: Locator) =>
+        scope.evaluateAll((elements) =>
+            elements.map((element) => element.getAttribute("data-tile-id"))
         );
-        return menu;
+    const homeApp = (name: string) =>
+        homeGrid.locator(".launcher-tile", {
+            has: page.locator(".webapp-name", { hasText: name }),
+        });
+    const homeFolder = (name: string) =>
+        homeGrid.locator(".launcher-folder-item", {
+            has: page.locator(".launcher-folder-name", { hasText: name }),
+        });
+
+    /** A point on the blank part of an app grid surface (not on any tile). */
+    async function blankPoint(scope: string, targetPage: Page = page) {
+        await settlePresentation(targetPage);
+        return await targetPage.evaluate((selector) => {
+            const wrap = document.querySelector<HTMLElement>(
+                `${selector} .launcher-surface-wrap`,
+            );
+            if (!wrap) throw new Error(`No library surface in ${selector}`);
+            const rect = wrap.getBoundingClientRect();
+            // Touch hit-testing is fuzzy: take the blank point farthest from
+            // every tile, not merely the first one.
+            const tiles = [...wrap.querySelectorAll(".launcher-tile")].map((
+                el,
+            ) => el.getBoundingClientRect());
+            let best: { x: number; y: number; distance: number } | null = null;
+            for (let y = rect.bottom - 3; y > rect.top; y -= 4) {
+                for (let x = rect.left + 3; x < rect.right; x += 4) {
+                    const hit = document.elementFromPoint(x, y);
+                    if (
+                        !hit || !wrap.contains(hit) ||
+                        hit.closest(
+                            ".launcher-tile, .launcher-app, .launcher-folder-item, .home-managing-bar, button",
+                        )
+                    ) continue;
+                    const distance = Math.min(
+                        ...tiles.map((tile) =>
+                            Math.hypot(
+                                Math.max(tile.left - x, 0, x - tile.right),
+                                Math.max(tile.top - y, 0, y - tile.bottom),
+                            )
+                        ),
+                    );
+                    if (!best || distance > best.distance) {
+                        best = { x, y, distance };
+                    }
+                }
+            }
+            if (!best) {
+                throw new Error(`No blank point on the surface in ${selector}`);
+            }
+            return { x: best.x, y: best.y };
+        }, scope);
     }
 
-    async function enterArrangingViaSurface(targetPage: Page = page) {
-        const menu = await openSurfaceMenu(targetPage);
-        const item = menu.locator('[data-slot="context-menu-item"]', {
-            hasText: "整理布局",
-        });
-        await item.click();
-        await menu.waitFor({ state: "detached" });
+    async function openBlankMenu(
+        scope = ".launcher-library",
+        targetPage: Page = page,
+    ) {
+        const { x, y } = await blankPoint(scope, targetPage);
+        await targetPage.mouse.click(x, y, { button: "right" });
+        const content = targetPage.locator(
+            '[data-slot="context-menu-content"]',
+        );
+        await content.waitFor();
+        await targetPage.waitForFunction(() =>
+            document.querySelector('[data-slot="context-menu-content"]')
+                ?.contains(document.activeElement)
+        );
+        return content;
     }
 
-    async function exitArrangingViaSurface(targetPage: Page = page) {
-        const menu = await openSurfaceMenu(targetPage);
-        const item = menu.locator('[data-slot="context-menu-item"]', {
-            hasText: "完成整理",
-        });
-        await item.click();
-        await menu.waitFor({ state: "detached" });
+    async function blankMenuItem(name: string, scope = ".launcher-library") {
+        const content = await openBlankMenu(scope);
+        await content.getByRole("menuitem", { name, exact: true }).click();
+        await content.waitFor({ state: "detached" });
+    }
+
+    const enterArranging = () => blankMenuItem("整理布局");
+    const exitArranging = () => blankMenuItem("完成整理");
+
+    async function dragTo(
+        source: Locator,
+        target: Locator,
+        waitFor: () => Promise<unknown>,
+    ) {
+        const a = (await source.boundingBox())!;
+        const b = (await target.boundingBox())!;
+        await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(
+            a.x + a.width / 2 + 15,
+            a.y + a.height / 2 + 15,
+        );
+        await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+        await waitFor();
+    }
+
+    async function serverRoot() {
+        const apps = (await apiRequest("/api/webapps")).data as ServerApp[];
+        const groups = (await apiRequest("/api/webapp-groups"))
+            .data as Array<{ id: string; sortOrder: number }>;
+        return [
+            ...apps.filter((item) => !item.groupId).map((item) => ({
+                id: item.id,
+                rank: item.sortOrder,
+            })),
+            ...groups.map((item) => ({
+                id: "folder:" + item.id,
+                rank: item.sortOrder,
+            })),
+        ].sort((a, b) => a.rank - b.rank);
     }
 
     await t.step(
-        "0. Empty Launcher Root: blank surface menu available when zero apps or folders",
+        "0. Empty library: only the add cell; blank menu still offers folder and arrange",
         async () => {
-            await page.setViewportSize({ width: 1280, height: 800 });
-            await page.locator('.zen-edge-btn[data-workspace="apps"]').click();
-
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-            await panel.waitFor();
-            await panel.locator(".launcher-empty, .empty-state").waitFor();
+            assertEquals(await homeTiles.count(), 0);
             assertEquals(
-                await panel.locator(".launcher-empty, .empty-state").first()
-                    .isVisible(),
-                true,
-            );
-
-            // Blank surface menu is accessible in empty root state
-            const emptyMenu = await openSurfaceMenu(page);
-            assertEquals(
-                await emptyMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
+                await homeGrid.locator('[data-library-cell="add"]').count(),
                 1,
             );
-            assertEquals(
-                await emptyMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                1,
-            );
+            const content = await openBlankMenu();
+            for (const name of ["新建文件夹", "整理布局"]) {
+                assertEquals(
+                    await content.getByRole("menuitem", { name, exact: true })
+                        .count(),
+                    1,
+                    name,
+                );
+            }
             await page.keyboard.press("Escape");
-            await emptyMenu.waitFor({ state: "detached" });
+            await content.waitFor({ state: "detached" });
         },
     );
 
-    // Seed test data: 2 groups, 3 apps (1 in group, 2 loose, 1 pinned)
+    // Seed test data: 2 folders, 3 apps (1 in folder, 2 loose)
     const { data: group1 } = await apiRequest("/api/webapp-groups", "POST", {
         name: "Dev Tools",
         sortOrder: 0,
@@ -253,656 +284,307 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         sortOrder: 1,
         folderSize: "small",
     });
-
     const { data: appGitHub } = await apiRequest("/api/webapps", "POST", {
         name: "GitHub",
         url: "https://github.com",
         sortOrder: 0,
-        isPinned: true,
-        pinnedSortOrder: 0,
     });
     const { data: appLinear } = await apiRequest("/api/webapps", "POST", {
         name: "Linear",
         url: "https://linear.app",
         sortOrder: 1,
-        isPinned: false,
     });
-    const { data: _appGitLab } = await apiRequest("/api/webapps", "POST", {
+    const { data: appGitLab } = await apiRequest("/api/webapps", "POST", {
         name: "GitLab",
         url: "https://gitlab.com",
         groupId: group1.id,
         sortOrder: 0,
-        isPinned: false,
     });
-
-    await page.reload();
-    await page.locator("main").waitFor();
+    await showHome();
 
     await t.step(
-        "1. Unified Launcher Root: defaults directly to complete launcher without legacy IA",
+        "1. Home shows loose apps and folders; folder members stay inside their folder",
         async () => {
-            await page.setViewportSize({ width: 1280, height: 800 });
-
-            // Open Apps Workspace
-            await page.locator('.zen-edge-btn[data-workspace="apps"]').click();
-
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-            await panel.waitFor();
             assertEquals(
-                await panel.locator(
-                    ".workspace-title",
-                ).textContent(),
-                "应用",
-            );
-
-            assertEquals(
-                await panel.getByText("管理文件夹", { exact: true }).count(),
+                await page.locator('[data-workspace="apps"]').count(),
                 0,
             );
-            assertEquals(
-                await panel.getByRole("button", { name: "全部网站" }).count(),
-                0,
-            );
-            assertEquals(
-                await panel.getByRole("button", { name: "未分组" }).count(),
-                0,
-            );
-
-            // Single primary contract in normal state:
-            // the header carries one icon-only "添加应用" button.
-            const addAppBtn = panel.locator(
-                ".workspace-header .workspace-primary",
-            );
-            assertEquals(await addAppBtn.isVisible(), true);
-            assertEquals(
-                await addAppBtn.getAttribute("aria-label"),
-                "添加应用",
-            );
-
-            // Top secondary toolbar buttons are removed per Issue #61
-            assertEquals(
-                await panel.locator(
-                    '.apps-workspace-secondary-bar button[aria-label="新建文件夹"]',
-                ).count(),
-                0,
-            );
-            assertEquals(
-                await panel.locator(
-                    '.apps-workspace-secondary-bar button[aria-label="整理网站排序与布局"]',
-                ).count(),
-                0,
-            );
-
-            // Workspace blank surface menu is accessible below sparse grid rows
-            const surfaceMenu = await openSurfaceMenu(page);
-            assertEquals(
-                await surfaceMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                1,
-            );
-            assertEquals(
-                await surfaceMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                1,
-            );
-            await page.keyboard.press("Escape");
-            await surfaceMenu.waitFor({ state: "detached" });
-            // Tiles on root: loose apps (GitHub, Linear) and folders (Dev Tools, Empty Folder)
-            // Grouped app (GitLab) is inside Dev Tools, NOT duplicated on root!
-            const rootAppNames = await panel.locator(
+            const rootAppNames = await homeGrid.locator(
                 ".launcher-tile .webapp-name",
-            )
-                .allTextContents();
+            ).allTextContents();
             assertEquals(rootAppNames.includes("GitHub"), true);
             assertEquals(rootAppNames.includes("Linear"), true);
             assertEquals(rootAppNames.includes("GitLab"), false);
-
-            const folderNames = await panel.locator(
-                ".launcher-tile .launcher-folder-name",
+            const folderNames = await homeGrid.locator(
+                ".launcher-folder-name",
             ).allTextContents();
             assertEquals(folderNames.includes("Dev Tools"), true);
             assertEquals(folderNames.includes("Empty Folder"), true);
+            assertEquals(
+                await homeGrid.locator('[data-library-cell="add"]').count(),
+                1,
+            );
+            assertEquals(
+                await homeGrid.locator('[data-library-cell="more"]').count(),
+                0,
+            );
         },
     );
 
     await t.step(
-        "2. Folder Inline Browse & Back scroll-focus restoration",
+        "2. Folder opens in a popup over home; Escape and close button restore focus to the folder",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-
-            // Click Dev Tools folder to open inline view
-            const folderTile = panel.locator(
-                '.launcher-folder-item[data-folder-id="' + group1.id + '"]',
-            );
-            await folderTile.click();
-
-            // Renders inline folder view (role="region", not a route change!)
-            const inlineView = panel.locator(
-                '.launcher-folder-inline[role="region"]',
-            );
-            await inlineView.waitFor();
+            const folder = homeFolder("Dev Tools");
+            await folder.click();
+            await popup.waitFor();
+            assertEquals(page.url(), origin + "/");
+            const dialog = page.getByRole("dialog", {
+                name: "Dev Tools",
+                exact: true,
+            });
+            await dialog.waitFor();
             assertEquals(
-                await panel.locator(
-                    ".workspace-title",
-                ).textContent(),
-                "应用",
-            ); // Route stays apps/root!
-            assertEquals(
-                await panel.getByRole("heading", {
-                    name: "Dev Tools",
-                    exact: true,
-                }).textContent(),
-                "Dev Tools",
-            );
-
-            // Focus enters folder region on open: Back button has focus
-            const backBtn = panel.locator(
-                'button[aria-label="返回应用列表"]',
-            );
-            await backBtn.waitFor();
-            assertEquals(
-                await backBtn.evaluate((el) => document.activeElement === el),
-                true,
-            );
-
-            // Inside folder: GitLab is visible and directly accessible
-            assertEquals(
-                await inlineView.locator(".webapp-name").textContent(),
-                "GitLab",
-            );
-
-            // Blank surface menu is accessible inside inline folder view below apps
-            const folderSurfaceMenu = await openSurfaceMenu(page);
-            assertEquals(
-                await folderSurfaceMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                1,
+                await popup.locator(".launcher-popup-count").textContent(),
+                "1 个应用",
             );
             assertEquals(
-                await folderSurfaceMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                1,
+                await popup.locator(".webapp-name").allTextContents(),
+                ["GitLab"],
             );
             await page.keyboard.press("Escape");
-            await folderSurfaceMenu.waitFor({ state: "detached" });
-            // Click Back -> returns to Launcher root, restores focus to Dev Tools folder tile
-            await backBtn.click();
-            await inlineView.waitFor({ state: "detached" });
-
-            // Folder tile receives focus back
+            await popup.waitFor({ state: "detached" });
             await page.waitForFunction(
-                (id) => {
-                    const el = document.querySelector(
-                        `[data-folder-id="${id}"], [data-tile-id="folder:${id}"]`,
-                    );
-                    return Boolean(
-                        el &&
-                            (el.contains(document.activeElement) ||
-                                el === document.activeElement),
-                    );
-                },
+                (id) =>
+                    document.querySelector(`[data-folder-id="${id}"]`)
+                        ?.contains(document.activeElement) === true,
                 group1.id,
             );
-            const isFolderFocused = await folderTile.evaluate((el) =>
-                el.contains(document.activeElement) ||
-                el === document.activeElement
+
+            await folder.click();
+            await popup.waitFor();
+            await popup.getByRole("button", { name: "关闭", exact: true })
+                .click();
+            await popup.waitFor({ state: "detached" });
+            await page.waitForFunction(
+                (id) =>
+                    document.querySelector(`[data-folder-id="${id}"]`)
+                        ?.contains(document.activeElement) === true,
+                group1.id,
             );
-            assertEquals(isFolderFocused, true);
         },
     );
 
     await t.step(
-        "3. Blank space context menu & Keyboard / Touch folder creation",
+        "2b. Opening a folder popup moves keyboard focus into it",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
+            await homeFolder("Dev Tools").click();
+            try {
+                await page.waitForFunction(() =>
+                    document.querySelector(".launcher-popup")
+                        ?.contains(document.activeElement) === true
+                );
+            } finally {
+                await page.keyboard.press("Escape");
+                await popup.waitFor({ state: "detached" });
+            }
+        },
+    );
 
-            // Right click on empty launcher surface below last grid row to open context menu
-            const contextMenu = await openSurfaceMenu(page);
-            const newFolderItem = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "新建文件夹",
-                },
-            );
-            await newFolderItem.click();
+    await t.step(
+        "3. Blank menu creates folders; 整理 mode disables 新建文件夹 and hides the add cell",
+        async () => {
+            const createFolder = async (name: string) => {
+                await blankMenuItem("新建文件夹");
+                const dialog = page.getByRole("dialog", {
+                    name: "新建文件夹",
+                    exact: true,
+                });
+                await dialog.waitFor();
+                const input = dialog.locator("#folder-name-input");
+                const submit = dialog.locator('button[type="submit"]');
+                await input.fill("   ");
+                assertEquals(await submit.isDisabled(), true);
+                await input.fill(name);
+                await submit.click();
+                await dialog.waitFor({ state: "detached" });
+                await homeFolder(name).waitFor();
+            };
+            await createFolder("Social Media");
+            await createFolder("Productivity");
 
-            // Lightweight FolderNameDialog opens
-            const dialog = page.locator('[data-slot="dialog-content"]');
-            await dialog.waitFor();
+            await enterArranging();
+            await page.locator(".home-managing-bar").waitFor();
+            const arranging = await openBlankMenu();
             assertEquals(
-                await dialog.locator('[data-slot="dialog-title"]')
-                    .textContent(),
-                "新建文件夹",
-            );
-
-            const input = dialog.locator("#folder-name-input");
-            const submitBtn = dialog.locator('button[type="submit"]');
-
-            // Empty name cannot be submitted
-            await input.fill("   ");
-            assertEquals(await submitBtn.isDisabled(), true);
-
-            // Valid name submits and folder appears directly in launcher
-            await input.fill("Social Media");
-            await submitBtn.click();
-            await dialog.waitFor({ state: "detached" });
-
-            // Folder appears directly in launcher
-            await panel.locator(
-                '.launcher-folder-name:has-text("Social Media")',
-            )
-                .waitFor();
-
-            // Create second folder "Productivity" also via surface context menu below last grid row
-            const secondMenu = await openSurfaceMenu(page);
-            await secondMenu.locator(
-                '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-            ).click();
-            await dialog.waitFor();
-            await input.fill("Productivity");
-            await submitBtn.click();
-            await dialog.waitFor({ state: "detached" });
-            await panel.locator(
-                '.launcher-folder-name:has-text("Productivity")',
-            )
-                .waitFor();
-
-            // Verify arranging menu behavior: "完成整理" is shown and "新建文件夹" is disabled
-            await enterArrangingViaSurface(page);
-            const arrangingMenu = await openSurfaceMenu(page);
-            assertEquals(
-                await arrangingMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("完成整理")',
-                ).count(),
+                await arranging.getByRole("menuitem", {
+                    name: "完成整理",
+                    exact: true,
+                }).count(),
                 1,
             );
-            const disabledCreateFolder = arrangingMenu.locator(
-                '[data-slot="context-menu-item"]:has-text("新建文件夹")',
+            assertEquals(
+                await arranging.getByRole("menuitem", {
+                    name: "新建文件夹",
+                    exact: true,
+                }).isDisabled(),
+                true,
             );
-            if (await disabledCreateFolder.count() > 0) {
-                const disabled =
-                    await disabledCreateFolder.getAttribute("aria-disabled") ===
-                        "true" ||
-                    await disabledCreateFolder.getAttribute("data-disabled") !==
-                        null ||
-                    await disabledCreateFolder.isDisabled();
-                assertEquals(disabled, true);
-            }
             await page.keyboard.press("Escape");
-            await arrangingMenu.waitFor({ state: "detached" });
-            await exitArrangingViaSurface(page);
+            await arranging.waitFor({ state: "detached" });
+            await exitArranging();
+            await page.locator(".home-managing-bar").waitFor({
+                state: "detached",
+            });
         },
     );
 
     await t.step(
-        "4. Folder context actions: resize, rename, delete with confirmation and apps preserved",
+        "3b. 整理 mode hides the add cell; it returns after finishing",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-
-            const folderTile = panel.locator(
-                '.launcher-folder-item:has(.launcher-folder-name:has-text("Productivity"))',
-            );
-            await folderTile.click({ button: "right" });
-
-            const contextMenu = page.locator(
-                '[data-slot="context-menu-content"]',
-            );
-            await contextMenu.waitFor();
-
-            // Folder context menu isolation: does NOT contain workspace-level actions
             assertEquals(
-                await contextMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                0,
+                await homeGrid.locator('[data-library-cell="add"]').count(),
+                1,
             );
-            assertEquals(
-                await contextMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("完成整理")',
-                ).count(),
-                0,
-            );
-            assertEquals(
-                await contextMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                0,
-            );
-
-            // 4a. Resize to large
-            const resizeItem = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "显示为大文件夹",
-                },
-            );
-            await resizeItem.click();
-            await page.waitForFunction(() => {
-                const el = document.querySelector(
-                    ".launcher-folder-item--large",
+            await enterArranging();
+            try {
+                await page.locator(".home-managing-bar").waitFor();
+                assertEquals(
+                    await homeGrid.locator('[data-library-cell="add"]')
+                        .count(),
+                    0,
                 );
-                return el !== null;
+            } finally {
+                await exitArranging();
+            }
+            await homeGrid.locator('[data-library-cell="add"]').waitFor();
+        },
+    );
+
+    await t.step(
+        "4. Folder context actions: resize, rename, delete with confirmation",
+        async () => {
+            const folder = homeFolder("Productivity");
+            await folder.click({ button: "right" });
+            await menu.waitFor();
+            // Folder menu carries folder actions only.
+            for (const name of ["整理布局", "完成整理", "新建文件夹"]) {
+                assertEquals(
+                    await menu.getByRole("menuitem", { name, exact: true })
+                        .count(),
+                    0,
+                    name,
+                );
+            }
+            await menu.getByRole("menuitem", {
+                name: "显示为大文件夹",
+                exact: true,
+            }).click();
+            await menu.waitFor({ state: "detached" });
+            await page.locator(".launcher-folder-item--large").waitFor();
+
+            await folder.click({ button: "right" });
+            await menu.getByRole("menuitem", { name: "重命名", exact: true })
+                .click();
+            const dialog = page.getByRole("dialog", {
+                name: "重命名文件夹",
+                exact: true,
             });
-
-            // 4b. Rename folder inline
-            await folderTile.click({ button: "right" });
-            await contextMenu.waitFor();
-            const renameItem = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "重命名",
-                },
-            );
-            await renameItem.click();
-
-            const dialog = page.locator('[data-slot="dialog-content"]');
             await dialog.waitFor();
-            assertEquals(
-                await dialog.locator('[data-slot="dialog-title"]')
-                    .textContent(),
-                "重命名文件夹",
-            );
-
             const input = dialog.locator("#folder-name-input");
             assertEquals(await input.inputValue(), "Productivity");
             await input.fill("Office Suite");
             await dialog.locator('button[type="submit"]').click();
             await dialog.waitFor({ state: "detached" });
+            await homeFolder("Office Suite").waitFor();
 
-            await panel.locator(
-                '.launcher-folder-name:has-text("Office Suite")',
-            )
-                .waitFor();
-
-            // 4c. Delete folder with destructive confirmation
-            const updatedFolder = panel.locator(
-                '.launcher-folder-item:has(.launcher-folder-name:has-text("Office Suite"))',
-            );
-            await updatedFolder.click({ button: "right" });
-            await contextMenu.waitFor();
-
-            const deleteItem = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "删除文件夹",
-                },
-            );
-            await deleteItem.click();
-
+            await homeFolder("Office Suite").click({ button: "right" });
+            await menu.getByRole("menuitem", {
+                name: "删除文件夹",
+                exact: true,
+            }).click();
             const alert = page.locator('[data-slot="alert-dialog-content"]');
             await alert.waitFor();
-
-            // Confirm delete
             await alert.locator('button[data-slot="alert-dialog-action"]')
                 .click();
             await alert.waitFor({ state: "detached" });
-
-            // Folder deleted from root
-            assertEquals(
-                await panel.locator(
-                    '.launcher-folder-name:has-text("Office Suite")',
-                ).count(),
-                0,
-            );
+            await homeFolder("Office Suite").waitFor({ state: "detached" });
         },
     );
 
     await t.step(
-        "5. Search deduplication, Folder result click & arrange mode search unbinding",
+        "5. Search suggestions list apps once and open a matching folder on home",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-            const searchInput = panel.locator(
-                'input[data-workspace-search=""]',
-            );
+            const search = page.getByPlaceholder("搜索或输入网址");
+            await search.fill("git");
+            const items = page.locator(".suggestion-item .suggestion-text");
+            await items.filter({ hasText: "GitLab" }).first().waitFor();
+            const texts = await items.allTextContents();
+            assertEquals(texts.filter((text) => text === "GitHub").length, 1);
+            assertEquals(texts.filter((text) => text === "GitLab").length, 1);
 
-            // Search for "git" (matches GitHub loose app, GitLab in Dev Tools folder, and folder name Dev Tools)
-            await searchInput.fill("git");
+            await search.fill("Dev To");
+            await page.locator(".suggestion-item", {
+                hasText: "文件夹",
+            }).filter({ hasText: "Dev Tools" }).click();
+            await popup.waitFor();
+            assertEquals(
+                await popup.locator(".launcher-popup-title").textContent(),
+                "Dev Tools",
+            );
+            await page.keyboard.press("Escape");
+            await popup.waitFor({ state: "detached" });
+            await search.fill("");
+        },
+    );
 
-            // Matched count is shown
-            const searchSection = panel.getByRole("region", {
-                name: "搜索结果",
+    await t.step(
+        "6. App menu moves an app into a folder and back out",
+        async () => {
+            await homeApp("GitHub").locator(".launcher-app").click({
+                button: "right",
             });
-            await searchSection.waitFor();
-            const matchCount = searchSection.locator(
-                ".workspace-section-count",
-            );
-            await matchCount.waitFor();
-            assertEquals(await matchCount.isVisible(), true);
-
-            // GitLab (inside Dev Tools folder) directly appears in search results for fast access
-            const appResults = searchSection.locator(".apps-search-name");
-            const textContents = await appResults.allTextContents();
-            assertEquals(textContents.includes("GitHub"), true);
-            assertEquals(textContents.includes("GitLab"), true);
-
-            // Deduplication: each app appears at most once
-            const gitLabCount =
-                textContents.filter((t) => t === "GitLab").length;
-            assertEquals(gitLabCount, 1);
-
-            // Blank surface menu is accessible below search results above footer
-            const searchMenu = await openSurfaceMenu(page);
+            await menu.waitFor();
+            // App menu has no folder-creation entry.
             assertEquals(
-                await searchMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                1,
-            );
-            assertEquals(
-                await searchMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                1,
-            );
-            await page.keyboard.press("Escape");
-            await searchMenu.waitFor({ state: "detached" });
-
-            // Clear search
-            await panel.locator('button[aria-label="清除搜索"]').click();
-            assertEquals(await searchInput.inputValue(), "");
-
-            // Search with no results state
-            await searchInput.fill("nonexistentqueryxyz");
-            await panel.locator(".empty-state").waitFor();
-
-            // Blank surface menu is accessible in search no-results state
-            const noResultsMenu = await openSurfaceMenu(page);
-            assertEquals(
-                await noResultsMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                1,
-            );
-            assertEquals(
-                await noResultsMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                1,
-            );
-            await page.keyboard.press("Escape");
-            await noResultsMenu.waitFor({ state: "detached" });
-
-            // Type query and enter arrange mode via surface menu: clears query and unbinds search
-            await searchInput.fill("test");
-            await enterArrangingViaSurface(page);
-
-            // In arrange mode: query was cleared and input is disabled
-            assertEquals(await searchInput.inputValue(), "");
-            assertEquals(await searchInput.isDisabled(), true);
-
-            // In arrange mode: the header primary becomes "完成整理"; "添加应用" is gone
-            assertEquals(
-                await panel.locator(
-                    '.workspace-header [aria-label="添加应用"]',
-                ).count(),
+                await menu.getByRole("menuitem", {
+                    name: "新建文件夹",
+                    exact: true,
+                }).count(),
                 0,
             );
+            await menu.getByRole("menuitem", {
+                name: "移至文件夹 Dev Tools",
+                exact: true,
+            }).click();
+            await homeApp("GitHub").waitFor({ state: "detached" });
 
-            // In arrange mode: surface menu shows "完成整理" and disabled "新建文件夹"
-            const arrangeModeMenu = await openSurfaceMenu(page);
+            await homeFolder("Dev Tools").click();
+            await popup.waitFor();
             assertEquals(
-                await arrangeModeMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("完成整理")',
-                ).count(),
-                1,
+                (await popup.locator(".webapp-name").allTextContents())
+                    .includes("GitHub"),
+                true,
             );
-            const disabledNewFolder = arrangeModeMenu.locator(
-                '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-            );
-            if (await disabledNewFolder.count() > 0) {
-                const disabled =
-                    await disabledNewFolder.getAttribute("aria-disabled") ===
-                        "true" ||
-                    await disabledNewFolder.getAttribute("data-disabled") !==
-                        null ||
-                    await disabledNewFolder.isDisabled();
-                assertEquals(disabled, true);
-            }
+            await popup.locator(".launcher-app", {
+                has: page.locator(".webapp-name", { hasText: "GitHub" }),
+            }).click({ button: "right" });
+            await menu.getByRole("menuitem", {
+                name: "移出文件夹",
+                exact: true,
+            }).click();
+            await popup.locator(".launcher-app", {
+                has: page.locator(".webapp-name", { hasText: "GitHub" }),
+            }).waitFor({ state: "detached" });
             await page.keyboard.press("Escape");
-            await arrangeModeMenu.waitFor({ state: "detached" });
-
-            // Exit arrange mode via surface menu: search is re-enabled
-            await exitArrangingViaSurface(page);
-            assertEquals(await searchInput.isDisabled(), false);
+            await popup.waitFor({ state: "detached" });
+            await homeApp("GitHub").waitFor();
         },
     );
 
     await t.step(
-        "6. App Context Menu ownership fallback (move in & out of folder)",
+        "7. App -> folder pointer drop: drop-target feedback and failure rollback",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-
-            // Move GitHub into "Dev Tools" via context menu
-            const gitHubTile = panel.locator(
-                '.launcher-tile:has(.webapp-name:has-text("GitHub"))',
-            );
-            await gitHubTile.click({ button: "right" });
-
-            const contextMenu = page.locator(
-                '[data-slot="context-menu-content"]',
-            );
-            await contextMenu.waitFor();
-
-            // App context menu isolation: does NOT contain workspace-level actions
-            assertEquals(
-                await contextMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                0,
-            );
-            assertEquals(
-                await contextMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("完成整理")',
-                ).count(),
-                0,
-            );
-            assertEquals(
-                await contextMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                0,
-            );
-            const moveToDevTools = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "移至文件夹 Dev Tools",
-                },
-            );
-            await moveToDevTools.click();
-
-            // GitHub disappears from root
-            await page.waitForFunction(() => {
-                const p = document.querySelector(
-                    "aside.workspace-panel",
-                );
-                if (!p) return false;
-                const names = Array.from(
-                    p.querySelectorAll(".launcher-tile .webapp-name"),
-                ).map((e) => e.textContent);
-                return !names.includes("GitHub");
-            });
-
-            // Open Dev Tools -> GitHub is now inside Dev Tools
-            const devToolsTile = panel.locator(
-                '.launcher-folder-item[data-folder-id="' + group1.id + '"]',
-            );
-            await devToolsTile.click();
-
-            const inlineView = panel.locator(
-                '.launcher-folder-inline[role="region"]',
-            );
-            await inlineView.waitFor();
-            const folderAppNames = await inlineView.locator(".webapp-name")
-                .allTextContents();
-            assertEquals(folderAppNames.includes("GitHub"), true);
-
-            // Move GitHub back out via context menu
-            const gitHubInFolder = inlineView.locator(
-                '.launcher-app:has(.webapp-name:has-text("GitHub"))',
-            );
-            await gitHubInFolder.click({ button: "right" });
-            const folderContextMenu = page.locator(
-                '[data-slot="context-menu-content"]',
-            );
-            await folderContextMenu.waitFor();
-            const moveOutItem = folderContextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "移出文件夹",
-                },
-            );
-            await moveOutItem.click();
-
-            // Close folder view
-            await panel.locator('button[aria-label="返回应用列表"]')
-                .click();
-            await inlineView.waitFor({ state: "detached" });
-
-            // GitHub is back on Launcher root
-            await panel.locator(
-                '.launcher-tile .webapp-name:has-text("GitHub")',
-            ).waitFor();
-        },
-    );
-
-    await t.step(
-        "7. App -> Folder pointer DnD: drop-target feedback and move failure rollback",
-        async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-
-            // Enter arrange mode via surface menu
-            await enterArrangingViaSurface(page);
-
-            const linearTile = panel.locator(
-                '.launcher-tile:has(.webapp-name:has-text("Linear"))',
-            );
-            const devToolsTile = panel.locator(
-                '.launcher-tile[data-folder-id="' + group1.id + '"]',
-            );
-
-            const linearBox = await linearTile.boundingBox();
-            const devToolsBox = await devToolsTile.boundingBox();
-            assertEquals(Boolean(linearBox && devToolsBox), true);
-
-            // Intercept PATCH /api/webapps/* to simulate API failure
+            await enterArranging();
             await page.route("**/api/webapps/*", (route) => {
                 if (route.request().method() === "PATCH") {
                     void route.fulfill({
@@ -917,225 +599,104 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     void route.continue();
                 }
             });
-
-            // Real pointer drag beyond threshold (8px) over Dev Tools folder
-            await page.mouse.move(
-                linearBox!.x + linearBox!.width / 2,
-                linearBox!.y + linearBox!.height / 2,
+            await dragTo(
+                homeApp("Linear"),
+                homeGrid.locator(`[data-folder-id="${group1.id}"]`).first(),
+                async () => {
+                    await homeGrid.locator(
+                        ".launcher-tile.is-folder-drop-target",
+                    )
+                        .waitFor();
+                    await page.locator(".launcher-folder-drop-badge")
+                        .first().waitFor();
+                },
             );
-            await page.mouse.down();
-            await page.mouse.move(
-                linearBox!.x + linearBox!.width / 2 + 15,
-                linearBox!.y + linearBox!.height / 2 + 15,
-            );
-            await page.mouse.move(
-                devToolsBox!.x + devToolsBox!.width / 2,
-                devToolsBox!.y + devToolsBox!.height / 2,
-            );
-
-            // Assert drop target feedback: outline class and visual badge
-            await page.waitForFunction(() => {
-                const el = document.querySelector(
-                    ".launcher-tile.is-folder-drop-target",
-                );
-                return el !== null;
-            });
-            assertEquals(
-                await panel.locator(".launcher-folder-drop-badge").isVisible(),
-                true,
-            );
-
-            // Drop: pointerup
             await page.mouse.up();
 
-            // Move failed -> error banner shown
-            const errorBanner = panel.getByRole("alert");
-            await errorBanner.waitFor();
+            const banner = page.getByRole("alert").filter({
+                hasText: "排列保存失败",
+            });
+            await banner.waitFor();
             assertStringIncludes(
-                await errorBanner.textContent() ?? "",
+                await banner.textContent() ?? "",
                 "Simulated DnD move network failure",
             );
-
-            // Rollback: Linear returns to root!
-            await page.waitForFunction(() => {
-                const p = document.querySelector(
-                    "aside.workspace-panel",
-                );
-                if (!p) return false;
-                const names = Array.from(
-                    p.querySelectorAll(".launcher-tile .webapp-name"),
-                ).map((e) => e.textContent);
-                return names.includes("Linear");
-            });
-
-            // Clean up route intercept
+            // Rollback: Linear is back on root and the server never moved it.
+            await homeApp("Linear").waitFor();
             await page.unroute("**/api/webapps/*");
-            await errorBanner.locator("button").click();
-            await errorBanner.waitFor({ state: "detached" });
+            await banner.getByRole("button", { name: "关闭", exact: true })
+                .click();
+            await banner.waitFor({ state: "detached" });
+            await exitArranging();
 
-            // Exit arrange mode via surface menu
-            await exitArrangingViaSurface(page);
-
-            // Verify server state on reload: Linear is still loose, not in Dev Tools
-            await page.reload();
-            await page.locator("main").waitFor();
-            await page.locator(
-                '.zen-edge-btn[data-workspace="apps"]',
-            ).click();
-            await panel.waitFor();
-
-            const { data: serverApps } = await apiRequest("/api/webapps");
-            const serverLinear =
-                (serverApps as Array<{ id: string; groupId: string | null }>)
-                    .find(
-                        (a) => a.id === appLinear.id,
-                    );
-            assertEquals(serverLinear?.groupId, null);
+            await showHome();
+            const serverApps = (await apiRequest("/api/webapps"))
+                .data as ServerApp[];
+            assertEquals(
+                serverApps.find((item) => item.id === appLinear.id)?.groupId,
+                null,
+            );
         },
     );
 
     await t.step(
-        "8. App -> Folder pointer DnD: successful move and server reload consistency",
+        "8. App -> folder pointer drop: success persists across reload",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
+            await enterArranging();
+            await dragTo(
+                homeApp("Linear"),
+                homeGrid.locator(`[data-folder-id="${group1.id}"]`).first(),
+                () =>
+                    homeGrid.locator(".launcher-tile.is-folder-drop-target")
+                        .waitFor(),
             );
-
-            // Enter arrange mode via surface menu
-            await enterArrangingViaSurface(page);
-
-            const linearTile = panel.locator(
-                '.launcher-tile:has(.webapp-name:has-text("Linear"))',
-            );
-            const devToolsTile = panel.locator(
-                '.launcher-tile[data-folder-id="' + group1.id + '"]',
-            );
-
-            const linearBox = await linearTile.boundingBox();
-            const devToolsBox = await devToolsTile.boundingBox();
-            assertEquals(Boolean(linearBox && devToolsBox), true);
-
-            // Drag Linear over Dev Tools
-            await page.mouse.move(
-                linearBox!.x + linearBox!.width / 2,
-                linearBox!.y + linearBox!.height / 2,
-            );
-            await page.mouse.down();
-            await page.mouse.move(
-                linearBox!.x + linearBox!.width / 2 + 15,
-                linearBox!.y + linearBox!.height / 2 + 15,
-            );
-            await page.mouse.move(
-                devToolsBox!.x + devToolsBox!.width / 2,
-                devToolsBox!.y + devToolsBox!.height / 2,
-            );
-
-            await page.waitForFunction(() => {
-                const el = document.querySelector(
-                    ".launcher-tile.is-folder-drop-target",
-                );
-                return el !== null;
-            });
-
             const saved = page.waitForResponse((response) =>
                 new URL(response.url()).pathname ===
                     "/api/webapps/" + appLinear.id &&
                 response.request().method() === "PATCH"
             );
-            // Drop
             await page.mouse.up();
             assertEquals((await saved).status(), 200);
+            await homeApp("Linear").waitFor({ state: "detached" });
+            await exitArranging();
 
-            // Linear disappears from root
-            await page.waitForFunction(() => {
-                const p = document.querySelector(
-                    "aside.workspace-panel",
-                );
-                if (!p) return false;
-                const names = Array.from(
-                    p.querySelectorAll(".launcher-tile .webapp-name"),
-                ).map((e) => e.textContent);
-                return !names.includes("Linear");
-            });
-
-            // Exit arrange mode via surface menu
-            await exitArrangingViaSurface(page);
-
-            // Verify server state on reload: Linear now has groupId === group1.id
-            await page.reload();
-            await page.locator("main").waitFor();
-            await page.locator(
-                '.zen-edge-btn[data-workspace="apps"]',
-            ).click();
-            await panel.waitFor();
-
-            const { data: serverApps } = await apiRequest("/api/webapps");
-            const serverLinear = (serverApps as Array<
-                { id: string; groupId: string | null; sortOrder: number }
-            >).find(
-                (a) => a.id === appLinear.id,
+            await showHome();
+            const serverApps = (await apiRequest("/api/webapps"))
+                .data as ServerApp[];
+            assertEquals(
+                serverApps.find((item) => item.id === appLinear.id)?.groupId,
+                group1.id,
             );
-            assertEquals(serverLinear?.groupId, group1.id);
         },
     );
 
     await t.step(
-        "9. Folder-internal App reorder, scope-local order, and pinnedOrder untouched",
+        "9. Folder popup reorder changes only member order",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
+            const before = (await apiRequest("/api/webapps"))
+                .data as ServerApp[];
+            await homeFolder("Dev Tools").click();
+            await popup.waitFor();
+            const members = popup.locator(".launcher-tile[data-tile-id]");
+            assertEquals(await readTileIds(members), [
+                appGitLab.id,
+                appLinear.id,
+            ]);
+            // The app menu toggles 整理 mode from inside the popup.
+            await popup.locator(".launcher-app", {
+                has: page.locator(".webapp-name", { hasText: "Linear" }),
+            }).click({ button: "right" });
+            await menu.getByRole("menuitem", {
+                name: "整理布局",
+                exact: true,
+            }).click();
+            await popup.locator(".launcher-tile.is-managing").first()
+                .waitFor();
 
-            const beforeReorder = (await apiRequest("/api/webapps"))
-                .data as Array<
-                    {
-                        id: string;
-                        groupId: string | null;
-                        sortOrder: number;
-                        pinnedSortOrder: number;
-                    }
-                >;
-            // Open Dev Tools folder (now contains GitLab and Linear)
-            const devToolsTile = panel.locator(
-                '.launcher-folder-item[data-folder-id="' + group1.id + '"]',
-            );
-            await devToolsTile.click();
-
-            const inlineView = panel.locator(
-                '.launcher-folder-inline[role="region"]',
-            );
-            await inlineView.waitFor();
-
-            // Enter arrange mode via surface menu
-            await enterArrangingViaSurface(page);
-
-            // Apps inside folder: Linear and GitLab
-            const linearInFolder = inlineView.locator(
-                '.launcher-app:has(.webapp-name:has-text("Linear"))',
-            );
-            const gitLabInFolder = inlineView.locator(
-                '.launcher-app:has(.webapp-name:has-text("GitLab"))',
-            );
-            await linearInFolder.waitFor();
-            await gitLabInFolder.waitFor();
-
-            const linearBox = await linearInFolder.boundingBox();
-            const gitLabBox = await gitLabInFolder.boundingBox();
-            assertEquals(Boolean(linearBox && gitLabBox), true);
-
-            // Drag Linear before GitLab inside folder
-            await page.mouse.move(
-                linearBox!.x + linearBox!.width / 2,
-                linearBox!.y + linearBox!.height / 2,
-            );
-            await page.mouse.down();
-            await page.mouse.move(
-                linearBox!.x + linearBox!.width / 2 - 15,
-                linearBox!.y + linearBox!.height / 2,
-            );
-            await page.mouse.move(
-                gitLabBox!.x + gitLabBox!.width / 2 - 5,
-                gitLabBox!.y + gitLabBox!.height / 2,
+            await dragTo(
+                members.nth(1),
+                members.nth(0),
+                () => members.nth(0).locator(".webapp-icon").waitFor(),
             );
             const saved = page.waitForResponse((response) =>
                 new URL(response.url()).pathname === "/api/webapps/reorder" &&
@@ -1143,183 +704,76 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             );
             await page.mouse.up();
             assertEquals((await saved).status(), 200);
+            assertEquals(await readTileIds(members), [
+                appLinear.id,
+                appGitLab.id,
+            ]);
 
-            // Exit arrange mode via surface menu
-            await exitArrangingViaSurface(page);
+            await popup.locator(".launcher-app").first().click({
+                button: "right",
+            });
+            await menu.getByRole("menuitem", {
+                name: "完成整理",
+                exact: true,
+            }).click();
+            await page.keyboard.press("Escape");
+            await popup.waitFor({ state: "detached" });
+            await page.locator(".home-managing-bar").waitFor({
+                state: "detached",
+            });
 
-            // Return to root
-            await panel.locator('button[aria-label="返回应用列表"]')
-                .click();
-            await inlineView.waitFor({ state: "detached" });
-
-            // Verify server state on reload:
-            // 1. Linear and GitLab inside folder reordered
-            // 2. Loose app GitHub sortOrder untouched
-            // 3. GitHub pinnedSortOrder untouched (still 0)
-            await page.reload();
-            await page.locator("main").waitFor();
-
-            const { data: serverApps } = await apiRequest("/api/webapps");
-            const appsList = serverApps as Array<{
-                id: string;
-                groupId: string | null;
-                sortOrder: number;
-                isPinned: boolean;
-                pinnedSortOrder: number | null;
-            }>;
+            await showHome();
+            const after = (await apiRequest("/api/webapps"))
+                .data as ServerApp[];
             assertEquals(
-                appsList.filter((item) => item.groupId === group1.id).sort((
+                after.filter((item) => item.groupId === group1.id).sort((
                     a,
                     b,
                 ) => a.sortOrder - b.sortOrder).map((item) => item.id),
-                [appLinear.id, _appGitLab.id],
+                [appLinear.id, appGitLab.id],
             );
-            const rootRanks = (items: typeof beforeReorder) =>
+            const rootRanks = (items: ServerApp[]) =>
                 items.filter((item) => item.groupId !== group1.id).map((
                     item,
-                ) => ({
-                    id: item.id,
-                    sortOrder: item.sortOrder,
-                    pinnedSortOrder: item.pinnedSortOrder,
-                })).sort((a, b) => a.id.localeCompare(b.id));
-            assertEquals(
-                rootRanks(appsList as typeof beforeReorder),
-                rootRanks(beforeReorder),
-            );
-
-            const gitHub = appsList.find((a) => a.id === appGitHub.id);
-            assertEquals(gitHub?.isPinned, true);
-            assertEquals(gitHub?.pinnedSortOrder, 0); // Pinned order untouched!
+                ) => ({ id: item.id, sortOrder: item.sortOrder })).sort((
+                    a,
+                    b,
+                ) => a.id.localeCompare(b.id));
+            assertEquals(rootRanks(after), rootRanks(before));
         },
     );
 
     await t.step(
-        "10. Mixed Root Reorder via KeyboardSensor and atomic PUT persistence",
+        "10. 整理 mode arrow keys move a tile in visual order and persist atomically",
         async () => {
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-            await page.locator(
-                '.zen-edge-btn[data-workspace="apps"]',
-            ).click();
-            await panel.waitFor();
-
-            // Enter arrange mode via surface menu
-            await enterArrangingViaSurface(page);
-            const readRoot = () =>
-                panel.locator(".launcher-grid > .launcher-tile").evaluateAll((
-                    elements,
-                ) => elements.map((element) =>
-                    element.getAttribute("data-tile-id")
-                ));
-            const before = await readRoot();
+            await enterArranging();
+            const before = await readTileIds(homeTiles);
             assertEquals(before.length >= 2, true);
             const expected = [before[1], before[0], ...before.slice(2)];
-            const firstButton = panel.locator(".launcher-tile button").first();
-            await firstButton.focus();
-            await page.keyboard.press("Space");
-            await panel.locator(".launcher-tile.is-dragging").waitFor();
-            await page.evaluate(() =>
-                new Promise<void>((resolve) =>
-                    requestAnimationFrame(() =>
-                        requestAnimationFrame(() => resolve())
-                    )
-                )
-            );
-            await page.keyboard.press("ArrowRight");
-            await panel.locator(`[data-tile-id="${before[1]}"].is-over`)
-                .waitFor();
+            await homeTiles.first().locator("button").first().focus();
             const persisted = page.waitForResponse((response) =>
                 new URL(response.url()).pathname === "/api/webapps/reorder" &&
                 response.request().method() === "PUT"
             );
-            await page.keyboard.press("Space");
+            await page.keyboard.press("ArrowRight");
             assertEquals((await persisted).status(), 200);
-            // Exit arrange mode via surface menu
-            await exitArrangingViaSurface(page);
-            assertEquals(await readRoot(), expected);
-            await page.reload();
-            await page.locator(
-                '.zen-edge-btn[data-workspace="apps"]',
-            ).click();
-            await panel.waitFor();
-            assertEquals(await readRoot(), expected);
-            const apps = (await apiRequest("/api/webapps")).data as Array<
-                {
-                    id: string;
-                    groupId: string | null;
-                    sortOrder: number;
-                    pinnedSortOrder: number;
-                }
-            >;
-            const groups = (await apiRequest("/api/webapp-groups"))
-                .data as Array<{ id: string; sortOrder: number }>;
-            const serverRoot = [
-                ...apps.filter((item) => !item.groupId).map((item) => ({
-                    id: item.id,
-                    rank: item.sortOrder,
-                })),
-                ...groups.map((item) => ({
-                    id: "folder:" + item.id,
-                    rank: item.sortOrder,
-                })),
-            ].sort((a, b) => a.rank - b.rank);
-            assertEquals(serverRoot.map((item) => item.id), expected);
+            assertEquals(await readTileIds(homeTiles), expected);
+            await exitArranging();
+
+            await showHome();
+            assertEquals(await readTileIds(homeTiles), expected);
+            const root = await serverRoot();
+            assertEquals(root.map((item) => item.id), expected);
             assertEquals(
-                serverRoot.map((item) => item.rank),
+                root.map((item) => item.rank),
                 expected.map((_, index) => index),
             );
-            assertEquals(
-                apps.find((item) => item.id === appGitHub.id)?.pinnedSortOrder,
-                0,
-            );
         },
     );
 
     await t.step(
-        "11. 375px mobile viewport & real theme system (dataset.theme reactive)",
+        "11. Folder across app and app across app preserve mixed order on reload",
         async () => {
-            // Mobile 375px
-            await page.setViewportSize({ width: 375, height: 667 });
-            // Below 768 the workspace renders as the shared mobile sheet
-            const panel = page.locator(".workspace-panel--mobile");
-            await panel.waitFor();
-
-            // Check no horizontal overflow
-            const scrollWidth = await panel.evaluate((el) => el.scrollWidth);
-            const clientWidth = await panel.evaluate((el) => el.clientWidth);
-            assertEquals(scrollWidth <= clientWidth + 2, true);
-
-            // System theme reactive integration: emulate dark color scheme
-            await page.emulateMedia({ colorScheme: "dark" });
-            await page.waitForFunction(
-                () => document.documentElement.dataset.theme === "dark",
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    document.documentElement.dataset.theme
-                ),
-                "dark",
-            );
-
-            // Emulate light color scheme
-            await page.emulateMedia({ colorScheme: "light" });
-            await page.waitForFunction(
-                () => document.documentElement.dataset.theme === "light",
-            );
-            assertEquals(
-                await page.evaluate(() =>
-                    document.documentElement.dataset.theme
-                ),
-                "light",
-            );
-        },
-    );
-
-    await t.step(
-        "12. Folder across App and App across App preserve mixed order on reload",
-        async () => {
-            await page.setViewportSize({ width: 1280, height: 800 });
             const added = await apiRequest("/api/webapps", "POST", {
                 name: "Second Loose",
                 url: "https://example.org/second-loose",
@@ -1327,8 +781,6 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
             });
             assertEquals(added.status, 200);
             const loose = added.data as { id: string };
-
-            // Add extra loose apps to establish a multi-row root layout
             for (let i = 1; i <= 3; i++) {
                 await apiRequest("/api/webapps", "POST", {
                     name: `Multi App ${i}`,
@@ -1336,72 +788,28 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     sortOrder: 1000 + i,
                 });
             }
-            await page.reload();
-            await page.locator(
-                '.zen-edge-btn[data-workspace="apps"]',
-            ).click();
-            const panel = page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            );
-
-            // Multi-row root: blank surface coordinate is below the lowest tile row and above footer
-            const multiRowPoint = await getSurfaceBlankCoordinate(page);
-            assertEquals(multiRowPoint.y > multiRowPoint.contentBottom, true);
-            assertEquals(multiRowPoint.y < multiRowPoint.boundaryTop, true);
-
-            // Workspace surface menu functions below multirow grid
-            const multiRowMenu = await openSurfaceMenu(page);
-            assertEquals(
-                await multiRowMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                ).count(),
-                1,
-            );
-            assertEquals(
-                await multiRowMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).count(),
-                1,
-            );
-            await page.keyboard.press("Escape");
-            await multiRowMenu.waitFor({ state: "detached" });
-            const readRoot = () =>
-                panel.locator(".launcher-grid > .launcher-tile").evaluateAll((
-                    elements,
-                ) => elements.map((element) =>
-                    element.getAttribute("data-tile-id")
-                ));
             for (const sourceId of ["folder:" + group1.id, loose.id]) {
-                await page.reload();
-                await page.locator(
-                    '.zen-edge-btn[data-workspace="apps"]',
-                ).click();
-                await panel.waitFor();
-                await enterArrangingViaSurface(page);
-                const before = await readRoot();
+                await showHome();
+                await enterArranging();
+                const before = await readTileIds(homeTiles);
                 const expected = [...before];
                 const from = before.indexOf(sourceId);
                 const to = before.indexOf(appGitHub.id);
                 assertEquals(from >= 0 && to >= 0, true);
                 expected.splice(to, 0, ...expected.splice(from, 1));
-                const source = panel.locator(
-                    '[data-tile-id="' + sourceId + '"]',
-                ).first();
-                const target = panel.locator(
-                    '[data-tile-id="' + appGitHub.id + '"]',
-                ).first();
-                const a = (await source.boundingBox())!;
-                const b = (await target.boundingBox())!;
-                await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
-                await page.mouse.down();
-                await page.mouse.move(
-                    a.x + a.width / 2 + 10,
-                    a.y + a.height / 2 + 10,
+                const target = homeGrid.locator(
+                    `.launcher-tile[data-tile-id="${appGitHub.id}"]`,
                 );
-                await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-                await target.locator(
-                    "xpath=self::*[contains(@class,'is-over')]",
-                ).waitFor();
+                await dragTo(
+                    homeGrid.locator(
+                        `.launcher-tile[data-tile-id="${sourceId}"]`,
+                    ),
+                    target,
+                    () =>
+                        target.locator(
+                            "xpath=self::*[contains(@class,'is-over')]",
+                        ).waitFor(),
+                );
                 const saved = page.waitForResponse((response) =>
                     new URL(response.url()).pathname ===
                         "/api/webapps/reorder" &&
@@ -1409,20 +817,11 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 );
                 await page.mouse.up();
                 assertEquals((await saved).status(), 200);
-                assertEquals(await readRoot(), expected);
-                await page.reload();
-                await page.locator(
-                    '.zen-edge-btn[data-workspace="apps"]',
-                ).click();
-                await panel.waitFor();
-                assertEquals(await readRoot(), expected);
-                const apps = (await apiRequest("/api/webapps")).data as Array<
-                    {
-                        id: string;
-                        groupId: string | null;
-                        pinnedSortOrder: number;
-                    }
-                >;
+                assertEquals(await readTileIds(homeTiles), expected);
+                await showHome();
+                assertEquals(await readTileIds(homeTiles), expected);
+                const apps = (await apiRequest("/api/webapps"))
+                    .data as ServerApp[];
                 assertEquals(
                     apps.find((item) => item.id === loose.id)?.groupId,
                     null,
@@ -1431,17 +830,73 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     apps.find((item) => item.id === appGitHub.id)?.groupId,
                     null,
                 );
-                assertEquals(
-                    apps.find((item) => item.id === appGitHub.id)
-                        ?.pinnedSortOrder,
-                    0,
-                );
             }
         },
     );
 
     await t.step(
-        "13. Real touch drag moves App into Folder without changing Home pin order",
+        "12. Overflow popup (更多) reorders its tiles into the canonical order",
+        async () => {
+            // One row only: the remaining root tiles move into 更多（N）.
+            await page.setViewportSize({ width: 1280, height: 440 });
+            await showHome();
+            const more = homeGrid.locator('[data-library-cell="more"]');
+            await more.waitFor();
+            const total = (await serverRoot()).length;
+            const shown = await homeTiles.count();
+            assertEquals(
+                await more.getAttribute("aria-label"),
+                `更多（${total - shown}）`,
+            );
+            // + moves into the popup when the grid is over capacity.
+            assertEquals(
+                await homeGrid.locator('[data-library-cell="add"]').count(),
+                0,
+            );
+            await more.click();
+            await popup.waitFor();
+            assertEquals(
+                await popup.locator(".launcher-popup-title").textContent(),
+                "更多应用",
+            );
+            assertEquals(
+                await popup.locator('[data-library-cell="add"]').count(),
+                1,
+            );
+            const popupTiles = popup.locator(".launcher-tile[data-tile-id]");
+            const overflow = await readTileIds(popupTiles);
+            assertEquals(overflow.length, total - shown);
+
+            const canonical = (await serverRoot()).map((item) => item.id);
+            await blankMenuItem("整理布局", ".launcher-popup");
+            await popupTiles.first().locator("button").first().focus();
+            const persisted = page.waitForResponse((response) =>
+                new URL(response.url()).pathname === "/api/webapps/reorder" &&
+                response.request().method() === "PUT"
+            );
+            await page.keyboard.press("ArrowRight");
+            assertEquals((await persisted).status(), 200);
+
+            const expected = [...canonical];
+            const first = canonical.indexOf(overflow[0]!);
+            const second = canonical.indexOf(overflow[1]!);
+            expected[first] = overflow[1]!;
+            expected[second] = overflow[0]!;
+            assertEquals((await serverRoot()).map((item) => item.id), expected);
+            assertEquals(await readTileIds(popupTiles), [
+                overflow[1],
+                overflow[0],
+                ...overflow.slice(2),
+            ]);
+            await blankMenuItem("完成整理", ".launcher-popup");
+            await page.keyboard.press("Escape");
+            await popup.waitFor({ state: "detached" });
+            await page.setViewportSize({ width: 1280, height: 800 });
+        },
+    );
+
+    await t.step(
+        "13. Real touch drag moves an app into a folder; long press and swipe on blank surface behave",
         async () => {
             const touchContext = await browser.newContext({
                 viewport: { width: 390, height: 844 },
@@ -1449,101 +904,79 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 isMobile: true,
                 storageState: await context.storageState(),
             });
+            await touchContext.route(
+                "**/api/webapps/*/fetch-icon",
+                (route) => route.abort(),
+            );
             try {
                 const touchPage = await touchContext.newPage();
-                await visit("/", touchPage);
-                // Below 768 the workspace renders as the shared mobile sheet
-                const panel = touchPage.locator(
-                    ".workspace-panel--mobile, .workspace-panel",
-                );
-                const ensureMobileAppsSheetOpen = async () => {
-                    const grid = panel.locator(".launcher-grid");
-                    const restored = await grid.waitFor({
-                        state: "visible",
-                        timeout: 2500,
-                    }).then(() => true).catch(() => false);
-                    if (!restored) {
-                        await touchPage.locator(
-                            '.zen-edge-btn[data-workspace="apps"], button[data-workspace="apps"]',
-                        ).first().click();
-                        await grid.waitFor({ state: "visible" });
-                    }
-                    await settlePresentation(touchPage);
-                };
-                await ensureMobileAppsSheetOpen();
-                const cdp = await touchContext.newCDPSession(touchPage);
-                const blankPoint = await getSurfaceBlankCoordinate(touchPage);
-                assertEquals(blankPoint.y > blankPoint.contentBottom, true);
-                assertEquals(blankPoint.y < blankPoint.boundaryTop, true);
-
-                // 13a. Real touch scrolling below grid does NOT trigger context menu
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchStart",
-                    touchPoints: [{ x: blankPoint.x, y: blankPoint.y, id: 1 }],
-                });
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchMove",
-                    touchPoints: [{
-                        x: blankPoint.x,
-                        y: blankPoint.y - 30,
-                        id: 1,
-                    }],
-                });
-                await touchPage.waitForTimeout(600);
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchEnd",
-                    touchPoints: [],
-                });
-                assertEquals(
-                    await touchPage.locator(
-                        '[data-slot="context-menu-content"]',
-                    ).count(),
-                    0,
-                );
-
-                // 13b. Real touch CDP longpress below grid triggers workspace surface context menu
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchStart",
-                    touchPoints: [{ x: blankPoint.x, y: blankPoint.y, id: 2 }],
-                });
-                await touchPage.waitForTimeout(600);
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchEnd",
-                    touchPoints: [],
-                });
-
+                await showHome(touchPage);
+                await settlePresentation(touchPage);
+                const touchGrid = touchPage.locator(".launcher-grid--home");
                 const touchMenu = touchPage.locator(
                     '[data-slot="context-menu-content"]',
                 );
-                await touchMenu.waitFor();
-                assertEquals(
-                    await touchMenu.locator(
-                        '[data-slot="context-menu-item"]:has-text("新建文件夹")',
-                    ).count(),
-                    1,
-                );
-                assertEquals(
-                    await touchMenu.locator(
-                        '[data-slot="context-menu-item"]:has-text("整理布局")',
-                    ).count(),
-                    1,
-                );
+                const cdp = await touchContext.newCDPSession(touchPage);
+                const blank = await blankPoint(".launcher-library", touchPage);
 
-                // Enter arrange mode directly from touch surface menu
-                await touchMenu.locator(
-                    '[data-slot="context-menu-item"]:has-text("整理布局")',
-                ).click();
+                // 13a. A touch that moves before the long-press delay scrolls and
+                // must not open the menu. The 600ms wait is the long-press window.
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ x: blank.x, y: blank.y, id: 1 }],
+                });
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchMove",
+                    touchPoints: [{ x: blank.x, y: blank.y - 30, id: 1 }],
+                });
+                await touchPage.waitForTimeout(600);
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                assertEquals(await touchMenu.count(), 0);
+
+                // 13b. Long press on the blank surface opens the surface menu.
+                // The swipe above may have scrolled the page: measure again.
+                const pressPoint = await blankPoint(
+                    ".launcher-library",
+                    touchPage,
+                );
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [{ x: pressPoint.x, y: pressPoint.y, id: 2 }],
+                });
+                await touchMenu.waitFor();
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchEnd",
+                    touchPoints: [],
+                });
+                for (const name of ["新建文件夹", "整理布局"]) {
+                    assertEquals(
+                        await touchMenu.getByRole("menuitem", {
+                            name,
+                            exact: true,
+                        }).count(),
+                        1,
+                        name,
+                    );
+                }
+                await touchMenu.getByRole("menuitem", {
+                    name: "整理布局",
+                    exact: true,
+                }).click();
                 await touchMenu.waitFor({ state: "detached" });
+
                 const folder =
                     ((await apiRequest("/api/webapp-groups")).data as Array<
                         { id: string; name: string }
                     >).find((item) => item.name === "Empty Folder")!;
-                const source = panel.locator(
-                    '[data-tile-id="' + appGitHub.id + '"]',
-                ).first();
-                const target = panel.locator(
-                    '[data-tile-id="folder:' + folder.id + '"]',
-                ).first();
+                const source = touchGrid.locator(
+                    `.launcher-tile[data-tile-id="${appGitHub.id}"]`,
+                );
+                const target = touchGrid.locator(
+                    `.launcher-tile[data-tile-id="folder:${folder.id}"]`,
+                );
                 await settlePresentation(touchPage);
                 const a = (await source.boundingBox())!;
                 const b = (await target.boundingBox())!;
@@ -1565,7 +998,8 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     type: "touchMove",
                     touchPoints: point(b.x + b.width / 2, b.y + b.height / 2),
                 });
-                await panel.locator(".launcher-folder-drop-badge").waitFor();
+                await touchPage.locator(".launcher-folder-drop-badge").first()
+                    .waitFor();
                 const overlay = touchPage.locator(".launcher-overlay");
                 await overlay.waitFor();
                 const overlayBox = (await overlay.boundingBox())!;
@@ -1594,35 +1028,41 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     touchPoints: [],
                 });
                 assertEquals((await saved).status(), 200);
-                const apps = (await apiRequest("/api/webapps")).data as Array<
-                    {
-                        id: string;
-                        groupId: string | null;
-                        pinnedSortOrder: number;
-                    }
-                >;
+                const apps = (await apiRequest("/api/webapps"))
+                    .data as ServerApp[];
                 assertEquals(
                     apps.find((item) => item.id === appGitHub.id)?.groupId,
                     folder.id,
                 );
-                assertEquals(
-                    apps.find((item) => item.id === appGitHub.id)
-                        ?.pinnedSortOrder,
-                    0,
-                );
+                await touchPage.locator(".launcher-drag-overlay").waitFor({
+                    state: "detached",
+                });
+                // dnd-kit keeps a click blocker for 50ms after pointerup,
+                // even if removing the source skips its drop animation.
+                // Use a normal-duration press so release clears that window;
+                // do not force or re-send a click that was swallowed.
                 await touchPage.getByRole("button", {
-                    name: "完成整理",
+                    name: "完成",
                     exact: true,
-                }).click();
+                }).click({ delay: 60 });
+                await touchPage.locator(".home-managing-bar").waitFor({
+                    state: "detached",
+                });
                 await settlePresentation(touchPage);
+
+                // 13c. Long press on a tile opens that tile's own menu, never
+                // the surface menu, and does not navigate or open the folder.
                 for (
-                    const selector of [
-                        ".launcher-app",
-                        ".launcher-folder-item--small, .launcher-folder-item--large",
-                    ]
+                    const [selector, item] of [
+                        [".launcher-app", "编辑"],
+                        [
+                            ".launcher-folder-item--small, .launcher-folder-item--large",
+                            "打开文件夹",
+                        ],
+                    ] as const
                 ) {
-                    const tile = panel.locator(selector).first();
-                    const bounds = (await tile.boundingBox())!;
+                    const bounds = (await touchGrid.locator(selector).first()
+                        .boundingBox())!;
                     await cdp.send("Input.dispatchTouchEvent", {
                         type: "touchStart",
                         touchPoints: [{
@@ -1638,80 +1078,27 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     });
                     assertEquals(
                         await touchMenu.getByRole("menuitem", {
-                            name: /^(新建文件夹|整理布局|完成整理)$/,
+                            name: item,
+                            exact: true,
+                        }).count(),
+                        1,
+                        item,
+                    );
+                    assertEquals(
+                        await touchMenu.getByRole("menuitem", {
+                            name: "新建文件夹",
+                            exact: true,
                         }).count(),
                         0,
                     );
                     assertEquals(touchPage.url(), origin + "/");
                     assertEquals(
-                        await panel.locator(".launcher-grid").isVisible(),
-                        true,
+                        await touchPage.locator(".launcher-popup").count(),
+                        0,
                     );
-                    await touchPage.reload();
-                    await ensureMobileAppsSheetOpen();
+                    await touchPage.keyboard.press("Escape");
+                    await touchMenu.waitFor({ state: "detached" });
                 }
-                // A short viewport creates real overflow; a swipe on the blank
-                // surface must move the body, not merely avoid opening a menu.
-                await touchPage.setViewportSize({ width: 390, height: 400 });
-                await settlePresentation(touchPage);
-                const body = panel.locator(".workspace-body");
-                await body.evaluate((el) => {
-                    el.scrollTop = el.scrollHeight;
-                });
-                const scrollBefore = await body.evaluate((el) => el.scrollTop);
-                assertEquals(scrollBefore > 0, true);
-                const swipe = await panel.evaluate((el) => {
-                    const bodyRect = el.querySelector(".workspace-body")!
-                        .getBoundingClientRect();
-                    const surfaceRect = el.querySelector(
-                        ".launcher-surface-wrap",
-                    )!
-                        .getBoundingClientRect();
-                    const y = bodyRect.top + bodyRect.height / 3;
-                    for (
-                        let x = surfaceRect.left + 1;
-                        x < surfaceRect.right;
-                        x += 2
-                    ) {
-                        const hit = document.elementFromPoint(x, y);
-                        if (
-                            hit?.closest(".launcher-surface-wrap") &&
-                            !hit.closest(
-                                ".launcher-tile, .launcher-app, .launcher-folder-item",
-                            )
-                        ) {
-                            return { x, y };
-                        }
-                    }
-                    throw new Error(
-                        "No visible blank Surface for scroll gesture",
-                    );
-                });
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchStart",
-                    touchPoints: [{ ...swipe, id: 3 }],
-                });
-                for (let offset = 20; offset <= 100; offset += 20) {
-                    await cdp.send("Input.dispatchTouchEvent", {
-                        type: "touchMove",
-                        touchPoints: [{
-                            x: swipe.x,
-                            y: swipe.y + offset,
-                            id: 3,
-                        }],
-                    });
-                }
-                await cdp.send("Input.dispatchTouchEvent", {
-                    type: "touchEnd",
-                    touchPoints: [],
-                });
-                await touchPage.waitForFunction((before) => {
-                    const body = document.querySelector(
-                        ".workspace-panel--mobile .workspace-body, .workspace-panel .workspace-body",
-                    );
-                    return body !== null && body.scrollTop < before;
-                }, scrollBefore);
-                assertEquals(await touchMenu.count(), 0);
             } finally {
                 await touchContext.close();
             }

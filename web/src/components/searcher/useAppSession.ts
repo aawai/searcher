@@ -1,3 +1,4 @@
+import { nextAppSortOrder } from "../../features/app-library/library-order.ts";
 import {
     type ChangeEvent,
     type FormEvent,
@@ -10,7 +11,10 @@ import {
 import { api, json } from "../../lib/api.ts";
 import { errorMessage } from "../../app/state.tsx";
 import type { Appearance } from "../../app/state.tsx";
-import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
+import type {
+    ExtendedWebApp,
+    WebAppGroup,
+} from "../../features/app-library/library-types.ts";
 import { useLogoSession } from "./useLogoSession.ts";
 
 export interface AppSessionOptions {
@@ -90,7 +94,6 @@ export function useAppSession(options: AppSessionOptions) {
     const [appOpenMode, setAppOpenMode] = useState<
         "global" | "current" | "new_tab"
     >("global");
-    const [appIsPinned, setAppIsPinned] = useState(false);
 
     // Icon fields
     const [iconTab, setIconTabState] = useState<
@@ -226,7 +229,6 @@ export function useAppSession(options: AppSessionOptions) {
             setAppName(editingApp.name);
             setAppGroupId(editingApp.groupId || "");
             setAppOpenMode(editingApp.openMode ?? "global");
-            setAppIsPinned(Boolean(editingApp.isPinned));
             setAppIconAssetId(editingApp.iconAssetId || null);
             setAppIconSource(editingApp.iconSource || "website");
             setIconPreviewUrl(
@@ -253,7 +255,6 @@ export function useAppSession(options: AppSessionOptions) {
             setAppName("");
             setAppGroupId(defaultGroupId);
             setAppOpenMode("global");
-            setAppIsPinned(false);
             setAppIconAssetId(null);
             setAppIconSource("website");
             setIconPreviewUrl(null);
@@ -278,7 +279,6 @@ export function useAppSession(options: AppSessionOptions) {
                 appName !== editingApp.name ||
                 appGroupId !== (editingApp.groupId || "") ||
                 appOpenMode !== (editingApp.openMode ?? "global") ||
-                appIsPinned !== Boolean(editingApp.isPinned) ||
                 appIconAssetId !== (editingApp.iconAssetId || null) ||
                 appIconSource !== (editingApp.iconSource || "website") ||
                 Boolean(iconImageUrl)
@@ -289,7 +289,6 @@ export function useAppSession(options: AppSessionOptions) {
             Boolean(appName.trim()) ||
             appGroupId !== defaultGroupId ||
             appOpenMode !== "global" ||
-            appIsPinned !== false ||
             appIconAssetId !== null ||
             Boolean(iconImageUrl)
         );
@@ -299,7 +298,6 @@ export function useAppSession(options: AppSessionOptions) {
         appName,
         appGroupId,
         appOpenMode,
-        appIsPinned,
         appIconAssetId,
         appIconSource,
         iconImageUrl,
@@ -560,7 +558,6 @@ export function useAppSession(options: AppSessionOptions) {
                     iconAssetId: nextIconAssetId,
                     iconSource: nextIconSource,
                     openMode: appOpenMode,
-                    isPinned: appIsPinned,
                 }),
             );
             if (!isCurrent(operationKey)) return;
@@ -582,8 +579,11 @@ export function useAppSession(options: AppSessionOptions) {
                     iconAssetId: nextIconAssetId,
                     iconSource: nextIconSource,
                     openMode: appOpenMode,
-                    isPinned: appIsPinned,
-                    sortOrder: existingApps.length,
+                    sortOrder: nextAppSortOrder(
+                        existingApps,
+                        groups,
+                        groupId || null,
+                    ),
                 }),
             );
             if (!isCurrent(operationKey)) return;
@@ -778,7 +778,6 @@ export function useAppSession(options: AppSessionOptions) {
         appName,
         appGroupId,
         appOpenMode,
-        appIsPinned,
         iconTab,
         appIconSource,
         iconPreviewUrl,
@@ -814,7 +813,6 @@ export function useAppSession(options: AppSessionOptions) {
         setAppName,
         setAppGroupId,
         setAppOpenMode,
-        setAppIsPinned,
         setIconTab,
         setAppIconAssetId,
         setAppIconSource,

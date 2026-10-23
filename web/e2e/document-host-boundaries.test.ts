@@ -331,26 +331,5 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
             }),
         );
     }
-    // 32 apps fit the 1440x900 launcher without overflow; seed more so the
-    // final wheel scroll has room to move.
-    for (let index = 32; index < 200; index++) {
-        await api("/api/webapps", "POST", {
-            name: `Host app ${index}`,
-            url: `https://example.org/host158/${index}`,
-        });
-    }
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(app.origin + "/");
-    await page.locator('button[data-workspace="apps"]').first().click();
-    const appsScroll = page.locator(".workspace-panel .workspace-body");
-    const appsPoint = await visiblePoint(appsScroll);
-    await page.mouse.move(appsPoint.x, appsPoint.y);
-    await page.mouse.wheel(0, 300);
-    await page.waitForFunction(() =>
-        document.querySelector<HTMLElement>(".workspace-body")!.scrollTop > 0
-    );
-    await visiblePoint(
-        page.getByRole("button", { name: "打开 Host app 199", exact: true }),
-    );
     assertEquals(errors, []);
 });

@@ -813,20 +813,6 @@ Deno.test("Issue 80 P6 Positive Fixture: authorized workspace CSS prefixes pass 
         0,
     );
 
-    const appsCss = `
-.apps-workspace-root { flex: 1 0 auto; }
-.apps-workspace-groups-grid { display: grid; }
-.apps-workspace-group-card { display: flex; }
-.apps-workspace-group-card-name { font-weight: 600; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/features/workspace/apps-workspace.css",
-            appsCss,
-        ).length,
-        0,
-    );
-
     const notesCss = `
 .notes-workspace-list { display: grid; }
 .notes-workspace-editor { height: 100%; }
@@ -904,19 +890,6 @@ Deno.test("Issue 80 P6 Positive Fixture: domain-specific launcher and notes layo
         ).length,
         0,
     );
-
-    const appsCss = `
-.apps-workspace-groups-grid { display: grid; }
-.apps-workspace-group-card-icon { display: grid; place-items: center; }
-.apps-workspace-group-card-info { display: flex; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/features/workspace/apps-workspace.css",
-            appsCss,
-        ).length,
-        0,
-    );
 });
 
 Deno.test("Issue 80 P6 Integration: scanOwnership detects workspace negative fixtures and passes clean workspace", async () => {
@@ -987,11 +960,6 @@ Deno.test("Issue 80 P6 Integration: scanOwnership detects workspace negative fix
         await Deno.writeTextFile(
             `${cleanDir}/web/src/features/workspace/workspace.css`,
             `.workspace-panel { display: flex; }\n.workspace-section { display: flex; }`,
-        );
-
-        await Deno.writeTextFile(
-            `${cleanDir}/web/src/features/workspace/apps-workspace.css`,
-            `.apps-workspace-root { flex: 1; }\n.apps-workspace-groups-grid { display: grid; }`,
         );
 
         await Deno.writeTextFile(

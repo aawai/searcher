@@ -185,8 +185,8 @@ export interface PreferencesDto {
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
-    webAppHomeLimit: 8 | 12 | 16 | "all";
     showAppLabels: boolean;
+    showHomeApps: boolean;
     aiGenerationDefaults?: AiGenerationDefaultsDto;
 }
 export * from "./documents.ts";

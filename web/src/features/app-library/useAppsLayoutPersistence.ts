@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
+import type { ExtendedWebApp, WebAppGroup } from "./library-types.ts";
 import { errorMessage } from "../../app/state.tsx";
 import { api } from "../../lib/api.ts";
 

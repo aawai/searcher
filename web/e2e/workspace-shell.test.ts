@@ -61,7 +61,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     const panel = page.locator(
         ".workspace-panel--mobile, aside.workspace-panel",
     );
-    const appsTrigger = '.zen-edge-trigger button[data-workspace="apps"]';
+    const docsTrigger = '.zen-edge-trigger button[data-workspace="documents"]';
     const search = () => panel.locator("input[data-workspace-search]");
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
@@ -136,297 +136,18 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         page.waitForFunction(() =>
             document.querySelector(".home")?.getAnimations().length === 0
         );
-    async function openApps() {
-        await page.locator(appsTrigger).click();
+    async function openDocs() {
+        await page.locator(docsTrigger).click();
         await search().waitFor();
     }
-    const fail = {
-        status: 503,
-        contentType: "application/json",
-        body: JSON.stringify({
-            status: false,
-            message: "Contract API unavailable",
-            data: null,
-        }),
-    };
-
-    await t.step(
-        "loading remains bounded; retry recovers an empty Apps launcher",
-        async () => {
-            // Start without stale data so a failed GET exercises the API-error branch.
-            await page.waitForFunction(() =>
-                new Promise<boolean>((resolve, reject) => {
-                    const open = indexedDB.open("searcher-client", 1);
-                    open.onerror = () => reject(open.error);
-                    open.onsuccess = () => {
-                        const db = open.result;
-                        const tx = db.transaction("state", "readwrite");
-                        const keys = tx.objectStore("state").getAllKeys();
-                        let found = false;
-                        keys.onsuccess = () => {
-                            for (const key of keys.result) {
-                                if (String(key).startsWith("webapps:")) {
-                                    found = true;
-                                    tx.objectStore("state").delete(key);
-                                }
-                            }
-                        };
-                        tx.oncomplete = () => {
-                            db.close();
-                            resolve(found);
-                        };
-                        tx.onerror = () => reject(tx.error);
-                    };
-                })
-            );
-            const gate = Promise.withResolvers<void>();
-            await page.route("**/api/webapps", async (route) => {
-                await gate.promise;
-                await route.fulfill(fail);
-            });
-            try {
-                await visit("/");
-                await openApps();
-                await panel.getByText("正在加载", { exact: false }).waitFor();
-                await assertChromeInViewport(page);
-                gate.resolve();
-                const retry = panel.getByRole("button", {
-                    name: "重试",
-                    exact: true,
-                });
-                await retry.waitFor();
-                await panel.getByRole("alert").filter({
-                    hasText: "Contract API unavailable",
-                }).waitFor();
-                await assertChromeInViewport(page);
-                await page.unroute("**/api/webapps");
-                const recovered = page.waitForResponse((response) =>
-                    new URL(response.url()).pathname === "/api/webapps" &&
-                    response.status() === 200
-                );
-                await retry.click();
-                await recovered;
-                await panel.locator(".empty-state, .launcher-empty").first()
-                    .waitFor();
-                assertEquals(await panel.locator(".webapp-icon").count(), 0);
-                await close();
-            } finally {
-                gate.resolve();
-                await page.unroute("**/api/webapps");
-            }
-        },
-    );
-
-    const first = await request<{ id: string }>("/api/webapps", "POST", {
-        name: "State Alpha",
-        url: "https://example.org/state-alpha",
-        isPinned: true,
-    });
-    const second = await request<{ id: string }>("/api/webapps", "POST", {
-        name: "State Beta",
-        url: "https://example.org/state-beta",
-    });
-    await t.step(
-        "offline stale Apps cache remains browsable and explicit retry refreshes it",
-        async () => {
-            await page.reload();
-            await openApps();
-            await panel.getByRole("button", {
-                name: "打开 State Alpha",
-                exact: true,
-            }).waitFor();
-            await page.waitForFunction(() =>
-                new Promise<boolean>((resolve, reject) => {
-                    const open = indexedDB.open("searcher-client", 1);
-                    open.onerror = () => reject(open.error);
-                    open.onsuccess = () => {
-                        const db = open.result;
-                        const tx = db.transaction("state", "readonly");
-                        const keys = tx.objectStore("state").getAllKeys();
-                        keys.onsuccess = () =>
-                            resolve(
-                                keys.result.some((key) =>
-                                    String(key).startsWith("webapps:")
-                                ),
-                            );
-                        tx.oncomplete = () => db.close();
-                    };
-                })
-            );
-            await page.route("**/api/webapps", (route) => route.abort());
-            try {
-                await page.reload();
-                await openApps();
-                const retry = panel.getByRole("button", {
-                    name: "重试",
-                    exact: true,
-                });
-                await retry.waitFor();
-                await panel.getByRole("button", {
-                    name: "打开 State Alpha",
-                    exact: true,
-                }).waitFor();
-                await panel.getByRole("button", {
-                    name: "打开 State Beta",
-                    exact: true,
-                }).waitFor();
-                await assertChromeInViewport(page);
-                const added = await context.request.post(
-                    origin + "/api/webapps",
-                    {
-                        headers: { Origin: origin },
-                        data: {
-                            name: "Recovered App",
-                            url: "https://example.org/recovered",
-                        },
-                    },
-                );
-                assertEquals(added.status(), 200);
-                await page.unroute("**/api/webapps");
-                await retry.click();
-                await panel.getByRole("button", {
-                    name: "打开 Recovered App",
-                    exact: true,
-                }).waitFor();
-                await retry.waitFor({ state: "detached" });
-                await search().fill("no-match-contract-44");
-                await panel.getByRole("button", {
-                    name: "清除搜索",
-                    exact: true,
-                }).waitFor();
-                assertEquals(await panel.locator(".webapp-icon").count(), 0);
-                await panel.getByRole("button", {
-                    name: "清除搜索",
-                    exact: true,
-                }).click();
-                await panel.getByRole("button", {
-                    name: "打开 State Alpha",
-                    exact: true,
-                }).waitFor();
-                await close();
-            } finally {
-                await page.unroute("**/api/webapps");
-            }
-        },
-    );
-
-    await t.step(
-        "failed add/edit preserves draft and error; retry saves; delete/undo restores",
-        async () => {
-            await openApps();
-            await panel.locator(".workspace-header .workspace-primary").click();
-            await page.locator("#app-url-input").fill(
-                "https://example.org/draft",
-            );
-            await page.locator("#app-name-input").fill("Preserved draft");
-            await page.route("**/api/webapps", async (route) => {
-                if (route.request().method() === "POST") {
-                    await route.fulfill(fail);
-                } else await route.continue();
-            });
-            try {
-                await page.locator('.app-dialog-footer button[type="submit"]')
-                    .click();
-                await page.getByRole("alert").filter({
-                    hasText: "Contract API unavailable",
-                }).waitFor();
-                assertEquals(
-                    await page.locator("#app-url-input").inputValue(),
-                    "https://example.org/draft",
-                );
-                assertEquals(
-                    await page.locator("#app-name-input").inputValue(),
-                    "Preserved draft",
-                );
-                await assertChromeInViewport(page);
-                await page.unroute("**/api/webapps");
-                await page.locator('.app-dialog-footer button[type="submit"]')
-                    .click();
-                await panel.getByRole("button", {
-                    name: "打开 Preserved draft",
-                    exact: true,
-                }).waitFor();
-            } finally {
-                await page.unroute("**/api/webapps");
-            }
-            await panel.getByRole("button", {
-                name: "打开 State Alpha",
-                exact: true,
-            }).click({ button: "right" });
-            await page.getByRole("menuitem", { name: "编辑", exact: true })
-                .click();
-            await page.locator("#app-name-input").fill("Edited Alpha");
-            await page.route(
-                `**/api/webapps/${first.id}`,
-                (route) => route.fulfill(fail),
-            );
-            try {
-                await page.locator('.app-dialog-footer button[type="submit"]')
-                    .click();
-                await page.getByRole("alert").filter({
-                    hasText: "Contract API unavailable",
-                }).waitFor();
-                assertEquals(
-                    await page.locator("#app-name-input").inputValue(),
-                    "Edited Alpha",
-                );
-                await page.unroute(`**/api/webapps/${first.id}`);
-                await page.locator('.app-dialog-footer button[type="submit"]')
-                    .click();
-                await panel.getByRole("button", {
-                    name: "打开 Edited Alpha",
-                    exact: true,
-                }).waitFor();
-            } finally {
-                await page.unroute(`**/api/webapps/${first.id}`);
-            }
-            await panel.getByRole("button", {
-                name: "打开 State Beta",
-                exact: true,
-            }).click({ button: "right" });
-            await page.getByRole("menuitem", {
-                name: "移至回收站",
-                exact: true,
-            }).click();
-            const confirm = page.getByRole("alertdialog");
-            if (await confirm.isVisible()) {
-                await confirm.getByRole("button", { name: "删除", exact: true })
-                    .click();
-            }
-            await panel.getByRole("button", {
-                name: "打开 State Beta",
-                exact: true,
-            }).waitFor({ state: "detached" });
-            assertEquals(
-                (await request<Array<{ id: string }>>("/api/webapps")).some((
-                    item,
-                ) => item.id === second.id),
-                false,
-            );
-            await page.getByRole("button", { name: "撤销", exact: true })
-                .click();
-            await panel.getByRole("button", {
-                name: "打开 State Beta",
-                exact: true,
-            }).waitFor();
-            assertEquals(
-                (await request<Array<{ id: string }>>("/api/webapps")).some((
-                    item,
-                ) => item.id === second.id),
-                true,
-            );
-            await close();
-            await closeAllWorkspaces();
-        },
-    );
 
     for (let index = 0; index < 35; index++) {
-        await request("/api/webapps", "POST", {
-            name: (`Long App ${index} — ${"long name ".repeat(8)}`).slice(
+        await request("/api/documents", "POST", {
+            title: (`Long Note ${index} — ${"long name ".repeat(8)}`).slice(
                 0,
                 80,
             ),
-            url: `https://example.org/many-${index}`,
+            body: `Long note body ${index}`,
         });
     }
     await request("/api/documents", "POST", {
@@ -457,9 +178,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             document.documentElement.dataset.theme === expected,
                         theme,
                     );
-                    const trigger = page.locator(
-                        '.zen-edge-trigger button[data-workspace="apps"]',
-                    );
+                    const trigger = page.locator(docsTrigger);
                     await trigger.waitFor();
                     await page.locator(".hero").waitFor();
                     const hero = await page.locator(".hero").boundingBox();
@@ -478,15 +197,15 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     );
                     await page.keyboard.press("Tab");
                     assertEquals(
-                        await search().evaluate((el) =>
-                            el === document.activeElement
+                        await panel.locator(".workspace-body").evaluate((el) =>
+                            el.contains(document.activeElement)
                         ),
                         true,
                     );
                     assert(await search().getAttribute("aria-label"));
                     assertEquals(
                         await page.locator(
-                            '.workspace-switcher button[aria-label="应用工作区"]',
+                            '.workspace-switcher button[aria-label="笔记工作区"]',
                         ).getAttribute("aria-selected"),
                         "true",
                     );
@@ -546,27 +265,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             );
                         }
                     }
-                    await page.locator(
-                        '.workspace-switcher button[aria-label="笔记工作区"]',
-                    ).focus();
-                    await page.keyboard.press("Enter");
-                    await panel.locator(".documents-workspace").waitFor();
-                    await page.waitForFunction(() =>
-                        document.activeElement?.getAttribute(
-                            "aria-label",
-                        ) === "收起工作区"
-                    );
-                    assertEquals(
-                        await page.locator(
-                            '.workspace-switcher button[aria-label="笔记工作区"]',
-                        ).getAttribute("aria-selected"),
-                        "true",
-                    );
-                    await assertChromeInViewport(page);
-                    if (viewport.width >= 768) {
-                        await homeSettled();
-                        await assertHomeYields(hero, viewport.width);
-                    }
                     await panel.getByRole("button", {
                         name: "收起工作区",
                         exact: true,
@@ -576,7 +274,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await page.waitForFunction(() =>
                         document.activeElement?.getAttribute(
                             "data-workspace",
-                        ) === "apps"
+                        ) === "documents"
                     );
                     assertEquals(
                         await page.evaluate(() =>
@@ -585,7 +283,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                                 ) !== null &&
                             document.activeElement?.getAttribute(
                                     "data-workspace",
-                                ) === "apps"
+                                ) === "documents"
                         ),
                         true,
                     );
@@ -602,50 +300,23 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "keyboard-only Switcher/expand/Back/Close; overlay Escape takes priority",
+        "keyboard-only open/search/menu/Back/Close; overlay Escape takes priority",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
-            await page.locator(appsTrigger).focus();
+            await page.locator(docsTrigger).focus();
             await page.keyboard.press("Enter");
-            const appsSearch = panel.getByRole("searchbox", {
-                name: "搜索应用",
-                exact: true,
-            });
-            await appsSearch.fill("State");
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            )
-                .focus();
-            await page.keyboard.press("Enter");
-            await panel.getByRole("searchbox", {
+            const notesSearch = panel.getByRole("searchbox", {
                 name: "搜索笔记",
                 exact: true,
-            }).fill("Shell");
-            await page.locator(
-                '.workspace-switcher button[aria-label="应用工作区"]',
-            )
-                .focus();
-            await page.keyboard.press("Enter");
-            assertEquals(await appsSearch.inputValue(), "State");
-            await appsSearch.fill("");
-            await panel.getByRole("button", {
-                name: "打开 Edited Alpha",
-                exact: true,
-            }).focus().catch(async (cause) => {
-                throw new Error(
-                    `Apps keyboard fixture: ${
-                        JSON.stringify({
-                            activeSurface: await panel.innerText(),
-                            apps: await page.evaluate(async () =>
-                                (await fetch("/api/webapps")).json()
-                            ),
-                        })
-                    }`,
-                    { cause },
-                );
             });
-            await page.keyboard.press("Shift+F10");
+            await notesSearch.fill("Shell");
+            const actions = panel.getByRole("button", {
+                name: "笔记操作：Shell note",
+                exact: true,
+            });
+            await actions.focus();
+            await page.keyboard.press("Enter");
             await page.getByRole("menu").waitFor();
             // A mounted popup can precede Base UI's keyboard focus handoff.
             await page.waitForFunction(() =>
@@ -657,36 +328,29 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.getByRole("menu").waitFor({ state: "detached" });
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("aria-label") ===
-                    "打开 Edited Alpha"
+                    "笔记操作：Shell note"
             ).catch(async (cause) => {
                 throw new Error(
-                    `Context menu Escape focus: ${await page.evaluate(() =>
+                    `Menu Escape focus: ${await page.evaluate(() =>
                         document.activeElement?.outerHTML
                     )}`,
                     { cause },
                 );
             });
             assertEquals(await panel.isVisible(), true);
-            await panel.locator(".workspace-header .workspace-primary").focus();
+            await panel.getByRole("button", {
+                name: "打开笔记：Shell note",
+                exact: true,
+            }).focus();
             await page.keyboard.press("Enter");
-            await page.locator("#app-url-input").waitFor();
+            await panel.locator("[data-workspace-editor]").waitFor();
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("aria-label") ===
                     "返回上一级"
             );
             await page.keyboard.press("Enter");
             await search().waitFor();
-            await page.waitForFunction(() =>
-                document.activeElement?.matches(".workspace-primary") === true
-            );
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            )
-                .focus();
-            await page.keyboard.press("Enter");
             assertEquals(await search().inputValue(), "Shell");
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await page.waitForFunction(() => globalThis.innerWidth === 1440);
             await closeAllWorkspaces();
         },
     );
@@ -703,12 +367,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.setViewportSize({ width, height });
                 await visit("/");
 
-                // Opener: Apps edge trigger
-                const appsEdge = page.locator(
-                    '.zen-edge-trigger button[data-workspace="apps"]',
-                );
-                await appsEdge.waitFor();
-                await appsEdge.focus();
+                // Opener: Notes edge trigger
+                const docsEdge = page.locator(docsTrigger);
+                await docsEdge.waitFor();
+                await docsEdge.focus();
                 await page.keyboard.press("Enter");
                 await panel.waitFor();
                 assertEquals(
@@ -723,33 +385,27 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
 
                 // Nested Back behavior in Zen panel/sheet
-                const createBtn = panel.locator(
-                    ".workspace-header .workspace-primary",
-                );
-                await createBtn.focus();
-                await page.keyboard.press("Enter");
-                await page.locator("#app-url-input").waitFor();
-                // Nested view initial focus is on Back button
-                await page.waitForFunction(() =>
-                    document.activeElement?.getAttribute("aria-label") ===
-                        "返回上一级"
-                );
-                // Trigger Back
-                await page.keyboard.press("Enter");
-                await search().waitFor();
-                // Form Back restores the entry action, not unrelated chrome.
-                await page.waitForFunction(() =>
-                    document.activeElement?.matches(".workspace-primary") ===
-                        true
-                );
-
-                // Overlay Escape precedence in Zen panel/sheet
-                const appTile = panel.getByRole("button", {
-                    name: "打开 Edited Alpha",
+                const noteOpen = panel.getByRole("button", {
+                    name: "打开笔记：Shell note",
                     exact: true,
                 });
-                await appTile.focus();
-                await page.keyboard.press("Shift+F10");
+                await noteOpen.focus();
+                await page.keyboard.press("Enter");
+                await panel.locator("[data-workspace-editor]").waitFor();
+                // Back returns to the library root
+                await panel.getByRole("button", {
+                    name: "返回上一级",
+                    exact: true,
+                }).click();
+                await search().waitFor();
+
+                // Overlay Escape precedence in Zen panel/sheet
+                const actions = panel.getByRole("button", {
+                    name: "笔记操作：Shell note",
+                    exact: true,
+                });
+                await actions.focus();
+                await page.keyboard.press("Enter");
                 await page.getByRole("menu").waitFor();
                 await page.waitForFunction(() =>
                     document.querySelector(
@@ -761,30 +417,20 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.getByRole("menu").waitFor({ state: "detached" });
                 assertEquals(await panel.isVisible(), true);
 
-                // Switch Apps -> Documents
-                await page.locator(
-                    '.workspace-switcher button[aria-label="笔记工作区"]',
-                ).focus();
-                await page.keyboard.press("Enter");
-                await panel.locator(".documents-workspace").waitFor();
-
                 // Second Escape closes the Zen panel/sheet
                 await page.keyboard.press("Escape");
                 await panel.first().waitFor({ state: "detached" });
 
-                // Proves actual opener restoration: restores Apps edge trigger, not Documents
+                // Proves actual opener restoration to the Notes edge trigger
                 await page.waitForFunction(() =>
                     document.activeElement?.getAttribute("data-workspace") ===
-                        "apps"
+                        "documents"
                 );
                 assertEquals(
                     await page.evaluate(() =>
                         document.activeElement?.closest(
-                                ".zen-edge-trigger",
-                            ) !== null &&
-                        document.activeElement?.getAttribute(
-                                "data-workspace",
-                            ) === "apps"
+                            ".zen-edge-trigger",
+                        ) !== null
                     ),
                     true,
                 );
@@ -795,7 +441,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "issue #57 cross-workspace layout contract: geometry, search alignment, header primary hierarchy, stability",
+        "issue #57 workspace layout contract: geometry, search alignment, create action hierarchy, stability",
         async () => {
             for (const theme of ["light", "dark"] as const) {
                 await page.emulateMedia({ colorScheme: theme });
@@ -804,17 +450,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await visit("/");
                     await page.locator(".hero").waitFor();
                     const hero = await page.locator(".hero").boundingBox();
-                    await openApps();
-                    await search().waitFor();
-                    await assertChromeInViewport(page);
-                    const appInset = await measureBodyInset(panel);
-                    assertNear(appInset.searchLeftDiff, 0, 2);
-                    assertNear(appInset.searchRightDiff, 0, 2);
-                    const switcher = panel.getByRole("tab", {
-                        name: "笔记工作区",
-                        exact: true,
-                    });
-                    await switcher.click();
+                    await openDocs();
                     await panel.locator(".documents-workspace").waitFor();
                     await assertChromeInViewport(page);
                     const noteInset = await measureBodyInset(panel);
@@ -829,30 +465,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             ).count(),
                             1,
                         );
-                    } else {
-                        const closeBtn = panel.getByRole("button", {
-                            name: "收起工作区",
-                            exact: true,
-                        });
-                        if (await closeBtn.isVisible()) {
-                            await closeBtn.click();
-                            await panel.waitFor({ state: "detached" });
-                        }
-                        const mobileApps = page.locator(
-                            'button.zen-edge-btn[data-workspace="apps"]',
-                        );
-                        if (await mobileApps.isVisible()) {
-                            await mobileApps.click();
-                            await panel.waitFor();
-                            const appsCloseBtn = panel.getByRole("button", {
-                                name: "收起工作区",
-                                exact: true,
-                            });
-                            if (await appsCloseBtn.isVisible()) {
-                                await appsCloseBtn.click();
-                                await panel.waitFor({ state: "detached" });
-                            }
-                        }
                     }
                     await closeAllWorkspaces();
                 }
@@ -861,8 +473,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             // Desktop viewport for interaction, focus/blur, and chrome stability
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
-            await openApps();
-            await search().waitFor();
+            await openDocs();
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("aria-label") ===
                     "收起工作区"
@@ -929,220 +540,59 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             assertEquals(bodyAfterBlur, bodyBaseline);
             assertEquals(searchAfterBlur, searchBaseline);
 
-            // 2. Clear action & independent search queries
-            await search().fill("AlphaAppsQuery");
+            // 2. Clear action returns focus to the search input
+            await search().fill("DocumentsQueryToClear");
             const clearBtn = panel.locator(".workspace-search-clear");
             await clearBtn.waitFor({ state: "visible" });
             await clearBtn.focus();
             await page.keyboard.press("Enter");
             assertEquals(await search().inputValue(), "");
             assertEquals(await clearBtn.count(), 0);
-
-            await page.waitForFunction(() =>
-                document.activeElement?.matches("input[data-workspace-search]")
-            );
-            await page.keyboard.type("AppsQueryPersisted");
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            ).click();
-            await panel.locator(".documents-workspace").waitFor();
-            await search().waitFor();
-            assertEquals(await search().inputValue(), "");
-            await search().fill("DocumentsQueryToClear");
-            await clearBtn.focus();
-            await page.keyboard.press("Enter");
-            assertEquals(await search().inputValue(), "");
             await page.waitForFunction(() =>
                 document.activeElement?.matches("input[data-workspace-search]")
             );
             await page.keyboard.type("DocumentsQueryPersisted");
-
-            await page.locator(
-                '.workspace-switcher button[aria-label="应用工作区"]',
-            ).click();
-            await panel.locator(".apps-workspace .workspace-root").waitFor();
-            await search().waitFor();
-            assertEquals(await search().inputValue(), "AppsQueryPersisted");
-
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            ).click();
-            await panel.locator(".documents-workspace").waitFor();
-            await search().waitFor();
             assertEquals(
                 await search().inputValue(),
                 "DocumentsQueryPersisted",
             );
-
-            await search().fill("");
-            await page.locator(
-                '.workspace-switcher button[aria-label="应用工作区"]',
-            ).click();
-            await panel.locator(".apps-workspace .workspace-root").waitFor();
             await search().fill("");
 
-            // 3. Arrange mode: search disabled, header primary becomes 完成整理
-            const rightClickBlankSurface = async () => {
-                const res = await page.evaluate(() => {
-                    const panelEl = document.querySelector(
-                        ".workspace-panel--mobile, aside.workspace-panel",
-                    ) as HTMLElement;
-                    const bodyEl = panelEl.querySelector(
-                        ".workspace-body",
-                    ) as HTMLElement;
-                    if (bodyEl) {
-                        bodyEl.scrollTop = bodyEl.scrollHeight;
-                    }
-                    const surface = panelEl.querySelector(
-                        ".launcher-surface-wrap",
-                    ) as HTMLElement;
-                    const surfaceRect = surface.getBoundingClientRect();
-                    const tiles = Array.from(
-                        panelEl.querySelectorAll<HTMLElement>(".launcher-tile"),
-                    );
-                    const tileRects = tiles.map((t) =>
-                        t.getBoundingClientRect()
-                    );
-                    let foundPoint:
-                        | { x: number; y: number; el: string }
-                        | null = null;
-                    for (
-                        let py = surfaceRect.top + 10;
-                        py < surfaceRect.bottom - 5;
-                        py += 15
-                    ) {
-                        for (
-                            let px = surfaceRect.left + 10;
-                            px < surfaceRect.right - 10;
-                            px += 20
-                        ) {
-                            const inTile = tileRects.some((tr) =>
-                                px >= tr.left && px <= tr.right &&
-                                py >= tr.top && py <= tr.bottom
-                            );
-                            if (!inTile) {
-                                const el = document.elementFromPoint(px, py);
-                                if (
-                                    el &&
-                                    (el === surface || surface.contains(el)) &&
-                                    !el.closest(".launcher-tile")
-                                ) {
-                                    foundPoint = {
-                                        x: px,
-                                        y: py,
-                                        el: `${el.tagName}.${el.className}`,
-                                    };
-                                    break;
-                                }
-                            }
-                        }
-                        if (foundPoint) break;
-                    }
-                    return {
-                        foundPoint,
-                        surfaceOrigin: {
-                            x: surfaceRect.left,
-                            y: surfaceRect.top,
-                        },
-                    };
-                });
-                if (!res.foundPoint) {
-                    throw new Error("Blank point not found on surface");
-                }
-                await page.locator(".launcher-surface-wrap").click({
-                    button: "right",
-                    position: {
-                        x: res.foundPoint.x - res.surfaceOrigin.x,
-                        y: res.foundPoint.y - res.surfaceOrigin.y,
-                    },
-                });
-            };
-
-            await rightClickBlankSurface();
-            const contextMenu = page.locator(
-                '[data-slot="context-menu-content"]',
-            );
-            await contextMenu.waitFor();
-            const arrangeItem = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "整理布局",
-                },
-            );
-            await arrangeItem.click();
-            assertEquals(await search().isDisabled(), true);
+            // 3. Nested views: no library create action; Back restores it
             assertEquals(
-                await panel.locator(".workspace-header .workspace-primary")
-                    .getAttribute("aria-label"),
-                "完成整理",
+                await panel.getByRole("button", {
+                    name: "新建笔记",
+                    exact: true,
+                })
+                    .count(),
+                1,
             );
-
-            await rightClickBlankSurface();
-            await contextMenu.waitFor();
-            const doneArrangeItem = contextMenu.locator(
-                '[data-slot="context-menu-item"]',
-                {
-                    hasText: "完成整理",
-                },
-            );
-            await doneArrangeItem.click();
-            assertEquals(await search().isDisabled(), false);
+            await panel.getByRole("button", {
+                name: "打开笔记：Shell note",
+                exact: true,
+            }).click();
+            await panel.locator("[data-workspace-editor]").waitFor();
             assertEquals(
-                await panel.locator(".workspace-header .workspace-primary")
-                    .getAttribute("aria-label"),
-                "添加应用",
-            );
-
-            // 4. Nested views: no Root create action, .app-dialog-body inset matches workspace-body
-            await panel.locator(".workspace-header .workspace-primary").click();
-            await panel.locator(".app-dialog-form").waitFor();
-            assertEquals(
-                await panel.locator(".workspace-header .workspace-primary")
+                await panel.getByRole("button", {
+                    name: "新建笔记",
+                    exact: true,
+                })
                     .count(),
                 0,
             );
-            const appDialogBodyDiff = await panel.evaluate((panelEl) => {
-                const body = panelEl.querySelector(
-                    ".workspace-body",
-                ) as HTMLElement;
-                const dialogBody = panelEl.querySelector(
-                    ".app-dialog-body",
-                ) as HTMLElement;
-                const bodyRect = body.getBoundingClientRect();
-                const dialogRect = dialogBody.getBoundingClientRect();
-                const bodyStyle = getComputedStyle(body);
-                const padLeft = parseFloat(bodyStyle.paddingLeft);
-                const padRight = parseFloat(bodyStyle.paddingRight);
-                return {
-                    leftDiff: Math.round(
-                        (dialogRect.left - bodyRect.left) - padLeft,
-                    ),
-                    rightDiff: Math.round(
-                        (bodyRect.right - dialogRect.right) - padRight,
-                    ),
-                };
-            });
-            assertNear(appDialogBodyDiff.leftDiff, 0, 2);
-            assertNear(appDialogBodyDiff.rightDiff, 0, 2);
-
             await panel.getByRole("button", { name: "返回上一级", exact: true })
                 .click();
             await search().waitFor();
             assertEquals(
-                await panel.locator(".workspace-header .workspace-primary")
+                await panel.getByRole("button", {
+                    name: "新建笔记",
+                    exact: true,
+                })
                     .count(),
                 1,
             );
 
-            // 5. Long names / titles do not distort chrome
-            const longApp = await request<{ id: string }>(
-                "/api/webapps",
-                "POST",
-                {
-                    name: "A".repeat(80),
-                    url: "https://example.com/" + "u".repeat(120),
-                },
-            );
+            // 4. Long titles do not distort chrome
             const longNote = await request<{ id: string; version: number }>(
                 "/api/documents",
                 "POST",
@@ -1153,18 +603,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await closeAllWorkspaces();
             await visit("/");
-            await openApps();
-            await search().waitFor();
-            await panel.getByRole("button", {
-                name: "打开 " + "A".repeat(80),
-                exact: true,
-            })
-                .waitFor({ state: "attached" });
-            await assertChromeInViewport(page);
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            )
-                .click();
+            await openDocs();
             await panel.locator(".documents-workspace").waitFor();
             await panel.getByRole("button", {
                 name: "打开笔记：" + "T".repeat(200),
@@ -1173,7 +612,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 .waitFor({ state: "attached" });
             await assertChromeInViewport(page);
 
-            await request(`/api/webapps/${longApp.id}`, "DELETE");
             await request(
                 `/api/documents/${longNote.id}?version=${longNote.version}`,
                 "DELETE",
@@ -1191,12 +629,15 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     try {
                         await page.setViewportSize({ width, height: 900 });
                         await visit("/");
-                        await openApps();
+                        await openDocs();
                         await panel.getByRole("button", {
-                            name: "添加应用",
+                            name: "打开笔记：Shell note",
                             exact: true,
                         }).click();
-                        const name = panel.locator("#app-name-input");
+                        const name = panel.getByRole("textbox", {
+                            name: "笔记标题",
+                            exact: true,
+                        });
                         await name.waitFor();
                         await name.evaluate((element) =>
                             element.setAttribute(
@@ -1286,7 +727,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await page.waitForFunction(() =>
                             document.activeElement?.getAttribute(
                                 "data-workspace",
-                            ) === "apps"
+                            ) === "documents"
                         );
                         assertEquals(
                             await name.evaluate((element) => {
@@ -1308,11 +749,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             false,
                             "an exiting workspace must no longer own Escape",
                         );
-                        await page.locator(appsTrigger).click();
+                        await page.locator(docsTrigger).click();
                         assertEquals(
                             await name.getAttribute("data-exit-instance"),
                             "original",
-                            "reopening retains the nested form instance",
+                            "reopening retains the nested editor instance",
                         );
                         // Base UI clears the exit state on its own commit after
                         // reopening; wait for that observable state change.
@@ -1357,10 +798,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         await close();
                         await page.locator('[data-slot="sheet-backdrop"]')
                             .waitFor({ state: "detached" });
-                        await openApps();
-                        await search().waitFor();
+                        await openDocs();
                         assertEquals(
-                            await panel.locator("#app-name-input").count(),
+                            await panel.locator("[data-workspace-editor]")
+                                .count(),
                             0,
                         );
                         await close();
@@ -1389,7 +830,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 const hero = await page.locator(".hero").boundingBox();
                 const searchBefore = await page.locator(".search-form")
                     .boundingBox();
-                await openApps();
+                await openDocs();
                 await homeSettled();
                 await assertHomeYields(hero, width);
                 if (width >= 1496) {
@@ -1410,7 +851,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await visit("/");
-            await openApps();
+            await openDocs();
             await page.locator('[data-slot="sheet-backdrop"]').waitFor();
             await panel.getByRole("button", {
                 name: "收起工作区",
@@ -1427,7 +868,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 document.activeElement?.closest(".zen-edge-trigger") !==
                     null &&
                 document.activeElement?.getAttribute("data-workspace") ===
-                    "apps"
+                    "documents"
             );
         },
     );
@@ -1436,12 +877,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
-            await openApps();
-            await search().fill("State Alpha");
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            )
-                .click();
+            await openDocs();
             await search().fill("private documents query");
             for (const width of [390, 768, 1024, 1440]) {
                 await page.setViewportSize({ width, height: 900 });
@@ -1459,17 +895,17 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 );
                 await assertChromeInViewport(page);
             }
-            await page.locator(
-                '.workspace-switcher button[aria-label="应用工作区"]',
-            )
-                .click();
-            assertEquals(await search().inputValue(), "State Alpha");
-            await panel.getByRole("button", { name: "添加应用", exact: true })
-                .click();
+            await search().fill("Shell");
+            await panel.getByRole("button", {
+                name: "打开笔记：Shell note",
+                exact: true,
+            }).click();
+            await panel.locator("[data-workspace-editor]").waitFor();
             await page.setViewportSize({ width: 390, height: 900 });
             await panel.getByRole("button", { name: "返回上一级", exact: true })
                 .click();
-            assertEquals(await search().inputValue(), "State Alpha");
+            await search().waitFor();
+            assertEquals(await search().inputValue(), "Shell");
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.getByRole("button", {
                 name: "用户菜单：Shell contract",
@@ -1490,12 +926,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.locator('form button[type="submit"]').click();
             await page.waitForURL(origin + "/");
             assertEquals(await panel.count(), 0);
-            await openApps();
-            assertEquals(await search().inputValue(), "");
-            await page.locator(
-                '.workspace-switcher button[aria-label="笔记工作区"]',
-            )
-                .click();
+            await openDocs();
             assertEquals(await search().inputValue(), "");
             await closeAllWorkspaces();
         },

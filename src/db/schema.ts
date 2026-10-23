@@ -80,9 +80,8 @@ export const preferences = sqliteTable("preferences", {
         .notNull().default("same"),
     searchHistoryEnabled: integer("search_history_enabled", { mode: "boolean" })
         .notNull().default(false),
-    webAppHomeLimit: text("webapp_home_limit", {
-        enum: ["8", "12", "16", "all"],
-    }).notNull().default("12"),
+    showHomeApps: integer("show_home_apps", { mode: "boolean" })
+        .notNull().default(true),
     showAppLabels: integer("show_app_labels", { mode: "boolean" })
         .notNull().default(true),
     aiGenerationDefaults: text("ai_generation_defaults"),
@@ -112,10 +111,6 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_search_target_check",
         sql`${t.searchTarget} in ('same','new')`,
-    ),
-    check(
-        "preferences_webapp_home_limit_check",
-        sql`${t.webAppHomeLimit} in ('8','12','16','all')`,
     ),
 ]);
 
@@ -173,11 +168,7 @@ export const webapps = sqliteTable("webapps", {
     iconSource: text("icon_source", {
         enum: ["website", "upload", "url", "ai", "default"],
     }).notNull().default("website"),
-    isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(
-        false,
-    ),
     sortOrder: integer("sort_order").notNull().default(0),
-    pinnedSortOrder: integer("pinned_sort_order").notNull().default(0),
     openMode: text("open_mode", {
         enum: ["global", "current", "new_tab"],
     }).notNull().default("global"),

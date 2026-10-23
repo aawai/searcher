@@ -185,9 +185,7 @@ Deno.test({
                     name: "GitHub",
                     url: "https://github.com",
                     groupId: devGroup.id,
-                    isPinned: true,
                     sortOrder: 1,
-                    pinnedSortOrder: 1,
                     openMode: "new_tab",
                 }),
             });
@@ -195,7 +193,6 @@ Deno.test({
             const w1 = (await createW1Res.json() as Envelope<WebAppDto>).data!;
             assertEquals(w1.name, "GitHub");
             assertEquals(w1.groupId, devGroup.id);
-            assertEquals(w1.isPinned, true);
             assertEquals(w1.openMode, "new_tab");
 
             // 2b. Patch group folderSize to large
@@ -228,29 +225,13 @@ Deno.test({
                 body: JSON.stringify({
                     name: "Figma",
                     url: "https://figma.com",
-                    isPinned: false,
                     sortOrder: 2,
                 }),
             });
             assertEquals(createW2Res.status, STATUS_CODE.OK);
             const w2 = (await createW2Res.json() as Envelope<WebAppDto>).data!;
 
-            // 3. Query filtered by pinned and groupId
-            const listPinnedRes = await app.request(
-                "/api/webapps?pinned=true",
-                {
-                    method: "GET",
-                    headers: {
-                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
-                    },
-                },
-            );
-            assertEquals(listPinnedRes.status, STATUS_CODE.OK);
-            const pinnedList =
-                (await listPinnedRes.json() as Envelope<WebAppDto[]>).data!;
-            assertEquals(pinnedList.length, 1);
-            assertEquals(pinnedList[0].id, w1.id);
-
+            // 3. Query filtered by groupId
             const listGroupRes = await app.request(
                 `/api/webapps?groupId=${devGroup.id}`,
                 {
@@ -276,8 +257,8 @@ Deno.test({
                 },
                 body: JSON.stringify({
                     items: [
-                        { id: w1.id, sortOrder: 10, pinnedSortOrder: 2 },
-                        { id: w2.id, sortOrder: 5, pinnedSortOrder: 1 },
+                        { id: w1.id, sortOrder: 10 },
+                        { id: w2.id, sortOrder: 5 },
                     ],
                 }),
             });
@@ -630,7 +611,7 @@ Deno.test({
     },
 });
 
-Deno.test("WebApps mixed root reorder is atomic and owner isolated without changing pinned order", async () => {
+Deno.test("WebApps mixed root reorder is atomic and owner isolated", async () => {
     const { store, app } = await setupTestApp();
     try {
         const token = await registerUser(app, "mixed_owner");
@@ -660,8 +641,6 @@ Deno.test("WebApps mixed root reorder is atomic and owner isolated without chang
             name: "Loose",
             url: "https://example.org/loose",
             sortOrder: 9,
-            isPinned: true,
-            pinnedSortOrder: 4,
         });
         const folder = await create<WebAppGroupDto>("/api/webapp-groups", {
             name: "Folder",
@@ -687,10 +666,6 @@ Deno.test("WebApps mixed root reorder is atomic and owner isolated without chang
             (await (await app.request("/api/webapp-groups", { headers }))
                 .json() as Envelope<WebAppGroupDto[]>).data!;
         assertEquals(apps.find((item) => item.id === webapp.id)?.sortOrder, 1);
-        assertEquals(
-            apps.find((item) => item.id === webapp.id)?.pinnedSortOrder,
-            4,
-        );
         assertEquals(
             groups.find((item) => item.id === folder.id)?.sortOrder,
             0,

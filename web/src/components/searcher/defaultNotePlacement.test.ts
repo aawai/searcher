@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import {
+    exclusionFromRects,
     type MeasuredDefaultNote,
     placeDefaultNotes,
     type PlacementRect,
@@ -73,4 +74,47 @@ Deno.test("#180 notes that cannot fit overflow without moving other notes", () =
 
     assertEquals(result.placed.map(({ id }) => id), ["fits"]);
     assertEquals(result.overflowIds, ["oversized"]);
+});
+
+Deno.test("default notes avoid the whole app region, not only the search box", () => {
+    const availableRect = { x: 20, y: 30, width: 1200, height: 800 };
+    const search = { x: 460, y: 280, width: 320, height: 48 };
+    const grid = { x: 380, y: 360, width: 480, height: 372 };
+    const notes: MeasuredDefaultNote[] = [
+        { id: "a", width: 238, height: 158, offsetX: 0, offsetY: 0 },
+        { id: "b", width: 238, height: 158, offsetX: 0, offsetY: 0 },
+        { id: "c", width: 238, height: 158, offsetX: 0, offsetY: 0 },
+    ];
+    const exclusion = exclusionFromRects([search, grid], 0);
+    assert(exclusion !== null);
+    assertEquals(exclusion, { x: 380, y: 280, width: 480, height: 452 });
+    const result = placeDefaultNotes(availableRect, exclusion, notes);
+    const noteById = new Map(notes.map((note) => [note.id, note] as const));
+    for (const position of result.placed) {
+        const note = noteById.get(position.id);
+        assert(note !== undefined);
+        const rect = visualRect(position, note);
+        assert(!overlaps(rect, search));
+        assert(!overlaps(rect, grid));
+    }
+    assert(result.placed.length > 0);
+});
+
+Deno.test("with the home grid off the exclusion is the search box alone", () => {
+    const search = { x: 460, y: 280, width: 320, height: 48 };
+    assertEquals(exclusionFromRects([search], 0), search);
+    assertEquals(exclusionFromRects([], 0), null);
+});
+
+Deno.test("scrolling keeps the exclusion bottom in document space", () => {
+    const search = { x: 460, y: 180, width: 320, height: 48 };
+    const grid = { x: 380, y: 260, width: 480, height: 372 };
+    // Scrolled 100px: elements measured 100px higher; the top follows the
+    // viewport and the reserved height grows by the scroll distance.
+    assertEquals(exclusionFromRects([search, grid], 100), {
+        x: 380,
+        y: 180,
+        width: 480,
+        height: 452 + 100,
+    });
 });

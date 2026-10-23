@@ -96,11 +96,28 @@ Deno.test("Appearance: legacy icon size fields are ignored without losing valid 
         const result = normalizeAppearance({
             webAppIconSize,
             showAppLabels: false,
-            webAppHomeLimit: 16,
         });
         assertEquals(result.showAppLabels, false);
-        assertEquals(result.webAppHomeLimit, 16);
         assertEquals("webAppIconSize" in result, false);
+    }
+});
+
+Deno.test("Appearance: showHomeApps defaults on and only accepts booleans", () => {
+    assertEquals(normalizeAppearance(undefined).showHomeApps, true);
+    assertEquals(normalizeAppearance({}).showHomeApps, true);
+    assertEquals(
+        normalizeAppearance({ showHomeApps: false }).showHomeApps,
+        false,
+    );
+    assertEquals(
+        normalizeAppearance({ showHomeApps: true }).showHomeApps,
+        true,
+    );
+    for (const bad of ["false", 0, null, "off"]) {
+        assertEquals(
+            normalizeAppearance({ showHomeApps: bad }).showHomeApps,
+            true,
+        );
     }
 });
 

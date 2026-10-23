@@ -5,31 +5,18 @@ import {
     useRef,
     useState,
 } from "react";
-import { Button } from "../../components/ui/button.tsx";
-import { Check, Plus } from "lucide-react";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from "../../components/ui/tooltip.tsx";
 import {
     type WorkspacePresentation,
     WorkspaceSurface,
 } from "./WorkspaceSurface.tsx";
 import { WorkspaceNavigation } from "./WorkspaceNavigation.tsx";
-import {
-    isAppsWorkspaceView,
-    type WorkspaceKind,
-    type WorkspaceRoute,
-} from "./workspace-state.ts";
+import type { WorkspaceRoute } from "./workspace-state.ts";
 import "./workspace.css";
 
 /** What the surface displays; frozen at its last open value while it exits. */
 type WorkspaceView = {
     state: WorkspaceRoute;
     title: string;
-    appsArranging: boolean;
-    onCreate: (() => void) | undefined;
     feedback: ReactNode;
     children: ReactNode;
 };
@@ -47,11 +34,11 @@ function useLastOpenView(open: boolean, view: WorkspaceView): WorkspaceView {
     return open ? view : lastOpen.current;
 }
 
-/** The entry that opens `kind` outside the workspace itself (the Dock). */
-function workspaceEntry(kind: WorkspaceKind): HTMLElement | null {
+/** The entry that opens the workspace outside the panel itself (the Dock). */
+function workspaceEntry(): HTMLElement | null {
     for (
         const entry of document.querySelectorAll<HTMLElement>(
-            '[data-workspace="' + kind + '"]',
+            '[data-workspace="documents"]',
         )
     ) {
         if (!entry.closest(".workspace-panel")) return entry;
@@ -64,15 +51,11 @@ export function WorkspaceShell(
         open = true,
         state,
         title,
-        onSwitch,
         onBack,
         onClose,
-        onCreate,
         onEscape,
-        onFinishArrange,
         feedback,
         onFeedbackHost,
-        appsArranging = false,
         children,
         chromeBottom,
         onDockedChange,
@@ -81,16 +64,11 @@ export function WorkspaceShell(
         open?: boolean;
         state: WorkspaceRoute;
         title: string;
-        /** Switches the visible domain; each domain keeps its own route and draft. */
-        onSwitch: (kind: WorkspaceKind) => void;
         onBack: () => void;
         onClose: () => void;
-        onCreate?: () => void;
         onEscape?: () => void;
-        onFinishArrange?: () => void;
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
-        appsArranging?: boolean;
         children: ReactNode;
         chromeBottom?: number;
         /** Whether the non-expanded desktop panel is open beside the page content. */
@@ -111,18 +89,12 @@ export function WorkspaceShell(
     const view = useLastOpenView(open, {
         state,
         title,
-        appsArranging,
-        onCreate,
         feedback,
         children,
     });
     const route = view.state;
     const presentation: WorkspacePresentation = mobile ? "sheet" : "panel";
-    const workspace: WorkspaceKind = isAppsWorkspaceView(route)
-        ? "apps"
-        : "documents";
     const opener = useRef<HTMLElement | null>(null);
-    const openingWorkspace = useRef<WorkspaceKind>(workspace);
     const wasOpen = useRef(false);
     // Focus returns when `open` turns false, not when the exit motion ends.
     useLayoutEffect(() => {
@@ -133,13 +105,12 @@ export function WorkspaceShell(
                     !active.closest(".workspace-panel")
                 ? active
                 : null;
-            openingWorkspace.current = workspace;
         }
         if (!open && wasOpen.current) {
             const frame = requestAnimationFrame(() => {
                 const target = opener.current?.isConnected
                     ? opener.current
-                    : workspaceEntry(openingWorkspace.current);
+                    : workspaceEntry();
                 target?.focus({ preventScroll: true });
                 opener.current = null;
             });
@@ -147,24 +118,15 @@ export function WorkspaceShell(
             return () => cancelAnimationFrame(frame);
         }
         wasOpen.current = open;
-    }, [open, workspace]);
+    }, [open]);
     const expanded = route.view === "documents/edit";
     const docked = open && presentation === "panel" && !expanded;
     useLayoutEffect(() => {
         onDockedChange?.(docked);
         return () => onDockedChange?.(false);
     }, [docked, onDockedChange]);
-    const root = route.view === "apps/root" ||
-        route.view === "documents/root";
-    let bodyLayout: "app-form" | "editor" | undefined;
-    if (route.view === "apps/create" || route.view === "apps/edit") {
-        bodyLayout = "app-form";
-    } else if (route.view === "documents/edit") {
-        bodyLayout = "editor";
-    }
-    const createLabel = workspace === "apps"
-        ? view.appsArranging ? "完成整理" : "添加应用"
-        : "新建笔记";
+    const root = route.view === "documents/root";
+    const bodyLayout = route.view === "documents/edit" ? "editor" : undefined;
     return (
         <WorkspaceSurface
             open={open}
@@ -172,44 +134,13 @@ export function WorkspaceShell(
             chromeBottom={chromeBottom}
             title={view.title}
             expanded={expanded}
-            headerActions={
-                <>
-                    <WorkspaceNavigation
-                        selected={workspace}
-                        onSelect={onSwitch}
-                    />
-                    {root && view.onCreate && (
-                        <Tooltip>
-                            <TooltipTrigger
-                                render={
-                                    <Button
-                                        className="workspace-primary"
-                                        variant="ghost"
-                                        size="icon"
-                                        aria-label={createLabel}
-                                        onClick={workspace === "apps" &&
-                                                view.appsArranging
-                                            ? onFinishArrange
-                                            : view.onCreate}
-                                    />
-                                }
-                            >
-                                {workspace === "apps" && view.appsArranging
-                                    ? <Check size="1em" className="icon-lg" />
-                                    : <Plus size="1em" className="icon-lg" />}
-                            </TooltipTrigger>
-                            <TooltipContent>{createLabel}</TooltipContent>
-                        </Tooltip>
-                    )}
-                </>
-            }
+            headerActions={<WorkspaceNavigation />}
             routeKey={JSON.stringify(route)}
             nested={!root}
             onBack={onBack}
             onClose={onClose}
             onEscape={onEscape}
             onExited={onExited}
-            escapeManaged={workspace === "apps"}
             bodyLayout={bodyLayout}
             feedback={mobile ? view.feedback : undefined}
             onFeedbackHost={mobile ? onFeedbackHost : undefined}

@@ -806,7 +806,6 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         await apiData("/api/webapps", "POST", {
             name: `首页应用 ${index + 1}`,
             url: `https://zen-inline-${index}.example/`,
-            isPinned: true,
         });
     }
     for (

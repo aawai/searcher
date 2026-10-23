@@ -1,5 +1,4 @@
 import {
-    type AppsRoute,
     type DocumentsRoute,
     type DocumentsScope,
     type DomainWorkspaceAction,
@@ -18,7 +17,7 @@ export interface WorkspaceHostState {
 
 export const initialWorkspaceHost: WorkspaceHostState = {
     models: initialWorkspaceCoreState,
-    open: { apps: false, documents: false },
+    open: { documents: false },
     activeKind: null,
 };
 
@@ -29,11 +28,6 @@ export type DocumentsWorkspaceAction = DomainWorkspaceAction<DocumentsRoute> | {
 
 export type WorkspaceHostAction =
     | { type: "domain"; kind: "documents"; action: DocumentsWorkspaceAction }
-    | {
-        type: "domain";
-        kind: "apps";
-        action: DomainWorkspaceAction<AppsRoute>;
-    }
     | { type: "open"; kind: WorkspaceKind }
     | { type: "close"; kind?: WorkspaceKind }
     | { type: "activate"; kind: WorkspaceKind | null }
@@ -113,47 +107,28 @@ export function workspaceHostReducer(
         }
 
         case "domain": {
-            if (action.kind === "documents") {
-                const current = state.models.documents;
-                const model = action.action.type === "scope"
-                    ? { ...current, scope: action.action.scope }
-                    : action.action.type === "reset"
-                    ? initialDocumentsWorkspaceState
-                    : {
-                        ...current,
-                        ...domainWorkspaceReducer(current, action.action),
-                    };
-                const models = { ...state.models, documents: model };
-                if (
-                    action.action.type === "query" ||
-                    action.action.type === "scope" ||
-                    action.action.type === "reset"
-                ) {
-                    return { ...state, models };
-                }
-                return {
-                    ...state,
-                    models,
-                    open: { ...state.open, documents: true },
-                    activeKind: "documents",
+            const current = state.models.documents;
+            const model = action.action.type === "scope"
+                ? { ...current, scope: action.action.scope }
+                : action.action.type === "reset"
+                ? initialDocumentsWorkspaceState
+                : {
+                    ...current,
+                    ...domainWorkspaceReducer(current, action.action),
                 };
-            }
-            const model = domainWorkspaceReducer(
-                state.models.apps,
-                action.action,
-            );
-            const nextModels = { ...state.models, apps: model };
+            const models = { ...state.models, documents: model };
             if (
                 action.action.type === "query" ||
+                action.action.type === "scope" ||
                 action.action.type === "reset"
             ) {
-                return { ...state, models: nextModels };
+                return { ...state, models };
             }
             return {
                 ...state,
-                models: nextModels,
-                open: { ...state.open, apps: true },
-                activeKind: "apps",
+                models,
+                open: { ...state.open, documents: true },
+                activeKind: "documents",
             };
         }
     }

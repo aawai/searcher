@@ -50,7 +50,7 @@ Deno.test("icon size removal migrates every legacy tier without losing readable 
         for (const tier of tiers) {
             const result = await service.get(tier);
             assertEquals(result.showAppLabels, false);
-            assertEquals(result.webAppHomeLimit, 16);
+            assertEquals(result.showHomeApps, true);
             assertEquals(result.accent, "violet");
             assertEquals("webAppIconSize" in result, false);
         }

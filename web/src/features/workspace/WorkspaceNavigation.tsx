@@ -1,31 +1,17 @@
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs.tsx";
-import type { WorkspaceKind } from "./workspace-state.ts";
 
-export function WorkspaceNavigation(
-    { selected, onSelect }: {
-        selected?: WorkspaceKind;
-        onSelect: (workspace: WorkspaceKind) => void;
-    },
-) {
+/** Notes is the only workspace; the tab names the panel and is its header anchor. */
+export function WorkspaceNavigation() {
     return (
-        <Tabs
-            className="workspace-switcher"
-            value={selected}
-            onValueChange={(value) => onSelect(value as WorkspaceKind)}
-        >
+        <Tabs className="workspace-switcher" value="documents">
             <TabsList aria-label="工作区导航">
-                {(["apps", "documents"] as const).map((workspace) => (
-                    <TabsTrigger
-                        key={workspace}
-                        value={workspace}
-                        data-workspace={workspace}
-                        aria-label={workspace === "apps"
-                            ? "应用工作区"
-                            : "笔记工作区"}
-                    >
-                        {workspace === "apps" ? "应用" : "笔记"}
-                    </TabsTrigger>
-                ))}
+                <TabsTrigger
+                    value="documents"
+                    data-workspace="documents"
+                    aria-label="笔记工作区"
+                >
+                    笔记
+                </TabsTrigger>
             </TabsList>
         </Tabs>
     );

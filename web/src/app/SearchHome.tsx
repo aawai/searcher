@@ -9,7 +9,6 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
-    useMemo,
     useReducer,
     useRef,
     useState,
@@ -42,7 +41,6 @@ import {
     trashPaper,
 } from "../features/home-layouts/home-papers-api.ts";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
-import type { WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
 import {
@@ -59,15 +57,12 @@ import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
-import { AppsWorkspace } from "../features/workspace/AppsWorkspace.tsx";
-import { useAppsLayoutPersistence } from "../features/workspace/useAppsLayoutPersistence.ts";
+import { useAppsLayoutPersistence } from "../features/app-library/useAppsLayoutPersistence.ts";
 import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
 import "../features/workspace/documents-workspace.css";
 import {
-    type AppsRoute,
     type DocumentsRoute,
     type DomainWorkspaceAction,
-    isAppsWorkspaceView,
     type WorkspaceKind,
     type WorkspaceRoute,
 } from "../features/workspace/workspace-state.ts";
@@ -83,24 +78,15 @@ import {
     type AppSessionRouteIntent,
 } from "../components/searcher/AppSessionProvider.tsx";
 import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
-import { appsEscapeIntent } from "../features/workspace/apps-dismiss.ts";
-import { useAppsEscape } from "../features/workspace/workspace-escape.ts";
-export interface WebAppGroup {
-    id: string;
-    userId: string;
-    name: string;
-    folderSize: "small" | "large";
-    sortOrder: number;
-    createdAt: number;
-    updatedAt: number;
-}
-
-export interface ExtendedWebApp extends WebAppItem {
-    sortOrder?: number;
-    pinnedSortOrder?: number;
-    openMode?: "global" | "current" | "new_tab";
-    groupId?: string | null;
-}
+import type {
+    ExtendedWebApp,
+    WebAppGroup,
+} from "../features/app-library/library-types.ts";
+import {
+    AppFormDialog,
+    type AppFormTarget,
+} from "../features/app-library/AppFormDialog.tsx";
+import { useAppLibraryActions } from "../features/app-library/useAppLibraryActions.ts";
 type UndoRecordBase = {
     id: string;
     userId: string;
@@ -134,13 +120,13 @@ const EMPTY_GROUPS: WebAppGroup[] = [];
 const EMPTY_PAPERS: PaperItem[] = [];
 
 type WorkspaceAction =
-    | DomainWorkspaceAction<AppsRoute>
     | DomainWorkspaceAction<DocumentsRoute>
     | { type: "close" };
 
 type PendingAction =
-    | { kind: WorkspaceKind; action: WorkspaceAction }
-    | { kind: "route"; intent: AppSessionRouteIntent };
+    | { kind: "workspace"; action: WorkspaceAction }
+    | { kind: "route"; intent: AppSessionRouteIntent }
+    | { kind: "appForm" };
 
 export function SearchHome() {
     const { user, appearance, authSession } = useAppState();
@@ -193,6 +179,16 @@ export function SearchHome() {
     const currentAppsError = ownsCurrentUserData ? appsError : "";
     const currentPapersLoading = !ownsCurrentUserData || papersLoading;
     const appLayout = useAppsLayoutPersistence(user?.id, setApps, setGroups);
+    const library = useAppLibraryActions({
+        apps: currentApps,
+        groups: currentGroups,
+        status: currentAppsStatus,
+        setApps,
+        setGroups,
+        persist: appLayout.persist,
+        layoutError: appLayout.error,
+        dismissLayoutError: appLayout.dismissError,
+    });
     const appSession = useRef<AppSessionNavigation | null>(null);
     const [host, dispatchHost] = useReducer(
         workspaceHostReducer,
@@ -212,7 +208,7 @@ export function SearchHome() {
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);
     }, []);
-    const [appsArranging, setAppsArranging] = useState(false);
+    const [appForm, setAppForm] = useState<AppFormTarget | null>(null);
     const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(
@@ -247,98 +243,31 @@ export function SearchHome() {
         },
         [updatePendingAction],
     );
-    const appEntryFocus = useRef<string>("");
-    function focusApps(selector = appEntryFocus.current) {
-        requestAnimationFrame(() =>
-            requestAnimationFrame(() => {
-                const target = selector
-                    ? document.querySelector<HTMLElement>(selector)
-                    : null;
-                (target ??
-                    document.querySelector<HTMLElement>(
-                        ".apps-workspace-root input",
-                    ))?.focus({ preventScroll: true });
-            })
-        );
-    }
     function finishWorkspaceClose() {
         const kind = closingWorkspace.current;
         if (!kind) return;
         closingWorkspace.current = null;
-        if (kind === "apps") {
-            setAppsArranging(false);
-            setActiveFolderId(null);
-        }
         dispatchHost({ type: "close", kind });
     }
-    function resumeWorkspace(kind: WorkspaceKind) {
-        const closing = closingWorkspace.current;
-        if (closing && closing !== kind) finishWorkspaceClose();
+    function resumeWorkspace() {
         closingWorkspace.current = null;
     }
-    function applyWorkspace(
-        kind: WorkspaceKind,
-        action:
-            | DomainWorkspaceAction<AppsRoute>
-            | DomainWorkspaceAction<DocumentsRoute>
-            | { type: "close" },
-    ) {
-        if (
-            kind === "apps" && action.type === "navigate" &&
-            (action.route.view === "apps/create" ||
-                action.route.view === "apps/edit") &&
-            host.models.apps.route.view === "apps/root"
-        ) {
-            const appId = action.route.view === "apps/edit"
-                ? action.route.id
-                : null;
-            appEntryFocus.current = appId
-                ? `[data-app-id="${CSS.escape(appId)}"]`
-                : ".workspace-primary";
-        }
-        if (kind === "apps" && action.type === "back") focusApps();
+    function applyWorkspace(action: WorkspaceAction) {
         if (action.type === "close") {
-            closingWorkspace.current = kind;
+            closingWorkspace.current = "documents";
             dispatchHost({ type: "activate", kind: null });
             return;
         }
-        resumeWorkspace(kind);
-        if (kind === "apps") setAppsArranging(false);
-        for (const other of ["apps", "documents"] as const) {
-            if (other !== kind && host.open[other]) {
-                dispatchHost({ type: "close", kind: other });
-            }
-        }
-        if (kind === "apps") {
-            dispatchHost({
-                type: "domain",
-                kind: "apps",
-                action: action as DomainWorkspaceAction<AppsRoute>,
-            });
-        } else {
-            dispatchHost({
-                type: "domain",
-                kind: "documents",
-                action: action as DomainWorkspaceAction<DocumentsRoute>,
-            });
-        }
+        resumeWorkspace();
+        dispatchHost({ type: "domain", kind: "documents", action });
     }
-    function requestWorkspace(
-        kind: WorkspaceKind,
-        action: WorkspaceAction,
-    ) {
+    function requestWorkspace(action: WorkspaceAction) {
         if (pendingActionRef.current) return;
-        if (appSession.current?.isSubmitting) return;
-        if (
-            (appSession.current?.isDirty &&
-                (appRoute.view === "apps/create" ||
-                    appRoute.view === "apps/edit")) ||
-            dirtyForm.current
-        ) {
-            updatePendingAction({ kind, action });
+        if (dirtyForm.current) {
+            updatePendingAction({ kind: "workspace", action });
             return;
         }
-        applyWorkspace(kind, action);
+        applyWorkspace(action);
     }
     function confirmPendingAction() {
         const action = pendingActionRef.current;
@@ -348,13 +277,32 @@ export function SearchHome() {
             action.intent.proceed();
             return;
         }
+        if (action.kind === "appForm") {
+            setAppForm(null);
+            return;
+        }
         dirtyForm.current = false;
-        applyWorkspace(action.kind, action.action);
+        applyWorkspace(action.action);
     }
     function navigateWorkspace(route: WorkspaceRoute) {
-        if (isAppsWorkspaceView(route)) {
-            requestWorkspace("apps", { type: "navigate", route });
-        } else requestWorkspace("documents", { type: "navigate", route });
+        requestWorkspace({ type: "navigate", route });
+    }
+    function openCreateApp(groupId?: string) {
+        setAppForm({ mode: "create", groupId });
+    }
+    function openEditApp(app: ExtendedWebApp, expandIcon?: boolean) {
+        setAppForm({ mode: "edit", id: app.id, expandIcon });
+    }
+    /** Close the app form; unsaved changes are confirmed first. */
+    function requestCloseAppForm() {
+        if (pendingActionRef.current) return;
+        const session = appSession.current;
+        if (session?.isSubmitting) return;
+        if (session?.isDirty) {
+            updatePendingAction({ kind: "appForm" });
+            return;
+        }
+        setAppForm(null);
     }
     function openDocument(id: string) {
         navigateWorkspace({ view: "documents/edit", id });
@@ -395,42 +343,15 @@ export function SearchHome() {
         user?.id,
         workspaceResetUserId,
     ]);
-    function backWorkspace(kind = host.activeKind) {
-        if (kind) requestWorkspace(kind, { type: "back" });
+    function backWorkspace() {
+        if (host.activeKind) requestWorkspace({ type: "back" });
     }
-    function closeWorkspace(kind = host.activeKind) {
-        if (kind) requestWorkspace(kind, { type: "close" });
-    }
-    function escapeWorkspace(kind = host.activeKind) {
-        if (kind !== "apps") {
-            if (kind) closeWorkspace(kind);
-            return;
-        }
-        const intent = appsEscapeIntent(
-            appRoute,
-            host.models.apps.query,
-            appsArranging,
-            activeFolderId,
-        );
-        if (intent === "clear-query") {
-            dispatchHost({
-                type: "domain",
-                kind: "apps",
-                action: { type: "query", value: "" },
-            });
-            focusApps(".apps-workspace-root input");
-        } else if (intent === "finish-arrange") {
-            setAppsArranging(false);
-            focusApps("[data-app-arrange]");
-        } else if (intent === "leave-folder") {
-            const folderId = activeFolderId;
-            setActiveFolderId(null);
-            focusApps(`[data-folder-id="${CSS.escape(folderId!)}"] button`);
-        } else if (intent === "back") backWorkspace("apps");
-        else closeWorkspace("apps");
+    function closeWorkspace() {
+        if (host.activeKind) requestWorkspace({ type: "close" });
     }
     function openWorkspace(kind: WorkspaceKind) {
-        resumeWorkspace(kind);
+        resumeWorkspace();
+        setIsManagingApps(false);
         dispatchHost({ type: "open", kind });
     }
     useEffect(() => {
@@ -438,8 +359,7 @@ export function SearchHome() {
         closingWorkspace.current = null;
         dispatchHost({ type: "reset" });
         cancelPendingAction();
-        setAppsArranging(false);
-        setActiveFolderId(null);
+        setAppForm(null);
         setIsManagingApps(false);
         setPapers([]);
         setPapersError("");
@@ -464,7 +384,6 @@ export function SearchHome() {
     undoOverlayPausedRef.current = overlayActive;
     const restoringUndoIdsRef = useRef<Set<string>>(new Set());
     const undoIdRef = useRef(0);
-    const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
     useEffect(() => {
         if (undoPaused) return;
         const timers: ReturnType<typeof globalThis.setTimeout>[] = [];
@@ -528,34 +447,29 @@ export function SearchHome() {
         undoOverlayPausedRef.current = overlayActive;
         updateUndoPauseState();
     }, [overlayActive]);
-    const appRoute = host.models.apps.route;
     const appSessionOptions: AppSessionOptions = {
-        sessionKey: user && appsOwnerId === user.id &&
-                (appRoute.view === "apps/create" ||
-                    appRoute.view === "apps/edit")
-            ? `${user.id}:${appRoute.view}:${
-                appRoute.view === "apps/edit" ? appRoute.id : ""
+        sessionKey: user && appsOwnerId === user.id && appForm
+            ? `${user.id}:${appForm.mode}:${
+                appForm.mode === "edit" ? appForm.id : ""
             }`
             : "",
-        editingApp: user && appRoute.view === "apps/edit"
-            ? currentApps.find((app) => app.id === appRoute.id) ?? null
+        editingApp: user && appForm?.mode === "edit"
+            ? currentApps.find((app) => app.id === appForm.id) ?? null
             : null,
-        defaultGroupId: appRoute.view === "apps/create"
-            ? appRoute.groupId || activeFolderId || ""
-            : "",
+        defaultGroupId: appForm?.mode === "create" ? appForm.groupId ?? "" : "",
         groups: currentGroups,
         appearance,
         existingApps: currentApps,
-        expandIcon: appRoute.view === "apps/edit" && appRoute.expandIcon,
+        expandIcon: appForm?.mode === "edit" && Boolean(appForm.expandIcon),
         onSaved: (saved, isEdit) => {
             setApps((items) =>
                 isEdit
                     ? items.map((item) => item.id === saved.id ? saved : item)
                     : [...items, saved]
             );
-            applyWorkspace("apps", { type: "back" });
+            setAppForm(null);
         },
-        onClose: () => backWorkspace("apps"),
+        onClose: requestCloseAppForm,
     };
     useEffect(() => setEngine(appearance.engine), [appearance.engine]);
     useEffect(() => {
@@ -761,76 +675,6 @@ export function SearchHome() {
             } else globalThis.location.assign(url.href);
         } catch {
             setError("网址无效，请编辑后重试。");
-        }
-    }
-
-    // Home pinned apps follow the pinned order, capped by the home limit.
-    const pinned = useMemo(
-        () =>
-            currentApps
-                .filter((item) => item.isPinned)
-                .sort((a, b) =>
-                    (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0)
-                )
-                .slice(
-                    0,
-                    appearance.webAppHomeLimit === "all"
-                        ? undefined
-                        : appearance.webAppHomeLimit,
-                ),
-        [currentApps, appearance.webAppHomeLimit],
-    );
-    async function reorderPinned(ids: string[]) {
-        const updates = ids.map((id, pinnedSortOrder) => ({
-            id,
-            pinnedSortOrder,
-        }));
-        try {
-            await api("/api/webapps/reorder", json("PUT", { items: updates }));
-            const orders = new Map(
-                updates.map((item) => [item.id, item.pinnedSortOrder]),
-            );
-            setApps((items) =>
-                items.map((item) =>
-                    orders.has(item.id)
-                        ? { ...item, pinnedSortOrder: orders.get(item.id) }
-                        : item
-                )
-            );
-        } catch (cause) {
-            setError(errorMessage(cause));
-        }
-    }
-    function openEditModal(app: ExtendedWebApp) {
-        navigateWorkspace({ view: "apps/edit", id: app.id });
-    }
-
-    async function togglePinApp(app: ExtendedWebApp) {
-        setError("");
-        const nextPinned = !app.isPinned;
-        try {
-            const updated = await api<ExtendedWebApp>(
-                `/api/webapps/${app.id}`,
-                json("PATCH", { isPinned: nextPinned }),
-            );
-            setApps((items) =>
-                items.map((item) => item.id === app.id ? updated : item)
-            );
-        } catch (e) {
-            setError(errorMessage(e));
-        }
-    }
-    async function moveAppGroup(app: ExtendedWebApp, groupId: string | null) {
-        try {
-            const updated = await api<ExtendedWebApp>(
-                `/api/webapps/${app.id}`,
-                json("PATCH", { groupId }),
-            );
-            setApps((items) =>
-                items.map((item) => item.id === app.id ? updated : item)
-            );
-        } catch (e) {
-            setError(errorMessage(e));
         }
     }
 
@@ -1119,21 +963,19 @@ export function SearchHome() {
         onCheckConnections: checkConnections,
         search,
         apps: currentApps,
-        pinned,
         groups: currentGroups,
         appsStatus: currentAppsStatus,
         appsError: currentAppsError,
         onReloadApps: () => setReloadApps((count) => count + 1),
+        library,
         papers: currentPapers,
         papersLoading: currentPapersLoading,
         isManagingApps,
         setIsManagingApps,
         openApp,
-        openEditModal,
-        reorderPinned,
-        togglePinApp,
+        openEditApp,
+        openCreateApp,
         softDeleteApp,
-        moveAppGroup,
         openPaper,
         deletePaper,
         updatePaper,
@@ -1141,56 +983,12 @@ export function SearchHome() {
         openWorkspace,
         workspaceOpen: Boolean(host.activeKind),
         showAppLabels: appearance.showAppLabels,
+        showHomeApps: appearance.showHomeApps,
         setError,
     };
-    const currentWorkspace = host.activeKind ?? "apps";
-    const currentRoute = host.models[currentWorkspace].route;
-    const isApps = currentWorkspace === "apps";
-    const title = currentRoute.view === "apps/create"
-        ? "添加应用"
-        : currentRoute.view === "apps/edit"
-        ? "编辑应用"
-        : isApps
-        ? "应用"
-        : "笔记";
-    function renderWorkspaceContent(kind: WorkspaceKind) {
+    const currentRoute = host.models.documents.route;
+    function renderWorkspaceContent() {
         if (!user) return null;
-        if (kind === "apps") {
-            if (!ownsCurrentUserData) return null;
-            const model = host.models.apps;
-            return (
-                <AppsWorkspace
-                    state={model.route}
-                    navigate={navigateWorkspace}
-                    activeFolderId={activeFolderId}
-                    onFolderChange={setActiveFolderId}
-                    apps={currentApps}
-                    groups={currentGroups}
-                    setApps={setApps}
-                    setGroups={setGroups}
-                    persistLayout={appLayout.persist}
-                    layoutError={appLayout.error}
-                    onDismissLayoutError={appLayout.dismissError}
-                    isArranging={appsArranging}
-                    onArrangeChange={setAppsArranging}
-                    query={model.query}
-                    onQueryChange={(value) => {
-                        setAppsArranging(false);
-                        dispatchHost({
-                            type: "domain",
-                            kind: "apps",
-                            action: { type: "query", value },
-                        });
-                    }}
-                    status={currentAppsStatus}
-                    error={currentAppsError}
-                    onRetry={layoutProps.onReloadApps}
-                    onOpen={openApp}
-                    onPin={togglePinApp}
-                    onDelete={softDeleteApp}
-                />
-            );
-        }
         const model = host.models.documents;
         return (
             <DocumentsWorkspace
@@ -1299,16 +1097,6 @@ export function SearchHome() {
             onPauseChange={pauseUndoQueue}
         />
     );
-    useAppsEscape({
-        enabled: Boolean(user && host.activeKind === "apps"),
-        hasDialog: () =>
-            Boolean(pendingAction || appSession.current?.hasDialog),
-        onDialogEscape: () => {
-            if (pendingAction) cancelPendingAction();
-            else appSession.current?.dismissDialog();
-        },
-        onEscape: () => escapeWorkspace("apps"),
-    });
     return (
         <AppSessionProvider
             options={appSessionOptions}
@@ -1349,14 +1137,11 @@ export function SearchHome() {
                         chromeBottom={home.chromeBottom}
                         onDockedChange={setWorkspaceDocked}
                         state={currentRoute}
-                        title={title}
-                        appsArranging={appsArranging}
-                        onSwitch={openWorkspace}
-                        onBack={() => backWorkspace()}
-                        onClose={() => closeWorkspace()}
-                        onEscape={() => escapeWorkspace()}
+                        title="笔记"
+                        onBack={backWorkspace}
+                        onClose={closeWorkspace}
+                        onEscape={closeWorkspace}
                         onExited={finishWorkspaceClose}
-                        onFinishArrange={() => setAppsArranging(false)}
                         feedback={
                             <>
                                 {error && (
@@ -1370,18 +1155,14 @@ export function SearchHome() {
                             </>
                         }
                         onFeedbackHost={setFeedbackHost}
-                        onCreate={host.activeKind === "apps"
-                            ? () =>
-                                navigateWorkspace({
-                                    view: "apps/create",
-                                    groupId: activeFolderId ?? undefined,
-                                })
-                            : undefined}
                     >
-                        {host.activeKind &&
-                            renderWorkspaceContent(host.activeKind)}
+                        {host.activeKind && renderWorkspaceContent()}
                     </WorkspaceShell>
                 )}
+                <AppFormDialog
+                    target={user && ownsCurrentUserData ? appForm : null}
+                    onRequestClose={requestCloseAppForm}
+                />
                 {undoFeedback}
                 <AlertDialog
                     open={Boolean(pendingAction)}
@@ -1392,13 +1173,15 @@ export function SearchHome() {
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>
-                                {pendingAction?.kind === "apps" ||
-                                        pendingAction?.kind === "route"
+                                {pendingAction?.kind === "route" ||
+                                        pendingAction?.kind === "appForm"
                                     ? "放弃未保存的应用修改？"
                                     : "放弃未保存的修改？"}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                                离开当前页面或工作区后，当前未保存的表单内容将丢失。
+                                {pendingAction?.kind === "appForm"
+                                    ? "关闭后，当前未保存的表单内容将丢失。"
+                                    : "离开当前页面或工作区后，当前未保存的表单内容将丢失。"}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

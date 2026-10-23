@@ -3,7 +3,6 @@ import { Check, Loader2, RefreshCw, Upload } from "lucide-react";
 import { Button } from "../ui/button.tsx";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
-import { Switch } from "../ui/switch.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
 import { WebAppGlyph } from "./WebAppIcon.tsx";
@@ -28,7 +27,6 @@ export function AppForm() {
         appName,
         appGroupId,
         appOpenMode,
-        appIsPinned,
         iconTab,
         appIconSource,
         iconPreviewUrl,
@@ -51,7 +49,6 @@ export function AppForm() {
         setAppName,
         setAppGroupId,
         setAppOpenMode,
-        setAppIsPinned,
         setIconTab,
         setAppIconAssetId,
         setAppIconSource,
@@ -191,26 +188,6 @@ export function AppForm() {
                 <section className="app-dialog-section">
                     <h3 className="app-dialog-section-title">打开设置</h3>
                     <div className="app-dialog-options-card">
-                        {/* 固定在搜索首页 */}
-                        <div className="app-dialog-option-row">
-                            <div className="flex flex-col gap-0.5">
-                                <label
-                                    htmlFor="app-pin-switch"
-                                    className="app-dialog-option-title cursor-pointer"
-                                >
-                                    固定到首页
-                                </label>
-                            </div>
-                            <Switch
-                                id="app-pin-switch"
-                                checked={appIsPinned}
-                                onCheckedChange={setAppIsPinned}
-                                aria-label="固定到首页"
-                            />
-                        </div>
-
-                        <div className="app-dialog-option-divider" />
-
                         {/* 打开方式 */}
                         <div className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between gap-2">

@@ -1,4 +1,11 @@
-import { ArrowUpRight, History, Search, Sparkles } from "lucide-react";
+import {
+    AppWindow,
+    ArrowUpRight,
+    Folder,
+    History,
+    Search,
+    Sparkles,
+} from "lucide-react";
 import { EngineIcon, EngineSelector } from "./EngineSelector.tsx";
 import { type ModelOption, ModelSelector } from "./ModelSelector.tsx";
 import {
@@ -24,6 +31,7 @@ import {
     SEARCH_QUICK_COMMANDS,
     SHORTCUTS,
 } from "../../features/shortcuts/shortcut-catalog.ts";
+import { matchLibrary } from "../../features/app-library/library-search.ts";
 
 export type Reachability = Record<
     string,
@@ -37,13 +45,25 @@ export interface WebAppCandidate {
     iconAssetId?: string | null;
 }
 
+export interface WebFolderCandidate {
+    id: string;
+    name: string;
+}
+
+export interface QuickEntry {
+    id: string;
+    label: string;
+}
+
 export interface SuggestionItem {
     text: string;
-    source: "history" | "webapp" | "engine" | "command";
+    source: "history" | "webapp" | "folder" | "entry" | "engine" | "command";
     engine?: EngineId;
     url?: string;
     description?: string;
     app?: WebAppCandidate;
+    folderId?: string;
+    entryId?: string;
 }
 
 type SuggestionSegment = {
@@ -82,6 +102,13 @@ export function splitSuggestionLabel(
 const EMPTY_REACHABILITY: Reachability = {};
 const EMPTY_MODELS: ModelOption[] = [];
 const EMPTY_WEB_APPS: WebAppCandidate[] = [];
+const EMPTY_WEB_FOLDERS: WebFolderCandidate[] = [];
+const EMPTY_QUICK_ENTRIES: QuickEntry[] = [];
+
+/** Library matches (apps, folders) are listed before history and engine suggestions. */
+function isLocalSource(source: SuggestionItem["source"] | undefined) {
+    return source === "webapp" || source === "folder";
+}
 
 export function SearcherSearchInput(
     {
@@ -99,7 +126,11 @@ export function SearcherSearchInput(
         onModelChange,
         disabled = false,
         webApps = EMPTY_WEB_APPS,
+        webFolders = EMPTY_WEB_FOLDERS,
         onOpenApp,
+        onOpenFolder,
+        quickEntries = EMPTY_QUICK_ENTRIES,
+        onQuickEntry,
     }: {
         engine: EngineId;
         onEngineChange: (id: EngineId) => void;
@@ -119,7 +150,12 @@ export function SearcherSearchInput(
         onModelChange?: (id: string) => void;
         disabled?: boolean;
         webApps?: WebAppCandidate[];
+        webFolders?: WebFolderCandidate[];
         onOpenApp?: (app: { name: string; url: string }) => void;
+        onOpenFolder?: (folderId: string) => void;
+        /** Shown while the focused box is empty (e.g. 应用 with the home grid off). */
+        quickEntries?: QuickEntry[];
+        onQuickEntry?: (entryId: string) => void;
     },
 ) {
     const [query, setQuery] = useState("");
@@ -180,6 +216,20 @@ export function SearcherSearchInput(
     useEffect(() => {
         const trimmed = query.trim();
         setOnlineUnavailable(false);
+        if (!trimmed && mode !== "ai" && quickEntries.length > 0) {
+            // Focusing the empty box offers the quick entries.
+            setSuggestions(quickEntries.map((entry) => ({
+                text: entry.label,
+                source: "entry" as const,
+                entryId: entry.id,
+            })));
+            setIsOpen(
+                typeof document !== "undefined" &&
+                    document.activeElement === field.current,
+            );
+            setSelectedIndex(-1);
+            return;
+        }
         if (!trimmed || mode === "ai") {
             setSuggestions((prev) => prev.length === 0 ? prev : []);
             setIsOpen(false);
@@ -249,26 +299,29 @@ export function SearcherSearchInput(
             const combined: SuggestionItem[] = [];
             let onlineFailed = false;
             const seen = new Set<string>();
-
-            // 1. Web App candidates (Name and URL)
             const qLower = effectiveQuery.toLowerCase();
-            for (const app of webApps) {
-                if (
-                    app.name.toLowerCase().includes(qLower) ||
-                    app.url.toLowerCase().includes(qLower)
-                ) {
-                    const key = `webapp:${app.name}:${app.url}`.toLowerCase();
-                    if (!seen.has(key)) {
-                        seen.add(key);
-                        combined.push({
-                            text: app.name,
-                            source: "webapp",
-                            url: app.url,
-                            app,
-                        });
-                        if (combined.length >= 4) break;
-                    }
+
+            // 1. Library matches: folders by name, then apps by name or URL
+            for (
+                const match of matchLibrary(effectiveQuery, webApps, webFolders)
+            ) {
+                if (match.type === "folder") {
+                    combined.push({
+                        text: match.folder.name,
+                        source: "folder",
+                        folderId: match.folder.id,
+                    });
+                    continue;
                 }
+                const key = `webapp:${match.app.name}:${match.app.url}`
+                    .toLowerCase();
+                seen.add(key);
+                combined.push({
+                    text: match.app.name,
+                    source: "webapp",
+                    url: match.app.url,
+                    app: match.app,
+                });
             }
 
             // 2. Local search history from IndexedDB
@@ -332,7 +385,7 @@ export function SearcherSearchInput(
             clearTimeout(timer);
             controller.abort();
         };
-    }, [query, engine, mode, webApps]);
+    }, [query, engine, mode, webApps, webFolders, quickEntries]);
 
     function saveToLocalHistory(term: string) {
         if (!term.trim()) return;
@@ -385,6 +438,16 @@ export function SearcherSearchInput(
                 field.current?.focus();
                 setSelectedIndex(-1);
             }
+            return;
+        }
+        if (item.source === "folder" && item.folderId) {
+            onOpenFolder?.(item.folderId);
+            setIsOpen(false);
+            return;
+        }
+        if (item.source === "entry" && item.entryId) {
+            onQuickEntry?.(item.entryId);
+            setIsOpen(false);
             return;
         }
         if (item.source === "webapp" && item.url) {
@@ -621,10 +684,12 @@ export function SearcherSearchInput(
                                     tabIndex={-1}
                                     aria-selected={isSelected}
                                     className={`suggestion-item ${
-                                        item.source !== "webapp" &&
-                                            visibleSuggestions.suggestions[
+                                        !isLocalSource(item.source) &&
+                                            isLocalSource(
+                                                visibleSuggestions.suggestions[
                                                     idx - 1
-                                                ]?.source === "webapp"
+                                                ]?.source,
+                                            )
                                             ? "suggestion-section-start"
                                             : ""
                                     } ${isSelected ? "active" : ""}`}
@@ -664,6 +729,18 @@ export function SearcherSearchInput(
                                                     className="suggestion-app-icon"
                                                 />
                                             )}
+                                        {item.source === "folder" && (
+                                            <Folder
+                                                size="1em"
+                                                className="icon-md suggestion-icon"
+                                            />
+                                        )}
+                                        {item.source === "entry" && (
+                                            <AppWindow
+                                                size="1em"
+                                                className="icon-md suggestion-icon"
+                                            />
+                                        )}
                                         {item.source === "engine" && (
                                             <Search
                                                 size="1em"
@@ -692,6 +769,8 @@ export function SearcherSearchInput(
                                     {(() => {
                                         const badge = item.source === "command"
                                             ? "快捷命令"
+                                            : item.source === "folder"
+                                            ? "文件夹"
                                             : item.source === "webapp"
                                             ? (item.url
                                                 ? item.url.replace(
@@ -701,6 +780,8 @@ export function SearcherSearchInput(
                                                 : "网站")
                                             : item.source === "history"
                                             ? "历史"
+                                            : item.source === "entry"
+                                            ? null
                                             : (item.engine &&
                                                     item.engine !==
                                                         visibleSuggestions

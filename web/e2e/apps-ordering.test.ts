@@ -35,44 +35,57 @@ Deno.test("apps concurrent optimistic sorting converges to confirmed server orde
             assertEquals(response.status(), 200);
         }
         await page.reload();
-        await page.locator('[data-workspace="apps"]').click();
-        await page.getByRole("button", { name: "应用更多操作", exact: true })
-            .click();
+        const tiles = page.locator(
+            ".launcher-grid--home > .launcher-tile[data-tile-id]",
+        );
+        const readOrder = () =>
+            tiles.evaluateAll((nodes) =>
+                nodes.map((node) => node.getAttribute("data-tile-id"))
+            );
+        await tiles.first().waitFor();
+        await tiles.first().click({ button: "right" });
         await page.getByRole("menuitem", { name: "整理布局", exact: true })
             .click();
-        const root = page.locator(".apps-workspace-root");
+        await page.locator(".home-managing-bar").waitFor();
+        const initial = await readOrder();
+        assertEquals(initial.length, 3);
         const routes: Route[] = [];
         await page.route("**/api/webapps/reorder", (route) => {
             routes.push(route);
         });
-        const reorder = async () => {
-            const tiles = root.locator(".launcher-grid > .launcher-tile");
-            const target = await tiles.nth(1).getAttribute("data-tile-id");
-            await tiles.first().locator("button").first().focus();
-            await page.keyboard.press("Space");
-            await root.locator(".launcher-tile.is-dragging").waitFor();
-            await page.evaluate(() =>
-                new Promise<void>((resolve) =>
-                    requestAnimationFrame(() =>
-                        requestAnimationFrame(() => resolve())
-                    )
-                )
+        // In 整理 mode the arrow keys move the focused tile one visual slot
+        // and persist the whole order; every gesture is optimistic.
+        const moveRight = async (
+            index: number,
+            expected: Array<string | null>,
+        ) => {
+            const requested = page.waitForRequest((request) =>
+                new URL(request.url()).pathname === "/api/webapps/reorder" &&
+                request.method() === "PUT"
             );
+            await tiles.nth(index).locator("button").first().focus();
             await page.keyboard.press("ArrowRight");
-            await root.locator(`[data-tile-id="${target}"].is-over`).waitFor();
-            await page.keyboard.press("Space");
+            await requested;
+            await page.waitForFunction(
+                (order) =>
+                    JSON.stringify(
+                        Array.from(
+                            document.querySelectorAll(
+                                ".launcher-grid--home > .launcher-tile[data-tile-id]",
+                            ),
+                            (node) => node.getAttribute("data-tile-id"),
+                        ),
+                    ) === JSON.stringify(order),
+                expected,
+            );
         };
-        await reorder();
-        await page.waitForFunction(() =>
-            !document.querySelector(".launcher-tile.is-dragging")
-        );
-        await reorder();
+        const afterFirst = [initial[1], initial[0], initial[2]];
+        const afterSecond = [initial[1], initial[2], initial[0]];
+        await moveRight(0, afterFirst);
+        await moveRight(1, afterSecond);
         // Both optimistic gestures run before either request settles. The newer
         // request succeeds first; the older one then fails, so snapshot rollback
         // would incorrectly replace the server-confirmed order.
-        await page.waitForFunction(() =>
-            !document.querySelector(".launcher-tile.is-dragging")
-        );
         if (routes.length !== 2) {
             throw new Error(
                 `Expected two pending gestures, got ${routes.length}`,
@@ -96,29 +109,23 @@ Deno.test("apps concurrent optimistic sorting converges to confirmed server orde
             a: { sortOrder: number },
             b: { sortOrder: number },
         ) => a.sortOrder - b.sortOrder).map((item: { id: string }) => item.id);
+        assertEquals(confirmed, afterSecond);
         await page.waitForFunction(
             (expected) =>
                 JSON.stringify(
                     Array.from(
                         document.querySelectorAll(
-                            ".apps-workspace-root .launcher-grid > .launcher-tile",
+                            ".launcher-grid--home > .launcher-tile[data-tile-id]",
                         ),
                         (node) => node.getAttribute("data-tile-id"),
                     ),
                 ) === JSON.stringify(expected),
             confirmed,
         );
-        await page.getByRole("button", { name: "完成整理", exact: true })
-            .click();
+        await page.getByRole("button", { name: "完成", exact: true }).click();
         await page.reload();
-        await page.locator('[data-workspace="apps"]').click();
-        assertEquals(
-            await root.locator(".launcher-grid > .launcher-tile").evaluateAll(
-                (nodes) =>
-                    nodes.map((node) => node.getAttribute("data-tile-id")),
-            ),
-            confirmed,
-        );
+        await tiles.first().waitFor();
+        assertEquals(await readOrder(), confirmed);
     } finally {
         await browser.close();
         await app.close();

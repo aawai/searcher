@@ -804,31 +804,19 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await authenticateContext(context);
             await visit("/", page);
 
-            // Open Apps workspace
-            const appsBtn = page.locator(
-                'button.zen-edge-btn[data-workspace="apps"]',
-            );
-            await appsBtn.first().waitFor({ state: "visible" });
-            await appsBtn.first().click();
-
-            const aside = page.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            );
-            await aside.waitFor({ state: "visible" });
-
-            // 1. Duplicate app confirmation dialog
-            const addAppBtn = aside.getByRole("button", { name: "添加应用" });
+            // Add from the home library grid
+            const addAppBtn = page.getByRole("button", { name: "添加应用" });
             await addAppBtn.waitFor({ state: "visible" });
             await addAppBtn.click();
 
-            // AppForm is visible inside aside
-            const urlInput = aside.locator("#app-url-input");
+            // AppForm is visible inside the app form dialog
+            const urlInput = page.locator("#app-url-input");
             await urlInput.waitFor({ state: "visible" });
             await urlInput.fill("https://example.com/base-url");
-            const nameInput = aside.locator("#app-name-input");
+            const nameInput = page.locator("#app-name-input");
             await nameInput.fill("Base App Copy");
 
-            const submitBtn = aside.locator(
+            const submitBtn = page.locator(
                 'form.app-dialog-form button[type="submit"]',
             );
             let addRequests = 0;
@@ -889,14 +877,14 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             assertEquals(addRequests, 1);
 
             // Form closes and returns to apps root with the duplicate app
-            const duplicateTile = aside.locator(
+            const duplicateTile = page.locator(
                 ".launcher-tile:has-text('Base App Copy')",
             );
             await duplicateTile.waitFor({ state: "visible" });
 
             // 2. Icon overwrite confirmation dialog on URL change
             // Right click on Base App tile to open context menu and click 更换图标/编辑
-            const baseTile = aside.locator(
+            const baseTile = page.locator(
                 ".launcher-tile:has-text('Base App')",
             ).first();
             await baseTile.click({ button: "right" });
@@ -1066,19 +1054,8 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await authenticateContext(context);
             await visit("/", page);
 
-            // 1. Home / Apps workspace: App delete and UndoToast restoration
-            const appsBtn = page.locator(
-                'button.zen-edge-btn[data-workspace="apps"]',
-            );
-            await appsBtn.first().waitFor({ state: "visible" });
-            await appsBtn.first().click();
-
-            const aside = page.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            );
-            await aside.waitFor({ state: "visible" });
-
-            const appTile = aside.locator(
+            // 1. Home library: App delete and UndoToast restoration
+            const appTile = page.locator(
                 ".launcher-tile:has-text('Undo Target WebApp')",
             );
             await appTile.waitFor({ state: "visible" });
@@ -1122,7 +1099,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 new Date(clockStart.getTime() + 1000),
             );
             const batchAppTiles = undoBatchApps.map((app) =>
-                aside.locator(`.launcher-tile:has-text('${app.name}')`)
+                page.locator(`.launcher-tile:has-text('${app.name}')`)
             );
             for (const tile of batchAppTiles) {
                 await tile.click({ button: "right" });
@@ -1454,7 +1431,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     );
 
     await t.step(
-        "Workspace: Apps/Documents initial loading, error, empty (首次空结果不闪空态) 及可读 warning",
+        "Workspace/Home: Apps/Documents initial loading, error, empty (首次空结果不闪空态) 及可读 warning",
         async () => {
             // Register a fresh clean user without apps or documents
             const emptyUsername = "empty_state_user_79";
@@ -1588,19 +1565,11 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             });
 
             await visit("/", appsTestPage);
-            const appsOpenBtn = appsTestPage.locator(
-                'button.zen-edge-btn[data-workspace="apps"]',
-            );
-            await appsOpenBtn.first().waitFor({ state: "visible" });
-            await appsOpenBtn.first().click();
 
-            const appsAside = appsTestPage.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            );
-            await appsAside.waitFor({ state: "visible" });
-
-            // Loading state is visible in apps panel
-            const appsLoading = appsAside.locator(".loading-state");
+            // Loading state is visible in the home library
+            const appsLoading = appsTestPage.getByRole("status").filter({
+                hasText: "正在加载应用…",
+            });
             await appsLoading.waitFor({ state: "visible" });
 
             appsGate.resolve();
@@ -1621,14 +1590,9 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // Reload page with 500 error route active
             await appsTestPage.reload();
-            const appsReopenBtn = appsTestPage.locator(
-                'button.zen-edge-btn[data-workspace="apps"]',
-            );
-            await appsReopenBtn.first().waitFor({ state: "visible" });
-            await appsReopenBtn.first().click();
-            const appsErrorBanner = appsAside.locator(
-                ".status-banner:has-text('网站服务连接失败')",
-            );
+            const appsErrorBanner = appsTestPage.getByRole("alert").filter({
+                hasText: "网站服务连接失败",
+            });
             await appsErrorBanner.waitFor({ state: "visible" });
             const appsRetryBtn = appsErrorBanner.getByRole("button", {
                 name: "重试",

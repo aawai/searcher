@@ -196,7 +196,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
 
     // Document summaries may load vendor code, but do not instantiate the runtime.
     await t.step(
-        "Scenario 2: Home/Apps stay vendor-cold; Documents root stays runtime-cold; Live loads on demand and Source does not reload",
+        "Scenario 2: Home stays vendor-cold; Documents root stays runtime-cold; Live loads on demand and Source does not reload",
         async () => {
             const { page, close } = await createIsolatedPage();
             try {
@@ -225,21 +225,18 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 await page.waitForURL(origin + "/");
                 await page.locator("main").waitFor({ state: "visible" });
 
-                // 2. Open Apps workspace and assert panel visible
-                const appsBtn = page.locator('button[data-workspace="apps"]')
-                    .first();
-                await appsBtn.waitFor({ state: "visible" });
-                await appsBtn.click();
-                const workspacePanel = page.locator(".workspace-panel").first();
-                await workspacePanel.waitFor({ state: "visible" });
+                // 2. Home (library grid included) must stay editor-cold
+                await page.locator("#search-query").waitFor({
+                    state: "visible",
+                });
                 assert(
                     !requestedJs.includes(editorVendorChunk),
-                    `Home/Apps unexpectedly requested editor-vendor: ${editorVendorChunk}`,
+                    `Home unexpectedly requested editor-vendor: ${editorVendorChunk}`,
                 );
                 assert(
                     !requestedJs.includes(runtimeChunk) &&
                         !requestedJs.includes(sharedRuntimeChunk),
-                    "Auth/Home/Apps must not request editor runtime",
+                    "Auth/Home must not request editor runtime",
                 );
 
                 // 3. Seed a document, then open it from the documents workspace
@@ -256,7 +253,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                     if (!response.ok) throw new Error(await response.text());
                 });
                 const documentsSwitcher = page.locator(
-                    '.workspace-panel button[data-workspace="documents"]',
+                    'button[data-workspace="documents"]',
                 ).first();
                 await documentsSwitcher.waitFor({ state: "visible" });
                 await documentsSwitcher.click();

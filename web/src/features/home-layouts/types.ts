@@ -5,7 +5,11 @@ import type {
     UpdateDocumentInput,
 } from "@shared/documents.ts";
 import type { Reachability } from "../../components/searcher/SearcherSearchInput.tsx";
-import type { ExtendedWebApp, WebAppGroup } from "../../app/SearchHome.tsx";
+import type {
+    ExtendedWebApp,
+    WebAppGroup,
+} from "../app-library/library-types.ts";
+import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
 import type { UserDto } from "@shared/contracts.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
 import type { PaperItem } from "./home-papers.ts";
@@ -24,11 +28,12 @@ export interface HomeLayoutProps {
         override?: { engine?: EngineId; mode?: "search" | "ai" },
     ) => void;
     apps: ExtendedWebApp[];
-    pinned: ExtendedWebApp[];
     groups: WebAppGroup[];
     appsStatus: "loading" | "ready" | "offline" | "error";
     appsError: string;
     onReloadApps: () => void;
+    /** Folder CRUD, order writes and icon backfill for the home app library. */
+    library: AppLibraryController;
     papersLoading: boolean;
     papers: PaperItem[];
     isManagingApps: boolean;
@@ -40,14 +45,9 @@ export interface HomeLayoutProps {
             openMode?: "current" | "new_tab" | "global" | null;
         },
     ) => void;
-    openEditModal: (app: ExtendedWebApp) => void;
-    reorderPinned: (ids: string[]) => Promise<void>;
-    togglePinApp: (app: ExtendedWebApp) => Promise<void>;
+    openEditApp: (app: ExtendedWebApp, expandIcon?: boolean) => void;
+    openCreateApp: (groupId?: string) => void;
     softDeleteApp: (app: ExtendedWebApp) => Promise<void>;
-    moveAppGroup: (
-        app: ExtendedWebApp,
-        groupId: string | null,
-    ) => Promise<void>;
     // papers
     openPaper: (paper: PaperItem) => void;
     deletePaper: (paper: PaperItem) => Promise<void>;
@@ -64,6 +64,8 @@ export interface HomeLayoutProps {
     workspaceOpen: boolean;
     // appearance
     showAppLabels: boolean;
+    /** 在首页显示应用: the grid, + and 更多 render on home. */
+    showHomeApps: boolean;
     // error
     setError: (err: string) => void;
 }

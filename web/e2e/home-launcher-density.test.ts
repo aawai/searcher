@@ -19,42 +19,43 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         });
         const page = await context.newPage();
         await page.goto(app.origin + "/register");
-        await page.locator("#auth-username").fill("zen_pinned_density");
+        await page.locator("#auth-username").fill("home_library_density");
         await page.locator("#auth-display-name").fill("Zen density tester");
         await page.locator("#auth-password").fill("Zen-density-password-150!");
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
 
+        // Six apps plus the trailing 添加应用 cell: the home grid is the library.
+        const APP_COUNT = 6;
         const longAppName = "A".repeat(80);
-        await page.evaluate(async (longName) => {
-            for (let index = 0; index < 6; index++) {
+        await page.evaluate(async ([longName, appCount]) => {
+            for (let index = 0; index < appCount; index++) {
                 const response = await fetch("/api/webapps", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        name: index === 0 ? longName : "Pinned " + index,
-                        url: "https://pinned-" + index + ".example/",
-                        isPinned: true,
+                        name: index === 0 ? longName : "App " + index,
+                        url: "https://home-app-" + index + ".example/",
                         sortOrder: index,
                     }),
                 });
                 if (!response.ok) {
                     throw new Error(
-                        "Seed pinned app: " + await response.text(),
+                        "Seed app: " + await response.text(),
                     );
                 }
             }
-        }, longAppName);
+        }, [longAppName, APP_COUNT] as const);
         await page.reload();
 
-        const grid = page.locator(".pinned-area .launcher-grid--home");
+        const grid = page.locator(".launcher-library .launcher-grid--home");
         // Visibility alone is not enough: useDesktopColumns initializes with
         // six columns and ResizeObserver updates the responsive grid later.
         const waitForHomeColumns = async (expected: number, track = 68) => {
             await grid.waitFor({ state: "visible" });
-            await page.waitForFunction(([columns, track]) => {
+            await page.waitForFunction(([columns, track, appCount]) => {
                 const home = document.querySelector<HTMLElement>(
-                    ".pinned-area .launcher-grid--home",
+                    ".launcher-library .launcher-grid--home",
                 );
                 if (!home || Number(home.dataset.columns) !== columns) {
                     return false;
@@ -72,7 +73,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     ),
                 );
                 if (
-                    cell !== track || gap !== 4 || tiles.length !== 6 ||
+                    cell !== track || gap !== 4 ||
+                    tiles.length !== appCount + 1 ||
                     width <= 0
                 ) return false;
                 const measured = Math.max(
@@ -84,7 +86,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     Math.abs(tile.getBoundingClientRect().top - top) < 1
                 ).length;
                 return measured === columns && firstRow === columns;
-            }, [expected, track]);
+            }, [expected, track, APP_COUNT]);
         };
 
         // Persist an appearance change and reload so assertions read the
@@ -115,7 +117,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             await page.waitForFunction(
                 ([glyphSize, labelCount]) => {
                     const home = document.querySelector<HTMLElement>(
-                        ".pinned-area .launcher-grid--home",
+                        ".launcher-library .launcher-grid--home",
                     );
                     const glyphNode = home?.querySelector<HTMLElement>(
                         ".webapp-glyph",
@@ -128,7 +130,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                         home.querySelectorAll(".webapp-name").length ===
                             labelCount;
                 },
-                [glyph, showLabels ? 6 : 0],
+                [glyph, showLabels ? APP_COUNT + 1 : 0],
             );
             const columns = await grid.evaluate((node, cell) => {
                 const width = node.parentElement?.getBoundingClientRect()
@@ -205,7 +207,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             assertEquals(metrics.firstRow, columns);
             assert(metrics.centerOffset < 1, JSON.stringify(metrics));
             assertEquals(metrics.overflow, false);
-            assertEquals(metrics.labels, showLabels ? 6 : 0);
+            assertEquals(metrics.labels, showLabels ? APP_COUNT + 1 : 0);
             for (const button of metrics.buttons) {
                 assertEquals(button.width, track);
                 assertEquals(button.height, track);
@@ -251,7 +253,9 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             exact: true,
         });
         await longHomeIcon.waitFor({ state: "visible" });
-        const firstHomeTile = grid.locator(":scope > .launcher-tile").filter({
+        const firstHomeTile = grid.locator(
+            ":scope > .launcher-tile[data-tile-id]",
+        ).filter({
             has: page.getByRole("button", {
                 name: `打开 ${longAppName}`,
                 exact: true,
@@ -264,7 +268,9 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         const firstHomeTileLabel = await longHomeIcon.getAttribute(
             "aria-label",
         );
-        const homeTileIds = await grid.locator(":scope > .launcher-tile")
+        const homeTileIds = await grid.locator(
+            ":scope > .launcher-tile[data-tile-id]",
+        )
             .evaluateAll((tiles) =>
                 tiles.map((tile) => tile.getAttribute("data-tile-id"))
             );
@@ -376,7 +382,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         }).waitFor({ state: "visible" });
         await page.waitForFunction(() =>
             document.querySelectorAll(
-                ".pinned-area .launcher-grid--home > .launcher-tile",
+                ".launcher-library .launcher-grid--home > .launcher-tile[data-tile-id]",
             ).length === 6
         );
         await page.clock.resume();
@@ -481,7 +487,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
 
         // Enter arranging via context menu; reproduce real CDP touch dragging
         // into another cell and verify the portaled preview + persistence.
-        const tiles = grid.locator(":scope > .launcher-tile");
+        const tiles = grid.locator(":scope > .launcher-tile[data-tile-id]");
         const initialIds = await tiles.evaluateAll((nodes) =>
             nodes.map((node) => node.getAttribute("data-tile-id"))
         );
@@ -500,20 +506,19 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             type: "touchStart",
             touchPoints: [pressPoint],
         });
-        await page.waitForTimeout(650);
-        await cdp.send("Input.dispatchTouchEvent", {
-            type: "touchEnd",
-            touchPoints: [],
-        });
         const arrange = page.getByRole("menuitem", {
             name: "整理布局",
             exact: true,
         });
         await arrange.waitFor({ state: "visible" });
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchEnd",
+            touchPoints: [],
+        });
         await arrange.click();
         await page.waitForFunction(() =>
             document.querySelectorAll(
-                ".pinned-area .launcher-tile.is-managing",
+                ".launcher-library .launcher-tile.is-managing",
             ).length === 6
         );
         const source = (await tiles.nth(0).boundingBox())!;
@@ -567,7 +572,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         ) => {
             const relative = await page.evaluate(() => {
                 const original = document.querySelector<HTMLElement>(
-                    ".pinned-area .launcher-tile.is-dragging",
+                    ".launcher-library .launcher-tile.is-dragging",
                 );
                 const preview = document.querySelector<HTMLElement>(
                     ".launcher-overlay--home",
@@ -628,7 +633,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             (targetId) =>
                 Array.from(
                     document.querySelectorAll(
-                        ".pinned-area .launcher-tile.is-over",
+                        ".launcher-library .launcher-tile.is-over",
                     ),
                 ).some((node) =>
                     node.getAttribute("data-tile-id") === targetId
@@ -643,7 +648,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await page.waitForFunction((ids) => {
             const actual = Array.from(
                 document.querySelectorAll(
-                    ".pinned-area .launcher-grid--home > .launcher-tile",
+                    ".launcher-library .launcher-grid--home > .launcher-tile",
                 ),
                 (node) => node.getAttribute("data-tile-id"),
             );
@@ -651,7 +656,9 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         }, initialIds);
         await page.reload();
         await waitForHomeColumns(5);
-        const reorderedIds = await grid.locator(":scope > .launcher-tile")
+        const reorderedIds = await grid.locator(
+            ":scope > .launcher-tile[data-tile-id]",
+        )
             .evaluateAll((nodes) =>
                 nodes.map((node) => node.getAttribute("data-tile-id"))
             );
@@ -666,10 +673,12 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await waitForHomeColumns(5);
         await page.waitForFunction(() =>
             document.querySelectorAll(
-                ".pinned-area .launcher-grid--home .webapp-name",
+                ".launcher-library .launcher-grid--home .webapp-name",
             ).length === 0
         );
-        const hiddenTiles = grid.locator(":scope > .launcher-tile");
+        const hiddenTiles = grid.locator(
+            ":scope > .launcher-tile[data-tile-id]",
+        );
         await hiddenTiles.first().locator(".webapp-icon").click({
             button: "right",
         });
@@ -679,7 +688,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         }).click();
         await page.waitForFunction(() =>
             document.querySelectorAll(
-                ".pinned-area .launcher-tile.is-managing",
+                ".launcher-library .launcher-tile.is-managing",
             ).length === 6
         );
         const hiddenBox = (await hiddenTiles.first().boundingBox())!;
@@ -727,7 +736,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             const finePage = await fineContext.newPage();
             await finePage.goto(app.origin + "/");
             const fineGrid = finePage.locator(
-                ".pinned-area .launcher-grid--home",
+                ".launcher-library .launcher-grid--home",
             );
             await fineGrid.waitFor({ state: "visible" });
             const fineMetrics = await fineGrid.evaluate((node) => {
@@ -745,7 +754,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             await finePage.setViewportSize({ width: 1440, height: 900 });
             await finePage.waitForFunction(() => {
                 const home = document.querySelector<HTMLElement>(
-                    ".pinned-area .launcher-grid--home",
+                    ".launcher-library .launcher-grid--home",
                 );
                 return !!home &&
                     getComputedStyle(home).getPropertyValue("--launcher-col-w")

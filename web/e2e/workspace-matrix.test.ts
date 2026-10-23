@@ -16,7 +16,7 @@ import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
  * Covers:
  * Matrix A: 4 viewports x 2 themes - overflow, search/home geometry, presenter type, focus-visible
  * Matrix B: Wallpaper material - 390 wallpaper on/off, light surface boundary and readability
- * Matrix C: Apps/Documents states (root/nested/empty/loading/error) at 390 mobile and 1440
+ * Matrix C: Documents states (root/edit/empty/loading/error) at 390 mobile and 1440
  */
 
 Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
@@ -117,13 +117,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         color: "amber",
     });
 
-    async function openWorkspace(
-        type: "apps" | "documents",
-        target: Page = page,
-    ) {
-        const label = type === "apps" ? "应用工作区" : "笔记工作区";
+    async function openWorkspace(target: Page = page) {
         const trigger = target.locator(
-            `.zen-edge-btn[data-workspace="${type}"], button[aria-label="${label}"]`,
+            '.zen-edge-btn[data-workspace="documents"]',
         ).first();
         await trigger.waitFor({ state: "visible" });
         await trigger.click();
@@ -276,7 +272,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     }
 
                     // 4. Presenter check: open and verify presenter type
-                    await openWorkspace("apps");
+                    await openWorkspace();
                     if (vp.width === 390) {
                         const isMobileSheet = await page.locator(
                             '.workspace-panel--mobile[data-slot="sheet-content"]',
@@ -315,7 +311,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             });
             await page.emulateMedia({ colorScheme: "light" });
 
-            await openWorkspace("apps");
+            await openWorkspace();
             const sheet = page.locator(
                 '.workspace-panel--mobile, [data-slot="sheet-content"], .workspace-panel',
             ).first();
@@ -358,10 +354,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     );
 
     // =========================================================================
-    // Matrix C: Apps/Documents states (root/nested/empty) at 390 mobile
+    // Matrix C: Documents states (root/edit/empty) at 390 mobile
     // =========================================================================
     await t.step(
-        "Matrix C: Apps/Documents states (root/nested/empty) at 390 mobile",
+        "Matrix C: Documents states (root/edit/empty) at 390 mobile",
         async () => {
             // Part 1: 390 Mobile
             await page.setViewportSize({ width: 390, height: 844 });
@@ -370,49 +366,8 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             });
             await visit("/");
 
-            // 1a. Apps root state
-            await openWorkspace("apps");
-            const appsPanel = page.getByRole("dialog", {
-                name: "应用",
-                exact: true,
-            });
-            await appsPanel.locator(
-                ".launcher-tile, .launcher-app, [data-app-id]",
-            ).first().waitFor({ state: "visible" });
-
-            // 1b. Apps nested state
-            const workFolder = appsPanel.locator(
-                ".launcher-folder-item, [data-folder-id]",
-            ).first();
-            await workFolder.waitFor({ state: "visible" });
-            await workFolder.click();
-            const backBtn = appsPanel.locator(
-                'button[aria-label="返回应用列表"], button[aria-label="返回上一级"]',
-            ).first();
-            await backBtn.waitFor({ state: "visible" });
-            await backBtn.click();
-            await appsPanel.locator(
-                ".launcher-tile, .launcher-app, [data-app-id]",
-            ).first().waitFor({ state: "visible" });
-
-            // 1c. Apps empty state
-            const appsSearch = appsPanel.locator(
-                "input[data-workspace-search], input[type='search']",
-            ).first();
-            await appsSearch.waitFor({ state: "visible" });
-            await appsSearch.fill("xyznonexistent");
-            const appsEmpty = appsPanel.locator(
-                ".empty-state, .launcher-empty, [data-slot='empty-state']",
-            ).first();
-            await appsEmpty.waitFor({ state: "visible" });
-            await appsSearch.fill("");
-            await appsPanel.locator(
-                ".launcher-tile, .launcher-app, [data-app-id]",
-            ).first().waitFor({ state: "visible" });
-            await closeWorkspace();
-
             // 1e. Documents root state
-            await openWorkspace("documents");
+            await openWorkspace();
             await page.getByRole("dialog", { name: "笔记", exact: true })
                 .waitFor({ state: "visible" });
             const documentsPanel = page.getByRole("dialog", {
@@ -461,7 +416,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     // Matrix C (loading/error): Apps/Documents loading, error and retry at 390 and 1440
     // =========================================================================
     await t.step(
-        "Matrix C: Apps/Documents loading, error and retry at 390 and 1440",
+        "Matrix C: Documents loading, error and retry at 390 and 1440",
         async () => {
             await request("/api/preferences", "PATCH", {
                 theme: "light",
@@ -473,85 +428,78 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 }]
             ) {
                 await page.setViewportSize(viewport);
-                for (const kind of ["apps", "documents"] as const) {
-                    const targetPath = kind === "apps"
-                        ? "/api/webapps"
-                        : "/api/documents";
-                    const isTarget = (url: URL) => url.pathname === targetPath;
-                    const getSurface = () =>
-                        page.locator(
-                            viewport.width === 390
-                                ? ".workspace-panel--mobile"
-                                : "aside.workspace-panel",
-                        );
-                    const rows = kind === "apps"
-                        ? ".launcher-tile"
-                        : "[data-document-id]";
-                    const gate = Promise.withResolvers<void>();
-                    await page.route(isTarget, async (route) => {
-                        if (route.request().method() === "GET") {
-                            await gate.promise;
-                        }
-                        await route.continue();
-                    });
-                    try {
-                        await visit("/");
-                        await openWorkspace(kind);
-                        const surface = getSurface();
-                        const loading = surface.locator(
-                            '.loading-state[role="status"]',
-                        );
-                        await loading.waitFor({ state: "visible" });
-
-                        gate.resolve();
-                        await loading.waitFor({ state: "detached" });
-                        await surface.locator(rows).first().waitFor({
-                            state: "visible",
-                        });
-                        await closeWorkspace();
-                    } finally {
-                        gate.resolve();
-                        await page.unrouteAll({ behavior: "wait" });
-                    }
-                    const message = "网络状态验收失败";
-                    await page.route(
-                        isTarget,
-                        (route) =>
-                            route.request().method() === "GET"
-                                ? route.fulfill({
-                                    status: 500,
-                                    contentType: "application/json",
-                                    body: JSON.stringify({
-                                        status: false,
-                                        message,
-                                    }),
-                                })
-                                : route.continue(),
+                const targetPath = "/api/documents";
+                const isTarget = (url: URL) => url.pathname === targetPath;
+                const getSurface = () =>
+                    page.locator(
+                        viewport.width === 390
+                            ? ".workspace-panel--mobile"
+                            : "aside.workspace-panel",
                     );
-                    try {
-                        await visit("/");
-                        await openWorkspace(kind);
-                        const surface = getSurface();
-                        const alert = surface.locator(
-                            '.status-banner[role="alert"]',
-                        );
-                        await alert.waitFor({ state: "visible" });
-                        assert(
-                            (await alert.textContent())?.includes(message),
-                            kind +
-                                " must expose its network failure to the user",
-                        );
-                        await page.unrouteAll({ behavior: "wait" });
-                        await alert.getByRole("button", { name: "重试" })
-                            .click();
-                        await alert.waitFor({ state: "detached" });
-                        await surface.locator(rows).first().waitFor({
-                            state: "visible",
-                        });
-                        await closeWorkspace();
-                    } finally {
-                        await page.unrouteAll({ behavior: "wait" });
+                const rows = "[data-document-id]";
+                const gate = Promise.withResolvers<void>();
+                await page.route(isTarget, async (route) => {
+                    if (route.request().method() === "GET") {
+                        await gate.promise;
                     }
+                    await route.continue();
+                });
+                try {
+                    await visit("/");
+                    await openWorkspace();
+                    const surface = getSurface();
+                    const loading = surface.locator(
+                        '.loading-state[role="status"]',
+                    );
+                    await loading.waitFor({ state: "visible" });
+
+                    gate.resolve();
+                    await loading.waitFor({ state: "detached" });
+                    await surface.locator(rows).first().waitFor({
+                        state: "visible",
+                    });
+                    await closeWorkspace();
+                } finally {
+                    gate.resolve();
+                    await page.unrouteAll({ behavior: "wait" });
+                }
+                const message = "网络状态验收失败";
+                await page.route(
+                    isTarget,
+                    (route) =>
+                        route.request().method() === "GET"
+                            ? route.fulfill({
+                                status: 500,
+                                contentType: "application/json",
+                                body: JSON.stringify({
+                                    status: false,
+                                    message,
+                                }),
+                            })
+                            : route.continue(),
+                );
+                try {
+                    await visit("/");
+                    await openWorkspace();
+                    const surface = getSurface();
+                    const alert = surface.locator(
+                        '.status-banner[role="alert"]',
+                    );
+                    await alert.waitFor({ state: "visible" });
+                    assert(
+                        (await alert.textContent())?.includes(message),
+                        "documents must expose its network failure to the user",
+                    );
+                    await page.unrouteAll({ behavior: "wait" });
+                    await alert.getByRole("button", { name: "重试" })
+                        .click();
+                    await alert.waitFor({ state: "detached" });
+                    await surface.locator(rows).first().waitFor({
+                        state: "visible",
+                    });
+                    await closeWorkspace();
+                } finally {
+                    await page.unrouteAll({ behavior: "wait" });
                 }
             }
         },

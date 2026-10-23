@@ -152,3 +152,27 @@ export function placeDefaultNotes(
 
     return { placed, overflowIds };
 }
+
+/**
+ * The obstacle default notes avoid: the bounding box of the search box and, with
+ * the home app library on, the measured app grid (large folders and 更多 included).
+ * Scrolling keeps the normal-flow bottom reserved: the top follows the viewport
+ * while the height grows by the scroll distance, so releasing it never removes
+ * overflow notes or resets scroll.
+ */
+export function exclusionFromRects(
+    rects: readonly PlacementRect[],
+    scrollY: number,
+): PlacementRect | null {
+    if (rects.length === 0) return null;
+    const x = Math.min(...rects.map((rect) => rect.x));
+    const right = Math.max(...rects.map((rect) => rect.x + rect.width));
+    const y = Math.min(...rects.map((rect) => rect.y));
+    const bottom = Math.max(...rects.map((rect) => rect.y + rect.height));
+    return {
+        x,
+        y: Math.min(y, y + scrollY),
+        width: right - x,
+        height: bottom - y + Math.abs(scrollY),
+    };
+}

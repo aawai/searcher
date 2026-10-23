@@ -1,7 +1,11 @@
 // Derive runtime dependency closure without resolving new versions from registries.
 import ts from "typescript";
 
-type Package = { integrity: string; dependencies?: string[] };
+type Package = {
+    integrity: string;
+    dependencies?: string[];
+    optionalDependencies?: string[];
+};
 type Lock = {
     version: string;
     specifiers: Record<string, string>;
@@ -37,7 +41,13 @@ function visitNpm(key: string): void {
     const pkg = source.npm[key];
     if (!pkg) throw new Error(`Missing locked npm dependency: ${key}`);
     npm[key] = pkg;
-    for (const dependency of pkg.dependencies ?? []) {
+    // Optional platform binaries (e.g. sharp) must stay locked for --frozen.
+    for (
+        const dependency of [
+            ...pkg.dependencies ?? [],
+            ...pkg.optionalDependencies ?? [],
+        ]
+    ) {
         // v5 omits versions only when the package name is unambiguous.
         const candidates = dependency in source.npm
             ? [dependency]

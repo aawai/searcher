@@ -9,6 +9,7 @@ export const suites = {
         "launcher",
         "apps-density",
         "home-launcher-density",
+        "home-app-library",
         "icon-presentation",
         "home-composition",
         "apps-session",

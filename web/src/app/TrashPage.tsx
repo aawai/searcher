@@ -40,9 +40,7 @@ interface TrashWebApp {
     name: string;
     url: string;
     groupId: string | null;
-    isPinned: boolean;
     sortOrder: number;
-    pinnedSortOrder: number;
     openMode: "global" | "current" | "new_tab";
     deletedAt?: number | null;
     createdAt: number;

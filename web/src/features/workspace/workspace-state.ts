@@ -1,8 +1,3 @@
-export type AppsRoute =
-    | { view: "apps/root" }
-    | { view: "apps/create"; groupId?: string }
-    | { view: "apps/edit"; id: string; expandIcon?: boolean };
-
 export type DocumentsRoute =
     | { view: "documents/root" }
     | { view: "documents/create" }
@@ -15,11 +10,7 @@ export type DocumentsScope =
     | { type: "favorite" }
     | { type: "notebook"; notebookId: string };
 
-export type WorkspaceRoute = AppsRoute | DocumentsRoute;
-
-export function isAppsWorkspaceView(state: WorkspaceRoute): state is AppsRoute {
-    return state.view.startsWith("apps/");
-}
+export type WorkspaceRoute = DocumentsRoute;
 
 export function isDocumentsWorkspaceView(
     state: WorkspaceRoute,
@@ -27,9 +18,12 @@ export function isDocumentsWorkspaceView(
     return state.view.startsWith("documents/");
 }
 
-export type WorkspaceKind = "apps" | "documents";
+/** Documents is the only workspace; apps live on the home page. */
+export type WorkspaceKind = "documents";
 
-export interface DomainWorkspaceState<Route = WorkspaceRoute> {
+export interface DomainWorkspaceState<
+    Route extends WorkspaceRoute = WorkspaceRoute,
+> {
     route: Route;
     stack: Route[];
     query: string;
@@ -41,15 +35,8 @@ export interface DocumentsWorkspaceState
 }
 
 export interface WorkspaceCoreState {
-    apps: DomainWorkspaceState<AppsRoute>;
     documents: DocumentsWorkspaceState;
 }
-
-export const initialAppsWorkspaceState: DomainWorkspaceState<AppsRoute> = {
-    route: { view: "apps/root" },
-    stack: [],
-    query: "",
-};
 
 export const initialDocumentsWorkspaceState: DocumentsWorkspaceState = {
     route: { view: "documents/root" },
@@ -59,7 +46,6 @@ export const initialDocumentsWorkspaceState: DocumentsWorkspaceState = {
 };
 
 export const initialWorkspaceCoreState: WorkspaceCoreState = {
-    apps: initialAppsWorkspaceState,
     documents: initialDocumentsWorkspaceState,
 };
 
@@ -74,34 +60,23 @@ export function areWorkspaceRoutesEqual(
     b: WorkspaceRoute,
 ): boolean {
     if (a.view !== b.view) return false;
-    if (a.view === "apps/create" && b.view === "apps/create") {
-        return a.groupId === b.groupId;
-    }
-    if (a.view === "apps/edit" && b.view === "apps/edit") {
-        return a.id === b.id;
-    }
     if (a.view === "documents/edit" && b.view === "documents/edit") {
         return a.id === b.id;
     }
     return true;
 }
 
-export function parentWorkspaceRoute(route: WorkspaceRoute): WorkspaceRoute {
-    if (isAppsWorkspaceView(route)) return { view: "apps/root" };
+export function parentWorkspaceRoute(_route: WorkspaceRoute): WorkspaceRoute {
     return { view: "documents/root" };
 }
 
-export function domainWorkspaceReducer<Route extends WorkspaceRoute>(
-    state: DomainWorkspaceState<Route>,
-    action: DomainWorkspaceAction<Route>,
-): DomainWorkspaceState<Route> {
+export function domainWorkspaceReducer(
+    state: DomainWorkspaceState,
+    action: DomainWorkspaceAction,
+): DomainWorkspaceState {
     switch (action.type) {
-        case "reset": {
-            const initial = isAppsWorkspaceView(state.route)
-                ? initialAppsWorkspaceState
-                : initialDocumentsWorkspaceState;
-            return initial as DomainWorkspaceState<Route>;
-        }
+        case "reset":
+            return initialDocumentsWorkspaceState;
         case "query":
             return {
                 ...state,
@@ -115,7 +90,7 @@ export function domainWorkspaceReducer<Route extends WorkspaceRoute>(
             }
             return {
                 ...state,
-                route: parentWorkspaceRoute(state.route) as Route,
+                route: parentWorkspaceRoute(state.route),
                 stack: [],
             };
         }
@@ -124,10 +99,7 @@ export function domainWorkspaceReducer<Route extends WorkspaceRoute>(
             if (areWorkspaceRoutesEqual(state.route, nextRoute)) {
                 return state;
             }
-            if (
-                nextRoute.view === "apps/root" ||
-                nextRoute.view === "documents/root"
-            ) {
+            if (nextRoute.view === "documents/root") {
                 return { ...state, route: nextRoute, stack: [] };
             }
             const existingIndex = state.stack.findLastIndex((item) =>

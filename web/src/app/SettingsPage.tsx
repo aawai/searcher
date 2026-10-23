@@ -654,27 +654,6 @@ export function SettingsPage() {
                             ] as const}
                             select={(v) => set("target", v)}
                         />
-                        <Choices
-                            title="首页应用数量"
-                            value={String(
-                                appearance.webAppHomeLimit,
-                            )}
-                            control="select"
-                            values={[
-                                ["8", "8 个"],
-                                ["12", "12 个"],
-                                ["16", "16 个"],
-                                ["all", "全部"],
-                            ] as const}
-                            select={(v) =>
-                                set(
-                                    "webAppHomeLimit",
-                                    v === "all" ? "all" : (Number(v) as
-                                        | 8
-                                        | 12
-                                        | 16),
-                                )}
-                        />
                     </SettingsGroup>
                 )}
                 {tab === "appearance" && (
@@ -722,18 +701,26 @@ export function SettingsPage() {
                                 values={GLASS_CHOICES}
                                 select={(v) => set("glassIntensity", v)}
                             />
-                            <SettingsRow title="显示应用名称">
-                                <Switch
-                                    checked={appearance
-                                        .showAppLabels}
-                                    onCheckedChange={(checked) =>
-                                        set(
-                                            "showAppLabels",
-                                            checked,
-                                        )}
-                                    aria-label="显示应用名称"
-                                />
-                            </SettingsRow>
+                            {user && (
+                                <SettingsRow title="在首页显示应用">
+                                    <Switch
+                                        checked={appearance.showHomeApps}
+                                        onCheckedChange={(checked) =>
+                                            set("showHomeApps", checked)}
+                                        aria-label="在首页显示应用"
+                                    />
+                                </SettingsRow>
+                            )}
+                            {(!user || appearance.showHomeApps) && (
+                                <SettingsRow title="显示应用名称">
+                                    <Switch
+                                        checked={appearance.showAppLabels}
+                                        onCheckedChange={(checked) =>
+                                            set("showAppLabels", checked)}
+                                        aria-label="显示应用名称"
+                                    />
+                                </SettingsRow>
+                            )}
                         </SettingsGroup>
                         <SettingsGroup
                             title="壁纸"

@@ -47,7 +47,6 @@ export function WorkspaceSurface(
         onFeedbackHost,
         bodyLayout,
         onEscape = onClose,
-        escapeManaged = false,
         expanded = false,
         headerActions,
         backLabel = "返回上一级",
@@ -64,9 +63,8 @@ export function WorkspaceSurface(
         children: ReactNode;
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
-        bodyLayout?: "app-form" | "editor";
+        bodyLayout?: "editor";
         onEscape?: () => void;
-        escapeManaged?: boolean;
         expanded?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
@@ -81,7 +79,7 @@ export function WorkspaceSurface(
         if (!mobile && !open && !panel.mounted) exited.current?.();
     }, [mobile, open, panel.mounted]);
     const escapeStack = useEscapeLayerStack();
-    useEscapeLayer(open && !escapeManaged, onEscape, "host");
+    useEscapeLayer(open, onEscape, "host");
     const back = useRef<HTMLButtonElement>(null);
     const close = useRef<HTMLButtonElement>(null);
     const [viewport, setViewport] = useState(() => ({
@@ -225,7 +223,7 @@ function WorkspaceFrame(
         onBack: () => void;
         onClose: () => void;
         headerActions?: ReactNode;
-        bodyLayout?: "app-form" | "editor";
+        bodyLayout?: "editor";
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
         children: ReactNode;

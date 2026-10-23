@@ -6,8 +6,6 @@ import {
     mergeVisibleOrder,
     reorderRootTiles,
 } from "./launcherTiles.ts";
-import { computeEffectiveColumns } from "./WebAppLauncher.tsx";
-import { calculateDesktopLayout } from "./desktopLayout.ts";
 
 Deno.test("grouped apps form one folder with every current member in app order", () => {
     const app = (id: string, groupId: string | null): LauncherApp => ({
@@ -15,7 +13,6 @@ Deno.test("grouped apps form one folder with every current member in app order",
         name: id,
         url: `https://${id}.example/`,
         groupId,
-        isPinned: false,
     });
     const apps = [
         app("first", "work"),
@@ -50,32 +47,12 @@ Deno.test("sorting a filtered desktop preserves hidden apps in canonical order",
     );
 });
 
-Deno.test("a large folder leaves first-row space for following websites", () => {
-    const columns = computeEffectiveColumns({
-        tilesCount: 3,
-        columns: 5,
-        showFolders: true,
-        largeFolderCount: 1,
-    });
-    const placement = calculateDesktopLayout([
-        { id: "first", cols: 1, rows: 1 },
-        { id: "folder", cols: 2, rows: 2 },
-        { id: "next", cols: 1, rows: 1 },
-    ], columns);
-    assertEquals(placement.map(({ id, row, col }) => ({ id, row, col })), [
-        { id: "first", row: 0, col: 0 },
-        { id: "folder", row: 0, col: 1 },
-        { id: "next", row: 0, col: 3 },
-    ]);
-});
-
 Deno.test("empty folders participate in root mixed layout and explicit sortOrder", () => {
     const app = (id: string, sortOrder: number): LauncherApp => ({
         id,
         name: id,
         url: `https://${id}.example/`,
         sortOrder,
-        isPinned: false,
     });
     const groups: LauncherGroup[] = [
         { id: "empty-tools", name: "Tools", sortOrder: 0 },
@@ -105,7 +82,6 @@ Deno.test("reorderRootTiles normalizes sequential ranks across apps and folders"
         name: id,
         url: `https://${id}.example/`,
         sortOrder,
-        isPinned: false,
     });
     const groups: LauncherGroup[] = [
         { id: "folder-dev", name: "Dev", sortOrder: 0 },
