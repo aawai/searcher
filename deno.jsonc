@@ -104,6 +104,7 @@
     },
     "fmt": {
         "indentWidth": 4,
+        "proseWrap": "preserve",
         "exclude": [
             "./AGENTS.md",
             "./drizzle",
