@@ -1,4 +1,4 @@
-import { ArrowUpRight, Globe, History, Search, Sparkles } from "lucide-react";
+import { ArrowUpRight, History, Search, Sparkles } from "lucide-react";
 import { EngineIcon, EngineSelector } from "./EngineSelector.tsx";
 import { type ModelOption, ModelSelector } from "./ModelSelector.tsx";
 import {
@@ -12,6 +12,8 @@ import {
 import { type EngineId } from "@shared/engines.ts";
 import { Button } from "../ui/button.tsx";
 import { usePresence } from "../ui/presence.ts";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
+import { WebAppGlyph } from "./WebAppIcon.tsx";
 import { api } from "../../lib/api.ts";
 import { getLocal, setLocal } from "../../lib/local.ts";
 import {
@@ -31,6 +33,8 @@ export type Reachability = Record<
 export interface WebAppCandidate {
     name: string;
     url: string;
+    iconUrl?: string | null;
+    iconAssetId?: string | null;
 }
 
 export interface SuggestionItem {
@@ -39,6 +43,7 @@ export interface SuggestionItem {
     engine?: EngineId;
     url?: string;
     description?: string;
+    app?: WebAppCandidate;
 }
 
 type SuggestionSegment = {
@@ -259,6 +264,7 @@ export function SearcherSearchInput(
                             text: app.name,
                             source: "webapp",
                             url: app.url,
+                            app,
                         });
                         if (combined.length >= 4) break;
                     }
@@ -295,11 +301,13 @@ export function SearcherSearchInput(
                     { signal: controller.signal },
                 );
                 if (Array.isArray(res)) {
+                    let webSuggestionCount = 0;
                     for (const item of res) {
                         const lower = item.text.toLowerCase();
                         if (!seen.has(lower)) {
                             seen.add(lower);
                             combined.push(item);
+                            if (++webSuggestionCount >= 6) break;
                         }
                     }
                 }
@@ -541,27 +549,37 @@ export function SearcherSearchInput(
                         }}
                         placeholder={mode === "ai"
                             ? "输入问题，开始对话"
-                            : "搜索你想知道的…"}
+                            : "搜索或输入网址"}
                         disabled={disabled}
                     />
-                    {!query && (
-                        <span className="search-hint" aria-hidden="true">
-                            {formatShortcut(SHORTCUTS.focusSearch.binding)}
-                        </span>
-                    )}
-                    <Button
-                        className="search-submit"
-                        variant={query.trim() && !disabled
-                            ? "default"
-                            : "ghost"}
-                        type="submit"
-                        disabled={disabled || !query.trim()}
-                        aria-label={mode === "ai" ? "发送问题" : "搜索"}
-                    >
-                        {mode === "ai"
-                            ? <ArrowUpRight size="1em" className="icon-lg" />
-                            : <Search size="1em" className="icon-lg" />}
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={<span className="search-submit-tooltip" />}
+                        >
+                            <Button
+                                className="search-submit"
+                                variant={query.trim() && !disabled
+                                    ? "default"
+                                    : "ghost"}
+                                type="submit"
+                                disabled={disabled || !query.trim()}
+                                aria-label={mode === "ai" ? "发送问题" : "搜索"}
+                            >
+                                {mode === "ai"
+                                    ? (
+                                        <ArrowUpRight
+                                            size="1em"
+                                            className="icon-lg"
+                                        />
+                                    )
+                                    : <Search size="1em" className="icon-lg" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {formatShortcut(SHORTCUTS.focusSearch.binding)}{" "}
+                            聚焦搜索
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </form>
 
@@ -605,8 +623,13 @@ export function SearcherSearchInput(
                                     tabIndex={-1}
                                     aria-selected={isSelected}
                                     className={`suggestion-item ${
-                                        isSelected ? "active" : ""
-                                    }`}
+                                        item.source !== "webapp" &&
+                                            visibleSuggestions.suggestions[
+                                                    idx - 1
+                                                ]?.source === "webapp"
+                                            ? "suggestion-section-start"
+                                            : ""
+                                    } ${isSelected ? "active" : ""}`}
                                     onPointerDown={(event) =>
                                         event.preventDefault()}
                                     onClick={() => {
@@ -636,12 +659,13 @@ export function SearcherSearchInput(
                                                 className="icon-md suggestion-icon"
                                             />
                                         )}
-                                        {item.source === "webapp" && (
-                                            <Globe
-                                                size="1em"
-                                                className="icon-md suggestion-icon"
-                                            />
-                                        )}
+                                        {item.source === "webapp" && item.app &&
+                                            (
+                                                <WebAppGlyph
+                                                    app={item.app}
+                                                    className="suggestion-app-icon"
+                                                />
+                                            )}
                                         {item.source === "engine" && (
                                             <Search
                                                 size="1em"
