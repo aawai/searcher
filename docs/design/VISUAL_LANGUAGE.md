@@ -307,4 +307,4 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - **不进入生产路由**：原型不得被生产页面引用或依赖，生产首屏 bundle 不包含它们（`scripts/check-bundle.ts` 已把 `src/design-lab/` 整个目录列为首屏禁止项）；原型代码按需动态加载。
 - **约束范围**：不受 [UI_CHECKLIST](UI_CHECKLIST.md) 的 390 / 768 / 1440 × light / dark 实页矩阵约束；仍受 [底线](#一底线) 约束——实验不得示范违反底线的做法。
 - **转正**：原型要进入生产，必须先有对应阶段的契约子任务：改写本文的相应层（风格方向可改，系统语法须写语义与验证方式，底线不可放宽），再实现，再按 UI_CHECKLIST 验收。原型本身不是契约。
-- 现有入口：`/design-lab`（正式组件、交互状态、主题与响应式预览，含玻璃档位对比）、`/design-lab/motion`（共享元素展开 / 收回、reduced-motion 与焦点回退）、`/design-lab/omnibox`（统一输入框模拟交互）、`/design-lab/markdown-editor`、`/design-lab/editable-pagination`（编辑技术验证，见 [M0A 报告](../editor/MARKDOWN_EDITOR_M0A.md)）。
+- 现有入口：`/design-lab`（正式组件、交互状态、主题与响应式预览，含玻璃档位对比）、`/design-lab/motion`（共享元素展开 / 收回、reduced-motion 与焦点回退）、`/design-lab/omnibox`（统一输入框模拟交互；键盘与分组契约以 [工作区 · 搜索框](../workspace.md#搜索框) 为准）、`/design-lab/markdown-editor`、`/design-lab/editable-pagination`（编辑技术验证，见 [M0A 报告](../editor/MARKDOWN_EDITOR_M0A.md)）。
