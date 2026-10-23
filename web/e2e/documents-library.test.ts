@@ -299,6 +299,12 @@ Deno.test("production documents library workspace contracts", async (t) => {
 
             await scope("收藏笔记").click();
             await section("收藏笔记").waitFor({ state: "visible" });
+            // Both scopes contain two rows; wait for the new scope's content, not stale counts.
+            await panel.getByRole("button", {
+                name: "打开笔记：Beta Document",
+                exact: true,
+            })
+                .waitFor({ state: "visible" });
             await waitForRowCount(2);
             text = await panel.textContent() ?? "";
             assertStringIncludes(text, "Beta Document");

@@ -93,10 +93,36 @@ function scopeToKey(scope: DocumentScope): string {
     return scope.type;
 }
 
-function sanitizeFtsQuery(raw: string): string {
-    const terms = raw.match(/[^\s"'\(\)\{\}\[\]\:\*\^\~]+/g) ?? [];
-    if (terms.length === 0) return "";
-    return terms.map((t) => `"${t.replaceAll('"', "")}"*`).join(" ");
+// documents_fts uses the trigram tokenizer: MATCH is a substring search for phrases of at least
+// 3 characters and can never match a shorter one. Shorter terms are answered by scanning the
+// owner's live documents instead. Every term is a literal; none of it reaches FTS5 as syntax.
+const TRIGRAM_MIN_LENGTH = 3;
+// Scan results have no bm25 score; ranking by recency keeps the cursor shape (rank, id) identical
+// to MATCH results. A title hit sorts ahead of any body hit by this constant (> any epoch ms).
+const SCAN_TITLE_HIT_BONUS = 10_000_000_000_000;
+
+interface SearchTerms {
+    /** Quoted FTS5 phrases for terms of >= 3 characters, ANDed. */
+    readonly match: string | null;
+    /** Raw terms of 1–2 characters, matched as case-insensitive substrings. */
+    readonly scan: readonly string[];
+}
+
+function parseSearchTerms(raw: string): SearchTerms {
+    const phrases: string[] = [];
+    const scan: string[] = [];
+    for (const term of raw.split(/\s+/)) {
+        if (term.length === 0) continue;
+        if ([...term].length >= TRIGRAM_MIN_LENGTH) {
+            phrases.push(`"${term.replaceAll('"', '""')}"`);
+        } else {
+            scan.push(term);
+        }
+    }
+    return {
+        match: phrases.length > 0 ? phrases.join(" AND ") : null,
+        scan,
+    };
 }
 
 export class DocumentsService {
@@ -1183,10 +1209,7 @@ export class DocumentsService {
             return { items: [], nextCursor: null };
         }
 
-        const ftsQuery = sanitizeFtsQuery(cleanQuery);
-        if (ftsQuery.length === 0) {
-            return { items: [], nextCursor: null };
-        }
+        const terms = parseSearchTerms(cleanQuery);
 
         let cursorPayload: SearchCursorPayload | null = null;
         if (input.cursor) {
@@ -1205,11 +1228,38 @@ export class DocumentsService {
         }
 
         return await this.store.run(async (db) => {
+            // MATCH results rank by bm25 (lower is better); scan-only results by recency.
+            const scanTitleHit = (term: string) =>
+                sql`instr(lower(coalesce(d.title, '')), lower(${term})) > 0`;
+            const scanHit = (term: string) =>
+                sql`(${
+                    scanTitleHit(term)
+                } OR instr(lower(d.current_body), lower(${term})) > 0)`;
+            const scanTitleBonus = terms.scan.length > 0
+                ? sql`CASE WHEN ${
+                    sql.join(terms.scan.map(scanTitleHit), sql` AND `)
+                } THEN ${SCAN_TITLE_HIT_BONUS} ELSE 0 END`
+                : sql`0`;
+            const rankExpr = terms.match !== null
+                ? sql`documents_fts.rank`
+                : sql`(-d.updated_at - ${scanTitleBonus})`;
+            const scanSql = terms.scan.length > 0
+                ? sql` AND ${sql.join(terms.scan.map(scanHit), sql` AND `)}`
+                : sql``;
+            const sourceSql = terms.match !== null
+                ? sql`FROM documents_fts
+                JOIN documents d ON d.id = documents_fts.document_id
+                LEFT JOIN document_notebooks nb ON nb.id = d.notebook_id
+                WHERE documents_fts MATCH ${terms.match}
+                  AND documents_fts.user_id = ${userId}`
+                : sql`FROM documents d
+                LEFT JOIN document_notebooks nb ON nb.id = d.notebook_id
+                WHERE d.user_id = ${userId}`;
             let cursorSql = sql``;
             if (cursorPayload) {
                 const { rank, id } = cursorPayload.v;
                 cursorSql = sql`
-                    AND (documents_fts.rank > ${rank} OR (documents_fts.rank = ${rank} AND d.id < ${id}))
+                    AND (${rankExpr} > ${rank} OR (${rankExpr} = ${rank} AND d.id < ${id}))
                 `;
             }
 
@@ -1226,15 +1276,12 @@ export class DocumentsService {
                     d.updated_at,
                     CASE WHEN length(trim(coalesce(d.title, ''), ${TITLE_WHITESPACE})) = 0 THEN d.current_body ELSE substr(d.current_body, 1, 300) END AS body_preview,
                     nb.name AS notebook_name,
-                    documents_fts.rank AS rank
-                FROM documents_fts
-                JOIN documents d ON d.id = documents_fts.document_id
-                LEFT JOIN document_notebooks nb ON nb.id = d.notebook_id
-                WHERE documents_fts MATCH ${ftsQuery}
-                  AND documents_fts.user_id = ${userId}
+                    ${rankExpr} AS rank
+                ${sourceSql}
                   AND d.deleted_at IS NULL
+                  ${scanSql}
                   ${cursorSql}
-                ORDER BY documents_fts.rank ASC, d.id DESC
+                ORDER BY rank ASC, d.id DESC
                 LIMIT ${limit + 1}
             `;
 
