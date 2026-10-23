@@ -189,7 +189,11 @@ export function SearchHome() {
         workspaceHostReducer,
         initialWorkspaceHost,
     );
+    // Keep the domain mounted through its exit so a quick reopen resumes it.
+    const closingWorkspace = useRef<WorkspaceKind | null>(null);
     const home = useHomeViewport();
+    // True while the non-expanded desktop panel is open beside the home content.
+    const [workspaceDocked, setWorkspaceDocked] = useState(false);
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
     );
@@ -248,6 +252,21 @@ export function SearchHome() {
             })
         );
     }
+    function finishWorkspaceClose() {
+        const kind = closingWorkspace.current;
+        if (!kind) return;
+        closingWorkspace.current = null;
+        if (kind === "apps") {
+            setAppsArranging(false);
+            setActiveFolderId(null);
+        }
+        dispatchHost({ type: "close", kind });
+    }
+    function resumeWorkspace(kind: WorkspaceKind) {
+        const closing = closingWorkspace.current;
+        if (closing && closing !== kind) finishWorkspaceClose();
+        closingWorkspace.current = null;
+    }
     function applyWorkspace(
         kind: WorkspaceKind,
         action:
@@ -270,15 +289,13 @@ export function SearchHome() {
                 : ".workspace-primary";
         }
         if (kind === "apps" && action.type === "back") focusApps();
-        if (kind === "apps") {
-            setAppsArranging(false);
-            if (action.type === "close") setActiveFolderId(null);
-        }
         if (action.type === "close") {
-            dispatchHost({ type: "close", kind });
+            closingWorkspace.current = kind;
             dispatchHost({ type: "activate", kind: null });
             return;
         }
+        resumeWorkspace(kind);
+        if (kind === "apps") setAppsArranging(false);
         for (const other of ["apps", "notes", "documents"] as const) {
             if (other !== kind && host.open[other]) {
                 dispatchHost({ type: "close", kind: other });
@@ -413,10 +430,12 @@ export function SearchHome() {
         else closeWorkspace("apps");
     }
     function openWorkspace(kind: WorkspaceKind) {
+        resumeWorkspace(kind);
         dispatchHost({ type: "open", kind });
     }
     useEffect(() => {
         dirtyForm.current = false;
+        closingWorkspace.current = null;
         dispatchHost({ type: "reset" });
         cancelPendingAction();
         setAppsArranging(false);
@@ -1354,8 +1373,9 @@ export function SearchHome() {
             </Button>
         </>
     );
-    const undoFeedback = currentUndoQueue.length > 0 && (
+    const undoFeedback = (
         <UndoToast
+            open={currentUndoQueue.length > 0}
             message={undoErrors ? `${undoMessage} ${undoErrors}` : undoMessage}
             hidden={overlayActive}
             host={feedbackHost}
@@ -1389,32 +1409,36 @@ export function SearchHome() {
             <PageShell
                 archetype="search"
                 className="home"
+                data-workspace-panel={workspaceDocked ? "open" : undefined}
             >
-                {error && !mobileFeedback && (
-                    <StatusBanner tone="error" presentation="floating">
-                        {error === GUEST_AI_UNAVAILABLE_MESSAGE
-                            ? <GuestAiUnavailable />
-                            : <span>{error}</span>}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="关闭错误提示"
-                            onClick={() =>
-                                setError("")}
-                        >
-                            <X size="1em" className="icon-md" />
-                        </Button>
-                    </StatusBanner>
-                )}
+                <StatusBanner
+                    tone="error"
+                    presentation="floating"
+                    open={Boolean(error) && !mobileFeedback}
+                >
+                    {error === GUEST_AI_UNAVAILABLE_MESSAGE
+                        ? <GuestAiUnavailable />
+                        : <span>{error}</span>}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="关闭错误提示"
+                        onClick={() => setError("")}
+                    >
+                        <X size="1em" className="icon-md" />
+                    </Button>
+                </StatusBanner>
                 <ZenLayout
                     {...layoutProps}
                     availableRect={home.availableRect}
                     viewportWidth={home.viewportWidth}
+                    panelDocked={workspaceDocked}
                 />
                 {user && (
                     <WorkspaceShell
                         open={Boolean(host.activeKind)}
                         chromeBottom={home.chromeBottom}
+                        onDockedChange={setWorkspaceDocked}
                         state={currentRoute}
                         title={title}
                         appsArranging={appsArranging}
@@ -1422,6 +1446,7 @@ export function SearchHome() {
                         onBack={() => backWorkspace()}
                         onClose={() => closeWorkspace()}
                         onEscape={() => escapeWorkspace()}
+                        onExited={finishWorkspaceClose}
                         onFinishArrange={() => setAppsArranging(false)}
                         feedback={
                             <>

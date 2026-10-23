@@ -115,6 +115,17 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         return btoa(binary);
     }
     async function subjectVisible(target: Page, selector: string) {
+        // A top-level navigation cross-fades for --motion-base; sampling pixels
+        // mid-fade would blend the previous page over the wallpaper.
+        await target.evaluate(() =>
+            Promise.allSettled(
+                document.getAnimations().filter((animation) =>
+                    Number.isFinite(
+                        animation.effect?.getComputedTiming().endTime,
+                    )
+                ).map((animation) => animation.finished),
+            )
+        );
         const bytes = await target.locator(selector).screenshot();
         const base64 = toBase64(bytes);
         const count = await target.evaluate(async (encoded) => {

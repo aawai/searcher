@@ -30,6 +30,15 @@ deno run -A npm:playwright@1.56.1 install chromium
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。
 
+### 手工视觉验收数据
+
+`scripts/seed-mock-users.ts` 只创建或重置
+`user_empty`、`user_sparse`、`user_dense` 三个普通用户的样本内容（分别 0/3/12
+个首页应用、0/2/5 张便签），不授予管理员权限。 应用写入当前 `webapps`
+模型；非空账号包含固定到首页的便签与结构化 Markdown。
+仅向隔离临时数据库运行；重复运行会替换这三个账号的应用和便签，不清除其他用户的数据。
+密码通过 `MOCK_USER_PASSWORD` 提供；既有账号密码不变，不在生产数据库上执行。
+
 ## 专项集合
 
 ### Workspace

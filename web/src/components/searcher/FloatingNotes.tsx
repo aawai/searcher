@@ -102,6 +102,9 @@ function Floating(
             data-dragging={isDragging || undefined}
             ref={setNodeRef}
             onPointerDown={(e) => {
+                // React portal events bubble here, but menu actions must not
+                // reorder the note or race a layout write against deletion.
+                if (!e.currentTarget.contains(e.target as Node)) return;
                 // Re-layering a code scrollport cancels its native scrollbar drag.
                 if (
                     (e.target as HTMLElement).closest(

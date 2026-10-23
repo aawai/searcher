@@ -5,6 +5,7 @@ import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import { usePresence } from "../../components/ui/presence.ts";
 import { useZenNoteSelection } from "./useZenNoteSelection.ts";
 import { GUEST_AI_UNAVAILABLE_MESSAGE } from "../../components/searcher/GuestAiUnavailable.tsx";
 
@@ -23,6 +24,8 @@ export function ZenLayout(
     props: HomeLayoutProps & {
         availableRect: SafeRect;
         viewportWidth: number;
+        /** The non-expanded desktop panel is open beside the home content. */
+        panelDocked: boolean;
     },
 ) {
     const {
@@ -56,19 +59,30 @@ export function ZenLayout(
         updateNoteLayout,
         openWorkspace,
         workspaceOpen,
+        panelDocked,
         webAppIconSize,
         showAppLabels,
     } = props;
     const heroRef = useRef<HTMLElement>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
     const mobile = props.viewportWidth < 768;
+    // The Dock hides while a workspace is open: it fades out and stays inert
+    // until the fade ends. Only a Dock that returns after a workspace closed
+    // fades in; the first mount appears at once.
+    const dock = usePresence<HTMLElement>(!workspaceOpen);
+    const [workspaceWasOpen, setWorkspaceWasOpen] = useState(false);
+    if (workspaceOpen && !workspaceWasOpen) setWorkspaceWasOpen(true);
 
     useLayoutEffect(() => {
-        if (mobile) return;
+        // While the docked panel moves the search aside, default-placed notes
+        // keep the exclusion measured before it opened instead of re-placing
+        // every frame.
+        if (mobile || panelDocked) return;
         const hero = heroRef.current;
         const search = hero?.querySelector(".search-form-wrap");
         if (!hero || !search) return;
         let active = true;
+        let stop: (() => void) | undefined;
         const measure = () => {
             if (!active) return;
             const { x, y, width, height } = search.getBoundingClientRect();
@@ -84,18 +98,34 @@ export function ZenLayout(
                     : { x, y: top, width, height: reservedHeight }
             );
         };
-        const observer = new ResizeObserver(measure);
-        observer.observe(hero);
-        observer.observe(search);
-        measure();
-        void document.fonts.ready.then(measure);
-        addEventListener("scroll", measure, true);
+        const start = () => {
+            const observer = new ResizeObserver(measure);
+            observer.observe(hero);
+            observer.observe(search);
+            measure();
+            void document.fonts.ready.then(measure);
+            addEventListener("scroll", measure, true);
+            stop = () => {
+                observer.disconnect();
+                removeEventListener("scroll", measure, true);
+            };
+        };
+        // The home eases back once the panel releases it; measure after that
+        // settles rather than while the search is still moving.
+        const easing = hero.closest(".home")?.getAnimations() ?? [];
+        if (easing.length === 0) start();
+        else {
+            void Promise.allSettled(
+                easing.map((animation) => animation.finished),
+            ).then(() => {
+                if (active) start();
+            });
+        }
         return () => {
             active = false;
-            observer.disconnect();
-            removeEventListener("scroll", measure, true);
+            stop?.();
         };
-    }, [props.availableRect, mode, mobile]);
+    }, [props.availableRect, mode, mobile, panelDocked]);
 
     const resetPinnedLayout = () =>
         void reorderPinned(
@@ -244,14 +274,20 @@ export function ZenLayout(
                 />
             )}
 
-            {user && !workspaceOpen && (
-                <nav className="zen-edge-trigger" aria-label="工作区">
+            {user && dock.mounted && (
+                <nav
+                    ref={dock.ref}
+                    className="zen-edge-trigger"
+                    aria-label="工作区"
+                    data-returning={workspaceWasOpen || undefined}
+                    data-ending-style={dock.ending || undefined}
+                    inert={dock.ending || undefined}
+                >
                     <button
                         type="button"
                         className="zen-edge-btn"
                         data-workspace="apps"
-                        onClick={() =>
-                            openWorkspace("apps")}
+                        onClick={() => openWorkspace("apps")}
                     >
                         <AppWindow size="1em" className="icon-md" />
                         <span>应用</span>
@@ -260,8 +296,7 @@ export function ZenLayout(
                         type="button"
                         className="zen-edge-btn"
                         data-workspace="notes"
-                        onClick={() =>
-                            openWorkspace("notes")}
+                        onClick={() => openWorkspace("notes")}
                     >
                         <StickyNote size="1em" className="icon-md" />
                         <span>便签</span>

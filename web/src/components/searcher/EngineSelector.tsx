@@ -1,9 +1,11 @@
 import { ChevronDown, RotateCw, Sparkles } from "lucide-react";
-import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
+import { ENGINE_IDS, type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
@@ -148,6 +150,18 @@ export function EngineSelector(
     },
 ) {
     const current = SEARCH_ENGINES.find((item) => item.id === engine);
+    // Engines and AI are mutually exclusive search targets: one radio group.
+    const target = mode === "ai" ? "ai" : engine;
+    function chooseTarget(value: string) {
+        if (value === "ai") {
+            onModeChange("ai");
+            return;
+        }
+        const id = ENGINE_IDS.find((candidate) => candidate === value);
+        if (!id) return;
+        onModeChange("search");
+        onEngineChange(id);
+    }
 
     return (
         <DropdownMenu>
@@ -163,47 +177,44 @@ export function EngineSelector(
                 <ChevronDown size="1em" className="icon-sm" />
             </DropdownMenuTrigger>
             <DropdownMenuContent sideOffset={10}>
-                {SEARCH_ENGINES.map((item) => {
-                    const status = reachability[item.id];
-                    return (
-                        <DropdownMenuItem
-                            key={item.id}
-                            onClick={() => {
-                                onModeChange("search");
-                                onEngineChange(item.id);
-                            }}
-                            onSelect={() => {
-                                onModeChange("search");
-                                onEngineChange(item.id);
-                            }}
-                        >
-                            <EngineIcon id={item.id} className="icon-md" />
-                            <span>{item.label}</span>
-                            {status && (
-                                <span
-                                    className={status.ok
-                                        ? "status-dot online"
-                                        : "status-dot"}
-                                    role="img"
-                                    aria-label={status.ok
-                                        ? "最近检测可连接"
-                                        : "最近检测失败"}
-                                    title={`${
-                                        new Date(status.checkedAt)
-                                            .toLocaleString()
-                                    } · ${status.latency}ms`}
-                                />
-                            )}
-                        </DropdownMenuItem>
-                    );
-                })}
-                <DropdownMenuItem
-                    onClick={() => onModeChange("ai")}
-                    onSelect={() => onModeChange("ai")}
+                <DropdownMenuRadioGroup
+                    aria-label="搜索方式"
+                    value={target}
+                    onValueChange={chooseTarget}
                 >
-                    <Sparkles size="1em" className="icon-md" />
-                    <span>AI 问答</span>
-                </DropdownMenuItem>
+                    {SEARCH_ENGINES.map((item) => {
+                        const status = reachability[item.id];
+                        return (
+                            <DropdownMenuRadioItem
+                                key={item.id}
+                                value={item.id}
+                                closeOnClick
+                            >
+                                <EngineIcon id={item.id} className="icon-md" />
+                                <span>{item.label}</span>
+                                {status && (
+                                    <span
+                                        className={status.ok
+                                            ? "status-dot online"
+                                            : "status-dot"}
+                                        role="img"
+                                        aria-label={status.ok
+                                            ? "最近检测可连接"
+                                            : "最近检测失败"}
+                                        title={`${
+                                            new Date(status.checkedAt)
+                                                .toLocaleString()
+                                        } · ${status.latency}ms`}
+                                    />
+                                )}
+                            </DropdownMenuRadioItem>
+                        );
+                    })}
+                    <DropdownMenuRadioItem value="ai" closeOnClick>
+                        <Sparkles size="1em" className="icon-md" />
+                        <span>AI 问答</span>
+                    </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
                 {onCheck && (
                     <>
                         <DropdownMenuSeparator />

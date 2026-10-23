@@ -19,6 +19,34 @@
     padding-block-end: calc(
         var(--zen-dock-clearance) + env(safe-area-inset-bottom, 0px)
     );
+    transition: padding-inline-end var(--motion-panel) var(--ease-out-expo);
+}
+
+/* Reserve a whole panel column only while the search would otherwise overlap:
+   1496 = search max (640) + 2 * (panel (400) + inset (12) + gap (16)).
+   CSS variables cannot be used in media queries; keep this boundary derived
+   from --layout-search-max, --workspace-width, --workspace-inset and --space-4.
+   The search is centred between the left viewport edge and the panel; wide
+   viewports retain the unchanged, full-width home layout. */
+@media (min-width: 768px) {
+    .home[data-workspace-panel="open"] {
+        padding-inline-end: calc(
+            var(--workspace-width) + var(--workspace-inset)
+        );
+    }
+}
+
+@media (min-width: 1496px) {
+    .home[data-workspace-panel="open"] {
+        padding-inline-end: 0;
+    }
+}
+
+/* A layout shift has no opacity-only form, so reduced motion applies it at once. */
+@media (prefers-reduced-motion: reduce) {
+    .home {
+        transition: none;
+    }
 }
 
 .hero {
@@ -82,6 +110,22 @@
     backdrop-filter: var(--material-filter);
     border-radius: var(--radius-pill);
     box-shadow: var(--shadow-l2);
+    transition: opacity var(--motion-base) var(--ease-standard);
+}
+
+/* The Dock hides while a workspace is open. Opacity only, so the centring
+   transform stays untouched and reduced motion needs no variant. Only a Dock
+   that returns fades in (@starting-style); the first mount appears at once.
+   Both directions are transitions, so closing or reopening mid-fade reverses
+   from the current frame. */
+.zen-edge-trigger[data-ending-style] {
+    opacity: 0;
+}
+
+@starting-style {
+    .zen-edge-trigger[data-returning] {
+        opacity: 0;
+    }
 }
 
 .zen-edge-btn {
@@ -195,6 +239,15 @@
     line-height: var(--font-body-line-height);
     font-weight: var(--font-body-weight);
     white-space: pre-wrap;
+}
+
+/* Structured Markdown (lists, quotes, code, tables) keeps start-aligned lines so
+   markers and indents line up; the block itself stays centred on the shared axis.
+   Short plain text stays centred line by line. */
+.zen-inline-note-body[data-structured] {
+    align-self: center;
+    max-inline-size: 100%;
+    text-align: start;
 }
 
 .zen-inline-notes-position {

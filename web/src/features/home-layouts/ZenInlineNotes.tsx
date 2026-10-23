@@ -117,7 +117,10 @@ export function ZenInlineNotes({ selection, onOpen }: {
                     {title && (
                         <span className="zen-inline-note-title">{title}</span>
                     )}
-                    <span className="zen-inline-note-body">
+                    <span
+                        className="zen-inline-note-body"
+                        data-structured={preview.structured || undefined}
+                    >
                         {preview.text || "空白便签"}
                     </span>
                 </span>

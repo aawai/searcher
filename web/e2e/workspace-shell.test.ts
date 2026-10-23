@@ -68,29 +68,74 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         assertEquals(response?.status(), 200, path);
         await target.locator("main").waitFor();
     }
+    // A surface that is already exiting stays mounted but inert; only a
+    // surface that is not ending counts as open.
+    const openSelector =
+        ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])";
     async function closeAllWorkspaces(target: Page = page) {
-        const panelOrSheet = target.locator(
+        const everything = target.locator(
             ".workspace-panel--mobile, aside.workspace-panel",
         );
-        if (await panelOrSheet.first().isVisible()) {
-            const closeBtn = panelOrSheet.locator(
+        const open = target.locator(openSelector);
+        if (await open.first().isVisible()) {
+            const closeBtn = open.locator(
                 'button[aria-label="收起工作区"]',
             ).first();
             if (await closeBtn.isVisible()) {
                 await closeBtn.click();
-                await panelOrSheet.first().waitFor({ state: "detached" });
             }
         }
+        await everything.first().waitFor({ state: "detached" });
     }
     const close = async () => {
-        const btn = panel.locator(
+        const btn = page.locator(openSelector).locator(
             'button[aria-label="收起工作区"]',
         ).first();
         if (await btn.isVisible()) {
             await btn.click();
-            await panel.waitFor({ state: "hidden" });
         }
+        await panel.first().waitFor({ state: "detached" });
     };
+    // Narrow desktop layouts centre the search in the full remaining column;
+    // at >=1496px the original home/search axis stays unchanged.
+    async function assertHomeYields(
+        hero: { x: number; y: number; width: number; height: number } | null,
+        width: number,
+    ) {
+        await page.waitForFunction(() =>
+            document.querySelector("aside.workspace-panel")?.getAnimations()
+                .length === 0
+        );
+        const now = await page.locator(".hero").boundingBox();
+        const panelBox = await page.locator(
+            "aside.workspace-panel:not([data-ending-style])",
+        ).boundingBox();
+        const searchBox = await page.locator(".search-form").boundingBox();
+        assert(hero && now && panelBox && searchBox);
+        assertEquals(now.y, hero.y);
+        assertEquals(now.height, hero.height);
+        if (width >= 1496) {
+            assertEquals(now, hero);
+            assertNear(searchBox.x + searchBox.width / 2, width / 2, 1);
+        } else {
+            assertNear(now.width, width - 412, 1);
+            assertNear(panelBox.x, width - 412, 1);
+            assertNear(searchBox.x + searchBox.width / 2, (width - 412) / 2, 1);
+            assertNear(
+                searchBox.x,
+                panelBox.x - searchBox.x - searchBox.width,
+                1,
+            );
+        }
+        assert(
+            searchBox.x + searchBox.width <= panelBox.x - 16 + 1,
+            "search must leave at least the layout gap before the panel",
+        );
+    }
+    const homeSettled = () =>
+        page.waitForFunction(() =>
+            document.querySelector(".home")?.getAnimations().length === 0
+        );
     async function openApps() {
         await page.locator(appsTrigger).click();
         await search().waitFor();
@@ -469,10 +514,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             ).count(),
                             0,
                         );
-                        assertEquals(
-                            await page.locator(".hero").boundingBox(),
-                            hero,
-                        );
+                        await homeSettled();
+                        await assertHomeYields(hero, viewport.width);
                         await page.locator("#search-query").focus();
                         assertEquals(
                             await page.locator("#search-query").evaluate((
@@ -521,17 +564,15 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     );
                     await assertChromeInViewport(page);
                     if (viewport.width >= 768) {
-                        assertEquals(
-                            await page.locator(".hero").boundingBox(),
-                            hero,
-                        );
+                        await homeSettled();
+                        await assertHomeYields(hero, viewport.width);
                     }
                     await panel.getByRole("button", {
                         name: "收起工作区",
                         exact: true,
                     }).focus();
                     await page.keyboard.press("Enter");
-                    await panel.waitFor({ state: "hidden" });
+                    await panel.first().waitFor({ state: "detached" });
                     await page.waitForFunction(() =>
                         document.activeElement?.getAttribute(
                             "data-workspace",
@@ -548,6 +589,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         ),
                         true,
                     );
+                    await homeSettled();
                     assertEquals(
                         await page.locator(".hero").boundingBox(),
                         hero,
@@ -745,7 +787,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
                 // Second Escape closes the Zen panel/sheet
                 await page.keyboard.press("Escape");
-                await panel.waitFor({ state: "detached" });
+                await panel.first().waitFor({ state: "detached" });
 
                 // Proves actual opener restoration: restores Apps edge trigger, not Notes
                 await page.waitForFunction(() =>
@@ -796,10 +838,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     assertNear(noteInset.searchLeftDiff, 0, 2);
                     assertNear(noteInset.searchRightDiff, 0, 2);
                     if (width >= 768) {
-                        assertEquals(
-                            await page.locator(".hero").boundingBox(),
-                            hero,
-                        );
+                        await homeSettled();
+                        await assertHomeYields(hero, width);
                         assertEquals(
                             await page.locator(
                                 'aside.workspace-panel[data-presentation="panel"]',
@@ -1146,6 +1186,256 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await closeAllWorkspaces();
         },
     );
+
+    await t.step(
+        "panel and Sheet exits are inert, release Escape and preserve a nested view when reopened",
+        async () => {
+            for (const reducedMotion of ["no-preference", "reduce"] as const) {
+                await page.emulateMedia({ reducedMotion });
+                for (const width of [1440, 390]) {
+                    try {
+                        await page.setViewportSize({ width, height: 900 });
+                        await visit("/");
+                        await openApps();
+                        await panel.getByRole("button", {
+                            name: "添加应用",
+                            exact: true,
+                        }).click();
+                        const name = panel.locator("#app-name-input");
+                        await name.waitFor();
+                        await name.evaluate((element) =>
+                            element.setAttribute(
+                                "data-exit-instance",
+                                "original",
+                            )
+                        );
+                        await page.waitForFunction(() =>
+                            document.querySelector(".workspace-panel")
+                                ?.getAnimations().length === 0
+                        );
+                        const exit = await panel.evaluate((element) => {
+                            const { promise, resolve, reject } = Promise
+                                .withResolvers<{
+                                    mounted: boolean;
+                                    ending: boolean;
+                                    inert: boolean;
+                                    animations: number;
+                                    dockAnimations: number;
+                                    backdropInert: boolean;
+                                }>();
+                            // Failure deadline only; successful completion is
+                            // driven by the actual exit mutation, never a sleep.
+                            const timeout = setTimeout(
+                                () =>
+                                    reject(
+                                        new Error(
+                                            "Workspace did not start its held exit",
+                                        ),
+                                    ),
+                                5000,
+                            );
+                            const observer = new MutationObserver(() => {
+                                const ending = element.hasAttribute(
+                                    "data-ending-style",
+                                );
+                                if (!ending && element.isConnected) return;
+                                observer.disconnect();
+                                const animations = element.getAnimations();
+                                // Hold the real exit to exercise focus, Escape
+                                // and reopen before its finished promise.
+                                for (const animation of animations) {
+                                    animation.pause();
+                                }
+                                const backdrop = document.querySelector<
+                                    HTMLElement
+                                >('[data-slot="sheet-backdrop"]');
+                                resolve({
+                                    mounted: element.isConnected,
+                                    ending,
+                                    inert: element.hasAttribute("inert"),
+                                    animations: animations.length,
+                                    dockAnimations: document.querySelector(
+                                        ".zen-edge-trigger",
+                                    )?.getAnimations().length ?? 0,
+                                    backdropInert: !backdrop || backdrop.inert,
+                                });
+                            });
+                            observer.observe(document.body, {
+                                subtree: true,
+                                childList: true,
+                                attributes: true,
+                                attributeFilter: ["data-ending-style", "inert"],
+                            });
+                            element.querySelector<HTMLButtonElement>(
+                                'button[aria-label="收起工作区"]',
+                            )!.click();
+                            return promise.finally(() => {
+                                clearTimeout(timeout);
+                                observer.disconnect();
+                            });
+                        });
+                        assertEquals(exit.mounted, true);
+                        assertEquals(exit.ending, true);
+                        assertEquals(exit.inert, true);
+                        assertEquals(exit.backdropInert, true);
+                        assert(
+                            exit.animations > 0,
+                            "exit must retain a real transition",
+                        );
+                        assert(
+                            exit.dockAnimations > 0,
+                            "the returning Dock must fade in",
+                        );
+                        // The Dock click below proves nothing in the exiting
+                        // Sheet intercepts pointer input.
+                        await page.waitForFunction(() =>
+                            document.activeElement?.getAttribute(
+                                "data-workspace",
+                            ) === "apps"
+                        );
+                        assertEquals(
+                            await name.evaluate((element) => {
+                                element.focus();
+                                return document.activeElement === element;
+                            }),
+                            false,
+                        );
+                        assertEquals(
+                            await page.evaluate(() => {
+                                const event = new KeyboardEvent("keydown", {
+                                    key: "Escape",
+                                    bubbles: true,
+                                    cancelable: true,
+                                });
+                                document.activeElement?.dispatchEvent(event);
+                                return event.defaultPrevented;
+                            }),
+                            false,
+                            "an exiting workspace must no longer own Escape",
+                        );
+                        await page.locator(appsTrigger).click();
+                        assertEquals(
+                            await name.getAttribute("data-exit-instance"),
+                            "original",
+                            "reopening retains the nested form instance",
+                        );
+                        // Base UI clears the exit state on its own commit after
+                        // reopening; wait for that observable state change.
+                        await page.waitForFunction(
+                            (element) =>
+                                element !== null &&
+                                !element.hasAttribute("inert") &&
+                                !element.hasAttribute("data-ending-style"),
+                            await panel.elementHandle(),
+                            { timeout: 5000 },
+                        );
+                        if (width < 768) {
+                            await page.getByRole("button", {
+                                name: "收起工作区",
+                                exact: true,
+                            }).focus();
+                            for (let index = 0; index < 12; index++) {
+                                await page.keyboard.press("Tab");
+                                // Base UI's edge focus guard redirects on the
+                                // next frame; the trap holds once focus settles.
+                                await page.waitForFunction(
+                                    (element) =>
+                                        element?.contains(
+                                            document.activeElement,
+                                        ) ?? false,
+                                    await panel.elementHandle(),
+                                    { timeout: 2000 },
+                                );
+                            }
+                        }
+                        await panel.evaluate((element) => {
+                            for (const animation of element.getAnimations()) {
+                                if (animation.playState === "paused") {
+                                    animation.play();
+                                }
+                            }
+                        });
+                        await page.waitForFunction(() =>
+                            document.querySelector(".workspace-panel")
+                                ?.getAnimations().length === 0
+                        );
+                        await close();
+                        await page.locator('[data-slot="sheet-backdrop"]')
+                            .waitFor({ state: "detached" });
+                        await openApps();
+                        await search().waitFor();
+                        assertEquals(
+                            await panel.locator("#app-name-input").count(),
+                            0,
+                        );
+                        await close();
+                    } finally {
+                        await page.evaluate(() => {
+                            for (const animation of document.getAnimations()) {
+                                if (animation.playState === "paused") {
+                                    animation.play();
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            await page.emulateMedia({ reducedMotion: "reduce" });
+        },
+    );
+
+    await t.step(
+        "desktop panel never covers the search; Hero keeps its vertical box",
+        async () => {
+            for (const width of [768, 1024, 1280, 1440, 1495, 1496, 1600]) {
+                await page.setViewportSize({ width, height: 900 });
+                await visit("/");
+                await page.locator(".hero").waitFor();
+                const hero = await page.locator(".hero").boundingBox();
+                const searchBefore = await page.locator(".search-form")
+                    .boundingBox();
+                await openApps();
+                await homeSettled();
+                await assertHomeYields(hero, width);
+                if (width >= 1496) {
+                    assertEquals(
+                        await page.locator(".search-form").boundingBox(),
+                        searchBefore,
+                    );
+                }
+                await closeAllWorkspaces();
+                await homeSettled();
+                assertEquals(await page.locator(".hero").boundingBox(), hero);
+            }
+        },
+    );
+
+    await t.step(
+        "mobile Sheet detaches with its backdrop and returns focus to the Dock",
+        async () => {
+            await page.setViewportSize({ width: 390, height: 844 });
+            await visit("/");
+            await openApps();
+            await page.locator('[data-slot="sheet-backdrop"]').waitFor();
+            await panel.getByRole("button", {
+                name: "收起工作区",
+                exact: true,
+            }).click();
+            await page.locator(".workspace-panel--mobile").waitFor({
+                state: "detached",
+            });
+            await page.locator('[data-slot="sheet-backdrop"]').waitFor({
+                state: "detached",
+            });
+            await page.locator(".zen-edge-trigger").waitFor();
+            await page.waitForFunction(() =>
+                document.activeElement?.closest(".zen-edge-trigger") !==
+                    null &&
+                document.activeElement?.getAttribute("data-workspace") ===
+                    "apps"
+            );
+        },
+    );
     await t.step(
         "presentation changes preserve Core queries and nested Back; logout clears transient state",
         async () => {
@@ -1193,6 +1483,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.getByRole("menuitem", { name: "退出登录", exact: true })
                 .click();
             await panel.waitFor({ state: "detached" });
+            await page.locator("[data-workspace]").first().waitFor({
+                state: "detached",
+            });
             assertEquals(await page.locator("[data-workspace]").count(), 0);
             await page.goto(origin + "/login");
             await page.locator("#auth-username").fill("shell44");

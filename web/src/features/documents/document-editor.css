@@ -208,6 +208,13 @@
     scroll-behavior: smooth;
 }
 
+/* Reduced motion: programmatic and anchor scrolls jump instead of gliding. */
+@media (prefers-reduced-motion: reduce) {
+    .document-editor-scroll-area {
+        scroll-behavior: auto;
+    }
+}
+
 @media (max-width: 640px) {
     .document-editor-scroll-area {
         padding: var(--space-3);

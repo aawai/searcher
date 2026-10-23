@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
-import { chromium, type Page } from "playwright";
+import { type BrowserContext, chromium, type Page } from "playwright";
 import { eq } from "drizzle-orm";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
@@ -12,6 +12,40 @@ import {
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+
+// React Router starts a view transition for each `viewTransition` navigation.
+function trackViewTransitions(context: BrowserContext) {
+    return context.addInitScript(() => {
+        const start = document.startViewTransition.bind(document);
+        let count = 0;
+        let finished: Promise<void> = Promise.resolve();
+        Object.defineProperty(globalThis, "viewTransitionCount", {
+            get: () => count,
+        });
+        Object.defineProperty(globalThis, "viewTransitionFinished", {
+            get: () => finished,
+        });
+        document.startViewTransition = (
+            ...args: Parameters<Document["startViewTransition"]>
+        ) => {
+            count += 1;
+            const transition = start(...args);
+            finished = transition.finished;
+            return transition;
+        };
+    });
+}
+
+async function viewTransitions(page: Page, expected: number): Promise<number> {
+    await page.waitForFunction(
+        (count) => Reflect.get(globalThis, "viewTransitionCount") >= count,
+        expected,
+    );
+    return page.evaluate(async () => {
+        await Reflect.get(globalThis, "viewTransitionFinished");
+        return Reflect.get(globalThis, "viewTransitionCount") as number;
+    });
+}
 
 // Run with deno task test:routing; the task builds the real production frontend.
 Deno.test("production navigation contracts", async (t) => {
@@ -79,7 +113,7 @@ Deno.test("production navigation contracts", async (t) => {
                                 colorScheme,
                             );
                             const geometry = await target.locator(
-                                ".auth-form",
+                                ".narrow-form",
                             ).last().evaluate((surface) => {
                                 const rect = surface.getBoundingClientRect();
                                 const style = getComputedStyle(surface);
@@ -141,6 +175,70 @@ Deno.test("production navigation contracts", async (t) => {
                                 scenario + " content axis",
                             );
                         }
+                    }
+                }
+            } finally {
+                await guest.close();
+            }
+        },
+    );
+    await t.step(
+        "auth switch links use the accent color and underline on hover",
+        async () => {
+            const guest = await browser.newContext();
+            try {
+                const target = await guest.newPage();
+                for (const colorScheme of ["light", "dark"] as const) {
+                    await target.emulateMedia({ colorScheme });
+                    for (
+                        const [path, name] of [
+                            ["/login", "注册"],
+                            ["/register", "登录"],
+                        ] as const
+                    ) {
+                        await visit(path, target);
+                        await target.waitForFunction(
+                            (theme) =>
+                                document.documentElement.dataset.theme ===
+                                    theme,
+                            colorScheme,
+                        );
+                        const link = target.locator(".auth-footer")
+                            .getByRole("link", { name, exact: true });
+                        await link.waitFor({ state: "visible" });
+                        const accent = await target.evaluate(() => {
+                            const probe = document.createElement("span");
+                            probe.style.color = "var(--accent)";
+                            document.body.append(probe);
+                            const color = getComputedStyle(probe).color;
+                            probe.remove();
+                            return color;
+                        });
+                        const appearance = () =>
+                            link.evaluate((element) => {
+                                const style = getComputedStyle(element);
+                                return {
+                                    color: style.color,
+                                    decoration: style.textDecorationLine,
+                                };
+                            });
+                        const scenario = path + " " + colorScheme;
+                        assertEquals(
+                            (await appearance()).color,
+                            accent,
+                            scenario + " link color",
+                        );
+                        assertEquals(
+                            (await appearance()).decoration,
+                            "none",
+                            scenario + " resting link",
+                        );
+                        await link.hover();
+                        assertEquals(
+                            (await appearance()).decoration,
+                            "underline",
+                            scenario + " hovered link",
+                        );
                     }
                 }
             } finally {
@@ -228,21 +326,75 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
-        "unknown pages and workspace children render the same recoverable 404",
+        "unknown pages and workspace children render the same recoverable 404 in a narrow column",
         async () => {
-            for (
-                const path of [
-                    "/missing",
-                    "/settings/nope",
+            const cases: [
+                path: string,
+                back?: { label: string; to: string },
+            ][] = [
+                ["/missing"],
+                ["/settings/nope", { label: "返回设置", to: "/settings" }],
+                [
                     "/settings/ai/extra",
+                    { label: "返回设置", to: "/settings" },
+                ],
+                [
                     "/settings/shortcuts/extra",
-                    "/admin/nope",
+                    { label: "返回设置", to: "/settings" },
+                ],
+                ["/admin/nope", { label: "返回管理后台", to: "/admin" }],
+                [
                     "/admin/users/extra",
-                ]
-            ) {
+                    { label: "返回管理后台", to: "/admin" },
+                ],
+            ];
+            for (const [path, back] of cases) {
                 await visit(path);
-                await page.getByRole("heading", { name: "页面不存在" })
-                    .waitFor({ state: "visible" });
+                await page.getByRole("heading", {
+                    level: 1,
+                    name: "页面不存在",
+                    exact: true,
+                }).waitFor({ state: "visible" });
+                await page.getByText("链接可能有误，或页面已被移除。").waitFor({
+                    state: "visible",
+                });
+                // Home is the only primary action; settings and admin paths add
+                // one way back into the area they were under.
+                assertEquals(
+                    (await page.locator("main").getByRole("link")
+                        .allTextContents()).map((label) => label.trim()),
+                    back ? ["返回首页", back.label] : ["返回首页"],
+                    path + " actions",
+                );
+                if (back) {
+                    assertEquals(
+                        await page.getByRole("link", {
+                            name: back.label,
+                            exact: true,
+                        }).getAttribute("href"),
+                        back.to,
+                        path + " back target",
+                    );
+                }
+                const column = await page.locator(".narrow-form").evaluate(
+                    (element) => {
+                        const rect = element.getBoundingClientRect();
+                        return {
+                            width: rect.width,
+                            max: parseFloat(
+                                getComputedStyle(element).getPropertyValue(
+                                    "--layout-auth-max",
+                                ),
+                            ),
+                            offCenter: Math.abs(
+                                rect.left + rect.width / 2 -
+                                    document.documentElement.clientWidth / 2,
+                            ),
+                        };
+                    },
+                );
+                assert(column.width <= column.max, path + " narrow column");
+                assert(column.offCenter < 1, path + " centered column");
                 await page.getByRole("link", {
                     name: "返回首页",
                     exact: true,
@@ -410,6 +562,208 @@ Deno.test("production navigation contracts", async (t) => {
                     .count(),
                 0,
             );
+        },
+    );
+    await t.step(
+        "account page joins the settings shell for signed-in users and stays out of the guest list",
+        async () => {
+            const settingsNav = page.getByRole("navigation", {
+                name: "设置分类",
+            });
+            const accountLink = settingsNav.getByRole("link", {
+                name: "账户与安全",
+                exact: true,
+            });
+            const accountHeading = page.getByRole("heading", {
+                level: 1,
+                name: "账户与安全",
+                exact: true,
+            });
+            const entries = async (target: Page) =>
+                (await target.getByRole("navigation", { name: "设置分类" })
+                    .getByRole("link").allTextContents()).map((label) =>
+                        label.trim()
+                    );
+            const withAccount = [
+                "账户与安全",
+                "搜索",
+                "外观",
+                "AI 问答",
+                "数据与同步",
+                "快捷键",
+            ];
+
+            // Wide: the account content sits beside the navigation, marked current.
+            await visit("/account");
+            await accountLink.waitFor({ state: "visible" });
+            assertEquals(await entries(page), withAccount);
+            assertEquals(
+                await accountLink.getAttribute("aria-current"),
+                "page",
+            );
+            assertEquals(
+                await page.getByRole("heading", { level: 1 })
+                    .allTextContents(),
+                ["账户与安全"],
+            );
+            assertEquals(
+                await page.locator(".settings-back").isVisible(),
+                false,
+            );
+            assertEquals(
+                await page.locator('.topbar-link--active[aria-label="设置"]')
+                    .count(),
+                1,
+            );
+            await settingsNav.getByRole("link", { name: "外观", exact: true })
+                .click();
+            await page.waitForURL(origin + "/settings/appearance");
+            await page.getByRole("heading", {
+                level: 1,
+                name: "外观",
+                exact: true,
+            }).waitFor({ state: "visible" });
+            assertEquals(await accountLink.getAttribute("aria-current"), null);
+            await accountLink.click();
+            await page.waitForURL(origin + "/account");
+            await accountHeading.waitFor({ state: "visible" });
+            assertEquals(
+                await accountLink.getAttribute("aria-current"),
+                "page",
+            );
+
+            // Entering from the user menu keeps a normal history entry; the
+            // navigation items, account included, replace it.
+            await visit("/");
+            await page.getByRole("button", { name: /^用户菜单/ }).click();
+            await page.getByRole("menuitem", {
+                name: "账户与安全",
+                exact: true,
+            }).click();
+            await page.waitForURL(origin + "/account");
+            await accountHeading.waitFor({ state: "visible" });
+            await settingsNav.getByRole("link", { name: "快捷键", exact: true })
+                .click();
+            await page.waitForURL(origin + "/settings/shortcuts");
+            await page.goBack();
+            await page.waitForURL(origin + "/");
+
+            // Narrow: /settings lists the account, /account opens as a detail view.
+            await page.setViewportSize({ width: 390, height: 844 });
+            try {
+                await visit("/settings");
+                await accountLink.waitFor({ state: "visible" });
+                assertEquals(await entries(page), withAccount);
+                await accountLink.click();
+                await page.waitForURL(origin + "/account");
+                await accountHeading.waitFor({ state: "visible" });
+                assertEquals(await settingsNav.isVisible(), false);
+                const back = page.locator(".settings-back");
+                await back.waitFor({ state: "visible" });
+                await back.click();
+                await page.waitForURL(origin + "/settings");
+                await settingsNav.waitFor({ state: "visible" });
+            } finally {
+                await page.setViewportSize({ width: 1280, height: 720 });
+            }
+
+            // Guests never see the entry; direct entry keeps its sign-in prompt.
+            const guestContext = await browser.newContext();
+            try {
+                const guest = await guestContext.newPage();
+                await visit("/settings", guest);
+                await guest.getByRole("navigation", { name: "设置分类" })
+                    .waitFor({ state: "visible" });
+                assertEquals(await entries(guest), withAccount.slice(1));
+                await visit("/account", guest);
+                await guest.getByRole("heading", {
+                    level: 1,
+                    name: "账户与安全",
+                    exact: true,
+                }).waitFor({ state: "visible" });
+                await guest.getByRole("link", { name: "前往登录", exact: true })
+                    .waitFor({ state: "visible" });
+                assertEquals(await entries(guest), withAccount.slice(1));
+            } finally {
+                await guestContext.close();
+            }
+        },
+    );
+    await t.step(
+        "top-level navigations start a view transition; settings navigation stays in its shell",
+        async () => {
+            await trackViewTransitions(context);
+            const settingsNav = page.getByRole("navigation", {
+                name: "设置分类",
+            });
+
+            await visit("/");
+            await page.getByRole("link", { name: "设置", exact: true }).click();
+            await settingsNav.waitFor({ state: "visible" });
+            assertEquals(await viewTransitions(page, 1), 1, "top bar link");
+            await settingsNav.getByRole("link", { name: "外观", exact: true })
+                .click();
+            await page.getByRole("heading", {
+                level: 1,
+                name: "外观",
+                exact: true,
+            }).waitFor({ state: "visible" });
+            await settingsNav.getByRole("link", {
+                name: "账户与安全",
+                exact: true,
+            }).click();
+            await page.getByRole("heading", {
+                level: 1,
+                name: "账户与安全",
+                exact: true,
+            }).waitFor({ state: "visible" });
+            assertEquals(
+                await viewTransitions(page, 1),
+                1,
+                "settings navigation",
+            );
+            await page.getByRole("button", { name: /^用户菜单/ }).click();
+            await page.getByRole("menuitem", {
+                name: "偏好设置",
+                exact: true,
+            }).click();
+            await page.waitForURL(origin + "/settings");
+            await settingsNav.waitFor({ state: "visible" });
+            assertEquals(await viewTransitions(page, 2), 2, "user menu entry");
+            await page.getByRole("link", { name: "Searcher 首页" }).click();
+            await page.waitForURL(origin + "/");
+            await page.locator("main.home").waitFor({ state: "visible" });
+            assertEquals(await viewTransitions(page, 3), 3, "home wordmark");
+
+            const guestContext = await browser.newContext();
+            try {
+                await trackViewTransitions(guestContext);
+                const guest = await guestContext.newPage();
+                await visit("/missing", guest);
+                await guest.getByRole("link", {
+                    name: "返回首页",
+                    exact: true,
+                }).click();
+                await guest.waitForURL(origin + "/");
+                await guest.locator("main.home").waitFor({ state: "visible" });
+                assertEquals(
+                    await viewTransitions(guest, 1),
+                    1,
+                    "404 home link",
+                );
+                await visit("/login", guest);
+                await guest.getByRole("link", { name: "注册", exact: true })
+                    .click();
+                await guest.waitForURL(origin + "/register");
+                await guest.locator("#auth-display-name").waitFor();
+                assertEquals(
+                    await viewTransitions(guest, 1),
+                    1,
+                    "auth mode link",
+                );
+            } finally {
+                await guestContext.close();
+            }
         },
     );
     await t.step(

@@ -53,6 +53,14 @@
     gap: var(--space-3);
     min-width: 0;
 }
+/* The h1 line box anchors the header: actions centre on it, so their height never moves the title. */
+.page-header-main {
+    align-items: flex-start;
+}
+.page-header-main > .action-group {
+    height: var(--font-page-title-line-height);
+    align-content: center;
+}
 .page-shell .page-header .page-title {
     margin: 0;
     font-size: var(--font-page-title-size);
@@ -176,19 +184,20 @@
     flex-direction: column;
     gap: var(--space-half);
     min-width: 0;
-    flex: 1 0 auto;
+    flex: 1 1 0;
 }
 .settings-row-title {
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     font-weight: var(--font-body-weight);
-    /* Labels are short (≤6 汉字); keep them on one line so wide controls wrap instead. */
-    white-space: nowrap;
+    overflow-wrap: anywhere;
 }
 .settings-row-desc {
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 .settings-row-control {
     display: flex;
@@ -210,6 +219,35 @@
 }
 .settings-row--vertical .settings-row-control {
     justify-content: flex-start;
+}
+
+/* Inline fields: borderless with the value right-aligned (macOS System Settings).
+   The field pulls its inset into the row gutter so the value lines up with plain
+   values and switches. Hover fills softly; keyboard focus keeps the primitive ring. */
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"]) {
+    padding-inline-start: var(--space-2);
+    border-color: transparent;
+    background: transparent;
+    text-align: end;
+    transition: background var(--motion-fast) var(--ease-standard),
+        border-color var(--motion-fast) var(--ease-standard);
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control .cn-input {
+    padding-inline-end: var(--space-2);
+    margin-inline-end: calc(-1 * (var(--space-2) + var(--space-hairline)));
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select"] {
+    text-align-last: end;
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select-wrapper"] {
+    width: auto;
+    margin-inline-end: calc(-1 * var(--space-2));
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"]):hover:not(:disabled) {
+    background: var(--surface-soft);
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"])[aria-invalid="true"] {
+    border-color: var(--danger);
 }
 
 /* Feedback. */
@@ -301,6 +339,32 @@
     .undo-toast[data-placement="floating"] {
         inset-block-end: calc(env(safe-area-inset-bottom, 0px) +
             var(--control-touch-target) + var(--space-8));
+    }
+}
+/* Starting styles and exit styles share transitions, so closing mid-enter
+   reverses from the current frame instead of cancelling an entrance animation. */
+.status-banner[data-presentation="floating"],
+.undo-toast[data-placement="floating"] {
+    --feedback-travel: var(--space-2);
+    transition: opacity var(--motion-base) var(--ease-standard),
+        translate var(--motion-base) var(--ease-standard);
+}
+@starting-style {
+    .status-banner[data-presentation="floating"],
+    .undo-toast[data-placement="floating"] {
+        opacity: 0;
+        translate: 0 var(--feedback-travel);
+    }
+}
+.status-banner[data-presentation="floating"][data-ending-style],
+.undo-toast[data-placement="floating"][data-ending-style] {
+    opacity: 0;
+    translate: 0 var(--feedback-travel);
+}
+@media (prefers-reduced-motion: reduce) {
+    .status-banner[data-presentation="floating"],
+    .undo-toast[data-placement="floating"] {
+        --feedback-travel: 0;
     }
 }
 .undo-toast[hidden] {
@@ -412,15 +476,5 @@
     .page-shell[data-archetype="search"] {
         width: 100%;
         margin: 0;
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
     }
 }

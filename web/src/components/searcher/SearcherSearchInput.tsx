@@ -1,9 +1,17 @@
 import { ArrowUpRight, Globe, History, Search, Sparkles } from "lucide-react";
 import { EngineIcon, EngineSelector } from "./EngineSelector.tsx";
 import { type ModelOption, ModelSelector } from "./ModelSelector.tsx";
-import { type FormEvent, useEffect, useId, useRef, useState } from "react";
+import {
+    type FormEvent,
+    useEffect,
+    useId,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import { type EngineId } from "@shared/engines.ts";
 import { Button } from "../ui/button.tsx";
+import { usePresence } from "../ui/presence.ts";
 import { api } from "../../lib/api.ts";
 import { getLocal, setLocal } from "../../lib/local.ts";
 import {
@@ -113,6 +121,7 @@ export function SearcherSearchInput(
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
     const [selectedIndex, setSelectedIndex] = useState<number>(-1);
     const [isOpen, setIsOpen] = useState(false);
+    const suggestionPresence = usePresence<HTMLDivElement>(isOpen);
     const [onlineUnavailable, setOnlineUnavailable] = useState(false);
     const suggestionsId = useId();
     const field = useRef<HTMLInputElement>(null);
@@ -453,6 +462,20 @@ export function SearcherSearchInput(
 
     const command = parseCommandPrefix(query);
     const matchingQuery = command?.hasSpace ? command.rest : query.trim();
+    const suggestionContent = {
+        suggestions,
+        selectedIndex,
+        matchingQuery,
+        onlineUnavailable,
+        engine,
+    };
+    const lastSuggestionContent = useRef(suggestionContent);
+    useLayoutEffect(() => {
+        if (isOpen) lastSuggestionContent.current = suggestionContent;
+    });
+    const visibleSuggestions = isOpen
+        ? suggestionContent
+        : lastSuggestionContent.current;
 
     return (
         <div
@@ -550,21 +573,29 @@ export function SearcherSearchInput(
             >
                 {isOpen ? `${suggestions.length} 条建议` : ""}
             </span>
-            {isOpen && (
-                <div className="search-suggestions">
+            {suggestionPresence.mounted && (
+                <div
+                    className="search-suggestions"
+                    ref={suggestionPresence.ref}
+                    data-ending-style={suggestionPresence.ending
+                        ? ""
+                        : undefined}
+                    inert={suggestionPresence.ending}
+                >
                     <div
                         id={suggestionsId}
                         role="listbox"
                         aria-label="搜索建议"
                     >
-                        {suggestions.map((item, idx) => {
-                            const isSelected = idx === selectedIndex;
+                        {visibleSuggestions.suggestions.map((item, idx) => {
+                            const isSelected =
+                                idx === visibleSuggestions.selectedIndex;
                             const label = item.source === "command"
                                 ? item.text
                                 : item.description || item.text;
                             const segments = splitSuggestionLabel(
                                 label,
-                                matchingQuery,
+                                visibleSuggestions.matchingQuery,
                             );
                             return (
                                 <div
@@ -649,7 +680,9 @@ export function SearcherSearchInput(
                                             : item.source === "history"
                                             ? "历史"
                                             : (item.engine &&
-                                                    item.engine !== engine)
+                                                    item.engine !==
+                                                        visibleSuggestions
+                                                            .engine)
                                             ? item.engine
                                             : null;
                                         return badge
@@ -664,7 +697,7 @@ export function SearcherSearchInput(
                             );
                         })}
                     </div>
-                    {onlineUnavailable && (
+                    {visibleSuggestions.onlineUnavailable && (
                         <p className="search-suggestions-status" role="status">
                             在线联想暂不可用
                         </p>

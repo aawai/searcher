@@ -42,7 +42,7 @@
     width: 18px;
     height: 18px;
     border-radius: var(--radius-pill);
-    background: var(--surface-solid);
+    background: var(--surface-control-thumb);
     box-shadow: var(--shadow-control-thumb);
     transform: translateX(2px);
     transition: transform var(--motion-base) var(--ease-out-expo);
@@ -153,7 +153,7 @@
 }
 
 [data-slot="radio-group"][data-variant="segmented"] .radio-item[data-checked] {
-    background: var(--surface-solid);
+    background: var(--surface-control-thumb);
     color: var(--foreground);
     box-shadow: var(--shadow-control-thumb);
 }
@@ -249,7 +249,7 @@
     width: 20px;
     height: 20px;
     border-radius: var(--radius-pill);
-    background: var(--surface-solid);
+    background: var(--surface-control-thumb);
     box-shadow: var(--shadow-control-thumb);
 }
 
@@ -483,6 +483,7 @@
     color: var(--foreground);
     font-size: var(--font-body-size);
     outline: none;
+    scrollbar-width: thin;
     z-index: var(--elevation-menu);
     transform-origin: var(--transform-origin);
     transition: opacity var(--motion-fast) var(--ease-standard),
@@ -542,6 +543,11 @@
     color: inherit;
 }
 
+/* Radio items keep the indicator slot so a check never shifts the row. */
+.menu-item-indicator[data-unchecked] {
+    visibility: hidden;
+}
+
 .menu-separator {
     height: 1px;
     margin: var(--space-1) var(--space-2);
@@ -599,6 +605,12 @@
 .sheet[data-starting-style],
 .sheet[data-ending-style] {
     transform: translate(-50%, 100%);
+}
+
+.sheet[data-ending-style],
+.sheet-backdrop[data-ending-style] {
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--ease-standard);
 }
 
 .sheet-head {
@@ -816,7 +828,7 @@
 }
 
 [data-slot="tabs-trigger"][data-active] {
-    background: var(--surface-solid);
+    background: var(--surface-control-thumb);
     color: var(--foreground);
     box-shadow: var(--shadow-control-thumb);
 }
@@ -928,7 +940,7 @@
     inset: 0;
     z-index: var(--elevation-modal-backdrop);
     background: var(--surface-scrim);
-    transition: opacity var(--motion-base) var(--ease-standard);
+    transition: opacity var(--motion-panel) var(--ease-out-expo);
 }
 
 .dialog-backdrop[data-starting-style],
@@ -948,14 +960,15 @@
     width: min(calc(100vw - var(--space-6)), 480px);
     max-height: calc(100dvh - var(--space-7));
     overflow-y: auto;
+    scrollbar-width: thin;
     padding: var(--space-6);
     border-radius: var(--radius-lg);
     background: var(--surface-l3);
     color: var(--foreground);
     box-shadow: var(--shadow-l3);
     outline: none;
-    transition: opacity var(--motion-base) var(--ease-standard),
-        transform var(--motion-base) var(--ease-out-expo);
+    transition: opacity var(--motion-panel) var(--ease-out-expo),
+        transform var(--motion-panel) var(--ease-out-expo);
 }
 
 [data-slot="alert-dialog-content"] {
@@ -969,7 +982,15 @@
 [data-slot="alert-dialog-content"][data-starting-style],
 [data-slot="alert-dialog-content"][data-ending-style] {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(.98);
+    transform: translate(-50%, calc(-50% + var(--space-2)));
+}
+
+.dialog-backdrop[data-ending-style],
+.dialog-panel[data-ending-style],
+[data-slot="alert-dialog-overlay"][data-ending-style],
+[data-slot="alert-dialog-content"][data-ending-style] {
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--ease-standard);
 }
 
 .dialog-panel [data-slot="dialog-title"],
@@ -1052,6 +1073,55 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     overflow-wrap: anywhere;
+}
+
+/* Popover and tooltip pop in from their anchor: fade plus a 2% scale. */
+[data-slot="popover-content"],
+.tooltip-content {
+    transform-origin: var(--transform-origin);
+    transition: opacity var(--motion-fast) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
+}
+
+[data-slot="popover-content"][data-starting-style],
+[data-slot="popover-content"][data-ending-style],
+.tooltip-content[data-starting-style],
+.tooltip-content[data-ending-style] {
+    opacity: 0;
+    transform: scale(.98);
+}
+
+/* Reduced motion keeps the opacity timeline while dropping travel and scale. */
+@media (prefers-reduced-motion: reduce) {
+    .switch-thumb {
+        transition: none;
+    }
+
+    .menu-popup[data-starting-style],
+    .menu-popup[data-ending-style],
+    [data-slot="popover-content"][data-starting-style],
+    [data-slot="popover-content"][data-ending-style],
+    .tooltip-content[data-starting-style],
+    .tooltip-content[data-ending-style] {
+        transform: none;
+    }
+
+    .sheet {
+        transition-property: opacity;
+    }
+
+    .sheet[data-starting-style],
+    .sheet[data-ending-style] {
+        opacity: 0;
+        transform: translateX(-50%);
+    }
+
+    .dialog-panel[data-starting-style],
+    .dialog-panel[data-ending-style],
+    [data-slot="alert-dialog-content"][data-starting-style],
+    [data-slot="alert-dialog-content"][data-ending-style] {
+        transform: translate(-50%, -50%);
+    }
 }
 
 @media (pointer: coarse), (hover: none) {

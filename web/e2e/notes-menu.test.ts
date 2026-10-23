@@ -97,3 +97,52 @@ Deno.test("Notes format menus retain Source selection, keyboard focus and deboun
         await page.locator(".save-saved").waitFor();
     }
 });
+
+Deno.test("Home note menu changes color without moving the note or persisting a desktop position", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const credentials = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    await loginAndVisit(page, app.origin, "/", credentials);
+    const noteId = await page.evaluate(async () => {
+        const response = await fetch("/api/notes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: "菜单不移动便签",
+                body: "保持自动布局",
+                isHomeFixed: true,
+            }),
+        });
+        return (await response.json()).data.id as string;
+    });
+    await page.reload();
+    const card = page.locator(".note-card").filter({
+        has: page.getByRole("button", { name: "菜单不移动便签", exact: true }),
+    });
+    await card.hover();
+    await card.getByRole("button", { name: "更多操作", exact: true }).click();
+    const changed = page.waitForResponse((response) =>
+        response.request().method() === "PATCH" &&
+        response.url().endsWith(`/api/notes/${noteId}`)
+    );
+    await page.getByRole("menuitemradio", { name: "鼠尾草", exact: true })
+        .click();
+    assertEquals((await changed).ok(), true);
+    await page.getByRole("menu").waitFor({ state: "detached" });
+    const saved = await page.evaluate(async (id) => {
+        const response = await fetch(`/api/notes/${id}`);
+        return (await response.json()).data;
+    }, noteId);
+    assertEquals(saved.color, "sage");
+    assertEquals(saved.layout, null);
+});

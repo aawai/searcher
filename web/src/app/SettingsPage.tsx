@@ -14,18 +14,7 @@ import {
     type WallpaperReadability,
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
-import {
-    Check,
-    ChevronLeft,
-    ChevronRight,
-    Keyboard,
-    MoreVertical,
-    Palette,
-    RefreshCw,
-    Search,
-    Sparkles,
-    Upload,
-} from "lucide-react";
+import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
 import {
     type ReactNode,
     useCallback,
@@ -35,8 +24,6 @@ import {
     useState,
 } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import { PageShell } from "../components/searcher/PageShell.tsx";
 import {
     ActionGroup,
     SettingsGroup,
@@ -76,19 +63,10 @@ import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
-import { routes, type SettingsTab, settingsTab } from "./routes.ts";
+import { routes, settingsTab } from "./routes.ts";
+import { SettingsShell } from "./SettingsShell.tsx";
 import "./settings.css";
 import { type Appearance, useAppState } from "./state.tsx";
-
-type Tab = SettingsTab;
-
-const tabs: Record<Tab, { label: string; icon: typeof Search }> = {
-    search: { label: "搜索", icon: Search },
-    appearance: { label: "外观", icon: Palette },
-    ai: { label: "AI 问答", icon: Sparkles },
-    data: { label: "数据与同步", icon: RefreshCw },
-    shortcuts: { label: "快捷键", icon: Keyboard },
-};
 
 function Choices<T extends string>(
     { title, value, values, control, select }: {
@@ -613,15 +591,6 @@ export function SettingsPage() {
     }
     const location = useLocation();
     const tab = settingsTab(location.pathname);
-    const [mobile, setMobile] = useState(() =>
-        globalThis.matchMedia("(max-width: 767px)").matches
-    );
-    useEffect(() => {
-        const media = globalThis.matchMedia("(max-width: 767px)");
-        const change = () => setMobile(media.matches);
-        media.addEventListener("change", change);
-        return () => media.removeEventListener("change", change);
-    }, []);
 
     function set<K extends keyof Appearance>(key: K, value: Appearance[K]) {
         void setAppearance({ [key]: value });
@@ -635,625 +604,565 @@ export function SettingsPage() {
 
     return (
         <>
-            <PageShell archetype="utility">
-                <div
-                    className="settings-layout"
-                    data-view={location.pathname === routes.settings()
-                        ? "list"
-                        : "detail"}
-                >
-                    <nav className="settings-nav" aria-label="设置分类">
-                        <h1 className="settings-nav-title">设置</h1>
-                        <ul className="settings-nav-list">
-                            {(Object.keys(tabs) as Tab[]).map((id) => {
-                                const Icon = tabs[id].icon;
-                                return (
-                                    <li key={id}>
-                                        <Link
-                                            to={routes.settings(id)}
-                                            replace={!mobile}
-                                            className="settings-nav-item"
-                                            aria-current={tab === id
-                                                ? "page"
-                                                : undefined}
-                                        >
-                                            <Icon
-                                                size="1em"
-                                                className="icon-md"
-                                                aria-hidden="true"
-                                            />
-                                            <span className="settings-nav-label">
-                                                {tabs[id].label}
-                                            </span>
-                                            <ChevronRight
-                                                size="1em"
-                                                className="settings-nav-chevron icon-sm"
-                                                aria-hidden="true"
-                                            />
-                                        </Link>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </nav>
-                    <section className="settings-panel">
-                        <Link to={routes.settings()} className="settings-back">
-                            <ChevronLeft
-                                size="1em"
-                                className="icon-md"
-                                aria-hidden="true"
-                            />
-                            <span>设置</span>
-                        </Link>
-                        <PageHeader title={tabs[tab].label} />
-                        <div className="settings-content">
-                            {tab === "search" && (
-                                <SettingsGroup>
-                                    <Choices
-                                        title="默认搜索引擎"
-                                        value={appearance.engine}
-                                        control="select"
-                                        values={SEARCH_ENGINES.map((e) =>
-                                            [e.id, e.label] as const
-                                        )}
-                                        select={(v) =>
-                                            set("engine", v as EngineId)}
-                                    />
-                                    <Choices
-                                        title="结果打开方式"
-                                        value={appearance.target}
-                                        control="segmented"
-                                        values={[
-                                            ["current", "当前标签页"],
-                                            ["new_tab", "新标签页"],
-                                        ] as const}
-                                        select={(v) => set("target", v)}
-                                    />
-                                    <Choices
-                                        title="首页应用数量"
-                                        value={String(
-                                            appearance.webAppHomeLimit,
-                                        )}
-                                        control="select"
-                                        values={[
-                                            ["8", "8 个"],
-                                            ["12", "12 个"],
-                                            ["16", "16 个"],
-                                            ["all", "全部"],
-                                        ] as const}
-                                        select={(v) =>
-                                            set(
-                                                "webAppHomeLimit",
-                                                v === "all"
-                                                    ? "all"
-                                                    : (Number(v) as
-                                                        | 8
-                                                        | 12
-                                                        | 16),
-                                            )}
-                                    />
-                                </SettingsGroup>
+            <SettingsShell current={tab}>
+                {tab === "search" && (
+                    <SettingsGroup>
+                        <Choices
+                            title="默认搜索引擎"
+                            value={appearance.engine}
+                            control="select"
+                            values={SEARCH_ENGINES.map((e) =>
+                                [e.id, e.label] as const
                             )}
-                            {tab === "appearance" && (
-                                <>
-                                    <SettingsGroup>
-                                        <Choices
-                                            title="主题"
-                                            value={appearance.theme}
-                                            control="segmented"
-                                            values={[
-                                                ["system", "跟随系统"],
-                                                ["light", "浅色"],
-                                                ["dark", "深色"],
-                                            ] as const}
-                                            select={(v) => set("theme", v)}
-                                        />
-                                        <Choices
-                                            title="强调色"
-                                            value={appearance.accent}
-                                            control="swatches"
-                                            values={ACCENTS.map((a) =>
-                                                [a.id, a.label] as const
+                            select={(v) => set("engine", v as EngineId)}
+                        />
+                        <Choices
+                            title="结果打开方式"
+                            value={appearance.target}
+                            control="segmented"
+                            values={[
+                                ["current", "当前标签页"],
+                                ["new_tab", "新标签页"],
+                            ] as const}
+                            select={(v) => set("target", v)}
+                        />
+                        <Choices
+                            title="首页应用数量"
+                            value={String(
+                                appearance.webAppHomeLimit,
+                            )}
+                            control="select"
+                            values={[
+                                ["8", "8 个"],
+                                ["12", "12 个"],
+                                ["16", "16 个"],
+                                ["all", "全部"],
+                            ] as const}
+                            select={(v) =>
+                                set(
+                                    "webAppHomeLimit",
+                                    v === "all" ? "all" : (Number(v) as
+                                        | 8
+                                        | 12
+                                        | 16),
+                                )}
+                        />
+                    </SettingsGroup>
+                )}
+                {tab === "appearance" && (
+                    <>
+                        <SettingsGroup>
+                            <Choices
+                                title="主题"
+                                value={appearance.theme}
+                                control="segmented"
+                                values={[
+                                    ["system", "跟随系统"],
+                                    ["light", "浅色"],
+                                    ["dark", "深色"],
+                                ] as const}
+                                select={(v) => set("theme", v)}
+                            />
+                            <Choices
+                                title="强调色"
+                                value={appearance.accent}
+                                control="swatches"
+                                values={ACCENTS.map((a) =>
+                                    [a.id, a.label] as const
+                                )}
+                                select={(v) => set("accent", v)}
+                            />
+                        </SettingsGroup>
+                        <SettingsGroup title="首页">
+                            <Choices
+                                title="控件形状"
+                                control="segmented"
+                                value={appearance.shape}
+                                values={[
+                                    ["rounded", "圆角"],
+                                    ["pill", "胶囊"],
+                                ] as const}
+                                select={(v) => set("shape", v)}
+                            />
+                            <SettingsRow title="搜索框透明度">
+                                <div className="settings-opacity">
+                                    <output>
+                                        {Math.round(
+                                            appearance
+                                                .searchOpacity *
+                                                100,
+                                        )}%
+                                    </output>
+                                    <Slider
+                                        min={0.1}
+                                        max={1}
+                                        step={0.05}
+                                        value={appearance
+                                            .searchOpacity}
+                                        onValueChange={(value) =>
+                                            set(
+                                                "searchOpacity",
+                                                typeof value ===
+                                                        "number"
+                                                    ? value
+                                                    : value[0],
                                             )}
-                                            select={(v) => set("accent", v)}
-                                        />
-                                    </SettingsGroup>
-                                    <SettingsGroup title="首页">
-                                        <Choices
-                                            title="控件形状"
-                                            control="segmented"
-                                            value={appearance.shape}
-                                            values={[
-                                                ["rounded", "圆角"],
-                                                ["pill", "胶囊"],
-                                            ] as const}
-                                            select={(v) => set("shape", v)}
-                                        />
-                                        <SettingsRow title="搜索框透明度">
-                                            <div className="settings-opacity">
-                                                <output>
-                                                    {Math.round(
-                                                        appearance
-                                                            .searchOpacity *
-                                                            100,
-                                                    )}%
-                                                </output>
-                                                <Slider
-                                                    min={0.1}
-                                                    max={1}
-                                                    step={0.05}
-                                                    value={appearance
-                                                        .searchOpacity}
-                                                    onValueChange={(value) =>
-                                                        set(
-                                                            "searchOpacity",
-                                                            typeof value ===
-                                                                    "number"
-                                                                ? value
-                                                                : value[0],
-                                                        )}
-                                                    aria-label="搜索框透明度"
-                                                    getAriaValueText={(
-                                                        _formatted,
-                                                        value,
-                                                    ) => `${
-                                                        Math.round(value * 100)
-                                                    }%`}
-                                                />
-                                            </div>
-                                        </SettingsRow>
-                                        <Choices
-                                            title="应用图标大小"
-                                            control="segmented"
-                                            value={appearance.webAppIconSize}
-                                            values={[
-                                                ["compact", "小"],
-                                                ["default", "标准"],
-                                                ["large", "大"],
-                                            ] as const}
-                                            select={(v) =>
-                                                set("webAppIconSize", v)}
-                                        />
-                                        <SettingsRow title="显示应用名称">
-                                            <Switch
-                                                checked={appearance
-                                                    .showAppLabels}
-                                                onCheckedChange={(checked) =>
-                                                    set(
-                                                        "showAppLabels",
-                                                        checked,
-                                                    )}
-                                                aria-label="显示应用名称"
-                                            />
-                                        </SettingsRow>
-                                    </SettingsGroup>
-                                    <SettingsGroup
-                                        title="壁纸"
-                                        footer={user
-                                            ? "单张壁纸不超过 5 MiB。"
-                                            : (
-                                                <span data-testid="wallpaper-guest-notice">
-                                                    设置仅保存在此设备；登录后新上传的壁纸会同步到云端。单张壁纸不超过
-                                                    5 MiB。
-                                                </span>
-                                            )}
-                                    >
-                                        <SettingsRow
-                                            title="壁纸来源"
-                                            className="settings-row--vertical"
-                                        >
-                                            <div className="wallpaper-source-editor">
-                                                <input
-                                                    type="file"
-                                                    ref={fileInputRef}
-                                                    className="hidden"
-                                                    accept="image/png,image/jpeg,image/webp,image/avif"
-                                                    data-testid="wallpaper-file-input"
-                                                    onChange={(e) => {
-                                                        const file = e.target
-                                                            .files?.[0];
-                                                        if (file) {
-                                                            void handleWallpaperUpload(
-                                                                file,
-                                                            );
-                                                        }
-                                                        e.target.value = "";
-                                                    }}
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        fileInputRef.current
-                                                            ?.click()}
-                                                    disabled={uploadingWallpaper}
-                                                    title="上传本地图片"
-                                                    aria-label="上传本地图片"
-                                                    data-testid="wallpaper-upload-btn"
-                                                >
-                                                    <Upload
-                                                        size="1em"
-                                                        className="icon-md"
-                                                    />
-                                                </Button>
-                                                <Input
-                                                    id="wallpaper-input"
-                                                    data-testid="wallpaper-input"
-                                                    aria-label="壁纸来源"
-                                                    aria-invalid={!!draftError}
-                                                    aria-describedby={draftError
-                                                        ? "wallpaper-source-error"
-                                                        : undefined}
-                                                    placeholder={currentSourceHidden
-                                                        ? "替换为图片链接或渐变背景"
-                                                        : "图片链接（https）或渐变背景"}
-                                                    value={wallpaperDraft}
-                                                    onChange={(e) => {
-                                                        setWallpaperDraft(
-                                                            e.target.value,
-                                                        );
-                                                        setDraftError(null);
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.preventDefault();
-                                                            void handleApplyDraft();
-                                                        }
-                                                    }}
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        void handleApplyDraft()}
-                                                    disabled={isApplyingDraft ||
-                                                        !wallpaperDraft
-                                                            .trim() ||
-                                                        wallpaperDraft
-                                                                .trim() ===
-                                                            appearance
-                                                                .wallpaper}
-                                                    data-testid="wallpaper-apply-btn"
-                                                >
-                                                    应用
-                                                </Button>
-                                                {draftError && (
-                                                    <p
-                                                        id="wallpaper-source-error"
-                                                        className="wallpaper-input-error"
-                                                        role="alert"
-                                                    >
-                                                        {draftError}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </SettingsRow>
-                                        {hasWallpaper && (
-                                            <>
-                                                <SettingsRow
-                                                    title="当前壁纸"
-                                                    className="settings-row--vertical"
-                                                >
-                                                    <div className="wallpaper-current">
-                                                        <div
-                                                            className="wallpaper-stage"
-                                                            data-testid="wallpaper-stage"
-                                                        >
-                                                            <WallpaperSurface
-                                                                source={appearance
-                                                                    .wallpaper}
-                                                                presentation={effectivePresentation}
-                                                                embedded
-                                                                testId="wallpaper-current-preview"
-                                                            />
-                                                            <WallpaperStageContextPreview />
-                                                        </div>
-                                                        <ActionGroup>
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                onClick={() => {
-                                                                    const focal =
-                                                                        currentPresentation
-                                                                            .composition;
-                                                                    setCompositionTarget(
-                                                                        {
-                                                                            id: "current",
-                                                                            url: appearance
-                                                                                .wallpaper,
-                                                                            ...focal,
-                                                                        },
-                                                                    );
-                                                                }}
-                                                                data-testid="wallpaper-current-adjust-focal-btn"
-                                                            >
-                                                                调整构图
-                                                            </Button>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                onClick={() =>
-                                                                    void handleClearCurrentWallpaper()}
-                                                                aria-label="移除当前壁纸"
-                                                                data-testid="wallpaper-clear-btn"
-                                                            >
-                                                                移除
-                                                            </Button>
-                                                        </ActionGroup>
-                                                    </div>
-                                                </SettingsRow>
-                                                <SettingsRow
-                                                    title="可读性"
-                                                    className="settings-row--vertical"
-                                                >
-                                                    <SettingsPresetSlider
-                                                        stages={WALLPAPER_READABILITY_STAGES}
-                                                        value={effectivePresentation
-                                                            .readability}
-                                                        aria-label="可读性"
-                                                        testId="wallpaper-readability-slider"
-                                                        onChange={(v) => {
-                                                            setDraftPresentation(
-                                                                (prev) => ({
-                                                                    ...(prev ??
-                                                                        currentPresentation),
-                                                                    readability:
-                                                                        v as WallpaperReadability,
-                                                                }),
-                                                            );
-                                                        }}
-                                                        onCommit={(v) => {
-                                                            setDraftPresentation(
-                                                                null,
-                                                            );
-                                                            updatePresentation({
-                                                                readability:
-                                                                    v as WallpaperReadability,
-                                                            });
-                                                        }}
-                                                    />
-                                                </SettingsRow>
-                                            </>
+                                        aria-label="搜索框透明度"
+                                        getAriaValueText={(
+                                            _formatted,
+                                            value,
+                                        ) => `${Math.round(value * 100)}%`}
+                                    />
+                                </div>
+                            </SettingsRow>
+                            <Choices
+                                title="应用图标大小"
+                                control="segmented"
+                                value={appearance.webAppIconSize}
+                                values={[
+                                    ["compact", "小"],
+                                    ["default", "标准"],
+                                    ["large", "大"],
+                                ] as const}
+                                select={(v) => set("webAppIconSize", v)}
+                            />
+                            <SettingsRow title="显示应用名称">
+                                <Switch
+                                    checked={appearance
+                                        .showAppLabels}
+                                    onCheckedChange={(checked) =>
+                                        set(
+                                            "showAppLabels",
+                                            checked,
                                         )}
-                                    </SettingsGroup>
-                                    {wallpaperHistory.length > 0 && (
-                                        <SettingsGroup
-                                            title="最近上传"
-                                            footer="最多保留 5 张。"
-                                            padded
+                                    aria-label="显示应用名称"
+                                />
+                            </SettingsRow>
+                        </SettingsGroup>
+                        <SettingsGroup
+                            title="壁纸"
+                            footer={user
+                                ? "单张壁纸不超过 5 MiB。"
+                                : (
+                                    <span data-testid="wallpaper-guest-notice">
+                                        设置仅保存在此设备；登录后新上传的壁纸会同步到云端。单张壁纸不超过
+                                        5 MiB。
+                                    </span>
+                                )}
+                        >
+                            <SettingsRow
+                                title="壁纸来源"
+                                className="settings-row--vertical"
+                            >
+                                <div className="wallpaper-source-editor">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/png,image/jpeg,image/webp,image/avif"
+                                        data-testid="wallpaper-file-input"
+                                        onChange={(e) => {
+                                            const file = e.target
+                                                .files?.[0];
+                                            if (file) {
+                                                void handleWallpaperUpload(
+                                                    file,
+                                                );
+                                            }
+                                            e.target.value = "";
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                            fileInputRef.current
+                                                ?.click()}
+                                        disabled={uploadingWallpaper}
+                                        title="上传本地图片"
+                                        aria-label="上传本地图片"
+                                        data-testid="wallpaper-upload-btn"
+                                    >
+                                        <Upload
+                                            size="1em"
+                                            className="icon-md"
+                                        />
+                                    </Button>
+                                    <Input
+                                        id="wallpaper-input"
+                                        data-testid="wallpaper-input"
+                                        aria-label="壁纸来源"
+                                        aria-invalid={!!draftError}
+                                        aria-describedby={draftError
+                                            ? "wallpaper-source-error"
+                                            : undefined}
+                                        placeholder={currentSourceHidden
+                                            ? "替换为图片链接或渐变背景"
+                                            : "图片链接（https）或渐变背景"}
+                                        value={wallpaperDraft}
+                                        onChange={(e) => {
+                                            setWallpaperDraft(
+                                                e.target.value,
+                                            );
+                                            setDraftError(null);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                void handleApplyDraft();
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => void handleApplyDraft()}
+                                        disabled={isApplyingDraft ||
+                                            !wallpaperDraft
+                                                .trim() ||
+                                            wallpaperDraft
+                                                    .trim() ===
+                                                appearance
+                                                    .wallpaper}
+                                        data-testid="wallpaper-apply-btn"
+                                    >
+                                        应用
+                                    </Button>
+                                    {draftError && (
+                                        <p
+                                            id="wallpaper-source-error"
+                                            className="wallpaper-input-error"
+                                            role="alert"
                                         >
+                                            {draftError}
+                                        </p>
+                                    )}
+                                </div>
+                            </SettingsRow>
+                            {hasWallpaper && (
+                                <>
+                                    <SettingsRow
+                                        title="当前壁纸"
+                                        className="settings-row--vertical"
+                                    >
+                                        <div className="wallpaper-current">
                                             <div
-                                                className="wallpaper-history"
-                                                data-testid="wallpaper-history"
-                                                role="group"
-                                                aria-label="最近上传的图片"
+                                                className="wallpaper-stage"
+                                                data-testid="wallpaper-stage"
                                             >
-                                                <div className="wallpaper-history__grid">
-                                                    {wallpaperHistory.map(
-                                                        (record, index) => {
-                                                            const isCurrent =
-                                                                appearance
-                                                                    .wallpaper ===
-                                                                    record.url;
-                                                            return (
+                                                <WallpaperSurface
+                                                    source={appearance
+                                                        .wallpaper}
+                                                    presentation={effectivePresentation}
+                                                    embedded
+                                                    testId="wallpaper-current-preview"
+                                                />
+                                                <WallpaperStageContextPreview />
+                                            </div>
+                                            <ActionGroup>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        const focal =
+                                                            currentPresentation
+                                                                .composition;
+                                                        setCompositionTarget(
+                                                            {
+                                                                id: "current",
+                                                                url: appearance
+                                                                    .wallpaper,
+                                                                ...focal,
+                                                            },
+                                                        );
+                                                    }}
+                                                    data-testid="wallpaper-current-adjust-focal-btn"
+                                                >
+                                                    调整构图
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        void handleClearCurrentWallpaper()}
+                                                    aria-label="移除当前壁纸"
+                                                    data-testid="wallpaper-clear-btn"
+                                                >
+                                                    移除
+                                                </Button>
+                                            </ActionGroup>
+                                        </div>
+                                    </SettingsRow>
+                                    <SettingsRow
+                                        title="可读性"
+                                        className="settings-row--vertical"
+                                    >
+                                        <SettingsPresetSlider
+                                            stages={WALLPAPER_READABILITY_STAGES}
+                                            value={effectivePresentation
+                                                .readability}
+                                            aria-label="可读性"
+                                            testId="wallpaper-readability-slider"
+                                            onChange={(v) => {
+                                                setDraftPresentation(
+                                                    (prev) => ({
+                                                        ...(prev ??
+                                                            currentPresentation),
+                                                        readability:
+                                                            v as WallpaperReadability,
+                                                    }),
+                                                );
+                                            }}
+                                            onCommit={(v) => {
+                                                setDraftPresentation(
+                                                    null,
+                                                );
+                                                updatePresentation({
+                                                    readability:
+                                                        v as WallpaperReadability,
+                                                });
+                                            }}
+                                        />
+                                    </SettingsRow>
+                                </>
+                            )}
+                        </SettingsGroup>
+                        {wallpaperHistory.length > 0 && (
+                            <SettingsGroup
+                                title="最近上传"
+                                footer="最多保留 5 张。"
+                                padded
+                            >
+                                <div
+                                    className="wallpaper-history"
+                                    data-testid="wallpaper-history"
+                                    role="group"
+                                    aria-label="最近上传的图片"
+                                >
+                                    <div className="wallpaper-history__grid">
+                                        {wallpaperHistory.map(
+                                            (record, index) => {
+                                                const isCurrent = appearance
+                                                    .wallpaper ===
+                                                    record.url;
+                                                return (
+                                                    <div
+                                                        key={record
+                                                            .id}
+                                                        className="wallpaper-card"
+                                                        data-current={isCurrent
+                                                            ? "true"
+                                                            : undefined}
+                                                        data-testid={`wallpaper-history-item-${record.id}`}
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            className="wallpaper-card__main"
+                                                            onClick={() =>
+                                                                setCompositionTarget(
+                                                                    record,
+                                                                )}
+                                                            aria-label={`预览与调整构图：壁纸 ${
+                                                                index +
+                                                                1
+                                                            }${
+                                                                isCurrent
+                                                                    ? "（当前壁纸）"
+                                                                    : ""
+                                                            }`}
+                                                            data-testid={`wallpaper-card-preview-btn-${record.id}`}
+                                                        >
+                                                            <img
+                                                                className="wallpaper-card__thumbnail"
+                                                                src={record
+                                                                    .url}
+                                                                alt={`壁纸 ${
+                                                                    index +
+                                                                    1
+                                                                }`}
+                                                                loading="lazy"
+                                                            />
+                                                        </button>
+                                                        {isCurrent &&
+                                                            (
                                                                 <div
-                                                                    key={record
-                                                                        .id}
-                                                                    className="wallpaper-card"
-                                                                    data-current={isCurrent
-                                                                        ? "true"
-                                                                        : undefined}
-                                                                    data-testid={`wallpaper-history-item-${record.id}`}
+                                                                    className="wallpaper-card__current-badge"
+                                                                    data-testid="wallpaper-current-badge"
                                                                 >
-                                                                    <button
-                                                                        type="button"
-                                                                        className="wallpaper-card__main"
+                                                                    <Check
+                                                                        size="1em"
+                                                                        className="icon-sm shrink-0"
+                                                                    />
+                                                                    <span>
+                                                                        当前壁纸
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        <div className="wallpaper-card__actions">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    className="wallpaper-card__menu-trigger"
+                                                                    aria-label={`壁纸操作菜单：壁纸 ${
+                                                                        index +
+                                                                        1
+                                                                    }`}
+                                                                    data-testid={`wallpaper-menu-trigger-${record.id}`}
+                                                                >
+                                                                    <MoreVertical
+                                                                        size="1em"
+                                                                        className="icon-md"
+                                                                    />
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent>
+                                                                    {isCurrent
+                                                                        ? (
+                                                                            <DropdownMenuItem
+                                                                                disabled
+                                                                                data-testid="wallpaper-menu-set-current"
+                                                                            >
+                                                                                当前正在使用
+                                                                            </DropdownMenuItem>
+                                                                        )
+                                                                        : (
+                                                                            <DropdownMenuItem
+                                                                                onClick={() =>
+                                                                                    void handleSetCurrentFromHistory(
+                                                                                        record,
+                                                                                    )}
+                                                                                data-testid="wallpaper-menu-set-current"
+                                                                            >
+                                                                                设为当前壁纸
+                                                                            </DropdownMenuItem>
+                                                                        )}
+                                                                    <DropdownMenuItem
                                                                         onClick={() =>
                                                                             setCompositionTarget(
                                                                                 record,
                                                                             )}
-                                                                        aria-label={`预览与调整构图：壁纸 ${
-                                                                            index +
-                                                                            1
-                                                                        }${
-                                                                            isCurrent
-                                                                                ? "（当前壁纸）"
-                                                                                : ""
-                                                                        }`}
-                                                                        data-testid={`wallpaper-card-preview-btn-${record.id}`}
+                                                                        data-testid="wallpaper-menu-adjust-focal"
                                                                     >
-                                                                        <img
-                                                                            className="wallpaper-card__thumbnail"
-                                                                            src={record
-                                                                                .url}
-                                                                            alt={`壁纸 ${
-                                                                                index +
-                                                                                1
-                                                                            }`}
-                                                                            loading="lazy"
-                                                                        />
-                                                                    </button>
-                                                                    {isCurrent &&
-                                                                        (
-                                                                            <div
-                                                                                className="wallpaper-card__current-badge"
-                                                                                data-testid="wallpaper-current-badge"
-                                                                            >
-                                                                                <Check
-                                                                                    size="1em"
-                                                                                    className="icon-sm shrink-0"
-                                                                                />
-                                                                                <span>
-                                                                                    当前壁纸
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                    <div className="wallpaper-card__actions">
-                                                                        <DropdownMenu>
-                                                                            <DropdownMenuTrigger
-                                                                                className="wallpaper-card__menu-trigger"
-                                                                                aria-label={`壁纸操作菜单：壁纸 ${
-                                                                                    index +
-                                                                                    1
-                                                                                }`}
-                                                                                data-testid={`wallpaper-menu-trigger-${record.id}`}
-                                                                            >
-                                                                                <MoreVertical
-                                                                                    size="1em"
-                                                                                    className="icon-md"
-                                                                                />
-                                                                            </DropdownMenuTrigger>
-                                                                            <DropdownMenuContent>
-                                                                                {isCurrent
-                                                                                    ? (
-                                                                                        <DropdownMenuItem
-                                                                                            disabled
-                                                                                            data-testid="wallpaper-menu-set-current"
-                                                                                        >
-                                                                                            当前正在使用
-                                                                                        </DropdownMenuItem>
-                                                                                    )
-                                                                                    : (
-                                                                                        <DropdownMenuItem
-                                                                                            onClick={() =>
-                                                                                                void handleSetCurrentFromHistory(
-                                                                                                    record,
-                                                                                                )}
-                                                                                            data-testid="wallpaper-menu-set-current"
-                                                                                        >
-                                                                                            设为当前壁纸
-                                                                                        </DropdownMenuItem>
-                                                                                    )}
-                                                                                <DropdownMenuItem
-                                                                                    onClick={() =>
-                                                                                        setCompositionTarget(
-                                                                                            record,
-                                                                                        )}
-                                                                                    data-testid="wallpaper-menu-adjust-focal"
-                                                                                >
-                                                                                    调整构图
-                                                                                </DropdownMenuItem>
-                                                                                <DropdownMenuItem
-                                                                                    variant="destructive"
-                                                                                    onClick={() =>
-                                                                                        setDeleteTarget(
-                                                                                            record,
-                                                                                        )}
-                                                                                    data-testid="wallpaper-menu-delete"
-                                                                                >
-                                                                                    删除
-                                                                                </DropdownMenuItem>
-                                                                            </DropdownMenuContent>
-                                                                        </DropdownMenu>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        },
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </SettingsGroup>
-                                    )}
-                                </>
-                            )}
-                            {tab === "ai" && (
-                                <>
-                                    <SettingsGroup footer="AI 仅在你主动提问时响应，不影响普通搜索。">
-                                        <SettingsRow title="对话页面">
-                                            <Button
-                                                variant="ghost"
-                                                aria-label="打开 AI 问答"
-                                                render={
-                                                    <Link to={routes.ask} />
-                                                }
-                                            >
-                                                打开
-                                                <ChevronRight
-                                                    size="1em"
-                                                    className="icon-sm"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                        </SettingsRow>
-                                    </SettingsGroup>
-                                    <AiSettings />
-                                </>
-                            )}
-                            {tab === "data" && (
-                                <>
-                                    <SettingsGroup
-                                        title="同步"
-                                        footer={user
-                                            ? "偏好设置、应用与便签会在你的账户中双向同步。"
-                                            : "登录后，偏好设置、应用与便签会同步到你的账户。"}
+                                                                        调整构图
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        variant="destructive"
+                                                                        onClick={() =>
+                                                                            setDeleteTarget(
+                                                                                record,
+                                                                            )}
+                                                                        data-testid="wallpaper-menu-delete"
+                                                                    >
+                                                                        删除
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            },
+                                        )}
+                                    </div>
+                                </div>
+                            </SettingsGroup>
+                        )}
+                    </>
+                )}
+                {tab === "ai" && (
+                    <>
+                        <SettingsGroup footer="AI 仅在你主动提问时响应，不影响普通搜索。">
+                            <SettingsRow title="对话页面">
+                                <Button
+                                    variant="ghost"
+                                    aria-label="打开 AI 问答"
+                                    render={
+                                        <Link
+                                            to={routes.ask}
+                                            viewTransition
+                                        />
+                                    }
+                                >
+                                    打开
+                                    <ChevronRight
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </SettingsRow>
+                        </SettingsGroup>
+                        <AiSettings />
+                    </>
+                )}
+                {tab === "data" && (
+                    <>
+                        <SettingsGroup
+                            title="同步"
+                            footer={user
+                                ? "偏好设置、应用与便签会在你的账户中双向同步。"
+                                : "登录后，偏好设置、应用与便签会同步到你的账户。"}
+                        >
+                            <SettingsRow title="账户">
+                                {user ? user.displayName : "本地访客模式"}
+                            </SettingsRow>
+                            <SettingsRow title="状态">
+                                <Badge variant="secondary">
+                                    {user ? "已同步" : "未登录"}
+                                </Badge>
+                            </SettingsRow>
+                        </SettingsGroup>
+                        {user && (
+                            <SettingsGroup
+                                title="数据管理"
+                                footer="已删除的应用和便签保留在回收站，可恢复或彻底删除。"
+                            >
+                                <SettingsRow title="回收站">
+                                    <Button
+                                        variant="ghost"
+                                        aria-label="打开回收站"
+                                        render={
+                                            <Link
+                                                to={routes.trash}
+                                                viewTransition
+                                            />
+                                        }
                                     >
-                                        <SettingsRow title="账户">
-                                            {user
-                                                ? user.displayName
-                                                : "本地访客模式"}
-                                        </SettingsRow>
-                                        <SettingsRow title="状态">
-                                            <Badge variant="secondary">
-                                                {user ? "已同步" : "未登录"}
-                                            </Badge>
-                                        </SettingsRow>
-                                    </SettingsGroup>
-                                    {user && (
-                                        <SettingsGroup
-                                            title="数据管理"
-                                            footer="已删除的应用和便签保留在回收站，可恢复或彻底删除。"
-                                        >
-                                            <SettingsRow title="回收站">
-                                                <Button
-                                                    variant="ghost"
-                                                    aria-label="打开回收站"
-                                                    render={
-                                                        <Link
-                                                            to={routes.trash}
-                                                        />
-                                                    }
-                                                >
-                                                    打开
-                                                    <ChevronRight
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                        aria-hidden="true"
-                                                    />
-                                                </Button>
-                                            </SettingsRow>
-                                        </SettingsGroup>
-                                    )}
-                                    {isAdmin && (
-                                        <SettingsGroup>
-                                            <SettingsRow title="设计实验室">
-                                                <Button
-                                                    variant="ghost"
-                                                    aria-label="打开设计实验室"
-                                                    render={
-                                                        <Link
-                                                            to={routes
-                                                                .designLab}
-                                                        />
-                                                    }
-                                                >
-                                                    打开
-                                                    <ChevronRight
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                        aria-hidden="true"
-                                                    />
-                                                </Button>
-                                            </SettingsRow>
-                                        </SettingsGroup>
-                                    )}
-                                </>
-                            )}
-                            {tab === "shortcuts" && <ShortcutsSettings />}
-                        </div>
-                    </section>
-                </div>
-            </PageShell>
+                                        打开
+                                        <ChevronRight
+                                            size="1em"
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
+                                    </Button>
+                                </SettingsRow>
+                            </SettingsGroup>
+                        )}
+                        {isAdmin && (
+                            <SettingsGroup>
+                                <SettingsRow title="设计实验室">
+                                    <Button
+                                        variant="ghost"
+                                        aria-label="打开设计实验室"
+                                        render={
+                                            <Link
+                                                to={routes.designLab}
+                                                viewTransition
+                                            />
+                                        }
+                                    >
+                                        打开
+                                        <ChevronRight
+                                            size="1em"
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
+                                    </Button>
+                                </SettingsRow>
+                            </SettingsGroup>
+                        )}
+                    </>
+                )}
+                {tab === "shortcuts" && <ShortcutsSettings />}
+            </SettingsShell>
             <WallpaperCompositionDialog
                 open={compositionTarget !== null}
                 onOpenChange={(open) => {
@@ -1317,15 +1226,14 @@ export function SettingsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            {toastMessage && (
-                <StatusBanner
-                    tone="success"
-                    presentation="floating"
-                    data-testid="wallpaper-toast"
-                >
-                    {toastMessage}
-                </StatusBanner>
-            )}
+            <StatusBanner
+                tone="success"
+                presentation="floating"
+                open={toastMessage !== null}
+                data-testid="wallpaper-toast"
+            >
+                {toastMessage}
+            </StatusBanner>
         </>
     );
 }

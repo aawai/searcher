@@ -118,6 +118,7 @@ function DropdownMenuRadioItem(
         >
             {children}
             <MenuPrimitive.RadioItemIndicator
+                keepMounted
                 className="menu-item-indicator"
                 aria-hidden="true"
             >

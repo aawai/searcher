@@ -235,6 +235,7 @@ async function openAppsWorkspace(page: Page) {
         if (
             await trigger.evaluate((button) => {
                 const r = button.getBoundingClientRect();
+                if (button.closest("[inert]")) return false;
                 const hit = document.elementFromPoint(
                     r.x + r.width / 2,
                     r.y + r.height / 2,
@@ -1020,11 +1021,61 @@ async function runDesktopMatrix(
         });
         assertDensityMetrics(metrics, { width: 1440, height: 900 }, 38);
         assertFolderPreviewMetrics(metrics, false);
+        await page.waitForFunction(() =>
+            document.querySelector(".home")?.getAnimations().length === 0
+        );
         const homeAfter = await collectHomeGeometry(page, homeSelector);
+        // The panel reserves its full 412px column. Home stays centered in the
+        // remaining space without changing grid tracks, gaps or vertical geometry.
+        const clientWidth = await page.evaluate(() =>
+            document.documentElement.clientWidth
+        );
+        const reserve = 412;
+        const dx = homeAfter.grid.x - homeBefore.grid.x;
+        assertNear(
+            dx,
+            -reserve / 2,
+            "Home content shift while the panel is open",
+        );
+        assertNear(
+            homeAfter.grid.x + homeAfter.grid.width / 2,
+            (clientWidth - reserve) / 2,
+            "Home grid centers in the full remaining space",
+        );
+        const round = (value: number) => Math.round(value * 100) / 100;
+        const withoutX = (
+            geometry: typeof homeBefore,
+            shift: number,
+        ) => ({
+            ...geometry,
+            grid: { ...geometry.grid, x: round(geometry.grid.x - shift) },
+            tiles: geometry.tiles.map((tile) => ({
+                ...tile,
+                x: round(tile.x - shift),
+            })),
+            glyphs: geometry.glyphs.map((glyph) => ({
+                ...glyph,
+                x: round(glyph.x - shift),
+            })),
+        });
         assertEquals(
-            homeAfter,
-            homeBefore,
-            "Home geometry must not change when the Apps workspace opens",
+            withoutX(homeAfter, dx),
+            withoutX(homeBefore, 0),
+            "Home geometry must only shift horizontally when the Apps workspace opens",
+        );
+        const searchClearance = await page.evaluate(() => {
+            const search = document.querySelector(".home .search-form-wrap") ??
+                document.querySelector(".home .search-form");
+            const panel = document.querySelector(
+                "aside.workspace-panel:not([data-ending-style])",
+            );
+            if (!search || !panel) return null;
+            return panel.getBoundingClientRect().left -
+                search.getBoundingClientRect().right;
+        });
+        assert(
+            searchClearance !== null && searchClearance >= 16 - 1,
+            `Search must stay at least 16px clear of the Apps panel: ${searchClearance}`,
         );
         report.homeLauncher.push({
             theme,
@@ -1214,8 +1265,8 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                 if (grids.length !== 1) return false;
                 const host = grids[0].closest<HTMLElement>(
                     width < 768
-                        ? ".workspace-panel--mobile"
-                        : 'aside.workspace-panel[data-presentation="panel"]',
+                        ? ".workspace-panel--mobile:not([data-ending-style])"
+                        : 'aside.workspace-panel[data-presentation="panel"]:not([data-ending-style])',
                 );
                 if (innerWidth !== width || !host) return false;
                 const bounds = host.getBoundingClientRect();

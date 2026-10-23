@@ -372,6 +372,104 @@ Deno.test("Notes focus boundary preserves network, versions and history", async 
         },
     );
     await t.step(
+        "Escape flushes during a held exit and rapid reopen retains the editor",
+        async () => {
+            const panel = page.locator(".workspace-panel");
+            try {
+                await page.waitForFunction(() =>
+                    document.querySelector(".workspace-panel")
+                        ?.getAnimations().length === 0
+                );
+                await editor.evaluate((element) =>
+                    element.setAttribute("data-exit-instance", "original")
+                );
+                const before = await readState();
+                const count = writes.length;
+                await title.fill("退出动画前保存");
+                // Arm the observer completely before sending Escape.
+                await panel.evaluate((element) => {
+                    element.setAttribute("data-held-exit", "pending");
+                    const observer = new MutationObserver(() => {
+                        if (!element.hasAttribute("data-held-exit")) {
+                            observer.disconnect();
+                            return;
+                        }
+                        if (!element.hasAttribute("data-ending-style")) return;
+                        observer.disconnect();
+                        const animations = element.getAnimations();
+                        for (const animation of animations) animation.pause();
+                        element.setAttribute(
+                            "data-held-exit",
+                            String(animations.length),
+                        );
+                    });
+                    observer.observe(element, {
+                        attributes: true,
+                        attributeFilter: [
+                            "data-ending-style",
+                            "data-held-exit",
+                        ],
+                    });
+                });
+                const response = saved("autosave");
+                await title.press("Escape");
+                await page.waitForFunction(
+                    () => {
+                        const held = document.querySelector(".workspace-panel")
+                            ?.getAttribute("data-held-exit");
+                        return held !== undefined && held !== null &&
+                            held !== "pending";
+                    },
+                    undefined,
+                    { timeout: 5000 },
+                );
+                assertEquals(
+                    Number(await panel.getAttribute("data-held-exit")) > 0,
+                    true,
+                );
+                assertEquals((await response).status(), 200);
+                assertEquals(await editor.count(), 1);
+                assertEquals(await panel.getAttribute("inert"), "");
+                assertEquals(writes.slice(count).map(({ origin }) => origin), [
+                    "autosave",
+                ]);
+                const after = await readState();
+                assertEquals(after.note.title, "退出动画前保存");
+                assertEquals(after.note.version, before.note.version + 1);
+                assertEquals(after.history, before.history);
+                await page.locator(
+                    '.zen-edge-btn[data-workspace="notes"]',
+                ).first().click();
+                assertEquals(
+                    await editor.getAttribute("data-exit-instance"),
+                    "original",
+                );
+                assertEquals(await title.inputValue(), "退出动画前保存");
+                assertEquals(await panel.getAttribute("inert"), null);
+                await panel.evaluate((element) => {
+                    for (const animation of element.getAnimations()) {
+                        if (animation.playState === "paused") animation.play();
+                    }
+                });
+                await page.waitForFunction(() =>
+                    document.querySelector(".workspace-panel")
+                        ?.getAnimations().length === 0
+                );
+                await settled();
+                assertEquals(writes.length, count + 1);
+            } finally {
+                await panel.evaluateAll((elements) => {
+                    for (const element of elements) {
+                        element.removeAttribute("data-held-exit");
+                    }
+                    for (const animation of document.getAnimations()) {
+                        if (animation.playState === "paused") animation.play();
+                    }
+                });
+            }
+        },
+    );
+    await t.step(
         "active IME composition is retained locally across editor unmount",
         async () => {
             const before = await readState();

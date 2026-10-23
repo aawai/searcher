@@ -380,8 +380,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 ".pinned-area .launcher-grid--home > .launcher-tile",
             ).length === 6
         );
-        await undoToast.waitFor({ state: "detached" });
         await page.clock.resume();
+        await undoToast.waitFor({ state: "detached" });
 
         for (
             const { width, columns } of [

@@ -25,8 +25,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
-import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import { PageShell } from "../components/searcher/PageShell.tsx";
 import {
     EmptyState,
     SettingsGroup,
@@ -37,6 +35,7 @@ import { api, json } from "../lib/api.ts";
 import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authPath, routes } from "./routes.ts";
+import { SettingsShell } from "./SettingsShell.tsx";
 import "./account.css";
 
 interface SessionDevice {
@@ -82,6 +81,48 @@ function formatTime(timestamp: number | null | undefined): string {
     });
 }
 
+function SessionConfirmDialog(
+    { open, pending, title, description, pendingLabel, onCancel, onConfirm }: {
+        open: boolean;
+        pending: boolean;
+        title: string;
+        description: string;
+        pendingLabel: string;
+        onCancel: () => void;
+        onConfirm: () => void | Promise<void>;
+    },
+) {
+    return (
+        <AlertDialog
+            open={open}
+            onOpenChange={(next) => {
+                if (!next && !pending) onCancel();
+            }}
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{title}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {description}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={pending}>
+                        取消
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        variant="destructive"
+                        disabled={pending}
+                        onClick={onConfirm}
+                    >
+                        {pending ? pendingLabel : "确认退出"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+}
+
 export function AccountPage() {
     const { user, login, logout } = useAppState();
     const navigate = useNavigate();
@@ -108,9 +149,11 @@ export function AccountPage() {
     const [devicesLoading, setDevicesLoading] = useState(false);
     const [devicesError, setDevicesError] = useState("");
     const [devicesActionMsg, setDevicesActionMsg] = useState("");
-    const [revokingId, setRevokingId] = useState<string | null>(null);
 
-    // Logout confirmation state
+    // Session confirmation state: signing out any device is confirmed first.
+    const [revokeDeviceId, setRevokeDeviceId] = useState<string | null>(null);
+    const [revokeDevicePending, setRevokeDevicePending] = useState(false);
+
     const [logoutCurrentOpen, setLogoutCurrentOpen] = useState(false);
     const [logoutCurrentPending, setLogoutCurrentPending] = useState(false);
 
@@ -203,7 +246,9 @@ export function AccountPage() {
             setConfirmPassword("");
             // Logout after short delay
             setTimeout(() => {
-                void logout().then(() => navigate(routes.login));
+                void logout().then(() =>
+                    navigate(routes.login, { viewTransition: true })
+                );
             }, 2500);
         } catch (err) {
             setPasswordError(errorMessage(err));
@@ -226,24 +271,30 @@ export function AccountPage() {
         setPasswordDialogOpen(open);
     };
 
-    // Revoke single device
-    const handleRevokeDevice = async (device: SessionDevice) => {
-        if (device.isCurrent) {
-            setLogoutCurrentOpen(true);
-            return;
-        }
+    // Every device row asks for confirmation; the current device also ends
+    // this browser's session.
+    const handleRevokeDevice = (device: SessionDevice) => {
+        if (device.isCurrent) setLogoutCurrentOpen(true);
+        else setRevokeDeviceId(device.id);
+    };
 
-        setRevokingId(device.id);
+    const handleConfirmRevokeDevice = async () => {
+        if (!revokeDeviceId) return;
+        setRevokeDevicePending(true);
         setDevicesError("");
         setDevicesActionMsg("");
         try {
-            await api(`/api/auth/devices/${device.id}`, { method: "DELETE" });
+            await api(`/api/auth/devices/${revokeDeviceId}`, {
+                method: "DELETE",
+            });
             setDevicesActionMsg("已退出该设备");
+            setRevokeDeviceId(null);
             await loadDevices();
         } catch (err) {
             setDevicesError(errorMessage(err));
+            setRevokeDeviceId(null);
         } finally {
-            setRevokingId(null);
+            setRevokeDevicePending(false);
         }
     };
 
@@ -253,7 +304,7 @@ export function AccountPage() {
         try {
             await logout();
             setLogoutCurrentOpen(false);
-            navigate(routes.login);
+            navigate(routes.login, { viewTransition: true });
         } catch (err) {
             setDevicesError(errorMessage(err));
             setLogoutCurrentOpen(false);
@@ -284,24 +335,22 @@ export function AccountPage() {
 
     if (!user) {
         return (
-            <PageShell archetype="utility">
-                <div className="account-column">
-                    <PageHeader title="账户与安全" />
-                    <EmptyState
-                        title="未登录"
-                        action={
-                            <Link
-                                to={authPath("login", location)}
-                                className={buttonVariants({
-                                    variant: "default",
-                                })}
-                            >
-                                前往登录
-                            </Link>
-                        }
-                    />
-                </div>
-            </PageShell>
+            <SettingsShell current="account">
+                <EmptyState
+                    title="未登录"
+                    action={
+                        <Link
+                            to={authPath("login", location)}
+                            viewTransition
+                            className={buttonVariants({
+                                variant: "default",
+                            })}
+                        >
+                            前往登录
+                        </Link>
+                    }
+                />
+            </SettingsShell>
         );
     }
 
@@ -312,25 +361,24 @@ export function AccountPage() {
         email === (user.email ?? "");
 
     return (
-        <PageShell archetype="utility">
-            <div className="account-column">
-                <PageHeader
-                    title="账户与安全"
-                    actions={user.role === "admin"
-                        ? (
-                            <Link
-                                to={routes.admin()}
-                                className={buttonVariants({
-                                    variant: "outline",
-                                    size: "sm",
-                                })}
-                            >
-                                管理后台
-                            </Link>
-                        )
-                        : undefined}
-                />
-
+        <>
+            <SettingsShell
+                current="account"
+                actions={user.role === "admin"
+                    ? (
+                        <Link
+                            to={routes.admin()}
+                            viewTransition
+                            className={buttonVariants({
+                                variant: "outline",
+                                size: "sm",
+                            })}
+                        >
+                            管理后台
+                        </Link>
+                    )
+                    : undefined}
+            >
                 {isForcedReset && (
                     <StatusBanner
                         tone="warning"
@@ -428,6 +476,7 @@ export function AccountPage() {
                                     size="sm"
                                     className="account-danger"
                                     disabled={devicesLoading ||
+                                        revokeDevicePending ||
                                         revokeOthersPending ||
                                         logoutCurrentPending}
                                     onClick={() => setRevokeOthersOpen(true)}
@@ -472,69 +521,55 @@ export function AccountPage() {
                         )
                         : (
                             <div className="account-device-list">
-                                {devices.map((device) => {
-                                    const isRevoking = revokingId === device.id;
-                                    return (
-                                        <SettingsRow
-                                            key={device.id}
-                                            className="account-device-item"
-                                            title={describeDevice(
-                                                device.userAgent,
-                                            )}
-                                            description={
-                                                <span className="account-device-meta">
-                                                    {device.isCurrent && (
-                                                        <Badge variant="secondary">
-                                                            当前设备
-                                                        </Badge>
-                                                    )}
-                                                    <span>
-                                                        {device.ip || "未知 IP"}
-                                                    </span>
-                                                    <span>
-                                                        登录于 {formatTime(
-                                                            device.createdAt,
-                                                        )}
-                                                    </span>
-                                                    {device.lastActiveAt && (
-                                                        <span>
-                                                            最近活动{" "}
-                                                            {formatTime(
-                                                                device
-                                                                    .lastActiveAt,
-                                                            )}
-                                                        </span>
+                                {devices.map((device) => (
+                                    <SettingsRow
+                                        key={device.id}
+                                        className="account-device-item"
+                                        title={describeDevice(
+                                            device.userAgent,
+                                        )}
+                                        description={
+                                            <span className="account-device-meta">
+                                                {device.isCurrent && (
+                                                    <Badge variant="secondary">
+                                                        当前设备
+                                                    </Badge>
+                                                )}
+                                                <span>
+                                                    {device.ip || "未知 IP"}
+                                                </span>
+                                                <span>
+                                                    登录于 {formatTime(
+                                                        device.createdAt,
                                                     )}
                                                 </span>
-                                            }
+                                                {device.lastActiveAt && (
+                                                    <span>
+                                                        最近活动 {formatTime(
+                                                            device
+                                                                .lastActiveAt,
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        }
+                                    >
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="ghost"
+                                            className="account-danger"
+                                            disabled={devicesLoading ||
+                                                revokeDevicePending ||
+                                                logoutCurrentPending ||
+                                                revokeOthersPending}
+                                            onClick={() =>
+                                                handleRevokeDevice(device)}
                                         >
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                variant={device.isCurrent
-                                                    ? "outline"
-                                                    : "ghost"}
-                                                className={device.isCurrent
-                                                    ? undefined
-                                                    : "account-danger"}
-                                                disabled={isRevoking ||
-                                                    devicesLoading ||
-                                                    logoutCurrentPending ||
-                                                    revokeOthersPending}
-                                                onClick={() =>
-                                                    void handleRevokeDevice(
-                                                        device,
-                                                    )}
-                                            >
-                                                {isRevoking
-                                                    ? "处理中…"
-                                                    : device.isCurrent
-                                                    ? "退出此设备"
-                                                    : "退出"}
-                                            </Button>
-                                        </SettingsRow>
-                                    );
-                                })}
+                                            退出
+                                        </Button>
+                                    </SettingsRow>
+                                ))}
                             </div>
                         )}
                 </SettingsGroup>
@@ -549,7 +584,7 @@ export function AccountPage() {
                         {devicesError}
                     </StatusBanner>
                 )}
-            </div>
+            </SettingsShell>
 
             <Dialog
                 open={passwordDialogOpen}
@@ -676,65 +711,33 @@ export function AccountPage() {
                 </DialogPortal>
             </Dialog>
 
-            <AlertDialog
+            <SessionConfirmDialog
+                open={revokeDeviceId !== null}
+                pending={revokeDevicePending}
+                title="退出该设备"
+                description="确定要退出该设备吗？该设备需要重新登录。"
+                pendingLabel="处理中…"
+                onCancel={() => setRevokeDeviceId(null)}
+                onConfirm={handleConfirmRevokeDevice}
+            />
+            <SessionConfirmDialog
                 open={logoutCurrentOpen}
-                onOpenChange={(open) => {
-                    if (!open && !logoutCurrentPending) {
-                        setLogoutCurrentOpen(false);
-                    }
-                }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>退出当前设备</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            确定要退出当前设备吗？退出后需要重新登录。
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={logoutCurrentPending}>
-                            取消
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant="destructive"
-                            disabled={logoutCurrentPending}
-                            onClick={handleConfirmLogoutCurrent}
-                        >
-                            {logoutCurrentPending ? "退出中…" : "确认退出"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            <AlertDialog
+                pending={logoutCurrentPending}
+                title="退出当前设备"
+                description="确定要退出当前设备吗？退出后需要重新登录。"
+                pendingLabel="退出中…"
+                onCancel={() => setLogoutCurrentOpen(false)}
+                onConfirm={handleConfirmLogoutCurrent}
+            />
+            <SessionConfirmDialog
                 open={revokeOthersOpen}
-                onOpenChange={(open) => {
-                    if (!open && !revokeOthersPending) {
-                        setRevokeOthersOpen(false);
-                    }
-                }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>退出其他所有设备</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            确定要退出除当前设备外的所有其他设备吗？
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={revokeOthersPending}>
-                            取消
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant="destructive"
-                            disabled={revokeOthersPending}
-                            onClick={handleConfirmRevokeOthers}
-                        >
-                            {revokeOthersPending ? "处理中…" : "确认退出"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </PageShell>
+                pending={revokeOthersPending}
+                title="退出其他所有设备"
+                description="确定要退出除当前设备外的所有其他设备吗？"
+                pendingLabel="处理中…"
+                onCancel={() => setRevokeOthersOpen(false)}
+                onConfirm={handleConfirmRevokeOthers}
+            />
+        </>
     );
 }

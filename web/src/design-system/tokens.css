@@ -9,6 +9,8 @@
     --surface: #FFFFFF;
     --surface-solid: #FFFFFF;
     --surface-soft: #EBEBEE;
+    /* Thumb of switches, segmented selection, tabs and sliders: lighter than its track in both themes. */
+    --surface-control-thumb: #FFFFFF;
     --muted: #66666B;
     --border: rgb(0 0 0 / 0.09);
     --border-subtle: rgb(0 0 0 / 0.05);
@@ -34,11 +36,9 @@
     --surface-l0: var(--background);
     --surface-l2: var(--surface-solid);
     --surface-l3: var(--surface-solid);
-    --surface-workspace: var(--surface-solid);
     --surface-scrim: rgb(0 0 0 / 0.32);
     --shadow-l2: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.16);
     --shadow-l3: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 24px 56px -12px rgb(0 0 0 / 0.28);
-    --shadow-workspace: var(--shadow-l3);
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.20);
     --shadow-choice-selected: inset 0 0 0 1px var(--accent);
     --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
@@ -49,8 +49,7 @@
     --material-solid: var(--surface-solid);
     --material-filter: blur(24px) saturate(1.6);
 
-    /* Notes keep a physical paper metaphor; one card shadow pair. */
-    --shadow-note-card: 0 0 0 0.5px rgb(0 0 0 / 0.05), 0 1px 2px rgb(0 0 0 / 0.05), 0 6px 16px -6px rgb(0 0 0 / 0.12);
+    /* Home notes are material (--shadow-l2) and lift to the hover shadow; dragging uses the drag shadow. */
     --shadow-note-card-hover: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 2px 4px rgb(0 0 0 / 0.06), 0 12px 28px -8px rgb(0 0 0 / 0.18);
     --shadow-note-drag: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 18px 40px -8px rgb(0 0 0 / 0.32);
     --shadow-note-color-swatch: inset 0 0 0 1px var(--border);
@@ -245,6 +244,7 @@
     --surface: #1C1C1F;
     --surface-solid: #1C1C1F;
     --surface-soft: #2A2A2E;
+    --surface-control-thumb: #636366;
     --surface-l3: #242428;
     --muted: #A1A1A6;
     --border: rgb(255 255 255 / 0.10);
@@ -262,7 +262,6 @@
     --shadow-l2: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 24px -6px rgb(0 0 0 / 0.5);
     --shadow-l3: 0 0 0 0.5px rgb(255 255 255 / 0.10), 0 24px 56px -12px rgb(0 0 0 / 0.65);
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.2), 0 1px 3px rgb(0 0 0 / 0.4);
-    --shadow-note-card: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px -6px rgb(0 0 0 / 0.45);
     --shadow-note-card-hover: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 28px -8px rgb(0 0 0 / 0.55);
     --shadow-note-drag: 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 18px 40px -8px rgb(0 0 0 / 0.65);
     --shadow-document-paper: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.4);

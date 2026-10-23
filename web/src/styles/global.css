@@ -5,6 +5,10 @@
 html {
     min-width: 320px;
 }
+/* Every scroll container inherits a tokenised thumb colour; floating containers also set scrollbar-width: thin. */
+:root {
+    scrollbar-color: var(--border-control) transparent;
+}
 body {
     margin: 0;
     min-height: 100vh;
@@ -240,13 +244,30 @@ a {
         display: none;
     }
 }
-@media (prefers-reduced-motion:reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: .01ms!important;
-        animation-iteration-count: 1!important;
-        transition-duration: .01ms!important;
-        scroll-behavior: auto!important;
+/* Disable the root's geometry animation: top-level navigation only cross-fades. */
+::view-transition-group(root) {
+    animation: none;
+}
+::view-transition-old(root) {
+    animation: page-crossfade-out var(--motion-base) var(--ease-standard) both;
+}
+::view-transition-new(root) {
+    animation: page-crossfade-in var(--motion-base) var(--ease-standard) both;
+}
+@keyframes page-crossfade-out {
+    to {
+        opacity: 0;
+    }
+}
+@keyframes page-crossfade-in {
+    from {
+        opacity: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
     }
 }

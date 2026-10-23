@@ -30,7 +30,7 @@ Deno.test("guest AI entry links to login and returns home #196", async () => {
         assertEquals(await page.getByText("登录后可用").count(), 0);
 
         await page.locator(".search-engine").click();
-        const aiItem = page.getByRole("menuitem", {
+        const aiItem = page.getByRole("menuitemradio", {
             name: "AI 问答",
             exact: true,
         });

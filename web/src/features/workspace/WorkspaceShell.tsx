@@ -25,6 +25,42 @@ import {
 } from "./workspace-state.ts";
 import "./workspace.css";
 
+/** What the surface displays; frozen at its last open value while it exits. */
+type WorkspaceView = {
+    state: WorkspaceRoute;
+    title: string;
+    appsArranging: boolean;
+    notesExpanded: boolean;
+    onCreate: (() => void) | undefined;
+    feedback: ReactNode;
+    children: ReactNode;
+};
+
+/**
+ * The host clears title, route and content as soon as `open` turns false, so the
+ * exit motion would play over a blank or wrong workspace. Returns the live view
+ * while open and the last committed open view afterwards.
+ */
+function useLastOpenView(open: boolean, view: WorkspaceView): WorkspaceView {
+    const lastOpen = useRef(view);
+    useLayoutEffect(() => {
+        if (open) lastOpen.current = view;
+    });
+    return open ? view : lastOpen.current;
+}
+
+/** The entry that opens `kind` outside the workspace itself (the Dock). */
+function workspaceEntry(kind: WorkspaceKind): HTMLElement | null {
+    for (
+        const entry of document.querySelectorAll<HTMLElement>(
+            '[data-workspace="' + kind + '"]',
+        )
+    ) {
+        if (!entry.closest(".workspace-panel")) return entry;
+    }
+    return null;
+}
+
 export function WorkspaceShell(
     {
         open = true,
@@ -41,6 +77,8 @@ export function WorkspaceShell(
         appsArranging = false,
         children,
         chromeBottom,
+        onDockedChange,
+        onExited,
     }: {
         open?: boolean;
         state: WorkspaceRoute;
@@ -57,11 +95,15 @@ export function WorkspaceShell(
         appsArranging?: boolean;
         children: ReactNode;
         chromeBottom?: number;
+        /** Whether the non-expanded desktop panel is open beside the page content. */
+        onDockedChange?: (docked: boolean) => void;
+        /** Called after the panel or Sheet has finished closing. */
+        onExited?: () => void;
     },
 ) {
     const [notesExpanded, setNotesExpanded] = useState(false);
     useEffect(() => {
-        if (!open || state.view !== "notes/edit") setNotesExpanded(false);
+        if (open && state.view !== "notes/edit") setNotesExpanded(false);
     }, [open, state.view]);
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
@@ -72,15 +114,26 @@ export function WorkspaceShell(
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);
     }, []);
+    const view = useLastOpenView(open, {
+        state,
+        title,
+        appsArranging,
+        notesExpanded,
+        onCreate,
+        feedback,
+        children,
+    });
+    const route = view.state;
     const presentation: WorkspacePresentation = mobile ? "sheet" : "panel";
-    const workspace: WorkspaceKind = isAppsWorkspaceView(state)
+    const workspace: WorkspaceKind = isAppsWorkspaceView(route)
         ? "apps"
-        : isNotesWorkspaceView(state)
+        : isNotesWorkspaceView(route)
         ? "notes"
         : "documents";
     const opener = useRef<HTMLElement | null>(null);
     const openingWorkspace = useRef<WorkspaceKind>(workspace);
     const wasOpen = useRef(false);
+    // Focus returns when `open` turns false, not when the exit motion ends.
     useLayoutEffect(() => {
         if (open && !wasOpen.current) {
             const active = document.activeElement;
@@ -95,9 +148,7 @@ export function WorkspaceShell(
             const frame = requestAnimationFrame(() => {
                 const target = opener.current?.isConnected
                     ? opener.current
-                    : document.querySelector<HTMLButtonElement>(
-                        '[data-workspace="' + openingWorkspace.current + '"]',
-                    );
+                    : workspaceEntry(openingWorkspace.current);
                 target?.focus({ preventScroll: true });
                 opener.current = null;
             });
@@ -106,37 +157,41 @@ export function WorkspaceShell(
         }
         wasOpen.current = open;
     }, [open, workspace]);
-    if (!open) {
-        return null;
-    }
-    const root = state.view === "apps/root" || state.view === "notes/root" ||
-        state.view === "documents/root";
+    const expanded = route.view === "documents/edit" ||
+        (route.view === "notes/edit" && view.notesExpanded);
+    const docked = open && presentation === "panel" && !expanded;
+    useLayoutEffect(() => {
+        onDockedChange?.(docked);
+        return () => onDockedChange?.(false);
+    }, [docked, onDockedChange]);
+    const root = route.view === "apps/root" || route.view === "notes/root" ||
+        route.view === "documents/root";
     let bodyLayout: "app-form" | "editor" | undefined;
-    if (state.view === "apps/create" || state.view === "apps/edit") {
+    if (route.view === "apps/create" || route.view === "apps/edit") {
         bodyLayout = "app-form";
-    } else if (state.view === "notes/edit" || state.view === "documents/edit") {
+    } else if (route.view === "notes/edit" || route.view === "documents/edit") {
         bodyLayout = "editor";
     }
     const createLabel = workspace === "apps"
-        ? appsArranging ? "完成整理" : "添加应用"
+        ? view.appsArranging ? "完成整理" : "添加应用"
         : workspace === "notes"
         ? "新建便签"
         : "新建笔记";
     return (
         <WorkspaceSurface
+            open={open}
             presentation={presentation}
             chromeBottom={chromeBottom}
-            title={title}
-            expanded={state.view === "documents/edit" ||
-                (state.view === "notes/edit" && notesExpanded)}
-            backLabel={state.view === "notes/edit" ? "返回便签列表" : undefined}
+            title={view.title}
+            expanded={expanded}
+            backLabel={route.view === "notes/edit" ? "返回便签列表" : undefined}
             headerActions={
                 <>
                     <WorkspaceNavigation
                         selected={workspace}
                         onSelect={onSwitch}
                     />
-                    {root && onCreate && (
+                    {root && view.onCreate && (
                         <Tooltip>
                             <TooltipTrigger
                                 render={
@@ -146,42 +201,46 @@ export function WorkspaceShell(
                                         size="icon"
                                         aria-label={createLabel}
                                         onClick={workspace === "apps" &&
-                                                appsArranging
+                                                view.appsArranging
                                             ? onFinishArrange
-                                            : onCreate}
+                                            : view.onCreate}
                                     />
                                 }
                             >
-                                {workspace === "apps" && appsArranging
+                                {workspace === "apps" && view.appsArranging
                                     ? <Check size="1em" className="icon-lg" />
                                     : <Plus size="1em" className="icon-lg" />}
                             </TooltipTrigger>
                             <TooltipContent>{createLabel}</TooltipContent>
                         </Tooltip>
                     )}
-                    {state.view === "notes/edit" && !mobile && (
+                    {route.view === "notes/edit" && !mobile && (
                         <Button
                             variant="ghost"
                             size="sm"
-                            aria-pressed={notesExpanded}
+                            aria-pressed={view.notesExpanded}
                             onClick={() => setNotesExpanded((value) => !value)}
                         >
-                            {notesExpanded ? "收起编辑" : "展开编辑"}
+                            {view.notesExpanded ? "收起编辑" : "展开编辑"}
                         </Button>
                     )}
                 </>
             }
-            routeKey={JSON.stringify(state)}
+            routeKey={JSON.stringify(route)}
             nested={!root}
             onBack={onBack}
             onClose={onClose}
             onEscape={onEscape}
+            onExited={() => {
+                setNotesExpanded(false);
+                onExited?.();
+            }}
             escapeManaged={workspace === "apps"}
             bodyLayout={bodyLayout}
-            feedback={mobile ? feedback : undefined}
+            feedback={mobile ? view.feedback : undefined}
             onFeedbackHost={mobile ? onFeedbackHost : undefined}
         >
-            {children}
+            {view.children}
         </WorkspaceSurface>
     );
 }

@@ -49,9 +49,14 @@
     background: color-mix(in srgb, var(--note-color) 72%, transparent);
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-l2);
+    transition: box-shadow var(--motion-fast) var(--ease-standard);
 }
 .floating-notes .note-card[data-color="paper"] {
     background: var(--material-regular);
+}
+/* Home notes lift on hover (shadow only, no movement); dragging overrides it below. */
+.floating-notes .note-card:hover {
+    box-shadow: var(--shadow-note-card-hover);
 }
 .note-head {
     position: relative;
@@ -155,6 +160,7 @@
     margin-top: var(--space-2);
     max-height: 180px;
     overflow: auto;
+    scrollbar-width: thin;
     overflow-wrap: anywhere;
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
@@ -490,12 +496,5 @@
     .floating-notes .note-card,
     .floating-notes .note-card[data-color="paper"] {
         background: var(--note-color);
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    .note-card-actions,
-    .note-action-btn,
-    .note-drag {
-        transition: none;
     }
 }
