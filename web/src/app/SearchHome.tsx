@@ -23,6 +23,7 @@ import { X } from "lucide-react";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import type {
+    CreateDocumentInput,
     DocumentDto,
     DocumentLayoutDto,
     UpdateDocumentInput,
@@ -78,6 +79,13 @@ import {
     type AppSessionRouteIntent,
 } from "../components/searcher/AppSessionProvider.tsx";
 import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
+import { useAiAvailability } from "../features/omnibox/useAiAvailability.ts";
+import type { SearchQuickCommand } from "../features/shortcuts/shortcut-catalog.ts";
+import {
+    undoErrorMessage,
+    undoMessage,
+    type UndoSubject,
+} from "./undo-feedback.ts";
 import type {
     ExtendedWebApp,
     WebAppGroup,
@@ -106,12 +114,34 @@ type PaperUndoRecord = UndoRecordBase & {
     item: PaperItem;
 };
 
-type DeletionUndoRecord = AppUndoRecord | PaperUndoRecord;
+/** A quick capture (Shift+Enter): undo trashes the new note; it can be pinned to home. */
+type CaptureUndoRecord = UndoRecordBase & {
+    kind: "capture";
+    item: DocumentDto;
+    pinned: boolean;
+    isPinning: boolean;
+};
+
+type UndoRecord = AppUndoRecord | PaperUndoRecord | CaptureUndoRecord;
 
 type UndoRestoreResult =
     | { id: string; kind: "app"; restored: ExtendedWebApp }
     | { id: string; kind: "paper"; restored: PaperItem | null }
+    | { id: string; kind: "capture"; trashedId: string }
     | { id: string; error: string };
+
+function recordName(record: UndoRecord): string {
+    return record.kind === "app" ? record.item.name : record.item.displayTitle;
+}
+
+function recordSubject(record: UndoRecord): UndoSubject {
+    return {
+        kind: record.kind,
+        name: recordName(record),
+        error: record.error,
+        pinned: record.kind === "capture" ? record.pinned : undefined,
+    };
+}
 
 const UNDO_DURATION_MS = 10_000;
 
@@ -129,7 +159,8 @@ type PendingAction =
     | { kind: "appForm" };
 
 export function SearchHome() {
-    const { user, appearance, authSession } = useAppState();
+    const { user, appearance, authSession, setAppearance } = useAppState();
+    const aiAvailable = useAiAvailability(Boolean(user));
     const overlayActive = useEscapeLayerActive("overlay");
     const currentUserIdRef = useRef<string | null>(user?.id ?? null);
     currentUserIdRef.current = user?.id ?? null;
@@ -373,7 +404,7 @@ export function SearchHome() {
         setWorkspaceResetUserId(user?.id ?? null);
     }, [user?.id, cancelPendingAction]);
     const [error, setError] = useState("");
-    const [undoQueue, setUndoQueue] = useState<DeletionUndoRecord[]>([]);
+    const [undoQueue, setUndoQueue] = useState<UndoRecord[]>([]);
     const [undoPaused, setUndoPaused] = useState(false);
     const [isManagingApps, setIsManagingApps] = useState(false);
     const undoQueueRef = useRef(undoQueue);
@@ -751,6 +782,14 @@ export function SearchHome() {
                                 ),
                             };
                         }
+                        if (record.kind === "capture") {
+                            await trashPaper(record.item);
+                            return {
+                                id: record.id,
+                                kind: "capture",
+                                trashedId: record.item.id,
+                            };
+                        }
                         return {
                             id: record.id,
                             kind: "paper",
@@ -772,14 +811,22 @@ export function SearchHome() {
             const restoredApps: ExtendedWebApp[] = [];
             const restoredPapers: PaperItem[] = [];
             const failures = new Map<string, string>();
+            const trashedCaptureIds = new Set<string>();
             for (const result of results) {
                 if ("error" in result) {
                     failures.set(result.id, result.error);
                 } else if (result.kind === "app") {
                     restoredApps.push(result.restored);
+                } else if (result.kind === "capture") {
+                    trashedCaptureIds.add(result.trashedId);
                 } else {
                     if (result.restored) restoredPapers.push(result.restored);
                 }
+            }
+            if (trashedCaptureIds.size > 0) {
+                setPapers((items) =>
+                    items.filter((item) => !trashedCaptureIds.has(item.id))
+                );
             }
             if (restoredApps.length > 0) {
                 setApps((items) => [...items, ...restoredApps]);
@@ -952,6 +999,102 @@ export function SearchHome() {
             ) setError(errorMessage(cause));
         }
     }
+    /** Shift+Enter in the search box: a new plain note, not pinned or favorited. */
+    async function captureNote(text: string): Promise<boolean> {
+        const ownerId = currentUserIdRef.current;
+        if (!ownerId) return false;
+        setError("");
+        try {
+            const payload: CreateDocumentInput = {
+                body: text,
+                isHomeFixed: false,
+                isFavorite: false,
+            };
+            const created = await api<DocumentDto>(
+                "/api/documents",
+                json("POST", payload),
+            );
+            if (
+                !componentMountedRef.current ||
+                currentUserIdRef.current !== ownerId
+            ) return false;
+            if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
+                undoPausedRef.current = false;
+                setUndoPaused(false);
+            }
+            const remainingMs = UNDO_DURATION_MS;
+            const record: CaptureUndoRecord = {
+                id: `${ownerId}:${++undoIdRef.current}`,
+                userId: ownerId,
+                kind: "capture",
+                item: created,
+                pinned: false,
+                isPinning: false,
+                expiresAt: undoPausedRef.current
+                    ? null
+                    : Date.now() + remainingMs,
+                remainingMs,
+                isRestoring: false,
+            };
+            setUndoQueue((items) => [...items, record]);
+            return true;
+        } catch (cause) {
+            if (
+                componentMountedRef.current &&
+                currentUserIdRef.current === ownerId
+            ) setError(errorMessage(cause));
+            return false;
+        }
+    }
+    async function pinCapture(recordId: string) {
+        const ownerId = currentUserIdRef.current;
+        const record = undoQueueRef.current.find((item) =>
+            item.id === recordId
+        );
+        if (
+            !ownerId || record?.kind !== "capture" ||
+            record.userId !== ownerId || record.pinned || record.isPinning ||
+            record.isRestoring
+        ) return;
+        const update = (change: Partial<CaptureUndoRecord>) =>
+            setUndoQueue((items) =>
+                items.map((item) =>
+                    item.id === recordId && item.kind === "capture"
+                        ? { ...item, ...change }
+                        : item
+                )
+            );
+        update({ isPinning: true });
+        try {
+            const pinned = await patchPaper(record.item, {
+                isHomeFixed: true,
+            });
+            const paper = await fetchPaper(pinned.id);
+            if (
+                !componentMountedRef.current ||
+                currentUserIdRef.current !== ownerId
+            ) return;
+            if (paper) {
+                setPapers((items) => setPaper(items, paper.id, paper));
+            }
+            update({ item: pinned, pinned: true, isPinning: false });
+        } catch (cause) {
+            if (
+                componentMountedRef.current &&
+                currentUserIdRef.current === ownerId
+            ) {
+                update({ isPinning: false });
+                setError(errorMessage(cause));
+            }
+        }
+    }
+    function runSearchCommand(command: SearchQuickCommand) {
+        const { target } = command;
+        if (target.type === "theme") {
+            void setAppearance({ theme: target.theme });
+        } else if (target.type === "route") navigate(target.to);
+        else if (target.type === "workspace") openWorkspace(target.kind);
+    }
     const layoutProps: HomeLayoutProps = {
         user,
         engine,
@@ -981,6 +1124,10 @@ export function SearchHome() {
         updatePaper,
         updatePaperLayout,
         openWorkspace,
+        openDocument,
+        aiAvailable,
+        onSearchCommand: runSearchCommand,
+        onCapture: captureNote,
         workspaceOpen: Boolean(host.activeKind),
         showAppLabels: appearance.showAppLabels,
         showHomeApps: appearance.showHomeApps,
@@ -1021,21 +1168,9 @@ export function SearchHome() {
     const currentUndoQueue = undoQueue.filter((record) =>
         record.userId === user?.id
     );
-    const undoItemNames = currentUndoQueue.map((record) =>
-        record.kind === "app" ? record.item.name : record.item.displayTitle
-    );
-    const undoMessage = currentUndoQueue.length === 1
-        ? `已将“${undoItemNames[0]}”移至回收站`
-        : `已将 ${currentUndoQueue.length} 项移至回收站：${
-            undoItemNames.join("、")
-        }`;
-    const undoErrors = currentUndoQueue.flatMap((record) => {
-        if (!record.error) return [];
-        const name = record.kind === "app"
-            ? record.item.name
-            : record.item.displayTitle;
-        return [`恢复“${name}”失败：${record.error}，可以重试。`];
-    }).join(" ");
+    const undoSubjects = currentUndoQueue.map(recordSubject);
+    const undoText = undoMessage(undoSubjects);
+    const undoErrors = undoErrorMessage(undoSubjects);
     const undoableRecords = currentUndoQueue.filter((record) =>
         !record.isRestoring
     );
@@ -1049,9 +1184,7 @@ export function SearchHome() {
     const undoActions = (
         <>
             {currentUndoQueue.length > 1 && currentUndoQueue.map((record) => {
-                const name = record.kind === "app"
-                    ? record.item.name
-                    : record.item.displayTitle;
+                const name = recordName(record);
                 return (
                     <Button
                         key={record.id}
@@ -1071,6 +1204,24 @@ export function SearchHome() {
                     </Button>
                 );
             })}
+            {currentUndoQueue.map((record) =>
+                record.kind === "capture" && !record.pinned
+                    ? (
+                        <Button
+                            key={`pin-${record.id}`}
+                            variant="ghost"
+                            size="sm"
+                            disabled={record.isPinning || record.isRestoring}
+                            aria-label={currentUndoQueue.length > 1
+                                ? `固定 ${recordName(record)} 到首页`
+                                : undefined}
+                            onClick={() => void pinCapture(record.id)}
+                        >
+                            固定到首页
+                        </Button>
+                    )
+                    : null
+            )}
             <Button
                 variant="ghost"
                 size="sm"
@@ -1083,7 +1234,7 @@ export function SearchHome() {
     const undoFeedback = (
         <UndoToast
             open={currentUndoQueue.length > 0}
-            message={undoErrors ? `${undoMessage} ${undoErrors}` : undoMessage}
+            message={undoErrors ? `${undoText} ${undoErrors}` : undoText}
             hidden={overlayActive}
             host={feedbackHost}
             placement={mobileFeedback ? "inline" : "floating"}

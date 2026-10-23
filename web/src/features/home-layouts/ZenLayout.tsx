@@ -223,10 +223,19 @@ export function ZenLayout(
                     reachability={reachability}
                     onCheck={onCheckConnections}
                     isChecking={isCheckingConnections}
+                    signedIn={Boolean(user)}
+                    aiAvailable={props.aiAvailable}
                     webApps={apps}
                     webFolders={webFolders}
                     onOpenApp={openApp}
                     onOpenFolder={(id) => libraryRef.current?.openFolder(id)}
+                    onOpenDocument={props.openDocument}
+                    onCommand={(command) => {
+                        if (command.target.type === "apps") {
+                            libraryRef.current?.openAll();
+                        } else props.onSearchCommand(command);
+                    }}
+                    onCapture={user ? props.onCapture : undefined}
                     quickEntries={quickEntries}
                     onQuickEntry={() => libraryRef.current?.openAll()}
                 />

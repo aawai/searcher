@@ -53,6 +53,7 @@ export const suites = {
         "settings-shortcuts",
         "shortcuts-documents-ask",
         "shortcuts-search",
+        "omnibox-unified",
         "ask-accessibility-retry",
         "ui-feedback",
         "editable-pagination-spike",

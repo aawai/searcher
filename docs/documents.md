@@ -175,6 +175,8 @@ editor、选区和 undo history，只改变排版。编辑视图默认为所见�
 
 返回 `{ query, documents, apps }`：`documents` 为笔记 summary（同上搜索规则与排序），`apps` 为未删除的应用（含文件夹内应用），按名称以整句开头、名称包含全部词、仅 URL 命中排序，同级按首页顺序。应用名称与 URL 同样按字面量子串匹配，`%`、`_` 不是通配符。空查询返回两个空数组；他人数据、回收站笔记与已删除应用不会出现，未登录返回 401。
 
+首页搜索框用此接口生成“我的”“应用”两组（见 [工作区 · 搜索框](workspace.md#搜索框)）；返回 401 时前端移除这两组。搜索框 `Shift+Enter` 快速记录调用 `POST /api/documents`（仅 `body`，`isHomeFixed` 与 `isFavorite` 为 `false`），“撤销”移至回收站，“固定到首页”再 `PATCH` `isHomeFixed`。
+
 ### 事件流
 
 | 方法 | 路径                    | 说明                                                                                                                         |

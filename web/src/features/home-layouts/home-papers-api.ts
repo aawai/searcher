@@ -56,7 +56,7 @@ export async function fetchHomePapers(): Promise<PaperItem[]> {
 }
 
 export function patchPaper(
-    paper: PaperItem,
+    paper: Pick<DocumentDto, "id" | "version">,
     patch: Omit<UpdateDocumentInput, "version">,
 ): Promise<DocumentDto> {
     return api<DocumentDto>(
@@ -83,7 +83,9 @@ export function patchPaperLayout(
     );
 }
 
-export async function trashPaper(paper: PaperItem): Promise<void> {
+export async function trashPaper(
+    paper: Pick<DocumentDto, "id" | "version">,
+): Promise<void> {
     await api(
         `${documentPath(paper.id)}?version=${paper.version}`,
         { method: "DELETE" },

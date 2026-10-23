@@ -12,6 +12,7 @@ import type {
 import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
 import type { UserDto } from "@shared/contracts.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
+import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
 import type { PaperItem } from "./home-papers.ts";
 export interface HomeLayoutProps {
     user: UserDto | null;
@@ -62,6 +63,14 @@ export interface HomeLayoutProps {
     // sheet controls
     openWorkspace: (workspace: WorkspaceKind) => void;
     workspaceOpen: boolean;
+    /** Opens a document in the workspace by id (search results). */
+    openDocument: (id: string) => void;
+    /** An enabled model exists for the signed-in user: AI entry points show. */
+    aiAvailable: boolean;
+    /** Runs a theme, route or workspace command from the search box. */
+    onSearchCommand: (command: SearchQuickCommand) => void;
+    /** Shift+Enter quick capture; resolves true once the note exists. */
+    onCapture: (text: string) => Promise<boolean>;
     // appearance
     showAppLabels: boolean;
     /** 在首页显示应用: the grid, + and 更多 render on home. */

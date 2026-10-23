@@ -3,6 +3,7 @@ import {
     SettingsRow,
 } from "../../components/searcher/semantic.tsx";
 import {
+    commandTakesQuery,
     formatShortcut,
     formatShortcutAccessible,
     getShortcutPlatform,
@@ -52,17 +53,20 @@ function ShortcutRow({
 }
 
 function CommandRow({ cmd }: { cmd: SearchQuickCommand }) {
+    const takesQuery = commandTakesQuery(cmd);
     return (
         <SettingsRow title={cmd.action}>
             <span className="settings-shortcut-keycap-group">
                 <kbd className="settings-shortcut-keycap" aria-hidden="true">
                     {cmd.prefix}
                 </kbd>
-                <span className="settings-shortcut-arg" aria-hidden="true">
-                    关键词
-                </span>
+                {takesQuery && (
+                    <span className="settings-shortcut-arg" aria-hidden="true">
+                        关键词
+                    </span>
+                )}
                 <span className="sr-only">
-                    {`快捷命令：${cmd.prefix} 关键词`}
+                    {`快捷命令：${cmd.prefix}${takesQuery ? " 关键词" : ""}`}
                 </span>
             </span>
         </SettingsRow>
